@@ -224,7 +224,12 @@ function seedSkillFromItem(skills, item) {
  * (see module/dice/roll-parts.mjs, Milestone 2) and apply only if checked.
  */
 function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx) {
-  const { skills, bonuses, rollData, conditionalModifiers } = ctx;
+  const { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps } = ctx;
+  // Level-gated grants (e.g. Bune's "At Level 50, +2 Dexterity") simply don't
+  // apply at all below the threshold - re-evaluated fresh every
+  // prepareDerivedData pass, so it turns on automatically the moment the
+  // actor's Level reaches the gate. 0 (the default) means "always active".
+  if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) return;
   const label = change.label || sourceLabel;
   const hasConditions = Array.isArray(change.conditions) && change.conditions.length > 0;
   // Exposes `@rank` in a ChangeEntry's `value` formula as the Rank of the
@@ -255,6 +260,18 @@ function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx) 
       const entry = getOrCreateSkill(skills, change.target);
       const value = resolveValue(change.value, scopedRollData);
       entry.rank = applyScalarChange(entry.rank, change.mode, value);
+      // Reuses capMax here for a different purpose than the stat/resource
+      // case above: not a ceiling on the CURRENT value, but on how high
+      // CarlDice.rollAdvancementCheck will let this Skill's Rank climb via
+      // future Advancement Checks (e.g. "Arcane Skill can be raised to Rank
+      // 20" vs. the normal Rank-15 ceiling) - so the MOST PERMISSIVE (highest)
+      // grant wins when multiple sources raise the same Skill's cap, unlike
+      // accumulateCap's most-restrictive/lowest policy above.
+      if (change.capMax) {
+        const key = slugifySkillName(change.target);
+        const cap = resolveValue(change.capMax, scopedRollData);
+        if (typeof cap === "number") rankCaps[key] = key in rankCaps ? Math.max(rankCaps[key], cap) : cap;
+      }
       break;
     }
     case "skillDamage": {
@@ -292,12 +309,34 @@ function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx) 
       // derived "effective" value is computed once, safely, in
       // CarlRPGCharacter#prepareDerivedData from value + this bonus.
       accumulateBonus(bonuses, `stats.${change.target}`, change, scopedRollData);
+      accumulateCap(caps, `stats.${change.target}`, change, scopedRollData);
       break;
     }
     case "resource": {
       // Same reasoning as "stat" - e.g. target "hb.max" must never be
       // written directly, since that's the editable base field too.
       accumulateBonus(bonuses, change.target, change, scopedRollData);
+      accumulateCap(caps, change.target, change, scopedRollData);
+      break;
+    }
+    case "resistance": {
+      // SET semantics, not accumulate - a Resistance/Immunity/Vulnerability
+      // grant replaces whatever this actor's base system.resistances[type]
+      // says, it doesn't stack numerically. Last-applied-wins across
+      // multiple sources granting the same damage type (no adjudicated
+      // priority order - a rare enough conflict that this project's usual
+      // "surface state, don't over-engineer" default applies).
+      if (change.target) resistances[change.target] = change.value;
+      break;
+    }
+    case "advancementBonus": {
+      // A flat bonus to CarlDice.rollAdvancementCheck's d20, scoped to one
+      // named Skill/Spell/Damage Effect (e.g. "at the end of each floor, add
+      // 1 to your Skill Advancement Checks for Alchemy"). Keyed by slugified
+      // name, same convention as the skills bag itself.
+      const key = slugifySkillName(change.target);
+      const value = resolveValue(change.value, scopedRollData);
+      if (typeof value === "number") advancementBonuses[key] = (advancementBonuses[key] ?? 0) + value;
       break;
     }
     default: {
@@ -316,6 +355,14 @@ function accumulateBonus(bonuses, key, change, rollData) {
   if (typeof value !== "number") return;
   const current = bonuses[key] ?? 0;
   bonuses[key] = applyScalarChange(current, change.mode, value);
+}
+
+/** Records a ChangeEntry's optional `capMax` (an effective-value ceiling) into the caps bag, keeping the most restrictive (lowest) value per key. */
+function accumulateCap(caps, key, change, rollData) {
+  if (!change.capMax) return;
+  const cap = resolveValue(change.capMax, rollData);
+  if (typeof cap !== "number") return;
+  caps[key] = key in caps ? Math.min(caps[key], cap) : cap;
 }
 
 /**
@@ -350,6 +397,10 @@ export function aggregateActorBonuses(actorSystem) {
   const skills = {};
   const bonuses = {};
   const conditionalModifiers = [];
+  const caps = {};
+  const resistances = {};
+  const advancementBonuses = {};
+  const rankCaps = {};
 
   const rollData = {
     stats: actorSystem.stats ? foundry.utils.deepClone(actorSystem.stats) : {},
@@ -361,7 +412,7 @@ export function aggregateActorBonuses(actorSystem) {
     if (RANKED_TYPES.has(item.type)) seedSkillFromItem(skills, item);
   }
 
-  const ctx = { skills, bonuses, rollData, conditionalModifiers };
+  const ctx = { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps };
   for (const item of items) {
     for (const { change, sourceLabel, sourceItemId, sourceItemRank } of collectItemChanges(item)) {
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx);
@@ -371,4 +422,8 @@ export function aggregateActorBonuses(actorSystem) {
   actorSystem.skills = skills;
   actorSystem.bonuses = bonuses;
   actorSystem.conditionalModifiers = conditionalModifiers;
+  actorSystem.caps = caps;
+  actorSystem.grantedResistances = resistances;
+  actorSystem.advancementBonuses = advancementBonuses;
+  actorSystem.rankCaps = rankCaps;
 }

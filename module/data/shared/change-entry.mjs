@@ -31,7 +31,7 @@ export function defineChangeEntrySchema() {
     label: new fields.StringField({ required: false, blank: true }),
     targetType: new fields.StringField({
       required: true, blank: false, initial: "skillDamage",
-      choices: ["stat", "skillRank", "skillDamage", "resource", "rollMode", "custom"],
+      choices: ["stat", "skillRank", "skillDamage", "resource", "rollMode", "custom", "resistance", "advancementBonus"],
     }),
     /** Dotted path or arbitrary skill/resource name. Resolved dynamically - no master list required. */
     target: new fields.StringField({ required: true, blank: true }),
@@ -39,8 +39,23 @@ export function defineChangeEntrySchema() {
       required: true, blank: false, initial: "add",
       choices: ["add", "subtract", "multiply", "override", "upgrade", "downgrade"],
     }),
-    /** Formula string; may include dice notation and @-refs (e.g. "1d4", "2", "@rank"). */
+    /** Formula string; may include dice notation and @-refs (e.g. "1d4", "2", "@rank"). For targetType "resistance", one of "resist"|"vulnerable"|"immune" instead of a number. */
     value: new fields.StringField({ required: true, blank: true, initial: "0" }),
+    /**
+     * Only meaningful when targetType is "stat" or "resource" (e.g. target
+     * "dr"). An optional ceiling on the EFFECTIVE value (base + all bonuses),
+     * applied after aggregation - e.g. Hobgoblin's "-5 Charisma. Charisma is
+     * capped at 10". Blank means no cap. When multiple sources cap the same
+     * target, the most restrictive (lowest) cap wins.
+     */
+    capMax: new fields.StringField({ required: false, blank: true, initial: "" }),
+    /**
+     * Only meaningful for a "stat"/"skillRank"/"resource" change granted by a
+     * Race/Class item. When set (> 0), this change only takes effect once
+     * the owning actor's Character Level reaches this value - e.g. Bune's
+     * "At Level 50, +2 Dexterity". 0 (the default) means always active.
+     */
+    levelGate: new fields.NumberField({ required: false, integer: true, initial: 0, min: 0 }),
     /**
      * Only meaningful when targetType is "skillDamage". Author-declared (not
      * inferred from the formula) because Critical Hit only doubles "base"

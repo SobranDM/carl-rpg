@@ -122,6 +122,8 @@ CARLRPG.changeTargetTypes = {
   resource: 'CARLRPG.ChangeTarget.Resource',
   rollMode: 'CARLRPG.ChangeTarget.RollMode',
   custom: 'CARLRPG.ChangeTarget.Custom',
+  resistance: 'CARLRPG.ChangeTarget.Resistance',
+  advancementBonus: 'CARLRPG.ChangeTarget.AdvancementBonus',
 };
 
 /**
@@ -134,6 +136,7 @@ CARLRPG.changeTargetTypes = {
 CARLRPG.resourceTargets = {
   'hb.max': 'CARLRPG.ResourceTarget.HbMax',
   'mana.max': 'CARLRPG.ResourceTarget.ManaMax',
+  dr: 'CARLRPG.ResourceTarget.Dr',
 };
 
 /**

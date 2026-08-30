@@ -88,7 +88,8 @@
       "EffectiveValue": "Effective value (base + bonus from items/skills)",
       "Defenses": "Defenses",
       "Dr": "DR (flat damage reduction)",
-      "Resistances": "Resistances"
+      "Resistances": "Resistances",
+      "ResistanceGrantedHint": "Overridden by an owned item's Resistance grant"
     },
     "Skill": {
       "Category": "Category",
@@ -180,6 +181,11 @@
       "Value": "Value",
       "DamageDiceKind": "Damage Dice Kind",
       "DamageType": "Damage Type Override",
+      "ResistanceState": "Resistance State",
+      "CapMax": "Effective Cap (optional)",
+      "CapMaxPlaceholder": "e.g. 10 - no cap if blank",
+      "LevelGate": "Level Gate (optional)",
+      "LevelGatePlaceholder": "0 = always active",
       "LabelPlaceholder": "Label (shown in roll tooltip)",
       "Remove": "Remove",
       "DefaultChecked": "Checked by default",
@@ -327,11 +333,14 @@
       "SkillDamage": "Skill Damage",
       "Resource": "Resource",
       "RollMode": "Roll Mode",
-      "Custom": "Custom"
+      "Custom": "Custom",
+      "Resistance": "Resistance",
+      "AdvancementBonus": "Skill Advancement Check Bonus"
     },
     "ResourceTarget": {
       "HbMax": "Max Health Bar Slots",
-      "ManaMax": "Max Mana"
+      "ManaMax": "Max Mana",
+      "Dr": "DR"
     },
     "RollModeTarget": {
       "EvadeBonus": "Evade Bonus"

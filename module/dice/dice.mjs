@@ -742,10 +742,18 @@ export default class CarlDice {
    */
   static async rollAdvancementCheck(actor, skillItem, { apply = true, silent = false } = {}) {
     const currentRank = skillItem.system.rank ?? 0;
-    const roll = new Roll("1d20");
+    const slug = slugifySkillName(skillItem.name);
+    // "At the end of each floor, add 1 to your Skill Advancement Checks for
+    // X" (a Race/Class grant, targetType "advancementBonus") and "X Skill can
+    // be raised to Rank 20" (targetType "skillRank"'s capMax) both key off
+    // the actor's per-skill bags rather than the Skill item itself, since
+    // both are granted by a separate owned Race/Class item, not the Skill.
+    const bonus = actor.system.advancementBonuses?.[slug] ?? 0;
+    const rankCap = actor.system.rankCaps?.[slug] ?? 15;
+    const roll = new Roll(bonus ? `1d20 + ${bonus}` : "1d20");
     await roll.evaluate();
     const success = roll.total >= currentRank;
-    const newRank = success ? Math.min(currentRank + 1, 15) : currentRank;
+    const newRank = success ? Math.min(currentRank + 1, rankCap) : currentRank;
 
     if (apply) {
       await skillItem.update({ "system.rank": newRank, "system.marked": false });

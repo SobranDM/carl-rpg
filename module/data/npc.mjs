@@ -65,12 +65,22 @@ export default class CarlRPGNPC extends CarlRPGActorBase {
     for (const key in this.stats) {
       if (!this.stats[key]) continue;
       const bonus = this.bonuses?.[`stats.${key}`] ?? 0;
-      const effective = this.stats[key].value + bonus;
+      const cap = this.caps?.[`stats.${key}`];
+      const effective = cap !== undefined ? Math.min(this.stats[key].value + bonus, cap) : this.stats[key].value + bonus;
       this.stats[key].bonus = bonus;
       this.stats[key].effective = effective;
       this.stats[key].mod = getStatMod(effective);
       this.stats[key].label = game.i18n.localize(CONFIG.CARLRPG.stats[key]) ?? key;
     }
+
+    // See CarlRPGCharacter#prepareDerivedData - same DR/Resistance derivation,
+    // kept here too since the schema (actor-base.mjs) is shared and an NPC
+    // could in principle own a feature granting either.
+    this.drBonus = this.bonuses?.dr ?? 0;
+    this.drEffective = this.caps?.dr !== undefined
+      ? Math.min(this.dr + this.drBonus, this.caps.dr)
+      : this.dr + this.drBonus;
+    this.resistancesEffective = { ...this.resistances, ...this.grantedResistances };
 
     this.hb.slotValue = this.stats.con?.mod ?? 0;
     this.hb.bonusMax = this.bonuses?.["hb.max"] ?? 0;

@@ -91,12 +91,30 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     for (const key in this.stats) {
       if (!this.stats[key]) continue;
       const bonus = this.bonuses?.[`stats.${key}`] ?? 0;
-      const effective = this.stats[key].value + bonus;
+      const cap = this.caps?.[`stats.${key}`];
+      const effective = cap !== undefined ? Math.min(this.stats[key].value + bonus, cap) : this.stats[key].value + bonus;
       this.stats[key].bonus = bonus;
       this.stats[key].effective = effective;
       this.stats[key].mod = getStatMod(effective);
       this.stats[key].label = game.i18n.localize(CONFIG.CARLRPG.stats[key]) ?? key;
     }
+
+    // DR: system.dr stays the flat GM/player-editable base (never mutated
+    // here, same reasoning as stats.*.value above); drBonus/drEffective are
+    // derived-only, from any "resource" ChangeEntry targeting "dr" (e.g. a
+    // Race/Class's "+N DR Buff"), with an optional capMax ceiling.
+    this.drBonus = this.bonuses?.dr ?? 0;
+    this.drEffective = this.caps?.dr !== undefined
+      ? Math.min(this.dr + this.drBonus, this.caps.dr)
+      : this.dr + this.drBonus;
+
+    // Resistances: system.resistances stays the flat GM/player-editable base
+    // per-damage-type enum; a Race/Class's "resistance" ChangeEntry (e.g.
+    // "Immunity to Poison") overrides that base for its specific type only,
+    // in resistancesEffective (derived-only, read by module/helpers/
+    // damage-pipeline.mjs and shown on the sheet - the base itself is never
+    // mutated, so removing the granting item reverts to the GM-set default).
+    this.resistancesEffective = { ...this.resistances, ...this.grantedResistances };
 
     // Derived resource caps: HB slot value from (effective) CON Mod, HB
     // effective max = base max + any "hb.max" resource bonus, Mana max 1:1

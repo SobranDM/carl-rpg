@@ -176,6 +176,15 @@
     font-size: 12px;
   }
 
+  // Shown next to a resistance dropdown when an owned item's "resistance"
+  // ChangeEntry overrides the GM-set base for that damage type (see
+  // module/data/character.mjs's resistancesEffective).
+  .carl-resistance-granted {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--carl-accent);
+  }
+
   // Upgrade tier's damage-type split (docs/known-gaps.md 1.3/1.7): two
   // dropdowns side by side rather than a growable list, since the rules
   // text only ever needs "override to one type" or "split evenly between

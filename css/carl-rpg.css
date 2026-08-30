@@ -861,6 +861,11 @@
 .carl-rpg .carl-resistance-type {
   font-size: 12px;
 }
+.carl-rpg .carl-resistance-granted {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--carl-accent);
+}
 .carl-rpg .carl-upgrade-damage-split > div {
   display: flex;
   gap: 6px;

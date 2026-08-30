@@ -46,10 +46,15 @@
             <option value=""></option>
             {{selectOptions ../config.rollModeTargets selected=change.target localize=true}}
           </select>
-          {{else if (or (eq change.targetType "skillRank") (eq change.targetType "skillDamage"))}}
+          {{else if (or (eq change.targetType "skillRank") (eq change.targetType "skillDamage") (eq change.targetType "advancementBonus"))}}
           <input type="text" class="carl-w-full" list="carl-skill-target-list-{{../item.id}}"
             name="{{concat ../path '.' cIndex '.target'}}" value="{{change.target}}"
             placeholder="{{localize 'CARLRPG.Change.TargetSkillPlaceholder'}}" />
+          {{else if (eq change.targetType "resistance")}}
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.target'}}">
+            <option value=""></option>
+            {{selectOptions ../config.damageTypes selected=change.target localize=true}}
+          </select>
           {{else}}
           <input type="text" class="carl-w-full" name="{{concat ../path '.' cIndex '.target'}}" value="{{change.target}}"
             placeholder="{{localize 'CARLRPG.Change.TargetCustomPlaceholder'}}" />
@@ -68,8 +73,21 @@
         </div>
         <div>
           <label class="resource-label">{{localize "CARLRPG.Change.Value"}}</label>
+          {{#if (eq change.targetType "resistance")}}
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.value'}}">
+            {{selectOptions ../config.resistanceStates selected=change.value localize=true}}
+          </select>
+          {{else}}
           <input type="text" class="carl-w-full" name="{{concat ../path '.' cIndex '.value'}}" value="{{change.value}}" placeholder="1d4" />
+          {{/if}}
         </div>
+        {{#if (or (eq change.targetType "stat") (eq change.targetType "resource"))}}
+        <div class="carl-change-field-full">
+          <label class="resource-label">{{localize "CARLRPG.Change.CapMax"}}</label>
+          <input type="text" class="carl-w-full" name="{{concat ../path '.' cIndex '.capMax'}}" value="{{change.capMax}}"
+            placeholder="{{localize 'CARLRPG.Change.CapMaxPlaceholder'}}" />
+        </div>
+        {{/if}}
         {{#if (eq change.targetType "skillDamage")}}
         <div class="carl-change-field-full">
           <label class="resource-label">{{localize "CARLRPG.Change.DamageDiceKind"}}</label>
@@ -91,6 +109,8 @@
     <div class="carl-change-row-meta flexrow">
       <input type="text" class="carl-change-label" name="{{concat ../path '.' cIndex '.label'}}" value="{{change.label}}"
         placeholder="{{localize 'CARLRPG.Change.LabelPlaceholder'}}" />
+      <input type="text" class="carl-w-tiny" data-dtype="Number" name="{{concat ../path '.' cIndex '.levelGate'}}" value="{{change.levelGate}}"
+        title="{{localize 'CARLRPG.Change.LevelGate'}}" placeholder="{{localize 'CARLRPG.Change.LevelGatePlaceholder'}}" />
       <a class="item-control" data-action="deleteArrayItem" data-path="{{../path}}" data-index="{{cIndex}}"
         title="{{localize 'CARLRPG.Change.Remove'}}">
         <i class="fas fa-trash"></i>

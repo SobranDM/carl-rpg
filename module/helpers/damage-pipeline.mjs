@@ -137,8 +137,12 @@ export function reduceViaShield(rawTotal, shield) {
  */
 export function computeDamageApplication(damageByType, target, isMagic = true) {
   const sys = target?.system ?? {};
-  const dr = Number(sys.dr) || 0;
-  const resistances = sys.resistances ?? {};
+  // drEffective/resistancesEffective (module/data/character.mjs,npc.mjs) fold
+  // in any Race/Class/feature-granted DR bonus or Resistance/Immunity
+  // override on top of the flat GM-set base - fall back to the raw base
+  // fields for a plain data object that never went through prepareDerivedData.
+  const dr = Number(sys.drEffective ?? sys.dr) || 0;
+  const resistances = sys.resistancesEffective ?? sys.resistances ?? {};
   const slotValue = sys.hb?.slotValue ?? 0;
 
   const types = Object.keys(damageByType ?? {}).filter((type) => damageByType[type]);
