@@ -79,7 +79,14 @@
       "Fighter"
     ],
     "prerequisites": "This limited Class is only available to female crawlers",
-    "isEarthBased": true
+    "isEarthBased": true,
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Weapon",
+        "amount": 2
+      }
+    ]
   },
   "effects": [],
   "_stats": {

@@ -7,14 +7,68 @@
   "system": {
     "description": "<p>Typical tree-hugging nature lovers, Druids are protectors of flora and fauna alike. Sometimes they can get a bit overprotective. Don't get caught littering, as they're more than willing to exploit ecological forces to punish their enemies. So pick up your trash, or else your pulverized bones will serve as bricks for a retaining wall around some Druid's garden.</p><ul><li>+2 Intelligence, Constitution, and Dexterity</li><li>+3 Nature's Breath Spell</li><li>+3 in a Spell of your choice</li><li>+2 in a Spell of your choice</li><li>+2 Survival Skill</li><li>Your Mana recovers at twice the normal rate in a natural environment</li><li>Access to the Dungeon Book of the Floor club (\"Favored: Druid\" Spells only)</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Survival", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Survival",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Druid"],
+    "classTypes": [
+      "Druid"
+    ],
     "prerequisites": "",
-    "isEarthBased": false
+    "isEarthBased": false,
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Spell",
+        "amount": 3
+      },
+      {
+        "id": "",
+        "category": "Spell",
+        "amount": 2
+      }
+    ]
   },
   "effects": [],
   "_stats": {
@@ -29,7 +83,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!cKGgMe24gMadokJL"
 }

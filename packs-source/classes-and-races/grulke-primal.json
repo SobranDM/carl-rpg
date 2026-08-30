@@ -111,7 +111,13 @@
     "isAlien": false,
     "size": "Medium (4)",
     "prerequisites": "This limited Race is only available to crawlers who have Rank 5+ in the Jumping or Light on Your Feet Skill",
-    "skillChoiceGrants": []
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Reach Weapon",
+        "amount": 2
+      }
+    ]
   },
   "effects": [],
   "_stats": {

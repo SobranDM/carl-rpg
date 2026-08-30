@@ -67,7 +67,23 @@
     "isAlien": false,
     "size": "Medium (4)",
     "prerequisites": "",
-    "skillChoiceGrants": []
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Spell",
+        "amount": 2
+      },
+      {
+        "id": "",
+        "category": "Spell",
+        "amount": 2
+      },
+      {
+        "id": "",
+        "category": "Weapon",
+        "amount": 3
+      }
+    ]
   },
   "effects": [],
   "_stats": {

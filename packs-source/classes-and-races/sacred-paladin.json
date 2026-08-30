@@ -89,7 +89,14 @@
       "Paladin"
     ],
     "prerequisites": "",
-    "isEarthBased": false
+    "isEarthBased": false,
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Weapon",
+        "amount": 2
+      }
+    ]
   },
   "effects": [],
   "_stats": {

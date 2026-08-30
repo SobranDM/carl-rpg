@@ -7,18 +7,101 @@
   "system": {
     "description": "<p>Everyone wants that special wand. Rare materials, finely sculpted form, access to powerful magics. Well, someone has to fill all these custom orders! Not only can you make wands, but you can also make fancy staves and... toys? Well, maybe wand-shaped toys... not asking why you want those. All of these can be used by their wielder to focus their arcane energies and do wondrous things. Or maybe just make light and shoot Magic Missiles--to each their own.</p><ul><li>+5 Intelligence</li><li>+1 Strength and Dexterity</li><li>-2 Charisma</li><li>+5 Arcane Skill</li><li>+2 Lore, Negotiation, and Salvage Skills</li><li>Tier-1 crafting table of your choice</li><li>Arcanist Skill can be raised to Rank 20</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Arcane", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Lore", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Negotiation", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Salvage", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Arcane",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Lore",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Negotiation",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Salvage",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Arcanist"],
+    "classTypes": [
+      "Arcanist"
+    ],
     "prerequisites": "",
-    "isEarthBased": true
+    "isEarthBased": true,
+    "skillChoiceGrants": []
   },
   "effects": [],
   "_stats": {
@@ -33,7 +116,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!TniBeIKDXWpSvSJo"
 }

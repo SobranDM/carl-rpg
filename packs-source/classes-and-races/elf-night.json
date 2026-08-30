@@ -7,15 +7,56 @@
   "system": {
     "description": "<p>Accustomed to the darkness and navigating via the stars, Night Elves share the lithe androgynous appearance of their fellow elven kin, but their skin tones cover the spectrum of cool colors from teal to deep purple. Thank Drizzt and Blizzard for making these an Earth staple. Night Elves have longer, wider ears than other elves and an even more acute sense of hearing. Their eyes are accustomed to low light, but they have difficulty seeing in bright light, whether natural or artificial. The high Intelligence and Dexterity of Night Elves make them an ideal choice for Arcanists, Rogues, and Mages.</p><ul><li>Size: Medium (4)</li><li>+3 Intelligence and Dexterity</li><li>+3 Acute Ears and Hide in Shadows Skills</li><li>Can see total darkness</li><li>Gain Advantage when you use the Hide in Shadows Skill at night</li><li>Once per day, can instruct the shadow of a living thing to use the Taunt Skill at Rank equal to Floor Number (and no Stat Mod) to pull attacks away from you</li><li>Hide in Shadows and one crafting Skill of your choice can be raised to Rank 20</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Acute Ears", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Hide in Shadows", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Acute Ears",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Hide in Shadows",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
     "isEarthBased": true,
     "isAlien": false,
     "size": "Medium (4)",
-    "prerequisites": ""
+    "prerequisites": "",
+    "skillChoiceGrants": []
   },
   "effects": [],
   "_stats": {
@@ -30,7 +71,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!NwuwpqgySThq7dj7"
 }

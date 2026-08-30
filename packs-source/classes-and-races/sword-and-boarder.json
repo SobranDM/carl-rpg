@@ -7,17 +7,96 @@
   "system": {
     "description": "<p>Some people excel at fighting, but you specialize in taking ships and buildings. Often the first one through the breach, you're not afraid to charge ahead and clear the room while your allies filter in behind you. It's not like you prefer to charge in mindlessly, but if you have to, you become a rampaging juggernaut who gets in, inflicts damage, and holds the line while others catch up.</p><p>Using your massive shield to keep yourself safe, you prefer to use the terrain around you to pin your foes down. They may have the numbers, but even a war party of ravenous Crocodilians would struggle to break past you! Your only weakness is that you cannot do things in half-measures: once you're sent in, you're gonna need a plan to get out if you can't hold your ground.</p><ul><li>+2 Strength, Constitution, and Dexterity</li><li>-2 Intelligence</li><li>+5 Shield Block Skill</li><li>+3 in an Edged Weapon Skill of your choice</li><li>+2 Attack of Opportunity and Catcher Skills</li><li>Access to the Desperado Club</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Shield Block", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Attack of Opportunity", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Catcher", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Shield Block",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Attack of Opportunity",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Catcher",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Fighter"],
+    "classTypes": [
+      "Fighter"
+    ],
     "prerequisites": "",
-    "isEarthBased": false
+    "isEarthBased": false,
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Edged Weapon",
+        "amount": 3
+      }
+    ]
   },
   "effects": [],
   "_stats": {
@@ -32,7 +111,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!chB5MHtdHqGxF9CN"
 }

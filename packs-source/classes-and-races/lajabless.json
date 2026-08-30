@@ -10,7 +10,24 @@
     "isEarthBased": true,
     "isAlien": false,
     "size": "Medium (4)",
-    "prerequisites": ""
+    "prerequisites": "",
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Spell",
+        "amount": 2
+      },
+      {
+        "id": "",
+        "category": "Spell",
+        "amount": 2
+      },
+      {
+        "id": "",
+        "category": "Weapon",
+        "amount": 3
+      }
+    ]
   },
   "effects": [],
   "_stats": {
@@ -25,7 +42,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!vcXWi8EDRQ0waKh5"
 }

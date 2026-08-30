@@ -67,7 +67,14 @@
       "Barbarian"
     ],
     "prerequisites": "",
-    "isEarthBased": false
+    "isEarthBased": false,
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Weapon",
+        "amount": 3
+      }
+    ]
   },
   "effects": [],
   "_stats": {

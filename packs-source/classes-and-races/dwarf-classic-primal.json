@@ -111,7 +111,18 @@
     "isAlien": false,
     "size": "Medium (4)",
     "prerequisites": "",
-    "skillChoiceGrants": []
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "crafting",
+        "amount": 3
+      },
+      {
+        "id": "",
+        "category": "crafting",
+        "amount": 3
+      }
+    ]
   },
   "effects": [],
   "_stats": {

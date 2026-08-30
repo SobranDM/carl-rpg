@@ -122,7 +122,13 @@
     "isAlien": false,
     "size": "Medium (4), mostly due to wings",
     "prerequisites": "This limited Race is only available to crawlers who earn Rank 5+ with any Edged Weapon",
-    "skillChoiceGrants": []
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Spell",
+        "amount": 2
+      }
+    ]
   },
   "effects": [],
   "_stats": {

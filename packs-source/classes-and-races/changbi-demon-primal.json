@@ -64,9 +64,9 @@
       },
       {
         "id": "",
-        "label": "Creepy Chains",
+        "label": "",
         "targetType": "skillRank",
-        "target": "Club",
+        "target": "Creepy Chains",
         "mode": "add",
         "value": "3",
         "damageDiceKind": "",

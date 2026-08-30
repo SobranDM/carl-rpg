@@ -7,14 +7,68 @@
   "system": {
     "description": "<p>You decided long ago that you wanted to craft powerful magical items, but really never settled on a specialty. You're pretty good in some areas and just average in others. At higher Levels, you may gain some additional expertise, but for the most part, you are a generalist. Still, when someone needs that special arcane item to defeat that big Boss, you might just be the Arcanist for the job. And if not, well, you're probably the only Arcanist they can find, so you'll make do.</p><ul><li>+3 Intelligence</li><li>+2 Dexterity</li><li>+5 Arcane Skill</li><li>+3 Salvage Skill</li><li>+2 in a crafting Skill of your choice</li><li>+1 in a crafting Skill of your choice</li><li>Tier 1 Arcanist table</li><li>Arcane and one crafting Skill can be raised to Rank 20</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Arcane", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Salvage", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Arcane",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Salvage",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Arcanist"],
+    "classTypes": [
+      "Arcanist"
+    ],
     "prerequisites": "",
-    "isEarthBased": false
+    "isEarthBased": false,
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "crafting",
+        "amount": 2
+      },
+      {
+        "id": "",
+        "category": "crafting",
+        "amount": 1
+      }
+    ]
   },
   "effects": [],
   "_stats": {
@@ -29,7 +83,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!gadjU3R0RMu9VftS"
 }

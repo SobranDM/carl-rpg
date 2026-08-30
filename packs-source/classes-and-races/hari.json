@@ -1,6 +1,6 @@
 {
   "_id": "Gsoz6UdyU9LaoMK2",
-  "name": "Harrower",
+  "name": "Hari",
   "type": "class",
   "folder": "DsNuN60ndKOpEt8I",
   "img": "icons/svg/upgrade.svg",
@@ -79,7 +79,14 @@
       "Rogue"
     ],
     "prerequisites": "",
-    "isEarthBased": true
+    "isEarthBased": true,
+    "skillChoiceGrants": [
+      {
+        "id": "",
+        "category": "Weapon",
+        "amount": 2
+      }
+    ]
   },
   "effects": [],
   "_stats": {
