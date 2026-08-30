@@ -1,0 +1,23 @@
+{
+  "type": "Item",
+  "folder": "5xNYxKKJ3KTxXjSE",
+  "name": "Animals and Pets",
+  "color": null,
+  "sorting": "a",
+  "_id": "jT3gMEIaINuqbF2j",
+  "description": "",
+  "sort": 100000,
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115362573,
+    "modifiedTime": 1788115882712,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!folders!jT3gMEIaINuqbF2j"
+}

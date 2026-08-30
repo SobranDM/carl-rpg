@@ -1,0 +1,63 @@
+{
+  "_id": "FH4PruwbDSa99KVS",
+  "name": "Aiming",
+  "type": "skill",
+  "img": "icons/svg/target.svg",
+  "system": {
+    "description": "<p>You are skilled at targeting vital body parts to deal additional damage. When making a Ranged Attack, you can add your Ranks in this Skill to your Attack Skill Check if you choose to make the Check with Disadvantage. On Success, add 1d4 to the damage.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 damage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d4 base damage.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "This Skill is used only in conjunction with Ranged Attacks. Mark this Skill for Advancement only when applying its Ranks to such an Attack."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!FH4PruwbDSa99KVS"
+}

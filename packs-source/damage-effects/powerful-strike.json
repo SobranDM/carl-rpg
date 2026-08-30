@@ -1,0 +1,70 @@
+{
+  "_id": "n8z1uxuMm55A4m69",
+  "name": "Powerful Strike",
+  "type": "damageEffect",
+  "img": "icons/skills/melee/unarmed-punch-fist-yellow-red.webp",
+  "system": {
+    "description": "<p>Foot Soldier, Noggin Nocker, or Pugilism Damage Effect, Passive. Cooldown: 30 hours. Multiply your base damage dice result by your Rank in this Skill, then add your modifiers and buffs.</p>",
+    "changes": [
+      {
+        "targetType": "skillDamage",
+        "target": "Powerful Strike",
+        "mode": "multiply",
+        "value": "@rank",
+        "damageDiceKind": "multiplier"
+      }
+    ],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "The cooldown is 10 hours.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The cooldown is 5 hours.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The cooldown is 2 hours.",
+        "changes": []
+      }
+    ],
+    "parentSkills": [
+      "Foot Soldier",
+      "Noggin Nocker",
+      "Pugilism"
+    ],
+    "cooldown": "30 hours"
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!n8z1uxuMm55A4m69"
+}

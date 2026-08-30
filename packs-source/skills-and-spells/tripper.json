@@ -1,0 +1,66 @@
+{
+  "_id": "gBo8ibFgUucQK4F0",
+  "name": "Tripper",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/trap.svg",
+  "system": {
+    "description": "<p><strong>Limitations:</strong> Does not detonate traps with very specific triggers. Must be imbued onto something you are wearing.</p><p>With a snap of your fingers, every movement, heat, and weight-triggered trap in the area \"goes off.\" Blades swing, bombs blow, and creatures are released.</p><p><em>This trap-triggering area-of-effect mechanic has no structural support in this system - resolve by GM judgment.</em></p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+Intelligence Burst radius.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+Intelligence Burst radius.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+Intelligence Burst radius, and all damage taken is considered Splash (half damage).",
+        "changes": []
+      }
+    ],
+    "manaCost": 0,
+    "range": "30ft Burst radius",
+    "duration": "",
+    "cooldown": "5 hours",
+    "castingKeywords": [
+      "passive",
+      "areaOfEffect"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!gBo8ibFgUucQK4F0"
+}

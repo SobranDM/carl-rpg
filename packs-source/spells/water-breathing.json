@@ -1,0 +1,65 @@
+{
+  "_id": "hRgDnSrPGq9jeRgN",
+  "name": "Water Breathing",
+  "type": "spell",
+  "img": "icons/svg/water.svg",
+  "system": {
+    "description": "<p>The target can breathe underwater without issue.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You may now cast this upon others at a range of 5 feet.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The targets roll Swimming Skill Checks with Advantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You can target any or all individuals within a 15ft Burst radius.",
+        "changes": []
+      }
+    ],
+    "manaCost": 2,
+    "range": "Self",
+    "duration": "A number of seconds equal to the caster's Intelligence x3.",
+    "cooldown": "",
+    "castingKeywords": [
+      "passive"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!hRgDnSrPGq9jeRgN"
+}

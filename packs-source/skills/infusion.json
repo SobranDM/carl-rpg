@@ -1,0 +1,63 @@
+{
+  "_id": "IJzYctMjKE0o7p2X",
+  "name": "Infusion",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Use this Skill to infuse potion bonuses onto consumable items. One potion can infuse one item. You'll either need to learn Alchemy so you can craft your own potions, or find potions to transfer to consumables. On Success, your consumable item now does more!</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "One potion can infuse 2 items at once.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "One potion can infuse 5 items at once.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "One potion can infuse 10 items at once.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Requires an Infusion Station attachment on an Alchemy Table or Tier 3 Sapper's Table."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!IJzYctMjKE0o7p2X"
+}

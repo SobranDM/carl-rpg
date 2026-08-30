@@ -1,0 +1,93 @@
+{
+  "_id": "A7mp265RAErMxFmQ",
+  "name": "Ambush",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/magic/unholy/silhouette-robe-evil-power.webp",
+  "system": {
+    "description": "<p>You are skilled at popping up out of nowhere. When a Mob is moving toward you, even if they are aware of your general presence, make an INT-Opposed Skill Check. On Success, you gain a surprise Action against the Mob before combat starts. As an unseen attacker, you Attack with Advantage.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "If you Attack with your Surprise Action, add an Ambush Rank damage die to your Surprise Attack damage.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "pclxyXQMZbAiLYze",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "When other crawlers in your party roll this skill untrained, they roll as normal (not with Disadvantage).",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "TjO5yGdCLHWgYGG9",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You gain a second bonus Action as a surprise Action. This bonus Action can't be an Attack.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "D9BlYiZuQkbpLCBv",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116369408,
+    "modifiedTime": 1788116369408,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!A7mp265RAErMxFmQ"
+}

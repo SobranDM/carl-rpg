@@ -1,0 +1,63 @@
+{
+  "_id": "6vqYXP9A8QyEZL23",
+  "name": "Stealth",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Use this Skill if you want to move undetected or surprise a Mob. Make an INT-Opposed Skill Check. On Success before combat starts, you are unnoticed and gain 1 non-Attack Action. On Success in a non-combat situation, you remain unnoticed and can perform a Move Action with a 10ft Step as part of this Check.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Your surprise Action can be an Attack with Advantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "When other crawlers in your party roll this Skill untrained, they roll as normal (not with Disadvantage).",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "On a successful Surprise Check, you may also take a full Move and Step. If you Attack with your Surprise Action, deal x2 the base damage dice.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "You must be out of sight of all foes to begin this Check."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!6vqYXP9A8QyEZL23"
+}

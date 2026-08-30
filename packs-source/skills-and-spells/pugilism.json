@@ -1,0 +1,129 @@
+{
+  "_id": "of2HWTEoDWlOpD2a",
+  "name": "Pugilism",
+  "type": "skill",
+  "folder": "0qMmqOaJ47GUExAE",
+  "img": "icons/weapons/fist/boxing-gloves.webp",
+  "system": {
+    "description": "<p>Philistines call it punching. Attack Type: Melee, DEX. AI Favor: 2 (only if no Damage Effect is used). Choose the Dirty Fighting, Iron Punch, or Powerful Strike Damage Effect (if you wish) before rolling to hit.</p><p><strong>Base Damage:</strong> 1d2 + STR Bludgeoning.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d2",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+2d2 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Pugilism",
+            "mode": "add",
+            "value": "2d2",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "iZnOJ5MfohGYnLAQ",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "1cx9vvYcB3NnjTlc",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d2 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Pugilism",
+            "mode": "add",
+            "value": "1d2",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "EFHd7SLOiCUhAFZF",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "RgPNqHe524ZAgxBe",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d2 base damage, and you may make an extra free Attack with Disadvantage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Pugilism",
+            "mode": "add",
+            "value": "1d2",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "ktlvVe44HYMICV72",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "BligdZZW5sbMWcCq",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 2,
+    "cooldown": "",
+    "limitations": "AI Favor 2 only applies if no Damage Effect is used."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115698505,
+    "modifiedTime": 1788115812073,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 150000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!of2HWTEoDWlOpD2a"
+}

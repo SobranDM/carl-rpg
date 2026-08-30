@@ -1,0 +1,87 @@
+{
+  "_id": "9Uer81MzDpqqlfYN",
+  "name": "Warhammer",
+  "type": "skill",
+  "img": "icons/weapons/hammers/hammer-war-gold.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, STR.</p><p><strong>Limitations:</strong> Requires two hands to wield.</p><p><strong>Base Damage:</strong> 1d10 + STR Bludgeoning.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d10",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d10 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Warhammer",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d10 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Warhammer",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d10 base damage, and the target (of your size or smaller) is pushed 15 feet.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Warhammer",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Requires two hands to wield."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!9Uer81MzDpqqlfYN"
+}

@@ -1,0 +1,16 @@
+{{!-- Rendered by CarlDice.rollHeal's chat card (module/dice/dice.mjs) - see
+      module/chat/heal-card.mjs for the button click handlers and GM/owner
+      visibility gating, wired up client-side, not baked into this markup. --}}
+<div class="carl-heal-card">
+  <p class="carl-heal-summary">{{summary}}</p>
+  <div class="carl-heal-actions">
+    <button type="button" class="carl-apply-heal">
+      <i class="fas fa-heart"></i> {{localize "CARLRPG.Heal.ApplyButton"}}
+    </button>
+    {{#if canMend}}
+    <button type="button" class="carl-mend-debuff">
+      <i class="fas fa-band-aid"></i> {{localize "CARLRPG.Heal.MendButton"}}
+    </button>
+    {{/if}}
+  </div>
+</div>

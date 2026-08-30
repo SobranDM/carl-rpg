@@ -1,0 +1,93 @@
+{
+  "_id": "HIk7wEQIgv6i6Wpx",
+  "name": "Diplomacy",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/skills/social/handshake.webp",
+  "system": {
+    "description": "<p>Used in mediation between opposing organizations and parties. Make an INT-Opposed Skill Check of the side with the higher INT Mod. On Success, the two parties are willing to discuss options.</p>",
+    "changes": [],
+    "governingStat": "cha",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Roll with Advantage if you are not a member of either party.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "UU7B3fBMkgSudCTr",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Each side accepts consequences if they break the deal.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "1ZtDkxlX6xBAqXVm",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Hostilities cease at least for the remainder of the day.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "TWRm1Nffj3wdqXtp",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788117194645,
+    "modifiedTime": 1788117194645,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!HIk7wEQIgv6i6Wpx"
+}

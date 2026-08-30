@@ -1,0 +1,23 @@
+{
+  "name": "carl-rpg",
+  "version": "2.1.0",
+  "description": "CSS compiler for the CarlRPG system",
+  "scripts": {
+    "build": "sass src/scss/carl-rpg.scss css/carl-rpg.css --style=expanded --no-source-map",
+    "watch": "sass src/scss/carl-rpg.scss css/carl-rpg.css --style=expanded --source-map --watch",
+    "build:packs": "node tools/build-packs.mjs",
+    "unpack:packs": "node tools/unpack-packs.mjs"
+  },
+  "browserslist": [
+    "last 3 versions"
+  ],
+  "author": "Asacolips",
+  "license": "MIT",
+  "private": true,
+  "devDependencies": {
+    "@foundryvtt/foundryvtt-cli": "^3.0.4",
+    "fvtt-types": "14.366.0-beta.20260825144710",
+    "sass": "^1.93.2",
+    "typescript": "^5.9.3"
+  }
+}

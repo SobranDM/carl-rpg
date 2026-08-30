@@ -1,0 +1,63 @@
+{
+  "_id": "3UeTXpkAMqZEJaIA",
+  "name": "Persuasion",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You have a knack for getting others to see things your way. You typically need about 10 minutes of schmoozing in a safe environment to make a Check with this Skill, and you may suffer Disadvantage if the request is risky, inconvenient, or untoward. Make an INT-Opposed Skill Check. On Success, you convince the target to follow your suggestion if it isn't too costly for them, too dangerous, or against their nature.</p>",
+    "changes": [],
+    "governingStat": "cha",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "They'll follow your suggestion even if it is costly for them.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "They'll follow your suggestion even if it is dangerous.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "They'll follow your suggestion even if it's against their nature.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!3UeTXpkAMqZEJaIA"
+}

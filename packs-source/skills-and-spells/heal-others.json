@@ -1,0 +1,70 @@
+{
+  "_id": "Bi4kSJne8wrIPwFz",
+  "name": "Heal Others",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/heal.svg",
+  "system": {
+    "description": "<p><strong>Limitations:</strong> You can't cast this Spell on yourself, pets, or minions.</p><p>A wave of positive vibes engulfs the target. They heal 1d4 Health Bar slots.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "healDice": "1d4",
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "The target heals 1d6 Health Bar slots.",
+        "changes": [],
+        "healDice": "1d6"
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The target heals 2d6 Health Bar slots.",
+        "changes": [],
+        "healDice": "2d6"
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Instead of a single target, all party members within a 20ft Burst radius are healed.<br><em>Note: this multi-target AoE heal has no structural support (rollHeal only ever heals one snapshotted target) - apply it by hand to each ally in range.</em>",
+        "changes": []
+      }
+    ],
+    "manaCost": 6,
+    "range": "30 feet",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "heal",
+      "interrupt",
+      "passive"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Bi4kSJne8wrIPwFz"
+}

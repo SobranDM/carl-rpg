@@ -1,0 +1,112 @@
+{
+  "_id": "ltuobdTkYNhan4Yd",
+  "name": "Choke Out",
+  "type": "damageEffect",
+  "img": "icons/svg/paralysis.svg",
+  "system": {
+    "description": "<p>Wrasslin' Damage Effect, Passive. If the target is at 10% Health Bar or less, you deal x2 the total damage. Only check the box matching the highest threshold you qualify for (from this effect or its Upgrades) - don't stack multiple multipliers on the same hit.</p>",
+    "changes": [
+      {
+        "targetType": "skillDamage",
+        "target": "Choke Out",
+        "mode": "multiply",
+        "value": "2",
+        "damageDiceKind": "multiplier",
+        "conditions": [
+          {
+            "label": "Target at 10% Health Bar or less?"
+          }
+        ]
+      }
+    ],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Choke Out activates at 20% Health Bar or less.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Choke Out",
+            "mode": "multiply",
+            "value": "2",
+            "damageDiceKind": "multiplier",
+            "conditions": [
+              {
+                "label": "Target at 20% Health Bar or less?"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Choke Out activates at 40% Health Bar or less, and deals x4 the total damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Choke Out",
+            "mode": "multiply",
+            "value": "4",
+            "damageDiceKind": "multiplier",
+            "conditions": [
+              {
+                "label": "Target at 40% Health Bar or less?"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Choke Out activates at 80% Health Bar or less, and deals x8 the total damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Choke Out",
+            "mode": "multiply",
+            "value": "8",
+            "damageDiceKind": "multiplier",
+            "conditions": [
+              {
+                "label": "Target at 80% Health Bar or less?"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "parentSkills": [
+      "Wrasslin'"
+    ],
+    "cooldown": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!ltuobdTkYNhan4Yd"
+}

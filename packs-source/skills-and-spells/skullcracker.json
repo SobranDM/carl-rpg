@@ -1,0 +1,173 @@
+{
+  "_id": "hXMNYf4T2CeL9spJ",
+  "name": "Skullcracker",
+  "type": "damageEffect",
+  "folder": "m4SlnWEY7uAyxRJY",
+  "img": "icons/skills/wounds/injury-face-impact-orange.webp",
+  "system": {
+    "description": "<p>Noggin Nocker Damage Effect, Passive. If the target is the same size as you, gain +1d4 base damage.</p>",
+    "changes": [
+      {
+        "targetType": "skillDamage",
+        "target": "Skullcracker",
+        "mode": "add",
+        "value": "1d4",
+        "damageDiceKind": "base",
+        "conditions": [
+          {
+            "label": "Target the same size as you?"
+          }
+        ]
+      }
+    ],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage if target is the same size as you.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Skullcracker",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "conditions": [
+              {
+                "default": false,
+                "label": "Target the same size as you?",
+                "id": "iATN7wMQ9ngIUmi2"
+              }
+            ],
+            "id": "vzyGW6qfsSiMsrJd"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "irNg9kwURovtnFUH",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "If the target is the same size as you, add 1 Rank damage die, and the target gains the Stunned Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Skullcracker",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie",
+            "damageType": "",
+            "label": "",
+            "conditions": [
+              {
+                "default": false,
+                "label": "Target the same size as you?",
+                "id": "Fhny2hhz08z8hp6C"
+              }
+            ],
+            "id": "M1nTdVN4Ob57mblo"
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "stunned",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "3kWPmZpyyzfLXWHt"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "bKDKgkMuymPOuN6H",
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "If the target is the same size as you, add 1 Rank damage die, and the target gains the Blood Trail Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Skullcracker",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie",
+            "damageType": "",
+            "label": "",
+            "conditions": [
+              {
+                "default": false,
+                "label": "Target the same size as you?",
+                "id": "q9bgnVD4xwjXVtk3"
+              }
+            ],
+            "id": "DUmGObhfDNcR9muO"
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "bloodTrail",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "mVCLgyOslp1iLPTb"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "g8nVorm4mIOcBBdI",
+        "shieldSlots": 0
+      }
+    ],
+    "parentSkills": [
+      "Noggin Nocker"
+    ],
+    "cooldown": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115984117,
+    "modifiedTime": 1788115984117,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!hXMNYf4T2CeL9spJ"
+}

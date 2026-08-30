@@ -1,0 +1,63 @@
+{
+  "_id": "LUCOkhypOu777pRP",
+  "name": "Intimidate",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You can use this Skill to scare the wits out of a foe. Make a CHA-Opposed Skill Check. If either side has attacked or taken a hostile stance in this encounter, roll with Disadvantage. On Success, the target gains the Staggered Debuff.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "On Success or greater, until the end of the next round, the target can only use its remaining Actions to move away from you (though it does not need to use its Step when doing so).",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The target also gains the Woozy Debuff.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The target drops everything they were holding and also gains the Paralyzed Debuff.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!LUCOkhypOu777pRP"
+}

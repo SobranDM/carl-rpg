@@ -1,0 +1,123 @@
+import CarlRPGActorBase from "./actor-base.mjs";
+import { getStatMod } from "../helpers/rules.mjs";
+import { aggregateActorBonuses, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
+
+export default class CarlRPGCharacter extends CarlRPGActorBase {
+
+  static defineSchema() {
+    const fields = foundry.data.fields;
+    const requiredInteger = { required: true, nullable: false, integer: true };
+    const schema = super.defineSchema();
+
+    schema.attributes = new fields.SchemaField({
+      level: new fields.SchemaField({
+        // Levels increase Stats only, never Skills (Crawler Advancement, p. 169).
+        // Current level cap is 250 per the rules.
+        value: new fields.NumberField({ ...requiredInteger, initial: 1, min: 1, max: 250 }),
+      }),
+    });
+
+    // Stat points banked but not yet spent (Third Floor+ requires a saferoom
+    // to distribute Stat points gained from leveling).
+    schema.bankedStatPoints = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
+
+    const statKeys = Object.keys(CONFIG.CARLRPG.stats);
+    const statsSchema = {};
+    for (const stat of statKeys) {
+      statsSchema[stat] = new fields.SchemaField({
+        // Base value - GM/player-editable, NEVER touched by the modifier
+        // engine. `bonus`/`effective`/`mod` are derived-only every
+        // prepareDerivedData pass; mod is computed from effective
+        // (value+bonus), not value alone. `effective` exists purely so the
+        // sheet can show the summed total instead of making the reader do
+        // the arithmetic themselves.
+        value: new fields.NumberField({ ...requiredInteger, initial: 3, min: 1 }),
+        bonus: new fields.NumberField({ ...requiredInteger, initial: 0 }),
+        effective: new fields.NumberField({ ...requiredInteger, initial: 3 }),
+        mod: new fields.NumberField({ ...requiredInteger, initial: 0 }),
+        label: new fields.StringField({ required: true, blank: true }),
+      });
+    }
+    schema.stats = new fields.SchemaField(statsSchema);
+
+    // Active Debuffs/Buffs (Table 11). Resolved through the same modifier
+    // engine as everything else, not a bespoke status-effect system.
+    schema.conditions = new fields.ArrayField(
+      new fields.SchemaField({
+        id: new fields.StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() }),
+        key: new fields.StringField({ required: true, blank: false }), // key into CONFIG.CARLRPG.debuffs, or "custom"
+        label: new fields.StringField({ required: false, blank: true, initial: "" }),
+        stacks: new fields.NumberField({ ...requiredInteger, initial: 1, min: 1 }),
+        remaining: new fields.NumberField({ required: false, nullable: true, integer: true, initial: null }),
+        source: new fields.StringField({ required: false, blank: true, initial: "" }),
+      }),
+      { required: false, initial: [] }
+    );
+
+    return schema;
+  }
+
+  prepareDerivedData() {
+    super.prepareDerivedData();
+    if (!this.stats) return;
+
+    // Aggregate every embedded item's structured `changes`/`upgrades` into
+    // this.skills/this.bonuses/this.conditionalModifiers. This never
+    // mutates this.stats[*].value or other schema-backed fields directly -
+    // see module/helpers/modifiers.mjs for why (base value vs. sheet input
+    // vs. derived/effective value must stay separate fields, or bonuses
+    // silently compound on every save). Note: any `@stats.*.mod` reference
+    // inside a ChangeEntry formula resolves against last pass's mod value
+    // here (mod is computed below, after aggregation) - a one-render-behind
+    // staleness that self-corrects, traded for not needing a two-pass dance.
+    aggregateActorBonuses(this);
+
+    for (const key in this.stats) {
+      if (!this.stats[key]) continue;
+      const bonus = this.bonuses?.[`stats.${key}`] ?? 0;
+      const effective = this.stats[key].value + bonus;
+      this.stats[key].bonus = bonus;
+      this.stats[key].effective = effective;
+      this.stats[key].mod = getStatMod(effective);
+      this.stats[key].label = game.i18n.localize(CONFIG.CARLRPG.stats[key]) ?? key;
+    }
+
+    // Derived resource caps: HB slot value from (effective) CON Mod, HB
+    // effective max = base max + any "hb.max" resource bonus, Mana max 1:1
+    // with INT score plus any "mana.max" resource bonus.
+    this.hb.slotValue = this.stats.con?.mod ?? 0;
+    this.hb.bonusMax = this.bonuses?.["hb.max"] ?? 0;
+    this.hb.effectiveMax = this.hb.max + this.hb.bonusMax;
+    this.mana.max = (this.stats.int?.value ?? 0) + (this.bonuses?.["mana.max"] ?? 0);
+
+    // Shield-style pool (docs/known-gaps.md 1.4): fully derived from
+    // whichever owned toggled spell is currently active - see actor-base.mjs.
+    // The clamp handles a spell being deactivated mid-session, or its Rank
+    // dropping, so the pool visually/mechanically shrinks to match.
+    this.shield.slotValue = this.stats.con?.mod ?? 0;
+    this.shield.effectiveMax = computeActiveShieldSlots(this.parent?.items ? Array.from(this.parent.items) : []);
+    if (this.shield.value > this.shield.effectiveMax) this.shield.value = this.shield.effectiveMax;
+  }
+
+  getRollData() {
+    const data = {};
+
+    if (this.stats) {
+      data.stats = {};
+      for (let [k, v] of Object.entries(this.stats)) {
+        data.stats[k] = foundry.utils.deepClone(v);
+      }
+    }
+
+    if (this.skills) {
+      data.skills = foundry.utils.deepClone(this.skills);
+    }
+
+    data.lvl = this.attributes.level.value;
+    // Floor is a single world-wide value (every crawler is on the same
+    // floor), owned by the GM Toolbox - never stored per-actor.
+    data.floor = game.settings.get("carl-rpg", "currentFloor");
+
+    return data;
+  }
+}

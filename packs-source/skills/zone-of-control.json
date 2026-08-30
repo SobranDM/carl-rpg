@@ -1,0 +1,63 @@
+{
+  "_id": "wD1I6GXI5TJiThPk",
+  "name": "Zone of Control",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Once per round, when an enemy enters a space adjacent to you for the first time, you may perform an Interrupt Attack against them at a cost of one Action. Make the Attack with Disadvantage.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Your Attack is no longer made with Disadvantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The target is pushed 5 feet.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Make your Attack Skill Check with Advantage.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "You must be wielding a Reach weapon."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!wD1I6GXI5TJiThPk"
+}

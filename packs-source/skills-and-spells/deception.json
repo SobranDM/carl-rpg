@@ -1,0 +1,93 @@
+{
+  "_id": "6Uuf7eGr4iRwZAi9",
+  "name": "Deception",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/magic/control/mouth-smile-deception-purple.webp",
+  "system": {
+    "description": "<p>If you know the truth but want to obscure it, this is the Skill for you. When you lie and try to get away with it, make an INT-Opposed Skill Check. If the creature you're lying to has the Detect Lies Skill, you make this Check with Disadvantage. On Success, they believe you!</p>",
+    "changes": [],
+    "governingStat": "cha",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can use this Skill while gambling.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "aB8kgFrtMNfgRHGJ",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can use this Skill to forge documents.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "NgfDSFm61BCrTqsb",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You're good enough to know when you've been caught. If you fail this Check, you may perform one Action before your foes can react.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "NLIW48tEpqKeqKLb",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788117145010,
+    "modifiedTime": 1788117145010,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!6Uuf7eGr4iRwZAi9"
+}

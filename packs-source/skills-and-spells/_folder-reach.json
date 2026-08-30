@@ -1,0 +1,23 @@
+{
+  "type": "Item",
+  "folder": "5xNYxKKJ3KTxXjSE",
+  "name": "Reach",
+  "color": null,
+  "sorting": "a",
+  "_id": "xLI6SYrD060uROfc",
+  "description": "",
+  "sort": 0,
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116199264,
+    "modifiedTime": 1788116199264,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!folders!xLI6SYrD060uROfc"
+}

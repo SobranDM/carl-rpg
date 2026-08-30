@@ -1,0 +1,93 @@
+{
+  "_id": "R8H5sDOBy9ixBKYO",
+  "name": "Cartography",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/sundries/documents/blueprints-teal.webp",
+  "system": {
+    "description": "<p>You probably played some old-school TTRPGs and think that mapping the dungeon will help you in some way. Wrong! It will help you in many ways. Make an Unopposed Skill Check. On Success, you figure out where you are in relation to other things.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can always return from whence you came quickly, assuming the dungeon walls haven't shifted in the meantime.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "tOr3f8Jf9nljhxG2",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You provide an Advantage die to crawlers in your party (could be you) who are making Tracking Skill Checks or Checks that rely on spatial relations.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "SS7zFry2Vi4QYZo7",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Even with merely a finger point or a \"thattaway,\" you can get from point A to point B via the most direct path.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "8J6Q2cHpOQY99Dnx",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116728976,
+    "modifiedTime": 1788116728976,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!R8H5sDOBy9ixBKYO"
+}

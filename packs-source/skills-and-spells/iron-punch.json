@@ -1,0 +1,130 @@
+{
+  "_id": "5sbRVlOngZY83S2L",
+  "name": "Iron Punch",
+  "type": "damageEffect",
+  "folder": "m4SlnWEY7uAyxRJY",
+  "img": "icons/skills/melee/unarmed-punch-fist-blue.webp",
+  "system": {
+    "description": "<p>Pugilism Damage Effect, Passive. You deal +1d2 base damage.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d2",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Add 1 Rank damage die.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Iron Punch",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie",
+            "damageType": "",
+            "label": "",
+            "id": "uCMa7XKjtRtdEm9y",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "0B9U03GaVZjOY4Y1",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You may choose to have the target gain the Stunned Debuff instead of rolling damage.",
+        "targetEffects": [
+          {
+            "debuffKey": "stunned",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "jYrGp28afzMwT35W"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "ExCA6KowZHEdI1Yt",
+        "changes": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Add 1 Rank damage die, and the target gains the Stunned Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Iron Punch",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie",
+            "damageType": "",
+            "label": "",
+            "id": "iVDoaphkxENEfdNq",
+            "conditions": []
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "stunned",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "e4R08G2UrETV5S7V"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "BMDk7dhhse53MvoK",
+        "shieldSlots": 0
+      }
+    ],
+    "parentSkills": [
+      "Pugilism"
+    ],
+    "cooldown": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116022968,
+    "modifiedTime": 1788116022968,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!5sbRVlOngZY83S2L"
+}

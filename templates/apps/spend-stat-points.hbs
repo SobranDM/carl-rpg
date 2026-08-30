@@ -1,0 +1,31 @@
+<div class="carl-spend-stat-points-body">
+  <p class="carl-hint">{{localize "CARLRPG.SpendStatPoints.Hint"}}</p>
+  <div class="carl-spend-stat-points-banked">
+    {{localize "CARLRPG.Actor.BankedStatPoints"}}: <strong>{{bankedStatPoints}}</strong>
+  </div>
+  <div class="carl-spend-stat-points-grid">
+    <div class="carl-spend-stat-points-row carl-spend-stat-points-header">
+      <span></span>
+      <span>{{localize "CARLRPG.SpendStatPoints.Stat"}}</span>
+      <span>{{localize "CARLRPG.SpendStatPoints.Unmodified"}}</span>
+      <span>{{localize "CARLRPG.SpendStatPoints.Modified"}}</span>
+    </div>
+    {{#each stats as |stat|}}
+    <div class="carl-spend-stat-points-row">
+      <div class="carl-spend-stat-points-buttons">
+        <button type="button" data-action="decrementStat" data-key="{{stat.key}}"
+          {{#if stat.atInitial}}disabled{{/if}} title="{{localize 'CARLRPG.SpendStatPoints.Decrement'}}">
+          <i class="fas fa-minus"></i>
+        </button>
+        <button type="button" data-action="incrementStat" data-key="{{stat.key}}"
+          {{#if (lte bankedStatPoints 0)}}disabled{{/if}} title="{{localize 'CARLRPG.SpendStatPoints.Increment'}}">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      <span class="carl-spend-stat-points-label">{{stat.label}}</span>
+      <span class="carl-spend-stat-points-value">{{stat.value}}</span>
+      <span class="carl-spend-stat-points-value">{{stat.effective}}</span>
+    </div>
+    {{/each}}
+  </div>
+</div>

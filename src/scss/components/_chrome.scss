@@ -1,0 +1,39 @@
+// Whole-window chrome: the single biggest lever for reading as a themed
+// sheet rather than default Foundry chrome. `.carl-rpg` is already applied
+// directly by every one of our ApplicationV2 windows (actor sheets, item
+// sheets, and the GM Toolbox alike) via DEFAULT_OPTIONS.classes, and lands
+// on the real application root element - so this mixin, included once at
+// the top level in carl-rpg.scss, covers all three surfaces.
+// Blood-splatter watermark: a hand-authored cluster of irregular droplet
+// shapes, anchored in one corner at low opacity so it reads as background
+// texture rather than decoration. SVG data URIs can't reference CSS custom
+// properties, so the fill is a hardcoded oxblood hex (matching the spirit
+// of --carl-danger, not literally bound to it). Listed first in the
+// `background` shorthand below so it layers on TOP of the opaque --carl-bg
+// gradient - its own shapes are the only opaque-ish parts, everywhere else
+// on the SVG canvas is transparent, letting --carl-bg show through around it.
+$splatter-svg: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cg fill='%235c0f16' opacity='0.4'%3E%3Cpath d='M180,150 C200,145 220,160 225,180 C230,200 215,220 195,225 C175,230 155,220 150,200 C145,180 160,155 180,150 Z'/%3E%3Cpath d='M195,90 C205,85 218,92 220,105 C222,118 210,128 197,125 C185,122 180,108 185,98 C188,93 191,90 195,90 Z'/%3E%3Cellipse cx='140' cy='130' rx='8' ry='6' transform='rotate(-20 140 130)'/%3E%3Cellipse cx='118' cy='102' rx='5' ry='4' transform='rotate(15 118 102)'/%3E%3Cellipse cx='98' cy='78' rx='3.5' ry='3'/%3E%3Ccircle cx='75' cy='58' r='2.2'/%3E%3Ccircle cx='60' cy='40' r='1.5'/%3E%3C/g%3E%3C/svg%3E";
+
+@mixin styles {
+  background: url("#{$splatter-svg}") no-repeat bottom right / 220px 220px, var(--carl-bg);
+  color: var(--carl-text);
+  border-color: var(--carl-border-soft);
+
+  .window-header {
+    background: var(--carl-header-bg);
+    color: var(--carl-header-text);
+  }
+
+  // Foundry's core CSS gives h1-h5 their own display font/size/color
+  // (var(--font-h1..h5), var(--font-h1-size..h5-size)) meant for document-
+  // style content - overriding it here so headings used as plain UI labels
+  // (item names under Skills/Spells, "Rank 5" strings, etc.) match our own
+  // Roboto typography and surrounding context size instead of jumping out
+  // in a different, larger display face. Margins are left alone - several
+  // components already reset those where needed (e.g. .item-name h3/h4).
+  h1, h2, h3, h4, h5 {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+}

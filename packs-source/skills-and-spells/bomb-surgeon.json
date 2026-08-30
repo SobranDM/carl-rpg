@@ -1,0 +1,93 @@
+{
+  "_id": "j74B0Ag5ePOwHXaA",
+  "name": "Bomb Surgeon",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/weapons/ammunition/explosive-charge-timer.webp",
+  "system": {
+    "description": "<p>Use this Skill to deconstruct explosive bombs and smoke bombs. You can then use the half-sized bomb, or use the component parts to craft new bombs using other Skills. If you are using a Sapper's Table, you do not have to make an Unopposed Explosives Handling Skill Check to avoid a mishap. Time required is 1 hour. Make an Unopposed Skill Check. On Success, you have deconstructed it.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Time required is 30 minutes.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "Dc1yGkgK5KUnfrN5",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You never have to make an Explosives Handling Skill Check when using this skill.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "ceJeh5IKZbIagR6O",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "When cutting dynamite in half to make smaller bombs, round dice up. Time required is 15 minutes.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "Eptz8qkonSdV6guH",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116600847,
+    "modifiedTime": 1788116600847,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!j74B0Ag5ePOwHXaA"
+}

@@ -1,0 +1,103 @@
+{
+  "_id": "bB3kQEZTqUMLg7eX",
+  "name": "Dirt Clod",
+  "type": "spell",
+  "img": "icons/svg/hazard.svg",
+  "system": {
+    "description": "<p>You hurl a magical clod of dirt, leaving dirt and pebbles strewn about near the target. AI Favor: 2.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d2",
+      "stat": "int",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+2d2 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Dirt Clod",
+            "mode": "add",
+            "value": "2d2",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d2 base damage, and the target gains the Woozy Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Dirt Clod",
+            "mode": "add",
+            "value": "1d2",
+            "damageDiceKind": "base"
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "woozy",
+            "stacks": 1,
+            "critOnly": false
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d2 base damage, and add 1 Rank damage die.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Dirt Clod",
+            "mode": "add",
+            "value": "1d2",
+            "damageDiceKind": "base"
+          },
+          {
+            "targetType": "skillDamage",
+            "target": "Dirt Clod",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie"
+          }
+        ]
+      }
+    ],
+    "manaCost": 1,
+    "range": "100 feet",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "attack"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!bB3kQEZTqUMLg7eX"
+}

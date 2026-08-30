@@ -1,0 +1,63 @@
+{
+  "_id": "8BizVUeTZCtTH35H",
+  "name": "Backfire",
+  "type": "skill",
+  "img": "icons/svg/explosion.svg",
+  "system": {
+    "description": "<p>You are skilled at neutralizing and deconstructing traps without the use of a Sapper's Table. Triggering mechanisms are quite valuable. Time required to neutralize a trap is 10 minutes. Time required to deconstruct it is 1 hour. Make an Unopposed Skill Check. On Success, you successfully take apart the trap and can repurpose it.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can identify when the trap was placed. Time required to neutralize a trap is 5 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can identify when the trap was created. Time required to deconstruct a trap is 30 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You can identify the designer of the trap. Time required to deconstruct a trap is 15 minutes.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Compensated Anarchist Class Only"
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!8BizVUeTZCtTH35H"
+}

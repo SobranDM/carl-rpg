@@ -1,0 +1,93 @@
+{
+  "_id": "rntY42IC9gakv8dG",
+  "name": "Cockroach",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/creatures/invertebrates/beetle-stag-tan-brown.webp",
+  "system": {
+    "description": "<p>When an Attack would drop you to 0% Health Bar, roll an Unopposed Skill Check. On Success, drop to 10% instead.</p>",
+    "changes": [],
+    "governingStat": "con",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "No Skill Check required anymore.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "pmi3GMeciQOyIUmN",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The crawler's Health Bar is unaffected by damage that would drop them to 0%.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "rxEA6d7CXMxo8M6U",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Cooldown is twice per scene. When it triggers, the crawler heals to 100% and has +Rank DR until the end of the next round of combat.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "yzENSlFnhlSYJVKs",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "Once per scene",
+    "limitations": "This Limited Skill can only be learned via a Race, Class, or item. Mark the skill for advancement until you reach Rank 5. After that, Ranks in this Skill only increase by magical means and training."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788117017426,
+    "modifiedTime": 1788117017426,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!rntY42IC9gakv8dG"
+}

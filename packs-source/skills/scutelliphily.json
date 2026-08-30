@@ -1,0 +1,63 @@
+{
+  "_id": "bfrOQ4YptOPhS66a",
+  "name": "Scutelliphily",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You know your way around patches and love collecting them. Make an Unopposed Skill Check. On Success, you are able to identify a patch and its bonus level, if any.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can sew and iron patches onto clothing using this Skill.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You may use this as a crafting Skill, but crafting tables provide no bonuses. Enchanted patches are limited to one per Gear slot and do not take up Accessory slots.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Your crafting Checks take half the time. Increase the bonus value of your enchantments with this Skill by 1, at no additional Difficulty or time to craft.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "This Limited Skill can only be learned via a Race, Class, or item."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!bfrOQ4YptOPhS66a"
+}

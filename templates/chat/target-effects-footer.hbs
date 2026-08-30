@@ -1,0 +1,16 @@
+{{!-- Rendered only when an Attack roll's hit collected at least one
+      targetEffect (see module/dice/dice.mjs's CarlDice.rollAttack and
+      module/chat/target-effects-card.mjs). The button's click handler and
+      GM/owner visibility gating are wired up client-side by
+      registerTargetEffectsChatListener, not baked into this markup. --}}
+<div class="carl-target-effects">
+  <div class="carl-target-effects-list">
+    <span class="carl-target-effects-label">{{localize "CARLRPG.TargetEffects.WillApply"}}</span>
+    {{#each effects}}
+    <span class="carl-target-effect-pill">{{this.displayLabel}} &times;{{this.stacks}}</span>
+    {{/each}}
+  </div>
+  <button type="button" class="carl-apply-target-effects">
+    <i class="fas fa-band-aid"></i> {{localize "CARLRPG.TargetEffects.ApplyButton"}}
+  </button>
+</div>

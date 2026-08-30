@@ -1,0 +1,19 @@
+{{!-- Rendered only when an Attack roll's hit produced at least one nonzero
+      damage-type subtotal (see module/dice/dice.mjs's CarlDice.rollAttack
+      and module/chat/damage-card.mjs). Pills show the RAW rolled subtotal
+      per type - DR/Resistance/Vulnerability/Immunity are only computed when
+      Apply Damage is actually clicked, against the target's live state, so
+      no reduced number is shown here ahead of time. The button's click
+      handler and GM/owner visibility gating are wired up client-side by
+      registerDamageChatListener, not baked into this markup. --}}
+<div class="carl-damage-card">
+  <div class="carl-damage-portions">
+    <span class="carl-damage-label">{{localize "CARLRPG.Damage.WillApply"}}</span>
+    {{#each portions}}
+    <span class="carl-damage-pill">{{this.amount}} {{this.label}}</span>
+    {{/each}}
+  </div>
+  <button type="button" class="carl-apply-damage">
+    <i class="fas fa-heart-crack"></i> {{localize "CARLRPG.Damage.ApplyButton"}}
+  </button>
+</div>

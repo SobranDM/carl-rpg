@@ -1,0 +1,63 @@
+{
+  "_id": "zOkvQiTCNuwfCyIy",
+  "name": "Escape Plan",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Your HUD reveals hidden doors and passages, unless those passages were crafted by someone with more Ranks in Fabricate or Engineering than you have in this Skill or the passage is entirely natural.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You have access to system-concealed displays and the Dungeon Locator. Holographic signs pop up in your HUD, displaying insider information like signs at a zoo. Includes arrows toward City and stronger Bosses.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You are able to read hidden sigils (glowing blue circles) used by the showrunners to direct the movement of Mobs.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You are able to read hidden messages and redactions in dungeon documents.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Ranks in this Skill only advance by magical means."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!zOkvQiTCNuwfCyIy"
+}

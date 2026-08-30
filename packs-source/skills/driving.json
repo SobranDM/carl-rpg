@@ -1,0 +1,63 @@
+{
+  "_id": "lmLQx7rogvZu9qt4",
+  "name": "Driving",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You don't need this Skill if you're casually driving down the road to pick up a quart of milk, but if you're racing, chasing, showing off, or doing something dangerous in a vehicle, this is the Skill you want. If you're doing something wild or trying to avoid becoming a skid mark on the highway, make an Unopposed Skill Check. Depending on how extreme the circumstances are, the GM may apply Advantage or Disadvantage to the Check. On Success, you achieve your daredevil maneuver or avoid wrecking your vehicle.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You no longer suffer Disadvantage when attacking while Driving.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Your vehicle has +5ft Move. Roll with Advantage to Evade Attacks against your vehicle.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Your vehicle has +5ft Move. When performing crazy stunts (like driving on only your left-side wheels), roll with Advantage.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "If you Attack while Driving, you suffer Disadvantage on those Checks."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!lmLQx7rogvZu9qt4"
+}

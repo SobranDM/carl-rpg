@@ -1,0 +1,87 @@
+{
+  "_id": "FMRpDJvsREwW4q4h",
+  "name": "Quarterstaff",
+  "type": "skill",
+  "folder": "xLI6SYrD060uROfc",
+  "img": "icons/weapons/staves/staff-simple.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, STR. Range: 10 feet.</p><p><strong>Limitations:</strong> Requires two hands to wield.</p><p><strong>Base Damage:</strong> 1d6 + STR Bludgeoning.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d6",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d6 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Quarterstaff",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d6 base damage, and you gain a +1 Evade Buff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Quarterstaff",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d6 base damage, and you gain a +1 Evade Buff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Quarterstaff",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "10 feet",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Requires two hands to wield."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": 1788116203524,
+    "modifiedTime": 1788116203524,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 150000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!FMRpDJvsREwW4q4h"
+}

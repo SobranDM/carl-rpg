@@ -1,0 +1,113 @@
+{
+  "_id": "mK52l4gB8AAiWOCw",
+  "name": "Magic Missile",
+  "type": "spell",
+  "img": "icons/svg/lightning.svg",
+  "system": {
+    "description": "<p><em>\"Standard Spell detected. Viewers appreciate the nostalgia.\"</em></p><p>From glowing eyes, fingers, or whatever, a streak of pure force shoots out. AI Favor: 1.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "int",
+      "damageType": "force"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage, and you can cast the Spell at a higher or lower Mana cost (see Mana Cost Variants below): 3 Mana: -4 damage. 4 Mana: -2 damage. 6 Mana: Add 1 Rank damage die.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Magic Missile",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage, and the missiles deal Force and Fire damage, split evenly. The target gains the Burned Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Magic Missile",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "burned",
+            "stacks": 1,
+            "critOnly": false
+          }
+        ],
+        "damageTypes": [
+          "force",
+          "fire"
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "This attack deals base damage x3.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Magic Missile",
+            "mode": "multiply",
+            "value": "3",
+            "damageDiceKind": "multiplier"
+          }
+        ]
+      }
+    ],
+    "manaCost": 5,
+    "range": "Within your line of sight",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "attack"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": [
+      {
+        "manaCost": 3,
+        "description": "-4 damage"
+      },
+      {
+        "manaCost": 4,
+        "description": "-2 damage"
+      },
+      {
+        "manaCost": 6,
+        "description": "Add 1 Rank damage die"
+      }
+    ]
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!mK52l4gB8AAiWOCw"
+}

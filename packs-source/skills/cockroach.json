@@ -1,0 +1,63 @@
+{
+  "_id": "rntY42IC9gakv8dG",
+  "name": "Cockroach",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>When an Attack would drop you to 0% Health Bar, roll an Unopposed Skill Check. On Success, drop to 10% instead.</p>",
+    "changes": [],
+    "governingStat": "con",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "No Skill Check required anymore.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The crawler's Health Bar is unaffected by damage that would drop them to 0%.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Cooldown is twice per scene. When it triggers, the crawler heals to 100% and has +Rank DR until the end of the next round of combat.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "Once per scene",
+    "limitations": "This Limited Skill can only be learned via a Race, Class, or item. Mark the skill for advancement until you reach Rank 5. After that, Ranks in this Skill only increase by magical means and training."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!rntY42IC9gakv8dG"
+}

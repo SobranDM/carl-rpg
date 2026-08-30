@@ -1,0 +1,87 @@
+{
+  "_id": "JHtJIcgdOqNJkrBk",
+  "name": "Lance",
+  "type": "skill",
+  "img": "icons/weapons/polearms/lance-jousting-yellow.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, STR. Range: 10 feet.</p><p><strong>Limitations:</strong> Must be mounted to use. Cannot be used in conjunction with Attack of Opportunity or Zone of Control Skills.</p><p><strong>Base Damage:</strong> 1d12 + STR Piercing.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d12",
+      "stat": "str",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d12 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Lance",
+            "mode": "add",
+            "value": "1d12",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d12 base damage, and +1 damage for every 10 feet your mount Moved this turn.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Lance",
+            "mode": "add",
+            "value": "1d12",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d12 base damage, and +X damage, where X is the size of your mount.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Lance",
+            "mode": "add",
+            "value": "1d12",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "10 feet",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Must be mounted to use. Cannot be used in conjunction with Attack of Opportunity or Zone of Control Skills."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!JHtJIcgdOqNJkrBk"
+}

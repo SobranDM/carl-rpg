@@ -1,0 +1,122 @@
+{{!-- Shared Rank/Upgrades block for Skill, Spell, and Damage Effect item
+      sheets - all three follow the book's "Rank 5/10/15 Upgrades" pattern. --}}
+<div class="carl-field-grid">
+  <div>
+    <label class="resource-label">{{localize "CARLRPG.Ranked.GoverningStat"}}</label>
+    <select class="carl-w-medium" name="system.governingStat">
+      <option value=""></option>
+      {{selectOptions config.stats selected=system.governingStat localize=true}}
+    </select>
+  </div>
+  <div>
+    <label class="resource-label">{{localize "CARLRPG.Ranked.Rank"}}</label>
+    <input type="text" class="carl-w-tiny" name="system.rank" value="{{system.rank}}" data-dtype="Number" />
+  </div>
+  <div>
+    <label class="resource-label">{{localize "CARLRPG.Ranked.Marked"}}</label>
+    <input type="checkbox" name="system.marked" {{checked system.marked}} />
+  </div>
+  <div>
+    <label class="resource-label">{{localize "CARLRPG.Ranked.AdvancementGate"}}</label>
+    <select class="carl-w-medium" name="system.advancementGate">
+      {{selectOptions config.advancementGates selected=system.advancementGate localize=true}}
+    </select>
+  </div>
+</div>
+{{#if canRollAdvancement}}
+<button type="button" class="carl-roll-advancement" data-action="rollAdvancement">
+  <i class="fas fa-dice-d20"></i> {{localize "CARLRPG.Ranked.RollAdvancement"}}
+</button>
+{{/if}}
+
+<fieldset class="carl-base-damage">
+  <legend>{{localize "CARLRPG.Ranked.BaseDamage"}}</legend>
+  <div class="carl-field-grid">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.BaseDamageDice"}}</label>
+      <input type="text" class="carl-w-short" name="system.baseDamage.dice" value="{{system.baseDamage.dice}}" placeholder="1d4" />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.BaseDamageStat"}}</label>
+      <select class="carl-w-short" name="system.baseDamage.stat">
+        <option value=""></option>
+        {{selectOptions config.stats selected=system.baseDamage.stat localize=true}}
+      </select>
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.BaseDamageType"}}</label>
+      <select class="carl-w-short" name="system.baseDamage.damageType">
+        <option value=""></option>
+        {{selectOptions config.damageTypes selected=system.baseDamage.damageType localize=true}}
+      </select>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="carl-base-heal">
+  <legend>{{localize "CARLRPG.Ranked.Heal"}}</legend>
+  <div class="carl-field-grid">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.HealDice"}}</label>
+      <input type="text" class="carl-w-short" name="system.healDice" value="{{system.healDice}}" placeholder="1d4" />
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="carl-upgrades">
+  <legend>{{localize "CARLRPG.Ranked.Upgrades"}}</legend>
+  {{#each system.upgrades as |upgrade uIndex|}}
+  <div class="carl-upgrade-tier">
+    <div class="carl-upgrade-tier-header flexrow">
+      <select class="carl-w-short" name="{{concat 'system.upgrades.' uIndex '.rankThreshold'}}" data-dtype="Number">
+        <option value="5" {{#if (eq upgrade.rankThreshold 5)}}selected{{/if}}>{{localize "CARLRPG.Ranked.Rank5"}}</option>
+        <option value="10" {{#if (eq upgrade.rankThreshold 10)}}selected{{/if}}>{{localize "CARLRPG.Ranked.Rank10"}}</option>
+        <option value="15" {{#if (eq upgrade.rankThreshold 15)}}selected{{/if}}>{{localize "CARLRPG.Ranked.Rank15"}}</option>
+      </select>
+      <a class="item-control" data-action="deleteArrayItem" data-path="system.upgrades" data-index="{{uIndex}}"
+        title="{{localize 'CARLRPG.Ranked.RemoveUpgrade'}}">
+        <i class="fas fa-trash"></i>
+      </a>
+    </div>
+    <textarea name="{{concat 'system.upgrades.' uIndex '.description'}}"
+      class="carl-upgrade-description">{{upgrade.description}}</textarea>
+    {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
+      changes=upgrade.changes path=(concat "system.upgrades." uIndex ".changes") config=../config
+      item=../item actorSkillNames=../actorSkillNames}}
+    {{> "systems/carl-rpg/templates/item/parts/target-effects-editor.hbs"
+      targetEffects=upgrade.targetEffects path=(concat "system.upgrades." uIndex ".targetEffects") config=../config}}
+    <div class="carl-field-grid carl-upgrade-damage-split">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Ranked.DamageTypeSplit"}}</label>
+        <select class="carl-w-short" name="{{concat 'system.upgrades.' uIndex '.damageTypes.0'}}">
+          <option value=""></option>
+          {{selectOptions ../config.damageTypes selected=(lookup upgrade.damageTypes 0) localize=true}}
+        </select>
+        <select class="carl-w-short" name="{{concat 'system.upgrades.' uIndex '.damageTypes.1'}}">
+          <option value=""></option>
+          {{selectOptions ../config.damageTypes selected=(lookup upgrade.damageTypes 1) localize=true}}
+        </select>
+      </div>
+    </div>
+    <div class="carl-field-grid carl-upgrade-heal">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Ranked.HealDice"}}</label>
+        <input type="text" class="carl-w-short" name="{{concat 'system.upgrades.' uIndex '.healDice'}}"
+          value="{{upgrade.healDice}}" placeholder="1d6" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Ranked.HealToFull"}}</label>
+        <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.healToFull'}}" {{checked upgrade.healToFull}} />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Ranked.HealMend"}}</label>
+        <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.healMend'}}" {{checked upgrade.healMend}} />
+      </div>
+    </div>
+  </div>
+  {{/each}}
+  <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.upgrades"
+    data-template='{"rankThreshold":5,"description":"","changes":[]}'>
+    <i class="fas fa-plus"></i> {{localize "CARLRPG.Ranked.AddUpgrade"}}
+  </a>
+</fieldset>

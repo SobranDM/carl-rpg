@@ -1,0 +1,23 @@
+{
+  "type": "Item",
+  "folder": "5xNYxKKJ3KTxXjSE",
+  "name": "Hand-to-Hand",
+  "color": null,
+  "sorting": "a",
+  "_id": "0qMmqOaJ47GUExAE",
+  "description": "",
+  "sort": 500000,
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115685130,
+    "modifiedTime": 1788115882713,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!folders!0qMmqOaJ47GUExAE"
+}

@@ -1,0 +1,115 @@
+{
+  "_id": "tfCR8RMio6cwCXyO",
+  "name": "Dirty Fighting",
+  "type": "damageEffect",
+  "folder": "m4SlnWEY7uAyxRJY",
+  "img": "icons/skills/wounds/injury-eyes-blood-red-pink.webp",
+  "system": {
+    "description": "<p>Pugilism or Wrasslin' Damage Effect, Passive. You use underhanded tactics to win fights and cause a different kind of harm to your opponents. If the Attack Skill Check is a Critical Fail, lose 1 Popularity. Apply the Woozy Debuff to the target.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Also apply The Taint Debuff to the target.",
+        "targetEffects": [
+          {
+            "debuffKey": "theTaint",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "xNgOjUG9p1X2VEIN"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "5QXbUfoMDIfDRmI5",
+        "changes": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Also apply the Blinded Debuff to the target. You no longer lose Popularity on Critical Fails.",
+        "targetEffects": [
+          {
+            "debuffKey": "blinded",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "PPntx8aaTPubqgqR"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "0Oz8BV6q1OWAV301",
+        "changes": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Also apply an immediate Minor Injury Debuff to the target.",
+        "targetEffects": [
+          {
+            "debuffKey": "minorInjury",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "0mhhsTwB2mEyFZ5t"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "DpiyW3alN6EXIVXp",
+        "changes": [],
+        "shieldSlots": 0
+      }
+    ],
+    "parentSkills": [
+      "Pugilism",
+      "Wrasslin'"
+    ],
+    "cooldown": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116091989,
+    "modifiedTime": 1788116091989,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!tfCR8RMio6cwCXyO"
+}

@@ -1,0 +1,131 @@
+{{!-- Shared ChangeEntry array editor. Invoke with `changes` (the array) and
+      `path` (the dotted path to that array, e.g. "system.changes" or
+      "system.upgrades.0.changes") - used for item-base's universal `changes`
+      and for each Upgrade tier's `changes`, so gear/features/skills/spells/
+      damage effects all share one editor. Add/remove use generic
+      data-action="addArrayItem"/"deleteArrayItem" handlers keyed by
+      data-path (+ data-index for delete), so no per-field-type JS is needed.
+
+      Context-depth note: Handlebars does NOT auto-walk up to a parent
+      context for a bare {{name}} - only `../` does that. `path`/`config`/
+      `item`/`actorSkillNames` are hash params on THIS partial's own
+      top-level context, so any reference to them from inside
+      {{#each changes}} needs `../`, and from inside the nested
+      {{#each change.conditions}} needs `../../` (one more level up). Every
+      `path`/`config`/`item` reference below must use the depth matching
+      where it sits, or the generated field `name` silently loses its
+      "system.changes." prefix (`expandObject` then builds a stray `{"":
+      {"0": {...}}}` key instead of updating the real array - the update
+      still "succeeds" with no error, it just never reaches the document). --}}
+<div class="carl-changes-editor">
+  {{#each changes as |change cIndex|}}
+  <div class="carl-change-row">
+    <fieldset class="carl-change-group">
+      <legend>{{localize "CARLRPG.Change.TargetGroup"}}</legend>
+      <div class="carl-change-fields-2col">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Change.TargetType"}}</label>
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.targetType'}}">
+            {{selectOptions ../config.changeTargetTypes selected=change.targetType localize=true}}
+          </select>
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Change.Target"}}</label>
+          {{#if (eq change.targetType "stat")}}
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.target'}}">
+            <option value=""></option>
+            {{selectOptions ../config.stats selected=change.target localize=true}}
+          </select>
+          {{else if (eq change.targetType "resource")}}
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.target'}}">
+            <option value=""></option>
+            {{selectOptions ../config.resourceTargets selected=change.target localize=true}}
+          </select>
+          {{else if (eq change.targetType "rollMode")}}
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.target'}}">
+            <option value=""></option>
+            {{selectOptions ../config.rollModeTargets selected=change.target localize=true}}
+          </select>
+          {{else if (or (eq change.targetType "skillRank") (eq change.targetType "skillDamage"))}}
+          <input type="text" class="carl-w-full" list="carl-skill-target-list-{{../item.id}}"
+            name="{{concat ../path '.' cIndex '.target'}}" value="{{change.target}}"
+            placeholder="{{localize 'CARLRPG.Change.TargetSkillPlaceholder'}}" />
+          {{else}}
+          <input type="text" class="carl-w-full" name="{{concat ../path '.' cIndex '.target'}}" value="{{change.target}}"
+            placeholder="{{localize 'CARLRPG.Change.TargetCustomPlaceholder'}}" />
+          {{/if}}
+        </div>
+      </div>
+    </fieldset>
+    <fieldset class="carl-change-group">
+      <legend>{{localize "CARLRPG.Change.EffectGroup"}}</legend>
+      <div class="carl-change-fields-2col">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Change.Mode"}}</label>
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.mode'}}">
+            {{selectOptions ../config.changeModes selected=change.mode localize=true}}
+          </select>
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Change.Value"}}</label>
+          <input type="text" class="carl-w-full" name="{{concat ../path '.' cIndex '.value'}}" value="{{change.value}}" placeholder="1d4" />
+        </div>
+        {{#if (eq change.targetType "skillDamage")}}
+        <div class="carl-change-field-full">
+          <label class="resource-label">{{localize "CARLRPG.Change.DamageDiceKind"}}</label>
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.damageDiceKind'}}">
+            <option value=""></option>
+            {{selectOptions ../config.damageDiceKinds selected=change.damageDiceKind localize=true}}
+          </select>
+        </div>
+        <div class="carl-change-field-full">
+          <label class="resource-label">{{localize "CARLRPG.Change.DamageType"}}</label>
+          <select class="carl-w-full" name="{{concat ../path '.' cIndex '.damageType'}}">
+            <option value=""></option>
+            {{selectOptions ../config.damageTypes selected=change.damageType localize=true}}
+          </select>
+        </div>
+        {{/if}}
+      </div>
+    </fieldset>
+    <div class="carl-change-row-meta flexrow">
+      <input type="text" class="carl-change-label" name="{{concat ../path '.' cIndex '.label'}}" value="{{change.label}}"
+        placeholder="{{localize 'CARLRPG.Change.LabelPlaceholder'}}" />
+      <a class="item-control" data-action="deleteArrayItem" data-path="{{../path}}" data-index="{{cIndex}}"
+        title="{{localize 'CARLRPG.Change.Remove'}}">
+        <i class="fas fa-trash"></i>
+      </a>
+    </div>
+    <div class="carl-conditions-editor">
+      {{#each change.conditions as |cond condIndex|}}
+      <div class="carl-condition-row flexrow">
+        <input type="checkbox" name="{{concat ../../path '.' cIndex '.conditions.' condIndex '.default'}}"
+          {{checked cond.default}} title="{{localize 'CARLRPG.Change.DefaultChecked'}}" />
+        <input type="text" name="{{concat ../../path '.' cIndex '.conditions.' condIndex '.label'}}" value="{{cond.label}}"
+          placeholder="{{localize 'CARLRPG.Change.ConditionPlaceholder'}}" />
+        <a class="item-control" data-action="deleteArrayItem"
+          data-path="{{concat ../../path '.' cIndex '.conditions'}}" data-index="{{condIndex}}">
+          <i class="fas fa-times"></i>
+        </a>
+      </div>
+      {{/each}}
+      <a class="item-control carl-add-link" data-action="addArrayItem"
+        data-path="{{concat ../path '.' cIndex '.conditions'}}" data-template="{}">
+        <i class="fas fa-plus"></i> {{localize "CARLRPG.Change.AddCondition"}}
+      </a>
+    </div>
+  </div>
+  {{/each}}
+  <a class="item-control carl-add-link" data-action="addArrayItem" data-path="{{path}}" data-template="{}">
+    <i class="fas fa-plus"></i> {{localize "CARLRPG.Change.AddChange"}}
+  </a>
+  {{!-- Autocomplete suggestions for Skill Rank/Skill Damage targets above -
+        Skill/Spell/Damage Effect names are homebrew with no master list, so
+        this is a convenience list (the current actor's owned items, empty
+        for an unowned/compendium item), never a closed set. --}}
+  <datalist id="carl-skill-target-list-{{item.id}}">
+    {{#each actorSkillNames as |name|}}
+    <option value="{{name}}"></option>
+    {{/each}}
+  </datalist>
+</div>

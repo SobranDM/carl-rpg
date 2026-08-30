@@ -1,0 +1,42 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="conditions">
+  <div class="carl-add-condition flexrow">
+    <select class="carl-w-medium" name="newConditionKey">
+      <option value="custom">{{localize "CARLRPG.Condition.Custom"}}</option>
+      {{selectOptions config.debuffs localize=true}}
+    </select>
+    <a class="item-control" data-action="addCondition">
+      <i class="fas fa-plus"></i> {{localize "CARLRPG.Condition.Add"}}
+    </a>
+  </div>
+
+  <ol class="items-list carl-conditions-list">
+    <li class="item flexrow items-header">
+      <div class="item-name">{{localize "CARLRPG.Condition.Label"}}</div>
+      <div class="item-prop">{{localize "CARLRPG.Condition.Stacks"}}</div>
+      <div class="item-prop">{{localize "CARLRPG.Condition.Remaining"}}</div>
+      <div class="item-prop">{{localize "CARLRPG.Condition.Source"}}</div>
+      <div class="item-controls"></div>
+    </li>
+    {{#each system.conditions as |condition index|}}
+    <li class="item flexrow">
+      <div class="item-name">
+        <input type="text" name="{{concat 'system.conditions.' index '.label'}}" value="{{condition.label}}" />
+      </div>
+      <div class="item-prop">
+        <input type="text" class="carl-w-tiny" name="{{concat 'system.conditions.' index '.stacks'}}" value="{{condition.stacks}}" data-dtype="Number" />
+      </div>
+      <div class="item-prop">
+        <input type="text" class="carl-w-tiny" name="{{concat 'system.conditions.' index '.remaining'}}" value="{{condition.remaining}}" data-dtype="Number" />
+      </div>
+      <div class="item-prop">
+        <input type="text" class="carl-w-medium" name="{{concat 'system.conditions.' index '.source'}}" value="{{condition.source}}" />
+      </div>
+      <div class="item-controls">
+        <a class="item-control" data-action="deleteArrayItem" data-path="system.conditions" data-index="{{index}}">
+          <i class="fas fa-trash"></i>
+        </a>
+      </div>
+    </li>
+    {{/each}}
+  </ol>
+</section>

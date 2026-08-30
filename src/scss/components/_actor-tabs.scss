@@ -1,0 +1,16 @@
+// Stats column styling now lives in components/_abilities.scss (the merged
+// Abilities tab superseded the old standalone .carl-stats grid layout).
+// This file keeps only what's still specific to the Conditions tab.
+@mixin styles {
+  .carl-add-condition {
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .carl-conditions-list {
+    .item-name input[type="text"] {
+      width: 100%;
+    }
+  }
+}

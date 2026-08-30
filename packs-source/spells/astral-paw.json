@@ -1,0 +1,82 @@
+{
+  "_id": "j3CleJa3VuHhh5r3",
+  "name": "Astral Paw",
+  "type": "spell",
+  "img": "icons/svg/aura.svg",
+  "system": {
+    "description": "<p><strong>Also known as:</strong> Astral Hand, Astral Claw.</p><p>You conjure a spectral hand, paw, or claw, looking much like your own. You can use this astral appendage to manipulate objects up to 30ft away by spending an Action. You can use the Astral Paw to make Skill Checks but suffer Disadvantage due to a lack of fine control.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Your Pugilism and Slice Attacks with the Paw add 1 Astral Paw Rank damage die.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Pugilism",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie",
+            "label": "Astral Paw"
+          },
+          {
+            "targetType": "skillDamage",
+            "target": "Slice Attack",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie",
+            "label": "Astral Paw"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can conjure a paw up to four size categories larger than your own, and the range increases to 50 feet.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The caster no longer suffers Disadvantage when performing suitable Skill Checks using the paw, and the duration is 15 minutes.",
+        "changes": []
+      }
+    ],
+    "manaCost": 12,
+    "range": "30 feet",
+    "duration": "Until the end of combat or 5 minutes.",
+    "cooldown": "",
+    "castingKeywords": [
+      "passive"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!j3CleJa3VuHhh5r3"
+}

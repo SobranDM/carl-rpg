@@ -1,0 +1,93 @@
+{
+  "_id": "DWLBTknXIJqQ57Or",
+  "name": "Climbing",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/sundries/survival/rope-coiled-brown.webp",
+  "system": {
+    "description": "<p>You don't need to use this Skill if you're climbing up a narrow flight of stairs. Probably not even when you're fully roped in and tethered to other climbers. But if you're racing, chasing, rappelling from a burning building, or doing something dangerous while climbing, this is the Skill you want.</p><p>Make an Unopposed Skill Check every minute (not round). Depending on how extreme the circumstances are, the GM may apply Advantage (such as if you've previously already climbed it) or Disadvantage (you got no ropes) to the Check. On Success, you are safe in your climb and make progress.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Make a Check every 5 minutes.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "fzEsiMdFPjvS5pZl",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Make a Check every 10 minutes. You no longer Attack with Disadvantage while climbing.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "ZoyKpkPyMasJyQ6s",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Make a Check every 15 minutes. When other crawlers in your party roll this skill untrained, they roll as normal (not with Disadvantage).",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "NrDOonzYChRh7RGi",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "If you Attack while Climbing, you suffer Disadvantage on those Checks."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116883670,
+    "modifiedTime": 1788116902245,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!DWLBTknXIJqQ57Or"
+}

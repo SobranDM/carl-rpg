@@ -1,0 +1,175 @@
+@use '../utils/variables' as *;
+
+@mixin styles {
+  // Whole-section drawers (Skills+DamageEffects, Spells) on the merged
+  // Abilities tab. Caret rotation mirrors the foundryvtt-wwn sibling
+  // system's collapsible-section pattern; unlike WWN's instant
+  // display:none snap, the body itself animates open/closed via the CSS
+  // grid 1fr/0fr row trick, which smoothly animates to/from intrinsic
+  // height with no JS height measurement needed.
+  .carl-drawer {
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
+    margin-bottom: $padding-md;
+    overflow: hidden;
+
+    .carl-drawer-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px $padding-md;
+      cursor: pointer;
+      user-select: none;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 12px;
+      color: var(--carl-header-text);
+      background: var(--carl-header-bg);
+    }
+
+    .carl-drawer-caret {
+      flex: 0 0 auto;
+      transition: transform 0.15s ease;
+    }
+
+    // Spells drawer only (see abilities.hbs) - Mana is shown right in the
+    // section header rather than the Stats column, since it's specifically
+    // spell-relevant. Pushed to the header's trailing edge.
+    .carl-drawer-header-mana {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 400;
+
+      input {
+        text-align: center;
+      }
+    }
+
+    // Skills drawer only (see abilities.hbs) - toggles system.uiState.
+    // itemsLocked, which governs the Skills/Spells (and nested Damage
+    // Effect) rows' edit/delete controls vs. Advancement mark checkbox.
+    // margin-left:auto pushes it to the header's trailing edge same as
+    // .carl-drawer-header-mana above; only one of the two appears per
+    // header, so there's no conflict between them.
+    .carl-drawer-lock-toggle {
+      margin-left: auto;
+      font-size: 14px;
+      color: var(--carl-text-muted);
+      cursor: pointer;
+
+      &:hover {
+        color: var(--carl-accent);
+      }
+    }
+
+    .carl-drawer-body {
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: grid-template-rows 0.2s ease;
+
+      > * {
+        overflow: hidden;
+      }
+    }
+
+    &.collapsed {
+      .carl-drawer-caret {
+        transform: rotate(-90deg);
+      }
+
+      .carl-drawer-body {
+        grid-template-rows: 0fr;
+      }
+    }
+  }
+
+  // Per-skill nested Damage Effects drawer - lives inside the Skills list
+  // as a sibling <li>, not a full .carl-drawer section (see
+  // skills-section-body.hbs for why), but shares the same caret/animation
+  // vocabulary at a smaller scale.
+  .carl-nested-drawer {
+    display: grid;
+    grid-template-rows: 1fr;
+    transition: grid-template-rows 0.12s ease;
+    padding-left: $padding-lg;
+    border-left: 2px solid var(--carl-groove);
+
+    > * {
+      overflow: hidden;
+    }
+
+    &.collapsed {
+      grid-template-rows: 0fr;
+    }
+  }
+
+  .carl-drawer-caret.item-control {
+    i {
+      transition: transform 0.15s ease;
+    }
+
+    &.collapsed i {
+      transform: rotate(-90deg);
+    }
+  }
+
+  // Larger, more prominent variant for the per-Skill nested Damage Effects
+  // caret - sits before the item icon (see skills-section-body.hbs) rather
+  // than tucked among the small item-controls icons, so it needs to read as
+  // an obviously clickable affordance at a glance.
+  .carl-drawer-caret-lg {
+    font-size: 16px;
+    color: var(--carl-text-muted);
+    margin-right: 2px;
+
+    &:hover {
+      color: var(--carl-accent);
+    }
+  }
+
+  // Read-only Skill detail drawer (description + unlocked-upgrade summary),
+  // toggled by clicking the Skill's name - a second, independent nested
+  // drawer alongside the Damage Effects one, sharing .carl-nested-drawer's
+  // grid-row animation. Padding lives on -inner, NOT on .carl-skill-details
+  // itself: .carl-skill-details is the direct grid-item child that
+  // .carl-nested-drawer's 0fr/overflow:hidden collapse trick squeezes to
+  // zero height when collapsed - padding on that element directly still
+  // renders (and visibly shifts content) even at 0fr, since a box's own
+  // padding isn't part of the "automatic minimum size" that collapses to
+  // zero. Pushing padding one level down keeps the collapsing element
+  // itself completely bare, matching the (working) Damage Effects drawer's
+  // zero-padding direct child (.items-list { padding: 0 }).
+  .carl-skill-details-inner {
+    padding: 6px 0;
+    font-size: 12px;
+  }
+
+  .carl-skill-description {
+    margin-bottom: 6px;
+    opacity: 0.9;
+  }
+
+  .carl-skill-upgrade {
+    margin-bottom: 4px;
+
+    strong {
+      color: var(--carl-accent);
+      margin-right: 6px;
+    }
+  }
+
+  .carl-unmatched-damage-effects {
+    margin-top: $padding-md;
+
+    h4 {
+      color: var(--carl-hazard);
+      margin: 0 0 4px;
+    }
+  }
+}

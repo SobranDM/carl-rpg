@@ -1,0 +1,93 @@
+{
+  "_id": "8nzYJFldnVDyjRkP",
+  "name": "Chopper Pilot",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/environment/vehicles/bicycle-penny-farthing.webp",
+  "system": {
+    "description": "<p>Known as a motorcycle in most parts of the world—and in the World Dungeon. You don't need to use this Skill if you're cruising through a town, but if you're racing, chasing, showing off, or trying to pop a wheelie, this is the Skill you want. If you're doing something wild or trying to avoid becoming a skid mark on the highway, make an Unopposed Skill Check. Depending on how extreme the circumstances are, the GM may apply Advantage or Disadvantage to the Check. On Success, you stay upright while performing your crazy maneuvers.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Your chopper has +5ft Move.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "0TfGNdAIcIcSopFr",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Attacking while piloting no longer suffers Disadvantage.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "h2jjrLxywOsCmE7C",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Your chopper has +5ft Move. When performing crazy stunts (like riding up a canyon wall), roll with Advantage.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "LzJU5e3Pq9rZdjnF",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "You suffer Disadvantage on Attack Skill Checks made while Piloting and cannot Attack with a weapon that requires two hands."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116849016,
+    "modifiedTime": 1788116849016,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!8nzYJFldnVDyjRkP"
+}

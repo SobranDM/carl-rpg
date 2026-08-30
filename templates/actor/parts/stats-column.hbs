@@ -1,0 +1,28 @@
+{{!-- Narrow vertical Stats column - embedded in the merged Abilities tab
+      (see abilities.hbs). Extracted from the old standalone stats.hbs tab. --}}
+<div class="carl-stats-column">
+  <a class="rollable flex-group-center carl-evade-link" data-action="rollEvade">
+    <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
+  </a>
+  {{#each system.stats as |stat key|}}
+  <div class="carl-stat">
+    <label class="resource-label rollable" data-action="roll" data-roll="1d20+@stats.{{key}}.mod"
+      data-label="{{stat.label}}">{{stat.label}}</label>
+    <div class="carl-stat-row">
+      <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EffectiveValue'}}">{{stat.effective}}</span>
+      <span class="carl-stat-mod rollable" data-action="roll" data-roll="1d20+@stats.{{key}}.mod"
+        data-label="{{stat.label}}" title="{{localize 'CARLRPG.Actor.EffectiveMod'}}">{{numberFormat stat.mod sign=true}}</span>
+    </div>
+  </div>
+  {{/each}}
+
+  {{#if (eq actor.type "character")}}
+  <fieldset class="carl-banked-stat-points">
+    <legend>{{localize "CARLRPG.Actor.BankedStatPoints"}}</legend>
+    <div class="carl-banked-stat-points-row">
+      <input type="text" class="carl-w-tiny" name="system.bankedStatPoints" value="{{system.bankedStatPoints}}" data-dtype="Number" />
+      <button type="button" data-action="spendStatPoints">{{localize "CARLRPG.Actor.Spend"}}</button>
+    </div>
+  </fieldset>
+  {{/if}}
+</div>

@@ -1,0 +1,151 @@
+{
+  "_id": "TDTSYNmgpfyvqvZR",
+  "name": "Polearm",
+  "type": "skill",
+  "folder": "xLI6SYrD060uROfc",
+  "img": "icons/weapons/polearms/glaive-hooked-steel.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, STR. Range: 10 feet.</p><p><strong>Limitations:</strong> Requires two hands to wield.</p><p><strong>Base Damage:</strong> 1d8 + STR Piercing.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d8",
+      "stat": "str",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d8 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Polearm",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "TPM8q7gFugbDb215",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "GfiMha5K6hqbPTtp",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d8 base damage, and +1 Rank in the Zone of Control Skill.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Polearm",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "n6rhShYdR7P3Hbuq",
+            "conditions": []
+          },
+          {
+            "targetType": "skillRank",
+            "target": "Zone of Control",
+            "mode": "add",
+            "value": "1",
+            "label": "",
+            "id": "4gOvGs5lwOtwGXrQ",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "RJiIFFbo3z9K8jwk",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d8 base damage, and +1 Rank in the Zone of Control Skill.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Polearm",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "iiIMrOYBvYBsBy8H",
+            "conditions": []
+          },
+          {
+            "targetType": "skillRank",
+            "target": "Zone of Control",
+            "mode": "add",
+            "value": "1",
+            "label": "",
+            "id": "XwZYtogiXHSEPW1c",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "OTzIG77sCARcXL9E",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "10 feet",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Requires two hands to wield."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115225340,
+    "modifiedTime": 1788116202760,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!TDTSYNmgpfyvqvZR"
+}

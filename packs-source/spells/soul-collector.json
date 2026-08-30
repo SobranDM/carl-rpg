@@ -1,0 +1,89 @@
+{
+  "_id": "qENapylvmRjk9zQ8",
+  "name": "Soul Collector",
+  "type": "spell",
+  "img": "icons/svg/skull.svg",
+  "system": {
+    "description": "<p><em>\"With a twist of your hand, you siphon the spirit from your target.\"</em> AI Favor: 1.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "int",
+      "damageType": "necrotic"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage, and if this Spell deals the killing blow to a foe of at least half your level, it deals +1 bonus damage until you complete a long rest. This damage bonus is cumulative up to the Spell's Rank. (This persistent, cross-combat, cumulative counter has no structural support in this system - track it manually.)",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Soul Collector",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage, and the bonus continues for one week.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Soul Collector",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d4 base damage, and the bonus continues for as long as you remain on your current floor.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Soul Collector",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "manaCost": 4,
+    "range": "50 feet",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "attack"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!qENapylvmRjk9zQ8"
+}

@@ -1,0 +1,69 @@
+@mixin styles {
+  .carl-spend-stat-points-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .carl-spend-stat-points-banked {
+    font-size: 12px;
+    text-align: center;
+
+    strong {
+      color: var(--carl-accent);
+    }
+  }
+
+  .carl-spend-stat-points-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  // [+/- buttons] [label] [unmodified] [modified] - buttons get a fixed
+  // wide column since they're a pair, the two value columns match each
+  // other's width so the numbers line up.
+  .carl-spend-stat-points-row {
+    display: grid;
+    grid-template-columns: 52px 1fr 44px 44px;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 4px;
+    border-radius: 3px;
+
+    &:not(.carl-spend-stat-points-header):nth-child(odd) {
+      background: var(--carl-panel-bg);
+    }
+  }
+
+  .carl-spend-stat-points-header {
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--carl-header-text);
+    background: var(--carl-header-bg);
+
+    span:nth-child(3),
+    span:nth-child(4) {
+      text-align: center;
+    }
+  }
+
+  .carl-spend-stat-points-buttons {
+    display: flex;
+    gap: 4px;
+
+    button {
+      flex: 1;
+      padding: 2px;
+      line-height: 1;
+    }
+  }
+
+  .carl-spend-stat-points-value {
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+}

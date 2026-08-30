@@ -1,0 +1,129 @@
+{
+  "_id": "NakosPYpiYJlh3p9",
+  "name": "Shuriken",
+  "type": "skill",
+  "folder": "P4CllUndu9WO8BEU",
+  "img": "icons/weapons/thrown/shuriken-blue.webp",
+  "system": {
+    "description": "<p>Attack Type: Ranged, DEX. AI Favor: 1. Range: 30 feet.</p><p><strong>Base Damage:</strong> 1d4 + STR Piercing.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "str",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage, and the range is 40 feet.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shuriken",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "tGpr3fnGNOnJyHLd",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "ZGSvPF45pu3j8nI9",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage, and you may make an extra free attack with Disadvantage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shuriken",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "VwF20Vj1DWq4f3wT",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "2F2kSqqGiCbksCcW",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d4 base damage, and you may make an extra free attack with Disadvantage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shuriken",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "R1EMS7dmhkrtDLL3",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "hz3KVa0z0KlCbqpH",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "ranged",
+    "range": "30 feet",
+    "aiFavor": 1,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115302967,
+    "modifiedTime": 1788116187628,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 137500,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!NakosPYpiYJlh3p9"
+}

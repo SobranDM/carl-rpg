@@ -1,0 +1,63 @@
+{
+  "_id": "zIHu45tQKmkHRwCc",
+  "name": "Lore",
+  "type": "skill",
+  "img": "icons/svg/book.svg",
+  "system": {
+    "description": "<p>You have studied the goings-on in the Dungeon and have figured out a thing or two. Make an Unopposed Skill Check. On Success, you know a little something about a neighborhood, some of the Mobs, or how to avoid pissing off the locals.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can identify the major factions in the area.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You are aware of the important local NPCs.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You roll with Advantage on your first Charisma-based Skill Check when encountering an organized group in a neighborhood.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!zIHu45tQKmkHRwCc"
+}

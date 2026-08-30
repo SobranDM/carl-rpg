@@ -1,0 +1,40 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="attributes">
+  <div class="carl-field-grid">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Skill.Category"}}</label>
+      <select class="carl-w-medium" name="system.category">
+        {{selectOptions config.skillCategories selected=system.category localize=true}}
+      </select>
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Skill.IsAttack"}}</label>
+      <input type="checkbox" name="system.isAttack" {{checked system.isAttack}} />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Skill.AttackType"}}</label>
+      <select class="carl-w-short" name="system.attackType">
+        <option value=""></option>
+        {{selectOptions config.attackTypes selected=system.attackType localize=true}}
+      </select>
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Skill.Range"}}</label>
+      <input type="text" class="carl-w-short" name="system.range" value="{{system.range}}" placeholder="5 ft" />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Skill.AiFavor"}}</label>
+      <input type="text" class="carl-w-tiny" name="system.aiFavor" value="{{system.aiFavor}}" data-dtype="Number" />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Skill.Cooldown"}}</label>
+      <input type="text" class="carl-w-short" name="system.cooldown" value="{{system.cooldown}}" />
+    </div>
+  </div>
+  <div class="resource">
+    <label class="resource-label">{{localize "CARLRPG.Skill.Limitations"}}</label>
+    <input type="text" class="carl-w-full" name="system.limitations" value="{{system.limitations}}" />
+  </div>
+
+  {{> "systems/carl-rpg/templates/item/parts/ranked-fields.hbs" system=system config=config canRollAdvancement=canRollAdvancement
+      item=item actorSkillNames=actorSkillNames}}
+</section>

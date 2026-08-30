@@ -1,0 +1,63 @@
+{
+  "_id": "Z7J4FQxQw15GfHf4",
+  "name": "Double Tap",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>If your first Attack is an Amazing Success or better, your second Attack (if it hits) is upgraded to a Critical Hit.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Roll your first Attack with Advantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "If your first Attack is a Standard Success or better, the second Attack (if it hits) is upgraded to a Critical Hit.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Roll your second Attack with Advantage. If your second Attack is a Critical Hit or upgraded to one, deal x3 damage (instead of x2).",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "To engage this Skill, you must declare a Double Tap at the start of the combat round, before Mob Actions have been determined. You must then use all of your Actions this round to Attack a single target with the same weapon or Spell. Mark this Skill for advancement anytime you roll an Amazing Success or better while using it."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Z7J4FQxQw15GfHf4"
+}

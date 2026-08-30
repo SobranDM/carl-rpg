@@ -1,0 +1,28 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="description">
+  {{!-- Damage-type pipeline (docs/known-gaps.md 1.3): direct, GM/player-
+        editable schema fields (module/data/actor-base.mjs), not modifier-
+        engine-driven - see that file's docstring for why. --}}
+  <fieldset class="carl-defenses">
+    <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Dr"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
+      </div>
+    </div>
+    <label class="resource-label">{{localize "CARLRPG.Actor.Resistances"}}</label>
+    <div class="carl-resistances-grid">
+      {{#each config.damageTypes as |label type|}}
+      <div class="carl-resistance-row">
+        <span class="carl-resistance-type">{{localize label}}</span>
+        <select class="carl-w-medium" name="{{concat 'system.resistances.' type}}">
+          {{selectOptions ../config.resistanceStates selected=(lookup ../system.resistances type) localize=true}}
+        </select>
+      </div>
+      {{/each}}
+    </div>
+  </fieldset>
+  <prose-mirror name="system.biography" toggled value="{{actor.system.biography}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
+    {{{biographyHTML}}}
+  </prose-mirror>
+</section>

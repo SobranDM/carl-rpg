@@ -1,0 +1,70 @@
+{
+  "_id": "UNb0KCnMN2Nvic44",
+  "name": "Heal Critter",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/heal.svg",
+  "system": {
+    "description": "<p><strong>Limitations:</strong> May only be cast on pets and minions.</p><p>The target glows as they heal back to 100% Health Bar.</p><p><em>Note: this base full-heal effect isn't automated (no base-level healToFull field exists) - apply it by hand.</em></p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "healDice": "",
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "The target mends a Minor Injury Debuff.",
+        "changes": [],
+        "healMend": true
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The target mends a Major Injury Debuff.",
+        "changes": [],
+        "healMend": true
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The target regrows all lost appendages.",
+        "changes": []
+      }
+    ],
+    "manaCost": 8,
+    "range": "30 feet",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "heal",
+      "interrupt",
+      "passive"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!UNb0KCnMN2Nvic44"
+}

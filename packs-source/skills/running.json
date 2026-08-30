@@ -1,0 +1,63 @@
+{
+  "_id": "t2V7RROipeym0BuK",
+  "name": "Running",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You don't need to use this Skill if you're running down a hallway to attack some Mobs. But if you're racing, chasing, or need to get away from a ticking time bomb, this is the Skill you want. Make an Unopposed Skill Check every minute, not every round. Add 1 to your result for every 10ft of Move you have. On Success, you succeed in the run.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You have a permanent +5ft Move Buff. Make a Check every 2 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You have an additional permanent +10ft Move Buff. Make a Check every 4 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You have an additional permanent +15ft Move Buff. Make a Check every 6 minutes.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "For short bursts of running. For extended runs, use Endurance instead."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!t2V7RROipeym0BuK"
+}

@@ -1,0 +1,68 @@
+{
+  "_id": "qJOLAfZ20kYqmq9B",
+  "name": "Grand Illusion",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/eye.svg",
+  "system": {
+    "description": "<p>You create an illusion that might trick your foes. Make a single INT-Opposed Spell Check vs. foes who can see it. Your same roll is used against foes who see it even after the casting round. Mundane illusions seeking only to impress might be rolled with Advantage, while complex illusions seeking a specific response or images that suddenly pop up during combat might be rolled with Disadvantage (GM's discretion). On Success, they believe your illusion.</p><p><em>Note: this multi-target opposed-check mechanic (not a standard Attack-vs-Evade roll) has no structural support in this system - resolve via a normal Skill Check and apply the listed effects by GM judgment.</em></p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Those who believe gain the Woozy Debuff or similar based on the desired response.",
+        "changes": [],
+        "targetEffects": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Those who believe also gain the Queasy Debuff or similar based on the desired response.",
+        "changes": [],
+        "targetEffects": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Those who believe also gain the Shocked Debuff or similar based on the desired response.",
+        "changes": [],
+        "targetEffects": []
+      }
+    ],
+    "manaCost": 7,
+    "range": "40 feet",
+    "duration": "2 minutes",
+    "cooldown": "15 minutes",
+    "castingKeywords": [
+      "mindControl"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!qJOLAfZ20kYqmq9B"
+}

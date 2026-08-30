@@ -1,0 +1,63 @@
+{
+  "_id": "tbl5yEnSl2ie1XKp",
+  "name": "Balance",
+  "type": "skill",
+  "img": "icons/svg/wingfoot.svg",
+  "system": {
+    "description": "<p>You can traverse tricky surfaces with general ease. Make an Unopposed Skill Check. The GM may add Difficulty for especially crazy surfaces. On Success, you keep your balance on tricky or shifting surfaces.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You may perform Move Actions in difficult terrain without penalty.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "When subject to a Take Down or involuntary Move effects, you may use this skill as a free Interrupt Action to avoid the effect.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You may perform your Step on vertical surfaces (yes, like in The Matrix), but must end it on a flat(ish) surface.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!tbl5yEnSl2ie1XKp"
+}

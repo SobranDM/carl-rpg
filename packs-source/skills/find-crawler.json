@@ -1,0 +1,63 @@
+{
+  "_id": "Hm9uZwLEL6y1NNJe",
+  "name": "Find Crawler",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Your HUD displays other crawlers within 1,000 feet of you. They are designated with a blue dot.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "The area in which you can detect other crawlers increases to 5 miles.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The area in which you can detect other crawlers increases to 10 miles.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You can input a specific crawler's name and learn their exact location anywhere in the dungeon.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Ranks in this Skill only increase by magical means."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Hm9uZwLEL6y1NNJe"
+}

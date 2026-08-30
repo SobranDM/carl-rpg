@@ -1,0 +1,63 @@
+{
+  "_id": "FpMeOuSh2JjgaUPo",
+  "name": "Find Trap",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Traps within 5 feet of you appear on your HUD one second prior to triggering the trap, which is often too late to react.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Traps appear on your HUD up to 5 seconds before they are triggered.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Traps within 10 feet of you appear on your HUD as you approach them.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Traps within 15 feet of you appear on your HUD as you approach them.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Ranks in this Skill only increase by magical means and training."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!FpMeOuSh2JjgaUPo"
+}

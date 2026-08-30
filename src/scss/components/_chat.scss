@@ -1,0 +1,241 @@
+// Chat card / roll-row / dialog styles. Unlike sheet components, chat
+// messages are NOT wrapped in a .carl-rpg element, so these selectors are
+// intentionally top-level (not nested under .carl-rpg).
+
+.carl-chat-card {
+  font-family: var(--font-primary);
+
+  .carl-chat-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+
+    .carl-chat-img {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 4px;
+      flex: 0 0 auto;
+    }
+
+    .carl-chat-titles {
+      flex: 1;
+    }
+
+    .carl-chat-title {
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .carl-chat-subtitle {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+  }
+
+  .carl-badge {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+
+    &.carl-badge--hit {
+      background: #2e7d32;
+      color: #fff;
+    }
+    &.carl-badge--miss {
+      background: #b71c1c;
+      color: #fff;
+    }
+    &.carl-badge--warn {
+      background: #8d6e00;
+      color: #fff;
+    }
+  }
+
+  .carl-chat-desc {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .carl-chat-rolls {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 4px;
+  }
+
+  .carl-chat-roll-summary {
+    .carl-chat-roll-label-cell {
+      text-align: left;
+      padding: 2px 4px;
+    }
+    .carl-chat-roll-detail {
+      text-align: left;
+      font-size: 11px;
+      opacity: 0.8;
+      padding: 2px 4px;
+    }
+    .carl-chat-roll-total-cell {
+      text-align: right;
+      padding: 2px 4px;
+      white-space: nowrap;
+    }
+    .carl-chat-roll-total {
+      font-weight: bold;
+      font-size: 15px;
+      margin-right: 4px;
+    }
+    .carl-chat-hint {
+      cursor: help;
+      opacity: 0.7;
+    }
+  }
+
+  .carl-chat-roll-tooltip td {
+    padding: 0 4px 4px;
+  }
+
+  .carl-chat-body {
+    font-size: 12px;
+  }
+
+  .carl-chat-footer {
+    margin-top: 4px;
+    font-size: 11px;
+    opacity: 0.8;
+  }
+
+  .carl-target-effects {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--color-border-light-tertiary, #999);
+
+    .carl-target-effects-list {
+      margin-bottom: 4px;
+      opacity: 1;
+    }
+
+    .carl-target-effects-label {
+      margin-right: 4px;
+    }
+
+    .carl-target-effect-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 1px 6px;
+      margin: 0 3px 3px 0;
+      border-radius: 3px;
+      background: #4a1414;
+      color: #fff;
+    }
+
+    .carl-apply-target-effects {
+      width: auto;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 2px 8px;
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .carl-heal-card {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--color-border-light-tertiary, #999);
+
+    .carl-heal-summary {
+      margin: 0 0 4px;
+    }
+
+    .carl-heal-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .carl-apply-heal,
+    .carl-mend-debuff {
+      width: auto;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 2px 8px;
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .carl-damage-card {
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--color-border-light-tertiary, #999);
+
+    .carl-damage-portions {
+      margin-bottom: 4px;
+    }
+
+    .carl-damage-label {
+      margin-right: 4px;
+    }
+
+    .carl-damage-pill {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 1px 6px;
+      margin: 0 3px 3px 0;
+      border-radius: 3px;
+      background: #4a1414;
+      color: #fff;
+    }
+
+    .carl-apply-damage {
+      width: auto;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 2px 8px;
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+    }
+  }
+}
+
+.carl-dialog {
+  .carl-dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .carl-dialog-conditions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .carl-dialog-condition {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .carl-dialog-condition-source {
+    opacity: 0.7;
+    font-size: 11px;
+  }
+}

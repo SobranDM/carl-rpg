@@ -1,0 +1,79 @@
+{
+  "_id": "VCCpGryfVTkt56hB",
+  "name": "Wrasslin'",
+  "type": "skill",
+  "img": "icons/skills/melee/strike-fist-orange.webp",
+  "system": {
+    "description": "<p>Choose the Choke Out, Dirty Fighting, or Toss Damage Effect (if you wish) before rolling to hit. On Success, the target gains the Held Debuff. Held foes continue to be Held until they spend an Action to attempt escape (Mobs may use their Move Action). To prevent such an escape, you must use an Action as an Interrupt and succeed in a Wrasslin' STR-Opposed Skill Check. Attack Type: Melee, STR. AI Favor: 1 (only if no Damage Effect is used).</p><p><strong>Limitations:</strong> Requires two hands to wield.</p><p><strong>Base Damage:</strong> 1d4 + STR Bludgeoning.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You may maintain the Held Debuff at no Action cost if you wish, but your Skill Check to prevent escape is made with Disadvantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Wrasslin'",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Wrasslin'",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 1,
+    "cooldown": "",
+    "limitations": "Requires two hands to wield. AI Favor 1 only applies if no Damage Effect is used."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!VCCpGryfVTkt56hB"
+}

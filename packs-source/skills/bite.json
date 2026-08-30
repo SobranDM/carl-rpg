@@ -1,0 +1,94 @@
+{
+  "_id": "9hk5btVdz5dJ6VgH",
+  "name": "Bite",
+  "type": "skill",
+  "img": "icons/svg/bones.svg",
+  "system": {
+    "description": "<p>Attack Type: Melee, STR.</p><p><strong>Limitations:</strong> The target must have an appendage you can clamp down onto. You taste your victim's blood. Better hope they're not poisonous.</p><p><strong>Base Damage:</strong> 1d8 + STR Piercing.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d8",
+      "stat": "str",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d8 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bite",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d8 base damage. You may latch on to move when the foe moves during their next Action (then you let go).",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bite",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d8 base damage, and the target gains the Woozy Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bite",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base"
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "woozy",
+            "stacks": 1,
+            "critOnly": false
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "The target must have an appendage you can clamp down onto."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!9hk5btVdz5dJ6VgH"
+}

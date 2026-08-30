@@ -1,0 +1,129 @@
+{
+  "_id": "H033akok5N0DMh1H",
+  "name": "Improvised Weapons",
+  "type": "skill",
+  "folder": "Pfn39rVBtWXqCh0i",
+  "img": "icons/sundries/books/book-backed-blue-gold.webp",
+  "system": {
+    "description": "<p>Pick up something and smack someone else with it. That object must weigh at least one pound and can't weigh more than your STR in pounds. Attack Type: Melee, STR. AI Favor: 1.</p><p><strong>Base Damage:</strong> 1d4 + STR Bludgeoning.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage, and you can throw the item (using this Skill) up to a range of Rank x5 feet.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Improvised Weapons",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "sDH23xGIEESr5u2g",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "yO63j2Prfe2u5LyI",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage, and you roll your first Attack each combat with Advantage due to the unexpected nature of your Attacks.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Improvised Weapons",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "1Hbl4BWPevLsCVmG",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "lWsOCAGP8ltPEoCi",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Improvised Weapons",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "StgY6CXYpXIYnefF",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "2VeCwvHG5MLWAZxQ",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 1,
+    "cooldown": "",
+    "limitations": "That object must weigh at least one pound and can't weigh more than your STR in pounds."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115010998,
+    "modifiedTime": 1788115625069,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!H033akok5N0DMh1H"
+}

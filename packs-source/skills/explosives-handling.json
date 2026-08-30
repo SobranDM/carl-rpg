@@ -1,0 +1,63 @@
+{
+  "_id": "eU4FLwdsbKblz674",
+  "name": "Explosives Handling",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>For making Attack Skill Checks with explosives. Make an Unopposed Skill Check. On Success, you safely handle standard explosive devices. On Fail, I'm sure the GM will think of something.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You are able to determine the type, status, and raw materials of explosives you handle.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You are able to craft explosives such as dynamite as if this were a crafting Skill, though you must have explosive raw materials and a Sapper's Table.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You may create explosive raw materials out of non-volatile materials. Your crafting takes half the time.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!eU4FLwdsbKblz674"
+}

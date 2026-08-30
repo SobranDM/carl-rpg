@@ -1,0 +1,70 @@
+{
+  "_id": "HQvsb346L3o38OOC",
+  "name": "Turn Undead",
+  "type": "spell",
+  "img": "icons/svg/holy-shield.svg",
+  "system": {
+    "description": "<p><strong>Limitations:</strong> Does not work against Bosses.</p><p>Make a single CHA-Opposed Spell Check vs. the Undead Mobs in the affected area. On Success, the Undead Mob runs away for the duration of the Spell.</p><p><em>This is a CHA-Opposed Check against potentially multiple Undead targets in a Cone, not a standard Attack-vs-Evade roll, and has no structural support in this system - resolve via a normal Skill Check and apply the flee effect by GM judgment.</em></p>",
+    "changes": [],
+    "governingStat": "cha",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+5ft Cone. Duration is 5 rounds.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+10ft Cone. Duration is 10 rounds.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+15ft Cone. Duration is 15 rounds. On an Amazing Success or better, the Undead Mob is destroyed.",
+        "changes": []
+      }
+    ],
+    "manaCost": 9,
+    "range": "10ft Cone",
+    "duration": "3 rounds",
+    "cooldown": "5 minutes",
+    "castingKeywords": [
+      "attack",
+      "areaOfEffect"
+    ],
+    "favoredClasses": [
+      "Bard",
+      "Cleric",
+      "Paladin"
+    ],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!HQvsb346L3o38OOC"
+}

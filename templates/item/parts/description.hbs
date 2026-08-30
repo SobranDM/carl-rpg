@@ -1,0 +1,5 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="description">
+  <prose-mirror name="system.description" toggled value="{{item.system.description}}" data-document-uuid="{{item.uuid}}" {{#unless editable}}disabled{{/unless}}>
+    {{{descriptionHTML}}}
+  </prose-mirror>
+</section>

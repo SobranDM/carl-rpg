@@ -1,0 +1,113 @@
+@use '../utils/variables' as *;
+
+@mixin styles {
+  .carl-abilities-layout {
+    display: flex;
+    gap: $padding-lg;
+    align-items: flex-start;
+    height: 100%;
+
+    // Stats take up very little space - a narrow fixed-width column beside
+    // the Skills/Spells drawers, reflowing to stacked-above under a narrow
+    // sheet width where there's no room for both side by side.
+    @media (max-width: 640px) {
+      flex-direction: column;
+    }
+  }
+
+  .carl-stats-column {
+    flex: 0 0 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    @media (max-width: 640px) {
+      flex: 0 0 auto;
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+  }
+
+  .carl-stat {
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
+    padding: 4px 6px;
+    text-align: center;
+  }
+
+  // Two equal grid columns (value, mod) so each centers independently
+  // within its own column - flex's space-around instead distributes space
+  // based on each child's rendered content width, so a 3-digit value and a
+  // 1-digit value don't land in the same horizontal position.
+  .carl-stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 4px;
+  }
+
+  // Effective (base + bonus) value - read-only display, not an editable
+  // input; Stats are only ever changed via the Spend Stat Points dialog
+  // (see module/apps/spend-stat-points-dialog.mjs).
+  .carl-stat-value {
+    font-weight: 700;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .carl-stat-mod {
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--carl-accent);
+  }
+
+  .carl-stat-bonus {
+    display: block;
+    font-size: 10px;
+    opacity: 0.8;
+  }
+
+  .carl-banked-stat-points {
+    margin-top: 4px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 3px;
+    background: var(--carl-panel-bg);
+    padding: 4px 6px 6px;
+
+    legend {
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--carl-header-text);
+      background: var(--carl-header-bg);
+      border-radius: 3px;
+      padding: 1px 5px;
+    }
+  }
+
+  .carl-banked-stat-points-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    input {
+      text-align: center;
+    }
+  }
+
+  .carl-evade-link {
+    margin-bottom: 2px;
+    font-weight: 700;
+    color: var(--carl-text);
+  }
+
+  .carl-abilities-main {
+    flex: 1;
+    min-width: 0;
+  }
+}

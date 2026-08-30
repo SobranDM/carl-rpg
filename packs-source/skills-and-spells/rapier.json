@@ -1,0 +1,129 @@
+{
+  "_id": "3rd7cfAKcphFL044",
+  "name": "Rapier",
+  "type": "skill",
+  "folder": "pyEnqopryzb0EWFG",
+  "img": "icons/weapons/swords/sword-guard-brass-worn.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, DEX.</p><p><strong>Base Damage:</strong> 1d6 + DEX Piercing.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d6",
+      "stat": "dex",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d6 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Rapier",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "9SAigVcr0mVXSajG",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "6h3RngnE0tUC19iA",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d6 base damage, and you gain a +1 Evade Buff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Rapier",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "R8O2QnYnF11ZPinw",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "Oixdu2shpyqKfodz",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d6 base damage, and you gain a +1 Evade Buff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Rapier",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "sN0ffNghckxZeDbz",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "iIroQOBdb8CIpfQ9",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115286136,
+    "modifiedTime": 1788115670272,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 125000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!3rd7cfAKcphFL044"
+}

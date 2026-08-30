@@ -1,0 +1,63 @@
+{
+  "_id": "kz4vdH5ojaEipBt5",
+  "name": "Repair",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>After spending 2 hours, you can repair most simple items that are broken or damaged but not destroyed. Make an Unopposed Skill Check. On Success, you repair the item.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can make repairs to things with moving parts.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can make repairs in 1 hour.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You can rebuild a destroyed item.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "For basic repairs to items with no moving parts, magical or not."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!kz4vdH5ojaEipBt5"
+}

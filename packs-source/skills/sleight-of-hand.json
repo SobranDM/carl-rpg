@@ -1,0 +1,63 @@
+{
+  "_id": "WtZeRy1XcrD8Y66a",
+  "name": "Sleight of Hand",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You've learned to manipulate small objects without being spotted. Great for shoplifting. Make an INT-Opposed Skill Check. If someone's Perception is a higher Rank than your Sleight of Hand, you have Disadvantage. On Success, you maneuver the item without being noticed.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You may attempt to pick the pockets of NPCs and Mobs.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You may attempt to plant items on someone with pockets or the equivalent.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You may manipulate items up to half your own size (rounded down).",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Items you manipulate must be smaller than the size of your hand. You cannot access others' Inventories or Hotlists."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!WtZeRy1XcrD8Y66a"
+}

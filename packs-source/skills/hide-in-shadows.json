@@ -1,0 +1,63 @@
+{
+  "_id": "nInYMJPZOYLsOovN",
+  "name": "Hide in Shadows",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>While in a heavily shadowed area or out of sight, you can stay still and attempt to foil foes' chances to spot you. Make an INT-Opposed Skill Check. If you're hiding behind an object that is larger than you, roll with Advantage. On Success, you become invisible to Mobs and the HUDs of other crawlers but can still be affected by environmental and Area Attacks. You become visible if you take an Action that affects another creature or if you're no longer behind cover.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can use this Skill in a dim light without having an object to hide behind.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "When other crawlers in your party roll this Skill untrained, they roll as normal (not with Disadvantage).",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You can use this Skill in a lightly shaded area and may make a Step without giving away your position.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "To move while avoiding detection, see Stealth, p. 199."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!nInYMJPZOYLsOovN"
+}

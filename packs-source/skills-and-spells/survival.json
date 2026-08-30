@@ -1,0 +1,63 @@
+{
+  "_id": "QFkklblwwMV2a4SO",
+  "name": "Survival",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You know how to survive in dangerous, often remote places for long periods of time with only the meager food and water you can rustle up. When traveling through such areas, make an Unopposed Skill Check. On Success, you survive the perils of the conditions unscathed.</p>",
+    "changes": [],
+    "governingStat": "con",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You do not suffer additional damage from a Critical Fail.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "When other crawlers in your party roll this Skill untrained, they roll as normal (not with Disadvantage).",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You do not suffer additional damage from a Major Fail.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!QFkklblwwMV2a4SO"
+}

@@ -1,0 +1,63 @@
+{
+  "_id": "HIk7wEQIgv6i6Wpx",
+  "name": "Diplomacy",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Used in mediation between opposing organizations and parties. Make an INT-Opposed Skill Check of the side with the higher INT Mod. On Success, the two parties are willing to discuss options.</p>",
+    "changes": [],
+    "governingStat": "cha",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Roll with Advantage if you are not a member of either party.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Each side accepts consequences if they break the deal.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Hostilities cease at least for the remainder of the day.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!HIk7wEQIgv6i6Wpx"
+}

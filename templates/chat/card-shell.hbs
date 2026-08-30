@@ -1,0 +1,28 @@
+<div class="carl-chat-card">
+  <header class="carl-chat-header">
+    {{#if img}}<img src="{{img}}" class="carl-chat-img" alt="" />{{/if}}
+    <div class="carl-chat-titles">
+      <div class="carl-chat-title">{{title}}</div>
+      {{#if subtitle}}<div class="carl-chat-subtitle">{{subtitle}}</div>{{/if}}
+    </div>
+    {{#if badge}}
+    <span class="carl-badge carl-badge--{{badge.type}}">{{badge.label}}</span>
+    {{/if}}
+  </header>
+  {{#if description}}
+  <div class="carl-chat-desc">{{{description}}}</div>
+  {{/if}}
+  {{#if rollRows.length}}
+  <table class="carl-chat-rolls">
+    {{#each rollRows}}
+    {{> carlChatRollRow}}
+    {{/each}}
+  </table>
+  {{/if}}
+  {{#if body}}
+  <div class="carl-chat-body">{{{body}}}</div>
+  {{/if}}
+  {{#if footer}}
+  <footer class="carl-chat-footer">{{{footer}}}</footer>
+  {{/if}}
+</div>

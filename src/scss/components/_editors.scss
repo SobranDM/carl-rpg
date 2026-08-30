@@ -1,0 +1,204 @@
+@use '../utils/variables' as *;
+
+@mixin styles {
+  .carl-hint {
+    font-size: 11px;
+    font-style: italic;
+    opacity: 0.75;
+    margin: 2px 0 6px;
+  }
+
+  .carl-add-link {
+    display: inline-block;
+    margin-top: 4px;
+    color: var(--color-text-hyperlink);
+    font-size: 12px;
+  }
+
+  fieldset.carl-base-damage,
+  fieldset.carl-base-heal,
+  fieldset.carl-upgrades,
+  fieldset.carl-changes,
+  fieldset.carl-string-list,
+  fieldset.carl-defenses {
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
+    margin: 8px 0;
+    padding: 6px 8px;
+
+    legend {
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--carl-header-text);
+      background: var(--carl-header-bg);
+      border-radius: 3px;
+      padding: 2px 6px;
+    }
+  }
+
+  .carl-upgrade-tier {
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 8px;
+    &:last-of-type { margin-bottom: 0; }
+
+    .carl-upgrade-tier-header {
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+
+      select {
+        font-weight: 700;
+        color: var(--carl-header-text);
+      }
+    }
+
+    .carl-upgrade-description {
+      width: 100%;
+      min-height: 2.4em;
+      resize: vertical;
+      margin-bottom: 6px;
+    }
+  }
+
+  .carl-changes-editor {
+    .carl-change-row {
+      border: 1px solid var(--color-border-light-tertiary);
+      border-radius: 3px;
+      padding: 6px;
+      margin-bottom: 6px;
+
+      .carl-change-row-fields {
+        margin: 0 0 4px;
+      }
+
+      .carl-change-row-meta {
+        align-items: center;
+        gap: 6px;
+
+        .carl-change-label {
+          flex: 1;
+        }
+      }
+    }
+
+    // Related fields grouped into their own bordered box, strictly two per
+    // row - a field with a long option label (see Damage Dice Kind) spans
+    // both columns via .carl-change-field-full instead of sharing a row,
+    // rather than an unbounded auto-fit row where a wide field could
+    // overflow into its neighbor.
+    .carl-change-group {
+      border: 1px solid var(--carl-border-soft);
+      border-radius: 3px;
+      padding: 4px 6px 6px;
+      margin-bottom: 4px;
+
+      legend {
+        font-weight: 700;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--carl-header-text);
+        background: var(--carl-header-bg);
+        border-radius: 3px;
+        padding: 1px 5px;
+      }
+    }
+
+    .carl-change-fields-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .carl-change-field-full {
+      grid-column: 1 / -1;
+    }
+
+    .carl-conditions-editor {
+      margin-top: 4px;
+      padding-left: 10px;
+      border-left: 2px solid var(--color-border-light-tertiary);
+
+      .carl-condition-row {
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 2px;
+
+        input[type="text"] { flex: 1; }
+      }
+    }
+  }
+
+  .carl-target-effects-editor {
+    margin: 4px 0 8px;
+
+    .carl-target-effect-row {
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+
+      .carl-target-effect-crit {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      input[type="text"].carl-w-medium { flex: 1; }
+    }
+  }
+
+  // Resistances table (module/data/actor-base.mjs's system.resistances) on
+  // the actor sheet's Description tab - one row per CONFIG.CARLRPG.damageTypes
+  // entry, each a plain label + a real dropdown into
+  // CONFIG.CARLRPG.resistanceStates.
+  .carl-resistances-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 4px $padding-md;
+    margin: 4px 0 10px;
+  }
+
+  .carl-resistance-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .carl-resistance-type {
+    font-size: 12px;
+  }
+
+  // Upgrade tier's damage-type split (docs/known-gaps.md 1.3/1.7): two
+  // dropdowns side by side rather than a growable list, since the rules
+  // text only ever needs "override to one type" or "split evenly between
+  // two" (e.g. Magic Missile Rank 10's "Force and Fire").
+  .carl-upgrade-damage-split > div {
+    display: flex;
+    gap: 6px;
+  }
+
+  .carl-string-list-row {
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+
+    input[type="text"] { flex: 1; }
+  }
+
+  .carl-roll-advancement {
+    margin: 6px 0;
+  }
+
+  .item-type-label {
+    font-size: 12px;
+    opacity: 0.75;
+  }
+}

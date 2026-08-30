@@ -1,0 +1,93 @@
+{
+  "_id": "QelI6h05kzy6MSDV",
+  "name": "Fabricate",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/tools/smithing/crucible.webp",
+  "system": {
+    "description": "<p>Use this Skill to make generic, mundane items with no inherent bonuses wholly out of Misc. Junk, but your GM can give them situational bonuses. Examples include a ladder, a 50ft rope, or a ceramic pot to store napalm. For items with moving parts, see the Engineering Skill instead. Make an Unopposed Skill Check. On Success, you create the item.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Choose a mundane item to specialize in. You have Advantage when creating that item.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "xCoOQIJQ1GtTsPij",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You may craft your specialty item with a +1 bonus level enchantment.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "9Eo4NeE2jblPBLTH",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You may craft your specialty item with up to +2 bonus level enchantment, and it takes half the time.",
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "GzHxZ10jMgNYnkiB",
+        "changes": [],
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Cannot create things with moving parts, fluids, or chemicals."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788117469128,
+    "modifiedTime": 1788117469128,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!QelI6h05kzy6MSDV"
+}

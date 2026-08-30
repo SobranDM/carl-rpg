@@ -1,0 +1,96 @@
+{
+  "_id": "TCQO2ZiNqDg7w20l",
+  "name": "Icicles",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/frozen.svg",
+  "system": {
+    "description": "<p>You conjure a volley of razor-sharp icicles and hurl them at a target.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d12",
+      "stat": "int",
+      "damageType": "ice"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d12 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Icicles",
+            "mode": "add",
+            "value": "1d12",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d12 base damage, and the target gains the Stiff Legs Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Icicles",
+            "mode": "add",
+            "value": "1d12",
+            "damageDiceKind": "base"
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "stiffLegs",
+            "stacks": 1,
+            "critOnly": false
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d12 base damage, and this Attack deals Armor-Piercing damage (ignores DR).",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Icicles",
+            "mode": "add",
+            "value": "1d12",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "manaCost": 19,
+    "range": "60 feet",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "attack"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!TCQO2ZiNqDg7w20l"
+}

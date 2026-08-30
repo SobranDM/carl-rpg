@@ -1,0 +1,188 @@
+@use '../utils/typography' as *;
+@use '../utils/variables' as *;
+
+@mixin styles {
+  .item-form {
+    font-family: $font-primary;
+  }
+
+  .sheet-header {
+    flex: 0 auto;
+    overflow: hidden;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+
+    .profile-img {
+      flex: 0 0 100px;
+      height: 100px;
+      margin-right: 10px;
+    }
+
+    .header-fields {
+      flex: 1;
+    }
+
+    h1.charname {
+      height: 50px;
+      padding: 0px;
+      margin: 5px 0;
+      border-bottom: 0;
+      flex: 1;
+      min-width: 0;
+      input {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+      }
+    }
+  }
+
+  // Name row: Level/Floor sit compact beside the name field rather than in
+  // their own grid row below (see header.hbs / header-npc.hbs).
+  .carl-name-row {
+    align-items: center;
+    gap: $padding-md;
+  }
+
+  .carl-name-row-field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 2px;
+  }
+
+  .sheet-tabs {
+    flex: 0;
+  }
+
+  // Folder-style tabs: top-rounded active tab, panel-matching background, no
+  // bottom border so it visually welds into the body panel beneath it.
+  // margin-bottom keeps tab content from sitting flush against this same
+  // border - .window-content .tab's own margin-top below targeted the
+  // wrong (nonexistent) ".sheet-body" wrapper and never actually applied.
+  nav.tabs {
+    border-bottom: 1px solid var(--carl-border-soft);
+    margin-bottom: 8px;
+    gap: 2px;
+
+    a[data-action="tab"] {
+      border: 1px solid transparent;
+      border-radius: 4px 4px 0 0;
+      padding: 4px 10px;
+      color: var(--carl-text-muted);
+
+      &:hover {
+        color: var(--carl-accent);
+      }
+
+      &.active {
+        background: var(--carl-panel-bg);
+        border-color: var(--carl-border-soft);
+        border-bottom-color: transparent;
+        color: var(--carl-accent);
+        margin-bottom: -1px;
+      }
+    }
+  }
+
+  // Broad input theming, matching the frosted-panel/theme-border vocabulary
+  // used across the rest of the sheet rather than Foundry's default fields.
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    background: var(--carl-input-bg);
+    border: 1px solid var(--carl-border-soft);
+    color: var(--carl-text);
+  }
+
+  // Native <option> popups render as a separate browser surface that
+  // doesn't inherit the <select>'s translucent background - without this,
+  // the popup falls back to the browser's default light background while
+  // still inheriting our light --carl-text color, reading as light-grey-on-
+  // white despite the dark theme.
+  select {
+    color-scheme: dark;
+  }
+
+  // Native checkboxes have the same light-on-light contrast problem as
+  // <select> dropdowns did - accent-color themes both the box fill and the
+  // checkmark itself, which plain background/border overrides can't reach.
+  input[type="checkbox"] {
+    accent-color: var(--carl-accent);
+  }
+
+  option {
+    background: var(--carl-bg-solid);
+    color: var(--carl-text);
+  }
+
+  // Standardized field widths (see utils/_variables.scss) - applied
+  // directly on individual inputs/selects per their expected content, since
+  // an explicit width always wins over a grid cell's stretch default.
+  .carl-w-tiny { width: $width-tiny; text-align: center; }
+  .carl-w-short { width: $width-short; }
+  .carl-w-medium { width: $width-medium; }
+  .carl-w-full { width: 100%; }
+
+  // Responsive field row: each field keeps its own natural width (driven by
+  // its .carl-w-* child, see above) and wraps onto additional rows once a
+  // row runs out of space, instead of a rigid grid-Ncol forcing N equal
+  // columns, or a grid `1fr` track that can end up narrower than a
+  // fixed-width child and force it to overflow past the sheet's edge (this
+  // was a real bug - a wide field like Advancement Gate's carl-w-medium
+  // select in a row of 4 could get squeezed into a track well under its own
+  // 12em width, e.g. a select field runs off the right edge). Flex naturally
+  // never sizes a track smaller than its child's own width, so an overflow
+  // like that becomes a wrap instead. Used in place of .grid.grid-Ncol
+  // wherever a row mixes several .carl-w-* fields (see ranked-fields.hbs,
+  // attributes-*.hbs, changes-editor.hbs).
+  .carl-field-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $padding-md;
+    margin: $padding-md 0;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+  }
+
+  // NOTE: an earlier version of this rule set explicit height:100% on
+  // .window-content/.tab (intending to fix the wrong, nonexistent
+  // ".sheet-body" selector). Foundry's own core .window-content is already
+  // a flex column that correctly sizes the header/nav/tab-content siblings
+  // - an explicit height:100% on .tab ignores how much space the header
+  // and nav bar above it already consumed and forces the tab to claim the
+  // *entire* content area's height instead of its real remaining share,
+  // which pushed the header out of view (confirmed: scrolling/prose-mirror
+  // sizing worked fine even while this rule was accidentally dead, proving
+  // core's native layout never needed our help here). Removed entirely.
+
+  prose-mirror {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 200px;
+  }
+
+  // Core uses display:block on hover for prose-mirror toggles, which breaks flex icon centering.
+  prose-mirror:hover button.toggle:enabled {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+  }
+
+  prose-mirror button.toggle > i {
+    margin: 0;
+    line-height: 1;
+  }
+}

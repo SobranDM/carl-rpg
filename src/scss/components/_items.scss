@@ -1,0 +1,149 @@
+@mixin styles {
+  // Section Header - filled color-block, matching foundryvtt-wwn's
+  // section-header treatment rather than a bare bold label on the window
+  // background.
+  .items-header {
+    height: 28px;
+    margin: 2px 0;
+    padding: 0 4px;
+    align-items: center;
+    color: var(--carl-header-text);
+    background: var(--carl-header-bg);
+    border: none;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    > * {
+      font-size: 12px;
+      text-align: center;
+    }
+    .item-name {
+      font-weight: 700;
+      padding-left: 5px;
+      text-align: left;
+      display: flex;
+    }
+    .item-controls a {
+      color: var(--carl-accent);
+    }
+  }
+
+  .items-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    color: var(--color-text-primary);
+
+    .item-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .item-name {
+      flex: 2;
+      margin: 0;
+      overflow: hidden;
+      font-size: 13px;
+      text-align: left;
+      align-items: center;
+      display: flex;
+      h3, h4 {
+        margin: 0;
+        white-space: nowrap;
+        // Shorthand (not overflow-x alone): per spec, setting only one axis
+        // to a non-visible value forces the OTHER axis to compute as auto
+        // (never visible) - so overflow-x:hidden alone silently opts this
+        // element into a real (if razor-thin, since the box is barely
+        // taller than one line) vertical scrollbar the instant its content
+        // is even a sub-pixel taller than the box, which is exactly the
+        // "tiny scrollbar by skill/spell names" symptom.
+        overflow: hidden;
+      }
+    }
+
+    // Clicking the name toggles a read-only description/upgrades drawer
+    // (see skills-section-body.hbs) - reset link styling so it just reads
+    // as the plain item name with a hover affordance, not a hyperlink.
+    .carl-item-name-toggle {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+
+      &:hover h4 {
+        color: var(--carl-accent);
+      }
+    }
+
+    .item-controls {
+      display: flex;
+      flex: 0 0 100px;
+      justify-content: flex-end;
+      a {
+        font-size: 12px;
+        text-align: center;
+        margin: 0 6px;
+      }
+    }
+
+    .item {
+      align-items: center;
+      padding: 0 2px;
+      border-bottom: 1px solid var(--color-border-light-primary);
+      &:last-child { border-bottom: none; }
+      .item-name {
+        .item-image {
+          flex: 0 0 30px;
+          height: 30px;
+          background-size: 30px;
+          border: none;
+          margin-right: 5px;
+        }
+      }
+    }
+
+    .item-prop {
+      text-align: center;
+      border-left: 1px solid var(--color-border-light-primary);
+      border-right: 1px solid var(--color-border-light-primary);
+      font-size: 12px;
+    }
+
+    .items-header {
+      height: 28px;
+      margin: 2px 0;
+      padding: 0 4px;
+      align-items: center;
+      color: var(--carl-header-text);
+      background: var(--carl-header-bg);
+      border: none;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+      > * {
+        font-size: 11px;
+        text-align: center;
+      }
+      .item-name {
+        padding-left: 5px;
+        text-align: left;
+      }
+      .item-controls a,
+      .effect-controls a {
+        color: var(--carl-accent);
+      }
+    }
+  }
+
+  .item-formula {
+    flex: 0 0 200px;
+    padding: 0 8px;
+  }
+}

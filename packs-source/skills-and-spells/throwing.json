@@ -1,0 +1,63 @@
+{
+  "_id": "I3GGNYDnRuIeo6TJ",
+  "name": "Throwing",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>This Skill is used for throwing objects like a football or dynamite. You can Throw an object that weighs up to your STR in pounds at a distance of up to your STR x10 feet. If you want to Throw a heavier or bulkier item, you do so with Disadvantage. To hit a target area, make an Unopposed Skill Check. To hit a foe with an object, make an Attack Skill Check vs. the target's Evade. On Fail, roll 1d8 for direction; the amount the Skill Check missed by is the distance away in feet it lands.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You have Advantage when Throwing to a target who wants to catch what you are selling.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Choose the direction on a miss, rather than roll.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Your Throw range is your STR x20 feet.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!I3GGNYDnRuIeo6TJ"
+}

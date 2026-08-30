@@ -1,0 +1,129 @@
+{
+  "_id": "wbWIifMGwCVuR4It",
+  "name": "Shotgun",
+  "type": "skill",
+  "folder": "P4CllUndu9WO8BEU",
+  "img": "icons/weapons/guns/shotgun-short-tan.webp",
+  "system": {
+    "description": "<p>Attack Type: Ranged, DEX. Range: 30 feet.</p><p><strong>Limitations:</strong> Requires two hands to wield. Each Attack requires proper ammunition. Spend one Action to reload after a Major Fail or worse.</p><p><strong>Base Damage:</strong> 1d10 Piercing.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d10",
+      "stat": "",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d10 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shotgun",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "SFeGaoOD6BmEpQo6",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "ZfFLWDusU9OW0Rfl",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d10 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shotgun",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "0dpriLJHHqmwTOVA",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "s9lcEpOO0abOgvbZ",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d10 base damage, +5ft Splash.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shotgun",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "daZeJ4J3rIKGO9or",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "7N58joi9rhmUUC7M",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "ranged",
+    "range": "30 feet",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Requires two hands to wield. Each Attack requires proper ammunition. Spend one Action to reload after a Major Fail or worse."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115293162,
+    "modifiedTime": 1788116184371,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 112500,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!wbWIifMGwCVuR4It"
+}

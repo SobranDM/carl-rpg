@@ -1,0 +1,63 @@
+{
+  "_id": "9WOqDeVexyEnNiYs",
+  "name": "Salvage",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Salvage is the art of collecting useful items from things you have deconstructed or failed to properly craft. Salvaging usually takes 1 hour to accomplish. At the end of that time, make an Unopposed Skill Check. On Success, you recover half of the important raw materials.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Your Salvage Checks take 30 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "On Success, you recover all of the important raw materials.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "On a crafting Standard Fail or Near Miss, roll your crafting Check again with Advantage, with an additional 15-minute time expenditure.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Salvage cannot be used with explosive devices."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!9WOqDeVexyEnNiYs"
+}

@@ -1,0 +1,32 @@
+@use 'utils/palette';
+@use 'global/window';
+@use 'global/grid';
+@use 'global/flex';
+@use 'components/chrome';
+@use 'components/forms';
+@use 'components/resource';
+@use 'components/items';
+@use 'components/editors';
+@use 'components/actor-tabs';
+@use 'components/abilities';
+@use 'components/drawers';
+@use 'components/hb-pips';
+@use 'components/toolbox';
+@use 'components/spend-stat-points';
+@use 'components/chat';
+
+/* Styles limited to carl-rpg sheets */
+.carl-rpg {
+  @include palette.variables;
+  @include chrome.styles;
+  @include forms.styles;
+  @include resource.styles;
+  @include items.styles;
+  @include editors.styles;
+  @include actor-tabs.styles;
+  @include abilities.styles;
+  @include drawers.styles;
+  @include hb-pips.styles;
+  @include toolbox.styles;
+  @include spend-stat-points.styles;
+}

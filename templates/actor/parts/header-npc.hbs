@@ -1,0 +1,22 @@
+{{!-- Sheet Header (NPC) --}}
+<header class="sheet-header">
+  <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+  <div class="header-fields">
+    <div class="carl-name-row flexrow">
+      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name" /></h1>
+      <div class="resource flex-group-center carl-name-row-field">
+        <label for="carl-floor-display" class="resource-label">{{localize "CARLRPG.Actor.Floor"}}</label>
+        <input id="carl-floor-display" type="text" class="carl-w-tiny carl-floor-readonly" value="{{currentFloor}}" disabled />
+      </div>
+    </div>
+    {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
+    {{> "systems/carl-rpg/templates/actor/parts/shield-bar.hbs"}}
+    <div class="resource">
+      <label for="system.mobTier" class="resource-label">{{localize "CARLRPG.Actor.MobTier"}}</label>
+      <select class="carl-w-medium" name="system.mobTier">
+        <option value=""></option>
+        {{selectOptions config.mobTiers selected=system.mobTier localize=true}}
+      </select>
+    </div>
+  </div>
+</header>

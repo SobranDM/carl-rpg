@@ -1,0 +1,23 @@
+{
+  "type": "Item",
+  "folder": "5xNYxKKJ3KTxXjSE",
+  "name": "Edged",
+  "color": null,
+  "sorting": "a",
+  "_id": "pyEnqopryzb0EWFG",
+  "description": "",
+  "sort": 300000,
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115646274,
+    "modifiedTime": 1788115882713,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!folders!pyEnqopryzb0EWFG"
+}

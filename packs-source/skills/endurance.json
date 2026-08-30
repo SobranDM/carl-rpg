@@ -1,0 +1,63 @@
+{
+  "_id": "r98R3Y8b8J6n3Gbt",
+  "name": "Endurance",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Use this Skill to prevent fatigue while grinding, walking long distances (measured in miles), or other extended strenuous activities. Make an Unopposed Skill Check. On Success, you may continue the activity and do not gain the Fatigued Debuff.</p>",
+    "changes": [],
+    "governingStat": "con",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can ignore the effects of a Major Fail when making these Checks.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "If you are not Fatigued or in extreme conditions, you make this Check with Advantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "If your Check is a Critical Fail, you can take the effects of a Standard Fail.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!r98R3Y8b8J6n3Gbt"
+}

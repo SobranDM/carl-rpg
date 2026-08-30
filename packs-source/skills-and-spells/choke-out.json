@@ -1,0 +1,157 @@
+{
+  "_id": "ltuobdTkYNhan4Yd",
+  "name": "Choke Out",
+  "type": "damageEffect",
+  "folder": "m4SlnWEY7uAyxRJY",
+  "img": "icons/skills/wounds/blood-cells-vessel-red-orange.webp",
+  "system": {
+    "description": "<p>Wrasslin' Damage Effect, Passive. If the target is at 10% Health Bar or less, you deal x2 the total damage. Only check the box matching the highest threshold you qualify for (from this effect or its Upgrades) - don't stack multiple multipliers on the same hit.</p>",
+    "changes": [
+      {
+        "targetType": "skillDamage",
+        "target": "Choke Out",
+        "mode": "multiply",
+        "value": "2",
+        "damageDiceKind": "multiplier",
+        "conditions": [
+          {
+            "label": "Target at 10% Health Bar or less?"
+          }
+        ]
+      }
+    ],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Choke Out activates at 20% Health Bar or less.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Choke Out",
+            "mode": "multiply",
+            "value": "2",
+            "damageDiceKind": "multiplier",
+            "damageType": "",
+            "label": "",
+            "conditions": [
+              {
+                "default": false,
+                "label": "Target at 20% Health Bar or less?",
+                "id": "bGTkqlyohur402ig"
+              }
+            ],
+            "id": "qPM7UzxTyigzTAwn"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "RPf2hUEqLIdb1Ho2",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Choke Out activates at 40% Health Bar or less, and deals x4 the total damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Choke Out",
+            "mode": "multiply",
+            "value": "4",
+            "damageDiceKind": "multiplier",
+            "damageType": "",
+            "label": "",
+            "conditions": [
+              {
+                "default": false,
+                "label": "Target at 40% Health Bar or less?",
+                "id": "avtThfMTA8ahdz4Z"
+              }
+            ],
+            "id": "s32rFWd9OJLD7wWl"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "GZJg2VqApEsiQM25",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Choke Out activates at 80% Health Bar or less, and deals x8 the total damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Choke Out",
+            "mode": "multiply",
+            "value": "8",
+            "damageDiceKind": "multiplier",
+            "damageType": "",
+            "label": "",
+            "conditions": [
+              {
+                "default": false,
+                "label": "Target at 80% Health Bar or less?",
+                "id": "qObrkboDRgBjHHSn"
+              }
+            ],
+            "id": "tl0sko9bBp1bAil4"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "LO6sFT8HVzKdKGXt",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "parentSkills": [
+      "Wrasslin'"
+    ],
+    "cooldown": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116153669,
+    "modifiedTime": 1788116153669,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!ltuobdTkYNhan4Yd"
+}

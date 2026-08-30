@@ -1,0 +1,69 @@
+@mixin styles {
+  .carl-hb-pips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-bottom: 4px;
+  }
+
+  // Each pip shows its CON Mod (the per-slot damage threshold, p.93-94) and
+  // its cumulative percentage (p.270's "100% on the rightmost slot" rule,
+  // generalized to any slot count via --pip-hue set inline per pip in
+  // hb-bar.hbs). Sized to fit both legibly - a bare colored box (the old
+  // 10x14px pip) has no room for either.
+  .carl-hb-pip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 30px;
+    min-width: 26px;
+    max-width: 60px;
+    height: 34px;
+    border-radius: 3px;
+    border: 1px solid var(--carl-border-soft);
+    background: transparent;
+    color: var(--carl-text-muted);
+    cursor: pointer;
+    transition: background 0.1s ease, transform 0.1s ease;
+
+    &:hover {
+      transform: scale(1.08);
+    }
+
+    // Red-to-green hue sweep across the whole bar (low % = red, high % =
+    // green), matching the reference image rather than the book's blunter
+    // 3-zone green/yellow/red split.
+    &.filled {
+      background: hsl(var(--pip-hue) 65% 38%);
+      border-color: hsl(var(--pip-hue) 65% 55%);
+      color: var(--carl-header-text);
+    }
+  }
+
+  .carl-hb-pip-value {
+    font-weight: 700;
+    font-size: 13px;
+    line-height: 1;
+  }
+
+  .carl-hb-pip-percent {
+    font-size: 8px;
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+
+  .carl-hb-fallback {
+    font-weight: bold;
+  }
+
+  .carl-hb-edit {
+    gap: 4px;
+    font-size: 11px;
+    opacity: 0.8;
+
+    input {
+      text-align: center;
+    }
+  }
+}

@@ -1,0 +1,14 @@
+$padding-md: 10px;
+$padding-lg: 20px;
+
+// Standardized input/select widths, so field width tracks likely content
+// instead of ambient grid/flex sizing (see components/_forms.scss's
+// .carl-w-* utility classes).
+$width-tiny: 3em;    // 1-3 digit numeric fields: stat value, rank, mana cost,
+                      // quantity, weight, aiFavor, HB value/max, banked stat
+                      // points, condition stacks/remaining
+$width-short: 6em;   // short text/codes and short-label selects: dice
+                      // notation, range, cooldown, duration, governingStat,
+                      // baseDamage.stat, attackType, rankThreshold
+$width-medium: 12em; // medium selects/text: category, advancementGate,
+                      // mobTier, tier, condition label/source

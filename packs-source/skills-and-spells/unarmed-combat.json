@@ -1,0 +1,129 @@
+{
+  "_id": "vS24h48XGWhej8MN",
+  "name": "Unarmed Combat",
+  "type": "skill",
+  "folder": "0qMmqOaJ47GUExAE",
+  "img": "icons/weapons/fist/fist-brass-knuckles.webp",
+  "system": {
+    "description": "<p>Every crawler starts out with this Skill. This is a mixture of all strikes, so call it what you will when you Attack. Attack Type: Melee, STR. AI Favor: 1.</p><p><strong>Limitations:</strong> Cannot choose a Damage Effect.</p><p><strong>Base Damage:</strong> 1d4 + STR Bludgeoning.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Unarmed Combat",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "CPwuf1Nnj5irTEWi",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "eu0hvTJxcihmGOrK",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Unarmed Combat",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "RUE5yC2WmvBj2XmV",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "nlPW8bRUiFGJkClo",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+2d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Unarmed Combat",
+            "mode": "add",
+            "value": "2d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "ggn7M12J99JZlPJB",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "aws4JIawFz9XjMyL",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 1,
+    "cooldown": "",
+    "limitations": "Cannot choose a Damage Effect."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115742453,
+    "modifiedTime": 1788115836528,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 125000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!vS24h48XGWhej8MN"
+}

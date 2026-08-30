@@ -1,0 +1,65 @@
+{
+  "_id": "YEH1kRC3CFY9R0sv",
+  "name": "Clockwork Triplicate",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/clockwork.svg",
+  "system": {
+    "description": "<p><strong>Limitations:</strong> Only castable on pets and minions.</p><p>When you cast this spell upon your pet or minion, it splits into three, each with its full complement of abilities. You must spend an Action making an Unopposed Animal Handling Skill Check to issue a new command to each one separately.</p><p><em>Note: this pet/minion-duplication mechanic has no structural support in this system - track manually.</em></p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Duration is 2 minutes per Rank.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Duration is 3 minutes per Rank.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "When you command your pet or minion, the clockwork versions follow suit.",
+        "changes": []
+      }
+    ],
+    "manaCost": 26,
+    "range": "5 feet",
+    "duration": "1 minute per Rank",
+    "cooldown": "",
+    "castingKeywords": [
+      "passive"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!YEH1kRC3CFY9R0sv"
+}

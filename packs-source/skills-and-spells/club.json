@@ -1,0 +1,145 @@
+{
+  "_id": "RRi0sers5qA6oDpS",
+  "name": "Club",
+  "type": "skill",
+  "folder": "Pfn39rVBtWXqCh0i",
+  "img": "icons/weapons/clubs/bat-baseball-wood.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, STR.</p><p><strong>Base Damage:</strong> 1d6 + STR Bludgeoning.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d6",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d6 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Club",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "7VgdBQ6vwvQSBc0J",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "fiBFx04Wopq0nWxK",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d6 base damage, and the target gains the Woozy Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Club",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "JazxHV4iFATBhU4L",
+            "conditions": []
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "woozy",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "cOVMUn0nDTT41wpT"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "sEdkeCK0FU4fWZYZ",
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d6 base damage, and if the target loses at least 3 Health Bar slots, they gain the Take Down Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Club",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "MLIenJh5fawgDn2D",
+            "conditions": []
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "takeDown",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "P5VBQmZVQgvmfjJp"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "2fgUuIEBbYHv3uDi",
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788114920349,
+    "modifiedTime": 1788115385598,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 100000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!RRi0sers5qA6oDpS"
+}

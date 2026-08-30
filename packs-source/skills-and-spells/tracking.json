@@ -1,0 +1,63 @@
+{
+  "_id": "SDETNG2IPIyXpVOg",
+  "name": "Tracking",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Use this Skill to find and follow tracks. Make an Unopposed Skill Check. Once you find tracks, you must make another Tracking Check every 15 minutes to continue following them. On Success, you either find the tracks or continue following them.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can follow found tracks for 30 minutes before making a new Check, and gain 1 piece of information about the target(s).",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can follow found tracks for 1 hour before making a new Check, and gain 2 pieces of information about the target(s).",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You can follow found tracks for 2 hours before making a new Check, and gain 4 pieces of information about the target(s).",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!SDETNG2IPIyXpVOg"
+}

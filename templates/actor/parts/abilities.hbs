@@ -1,0 +1,20 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="abilities">
+  <div class="carl-abilities-layout">
+    {{> "systems/carl-rpg/templates/actor/parts/stats-column.hbs"}}
+
+    <div class="carl-abilities-main">
+      {{#> carlCollapsibleSection sectionId="skills" expanded=system.uiState.skillsExpanded
+           label=(localize "CARLRPG.Tab.Skills") toggleScope="actor" togglePath="system.uiState.skillsExpanded"
+           showLockToggle=true locked=system.uiState.itemsLocked}}
+        {{> "systems/carl-rpg/templates/actor/parts/skills-section-body.hbs"
+            skills=skills unmatchedDamageEffects=unmatchedDamageEffects config=config locked=system.uiState.itemsLocked}}
+      {{/carlCollapsibleSection}}
+
+      {{#> carlCollapsibleSection sectionId="spells" expanded=system.uiState.spellsExpanded
+           label=(localize "CARLRPG.Tab.Spells") toggleScope="actor" togglePath="system.uiState.spellsExpanded"
+           showMana=true manaValue=system.mana.value manaMax=system.mana.max}}
+        {{> "systems/carl-rpg/templates/actor/parts/spells-section-body.hbs" spells=spells locked=system.uiState.itemsLocked}}
+      {{/carlCollapsibleSection}}
+    </div>
+  </div>
+</section>

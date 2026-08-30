@@ -1,0 +1,63 @@
+{
+  "_id": "PGYnFyaNfD1AXShC",
+  "name": "Investigation",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You spend 10 minutes looking at an area or puzzle in front of you and might make heads or tails of it. Make an Unopposed Skill Check. On Success, you learn something useful.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "If you're familiar with the area you are investigating, you can make the Skill Check with Advantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Each attempt takes 5 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Roll with Advantage if you know the parties involved.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!PGYnFyaNfD1AXShC"
+}

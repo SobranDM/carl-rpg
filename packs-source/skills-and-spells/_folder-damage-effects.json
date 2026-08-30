@@ -1,0 +1,23 @@
+{
+  "_id": "m4SlnWEY7uAyxRJY",
+  "name": "Damage Effects",
+  "type": "Item",
+  "description": "",
+  "sorting": "a",
+  "sort": 100000,
+  "color": null,
+  "folder": "0qMmqOaJ47GUExAE",
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115882713,
+    "modifiedTime": 1788115885507,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!folders!m4SlnWEY7uAyxRJY"
+}

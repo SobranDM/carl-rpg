@@ -1,0 +1,137 @@
+{
+  "_id": "9hk5btVdz5dJ6VgH",
+  "name": "Bite",
+  "type": "skill",
+  "folder": "jT3gMEIaINuqbF2j",
+  "img": "icons/creatures/abilities/bear-roar-bite-brown-green.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, STR.</p><p><strong>Limitations:</strong> The target must have an appendage you can clamp down onto. You taste your victim's blood. Better hope they're not poisonous.</p><p><strong>Base Damage:</strong> 1d8 + STR Piercing.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d8",
+      "stat": "str",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d8 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bite",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "oIHf1vjGY58ecD9A",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "Me8Hkjzo6v5Mcs3X",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d8 base damage. You may latch on to move when the foe moves during their next Action (then you let go).",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bite",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "nHBaoJzrn322uI9q",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "hvOykIdsRzuseu3b",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d8 base damage, and the target gains the Woozy Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bite",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "j3KBwmflxkIjj5ra",
+            "conditions": []
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "woozy",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "olO1nhkq0ZYUQIHa"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "ICOjg5IvJOFoWfMt",
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "The target must have an appendage you can clamp down onto."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788114891170,
+    "modifiedTime": 1788115367921,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!9hk5btVdz5dJ6VgH"
+}

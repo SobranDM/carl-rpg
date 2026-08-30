@@ -1,0 +1,66 @@
+{
+  "_id": "KaraVbPXP9488zCy",
+  "name": "Web",
+  "type": "spell",
+  "img": "icons/svg/net.svg",
+  "system": {
+    "description": "<p>A cone of sticky webbing shoots from your fingers. Make a single Spell Attack Skill Check vs. each friend and foe's Evade (if any). On Success, that entity gains the Held Debuff. The Rank of this spell is used in the Opposed Difficulty to escape, instead of STR.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+5ft Cone. Duration is 5 rounds.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+5ft Cone. Duration is 10 rounds.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+5ft Cone. Duration is 15 rounds.",
+        "changes": []
+      }
+    ],
+    "manaCost": 6,
+    "range": "20ft Cone",
+    "duration": "2 rounds",
+    "cooldown": "",
+    "castingKeywords": [
+      "attack",
+      "areaOfEffect"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!KaraVbPXP9488zCy"
+}

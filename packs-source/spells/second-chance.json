@@ -1,0 +1,65 @@
+{
+  "_id": "4fLPoiSPUhjUxmEh",
+  "name": "Second Chance",
+  "type": "spell",
+  "img": "icons/svg/skull.svg",
+  "system": {
+    "description": "<p>You raise a Mob with a level lower than your own from the dead. The Mob temporarily becomes your Undead Minion with half of its original Health Bar slots. You spend one Action to command it, then it acts independently with 1 Move Action and 1 other Action (usually an Attack) until given new instructions.</p><p><em>This temporary undead-minion-summon mechanic has no structural support in this system - track the minion manually.</em></p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "The Mob can be up to 5 levels higher than you, and the duration is 5 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The Mob can be up to 10 levels higher than the caster, with a duration of 15 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The Mob can be up to 15 levels higher than the caster, with a duration of 45 minutes.",
+        "changes": []
+      }
+    ],
+    "manaCost": 10,
+    "range": "10 feet",
+    "duration": "1 minute",
+    "cooldown": "",
+    "castingKeywords": [
+      "passive"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!4fLPoiSPUhjUxmEh"
+}

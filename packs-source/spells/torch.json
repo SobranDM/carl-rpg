@@ -1,0 +1,65 @@
+{
+  "_id": "FpFKsbBbeMymdSSI",
+  "name": "Torch",
+  "type": "spell",
+  "img": "icons/svg/light.svg",
+  "system": {
+    "description": "<p>You create a magical orb of light that follows slightly above and behind you. It provides bright light for a 20ft radius and dim light for a 20ft radius past that.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can move the orb up to 20 feet away from you.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can move the orb up to 60 feet away from you and can double the radius of the brightness with a thought.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You can move the orb up to 100 feet away from you and attach it to a surface as an Action.",
+        "changes": []
+      }
+    ],
+    "manaCost": 1,
+    "range": "Self",
+    "duration": "Until you enter a saferoom or descend to a new floor.",
+    "cooldown": "",
+    "castingKeywords": [
+      "passive"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!FpFKsbBbeMymdSSI"
+}

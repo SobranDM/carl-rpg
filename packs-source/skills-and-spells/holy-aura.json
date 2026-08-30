@@ -1,0 +1,93 @@
+{
+  "_id": "Vswoi5vi5sKq5xex",
+  "name": "Holy Aura",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/holy-shield.svg",
+  "system": {
+    "description": "<p>You channel a deity-blessed aura that bursts outward from you, striking only the enemies caught within it while leaving your allies untouched.</p>",
+    "changes": [],
+    "governingStat": "cha",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "cha",
+      "damageType": "holy"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage, and undead targets take double damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Holy Aura",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage, and the burst radius increases by 5ft.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Holy Aura",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d4 base damage, and the burst radius increases by another 5ft.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Holy Aura",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "manaCost": 7,
+    "range": "5ft Burst radius",
+    "duration": "",
+    "cooldown": "Once per round",
+    "castingKeywords": [
+      "attack",
+      "areaOfEffect"
+    ],
+    "favoredClasses": [
+      "Cleric",
+      "Paladin"
+    ],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Vswoi5vi5sKq5xex"
+}

@@ -1,0 +1,37 @@
+{{!-- Target Effects editor: "on hit, the target gains Debuff X" for this
+      Upgrade tier (module/data/shared/upgrade-tier.mjs's defineTargetEffectSchema).
+      NOT the same thing as a ChangeEntry's own `conditions` field just above
+      (roll-time opt-in checkboxes gating a bonus to the ACTING actor) - see
+      changes-editor.hbs's docstring for that distinction. `debuffKey` drives
+      a real dropdown into CONFIG.CARLRPG.debuffs (a closed enum), not free
+      text. Invoke with `targetEffects` (the array) and `path` (its dotted
+      path) - same context-depth rules as changes-editor.hbs apply: any
+      reference to `path`/`config` from inside {{#each targetEffects}} needs
+      one `../`. --}}
+<div class="carl-target-effects-editor">
+  <label class="resource-label">{{localize "CARLRPG.Ranked.TargetEffectsLegend"}}</label>
+  {{#each targetEffects as |te teIndex|}}
+  <div class="carl-target-effect-row flexrow">
+    <select class="carl-w-medium" name="{{concat ../path '.' teIndex '.debuffKey'}}">
+      <option value=""></option>
+      {{selectOptions ../config.debuffs selected=te.debuffKey localize=true}}
+    </select>
+    <input type="text" class="carl-w-tiny" name="{{concat ../path '.' teIndex '.stacks'}}" value="{{te.stacks}}"
+      data-dtype="Number" title="{{localize 'CARLRPG.TargetEffect.Stacks'}}" />
+    <label class="carl-target-effect-crit">
+      <input type="checkbox" name="{{concat ../path '.' teIndex '.critOnly'}}" {{checked te.critOnly}} />
+      {{localize "CARLRPG.TargetEffect.CritOnly"}}
+    </label>
+    <input type="text" class="carl-w-medium" name="{{concat ../path '.' teIndex '.label'}}" value="{{te.label}}"
+      placeholder="{{localize 'CARLRPG.TargetEffect.LabelPlaceholder'}}" />
+    <a class="item-control" data-action="deleteArrayItem" data-path="{{../path}}" data-index="{{teIndex}}"
+      title="{{localize 'CARLRPG.TargetEffect.Remove'}}">
+      <i class="fas fa-trash"></i>
+    </a>
+  </div>
+  {{/each}}
+  <a class="item-control carl-add-link" data-action="addArrayItem" data-path="{{path}}"
+    data-template='{"debuffKey":"","stacks":1,"critOnly":false,"label":""}'>
+    <i class="fas fa-plus"></i> {{localize "CARLRPG.TargetEffect.Add"}}
+  </a>
+</div>

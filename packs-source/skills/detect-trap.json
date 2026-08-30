@@ -1,0 +1,63 @@
+{
+  "_id": "Z0egkRXFyBHBhrmO",
+  "name": "Detect Trap",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>When you suspect a room, door, chest, or other object has an active trap, this is the Skill you want. Make an Unopposed Skill Check. Roll with Disadvantage when using this Skill to scan an entire room or while moving. On Success, you are alerted to the presence of a non-magic trap, which typically allows you to avoid triggering it. On Fail, you sense nothing, and a trap may or may not be present.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can detect magical traps.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You no longer roll with Disadvantage when searching a broad area or while moving.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "When you are aware of nearby traps, your party has Advantage on their first Check to avoid or escape the effects.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Z0egkRXFyBHBhrmO"
+}

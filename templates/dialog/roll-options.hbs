@@ -1,0 +1,65 @@
+<div class="carl-dialog-body">
+  <div class="form-group">
+    <label>{{localize "CARLRPG.Dialog.RollMode"}}</label>
+    <div class="form-fields">
+      <label><input type="radio" name="advantage" value="normal" checked /> {{localize "CARLRPG.Dialog.Normal"}}</label>
+      <label><input type="radio" name="advantage" value="advantage" /> {{localize "CARLRPG.Dialog.Advantage"}}</label>
+      <label><input type="radio" name="advantage" value="disadvantage" /> {{localize "CARLRPG.Dialog.Disadvantage"}}</label>
+    </div>
+  </div>
+  {{#if showDifficulty}}
+  <div class="form-group">
+    <label>{{localize "CARLRPG.Dialog.Difficulty"}}</label>
+    <div class="form-fields">
+      <input type="number" name="difficulty" value="{{difficulty}}" placeholder="{{localize 'CARLRPG.Dialog.DifficultyPlaceholder'}}" />
+    </div>
+  </div>
+  {{/if}}
+  {{#if damageEffectChoices.length}}
+  <div class="form-group">
+    <label>{{localize "CARLRPG.Dialog.DamageEffect"}}</label>
+    <div class="form-fields">
+      <select name="damageEffectId">
+        <option value=""></option>
+        {{#each damageEffectChoices as |de|}}
+        <option value="{{de.id}}">{{de.name}} ({{localize "CARLRPG.Roll.Rank"}} {{de.rank}})</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+  {{/if}}
+  {{#if manaCostChoices.length}}
+  <div class="form-group carl-dialog-mana-cost">
+    <label>{{localize "CARLRPG.Spell.ManaCost"}}</label>
+    <div class="form-fields carl-dialog-mana-cost-list">
+      {{#each manaCostChoices as |mc index|}}
+      <label class="carl-dialog-mana-cost-option">
+        <input type="radio" name="manaCostChoice" value="{{index}}" {{#if mc.isBase}}checked{{/if}} />
+        {{mc.manaCost}} {{localize "CARLRPG.Actor.Mana"}}{{#unless mc.isBase}} - {{mc.description}}{{/unless}}
+      </label>
+      {{/each}}
+    </div>
+  </div>
+  {{/if}}
+  {{#if conditions.length}}
+  <div class="form-group carl-dialog-conditions">
+    <label>{{localize "CARLRPG.Dialog.OptionalModifiers"}}</label>
+    <div class="form-fields carl-dialog-conditions-list">
+      {{#each conditions as |cm|}}
+      {{#each cm.conditions as |cond|}}
+      <label class="carl-dialog-condition">
+        <input type="checkbox" name="conditions.{{cm.id}}.{{cond.id}}" {{#if cond.default}}checked{{/if}} />
+        {{cond.label}} <span class="carl-dialog-condition-source">({{cm.label}})</span>
+      </label>
+      {{/each}}
+      {{/each}}
+    </div>
+  </div>
+  {{/if}}
+  <div class="form-group">
+    <label>{{localize "CARLRPG.Dialog.SituationalModifier"}}</label>
+    <div class="form-fields">
+      <input type="number" name="modifier" value="0" autofocus />
+    </div>
+  </div>
+</div>

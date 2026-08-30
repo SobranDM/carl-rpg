@@ -1,0 +1,22 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="attributes">
+  <div class="carl-field-grid">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Item.Quantity"}}</label>
+      <input type="text" class="carl-w-tiny" name="system.quantity" value="{{system.quantity}}" data-dtype="Number" />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Item.Weight"}}</label>
+      <input type="text" class="carl-w-tiny" name="system.weight" value="{{system.weight}}" data-dtype="Number" />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Item.Equipped"}}</label>
+      <input type="checkbox" name="system.equipped" {{checked system.equipped}} />
+    </div>
+  </div>
+
+  <fieldset class="carl-changes">
+    <legend>{{localize "CARLRPG.Item.Changes"}}</legend>
+    {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
+      changes=system.changes path="system.changes" config=config item=item actorSkillNames=actorSkillNames}}
+  </fieldset>
+</section>

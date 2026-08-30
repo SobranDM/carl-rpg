@@ -1,0 +1,63 @@
+{
+  "_id": "zNusEVtR7Fs55z66",
+  "name": "Smithing",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>You may craft mundane items such as horseshoes, railroad spikes, nails, or armor and weapons, but without DR or any bonuses.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You may craft items up to a +5 bonus.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You may craft items up to a +10 bonus.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Your crafting with this Skill takes half the time.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!zNusEVtR7Fs55z66"
+}

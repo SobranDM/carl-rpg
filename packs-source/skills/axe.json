@@ -1,0 +1,87 @@
+{
+  "_id": "lTe6JaPbySuQL4wl",
+  "name": "Axe",
+  "type": "skill",
+  "img": "icons/weapons/axes/axe-battle-black.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, STR.</p><p><strong>Base Damage:</strong> 1d6 + STR Slashing.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d6",
+      "stat": "str",
+      "damageType": "slashing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d6 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Axe",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d6 base damage, and you may make an extra free Attack with Disadvantage against another foe adjacent to both you and the original target.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Axe",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d6 base damage, and on an Amazing Success or better, sever an arm (or similar) of your foe (which disarms anyone with a two-handed weapon).",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Axe",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!lTe6JaPbySuQL4wl"
+}

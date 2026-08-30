@@ -1,0 +1,63 @@
+{
+  "_id": "148DKuc6m8o8Y49W",
+  "name": "Improvised Explosive Device",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/explosion.svg",
+  "system": {
+    "description": "<p>Use this Skill to manipulate explosive material into bombs and traps without a Sapper's Table. You'll have to make an Explosives Handling Skill Check to avoid issues when crafting your device. On Success, you create the device. Bombs and traps can have timers and triggering devices more sophisticated than a burning fuse.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Your crafting takes half the time.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Your devices deal d10s of damage instead of d6s (the default).",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Your devices can be set to trigger only against a specific Mob, Boss, NPC, or crawler.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!148DKuc6m8o8Y49W"
+}

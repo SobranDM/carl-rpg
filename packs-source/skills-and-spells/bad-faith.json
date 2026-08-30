@@ -1,0 +1,91 @@
+{
+  "_id": "n3fXQPF1TtOiddYF",
+  "name": "Bad Faith",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/skull.svg",
+  "system": {
+    "description": "<p>An unholy presence invades your victim's mind, body, and soul.</p>",
+    "changes": [],
+    "governingStat": "cha",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d8",
+      "stat": "cha",
+      "damageType": "necrotic"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d8 base damage, +5ft Splash.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bad Faith",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d8 base damage, and end all Buffs on the victims for the duration of the combat.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bad Faith",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d8 base damage, +5ft Splash.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Bad Faith",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "manaCost": 10,
+    "range": "40 feet",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "attack"
+    ],
+    "favoredClasses": [
+      "Cleric"
+    ],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!n3fXQPF1TtOiddYF"
+}

@@ -1,0 +1,63 @@
+{
+  "_id": "8nzYJFldnVDyjRkP",
+  "name": "Chopper Pilot",
+  "type": "skill",
+  "img": "icons/svg/wingfoot.svg",
+  "system": {
+    "description": "<p>Known as a motorcycle in most parts of the world—and in the World Dungeon. You don't need to use this Skill if you're cruising through a town, but if you're racing, chasing, showing off, or trying to pop a wheelie, this is the Skill you want. If you're doing something wild or trying to avoid becoming a skid mark on the highway, make an Unopposed Skill Check. Depending on how extreme the circumstances are, the GM may apply Advantage or Disadvantage to the Check. On Success, you stay upright while performing your crazy maneuvers.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Your chopper has +5ft Move.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Attacking while piloting no longer suffers Disadvantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Your chopper has +5ft Move. When performing crazy stunts (like riding up a canyon wall), roll with Advantage.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "You suffer Disadvantage on Attack Skill Checks made while Piloting and cannot Attack with a weapon that requires two hands."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!8nzYJFldnVDyjRkP"
+}

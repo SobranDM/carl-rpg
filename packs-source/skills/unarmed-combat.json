@@ -1,0 +1,87 @@
+{
+  "_id": "vS24h48XGWhej8MN",
+  "name": "Unarmed Combat",
+  "type": "skill",
+  "img": "icons/skills/melee/strike-fist-yellow.webp",
+  "system": {
+    "description": "<p>Every crawler starts out with this Skill. This is a mixture of all strikes, so call it what you will when you Attack. Attack Type: Melee, STR. AI Favor: 1.</p><p><strong>Limitations:</strong> Cannot choose a Damage Effect.</p><p><strong>Base Damage:</strong> 1d4 + STR Bludgeoning.</p>",
+    "changes": [],
+    "governingStat": "str",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Unarmed Combat",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Unarmed Combat",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+2d4 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Unarmed Combat",
+            "mode": "add",
+            "value": "2d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 1,
+    "cooldown": "",
+    "limitations": "Cannot choose a Damage Effect."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!vS24h48XGWhej8MN"
+}

@@ -1,0 +1,87 @@
+{
+  "_id": "3rd7cfAKcphFL044",
+  "name": "Rapier",
+  "type": "skill",
+  "img": "icons/weapons/swords/rapier-guard-gold.webp",
+  "system": {
+    "description": "<p>Attack Type: Melee, DEX.</p><p><strong>Base Damage:</strong> 1d6 + DEX Piercing.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d6",
+      "stat": "dex",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d6 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Rapier",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d6 base damage, and you gain a +1 Evade Buff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Rapier",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d6 base damage, and you gain a +1 Evade Buff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Rapier",
+            "mode": "add",
+            "value": "1d6",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!3rd7cfAKcphFL044"
+}

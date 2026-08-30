@@ -1,0 +1,63 @@
+{
+  "_id": "R8H5sDOBy9ixBKYO",
+  "name": "Cartography",
+  "type": "skill",
+  "img": "icons/svg/direction.svg",
+  "system": {
+    "description": "<p>You probably played some old-school TTRPGs and think that mapping the dungeon will help you in some way. Wrong! It will help you in many ways. Make an Unopposed Skill Check. On Success, you figure out where you are in relation to other things.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can always return from whence you came quickly, assuming the dungeon walls haven't shifted in the meantime.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You provide an Advantage die to crawlers in your party (could be you) who are making Tracking Skill Checks or Checks that rely on spatial relations.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Even with merely a finger point or a \"thattaway,\" you can get from point A to point B via the most direct path.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!R8H5sDOBy9ixBKYO"
+}

@@ -1,0 +1,67 @@
+{
+  "_id": "YTAzhq0MWgB38LDA",
+  "name": "Oakhide",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/shield.svg",
+  "system": {
+    "description": "<p>Your skin toughens like bark, granting you a flat +2 Damage Resistance buff for the duration.</p><p><em>Note: DR has no temporary/conditional-bonus mechanism in this system - apply this bonus by hand while the buff is active.</em></p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Grants an additional +2 DR, and the duration increases to 3 minutes.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Grants an additional +2 DR, and the buff can now extend to party members/NPCs within 10ft.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Grants an additional +2 DR, and the duration increases to 4 minutes.",
+        "changes": []
+      }
+    ],
+    "manaCost": 5,
+    "range": "Self",
+    "duration": "2 minutes",
+    "cooldown": "10 minutes",
+    "castingKeywords": [
+      "passive"
+    ],
+    "favoredClasses": [
+      "Druid"
+    ],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!YTAzhq0MWgB38LDA"
+}

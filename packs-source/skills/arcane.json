@@ -1,0 +1,63 @@
+{
+  "_id": "5Hd5ouOemYhUbNNZ",
+  "name": "Arcane",
+  "type": "skill",
+  "img": "icons/svg/aura.svg",
+  "system": {
+    "description": "<p>You have general knowledge of magic and can determine whether items are magical or not. Make an Unopposed Skill Check. On Success, you can identify the item as magical or not.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You are able to determine details such as the specific Rank and bonus levels of magical items.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can imbue items with inherent spells using an Arcanist Table. See Crafting on p. 221.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The default cooldown of your imbued spells is 3 hours.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!5Hd5ouOemYhUbNNZ"
+}

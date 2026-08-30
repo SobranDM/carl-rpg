@@ -1,0 +1,43 @@
+// DCC visual identity: "gladiator-show floor lighting over an industrial
+// dungeon, splattered in blood" - layered on TOP of Foundry's own dark-theme
+// --color-* custom properties (never replacing them), so the system still
+// respects whatever theme the user has Foundry set to.
+@mixin variables {
+  // Vivid crimson - primary interactive accent (rollable hover, drawer
+  // caret, .resource-label, active states).
+  --carl-accent: #c9273f;
+  --carl-accent-dim: color-mix(in srgb, var(--carl-accent) 45%, var(--color-text-primary));
+
+  // Hazard-tape amber-orange - secondary warning accent (delete-hover,
+  // low-resource states), kept visually distinct from --carl-danger below
+  // so "this is dangerous to click" and "this is currently damaged" read
+  // as different signals.
+  --carl-hazard: #e8542c;
+
+  // Deep oxblood - pushed darker than --carl-accent so the two reds stay
+  // visually distinct. General error/delete-hover accent; no longer used
+  // for HB-low-health (see components/_hb-pips.scss's per-pip gradient).
+  --carl-danger: #7a1220;
+
+  // Promoted from the literal hex already used in the toolbox's pulse
+  // animation, so the "reward/advancement" accent is a reusable token.
+  --carl-gold: #ffd700;
+
+  --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
+  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+
+  // Whole-window chrome tokens (components/_chrome.scss) - these own the
+  // window background/titlebar/text wholesale, unlike the accents above
+  // which only ever layered on top of Foundry's own --color-* vars. This
+  // means our sheets look the same regardless of the user's Foundry
+  // light/dark preference, deliberately, the same way foundryvtt-wwn's
+  // sheets do.
+  --carl-bg: linear-gradient(180deg, #160f10, #241315);
+  --carl-bg-solid: #1a1213;
+  --carl-header-bg: #3d0f14;
+  --carl-header-text: #f5e8e6;
+  --carl-border-soft: rgba(255, 74, 94, 0.55);
+  --carl-text: #e8e0df;
+  --carl-text-muted: rgba(232, 224, 223, 0.65);
+  --carl-input-bg: rgba(255, 255, 255, 0.05);
+}

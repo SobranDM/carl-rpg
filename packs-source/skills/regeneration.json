@@ -1,0 +1,63 @@
+{
+  "_id": "bW3nIuM4kfjJXgsI",
+  "name": "Regeneration",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>If your Rank in this Skill is equal to or greater than your CON, you heal 1 Health Bar slot at the start of each round (or every 10 seconds outside of combat). If not, you heal 1 Health Bar slot every other round (or every 20 seconds outside of combat).</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "After 5 minutes, any Minor Injury Debuff you suffer from ends. After 10 minutes, any Major Injury Debuff you suffer from ends.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "After 20 minutes, any Long-Term Minor Injury Debuff you suffer from ends. After 1 hour, any Long-Term Major Injury Debuff you suffer from ends.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The time required to end injury Debuffs is halved.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!bW3nIuM4kfjJXgsI"
+}

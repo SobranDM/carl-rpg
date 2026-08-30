@@ -1,0 +1,36 @@
+{{#if tooltipHtml}}
+<tbody class="dice-roll carl-chat-roll" data-action="expandRoll">
+  <tr class="carl-chat-roll-summary">
+    <td class="carl-chat-roll-label-cell">
+      <span class="carl-chat-roll-label">{{label}}</span>
+    </td>
+    <td class="carl-chat-roll-detail">{{#if detail}}{{detail}}{{/if}}</td>
+    <td class="carl-chat-roll-total-cell">
+      {{#if total}}<span class="carl-chat-roll-total">{{total}}</span>{{/if}}
+      {{#if breakdown}}
+      <i class="fa-solid fa-circle-question carl-chat-hint" data-tooltip="{{breakdown}}"
+        aria-label="{{localize 'CARLRPG.Roll.BreakdownHint'}}"></i>
+      {{/if}}
+    </td>
+  </tr>
+  <tr class="carl-chat-roll-tooltip">
+    <td colspan="3">{{{tooltipHtml}}}</td>
+  </tr>
+</tbody>
+{{else}}
+<tbody class="carl-chat-roll">
+  <tr class="carl-chat-roll-summary">
+    <td class="carl-chat-roll-label-cell">
+      <span class="carl-chat-roll-label">{{label}}</span>
+    </td>
+    <td class="carl-chat-roll-detail">{{#if detail}}{{detail}}{{/if}}</td>
+    <td class="carl-chat-roll-total-cell">
+      {{#if total}}<span class="carl-chat-roll-total">{{total}}</span>{{/if}}
+      {{#if breakdown}}
+      <i class="fa-solid fa-circle-question carl-chat-hint" data-tooltip="{{breakdown}}"
+        aria-label="{{localize 'CARLRPG.Roll.BreakdownHint'}}"></i>
+      {{/if}}
+    </td>
+  </tr>
+</tbody>
+{{/if}}

@@ -1,0 +1,92 @@
+{{!-- Skills + nested Damage Effects list - the content of the Skills
+      drawer on the merged Abilities tab. Damage Effects nest under every
+      matching parent Skill (see actor-sheet.mjs#_prepareItems); a Damage
+      Effect matching no owned Skill falls back to the "Unassigned" list
+      below. --}}
+<ol class="items-list carl-skills-list">
+  <li class="item flexrow items-header">
+    <div class="item-name">{{localize "Name"}}</div>
+    <div class="item-prop">{{localize "CARLRPG.Skill.Category"}}</div>
+    <div class="item-prop">{{localize "CARLRPG.Ranked.Rank"}}</div>
+    <div class="item-controls">
+      <a class="item-control item-create" data-action="createItem" data-type="skill">
+        <i class="fas fa-plus"></i> {{localize "DOCUMENT.New" type="Skill"}}
+      </a>
+    </div>
+  </li>
+  {{#each skills as |skill|}}
+  <li class="item flexrow" data-item-id="{{skill._id}}">
+    <div class="item-name">
+      {{#if skill.damageEffects.length}}
+      <a class="item-control carl-drawer-caret carl-drawer-caret-lg{{#unless skill.system.damageEffectsExpanded}} collapsed{{/unless}}"
+        data-action="toggleDrawer" data-scope="item" data-path="system.damageEffectsExpanded"
+        title="{{localize 'CARLRPG.DamageEffect.ToggleNested'}}">
+        <i class="fas fa-caret-down"></i>
+      </a>
+      {{/if}}
+      <div class="item-image">
+        <a class="rollable" data-action="roll" data-roll-type="item">
+          <img src="{{skill.img}}" title="{{skill.name}}" width="24" height="24" />
+        </a>
+      </div>
+      <a class="carl-item-name-toggle" data-action="toggleDrawer" data-scope="item" data-path="system.detailsExpanded"
+        title="{{localize 'CARLRPG.Ranked.ToggleDetails'}}">
+        <h4>{{skill.name}}</h4>
+      </a>
+    </div>
+    <div class="item-prop">{{skill.system.category}}</div>
+    <div class="item-prop">{{skill.system.rank}}</div>
+    <div class="item-controls">
+      {{#if ../locked}}
+      <a class="item-control" data-action="toggleMark" title="{{localize 'CARLRPG.Ranked.ToggleMark'}}">
+        <i class="fas {{#if skill.system.marked}}fa-check-square{{else}}fa-square{{/if}}"></i>
+      </a>
+      {{else}}
+      <a class="item-control item-edit" data-action="editItem" title="{{localize 'DOCUMENT.Update' type='Skill'}}">
+        <i class="fas fa-edit"></i>
+      </a>
+      <a class="item-control item-delete" data-action="deleteItem" title="{{localize 'DOCUMENT.Delete' type='Skill'}}">
+        <i class="fas fa-trash"></i>
+      </a>
+      {{/if}}
+    </div>
+  </li>
+  {{#if (or skill.system.description skill.system.upgrades.length)}}
+  <li class="carl-nested-drawer{{#unless skill.system.detailsExpanded}} collapsed{{/unless}}">
+    <div class="carl-skill-details">
+      <div class="carl-skill-details-inner">
+        {{#if skill.system.description}}
+        <div class="carl-skill-description">{{{skill.system.description}}}</div>
+        {{/if}}
+        {{#each skill.system.upgrades as |upgrade|}}
+        <div class="carl-skill-upgrade">
+          <strong>{{localize "CARLRPG.Ranked.Rank"}} {{upgrade.rankThreshold}}</strong>
+          {{#if upgrade.description}}<span>{{upgrade.description}}</span>{{/if}}
+        </div>
+        {{/each}}
+      </div>
+    </div>
+  </li>
+  {{/if}}
+  {{#if skill.damageEffects.length}}
+  <li class="carl-nested-drawer{{#unless skill.system.damageEffectsExpanded}} collapsed{{/unless}}">
+    <ol class="items-list carl-nested-damage-effects">
+      {{#each skill.damageEffects as |de|}}
+        {{> "systems/carl-rpg/templates/actor/parts/damage-effect-row.hbs" item=de hideParents=true locked=../../locked}}
+      {{/each}}
+    </ol>
+  </li>
+  {{/if}}
+  {{/each}}
+</ol>
+
+{{#if unmatchedDamageEffects.length}}
+<div class="carl-unmatched-damage-effects">
+  <h4>{{localize "CARLRPG.DamageEffect.Unassigned"}}</h4>
+  <ol class="items-list">
+    {{#each unmatchedDamageEffects as |de|}}
+      {{> "systems/carl-rpg/templates/actor/parts/damage-effect-row.hbs" item=de locked=../locked}}
+    {{/each}}
+  </ol>
+</div>
+{{/if}}

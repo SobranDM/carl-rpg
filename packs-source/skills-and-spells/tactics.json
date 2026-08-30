@@ -1,0 +1,63 @@
+{
+  "_id": "vYAfviW2x01UoiW8",
+  "name": "Tactics",
+  "type": "skill",
+  "folder": "klm7R0NNlJg7jdXL",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Your tactical mind and directions can spur your allies to victory. Choose one of the following combat disciplines: Attack, Damage, or Evade, and then make an Unopposed Skill Check. On Success, you and each member of your party gain a +1 bonus to Checks for the chosen discipline. Increase the bonus by +1 for each higher degree of Success.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "If you observe the foes and battlefield for at least 5 minutes prior to combat, roll this Skill Check with Advantage.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "After using this Skill during a combat, you roll 2d10 when you Call a Play (still choose one die).",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The bonus applies to all three combat disciplines instead of just one.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "A crawler may attempt this Skill Check only once per combat."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!vYAfviW2x01UoiW8"
+}

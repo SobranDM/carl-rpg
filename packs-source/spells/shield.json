@@ -1,0 +1,73 @@
+{
+  "_id": "OloGPmmqoCrHhsar",
+  "name": "Shield",
+  "type": "spell",
+  "img": "icons/svg/shield.svg",
+  "system": {
+    "description": "<p><em>\"Enjoy the illusion of safety.\"</em></p><p>You are surrounded by a translucent force field that moves with you and reduces non-magic damage you take. The Shield has 2 Health Bar slots, each with your CON Mod. When you take damage, reduce these Health Bar slots first. The Spell ends early if the shield loses all its Health Bar slots. You can't heal a Shield.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "isMagicDamage": true,
+    "shieldSlots": 2,
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "The Shield has 5 Health Bar slots.",
+        "changes": [],
+        "shieldSlots": 5
+      },
+      {
+        "rankThreshold": 10,
+        "description": "The Shield has 10 Health Bar slots.",
+        "changes": [],
+        "shieldSlots": 10
+      },
+      {
+        "rankThreshold": 15,
+        "description": "The Shield has 15 Health Bar slots.",
+        "changes": [],
+        "shieldSlots": 15
+      }
+    ],
+    "manaCost": 8,
+    "range": "Self",
+    "duration": "5 minutes",
+    "cooldown": "",
+    "castingKeywords": [
+      "interrupt",
+      "passive"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": [],
+    "isToggled": true,
+    "active": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!OloGPmmqoCrHhsar"
+}

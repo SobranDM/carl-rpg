@@ -1,0 +1,33 @@
+{{!-- Whole-section collapsible drawer for the merged Abilities tab (Skills
+      section, Spells section). Adapted from the foundryvtt-wwn sibling
+      system's templates/partials/collapsible-section.hbs markup/CSS pattern
+      (single rotating caret, .collapsed class toggle) - but state is a real
+      persisted DataModel boolean (see actor-sheet.mjs#_onToggleDrawer /
+      module/helpers/drawer-toggle.mjs), not a client-only setting like WWN's.
+      Must be invoked as a BLOCK partial: {{#> carlCollapsibleSection ...}}
+      ...content...{{/carlCollapsibleSection}} - registered as a named
+      partial in module/helpers/templates.mjs since block-partial invocation
+      needs a reliably-matched registered name. --}}
+<section class="carl-drawer{{#unless expanded}} collapsed{{/unless}}" data-section-id="{{sectionId}}">
+  <div class="carl-drawer-header" data-action="toggleDrawer" data-scope="{{toggleScope}}" data-path="{{togglePath}}">
+    <i class="fas fa-caret-down carl-drawer-caret"></i>
+    <span class="carl-drawer-label">{{label}}</span>
+    {{#if showMana}}
+    <div class="carl-drawer-header-mana">
+      <span class="resource-label">{{localize "CARLRPG.Actor.Mana"}}</span>
+      <input type="text" class="carl-w-tiny" name="system.mana.value" value="{{manaValue}}" data-dtype="Number" />
+      <span>/</span>
+      <span class="carl-floor-readonly">{{manaMax}}</span>
+    </div>
+    {{/if}}
+    {{#if showLockToggle}}
+    <a class="carl-drawer-lock-toggle" data-action="toggleDrawer" data-scope="actor" data-path="system.uiState.itemsLocked"
+      title="{{#if locked}}{{localize 'CARLRPG.Ranked.Unlock'}}{{else}}{{localize 'CARLRPG.Ranked.Lock'}}{{/if}}">
+      <i class="fas {{#if locked}}fa-lock{{else}}fa-lock-open{{/if}}"></i>
+    </a>
+    {{/if}}
+  </div>
+  <div class="carl-drawer-body">
+    {{> @partial-block}}
+  </div>
+</section>

@@ -1,0 +1,413 @@
+{
+  "CARLRPG": {
+    "Stat": {
+      "Str": { "long": "Strength", "abbr": "STR" },
+      "Dex": { "long": "Dexterity", "abbr": "DEX" },
+      "Con": { "long": "Constitution", "abbr": "CON" },
+      "Int": { "long": "Intelligence", "abbr": "INT" },
+      "Cha": { "long": "Charisma", "abbr": "CHA" }
+    },
+    "SheetLabels": {
+      "Actor": "CarlRPG Actor Sheet",
+      "Item": "CarlRPG Item Sheet"
+    },
+    "Tab": {
+      "Abilities": "Abilities",
+      "Stats": "Stats",
+      "Skills": "Skills",
+      "Spells": "Spells",
+      "DamageEffects": "Damage Effects",
+      "Inventory": "Inventory",
+      "Boons": "Boons",
+      "Conditions": "Conditions",
+      "Description": "Description"
+    },
+    "Toolbox": {
+      "Title": "GM Toolbox",
+      "RealWorldTimer": "Real-World Play Timer",
+      "StartTimer": "Start Timer",
+      "StopTimer": "Stop Timer",
+      "ResolveTwoHour": "Resolve 2-Hour Tick",
+      "ResolveTwoHourTitle": "Resolve 2-Hour Tick",
+      "ResolveTwoHourPrompt": "Roll Skill Advancement Checks for every marked Skill/Spell/Damage Effect on every character. Which Skills?",
+      "RankLte4Only": "Rank 4 or Lower Only",
+      "AllMarkedSkills": "All Marked Skills",
+      "TwoHourResultsTitle": "2-Hour Tick Results",
+      "NoMarkedSkills": "No marked Skills to advance.",
+      "NoChange": "no change",
+      "TwoHourReachedTitle": "2 Hours of Play Have Elapsed",
+      "TwoHourReachedBody": "The Play Timer has reached 2 hours. Resolve Skill Advancement Checks and/or grant a party Level whenever you're ready - this does not happen automatically.",
+      "PartyLevelUp": "+1 Level (Party)",
+      "PartyLevelUpTitle": "Party Level Up",
+      "PartyLevelUpBody": "{count} character(s) gained 1 Level.",
+      "FloorProgress": "Floor Progress",
+      "FloorIncrement": "Increment Floor",
+      "FloorDecrement": "Decrement Floor",
+      "NewFloor": "New Floor",
+      "NewFloorTitle": "Entering Floor {floor}",
+      "InWorldRest": "In-World Rest",
+      "ShortRest": "Short Rest (2h)",
+      "LongRest": "Long Rest (8h)",
+      "FullDayRest": "Full Day Rest (30h)",
+      "Rest": {
+        "ShortTitle": "Short Rest",
+        "LongTitle": "Long Rest",
+        "FullDayTitle": "Full Day's Rest"
+      },
+      "RestApplied": "Applied to {count} character(s)/NPC(s).",
+      "Other": "Other",
+      "Grind": "Grind",
+      "GrindTitle": "Grinding",
+      "GrindActor": "Character",
+      "GrindHours": "Hours Grinding",
+      "GrindNext": "Next",
+      "GrindSkillTitle": "Grinding: {name}",
+      "GrindThresholdReached": "{name} has accrued enough hours - rolling a Skill Advancement Check.",
+      "GrindProgress": "{name}: {accrued}/{rank} hours accrued.",
+      "NoCharacters": "No character Actors found.",
+      "NoSkills": "{name} has no Skills/Spells/Damage Effects.",
+      "RollLoot": "Roll Loot",
+      "RollLootTitle": "Roll Loot",
+      "NoRollTables": "No Roll Tables exist in this world yet."
+    },
+    "Actor": {
+      "HealthBar": "Health Bar",
+      "Shield": "Shield",
+      "Mana": "Mana",
+      "Level": "Level",
+      "Floor": "Floor",
+      "MobTier": "Mob Tier",
+      "BankedStatPoints": "Banked Stat Points",
+      "Spend": "Spend",
+      "BaseValue": "Base value (never modified by items/skills)",
+      "BonusFromItemsSkills": "Bonus from items/skills, applied on top of the base value",
+      "EffectiveMod": "Effective modifier (base + bonus)",
+      "EffectiveValue": "Effective value (base + bonus from items/skills)",
+      "Defenses": "Defenses",
+      "Dr": "DR (flat damage reduction)",
+      "Resistances": "Resistances"
+    },
+    "Skill": {
+      "Category": "Category",
+      "IsAttack": "Is Attack",
+      "AttackType": "Attack Type",
+      "Range": "Range",
+      "AiFavor": "AI Favor",
+      "Cooldown": "Cooldown",
+      "Limitations": "Limitations"
+    },
+    "Spell": {
+      "ManaCost": "Mana Cost",
+      "Range": "Range",
+      "Duration": "Duration",
+      "Cooldown": "Cooldown",
+      "CastingKeywords": "Casting Keywords",
+      "FavoredClasses": "Favored Classes (no Mana surcharge)",
+      "AddFavoredClass": "Add Favored Class"
+    },
+    "DamageEffect": {
+      "Cooldown": "Cooldown",
+      "ParentSkills": "Parent Skills",
+      "ParentSkillsHint": "Attack Skills this Damage Effect can be selected for at attack time.",
+      "AddParentSkill": "Add Parent Skill",
+      "Unassigned": "Unassigned Damage Effects",
+      "ToggleNested": "Toggle Damage Effects"
+    },
+    "Item": {
+      "Quantity": "Quantity",
+      "Weight": "Weight",
+      "Equipped": "Equipped",
+      "Changes": "Changes"
+    },
+    "Feature": {
+      "Tier": "Tier"
+    },
+    "FeatureTier": {
+      "Acolyte": "Acolyte",
+      "Devotee": "Devotee",
+      "Zealot": "Zealot"
+    },
+    "Ranked": {
+      "GoverningStat": "Governing Stat",
+      "Rank": "Rank",
+      "Rank5": "Rank 5",
+      "Rank10": "Rank 10",
+      "Rank15": "Rank 15",
+      "Marked": "Marked",
+      "AdvancementGate": "Advancement Gate",
+      "BaseDamage": "Base Damage",
+      "BaseDamageDice": "Dice",
+      "BaseDamageStat": "Stat",
+      "BaseDamageType": "Damage Type",
+      "Heal": "Heal",
+      "HealDice": "Heal Dice",
+      "HealToFull": "Heal to Full",
+      "HealMend": "Mend a Debuff",
+      "Upgrades": "Upgrades",
+      "AddUpgrade": "Add Upgrade",
+      "RemoveUpgrade": "Remove Upgrade",
+      "TargetEffectsLegend": "On-Hit Target Effects",
+      "DamageTypeSplit": "Damage Type Split (once unlocked, overrides/splits the default damage pool)",
+      "RollAdvancement": "Roll Advancement Check",
+      "ToggleMark": "Toggle Advancement Mark",
+      "ToggleDetails": "Show Description & Upgrades",
+      "Lock": "Lock (hide Edit/Delete, show Advancement Mark)",
+      "Unlock": "Unlock (show Edit/Delete, hide Advancement Mark)"
+    },
+    "Change": {
+      "TargetGroup": "What to Modify",
+      "EffectGroup": "How to Modify It",
+      "TargetType": "Target Type",
+      "Target": "Target",
+      "TargetSkillPlaceholder": "Type or pick a Skill/Spell name",
+      "TargetCustomPlaceholder": "Custom dotted key",
+      "Mode": "Mode",
+      "Value": "Value",
+      "DamageDiceKind": "Damage Dice Kind",
+      "DamageType": "Damage Type Override",
+      "LabelPlaceholder": "Label (shown in roll tooltip)",
+      "Remove": "Remove",
+      "DefaultChecked": "Checked by default",
+      "ConditionPlaceholder": "Condition label, e.g. \"Attacking from behind?\"",
+      "AddCondition": "Add Condition",
+      "AddChange": "Add Change"
+    },
+    "Condition": {
+      "Add": "Add",
+      "Custom": "Custom...",
+      "Label": "Label",
+      "Stacks": "Stacks",
+      "Remaining": "Remaining",
+      "Source": "Source"
+    },
+    "TargetEffect": {
+      "Stacks": "Stacks",
+      "CritOnly": "Crit Only",
+      "LabelPlaceholder": "Label override (optional)",
+      "Remove": "Remove",
+      "Add": "Add Target Effect"
+    },
+    "TargetEffects": {
+      "WillApply": "On hit, apply:",
+      "ApplyButton": "Apply to Target(s)",
+      "Applied": "Applied",
+      "AppliedNotice": "Applied to {count} target(s).",
+      "NoTargets": "No targets were selected when this roll was made."
+    },
+    "Damage": {
+      "WillApply": "Damage on hit:",
+      "ApplyButton": "Apply Damage",
+      "Applied": "Applied",
+      "AppliedNotice": "Applied damage to {count} target(s).",
+      "NoTargets": "No targets were selected when this roll was made.",
+      "DigestTitle": "Damage Applied",
+      "DigestLine": "<strong>{name}</strong>: {parts} = {total} total, {slots} slot(s) lost",
+      "DigestShield": "Shield absorbed {absorbed} ({slots} slot(s))"
+    },
+    "Heal": {
+      "Subtitle": "+{amount} HB",
+      "SubtitleFull": "Full Heal",
+      "WillHeal": "Heals {amount} Health Bar slot(s) when applied.",
+      "WillHealFull": "Heals to full and grants the benefits of a Short Rest when applied.",
+      "ApplyButton": "Apply Healing",
+      "Applied": "Applied",
+      "AppliedNotice": "Healed {name}.",
+      "NoActor": "The caster for this heal could no longer be found.",
+      "MendButton": "Mend Debuff",
+      "MendTitle": "Mend a Debuff",
+      "MendConfirm": "Mend",
+      "NoConditions": "{name} has no active Conditions to mend.",
+      "Mended": "Mended",
+      "MendedNotice": "Mended a Debuff on {name}."
+    },
+    "Roll": {
+      "Formula": "Formula",
+      "BreakdownHint": "Show breakdown",
+      "Die": "d20",
+      "SkillRank": "Rank",
+      "Rank": "Rank",
+      "Situational": "Situational",
+      "Damage": "Damage",
+      "SplitEvenly": "split evenly",
+      "Heal": "Heal",
+      "Evade": "Evade",
+      "EvadeBonus": "Evade Bonus",
+      "EvadeMajorFail": "Major Fail: this crawler takes extra damage equal to the current Floor Number and gains a Minor Injury Debuff after combat.",
+      "EvadeCriticalFail": "Critical Fail: this crawler takes double damage and gains a Major Injury Debuff after combat.",
+      "AdvancementTitle": "Skill Advancement: {name}",
+      "AdvancementSuccess": "Success! Rank {rank}",
+      "AdvancementFail": "No advancement"
+    },
+    "Dialog": {
+      "Roll": "Roll",
+      "Cancel": "Cancel",
+      "RollMode": "Roll",
+      "Normal": "Normal",
+      "Advantage": "Advantage",
+      "Disadvantage": "Disadvantage",
+      "Difficulty": "Difficulty",
+      "DifficultyPlaceholder": "GM sets, or leave blank",
+      "OptionalModifiers": "Optional Modifiers",
+      "SituationalModifier": "Situational Modifier",
+      "SkillCheckTitle": "Skill Check: {name}",
+      "AttackTitle": "Attack: {name}",
+      "EvadeTitle": "Evade Check",
+      "DamageEffect": "Damage Effect",
+      "ManaCostBase": "Base cost",
+      "ManaCostSpent": "Mana: {cost}"
+    },
+    "SpendStatPoints": {
+      "Title": "Spend Stat Points",
+      "TitleFor": "Spend Stat Points: {name}",
+      "Hint": "Each banked point buys +1 to one Stat's base value.",
+      "Stat": "Stat",
+      "Unmodified": "Base",
+      "Modified": "Effective",
+      "Increment": "Spend a point to increase this Stat by 1",
+      "Decrement": "Refund a point, decreasing this Stat by 1"
+    },
+    "Warning": {
+      "PassiveNoCheck": "{name} is a Passive Skill - it doesn't use Skill Checks.",
+      "CannotCastUntrained": "{name} can't be cast untrained (Rank 0).",
+      "RollNeedsOwner": "This item has no owning Actor to roll for.",
+      "DamageEffectUntrained": "{name} is untrained (Rank 0) and can't be applied as a Damage Effect."
+    },
+    "Toggle": {
+      "Activated": "Activated",
+      "Deactivated": "Deactivated",
+      "Active": "Active"
+    },
+    "DamageType": {
+      "Acid": "Acid",
+      "Bludgeoning": "Bludgeoning",
+      "Electric": "Electric",
+      "Fire": "Fire",
+      "Force": "Force",
+      "Holy": "Holy",
+      "Ice": "Ice",
+      "Necrotic": "Necrotic",
+      "Piercing": "Piercing",
+      "Poison": "Poison",
+      "Psychic": "Psychic",
+      "Slashing": "Slashing",
+      "Sonic": "Sonic"
+    },
+    "ResistanceState": {
+      "None": "None",
+      "Resist": "Resistant (half damage)",
+      "Vulnerable": "Vulnerable (double damage)",
+      "Immune": "Immune (no damage, no secondary effects)"
+    },
+    "ChangeMode": {
+      "Add": "Add",
+      "Subtract": "Subtract",
+      "Multiply": "Multiply",
+      "Override": "Override",
+      "Upgrade": "Upgrade (take higher)",
+      "Downgrade": "Downgrade (take lower)"
+    },
+    "ChangeTarget": {
+      "Stat": "Stat",
+      "SkillRank": "Skill Rank",
+      "SkillDamage": "Skill Damage",
+      "Resource": "Resource",
+      "RollMode": "Roll Mode",
+      "Custom": "Custom"
+    },
+    "ResourceTarget": {
+      "HbMax": "Max Health Bar Slots",
+      "ManaMax": "Max Mana"
+    },
+    "RollModeTarget": {
+      "EvadeBonus": "Evade Bonus"
+    },
+    "DamageDiceKind": {
+      "Base": "Base (doubles on Crit)",
+      "RankDie": "Rank Die (Table 37, never doubles)",
+      "Flat": "Flat (never doubles)",
+      "Multiplier": "Multiplier (never doubles)"
+    },
+    "SkillCategory": {
+      "Attack": "Attack",
+      "Utility": "Utility",
+      "Passive": "Passive"
+    },
+    "AttackType": {
+      "Melee": "Melee",
+      "Ranged": "Ranged"
+    },
+    "AdvancementGate": {
+      "Normal": "Normal",
+      "PassiveUntil5": "Passive (marks until Rank 5)",
+      "MagicOnly": "Magic/Training Only"
+    },
+    "CastingKeyword": {
+      "Attack": "Attack",
+      "Passive": "Passive",
+      "Interrupt": "Interrupt",
+      "AreaOfEffect": "Area of Effect",
+      "MindControl": "Mind Control",
+      "Heal": "Heal"
+    },
+    "MobTier": {
+      "Neighborhood": "Neighborhood Boss",
+      "Borough": "Borough Boss",
+      "City": "City Boss",
+      "Province": "Province Boss",
+      "Country": "Country Boss",
+      "Floor": "Floor Boss"
+    },
+    "Degree": {
+      "CriticalHit": "Critical Hit",
+      "AmazingSuccess": "Amazing Success",
+      "StandardSuccess": "Standard Success",
+      "NearMissFail": "Near Miss",
+      "StandardFail": "Standard Fail",
+      "MajorFail": "Major Fail",
+      "CriticalFail": "Critical Fail"
+    },
+    "Debuff": {
+      "Blinded": { "Label": "Blinded", "Effect": "Roll all sight-based Skill Checks with Disadvantage." },
+      "BloodTrail": { "Label": "Blood Trail", "Effect": "1d6+Floor damage/round. Stackable." },
+      "Burned": { "Label": "Burned", "Effect": "1d10+Floor Fire damage/round." },
+      "Drowning": { "Label": "Drowning", "Effect": "1d6+Floor damage/round." },
+      "Dying": { "Label": "Dying", "Effect": "Can't act. CON Mod = rounds until death; further damage just ticks the countdown." },
+      "Enraged": { "Label": "Enraged", "Effect": "May only perform Attack and Move Actions." },
+      "Fatigued": { "Label": "Fatigued", "Effect": "-1 penalty to all Checks; Move halved. Stackable." },
+      "Held": { "Label": "Held", "Effect": "Can't use Move Actions or take a Step. Attacks against you made with Advantage." },
+      "LongTermMajorInjury": { "Label": "Long-Term Major Injury", "Effect": "-5 penalty to all Checks." },
+      "LongTermMinorInjury": { "Label": "Long-Term Minor Injury", "Effect": "-2 penalty to all Checks." },
+      "MajorInjury": { "Label": "Major Injury", "Effect": "-5 penalty to all Checks. A 2nd Major Injury upgrades to Long-Term Major Injury." },
+      "MinorInjury": { "Label": "Minor Injury", "Effect": "-2 penalty to all Checks. A 2nd Minor Injury upgrades to Long-Term Minor Injury." },
+      "Muted": { "Label": "Muted", "Effect": "Can't speak or cast Spells." },
+      "Poisoned": { "Label": "Poisoned", "Effect": "1d8+Floor Poison damage/round. Stackable." },
+      "Paralyzed": { "Label": "Paralyzed", "Effect": "Can't take any Actions." },
+      "Queasy": { "Label": "Queasy", "Effect": "Next Action requiring a roll is made with Disadvantage." },
+      "Sepsis": { "Label": "Sepsis", "Effect": "Gains Staggered; 1d10+Floor Poison damage/round until healed." },
+      "ShitFaced": { "Label": "Shit-Faced", "Effect": "All Checks made with Disadvantage." },
+      "Shocked": { "Label": "Shocked", "Effect": "Lose your next Action." },
+      "SoreAsShit": { "Label": "Sore as Shit", "Effect": "-1 penalty to all rolls." },
+      "Staggered": { "Label": "Staggered", "Effect": "Next Action can't be a Move; if it's an Attack, made with Disadvantage; can't take a 10ft Step." },
+      "StiffLegs": { "Label": "Stiff Legs", "Effect": "Can't take 10ft Steps." },
+      "Stunned": { "Label": "Stunned", "Effect": "Next Check made with Disadvantage." },
+      "TakeDown": { "Label": "Take Down", "Effect": "Fall prone; Attacks against you made with Advantage." },
+      "Terrified": { "Label": "Terrified", "Effect": "Can't take Move Actions or 10ft Steps; Attacks made with Disadvantage." },
+      "TheTaint": { "Label": "The Taint", "Effect": "Can't be healed." },
+      "Woozy": { "Label": "Woozy", "Effect": "Can't add DEX Mod to Attack or Evade Checks." }
+    }
+  },
+
+  "TYPES": {
+    "Actor": {
+      "character": "Character",
+      "npc": "NPC"
+    },
+    "Item": {
+      "item": "Item",
+      "feature": "Boon",
+      "skill": "Skill",
+      "damageEffect": "Damage Effect",
+      "spell": "Spell"
+    }
+  }
+}

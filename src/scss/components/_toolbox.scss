@@ -1,0 +1,88 @@
+@mixin styles {
+  .carl-toolbox-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .carl-toolbox-section {
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
+    padding: 6px 8px;
+    margin: 0;
+
+    legend {
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--carl-header-text);
+      background: var(--carl-header-bg);
+      border-radius: 3px;
+      padding: 2px 6px;
+    }
+  }
+
+  .carl-toolbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+
+    button {
+      flex: 1;
+      white-space: nowrap;
+    }
+  }
+
+  .carl-toolbox-floor-row {
+    justify-content: center;
+
+    button {
+      flex: 0 0 auto;
+    }
+  }
+
+  // Short/Long Rest get their own two-up row, Full Day Rest wraps to a
+  // full-width row beneath - three non-shrinking button labels don't fit
+  // in the toolbox's 280px width on one line (see module/apps/gm-toolbox.mjs).
+  .carl-toolbox-rest-row {
+    flex-wrap: wrap;
+
+    button {
+      flex: 1 1 calc(50% - 3px);
+    }
+
+    button:last-child {
+      flex-basis: 100%;
+    }
+  }
+
+  .carl-toolbox-elapsed {
+    font-variant-numeric: tabular-nums;
+    font-weight: bold;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  .carl-toolbox-floor {
+    font-weight: bold;
+    min-width: 70px;
+    text-align: center;
+  }
+
+  // The "shine" that signals 2 real-world hours have elapsed. Applied via
+  // data-pulse-target buttons in module/apps/gm-toolbox.mjs's #tick() -
+  // purely a notification, never a trigger.
+  @keyframes carl-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--carl-gold) 70%, transparent); }
+    50% { box-shadow: 0 0 10px 4px color-mix(in srgb, var(--carl-gold) 90%, transparent); }
+  }
+
+  .pulse {
+    animation: carl-pulse 1.2s ease-in-out infinite;
+    border-color: var(--carl-gold) !important;
+  }
+}

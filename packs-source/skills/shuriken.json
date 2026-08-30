@@ -1,0 +1,87 @@
+{
+  "_id": "NakosPYpiYJlh3p9",
+  "name": "Shuriken",
+  "type": "skill",
+  "img": "icons/weapons/thrown/shuriken-star-yellow.webp",
+  "system": {
+    "description": "<p>Attack Type: Ranged, DEX. AI Favor: 1. Range: 30 feet.</p><p><strong>Base Damage:</strong> 1d4 + STR Piercing.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "str",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage, and the range is 40 feet.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shuriken",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage, and you may make an extra free attack with Disadvantage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shuriken",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d4 base damage, and you may make an extra free attack with Disadvantage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Shuriken",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "ranged",
+    "range": "30 feet",
+    "aiFavor": 1,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!NakosPYpiYJlh3p9"
+}

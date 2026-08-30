@@ -1,0 +1,89 @@
+{
+  "_id": "CrxpXceDPmRH2EuT",
+  "name": "Thunderlash",
+  "type": "spell",
+  "img": "icons/svg/explosion.svg",
+  "system": {
+    "description": "<p><em>\"You unleash a whip-like emanation of pure sound which thunders through the air.\"</em></p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d10",
+      "stat": "int",
+      "damageType": "sonic"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d10 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Thunderlash",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d10 base damage, and this attack deals Armor-Piercing damage (ignores DR).",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Thunderlash",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d10 base damage, and you can change the range to a 15ft Cone attack.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Thunderlash",
+            "mode": "add",
+            "value": "1d10",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "manaCost": 12,
+    "range": "50 feet",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "attack"
+    ],
+    "favoredClasses": [],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!CrxpXceDPmRH2EuT"
+}

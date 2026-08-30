@@ -1,0 +1,146 @@
+{
+  "_id": "Rh1zIww0lnlalAtk",
+  "name": "Dagger",
+  "type": "skill",
+  "folder": "pyEnqopryzb0EWFG",
+  "img": "icons/weapons/daggers/dagger-straight-blue.webp",
+  "system": {
+    "description": "<p>A quick, light blade. Attack Type: Melee, DEX. AI Favor: 1.</p><p><strong>Base Damage:</strong> 1d4 + STR Piercing.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d4",
+      "stat": "str",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d4 base damage, and this Attack deals Armor-Piercing damage (ignores DR).",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Dagger",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "ZGqx1ih2n3Zy5UWm",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "XAhUnfPK6LjUUQ2i",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d4 base damage, and you can throw this weapon (using this Skill) up to a range of Rank x 5 feet.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Dagger",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "Lc1b6VN0bc119zqi",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "wpP01FHnPHJFUB2l",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d4 base damage, and Attacks targeting the back of a foe deal x2 damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Dagger",
+            "mode": "add",
+            "value": "1d4",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "qt4OibORGL87qTzV",
+            "conditions": []
+          },
+          {
+            "targetType": "skillDamage",
+            "target": "Dagger",
+            "mode": "multiply",
+            "value": "2",
+            "damageDiceKind": "multiplier",
+            "damageType": "",
+            "label": "",
+            "conditions": [
+              {
+                "default": false,
+                "label": "Attacking from behind?",
+                "id": "O8ii3vd1VprwCz8Y"
+              }
+            ],
+            "id": "bXLW8vfjGfnjYUSC"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "gShse18t1M3ZvHqy",
+        "targetEffects": [],
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "melee",
+    "range": "",
+    "aiFavor": 1,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115032374,
+    "modifiedTime": 1788115659336,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 200000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Rh1zIww0lnlalAtk"
+}

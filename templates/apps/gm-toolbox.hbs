@@ -1,0 +1,59 @@
+<div class="carl-toolbox-body">
+  <fieldset class="carl-toolbox-section">
+    <legend>{{localize "CARLRPG.Toolbox.RealWorldTimer"}}</legend>
+    <div class="carl-toolbox-row">
+      <button type="button" data-action="toggleTimer">
+        <i class="fas {{#if timerRunning}}fa-stop{{else}}fa-play{{/if}}"></i>
+        {{#if timerRunning}}{{localize "CARLRPG.Toolbox.StopTimer"}}{{else}}{{localize "CARLRPG.Toolbox.StartTimer"}}{{/if}}
+      </button>
+      <span data-el="elapsed" class="carl-toolbox-elapsed">{{elapsedLabel}}</span>
+    </div>
+    <div class="carl-toolbox-row">
+      <button type="button" data-action="resolveTwoHourTick" data-pulse-target
+        class="{{#if thresholdReached}}pulse{{/if}}">
+        <i class="fas fa-dice-d20"></i> {{localize "CARLRPG.Toolbox.ResolveTwoHour"}}
+      </button>
+    </div>
+    <div class="carl-toolbox-row">
+      <button type="button" data-action="partyLevelUp" data-pulse-target
+        class="{{#if thresholdReached}}pulse{{/if}}">
+        <i class="fas fa-arrow-up"></i> {{localize "CARLRPG.Toolbox.PartyLevelUp"}}
+      </button>
+    </div>
+  </fieldset>
+
+  <fieldset class="carl-toolbox-section">
+    <legend>{{localize "CARLRPG.Toolbox.FloorProgress"}}</legend>
+    <div class="carl-toolbox-row carl-toolbox-floor-row">
+      <button type="button" data-action="floorDecrement" title="{{localize 'CARLRPG.Toolbox.FloorDecrement'}}">
+        <i class="fas fa-minus"></i>
+      </button>
+      <span class="carl-toolbox-floor">{{localize "CARLRPG.Actor.Floor"}} {{floor}}</span>
+      <button type="button" data-action="floorIncrement" title="{{localize 'CARLRPG.Toolbox.FloorIncrement'}}">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+    <div class="carl-toolbox-row">
+      <button type="button" data-action="newFloor">
+        <i class="fas fa-dice-d20"></i> {{localize "CARLRPG.Toolbox.NewFloor"}}
+      </button>
+    </div>
+  </fieldset>
+
+  <fieldset class="carl-toolbox-section">
+    <legend>{{localize "CARLRPG.Toolbox.InWorldRest"}}</legend>
+    <div class="carl-toolbox-row carl-toolbox-rest-row">
+      <button type="button" data-action="shortRest">{{localize "CARLRPG.Toolbox.ShortRest"}}</button>
+      <button type="button" data-action="longRest">{{localize "CARLRPG.Toolbox.LongRest"}}</button>
+      <button type="button" data-action="fullDayRest">{{localize "CARLRPG.Toolbox.FullDayRest"}}</button>
+    </div>
+  </fieldset>
+
+  <fieldset class="carl-toolbox-section">
+    <legend>{{localize "CARLRPG.Toolbox.Other"}}</legend>
+    <div class="carl-toolbox-row">
+      <button type="button" data-action="grind"><i class="fas fa-dumbbell"></i> {{localize "CARLRPG.Toolbox.Grind"}}</button>
+      <button type="button" data-action="rollLoot"><i class="fas fa-gem"></i> {{localize "CARLRPG.Toolbox.RollLoot"}}</button>
+    </div>
+  </fieldset>
+</div>

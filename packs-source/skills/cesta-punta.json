@@ -1,0 +1,63 @@
+{
+  "_id": "3dLfVnx9ouSfCFQL",
+  "name": "Cesta Punta",
+  "type": "skill",
+  "img": "icons/weapons/thrown/shuriken-star-yellow.webp",
+  "system": {
+    "description": "<p>Use this Skill Check when playing jai alai or when throwing things that fit in the xistera. See Throwing p. 200 for rules on throwing things, but use the ranges below. Roll with Disadvantage at ranges over 500 feet.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Throw range Strength x20 feet.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Add 1 Cesta Punta Rank damage die to thrown damaging Attacks.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Throw range Strength x30 feet, and roll with Disadvantage at ranges over 2,000 feet.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Only acquired via an Earth Hobby Potion"
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!3dLfVnx9ouSfCFQL"
+}

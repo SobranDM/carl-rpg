@@ -1,0 +1,67 @@
+{
+  "_id": "XPJdF1JxBk94sLeQ",
+  "name": "Air Buddy",
+  "type": "spell",
+  "folder": "YSITmHr3sIPtMPDx",
+  "img": "icons/svg/wingfoot.svg",
+  "system": {
+    "description": "<p>You launch yourself with enough force to fly, hurtling forward from your current position up to 10 x your INT Mod away. You land safely if you land on solid ground; otherwise, you fall. You can cast this twice in a row to \"double jump\" just like in platforming video games.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You may choose one additional willing target up to your size at touch range, who you bring with you.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can fly up to 20 x your INT Mod away with this spell.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "You may choose up to five additional willing targets up to your size at touch range to bring with you.",
+        "changes": []
+      }
+    ],
+    "manaCost": 12,
+    "range": "Self",
+    "duration": "",
+    "cooldown": "",
+    "castingKeywords": [
+      "passive"
+    ],
+    "favoredClasses": [
+      "Mage"
+    ],
+    "manaCostVariants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!XPJdF1JxBk94sLeQ"
+}

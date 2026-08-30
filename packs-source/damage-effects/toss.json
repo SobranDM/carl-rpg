@@ -1,0 +1,68 @@
+{
+  "_id": "z1g7Z2mXAKHd1bDA",
+  "name": "Toss",
+  "type": "damageEffect",
+  "img": "icons/svg/target.svg",
+  "system": {
+    "description": "<p>Wrasslin' Damage Effect, Passive. You deal +1d8 base damage + STR Bludgeoning, end the Held Debuff, and throw the target 5 feet for every five Ranks (minimum 5 feet) you have in this Skill. Requires the target already have the Held Debuff (applied via Wrasslin'). You can only Toss foes of a smaller size than you.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d8",
+      "stat": "str",
+      "damageType": "bludgeoning"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "You can Toss foes up to your own size or smaller.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You can Toss foes one size larger than you or smaller.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d8 base damage, and you can throw foes two sizes larger than you or smaller.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Toss",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base"
+          }
+        ]
+      }
+    ],
+    "parentSkills": [
+      "Wrasslin'"
+    ],
+    "cooldown": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!z1g7Z2mXAKHd1bDA"
+}

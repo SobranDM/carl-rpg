@@ -1,0 +1,25 @@
+{{!-- Shield-style secondary HP pool (docs/known-gaps.md 1.4) - only visible
+      while a shield-granting spell is active (system.shield.effectiveMax >
+      0 only then); no NPC max-input branch like hb-bar.hbs has, since this
+      is always fully derived (see character.mjs/npc.mjs prepareDerivedData),
+      never GM-editable directly. Shared by header.hbs and header-npc.hbs. --}}
+{{#if (gt system.shield.effectiveMax 0)}}
+<div class="resource flex-group-center carl-hb-resource carl-shield-resource">
+  <label class="resource-label">{{localize "CARLRPG.Actor.Shield"}}</label>
+  <div class="resource-content">
+    {{#if shieldPips}}
+    <div class="carl-hb-pips" title="{{system.shield.value}} / {{system.shield.effectiveMax}}">
+      {{#each shieldPips as |pip|}}
+      <span class="carl-hb-pip{{#if pip.filled}} filled{{/if}}" data-action="setShieldValue" data-value="{{pip.index}}"
+        style="--pip-hue: {{pip.hue}}">
+        <span class="carl-hb-pip-value">{{pip.slotValue}}</span>
+        <span class="carl-hb-pip-percent">{{pip.percent}}%</span>
+      </span>
+      {{/each}}
+    </div>
+    {{else}}
+    <span class="carl-hb-fallback">{{system.shield.value}} / {{system.shield.effectiveMax}}</span>
+    {{/if}}
+  </div>
+</div>
+{{/if}}

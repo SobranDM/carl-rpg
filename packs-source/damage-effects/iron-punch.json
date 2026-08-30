@@ -1,0 +1,90 @@
+{
+  "_id": "5sbRVlOngZY83S2L",
+  "name": "Iron Punch",
+  "type": "damageEffect",
+  "img": "icons/svg/explosion.svg",
+  "system": {
+    "description": "<p>Pugilism Damage Effect, Passive. You deal +1d2 base damage.</p>",
+    "changes": [],
+    "governingStat": "",
+    "rank": 0,
+    "marked": false,
+    "isPassive": true,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d2",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Add 1 Rank damage die.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Iron Punch",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie"
+          }
+        ]
+      },
+      {
+        "rankThreshold": 10,
+        "description": "You may choose to have the target gain the Stunned Debuff instead of rolling damage.",
+        "changes": [],
+        "targetEffects": [
+          {
+            "debuffKey": "stunned",
+            "stacks": 1,
+            "critOnly": false
+          }
+        ]
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Add 1 Rank damage die, and the target gains the Stunned Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Iron Punch",
+            "mode": "add",
+            "value": "",
+            "damageDiceKind": "rankDie"
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "stunned",
+            "stacks": 1,
+            "critOnly": false
+          }
+        ]
+      }
+    ],
+    "parentSkills": [
+      "Pugilism"
+    ],
+    "cooldown": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!5sbRVlOngZY83S2L"
+}

@@ -1,0 +1,25 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="attributes">
+  <div class="resource">
+    <label class="resource-label">{{localize "CARLRPG.DamageEffect.Cooldown"}}</label>
+    <input type="text" class="carl-w-short" name="system.cooldown" value="{{system.cooldown}}" />
+  </div>
+
+  <fieldset class="carl-string-list">
+    <legend>{{localize "CARLRPG.DamageEffect.ParentSkills"}}</legend>
+    <p class="carl-hint">{{localize "CARLRPG.DamageEffect.ParentSkillsHint"}}</p>
+    {{#each system.parentSkills as |skillName index|}}
+    <div class="carl-string-list-row flexrow">
+      <input type="text" name="{{concat 'system.parentSkills.' index}}" value="{{skillName}}" />
+      <a class="item-control" data-action="deleteArrayItem" data-path="system.parentSkills" data-index="{{index}}">
+        <i class="fas fa-times"></i>
+      </a>
+    </div>
+    {{/each}}
+    <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.parentSkills" data-template="&quot;&quot;">
+      <i class="fas fa-plus"></i> {{localize "CARLRPG.DamageEffect.AddParentSkill"}}
+    </a>
+  </fieldset>
+
+  {{> "systems/carl-rpg/templates/item/parts/ranked-fields.hbs" system=system config=config canRollAdvancement=canRollAdvancement
+      item=item actorSkillNames=actorSkillNames}}
+</section>

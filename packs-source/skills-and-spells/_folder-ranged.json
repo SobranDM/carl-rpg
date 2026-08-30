@@ -1,0 +1,23 @@
+{
+  "type": "Item",
+  "folder": "5xNYxKKJ3KTxXjSE",
+  "name": "Ranged",
+  "color": null,
+  "sorting": "a",
+  "_id": "P4CllUndu9WO8BEU",
+  "description": "",
+  "sort": 600000,
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788116167891,
+    "modifiedTime": 1788116172076,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!folders!P4CllUndu9WO8BEU"
+}

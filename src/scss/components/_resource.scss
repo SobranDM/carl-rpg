@@ -1,0 +1,23 @@
+@mixin styles {
+  .resource-label {
+    display: block;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--carl-accent-dim);
+    margin-bottom: 2px;
+  }
+
+  // Floor is a world-wide value owned by the GM Toolbox, shown read-only
+  // here for player visibility (see module/data/character.mjs#getRollData) -
+  // a disabled input (not a <span>) specifically so it lines up with the
+  // Level field beside it (see header.hbs), which browsers dim by default;
+  // opacity:1 keeps it reading as an intentional accent-colored display
+  // rather than a greyed-out/broken field.
+  .carl-floor-readonly {
+    font-weight: 700;
+    color: var(--carl-accent);
+    opacity: 1;
+  }
+}

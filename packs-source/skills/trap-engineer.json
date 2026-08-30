@@ -1,0 +1,63 @@
+{
+  "_id": "sKSn0Vw5Nw5Lb4em",
+  "name": "Trap Engineer",
+  "type": "skill",
+  "img": "icons/svg/stoned.svg",
+  "system": {
+    "description": "<p>Used to craft traps via a Sapper's Table with a Trap Module.</p>",
+    "changes": [],
+    "governingStat": "int",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "",
+      "stat": "",
+      "damageType": ""
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "Roll with Advantage when making non-explosive traps.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 10,
+        "description": "Your traps can be set to trigger only against a specific Mob, Boss, NPC, or crawler.",
+        "changes": []
+      },
+      {
+        "rankThreshold": 15,
+        "description": "Add a +5 Splash to your trap at no additional Difficulty, and your crafting takes half the time.",
+        "changes": []
+      }
+    ],
+    "category": "utility",
+    "isAttack": false,
+    "attackType": "",
+    "range": "",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!sKSn0Vw5Nw5Lb4em"
+}

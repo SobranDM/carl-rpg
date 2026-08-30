@@ -1,0 +1,137 @@
+{
+  "_id": "k0hDHknWw182VzNh",
+  "name": "Handgun",
+  "type": "skill",
+  "folder": "P4CllUndu9WO8BEU",
+  "img": "icons/weapons/guns/pistol-aimed.webp",
+  "system": {
+    "description": "<p>Attack Type: Ranged, DEX. Range: 150 feet.</p><p><strong>Limitations:</strong> Each Attack requires proper ammunition. Spend one Action to reload after a Major Fail or worse.</p><p><strong>Base Damage:</strong> 1d8 Piercing.</p>",
+    "changes": [],
+    "governingStat": "dex",
+    "rank": 0,
+    "marked": false,
+    "isPassive": false,
+    "advancementGate": "normal",
+    "baseDamage": {
+      "dice": "1d8",
+      "stat": "",
+      "damageType": "piercing"
+    },
+    "upgrades": [
+      {
+        "rankThreshold": 5,
+        "description": "+1d8 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Handgun",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "MYy25R77JO78q7q1",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "0cYJA2kwl7ZY1xi4",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 10,
+        "description": "+1d8 base damage.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Handgun",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "TPvEfiwmZfGhMaQN",
+            "conditions": []
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "wKrsfH62VZvAeX8e",
+        "targetEffects": [],
+        "shieldSlots": 0
+      },
+      {
+        "rankThreshold": 15,
+        "description": "+1d8 base damage, and the target gains the Staggered Debuff.",
+        "changes": [
+          {
+            "targetType": "skillDamage",
+            "target": "Handgun",
+            "mode": "add",
+            "value": "1d8",
+            "damageDiceKind": "base",
+            "damageType": "",
+            "label": "",
+            "id": "4XjvzO0rBcv4DcMt",
+            "conditions": []
+          }
+        ],
+        "targetEffects": [
+          {
+            "debuffKey": "staggered",
+            "stacks": 1,
+            "critOnly": false,
+            "label": "",
+            "id": "DXiFyT4wTO68OkGi"
+          }
+        ],
+        "damageTypes": [
+          "",
+          ""
+        ],
+        "healDice": "",
+        "healToFull": false,
+        "healMend": false,
+        "id": "zbVB9utgZunmUULd",
+        "shieldSlots": 0
+      }
+    ],
+    "category": "attack",
+    "isAttack": true,
+    "attackType": "ranged",
+    "range": "150 feet",
+    "aiFavor": 0,
+    "cooldown": "",
+    "limitations": "Each Attack requires proper ammunition. Spend one Action to reload after a Major Fail or worse."
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788115137160,
+    "modifiedTime": 1788116178912,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 150000,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!k0hDHknWw182VzNh"
+}
