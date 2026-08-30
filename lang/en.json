@@ -122,6 +122,18 @@
     "Feature": {
       "Tier": "Tier"
     },
+    "Class": {
+      "ClassTypes": "Class Types",
+      "AddClassType": "Add Class Type",
+      "Prerequisites": "Prerequisites",
+      "IsEarthBased": "Earth Class"
+    },
+    "Race": {
+      "IsEarthBased": "Earth-Based",
+      "IsAlien": "Alien",
+      "Size": "Size",
+      "Prerequisites": "Prerequisites"
+    },
     "FeatureTier": {
       "Acolyte": "Acolyte",
       "Devotee": "Devotee",
@@ -407,7 +419,9 @@
       "feature": "Boon",
       "skill": "Skill",
       "damageEffect": "Damage Effect",
-      "spell": "Spell"
+      "spell": "Spell",
+      "class": "Class",
+      "race": "Race"
     }
   }
 }

@@ -74,6 +74,8 @@ Hooks.once('init', function () {
     skill: models.CarlRPGSkill,
     damageEffect: models.CarlRPGDamageEffect,
     spell: models.CarlRPGSpell,
+    class: models.CarlRPGClass,
+    race: models.CarlRPGRace,
   });
 
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Actor, 'carl-rpg', CarlRPGActorSheet, {
@@ -82,7 +84,7 @@ Hooks.once('init', function () {
     label: 'CARLRPG.SheetLabels.Actor',
   });
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Item, 'carl-rpg', CarlRPGItemSheet, {
-    types: ['item', 'feature', 'skill', 'damageEffect', 'spell'],
+    types: ['item', 'feature', 'skill', 'damageEffect', 'spell', 'class', 'race'],
     makeDefault: true,
     label: 'CARLRPG.SheetLabels.Item',
   });

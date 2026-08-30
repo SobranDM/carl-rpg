@@ -46,7 +46,9 @@
       "feature": {},
       "skill": {},
       "damageEffect": {},
-      "spell": {}
+      "spell": {},
+      "class": {},
+      "race": {}
     }
   },
   "styles": [

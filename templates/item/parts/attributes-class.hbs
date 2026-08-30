@@ -1,0 +1,34 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="attributes">
+  <div class="carl-field-grid">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Class.IsEarthBased"}}</label>
+      <input type="checkbox" name="system.isEarthBased" {{checked system.isEarthBased}} />
+    </div>
+  </div>
+
+  <div class="resource">
+    <label class="resource-label">{{localize "CARLRPG.Class.Prerequisites"}}</label>
+    <input type="text" class="carl-w-full" name="system.prerequisites" value="{{system.prerequisites}}" />
+  </div>
+
+  <fieldset class="carl-string-list">
+    <legend>{{localize "CARLRPG.Class.ClassTypes"}}</legend>
+    {{#each system.classTypes as |classType index|}}
+    <div class="carl-string-list-row flexrow">
+      <input type="text" name="{{concat 'system.classTypes.' index}}" value="{{classType}}" />
+      <a class="item-control" data-action="deleteArrayItem" data-path="system.classTypes" data-index="{{index}}">
+        <i class="fas fa-times"></i>
+      </a>
+    </div>
+    {{/each}}
+    <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.classTypes" data-template="&quot;&quot;">
+      <i class="fas fa-plus"></i> {{localize "CARLRPG.Class.AddClassType"}}
+    </a>
+  </fieldset>
+
+  <fieldset class="carl-changes">
+    <legend>{{localize "CARLRPG.Item.Changes"}}</legend>
+    {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
+      changes=system.changes path="system.changes" config=config item=item actorSkillNames=actorSkillNames}}
+  </fieldset>
+</section>

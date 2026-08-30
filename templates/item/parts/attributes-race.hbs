@@ -1,0 +1,27 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="attributes">
+  <div class="carl-field-grid">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Race.IsEarthBased"}}</label>
+      <input type="checkbox" name="system.isEarthBased" {{checked system.isEarthBased}} />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Race.IsAlien"}}</label>
+      <input type="checkbox" name="system.isAlien" {{checked system.isAlien}} />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Race.Size"}}</label>
+      <input type="text" class="carl-w-short" name="system.size" value="{{system.size}}" placeholder="Medium (4)" />
+    </div>
+  </div>
+
+  <div class="resource">
+    <label class="resource-label">{{localize "CARLRPG.Race.Prerequisites"}}</label>
+    <input type="text" class="carl-w-full" name="system.prerequisites" value="{{system.prerequisites}}" />
+  </div>
+
+  <fieldset class="carl-changes">
+    <legend>{{localize "CARLRPG.Item.Changes"}}</legend>
+    {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
+      changes=system.changes path="system.changes" config=config item=item actorSkillNames=actorSkillNames}}
+  </fieldset>
+</section>

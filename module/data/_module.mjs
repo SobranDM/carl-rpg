@@ -9,3 +9,5 @@ export {default as CarlRPGFeature} from "./feature.mjs";
 export {default as CarlRPGSkill} from "./skill.mjs";
 export {default as CarlRPGDamageEffect} from "./damage-effect.mjs";
 export {default as CarlRPGSpell} from "./spell.mjs";
+export {default as CarlRPGClass} from "./class.mjs";
+export {default as CarlRPGRace} from "./race.mjs";

@@ -9,6 +9,8 @@ const ATTRIBUTES_TEMPLATES = {
   skill: 'systems/carl-rpg/templates/item/parts/attributes-skill.hbs',
   damageEffect: 'systems/carl-rpg/templates/item/parts/attributes-damage-effect.hbs',
   spell: 'systems/carl-rpg/templates/item/parts/attributes-spell.hbs',
+  class: 'systems/carl-rpg/templates/item/parts/attributes-class.hbs',
+  race: 'systems/carl-rpg/templates/item/parts/attributes-race.hbs',
 };
 
 const RANKED_TYPES = ['skill', 'spell', 'damageEffect'];
