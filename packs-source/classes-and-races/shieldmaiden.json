@@ -7,13 +7,77 @@
   "system": {
     "description": "<p>You are a fierce and skilled warrior who strikes fear in the hearts of your enemies--especially all those boys who used to bully you as a child. When you're not busy kicking ass and taking names, you might be found working out in the gym, helping your family, or volunteering in your community. You can bring home the bacon and fry it up in a pan--after you hunt down the boar and butcher it, just like you did to that wretched boy Dustin who used to tease you and pull your pigtails.</p><p>Prerequisite: This limited Class is only available to female crawlers</p><ul><li>+3 Strength, Dexterity, and Charisma</li><li>-2 Intelligence</li><li>+5 Shield Block Skill</li><li>+2 in one Weapon Skill of your choice</li><li>Rage (Benefit): Your melee attacks deal +1 damage for each Health Bar slot you have lost</li><li>+1 DR Buff</li><li>One Weapon Skill can be raised to Rank 20</li><li>Add your STR Mod a second time to your melee attack damage against males</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Shield Block", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Shield Block",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "DR Buff",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Barbarian", "Fighter"],
+    "classTypes": [
+      "Barbarian",
+      "Fighter"
+    ],
     "prerequisites": "This limited Class is only available to female crawlers",
     "isEarthBased": true
   },
@@ -30,7 +94,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!vUhjWhFBKQpylnDD"
 }

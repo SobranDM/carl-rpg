@@ -7,13 +7,76 @@
   "system": {
     "description": "<p>People who actually choose to work with explosives are the craziest bastards around. You excel at making things blow up. And while you're good at keeping the bombs from going off in your own hands, Bomb Squad Techs still tend to lose both friends and limbs at alarming rates.</p><p>Luckily, this Class comes with a benefit that can fix 50% of that problem.</p><p>Prerequisite: This limited Class is only available to crawlers who've earned the Boom! Achievement</p><ul><li>+2 Dexterity</li><li>+1 Constitution</li><li>-2 Intelligence (After all, only dumbasses would choose to do this for a living.)</li><li>+3 Bomb Surgeon and Find Trap Skills</li><li>+2 in all Explosive-based Skills</li><li>+1 DR Buff</li><li>Limb Regeneration Benefit: In 12 days minus your CON Mod, one limb fully regrows</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Bomb Surgeon", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Find Trap", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Bomb Surgeon",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Find Trap",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "DR Buff",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Rogue"],
+    "classTypes": [
+      "Rogue"
+    ],
     "prerequisites": "This limited Class is only available to crawlers who've earned the Boom! Achievement",
     "isEarthBased": true
   },
@@ -30,7 +93,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!tjKALmhsRqyLH6gy"
 }

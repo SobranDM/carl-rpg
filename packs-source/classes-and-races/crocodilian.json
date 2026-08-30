@@ -50,6 +50,17 @@
         "damageDiceKind": "",
         "damageType": "",
         "conditions": []
+      },
+      {
+        "id": "",
+        "label": "DR Buff",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
       }
     ],
     "isEarthBased": true,

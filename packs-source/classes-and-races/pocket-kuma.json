@@ -38,7 +38,8 @@
         "value": "4",
         "damageDiceKind": "",
         "damageType": "",
-        "conditions": []
+        "conditions": [],
+        "capMax": "10"
       },
       {
         "id": "",
@@ -91,6 +92,17 @@
         "target": "Ambush",
         "mode": "add",
         "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "resistance",
+        "target": "bludgeoning",
+        "mode": "override",
+        "value": "vulnerable",
         "damageDiceKind": "",
         "damageType": "",
         "conditions": []

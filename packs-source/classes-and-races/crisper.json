@@ -7,16 +7,109 @@
   "system": {
     "description": "<p>To say you're hot is putting it mildly: You're literally on fire! You can generate flames out of nothing to protect yourself and absolutely roast others. Unlike other fire users, you can modulate how much heat you're putting out, meaning you can do anything from cooking a quick meal to pelting your opponent with fiery pine cones.</p><p>The Crisper can also add additional effects to their fire abilities. You can burn your opponents, sear them, scorch their armor, and even extend healing magic through your flames to heal others... as long as they don't mind a few blisters in the process. By laying on your hands, you can also use your abilities to burn out harmful magics and effects hurting your allies.</p><p>Crispers don't excel in humid or wet environments, and despite their abilities, water tends to reduce their effectiveness. But if you need a fire user who knows the sheer versatility of one of the primal elements, the Crisper makes for a great support Class who can keep things warm and friendly among friends and fiery and destructive toward foes.</p><ul><li>+3 Intelligence</li><li>+2 Dexterity</li><li>-2 Constitution</li><li>+3 Wall of Fire and Fire Fingers Spells</li><li>+2 Fireball and Wilbur's Slow-Build Fireblast Spells</li><li>+2 Lore Skill</li><li>Resistance to Fire damage</li><li>No DR against Ice or water-based damage</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Wall of Fire", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Fire Fingers", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Fireball", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Wilbur's Slow-Build Fireblast", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Lore", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Wall of Fire",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Fire Fingers",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Fireball",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Wilbur's Slow-Build Fireblast",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Lore",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "resistance",
+        "target": "fire",
+        "mode": "override",
+        "value": "resist",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Mage"],
+    "classTypes": [
+      "Mage"
+    ],
     "prerequisites": "",
     "isEarthBased": false
   },
@@ -33,7 +126,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!B3t1bHtHaTyTyAgA"
 }

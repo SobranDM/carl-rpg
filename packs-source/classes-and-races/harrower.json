@@ -7,13 +7,77 @@
   "system": {
     "description": "<p>You're a lean, mean killing machine. And you look good in black. Like, all-black, head to toe. Some think you're a ghostly myth, but others know better, as you use your stealth to terrorize your enemies at night, making them think you're some sort of demonic spirit.</p><ul><li>+1 Strength, Dexterity, and Intelligence</li><li>+4 Ambush and Stealth Skills</li><li>+2 in one Weapon Skill of your choice</li><li>Rage (Benefit): Your melee attacks deal +1 damage for each Health Bar slot you have lost</li><li>+1 DR Buff</li><li>Can see in total darkness</li><li>Access to the Desperado Club</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Ambush", "mode": "add", "value": "4", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Stealth", "mode": "add", "value": "4", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Ambush",
+        "mode": "add",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Stealth",
+        "mode": "add",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "DR Buff",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Barbarian", "Rogue"],
+    "classTypes": [
+      "Barbarian",
+      "Rogue"
+    ],
     "prerequisites": "",
     "isEarthBased": true
   },
@@ -30,7 +94,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!Gsoz6UdyU9LaoMK2"
 }

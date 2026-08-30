@@ -27,7 +27,8 @@
         "value": "5",
         "damageDiceKind": "",
         "damageType": "",
-        "conditions": []
+        "conditions": [],
+        "capMax": "10"
       },
       {
         "id": "",

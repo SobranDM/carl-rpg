@@ -7,12 +7,65 @@
   "system": {
     "description": "<p>Like parading around in a loincloth and bashing heads? This is the Class for you! Just remember the Barbarian's motto: what doesn't kill you makes you stronger--as well as probably bleed a whole lot in the process.</p><ul><li>+6 Strength</li><li>+5 Constitution</li><li>+3 in a Weapon Skill of your choice</li><li>+2 Endurance Skill</li><li>+1 Intimidate Skill</li><li>Rage (Benefit): Your melee attacks deal +1 damage for each Health Bar slot you have lost</li><li>+2 DR Buff</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "6", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Endurance", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Intimidate", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "6",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Endurance",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Intimidate",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "DR Buff",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Barbarian"],
+    "classTypes": [
+      "Barbarian"
+    ],
     "prerequisites": "",
     "isEarthBased": false
   },
@@ -29,7 +82,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!ooJYOzrCqEMDW06e"
 }

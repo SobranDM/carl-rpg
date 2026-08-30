@@ -7,14 +7,87 @@
   "system": {
     "description": "<p>The Blizzardmancer represents the first step on a journey most Mages are too sensible--or too cold-averse--to attempt. While your peers are out there hurling fireballs and lightning bolts, you've chosen the deeply inconvenient powers of water and ice.</p><p>You don't explode things. You preserve them. In a block of ice. Yeah, that'll teach 'em! And while you're on your way back to your dorm to cry frigid tears into your pillow at night, don't forget to drop some ice cubes in my drink.</p><ul><li>+4 Intelligence</li><li>+3 Dexterity</li><li>-2 Strength</li><li>+4 Ice Blast and Frost Scar Spells</li><li>+2 Aiming Skill</li><li>Resistance to Ice damage</li><li>You can use the Aiming Skill for single-target Ice Spells</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "4", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Ice Blast", "mode": "add", "value": "4", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Frost Scar", "mode": "add", "value": "4", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Aiming", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Ice Blast",
+        "mode": "add",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Frost Scar",
+        "mode": "add",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Aiming",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "resistance",
+        "target": "ice",
+        "mode": "override",
+        "value": "resist",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Mage"],
+    "classTypes": [
+      "Mage"
+    ],
     "prerequisites": "",
     "isEarthBased": false
   },
@@ -31,7 +104,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!gThn0EuNR8QgLyQU"
 }

@@ -7,13 +7,76 @@
   "system": {
     "description": "<p>Lighting stuff on fire is fun. You make a lot of things that inherently burn with magical fire, including flaming weapons and fiery magical items. Flaming arrows? Check. Flaming swords? Check.</p><ul><li>+3 Strength and Constitution</li><li>+1 Dexterity</li><li>+5 Arcane Skill</li><li>+3 Smithing Skill</li><li>Resistance to Fire damage</li><li>Tier 1 Arcanist table</li><li>Tier 1 Smithing table</li><li>Arcane Skill can be raised to Rank 20</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Arcane", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Smithing", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Arcane",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Smithing",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "resistance",
+        "target": "fire",
+        "mode": "override",
+        "value": "resist",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Arcanist"],
+    "classTypes": [
+      "Arcanist"
+    ],
     "prerequisites": "",
     "isEarthBased": false
   },
@@ -30,7 +93,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!qYdczAin2PSI2D0c"
 }

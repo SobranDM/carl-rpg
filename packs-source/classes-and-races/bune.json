@@ -72,6 +72,18 @@
         "damageDiceKind": "",
         "damageType": "",
         "conditions": []
+      },
+      {
+        "id": "",
+        "label": "At Level 50: wings capable of flying up to 500ft per scene",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": [],
+        "levelGate": 50
       }
     ],
     "isEarthBased": false,

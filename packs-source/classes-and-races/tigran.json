@@ -7,12 +7,83 @@
   "system": {
     "description": "<p>These tiger-headed humanoids stand more than six feet tall and are covered from head to toe in a layer of incredibly vibrant orange-and-black fur. They have the head of a tiger, a long muscular tail, and humanlike hands that end in wicked claws. These claws are excellent for attack and defense, but they can cause difficulties in performing small, delicate tasks such as picking locks. You don't need to have fond memories of your Lisa Frank trapper keeper to know these tiger people are uniquely Earth creations.</p><p>Tigrans are cunning predators. If given their choice, they attack from cover, using overwhelming speed and ferocity rather than engaging in a drawn-out encounter. Although they're incredibly stealthy, often choosing to walk barefoot, their coloring makes stealth difficult in most of the World Dungeon.</p><p>Tigrans are social creatures, especially among others of their own kind, but they harbor an inherent streak of pride. It can be difficult to change their minds, which makes them seem antisocial.</p><p>Tigrans make great Barbarians, Monks, and Paladins.</p><ul><li>Size: Medium (4)</li><li>+3 Dexterity</li><li>+2 Strength</li><li>-4 Charisma</li><li>+2 Ambush, Cat-like Reflexes, and Slice Attack Skills</li><li>Can see in total darkness</li><li>+1 DR Buff</li><li>+10ft Move</li><li>When attacking during a Surprise Action, deal x2 total damage with melee attacks</li><li>Disadvantage on Dexterity-based Skills that require fine manipulation or motor coordination</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "subtract", "value": "4", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Ambush", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Catlike Reflexes", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Slice Attack", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Ambush",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Catlike Reflexes",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Slice Attack",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "DR Buff",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
     "isEarthBased": true,
     "isAlien": false,
@@ -32,7 +103,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!Y2NPkgoKhmFEpIRL"
 }

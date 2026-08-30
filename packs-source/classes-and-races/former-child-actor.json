@@ -7,11 +7,54 @@
   "system": {
     "description": "<p>This rare subclass is an offshoot of the Bard Class. It can only be obtained by crawlers who have both earned the \"Cut!\" achievement and reached at least one trillion views. Once a spoiled brat superstar, then addicted to drugs, you have crawled back from the brink stronger than ever. You're ready for your comeback. This Charisma and Chance-based Class could go either way. You'll either rise to the top, or you'll be dead in a ditch in a week. After a balance patch, it's slightly more likely you'll end up dead in that ditch, but this is your chance to prove them wrong!</p><p>This unique Earth Class is based on the Bard/Rogue Jack-Of-All-Trades subclass, but with a few distinctive differences. In addition to the following benefits, the most distinct aspect of this multi-faceted Class is the Rank 3 Character Actor Skill. This Skill increases in Rank only upon descent to the next floor.</p><p><strong>Prerequisites:</strong> Must have Popularity 3+, receiving the Cut! achievement, to take this Class</p><ul><li>+10 Charisma</li><li>+3 Character Actor Skill</li><li>+2 Cockroach Skill</li><li>Add 1 to your Skill Advancement Checks for Charisma-based Skills</li><li>Immunity to Poison and all diseases</li><li>The Manager Benefit</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
     "changes": [
-      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "add", "value": "10", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Character Actor", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
-      {"id": "", "label": "", "targetType": "skillRank", "target": "Cockroach", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "add",
+        "value": "10",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Character Actor",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Cockroach",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Immunity to Poison (diseases not modeled)",
+        "targetType": "resistance",
+        "target": "poison",
+        "mode": "override",
+        "value": "immune",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
     ],
-    "classTypes": ["Bard"],
+    "classTypes": [
+      "Bard"
+    ],
     "prerequisites": "Must have Popularity 3+, receiving the Cut! achievement, to take this Class",
     "isEarthBased": true
   },
@@ -28,7 +71,9 @@
     "exportSource": null
   },
   "sort": 0,
-  "ownership": { "default": 0 },
+  "ownership": {
+    "default": 0
+  },
   "flags": {},
   "_key": "!items!8pzlKPBFpC87c0Im"
 }

@@ -72,6 +72,17 @@
         "damageDiceKind": "",
         "damageType": "",
         "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "resistance",
+        "target": "holy",
+        "mode": "override",
+        "value": "vulnerable",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
       }
     ],
     "isEarthBased": true,
