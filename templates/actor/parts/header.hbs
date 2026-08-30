@@ -13,6 +13,22 @@
         <label for="carl-floor-display" class="resource-label">{{localize "CARLRPG.Actor.Floor"}}</label>
         <input id="carl-floor-display" type="text" class="carl-w-tiny carl-floor-readonly" value="{{currentFloor}}" disabled />
       </div>
+      <div class="resource flex-group-center carl-name-row-field">
+        <label class="resource-label">{{localize "CARLRPG.Actor.Class"}}</label>
+        {{#if classId}}
+        <a class="item carl-class-race-link" data-action="editItem" data-item-id="{{classId}}">{{className}}</a>
+        {{else}}
+        <span class="carl-class-race-empty">{{localize "CARLRPG.Actor.NoneSelected"}}</span>
+        {{/if}}
+      </div>
+      <div class="resource flex-group-center carl-name-row-field">
+        <label class="resource-label">{{localize "CARLRPG.Actor.Race"}}</label>
+        {{#if raceId}}
+        <a class="item carl-class-race-link" data-action="editItem" data-item-id="{{raceId}}">{{raceName}}</a>
+        {{else}}
+        <span class="carl-class-race-empty">{{localize "CARLRPG.Actor.NoneSelected"}}</span>
+        {{/if}}
+      </div>
     </div>
     {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
     {{> "systems/carl-rpg/templates/actor/parts/shield-bar.hbs"}}

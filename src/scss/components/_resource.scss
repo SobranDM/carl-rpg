@@ -20,4 +20,23 @@
     color: var(--carl-accent);
     opacity: 1;
   }
+
+  // Header Class/Race display (see header.hbs) - clickable when set (opens
+  // the linked Item sheet via the shared editItem action), a plain dash
+  // when unset rather than an empty/broken-looking field.
+  .carl-class-race-link {
+    font-weight: 700;
+    color: var(--carl-accent);
+    cursor: pointer;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .carl-class-race-empty {
+    font-weight: 700;
+    color: var(--carl-accent-dim);
+  }
 }

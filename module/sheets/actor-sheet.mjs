@@ -136,6 +136,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // module/data/character.mjs#getRollData.
     context.currentFloor = game.settings.get("carl-rpg", "currentFloor");
 
+    // Active Class/Race display (header.hbs) - resolved on Character actors
+    // only, see module/data/character.mjs#prepareDerivedData. Undefined on
+    // NPCs (no class/race fields there), which header-npc.hbs doesn't read.
+    context.classId = actorData.classItem?.id ?? "";
+    context.className = actorData.classItem?.name ?? "";
+    context.raceId = actorData.raceItem?.id ?? "";
+    context.raceName = actorData.raceItem?.name ?? "";
+
     // Template convenience variables
     context.cssClass = [...this.options.classes, actor.type].join(' ');
     context.owner = actor.isOwner;
@@ -451,6 +459,21 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const keepId = !this.actor.items.has(item.id);
     const itemData = game.items.fromCompendium(item, { clearFolder: true, keepId });
     const created = await Item.create(itemData, { parent: this.actor, keepId });
+
+    // Soft affordance, not an enforced rule: if this is the first Class or
+    // Race item dropped on the actor, make it the active one. Doesn't
+    // replace an already-active Class/Race - a second drop just sits there
+    // unlinked until the player/GM manually updates system.class/race (or
+    // removes the old item first), matching this project's "surface state,
+    // don't gate" pattern elsewhere.
+    if (created && this.actor.type === "character") {
+      if (created.type === "class" && !this.actor.system.class) {
+        await this.actor.update({ "system.class": created.id });
+      } else if (created.type === "race" && !this.actor.system.race) {
+        await this.actor.update({ "system.race": created.id });
+      }
+    }
+
     return created ?? null;
   }
 

@@ -21,6 +21,15 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     // to distribute Stat points gained from leveling).
     schema.bankedStatPoints = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
 
+    // The _id of this Character's active Class/Race Item (Race & Class
+    // Selection, p.127). An explicit reference, not "the sole owned item of
+    // that type" - nothing hard-blocks owning a second class/race-type item
+    // (e.g. mid Third-Floor tandem re-selection), so this field is what
+    // actually names which one is active. Every Character has a Race from
+    // creation; Class starts unset and is first chosen at the Third Floor.
+    schema.class = new fields.StringField({ required: false, blank: true, initial: "" });
+    schema.race = new fields.StringField({ required: false, blank: true, initial: "" });
+
     const statKeys = Object.keys(CONFIG.CARLRPG.stats);
     const statsSchema = {};
     for (const stat of statKeys) {
@@ -71,6 +80,13 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     // here (mod is computed below, after aggregation) - a one-render-behind
     // staleness that self-corrects, traded for not needing a two-pass dance.
     aggregateActorBonuses(this);
+
+    // Resolve the active Class/Race Item (for header.hbs display and the
+    // Favored-Class Mana-surcharge lookup in module/dice/dice.mjs). A stale
+    // reference - the item was deleted without clearing system.class/race -
+    // resolves to null rather than erroring.
+    this.classItem = this.class ? (this.parent?.items.get(this.class) ?? null) : null;
+    this.raceItem = this.race ? (this.parent?.items.get(this.race) ?? null) : null;
 
     for (const key in this.stats) {
       if (!this.stats[key]) continue;

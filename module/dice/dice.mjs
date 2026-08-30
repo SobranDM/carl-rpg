@@ -240,14 +240,46 @@ function buildManaCostChoices(spellItem) {
 }
 
 /**
+ * The actor's active Class name (module/data/character.mjs's
+ * system.class/classItem), used only for the Favored-Class Mana surcharge
+ * below. Null for NPCs and for Characters with no Class selected yet.
+ * @param {Actor} actor
+ * @returns {string|null}
+ */
+function getActorClassName(actor) {
+  return actor.system.classItem?.name ?? null;
+}
+
+/**
+ * "If a Spell is Favored by any particular Classes, other Classes pay 1
+ * additional Mana to cast it" (module/data/spell.mjs's favoredClasses field).
+ * A Spell with no favoredClasses at all charges everyone the same; a caster
+ * with no Class selected is never "favored", so pays the surcharge like any
+ * other non-favored Class.
+ * @param {Item} spellItem
+ * @param {Actor} actor
+ * @param {number} manaCost
+ * @returns {number}
+ */
+function applyFavoredClassSurcharge(spellItem, actor, manaCost) {
+  const favored = spellItem.system.favoredClasses ?? [];
+  if (!favored.length) return manaCost;
+  const className = getActorClassName(actor);
+  return className && favored.includes(className) ? manaCost : manaCost + 1;
+}
+
+/**
  * @param {Item} spellItem
  * @param {{manaCost: number, description: string, isBase: boolean}[]} manaCostChoices
- * @param {number} [chosenIndex]
+ * @param {number} chosenIndex
+ * @param {Actor} actor
  * @returns {{manaCost: number, description: string|null, isBase: boolean}}
  */
-function resolveManaCost(spellItem, manaCostChoices, chosenIndex) {
-  if (!manaCostChoices.length) return { manaCost: spellItem.system.manaCost, description: null, isBase: true };
-  return manaCostChoices[chosenIndex] ?? manaCostChoices[0];
+function resolveManaCost(spellItem, manaCostChoices, chosenIndex, actor) {
+  const chosen = manaCostChoices.length
+    ? (manaCostChoices[chosenIndex] ?? manaCostChoices[0])
+    : { manaCost: spellItem.system.manaCost, description: null, isBase: true };
+  return { ...chosen, manaCost: applyFavoredClassSurcharge(spellItem, actor, chosen.manaCost) };
 }
 
 /**
@@ -328,7 +360,7 @@ export default class CarlDice {
 
     await CarlDice.#markForAdvancement(skillItem);
 
-    const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice) : null;
+    const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
     return createRollMessage({
@@ -442,7 +474,7 @@ export default class CarlDice {
 
     // Mana is spent for casting, not the outcome - deduct/surface regardless
     // of hit/miss (docs/known-gaps.md 1.6).
-    const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice) : null;
+    const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
     const rolls = [attackRoll];
@@ -553,7 +585,9 @@ export default class CarlDice {
     // (docs/known-gaps.md 1.6) - no picker here, per this function's own
     // "not built ahead of a real use case" precedent above: no heal spell
     // currently has manaCostVariants.
-    const chosenManaCost = skillItem.type === "spell" ? { manaCost: skillSys.manaCost, isBase: true } : null;
+    const chosenManaCost = skillItem.type === "spell"
+      ? { manaCost: applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost), isBase: true }
+      : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
     const flags = { healActorUuid: actor.uuid };
@@ -605,6 +639,7 @@ export default class CarlDice {
   static async rollToggleSpell(actor, skillItem) {
     const skillSys = skillItem.system;
     const turningOn = !skillSys.active;
+    let manaCostSpent = null;
 
     if (turningOn) {
       const rank = skillSys.rank ?? 0;
@@ -612,7 +647,8 @@ export default class CarlDice {
         ui.notifications.warn(game.i18n.format("CARLRPG.Warning.CannotCastUntrained", { name: skillItem.name }));
         return null;
       }
-      await applyManaCost(actor, skillSys.manaCost);
+      manaCostSpent = applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost);
+      await applyManaCost(actor, manaCostSpent);
     }
 
     await skillItem.update({ "system.active": turningOn });
@@ -628,10 +664,14 @@ export default class CarlDice {
       await actor.update({ "system.shield.value": effectiveMax });
     }
 
+    const toggleSubtitle = turningOn
+      ? withManaCostSubtitle(game.i18n.localize("CARLRPG.Toggle.Activated"), { manaCost: manaCostSpent, isBase: true })
+      : game.i18n.localize("CARLRPG.Toggle.Deactivated");
+
     return createCardMessage({
       title: skillItem.name,
       img: skillItem.img,
-      subtitle: game.i18n.localize(turningOn ? "CARLRPG.Toggle.Activated" : "CARLRPG.Toggle.Deactivated"),
+      subtitle: toggleSubtitle,
       body: turningOn ? (skillItem.system.description ?? "") : "",
       actor,
     });

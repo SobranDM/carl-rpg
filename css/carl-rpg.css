@@ -575,6 +575,19 @@
   color: var(--carl-accent);
   opacity: 1;
 }
+.carl-rpg .carl-class-race-link {
+  font-weight: 700;
+  color: var(--carl-accent);
+  cursor: pointer;
+  text-decoration: none;
+}
+.carl-rpg .carl-class-race-link:hover {
+  text-decoration: underline;
+}
+.carl-rpg .carl-class-race-empty {
+  font-weight: 700;
+  color: var(--carl-accent-dim);
+}
 .carl-rpg .items-header {
   height: 28px;
   margin: 2px 0;
