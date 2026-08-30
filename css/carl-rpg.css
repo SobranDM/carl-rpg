@@ -878,6 +878,17 @@
 .carl-rpg .carl-string-list-row input[type=text] {
   flex: 1;
 }
+.carl-rpg .carl-skill-choice-editor {
+  margin-bottom: 8px;
+}
+.carl-rpg .carl-skill-choice-row {
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-skill-choice-row input[type=text] {
+  flex: 1;
+}
 .carl-rpg .carl-roll-advancement {
   margin: 6px 0;
 }

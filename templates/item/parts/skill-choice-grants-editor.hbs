@@ -1,0 +1,41 @@
+{{!-- Shared "+X Skill of your choice" grants editor (class.mjs/race.mjs).
+      Invoke with `grants` (system.skillChoiceGrants), `path` (dotted path to
+      that array, e.g. "system.skillChoiceGrants"), `item`, and
+      `actorSkillNames`. Authoring rows (category hint + amount) always show;
+      the "pick a Skill and assign" row only shows once the item is owned by
+      an actor (item.actor) - an unowned/compendium item has no one to pick
+      yet. Same context-depth caveats as changes-editor.hbs: `path`/`item`/
+      `actorSkillNames` are this partial's own top-level hash params, so any
+      reference from inside {{#each grants}} needs `../`. --}}
+<fieldset class="carl-skill-choice-editor">
+  <legend>{{localize "CARLRPG.SkillChoice.Legend"}}</legend>
+  <p class="carl-hint">{{localize "CARLRPG.SkillChoice.Hint"}}</p>
+  {{#each grants as |grant gIndex|}}
+  <div class="carl-skill-choice-row flexrow">
+    <input type="text" class="carl-w-medium" name="{{concat ../path '.' gIndex '.category'}}" value="{{grant.category}}"
+      placeholder="{{localize 'CARLRPG.SkillChoice.CategoryPlaceholder'}}" title="{{localize 'CARLRPG.SkillChoice.Category'}}" />
+    <input type="text" class="carl-w-tiny" data-dtype="Number" name="{{concat ../path '.' gIndex '.amount'}}" value="{{grant.amount}}"
+      title="{{localize 'CARLRPG.SkillChoice.Amount'}}" />
+    {{#if ../item.actor}}
+    <input type="text" class="carl-w-medium" list="carl-skill-choice-target-list-{{../item.id}}" data-skill-choice-input="{{gIndex}}"
+      placeholder="{{localize 'CARLRPG.SkillChoice.PickPlaceholder'}}" />
+    <a class="item-control carl-add-link" data-action="resolveSkillChoice" data-index="{{gIndex}}">
+      {{localize "CARLRPG.SkillChoice.Resolve"}}
+    </a>
+    {{/if}}
+    <a class="item-control" data-action="deleteArrayItem" data-path="{{../path}}" data-index="{{gIndex}}">
+      <i class="fas fa-times"></i>
+    </a>
+  </div>
+  {{/each}}
+  <a class="item-control carl-add-link" data-action="addArrayItem" data-path="{{path}}" data-template="{}">
+    <i class="fas fa-plus"></i> {{localize "CARLRPG.SkillChoice.AddGrant"}}
+  </a>
+  {{#if item.actor}}
+  <datalist id="carl-skill-choice-target-list-{{item.id}}">
+    {{#each actorSkillNames as |name|}}
+    <option value="{{name}}"></option>
+    {{/each}}
+  </datalist>
+  {{/if}}
+</fieldset>

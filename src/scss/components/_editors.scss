@@ -202,6 +202,20 @@
     input[type="text"] { flex: 1; }
   }
 
+  // "+X Skill of your choice" grants editor (class.mjs/race.mjs's
+  // skillChoiceGrants) - see skill-choice-grants-editor.hbs.
+  .carl-skill-choice-editor {
+    margin-bottom: 8px;
+  }
+
+  .carl-skill-choice-row {
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+
+    input[type="text"] { flex: 1; }
+  }
+
   .carl-roll-advancement {
     margin: 6px 0;
   }

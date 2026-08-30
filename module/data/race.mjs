@@ -1,4 +1,5 @@
 import CarlRPGItemBase from "./item-base.mjs";
+import { defineSkillChoiceGrantsField } from "./shared/skill-choice-grant.mjs";
 
 /**
  * Race (Race & Class Selection, p. 127-141): a flat, one-time, permanent
@@ -24,6 +25,9 @@ export default class CarlRPGRace extends CarlRPGItemBase {
     schema.size = new fields.StringField({ required: false, blank: true, initial: "" });
 
     schema.prerequisites = new fields.StringField({ required: false, blank: true, initial: "" });
+
+    // "+X in a [category] Skill of your choice" - see shared/skill-choice-grant.mjs.
+    schema.skillChoiceGrants = defineSkillChoiceGrantsField();
 
     return schema;
   }

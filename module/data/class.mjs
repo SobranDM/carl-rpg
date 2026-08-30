@@ -1,4 +1,5 @@
 import CarlRPGItemBase from "./item-base.mjs";
+import { defineSkillChoiceGrantsField } from "./shared/skill-choice-grant.mjs";
 
 /**
  * Class (Race & Class Selection, p. ~127-158): a flat, one-time, permanent
@@ -26,6 +27,9 @@ export default class CarlRPGClass extends CarlRPGItemBase {
     // Earth Classes are locked out to Alien Races and vice versa (p. 127-141).
     // Not enforced - just surfaced so a future selection UI can check it.
     schema.isEarthBased = new fields.BooleanField({ required: false, initial: false });
+
+    // "+X in a [category] Skill of your choice" - see shared/skill-choice-grant.mjs.
+    schema.skillChoiceGrants = defineSkillChoiceGrantsField();
 
     return schema;
   }

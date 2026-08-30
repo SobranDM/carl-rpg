@@ -9,6 +9,7 @@ export const preloadHandlebarsTemplates = async function () {
     'systems/carl-rpg/templates/item/parts/ranked-fields.hbs',
     'systems/carl-rpg/templates/item/parts/changes-editor.hbs',
     'systems/carl-rpg/templates/item/parts/target-effects-editor.hbs',
+    'systems/carl-rpg/templates/item/parts/skill-choice-grants-editor.hbs',
     // Shared actor-sheet partials (invoked via {{> "systems/carl-rpg/..."}}).
     'systems/carl-rpg/templates/actor/parts/stats-column.hbs',
     'systems/carl-rpg/templates/actor/parts/skills-section-body.hbs',

@@ -19,6 +19,9 @@
     <input type="text" class="carl-w-full" name="system.prerequisites" value="{{system.prerequisites}}" />
   </div>
 
+  {{> "systems/carl-rpg/templates/item/parts/skill-choice-grants-editor.hbs"
+    grants=system.skillChoiceGrants path="system.skillChoiceGrants" item=item actorSkillNames=actorSkillNames}}
+
   <fieldset class="carl-changes">
     <legend>{{localize "CARLRPG.Item.Changes"}}</legend>
     {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"

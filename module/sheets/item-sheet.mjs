@@ -33,6 +33,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
       rollAdvancement: CarlRPGItemSheet.#onRollAdvancement,
       addArrayItem: CarlRPGItemSheet.#onAddArrayItem,
       deleteArrayItem: CarlRPGItemSheet.#onDeleteArrayItem,
+      resolveSkillChoice: CarlRPGItemSheet.#onResolveSkillChoice,
     }
   };
 
@@ -191,5 +192,40 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
 
   static #onDeleteArrayItem(event, target) {
     return onDeleteArrayItem(event, target, this.item);
+  }
+
+  /**
+   * Resolve one "+X in a Skill of your choice" grant (class.mjs/race.mjs's
+   * skillChoiceGrants) into a real, permanent ChangeEntry once the player
+   * has picked a target Skill - see attributes-class.hbs/attributes-race.hbs
+   * for the picker input this reads from. Removes the resolved grant so it
+   * can't be spent twice; the materialized ChangeEntry is otherwise a normal
+   * entry the player can still hand-edit via the Changes editor afterward.
+   * @private
+   */
+  static async #onResolveSkillChoice(event, target) {
+    event.preventDefault();
+    const index = Number(target.dataset.index);
+    const grants = this.item.system.skillChoiceGrants ?? [];
+    const grant = grants[index];
+    if (!grant) return;
+    const input = this.element.querySelector(`[data-skill-choice-input="${index}"]`);
+    const skillName = input?.value?.trim();
+    if (!skillName) {
+      ui.notifications.warn(game.i18n.localize('CARLRPG.SkillChoice.NeedName'));
+      return;
+    }
+    const newChange = {
+      targetType: 'skillRank',
+      target: skillName,
+      mode: 'add',
+      value: String(grant.amount),
+      label: grant.category
+        ? game.i18n.format('CARLRPG.SkillChoice.ResolvedLabel', { category: grant.category })
+        : '',
+    };
+    const changes = [...(this.item.system.changes ?? []), newChange];
+    const remainingGrants = grants.filter((_, i) => i !== index);
+    await this.item.update({ 'system.changes': changes, 'system.skillChoiceGrants': remainingGrants });
   }
 }

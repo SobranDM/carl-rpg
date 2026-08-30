@@ -138,6 +138,19 @@
       "Size": "Size",
       "Prerequisites": "Prerequisites"
     },
+    "SkillChoice": {
+      "Legend": "Skill of Your Choice Grants",
+      "Hint": "\"+X in a [category] Skill of your choice\" - authored here without a fixed target; the owner picks a real Skill below, which materializes a permanent Change on this item.",
+      "Category": "Category Hint",
+      "CategoryPlaceholder": "e.g. crafting, Weapon, Reach Weapon",
+      "Amount": "Amount",
+      "AddGrant": "Add Skill-of-Choice Grant",
+      "PendingLegend": "Pending Choices (owner picks a Skill)",
+      "PickPlaceholder": "Type or pick a Skill name",
+      "Resolve": "Assign",
+      "NeedName": "Type a Skill name before assigning this grant.",
+      "ResolvedLabel": "Skill of your choice ({category})"
+    },
     "FeatureTier": {
       "Acolyte": "Acolyte",
       "Devotee": "Devotee",
