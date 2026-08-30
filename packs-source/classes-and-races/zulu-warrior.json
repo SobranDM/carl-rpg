@@ -1,0 +1,37 @@
+{
+  "_id": "ObWn6JcQiFeWSVXU",
+  "name": "Zulu Warrior",
+  "type": "class",
+  "folder": "jXI4bMNGwtC7nOUa",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>You've trained from an early age under the tutelage of your elders, learning discipline and endurance. While others might prefer the relative safety of firearms and other ranged weapons, you prefer getting up close and personal to give your enemies an old-fashioned beatdown. Using your swift mobility, you can quickly flank foes and catch them off guard.</p><ul><li>+3 Strength, Constitution, and Dexterity</li><li>+3 in one Melee Weapon Skill of your choice</li><li>+2 Attack of Opportunity, Endurance, and Running Skills</li><li>+1 DR</li><li>One Weapon Skill can be raised to Rank 20</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Attack of Opportunity", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Endurance", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Running", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Fighter"],
+    "prerequisites": "",
+    "isEarthBased": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!ObWn6JcQiFeWSVXU"
+}

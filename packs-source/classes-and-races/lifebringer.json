@@ -1,0 +1,37 @@
+{
+  "_id": "GmSyzP5riybBTaC2",
+  "name": "Lifebringer",
+  "type": "class",
+  "folder": "yTPzd3BuPSHjClp5",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>You've traveled the wasteland, past former refineries, down furious roads, and around thunderous strongholds. You're a survivor, and you've learned how to restore the dead lands and help flora to grow and thrive. While others fought the limited resources, often wearing nothing but chaps and some poorly applied sunscreen, you sought to bring life back to the desert. When you encountered lost souls, you took them in and helped them find their way, both figuratively and spiritually. You only wish you could get rid of all that sand that keeps getting stuck in the most uncomfortable places. There's gotta be a spell for that!</p><ul><li>+2 Constitution</li><li>+1 Intelligence</li><li>+2 First Aid, Pathfinder, Regeneration, and Survival Skills</li><li>+2 Nature's Breath Spell</li><li>+1 Rank in all Spells with the Heal keyword</li><li>Once per day, you can grant Regeneration at your Skill Rank to all party members within 30 feet for 10 minutes</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "First Aid", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Pathfinder", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Regeneration", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Survival", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Druid"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!GmSyzP5riybBTaC2"
+}

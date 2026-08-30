@@ -1,0 +1,33 @@
+{
+  "_id": "8G55Xf6qpoIjC5i7",
+  "name": "Physicker",
+  "type": "class",
+  "folder": "yTPzd3BuPSHjClp5",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>Your calling is to heal and protect others, and Mother Nature gives you the tools to do so. The natural environment comes to your aid in curing the physical ailments of the sick and protecting the weak. While some might think your \"home remedies\" are crude and archaic, they are every bit as effective as other magic and modern medicine (though they can get a bit smelly and gross by comparison!). I mean, leeches aren't everyone's cup of tea, and sometimes your remedies are slow to effect, but they can't deny how much better they feel after a good bloodletting...</p><ul><li>+3 Constitution and Intelligence</li><li>+3 Nature's Breath and Oakhide Spells</li><li>+2 Rootfoot and Solsplash Spells</li><li>Double Mana regeneration when outdoors</li><li>Able to grant +1 DR to your party for 1 scene, once per day</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Druid"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!8G55Xf6qpoIjC5i7"
+}

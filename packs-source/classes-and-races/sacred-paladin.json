@@ -1,0 +1,37 @@
+{
+  "_id": "pT9aBA3kcnZWIFKU",
+  "name": "Sacred Paladin",
+  "type": "class",
+  "folder": "nt6apQnp4AGZm23T",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>Piety is not a choice: it's a calling. You are pure and noble, a valiant protector of the innocent and avenger of the wronged. You can fight the good fight, heal the sick, and provide solace to the dying. Yeah, you're that guy in the party--the one who won't let anyone have any fun in this godforsaken dungeon.</p><ul><li>+3 Strength</li><li>+2 Charisma</li><li>+2 Catcher Skill</li><li>+2 in a Weapon Skill of your choice</li><li>+2 Heal Others, Smite, and Turn Undead Spells</li><li>Access to the Dungeon Book of the Floor club (Favored: Cleric or Paladin Spells only)</li><li>+2 DR Buff</li><li>Access to Club Vanquisher</li><li>Must worship a deity</li><li>You cannot choose this Class if you have access to the Desperado Club</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Catcher", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Heal Others", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Paladin's Smite", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Turn Undead", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Paladin"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!pT9aBA3kcnZWIFKU"
+}

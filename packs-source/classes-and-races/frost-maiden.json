@@ -1,0 +1,36 @@
+{
+  "_id": "LtmNXncOKeaO9M4q",
+  "name": "Frost Maiden",
+  "type": "race",
+  "folder": "molOulShS3qHIPyY",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Chilled to the core, Frost Maidens are a Fey Race of short humanoids with ice-cold skin, pale hair, and indomitable mental fortitude that originated during European dark ages. The icy walls around their psyche give Frost Maidens an Immunity to mental infirmity. Frost Maidens are highly charismatic and have access to elemental ice powers, and can gain the service of their Game Guide as a Manager. This Race is a strong choice for magic-users, Bards, and Tricksters.</p><ul><li>Size: Petite (3)</li><li>+2 Charisma, Intelligence, and Dexterity</li><li>+2 Persuasion Skill</li><li>Melee attacks deal +1d4 Ice damage</li><li>Roll with Advantage on INT and CON Stat Checks</li><li>The crawler's Game Guide becomes their Manager</li><li>Capable of flight for up to 1 minute per scene</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Persuasion", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Petite (3)",
+    "prerequisites": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!LtmNXncOKeaO9M4q"
+}

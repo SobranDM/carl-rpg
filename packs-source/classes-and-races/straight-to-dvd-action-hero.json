@@ -1,0 +1,40 @@
+{
+  "_id": "MYtcbPrHFS7BhGh8",
+  "name": "Straight-to-DVD Action Hero",
+  "type": "class",
+  "folder": "jXI4bMNGwtC7nOUa",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>While A-Listers get to star in big-budget blockbuster movies, the Straight-to-DVD Action Hero barely makes enough to cover his rent and groceries. Forced to do his own stunts, the Straight-to-DVD Action Hero knows the basics of stunt work and weapons handling, though they're also worse for wear due to the perpetually hazardous learning process. This is a Fighter subclass.</p><p>Straight-to-DVD Action Heroes receive the following benefits:</p><ul><li>+3 Strength, Constitution, Dexterity, and Charisma</li><li>-2 Intelligence</li><li>+2 Unarmed Combat Skill</li><li>+1 Driving, Running, and Performance Skills</li><li>Take no damage from falling</li><li>+1 DR</li><li>The Manager Benefit</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Unarmed Combat", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Driving", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Running", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Performance", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Fighter"],
+    "prerequisites": "",
+    "isEarthBased": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!MYtcbPrHFS7BhGh8"
+}

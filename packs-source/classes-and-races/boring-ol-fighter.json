@@ -1,0 +1,34 @@
+{
+  "_id": "Qd0Ra7xfHF3oeqWw",
+  "name": "Boring Ol' Fighter",
+  "type": "class",
+  "folder": "jXI4bMNGwtC7nOUa",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>You're not sure which Class to pick, so why not stick with the classic Boring Ol' Fighter? No big decisions to make here--just run up and hit stuff. You've got decent fighting ability but really suck at magic and Spells. Oh, well. Those things run out anyway, and why bother counting and calculating when you can just throw hands or get stabby with the bad guys? Nothing is as sure and consistent as punching, kicking, bludgeoning, hacking, and slashing your way through Mobs.</p><ul><li>+2 Strength and Constitution</li><li>+5 in a Weapon Skill of your choice</li><li>+3 Dodge Skill</li><li>+2 to your choice of two of the following Skills: Aiming, Attack of Opportunity, Catcher, Shield Block, or Zone of Control Skills</li><li>Can access any Weapon Training Guild. Upon arrival on each floor, you receive a coupon good for one free training at a Weapon Training Guild</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Dodge", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Fighter"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!Qd0Ra7xfHF3oeqWw"
+}

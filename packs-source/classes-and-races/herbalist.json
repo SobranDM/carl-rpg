@@ -1,0 +1,37 @@
+{
+  "_id": "cZiiWRD58HOwsC2h",
+  "name": "Herbalist",
+  "type": "class",
+  "folder": "yTPzd3BuPSHjClp5",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>You've spent years mastering the arcane properties of herbs--not the boring culinary kind, but the kind that make people question their life choices and maybe make a few more bad ones along the way. Every herb is a piece of the puzzle, every blend a calculated risk. The dungeon is your garden, and you harvest it with the enthusiasm of someone who genuinely does not understand the concept of \"too much.\"</p><ul><li>+2 Constitution and Intelligence</li><li>+2 Alchemy, Cooking, First Aid, and Survival Skills</li><li>+2 Nature's Breath and Dirt Clod Spells</li><li>Your Mana recovers at twice the normal rate in a natural environment</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Alchemy", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Cooking", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "First Aid", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Survival", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Arcanist", "Druid"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!cZiiWRD58HOwsC2h"
+}

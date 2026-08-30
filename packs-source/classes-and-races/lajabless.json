@@ -1,0 +1,31 @@
+{
+  "_id": "vcXWi8EDRQ0waKh5",
+  "name": "Lajabless",
+  "type": "race",
+  "folder": "molOulShS3qHIPyY",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Lajabless, creatures from Caribbean folklore, live two lives: by day, they walk the dungeon as beautiful people, casting Spells with ease, but are weak in strength. At night, their face turns hideous and cavernous as their magic wanes, giving way to powerful strength. Lajabless must walk the balance between magic and martial Skill, beauty and horror, demon and Human.</p><p>To show they constantly straddle these worlds, Lajabless usually have, no matter their current aspect, one humanoid leg and one animal leg (often that of a cow or goat). The versatile shifting nature of the Lajabless makes this Race an ideal choice for crawlers who want a diverse half-caster build.</p><ul><li>Size: Medium (4)</li><li>+5 Intelligence during the day, +5 Strength during the night</li><li>+2 in two Spells of your choice</li><li>+3 in one Weapon Skill of your choice</li><li>Advantage when using the Ambush and Intimidation Skill</li><li>During the day, Strength is halved, but Spells cost half the Mana to cast</li><li>During the night, Strength is doubled, but Spells cost double the Mana to cast</li></ul>",
+    "changes": [],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4)",
+    "prerequisites": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!vcXWi8EDRQ0waKh5"
+}

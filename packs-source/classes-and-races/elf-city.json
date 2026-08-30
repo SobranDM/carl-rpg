@@ -1,0 +1,67 @@
+{
+  "_id": "SQuERG9LLStKodO3",
+  "name": "Elf (City)",
+  "type": "race",
+  "folder": "molOulShS3qHIPyY",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>City Elves are a subspecies of Elf that make their home in glass skyscrapers and bustling city streets rather than in groves of trees or remote castles.</p><p>Not convinced these bastards came from Earth? I'd dare you to check out the depths of Urban Fantasy, or Romantasy if you're nasty--if those still existed. Instead, your ass is stuck in the dungeon and is going to have to trust me on this one.</p><p>Lithe and tall, with pale skin and neon-colored hair, City Elves sometimes favor using modern technological interpretations of Spells and equipment compared to their more rustic kin.</p><p>City Elves do not necessarily consider themselves superior to all other Races by virtue of being Elves; it's just that all others simply fall short by comparison, and usually because of their beliefs more than their appearance.</p><p>For what it's worth, City Elves in the dungeon are fucking morons. They are most often hypocritical sycophants and cult members who are too dumb to realize they've been tricked into living in a cult. But none of that has to apply to you as a crawler; it might earn you some funny looks from anyone else who has come across another City Elf in the dungeon, though. This Race makes ideal Arcanists, Bards, or Mages.</p><ul><li>Size: Medium (4)</li><li>+6 to split as you please between Intelligence, Dexterity, and Charisma</li><li>+3 Good First Impression Skill</li><li>+2 Negotiation and Streetwise Skills</li><li>Once per floor during a Long Rest, a City Elf can adjust the +4 spent between Charisma, Intelligence, and Dexterity, reassigning those points between those Stats</li><li>When entering a settlement for the first time, make your first Charisma-based Check with Advantage. On an Amazing Success or better, you have made a permanent contact</li></ul>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Good First Impression",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Negotiation",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Streetwise",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4)",
+    "prerequisites": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200011000,
+    "modifiedTime": 1788200011000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!SQuERG9LLStKodO3"
+}

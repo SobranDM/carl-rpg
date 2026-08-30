@@ -1,0 +1,36 @@
+{
+  "_id": "x6s6yb0IpeQBFvvt",
+  "name": "Tetrakai",
+  "type": "race",
+  "folder": "molOulShS3qHIPyY",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>What you notice first says a lot about you. Was it the blue skin or the four arms? This Race is traditionally offered to female crawlers, but some male Tetrakai have been spotted--literally. Male Tetrakai have white polka-dot spots the size of poker chips. Now you know why you don't see many.</p><p>As you can imagine, having four arms is pretty nice, though I don't know what the males do with the other three. Holding four items at a time offers all sorts of juicy benefits. Too bad you don't have four actions, amirite?</p><ul><li>Size: Medium (4)</li><li>+6 Dexterity</li><li>-2 Charisma</li><li>+2 Pugilism and Wrasslin' Skills</li><li>+1 in all Edged Weapon Skills</li><li>Four Arms: Your Hands/Holding Gear slot allows for four items (or two weapons requiring two hands)</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "6", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Pugilism", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Wrasslin'", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4)",
+    "prerequisites": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!x6s6yb0IpeQBFvvt"
+}

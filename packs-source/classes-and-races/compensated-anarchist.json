@@ -1,0 +1,41 @@
+{
+  "_id": "wVdnCpcpKm1PI5iG",
+  "name": "Compensated Anarchist",
+  "type": "class",
+  "folder": "qlcFgM5KKq6FuZxm",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>When the oligarchs want to manufacture a social movement, or better yet, stop one in its tracks, they must first bring in the big guns. The paid protestors. The Agent Provocateur. This Monk/Rogue hybrid Class is a trapmaking, bomb-making, social-media dynamo.</p><p>The Compensated Anarchist will happily throw a Molotov through a window one moment and step in front of a camera to plead for the violence to stop the next. Experts in hand-to-hand and dirty tactics, the Compensated Anarchist only suffers in more traditional fighting techniques.</p><p>A recent balance patch has adjusted this Class's values, but those who want to follow in Carl's bare, delightful footsteps can still benefit from this Class's wide array of bonuses.</p><p>Prerequisites: This limited Class is only available to crawlers who have Popularity 3 or higher and have Rank 5+ in the Explosives Handling Skill</p><ul><li>+5 Charisma</li><li>+1 Intelligence</li><li>+2 Backfire, Escape Plan, and Find Trap Skills</li><li>+1 Bomb Surgeon, Hide in Shadows, Trap Engineer, and Unarmed Combat Skills</li><li>+1 Fear Spell</li><li>Add no Stat Mod bonus damage when using Edged Weapons</li><li>You pay +3 Mana to cast damage-dealing Spells</li><li>At the end of each floor, add 1 to one of your trap-related Skill Advancement Checks</li><li>At the end of each floor, add 1 to one of your bomb-related Skill Advancement Checks</li><li>Access to the Desperado Club</li><li>Access to the Naughty Boys Employment Agency</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Backfire", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Escape Plan", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Find Trap", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Bomb Surgeon", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Hide in Shadows", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Trap Engineer", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Unarmed Combat", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Fear", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Monk", "Rogue"],
+    "prerequisites": "This limited Class is only available to crawlers who have Popularity 3 or higher and have Rank 5+ in the Explosives Handling Skill",
+    "isEarthBased": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!wVdnCpcpKm1PI5iG"
+}

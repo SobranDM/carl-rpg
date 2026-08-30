@@ -1,0 +1,89 @@
+{
+  "_id": "PnPvS9BuPM4EIDwu",
+  "name": "Amazonian",
+  "type": "race",
+  "folder": "molOulShS3qHIPyY",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Amazonians are a Race of tall, well-built humanoid women from Earth mythology who are known for their athleticism. Upon choosing this Race, crawlers gain an additional foot in height and bulk up to bodybuilder levels of swole. Amazonians excel at contests of physical strength and endurance but have little innate magical ability. This Race is an ideal choice for Fighter and Monk-based Classes.</p><p><em>Prerequisites: This limited Race is only available to crawlers who have at least one Strength or Dexterity-based Skill at Rank 5+</em></p><ul><li>Size: Medium (4)</li><li>+6 Strength</li><li>+3 Dexterity</li><li>+2 Bow, Endurance, and Pugilism Skills</li><li>+2 DR</li><li>Each floor, you receive a coupon good for one free training at a Weapon Training Guild</li></ul>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "6",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Bow",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Endurance",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Pugilism",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4)",
+    "prerequisites": "This limited Race is only available to crawlers who have at least one Strength or Dexterity-based Skill at Rank 5+"
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!PnPvS9BuPM4EIDwu"
+}

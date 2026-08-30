@@ -1,0 +1,37 @@
+{
+  "_id": "XrEyKvmEJsXURp1g",
+  "name": "Prison Tattoo Artist",
+  "type": "class",
+  "folder": "7HXqgvfIrVkarQFL",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>Sometimes you just gotta make do with the tools you have on hand and hope for the best. They might not be pretty, but they do the job.</p><p>Who are we kidding? You can't tell what these motherfucking tattoos are supposed to be! Just don't say that to the lifer who's been working on them all month for you.</p><p>You can create functional, but not aesthetically pleasing, magical tattoos that grant a wide range of arcane abilities for a limited amount of time.</p><ul><li>+3 Constitution and Dexterity</li><li>+2 Intelligence</li><li>+5 Tattoo Artistry Skill</li><li>+3 Calligraphy Skill</li><li>+2 Dagger Skill</li><li>Tier 1 Tattoo chair (table)</li><li>Tattoo Artistry Skill can be raised to Rank 20</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Tattoo Artistry", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Calligraphy", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Dagger", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Arcanist"],
+    "prerequisites": "",
+    "isEarthBased": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!XrEyKvmEJsXURp1g"
+}

@@ -1,0 +1,78 @@
+{
+  "_id": "N2UpiWV9qqqr9i0R",
+  "name": "Grulke",
+  "type": "race",
+  "folder": "wUcuJdB4eYn1w9Gt",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>You are a toad. A five-foot-tall toad person who once conquered planets, not that anyone remembers. If anyone calls you a frog, make them regret it. The Grulke are a militaristic Race of toad warriors, though they have lost much of their organization as a Race and are now more often seen solo in mercenary halls. If only a Grulke were able to unite the disparate battalions and restore honor to their people, an up-and-comer who hasn't been poisoned by infighting and politics. Oh, if only there were someone worthy...</p><p><em>Prerequisites: This limited Race is only available to crawlers who have Rank 5+ in the Jumping or Light on Your Feet Skill</em></p><ul><li>Size: Medium (4)</li><li>+3 Dexterity</li><li>+2 Strength</li><li>-2 Charisma</li><li>+3 in either Jumping or Light on Your Feet Skills</li><li>+2 Zone of Control and a Reach Weapon Skill of your choice</li><li>Tongue Lashing: Ranged attack; [Rank = Floor Number] + DEX to hit. 1d8 + STR, Bludgeoning, 30ft range. Add 1d8 at Rank 5, 10, and 15. Rank is always equal to the Floor Number and cannot be raised by other means</li><li>Gain a +2 DR breastplate (Torso) with your Grulke Battalion crest, not that it means much anymore</li><li>Troll-type enemies have Advantage on Wrasslin' Checks against you, and when successful, they lick you</li><li>+1 Popularity when a troll-type enemy licks you or when you achieve an Amazing Success or better on an Attack against a troll-type enemy</li><li>+1 Popularity when you score a Critical Hit on a larger foe in combat</li></ul>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Zone of Control",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": false,
+    "isAlien": true,
+    "size": "Medium (4)",
+    "prerequisites": "This limited Race is only available to crawlers who have Rank 5+ in the Jumping or Light on Your Feet Skill"
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!N2UpiWV9qqqr9i0R"
+}

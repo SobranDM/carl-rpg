@@ -1,0 +1,37 @@
+{
+  "_id": "Fv2fvnVAOVBB31XP",
+  "name": "Boring Ol' Mage",
+  "type": "class",
+  "folder": "Ybp1E405ta3O8NKx",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>Ever faithful to the old traditions, you, as an adherent of the Boring Ol' Mage School (as their foes would describe them), strive to learn how to channel sheer arcane power at the cost of other Skills. Though some believe this equips the Boring Ol' Mage Class with glass jaws, your rigorous focus on magic channels portions of your intellect into impressive effects.</p><p>Several crawlers have attempted to waylay one of these Mages only to find they're capable of channeling sudden destructive powers and manifesting Spells straight out of legend, often with the same showmanship and magical-sounding words found in movies, TV shows, and fantasy books.</p><ul><li>+5 Intelligence and Charisma</li><li>-2 Strength and Dexterity</li><li>+3 in a Fire Spell</li><li>+2 in one Force Spell and one Sonic Spell</li><li>+2 in two different Passive Spells</li><li>+2 Lore Skill</li><li>+1 Arcane Skill</li><li>-3 Ranks in all Dexterity Skills (to a minimum of 1 Rank if you have any Ranks)</li><li>-3 Ranks in all Strength Skills (to a minimum of 1 Rank if you have any Ranks)</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "str", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Lore", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Arcane", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Mage"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!Fv2fvnVAOVBB31XP"
+}

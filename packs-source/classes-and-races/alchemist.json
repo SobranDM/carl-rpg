@@ -1,0 +1,35 @@
+{
+  "_id": "zyXmvQfRsX7bx0vl",
+  "name": "Alchemist",
+  "type": "class",
+  "folder": "7HXqgvfIrVkarQFL",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>Crafting arcane liquids, now that's a fun thing! You can make all kinds of potions for all sorts of occasions. Plus, you've messed up enough potions to know how to make some pretty cool poisons, ranging from merely annoying to extremely deadly. Luckily, you've also learned, often the hard way, how to negate these poisons. Well, mostly. Don't drink that gray one, just in case.</p><ul><li>+3 Constitution and Intelligence</li><li>+5 Alchemy Skill</li><li>+3 Infusion Skill</li><li>Immunity to Poison</li><li>Tier 1 Alchemy table</li><li>At the end of each floor, add 1 to your Skill Advancement Checks for Alchemy and Infusion</li><li>Alchemy Skill can be raised to Rank 20</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "con", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Alchemy", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Infusion", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Arcanist"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!zyXmvQfRsX7bx0vl"
+}

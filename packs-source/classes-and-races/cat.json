@@ -1,0 +1,100 @@
+{
+  "_id": "Hf7fndo2HMOBK8D3",
+  "name": "Cat",
+  "type": "race",
+  "folder": "molOulShS3qHIPyY",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Cats are ordinary felines of unimpressive size common in Earth households across the world. You might not expect a Cat's sleek grace and supernatural luck to go to their head, but Cats have considered themselves the true and rightful rulers of Earth since before the days of ancient Egypt.</p><p>Note that a recent update to Syndicate Race standards has benefited the Cat, among other Races.</p><p><em>Prerequisites: This limited Race is only available to crawlers who are already a Cat</em></p><ul><li>Size: Small (2); Animal</li><li>+4 Dexterity</li><li>+2 Constitution</li><li>+1 Charisma</li><li>-3 Strength</li><li>+3 Cat-like Reflexes</li><li>+2 Slice Attack Skill</li><li>Can see in total darkness</li><li>Advantage on Cat-like Reflexes Skill Checks</li><li>Nine Lives: Take half damage from the first 9 attacks each day</li><li>Vulnerability: Take double damage from Dogs and Beasts</li></ul>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Catlike Reflexes",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Slice Attack",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Small (2); Animal",
+    "prerequisites": "This limited Race is only available to crawlers who are already a Cat"
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200002000,
+    "modifiedTime": 1788200002000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Hf7fndo2HMOBK8D3"
+}

@@ -1,0 +1,122 @@
+{
+  "_id": "a43mleI6OLEA7U0d",
+  "name": "Pocket Kuma",
+  "type": "race",
+  "folder": "wUcuJdB4eYn1w9Gt",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>A Pocket Kuma is an adorable and diminutive hybrid of a bear, a capybara, and a sugar glider that comes from beyond the stars. Their small bodies and oversized eyes made them absolutely adorable, and they were quickly put into service as pets by the High Elves who bred them specifically for that purpose.</p><p>However, these cute little abominations learned how to think, which inspired mass genocide of their species. Fortunately, a few clever specimens managed to escape, thus perpetuating their existence and eventual spread throughout the galaxy.</p><p>A Pocket Kuma's oversized eyes give them the ability to see incredibly well in day or night. Despite ranking among the weakest and most fragile of Races, they are some of the most agile and nimble creatures in the galaxy. It's not uncommon for them to leap up to ten times their own body length with a running start, or half that from standing.</p><p>Although their dexterous paws have opposable thumbs, they're simply too small to wield or use any weapons or items that aren't specifically designed for them, making them poor warriors. Members of this Race are ideal as Bards, Rogues, or magic-users.</p><ul><li>Size: Small (2); Animal</li><li>+5 Dexterity and Charisma</li><li>-4 Strength. Strength is capped at 10</li><li>-4 Constitution</li><li>+2 Bite, Dodge, and Slice Attack Skills</li><li>+1 Ambush Skill</li><li>You roll with Advantage on all Charisma-based Checks</li><li>Can see in total darkness</li><li>Take no damage from falling</li><li>Light on Your Feet Skill can be raised to Rank 20</li><li>You deal half damage with Strength-based melee weapons</li><li>Vulnerable to Bludgeoning damage</li><li>+1 Popularity when you act in the Surprise Round of a combat or roll a Critical Fail on an Evade Check</li></ul>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Bite",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Dodge",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Slice Attack",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Ambush",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": false,
+    "isAlien": true,
+    "size": "Small (2); Animal",
+    "prerequisites": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!a43mleI6OLEA7U0d"
+}

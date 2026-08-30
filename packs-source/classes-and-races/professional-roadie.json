@@ -1,0 +1,35 @@
+{
+  "_id": "5Zhz8kxY9kcqlwGh",
+  "name": "Professional Roadie",
+  "type": "class",
+  "folder": "mgBIILmP8HBfzI8Y",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>Considered by some to be the backup singer to a Bard, the Professional Roadie possesses powers that can boost their comrades and maximize sonic effects. Whether working on a team or taking your act solo, the Professional Roadie has a wealth of experience to draw on and has dealt with the most difficult patrons. The ability to sort out broken equipment and manage healing elixirs makes you invaluable to a group trying to survive the Floor.</p><p>The Professional Roadie spends a long time exploring the World Dungeon, utilizing their Skills to bargain for food and lodging from others. Highly versatile, a Professional Roadie often has a wealth of contacts on call should they need favors, information, or money that is owed to them. You also tell the best stories and can hypnotize a crowd with tales of days gone by and gigs you've played.</p><ul><li>+8 split between Strength, Constitution, and Charisma</li><li>+4 Performance Skill, with a guitar specialty</li><li>+3 Negotiation Skill</li><li>+1 Iron Stomach and Repair Skills</li><li>Advantage on Checks against Poison or effects that give the Shit-Faced Debuff</li><li>At the start of each combat, you may declare that all the damage you deal is Sonic damage</li><li>Roll with Advantage when making a Repair Skill Check</li><li>Silver Earth Box, with guaranteed Earth Hobby Potion</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Performance", "mode": "add", "value": "4", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Negotiation", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Iron Stomach", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Repair", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Bard", "Rogue"],
+    "prerequisites": "",
+    "isEarthBased": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!5Zhz8kxY9kcqlwGh"
+}

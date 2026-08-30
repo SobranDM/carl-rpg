@@ -1,0 +1,89 @@
+{
+  "_id": "qNLvTpmIdLVtiFtD",
+  "name": "Dwarf (Fathom)",
+  "type": "race",
+  "folder": "molOulShS3qHIPyY",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Fathom Dwarves, more so even than other Dwarves, have evolved and adapted to spelunk deep into mineshafts. They strap specially trained glowing lizards to their heads as light sources deep where the sun has never penetrated. No idea where this lizard symbiosis is from, but these guys are already delving so deep that Gandalf wrote their asses off as Balrog chow back on page 483 of The Silmarillion. Go ahead, look it up.</p><p>Fathom Dwarves are skilled diggers and crafters with stout, hardy bodies and rough skin. They have an edge in Constitution and Strength, making them an ideal choice for Fighters, Barbarians, and crafting Classes where durability is as important as Skill.</p><ul><li>Size: Medium (4)</li><li>+3 Constitution</li><li>+2 Strength</li><li>+3 Engineering Skill</li><li>+2 Dumpster Diving and Salvage Skills</li><li>Roll d20 Checks with Advantage when earth, rocks, and dirt are involved</li><li>Can produce a 15ft Cone of light from a harmless lizard nesting atop their heads, and can easily acquire a new lizard if the existing one is lost or killed</li></ul>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Engineering",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Dumpster Diving",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Salvage",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4)",
+    "prerequisites": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200009000,
+    "modifiedTime": 1788200009000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!qNLvTpmIdLVtiFtD"
+}

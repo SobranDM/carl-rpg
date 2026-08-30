@@ -1,0 +1,31 @@
+{
+  "_id": "WJvfD8JvcEuYj4CI",
+  "name": "Primal",
+  "type": "race",
+  "folder": "molOulShS3qHIPyY",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>For the first several seasons of Dungeon Crawler World, all contestants started off as Primals. Primals are blank slates, and your appearance does not change. The Primal Race offers little by way of specialization, but the Earth Classes you'll have access to make up for it. Find your current Race in this section of the book and apply those racial benefits. However, list your Race as Primal, and then apply these modifiers:</p><ul><li>Size: Unchanged</li><li>-1 to all Stats</li><li>All Skills can be raised to Rank 20</li></ul><p><strong>The World Dungeon on Hard Mode: Primals</strong></p><p>Primals were the first known species to conquer the universe. After, they seemingly disappeared and have since become \"the boogeymen of the cosmos.\" In the first Dungeon Crawler World seasons, every crawler was a Primal, but since then, they've been relegated to the back catalog, behind all of the shiny and popular Race choices.</p><p>Choosing a Primal is taking the World Dungeon on hard mode--you're declining the many significant bonuses of choosing another Race (even plain old humans have more benefits) and accepting a penalty to all of your stats in exchange for the opportunity to raise any Skill above the World Dungeon's soft cap of 15 Ranks. Raising a Skill to 15 is already difficult, requiring concentration to reach that degree of mastery. Primals get that challenge and say \"Hold my beer\" as they careen into maximizing as many of their Skills as possible. If you make this choice, we salute you--but don't say we didn't warn you.</p><p><strong>Note:</strong> this Race layers on top of your existing Race rather than replacing it — apply both sets of benefits, per the book text above.</p>",
+    "changes": [],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Unchanged",
+    "prerequisites": ""
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!WJvfD8JvcEuYj4CI"
+}

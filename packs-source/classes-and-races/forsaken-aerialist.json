@@ -1,0 +1,38 @@
+{
+  "_id": "JAzob2UcStSFxgyd",
+  "name": "Forsaken Aerialist",
+  "type": "class",
+  "folder": "Ybp1E405ta3O8NKx",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>Some Mages use powerful magic to blast and destroy with all the subtlety of a runaway locomotive or a scorching fireball. But not you. You eschew the spotlight and instead seek out more elegant and discreet ways to take on your foes. You have learned how to bypass certain magical limitations to make even the simplest and weakest of spells into something capable of slowly and steadily taking down the most powerful of creatures, all while they are completely unaware of their plight. That frog in the boiling pot never knew what hit him!</p><ul><li>+5 Intelligence</li><li>-2 Charisma</li><li>+3 Drain Life and Soul Collector Spells</li><li>+1 Alchemy, Infusion, and Tactics Skills</li><li>Double the duration of your Rank 5 and lower Spells that have a duration</li><li>Your Spells can be applied to a creature without it realizing it is under a Spell effect</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "5", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "cha", "mode": "subtract", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Drain Life", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Soul Collector", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Alchemy", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Infusion", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Tactics", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Mage"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!JAzob2UcStSFxgyd"
+}

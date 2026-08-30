@@ -1,0 +1,37 @@
+{
+  "_id": "FKutYB9CbgiHqTUX",
+  "name": "Elemental Monk",
+  "type": "class",
+  "folder": "y9tTpVaTrC0psivS",
+  "img": "icons/svg/upgrade.svg",
+  "system": {
+    "description": "<p>You have focused your monastic training on mastering the elements. It's not that you wanted to, but your monastery was too cheap to provide proper weapons or training facilities. So instead, you learned to work with what you had, and harnessed earth, wind, water, and fire in subtle and not-so-subtle ways. Your understanding of the elements enables you to see how they both complement and work against each other, revealing the weaknesses of elemental beings and giving you knowledge of how best to defeat them.</p><ul><li>+2 Intelligence and Dexterity</li><li>+3 Unarmed Combat Skill</li><li>+1 Dirt Clod, Fire Fingers, and Frost Scar Spells</li><li>+1 in all Spells with the Electric, Fire, and Ice damage types</li><li>Advantage when attacking elemental creatures</li><li>The ability to breathe underwater</li><li>The ability to burrow</li><li>The ability to fly</li></ul>",
+    "changes": [
+      {"id": "", "label": "", "targetType": "stat", "target": "int", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "stat", "target": "dex", "mode": "add", "value": "2", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Unarmed Combat", "mode": "add", "value": "3", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Dirt Clod", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Fire Fingers", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []},
+      {"id": "", "label": "", "targetType": "skillRank", "target": "Frost Scar", "mode": "add", "value": "1", "damageDiceKind": "", "damageType": "", "conditions": []}
+    ],
+    "classTypes": ["Mage", "Monk"],
+    "prerequisites": "",
+    "isEarthBased": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788200000000,
+    "modifiedTime": 1788200000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": { "default": 0 },
+  "flags": {},
+  "_key": "!items!FKutYB9CbgiHqTUX"
+}
