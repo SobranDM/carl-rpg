@@ -68,6 +68,13 @@
       "path": "packs/skills-and-spells",
       "type": "Item",
       "system": "carl-rpg"
+    },
+    {
+      "name": "classes-and-races",
+      "label": "Classes & Races",
+      "path": "packs/classes-and-races",
+      "type": "Item",
+      "system": "carl-rpg"
     }
   ],
   "packFolders": [ ],
