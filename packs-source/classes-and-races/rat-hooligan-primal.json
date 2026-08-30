@@ -1,0 +1,156 @@
+{
+  "_id": "gySEkYC4YDFrnVKv",
+  "name": "Rat Hooligan (Primal)",
+  "type": "race",
+  "folder": "yyu8SkWzc7TomQxb",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Rat-Kin have a reputation for being survivors, from the tales of rat-people whispered around candlelight in ancient times to Master Splinter serving as a beloved sewer-bound mentor. One of the more common Mobs in the early floors of the World Dungeon, Rat-Kin have surged forth from their warrens to resist the wholesale slaughter of their species. A crawler that chooses this Race becomes one of hundreds of siblings across all dungeon floors. Rat-Kins' propensity to hide in places considered gross or unnatural allows them to traverse the floors surreptitiously, gathering secrets and carrying messages. Rat Hooligans make ideal Rogues and capable magic-users.</p><ul><li>Size: Petite (3)</li><li>+2 Dexterity</li><li>+1 Constitution</li><li>+2 Escape Plan and Stealth Skills</li><li>+1 Bite and Survival Skills</li><li>Advantage on Checks to resist hunger and thirst</li><li>Can converse with common house rats to gather minimal information while in buildings</li><li>May add DEX Mod to Bite damage instead of STR</li></ul><p><strong>Primal variant</strong> (Race &amp; Class Selection, p.128): this Race's own benefits above, plus the Primal modifiers layered on top - -1 to all Stats (already included in the Change list below), and all Skills can be raised to Rank 20 (already true system-wide - see docs/known-gaps.md).</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Escape Plan",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Stealth",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Bite",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Survival",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Petite (3)",
+    "prerequisites": "",
+    "skillChoiceGrants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788300000000,
+    "modifiedTime": 1788300000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!gySEkYC4YDFrnVKv"
+}

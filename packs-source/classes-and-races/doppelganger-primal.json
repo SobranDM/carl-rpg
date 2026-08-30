@@ -1,0 +1,134 @@
+{
+  "_id": "vRwKKUx4qx1pjg38",
+  "name": "Doppelgänger (Primal)",
+  "type": "race",
+  "folder": "yyu8SkWzc7TomQxb",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Doppelgängers are shapeshifters, but they aren't just about changing their appearance to match someone else. Earth must have had some really fucked up history for two kinds of shape-stealing boogey monsters to feature so prevalently--no wonder you're so freaked out about your uncanny valley. In fact, Doppelgängers require a lot of practice before they can change into someone specific, and even general changes are painful and require a basic level of artistry and a good mirror. A Doppelgänger can mold its malleable body like tough clay.</p><p>For all the flexibility of their form, Doppelgängers can't change their mass, and that includes the mass of any equipment they are wearing or carrying, which must become a part of whatever form they take. This makes Doppelgängers a very adaptable Race, as they're able to pick up something of unusual composition and integrate it into their own form, but they're not capable of assuming identities as quickly or effectively as a Changeling. Doppelgängers are sturdy and make great front-line Fighters and Paladins.</p><ul><li>Size: Unchanged, but size changes when shifting</li><li>+4 Constitution</li><li>+3 Strength</li><li>+1 Deception and Endurance Skills</li><li>+2 DR</li><li>Due to shifting mass, can determine their maximum weight to lift based on Constitution instead of Strength</li><li>Advantage on Escape Artist Skill Checks and can make such Checks while being Held or watched</li><li>Once per scene, as an Action, you can incorporate a held weapon into their mass to deal additional damage equal to their CON Mod. Items incorporated this way can't be disarmed</li><li>Doppelgänger Shape-Changing: As an Action, you can transform into any shape of comparable mass, incorporating carried and worn items into the new shape in the same percentage (that is, a Doppelgänger holding metal equal to half their weight must assume a shape that is one-third metal). This transformation is painful, causing you to mark off 1 Health Bar slot per change. If you attempt to change your shape to resemble a specific person or object, do so with an Unopposed Deception Skill Check</li></ul><p><strong>Primal variant</strong> (Race &amp; Class Selection, p.128): this Race's own benefits above, plus the Primal modifiers layered on top - -1 to all Stats (already included in the Change list below), and all Skills can be raised to Rank 20 (already true system-wide - see docs/known-gaps.md).</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Deception",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Endurance",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Unchanged, but size changes when shifting",
+    "prerequisites": "",
+    "skillChoiceGrants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788300000000,
+    "modifiedTime": 1788300000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!vRwKKUx4qx1pjg38"
+}

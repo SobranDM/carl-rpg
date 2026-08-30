@@ -1,0 +1,178 @@
+{
+  "_id": "04aRF4KlWFp1bCjl",
+  "name": "Igneous (Primal)",
+  "type": "race",
+  "folder": "yyu8SkWzc7TomQxb",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>The Earthling idea for the Igneous goes much farther back than the first stunt performer who threw on a rock costume to battle the Power Rangers. Molten rock flows through their veins, visible through the cracks in their stony flesh. This flow visibly slows when an Igneous is cold or injured. Igneous are unsurpassed in terms of endurance and stamina. While they are not typically the fastest creatures in the universe, they can occasionally move with a burst of explosive speed to match any erupting peak.</p><p>An Igneous's rocky skin makes them ideally suited for stalking prey on their homeworld but leaves them incredibly conspicuous anywhere else. Of course, being conspicuous isn't typically as big an issue after you've poured a fresh batch of lava all over anyone who might object to your presence. This Race is an ideal choice for any tank Class.</p><ul><li>Size: Large (5)</li><li>+6 Constitution</li><li>+4 Strength</li><li>-2 Intelligence and Charisma</li><li>+1 Endurance Skill</li><li>+3 DR Buff</li><li>Once per day, double your Move for 20 seconds</li><li>As an Action, make a CON Stat Check. On Success, deal 1d8+F Fire damage, 5ft Burst radius</li><li>No Survival Checks needed in harsh heat conditions and can breathe underwater</li><li>Immunity to Fire damage, and vulnerable to Ice damage</li><li>Ability to burrow</li><li>Lose 1 Health Bar slot each time you access your Inventory (not Hotlist)</li><li>Disadvantage on Checks to conceal your presence or nature (such as Stealth)</li></ul><p><strong>Primal variant</strong> (Race &amp; Class Selection, p.128): this Race's own benefits above, plus the Primal modifiers layered on top - -1 to all Stats (already included in the Change list below), and all Skills can be raised to Rank 20 (already true system-wide - see docs/known-gaps.md).</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "add",
+        "value": "6",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "add",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Endurance",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "DR Buff",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "resistance",
+        "target": "fire",
+        "mode": "override",
+        "value": "immune",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "resistance",
+        "target": "ice",
+        "mode": "override",
+        "value": "vulnerable",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Large (5)",
+    "prerequisites": "",
+    "skillChoiceGrants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788300000000,
+    "modifiedTime": 1788300000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!04aRF4KlWFp1bCjl"
+}

@@ -1,0 +1,145 @@
+{
+  "_id": "uDIx8yKS0nggAQnx",
+  "name": "Arachnid (Primal)",
+  "type": "race",
+  "folder": "yyu8SkWzc7TomQxb",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>The way a creepy smile spreads across a face with too many eyes makes the Arachnids one of the most mistrusted Races in the World Dungeon. They're a popular choice among crawlers, especially with cultures that revered spiders (like the Akan peoples and Marvel fans who only like Spider-Man). Their humanoid torsos on a spider's frame give them a terrifying appearance, but they are well known for playing beautiful harp music (using silk chords), weaving silken tapestries honoring their conquests, and obsessing over death.</p><p>Arachnids feel at home on the ceiling and hiding in the shadows, content to watch events play out while planning the moment to strike. Still, as much as they are obsessed with death and plotting, they are a jovial Race who express their creative side at every opportunity. Arachnids make excellent Bards and Rogues.</p><ul><li>Size: Medium (4)</li><li>+5 Dexterity</li><li>+3 Web Spell, which costs half the normal Mana to cast</li><li>+2 Climbing, Perception, and Performance (with a stringed instrument specialty) Skills</li><li>You have an innate Climb Move equal to your normal Move value, without needing Checks (unless under duress)</li></ul><p><strong>Primal variant</strong> (Race &amp; Class Selection, p.128): this Race's own benefits above, plus the Primal modifiers layered on top - -1 to all Stats (already included in the Change list below), and all Skills can be raised to Rank 20 (already true system-wide - see docs/known-gaps.md).</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Web",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Climbing",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Perception",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Performance",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4)",
+    "prerequisites": "",
+    "skillChoiceGrants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788300000000,
+    "modifiedTime": 1788300000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!uDIx8yKS0nggAQnx"
+}

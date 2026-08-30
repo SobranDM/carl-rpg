@@ -1,0 +1,167 @@
+{
+  "_id": "bPvCpA3lwvg9ZgWg",
+  "name": "Cat Girl/Cat Boy (Primal)",
+  "type": "race",
+  "folder": "yyu8SkWzc7TomQxb",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Cat Girls/Boys are special offshoots of humanity that possess the best qualities of a Cat (though many pretend to be humble and demure to hide their ferocity and cunning). Possessing feline traits on top of a Human form, Cat Girls/Boys might appear mostly Human, save for furry ears atop the head or a tail, or they might appear like a humanoid lioness/lion in a maid's dress. Most other species get along with Cat Girls/Boys, though natural felines often view their existence as an abomination. This Race is a great choice for Bard and Mage Classes.</p><ul><li>Size: Medium (4)</li><li>+3 Dexterity and Charisma</li><li>-2 Constitution</li><li>+2 Cat-like Reflexes, Good First Impression, Light on your Feet, and Slice Attack Skills</li><li>Your Slice Attacks may add your CHA Mod to the damage instead of STR</li><li>Toxoplasma G.: Once per day, your allies have Rank 5 Catcher Skill (and the +5 DR Upgrade!) for one round to protect only you from attacks about to hit you. Those who do gain 1 AI Favor</li><li>When dealing with felines other than Cat Girls/Boys, you make Charisma-based Skill Checks with Disadvantage</li></ul><p><strong>Primal variant</strong> (Race &amp; Class Selection, p.128): this Race's own benefits above, plus the Primal modifiers layered on top - -1 to all Stats (already included in the Change list below), and all Skills can be raised to Rank 20 (already true system-wide - see docs/known-gaps.md).</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Catlike Reflexes",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Good First Impression",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Light on Your Feet",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Slice Attack",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4)",
+    "prerequisites": "",
+    "skillChoiceGrants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788300000000,
+    "modifiedTime": 1788300000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!bPvCpA3lwvg9ZgWg"
+}

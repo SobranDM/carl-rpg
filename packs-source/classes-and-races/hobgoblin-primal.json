@@ -1,0 +1,124 @@
+{
+  "_id": "mHXIpzvEtPUBWzIX",
+  "name": "Hobgoblin (Primal)",
+  "type": "race",
+  "folder": "yyu8SkWzc7TomQxb",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>A Hobgoblin is what happens when a lady Troll manages to get a Goblin drunk enough to talk herself into his pants. While that description makes them sound like they come from bawdy Earth Bards, this alien Race of explosive hooligans is a plague among the stars. Large, muscular, and smart, Hobgoblins excel at trapmaking, explosives management, and all-out mayhem. Unfortunately, these guys are so ugly that even Gorgons lose their lunch looking upon them, and they've suffered a few nerfs in the most recent balancing patch. This Race is best suited for Rogue and Fighter-based Classes.</p><p><em>Prerequisites: This limited Race is only available to crawlers who have Rank 5+ in the Explosives Handling Skill and any Trap-based Skill</em></p><ul><li>Size: Medium (4)</li><li>+1 Dexterity</li><li>-5 Charisma. Charisma is capped at 10</li><li>+3 in all Trap-based and Explosive-based Skills</li><li>+1 Regeneration Skill</li><li>Free access to all Hobgoblin Sapper Workshops</li><li>At the end of each floor, roll one Explosive or Trap-based Skill Advancement Check with Advantage</li><li>All explosives and trap-making Skills can be raised to Rank 20</li><li>+1 Popularity when you kill an enemy with a trap or explosive once per scene</li></ul><p><strong>Primal variant</strong> (Race &amp; Class Selection, p.128): this Race's own benefits above, plus the Primal modifiers layered on top - -1 to all Stats (already included in the Change list below), and all Skills can be raised to Rank 20 (already true system-wide - see docs/known-gaps.md).</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "5",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": [],
+        "capMax": "10"
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Regeneration",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4)",
+    "prerequisites": "This limited Race is only available to crawlers who have Rank 5+ in the Explosives Handling Skill and any Trap-based Skill",
+    "skillChoiceGrants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788300000000,
+    "modifiedTime": 1788300000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!mHXIpzvEtPUBWzIX"
+}

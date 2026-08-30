@@ -1,0 +1,145 @@
+{
+  "_id": "rXjeBWPk4Z9kEEPy",
+  "name": "Changeling (Primal)",
+  "type": "race",
+  "folder": "yyu8SkWzc7TomQxb",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>A Changeling wears many faces--as many as they've had the pleasure (or displeasure) of meeting. Many examples of shape-stealing nightmares come from across the galaxy, making Changelings right at home among the stories Earthlings warned their children about. Like Doppelgängers, Changelings can change their form, but while Doppelgängers maintain their base stats, Changelings apply the stats of whatever form they assume.</p><p>Able to slip unseen into any crowd as an anonymous stranger or to infiltrate close-knit groups by wearing the face of a friend, Changelings make powerful friends and dangerous enemies. This Race is an ideal choice for Rogue and magic-using Classes.</p><ul><li>Size: Large (5)</li><li>+3 Charisma</li><li>+2 Intelligence</li><li>+2 Ambush and Deception Skills</li><li>+1 Escape Artist Skill</li><li>Advantage on Deception Skill Checks when no talking is needed</li><li>Changelings gain free access to organizations and producers by impersonating other crawlers and Syndicate celebrities, but can only use those relevant to the currently shifted individual</li><li>Changeling Shapeshifting: A Changeling who touches a member of another Race can shapeshift themselves into that Race, building a \"library\" of Races they can transform into. A Changeling can shapeshift into another Race as an Action to make an Unopposed Deception Skill Check. While shapeshifted into that other Race, they gain that Race's bonuses other than statistics and Skills. For example, a Changeling shapeshifted into a Crocodilian would gain the Race's Advantage on Intimidation Skill Checks, DR Buff, bonus after a full meal, and additional fatigue penalty on Charisma-based Checks</li><li>While shapeshifted into another Race, these changes are conveyed to World Dungeon systems, including information on viewers' HUDs, mini-maps, and other systems</li><li>Changelings can't touch mimics-type creatures. Don't ask why or what happens--it's bad</li></ul><p><strong>Primal variant</strong> (Race &amp; Class Selection, p.128): this Race's own benefits above, plus the Primal modifiers layered on top - -1 to all Stats (already included in the Change list below), and all Skills can be raised to Rank 20 (already true system-wide - see docs/known-gaps.md).</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Ambush",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Deception",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Escape Artist",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Large (5)",
+    "prerequisites": "",
+    "skillChoiceGrants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788300000000,
+    "modifiedTime": 1788300000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!rXjeBWPk4Z9kEEPy"
+}

@@ -1,0 +1,145 @@
+{
+  "_id": "KBtt4SuZZQGCaquX",
+  "name": "Obsidian Butterfly (Primal)",
+  "type": "race",
+  "folder": "yyu8SkWzc7TomQxb",
+  "img": "icons/svg/mystery-man.svg",
+  "system": {
+    "description": "<p>Obsidian Butterflies are much like the Aztec deity that inspired them. They are deadly, graceful, and absolutely terrifying. These skeleton-faced figures move about the battlefield with frightening speed, blessing their allies and bringing devastation to their foes. Their wings contain hues of orange, red, black, and white, blending together in a colorful pattern. The vibrancy and speed of their wings can make them appear borne aloft by naked flame. More than one foe has chosen to flee the sight of an Obsidian Butterfly bearing down upon them.</p><p><em>Prerequisites: This limited Race is only available to crawlers who earn Rank 5+ with any Edged Weapon</em></p><ul><li>Size: Medium (4), mostly due to wings</li><li>+3 Dexterity</li><li>+2 Intelligence</li><li>-4 Constitution</li><li>+2 Intimidate and Slice Attack Skills</li><li>+2 in a Spell of your choice</li><li>Has four translucent butterfly wings that can reach up to 15 feet and deliver touch- or melee-range Spells</li><li>May use CHA Mod instead of CON Mod in their Health Bar</li><li>Upon entering the Sixth Floor, choose to either gain Stronger Wings (wings are now capable of flight for up to 2 minutes per scene, with +20ft Move when flying) or Ferocious Visage (Advantage when using any Skill to inspire fear or respect)</li><li>Add 1d4 to your Evade Checks</li></ul><p><strong>Primal variant</strong> (Race &amp; Class Selection, p.128): this Race's own benefits above, plus the Primal modifiers layered on top - -1 to all Stats (already included in the Change list below), and all Skills can be raised to Rank 20 (already true system-wide - see docs/known-gaps.md).</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "add",
+        "value": "3",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Intimidate",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "",
+        "targetType": "skillRank",
+        "target": "Slice Attack",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "str",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "dex",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "con",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "int",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      },
+      {
+        "id": "",
+        "label": "Primal",
+        "targetType": "stat",
+        "target": "cha",
+        "mode": "subtract",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "isEarthBased": true,
+    "isAlien": false,
+    "size": "Medium (4), mostly due to wings",
+    "prerequisites": "This limited Race is only available to crawlers who earn Rank 5+ with any Edged Weapon",
+    "skillChoiceGrants": []
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": "carl-rpg",
+    "systemVersion": "2.1.0",
+    "createdTime": 1788300000000,
+    "modifiedTime": 1788300000000,
+    "lastModifiedBy": "pPzkgksRlNl6iybf",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!KBtt4SuZZQGCaquX"
+}
