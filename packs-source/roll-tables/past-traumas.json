@@ -1,0 +1,353 @@
+{
+  "_id": "Kc7dt9hI2JcMKVgl",
+  "name": "Table 22: Past Traumas",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 22 (p.114).</em> Describe a Past Trauma for your crawler, or if you can't (or don't want to) think of your own, pick one or roll 1d12 to choose from this table.</p>",
+  "results": [
+    {
+      "_id": "LnINn7Ttl2FaZJxP",
+      "type": "text",
+      "name": "I was abused by someone I trusted.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.LnINn7Ttl2FaZJxP"
+    },
+    {
+      "_id": "7rPvfqL47nMZ3mQM",
+      "type": "text",
+      "name": "I was in a terrible accident.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.7rPvfqL47nMZ3mQM"
+    },
+    {
+      "_id": "RHz9iQRxJCZMKHVS",
+      "type": "text",
+      "name": "I witnessed a death.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.RHz9iQRxJCZMKHVS"
+    },
+    {
+      "_id": "BKZKrSRsBv5XCYmr",
+      "type": "text",
+      "name": "I was betrayed by a family member, friend, or lover.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.BKZKrSRsBv5XCYmr"
+    },
+    {
+      "_id": "BYJg4Dq6pAPagL6H",
+      "type": "text",
+      "name": "I was abandoned by one or more parents.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.BYJg4Dq6pAPagL6H"
+    },
+    {
+      "_id": "WWa7nNMha8MPZZzY",
+      "type": "text",
+      "name": "I have a fear of open spaces.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.WWa7nNMha8MPZZzY"
+    },
+    {
+      "_id": "cyGh8zoSV9NgFhbW",
+      "type": "text",
+      "name": "I have a fear of the dark or being alone.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.cyGh8zoSV9NgFhbW"
+    },
+    {
+      "_id": "HbF8U2iExaOkfFe0",
+      "type": "text",
+      "name": "My home burned down.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.HbF8U2iExaOkfFe0"
+    },
+    {
+      "_id": "vlsZdyaO0Ye4FNbb",
+      "type": "text",
+      "name": "I was falsely accused of a betrayal or crime.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.vlsZdyaO0Ye4FNbb"
+    },
+    {
+      "_id": "kAERMsMY5d7QHVLD",
+      "type": "text",
+      "name": "I was deeply humiliated by a family member, friend, or lover.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.kAERMsMY5d7QHVLD"
+    },
+    {
+      "_id": "PLEohSNRfz2iSiWt",
+      "type": "text",
+      "name": "I let someone take the blame for something terrible that I did.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.PLEohSNRfz2iSiWt"
+    },
+    {
+      "_id": "mdjTOFb43F1sJiA6",
+      "type": "text",
+      "name": "I have a fear of heights.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Kc7dt9hI2JcMKVgl.mdjTOFb43F1sJiA6"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Kc7dt9hI2JcMKVgl"
+}

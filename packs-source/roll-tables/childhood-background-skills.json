@@ -1,0 +1,353 @@
+{
+  "_id": "fmuUGRMnTlQkYtCx",
+  "name": "Table 12: Childhood Background Skills",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 12 (p.104).</em> Choose one of the twelve descriptive backgrounds and pick two of its three listed Skills, or roll 1d12 to select a background randomly. Both Skills you select start at Rank 1.</p>",
+  "results": [
+    {
+      "_id": "W86Y3o3PqkckR3n8",
+      "type": "text",
+      "name": "Latchkey Kid: Streetwise (CHA), Perception (INT), or Stealth (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.W86Y3o3PqkckR3n8"
+    },
+    {
+      "_id": "Dp9VJgAfgtdsw9T9",
+      "type": "text",
+      "name": "Crafty Kid: Fabricate (INT), Repair (INT), or Salvage (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.Dp9VJgAfgtdsw9T9"
+    },
+    {
+      "_id": "1Kg2FXX9ES1aUGCN",
+      "type": "text",
+      "name": "Excitable Kid: Escape Artist (DEX), Endurance (CON), or Running (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.1Kg2FXX9ES1aUGCN"
+    },
+    {
+      "_id": "edVAq0yZEYap4Z8C",
+      "type": "text",
+      "name": "Gymnast: Endurance (CON), Jumping (STR), or Performance (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.edVAq0yZEYap4Z8C"
+    },
+    {
+      "_id": "9vnbYhtxqtjjL6Ys",
+      "type": "text",
+      "name": "Military Brat: Deception (CHA), Streetwise (CHA), or Tactics (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.9vnbYhtxqtjjL6Ys"
+    },
+    {
+      "_id": "LjeJScfHen5wh9co",
+      "type": "text",
+      "name": "MMO Kid: Fabricate (INT), Engineering (INT), or Tactics (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.LjeJScfHen5wh9co"
+    },
+    {
+      "_id": "K09SAXTEUNC1Dby4",
+      "type": "text",
+      "name": "Only Child: Good First Impression (CHA), Investigation (INT), or Negotiation (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.K09SAXTEUNC1Dby4"
+    },
+    {
+      "_id": "t2GzEvOc2IWxbzeG",
+      "type": "text",
+      "name": "Outdoor Kid: Animal Handling (CHA), Climbing (STR), or Swimming (STR)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.t2GzEvOc2IWxbzeG"
+    },
+    {
+      "_id": "oszq0gafaU5PJHkJ",
+      "type": "text",
+      "name": "Problem Child: Intimidate (STR), Deception (CHA), or Pugilism (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.oszq0gafaU5PJHkJ"
+    },
+    {
+      "_id": "DmgsBs1T414dT63f",
+      "type": "text",
+      "name": "Scamp: Hide in Shadows (DEX), Jumping (STR), or Throwing (STR)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.DmgsBs1T414dT63f"
+    },
+    {
+      "_id": "7clZPyaJn3i8vr97",
+      "type": "text",
+      "name": "Teacher's Pet: Catcher (None), Perception (INT), or Good First Impression (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.7clZPyaJn3i8vr97"
+    },
+    {
+      "_id": "3HJkHhvesS7DWllD",
+      "type": "text",
+      "name": "Wild Child: Stealth (DEX), Survival (CON), or Running (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fmuUGRMnTlQkYtCx.3HJkHhvesS7DWllD"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!fmuUGRMnTlQkYtCx"
+}

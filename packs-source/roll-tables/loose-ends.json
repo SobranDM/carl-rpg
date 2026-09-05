@@ -1,0 +1,353 @@
+{
+  "_id": "JI4VFB1ID1pRLlPx",
+  "name": "Table 23: Loose Ends",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 23 (p.114).</em> Describe a Loose End for your crawler, or if you can't (or don't want to) think of your own, pick one or roll 1d12 to choose from this table.</p>",
+  "results": [
+    {
+      "_id": "HsUFGr30TX1aaFq4",
+      "type": "text",
+      "name": "I never finished high school or my college degree.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.HsUFGr30TX1aaFq4"
+    },
+    {
+      "_id": "u02bYbTXiLPlHtA8",
+      "type": "text",
+      "name": "I was about to open a restaurant or other business.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.u02bYbTXiLPlHtA8"
+    },
+    {
+      "_id": "K1bmJCTMREsU35x8",
+      "type": "text",
+      "name": "I didn't finish writing my novel.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.K1bmJCTMREsU35x8"
+    },
+    {
+      "_id": "p8UXwWM5hI2cj5Yx",
+      "type": "text",
+      "name": "A family member, friend, or lover recently died, but I couldn't say my goodbyes.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.p8UXwWM5hI2cj5Yx"
+    },
+    {
+      "_id": "6igBlMJqzwTKRD6j",
+      "type": "text",
+      "name": "I was on the verge of inventing or discovering something.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.6igBlMJqzwTKRD6j"
+    },
+    {
+      "_id": "LFvuYy27IAC2SJy8",
+      "type": "text",
+      "name": "I made a promise that I might no longer be able to fulfill.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.LFvuYy27IAC2SJy8"
+    },
+    {
+      "_id": "B1RVHWbWTUzZ4aif",
+      "type": "text",
+      "name": "My collection was almost complete.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.B1RVHWbWTUzZ4aif"
+    },
+    {
+      "_id": "hENsKOjXw59IgIRP",
+      "type": "text",
+      "name": "I was about to perform for the first time when the collapse happened.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.hENsKOjXw59IgIRP"
+    },
+    {
+      "_id": "QCTq8C3yV4dL7FYh",
+      "type": "text",
+      "name": "I wanted to dump my partner, but...",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.QCTq8C3yV4dL7FYh"
+    },
+    {
+      "_id": "GFSylQwjTgU7pFcE",
+      "type": "text",
+      "name": "I was just about to buy or finish renovating my home.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.GFSylQwjTgU7pFcE"
+    },
+    {
+      "_id": "qeHPGtGocPT5cGRW",
+      "type": "text",
+      "name": "I never sent that letter to a family member, friend, or loved one.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.qeHPGtGocPT5cGRW"
+    },
+    {
+      "_id": "hqYttmfE4kwZCuBm",
+      "type": "text",
+      "name": "I never got to travel to my dream destination.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JI4VFB1ID1pRLlPx.hqYttmfE4kwZCuBm"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!JI4VFB1ID1pRLlPx"
+}

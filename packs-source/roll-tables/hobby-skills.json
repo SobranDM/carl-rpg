@@ -1,0 +1,353 @@
+{
+  "_id": "ntTyE5QTV31TaRAr",
+  "name": "Table 15: Hobby Skills",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 15 (p.106).</em> Choose one of the twelve hobbies and take two of its three listed Skills, or roll 1d12 to select a hobby randomly. Unlike other background Skills, both hobby Skills you select start at Rank 2.</p>",
+  "results": [
+    {
+      "_id": "bqCw4XfGPhh9fXx0",
+      "type": "text",
+      "name": "Collector: Fabricate (INT), Determine Value (None), or Investigation (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.bqCw4XfGPhh9fXx0"
+    },
+    {
+      "_id": "MC5KNridS8XMunPG",
+      "type": "text",
+      "name": "Cosplay: Fabricate (INT), Performance (CHA), or Salvage (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.MC5KNridS8XMunPG"
+    },
+    {
+      "_id": "VHhMq3SmmUlPK2mb",
+      "type": "text",
+      "name": "Drinker: Deception (CHA), Intimidate (STR), or Streetwise (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.VHhMq3SmmUlPK2mb"
+    },
+    {
+      "_id": "U8wCDDDecyNX1ZIp",
+      "type": "text",
+      "name": "Gamer: Aiming (DEX), Perception (INT), or Tactics (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.U8wCDDDecyNX1ZIp"
+    },
+    {
+      "_id": "eOQJUgzxGvkcjvL3",
+      "type": "text",
+      "name": "Gym Rat: Running (DEX), Endurance (CON), or Swimming (STR)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.eOQJUgzxGvkcjvL3"
+    },
+    {
+      "_id": "hOt1Sh5FCI2yS6Nz",
+      "type": "text",
+      "name": "Hunting: Tracking (INT), Shotgun (DEX), or Stealth (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.hOt1Sh5FCI2yS6Nz"
+    },
+    {
+      "_id": "QmkvZj2gcaSCjMMs",
+      "type": "text",
+      "name": "Music: Perception (INT), Performance (CHA), or Sleight of Hand (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.QmkvZj2gcaSCjMMs"
+    },
+    {
+      "_id": "gLBAVZEhCuND8dFc",
+      "type": "text",
+      "name": "Motorsports: Driving (DEX), Repair (INT), or Salvage (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.gLBAVZEhCuND8dFc"
+    },
+    {
+      "_id": "QdGSnfigFaH105LY",
+      "type": "text",
+      "name": "Climber: Climbing (STR), Jumping (STR), or Endurance (CON)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.QdGSnfigFaH105LY"
+    },
+    {
+      "_id": "IMNY9pX4nZyWnJ1n",
+      "type": "text",
+      "name": "Pop Culture: Determine Value (None), Investigation (INT), or Perception (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.IMNY9pX4nZyWnJ1n"
+    },
+    {
+      "_id": "guMOsWMohrcktvj9",
+      "type": "text",
+      "name": "Tinkering: Engineering (INT), Repair (INT), or Salvage (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.guMOsWMohrcktvj9"
+    },
+    {
+      "_id": "ajBkoeZVQz1DgqTX",
+      "type": "text",
+      "name": "Travel: Endurance (CON), Negotiation (CHA), or Streetwise (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ntTyE5QTV31TaRAr.ajBkoeZVQz1DgqTX"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!ntTyE5QTV31TaRAr"
+}

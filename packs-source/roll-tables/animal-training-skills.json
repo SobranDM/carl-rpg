@@ -1,0 +1,191 @@
+{
+  "_id": "8k2i91PTZZlF1vtI",
+  "name": "Table 17: Animal Training Skills",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 17 (p.107).</em> Non-Human (animal) crawlers choose one of the six training backgrounds and gain two of its three listed Skills, or roll 1d6 to select a background randomly. Both Skills you select start at Rank 1.</p>",
+  "results": [
+    {
+      "_id": "SXRmDQhBO7qOCKvW",
+      "type": "text",
+      "name": "Clever: Investigation (INT), Detect Lies (INT), or Dodge (None)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8k2i91PTZZlF1vtI.SXRmDQhBO7qOCKvW"
+    },
+    {
+      "_id": "TeiKQM4xS8AK6UfV",
+      "type": "text",
+      "name": "Free Range: Escape Artist (DEX), Survival (CON), or Tracking (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8k2i91PTZZlF1vtI.TeiKQM4xS8AK6UfV"
+    },
+    {
+      "_id": "BJs33cbrMtzuH7Al",
+      "type": "text",
+      "name": "Pack Mentality: Animal Handling (CHA), Persuasion (CHA), or Tactics (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8k2i91PTZZlF1vtI.BJs33cbrMtzuH7Al"
+    },
+    {
+      "_id": "4ahyEmxfD9F2EKos",
+      "type": "text",
+      "name": "Mischievous: Deception (CHA), Persuasion (CHA), or Sleight of Hand (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8k2i91PTZZlF1vtI.4ahyEmxfD9F2EKos"
+    },
+    {
+      "_id": "TeYiEXXDW2W8hmZW",
+      "type": "text",
+      "name": "Watcher: Ambush (INT), Investigation (INT), or Perception (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8k2i91PTZZlF1vtI.TeYiEXXDW2W8hmZW"
+    },
+    {
+      "_id": "Qm2buFJDR87S8LiH",
+      "type": "text",
+      "name": "Well-Trained: Light on Your Feet (DEX), Catcher (None), or Performance (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8k2i91PTZZlF1vtI.Qm2buFJDR87S8LiH"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!8k2i91PTZZlF1vtI"
+}

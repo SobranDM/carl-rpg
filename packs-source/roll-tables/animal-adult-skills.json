@@ -1,0 +1,191 @@
+{
+  "_id": "5U1EpdOOHdXE95g3",
+  "name": "Table 19: Animal Adult Skills",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 19 (p.107).</em> Non-Human (animal) crawlers choose one of the six adult backgrounds and gain two of its three listed Skills, or roll 1d6 to select a background randomly. Both Skills you select start at Rank 3.</p>",
+  "results": [
+    {
+      "_id": "9HeWtbXyz8VIP3yE",
+      "type": "text",
+      "name": "Guard: Catcher (None), Perception (INT), or Taunt (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5U1EpdOOHdXE95g3.9HeWtbXyz8VIP3yE"
+    },
+    {
+      "_id": "IyXidTMVOZA82Fuq",
+      "type": "text",
+      "name": "Pile of Floof: Escape Artist (DEX), Deception (CHA), or Persuasion (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5U1EpdOOHdXE95g3.IyXidTMVOZA82Fuq"
+    },
+    {
+      "_id": "WtNADIYVkeL8mCJ5",
+      "type": "text",
+      "name": "Scrapper: Light on Your Feet (DEX), Streetwise (CHA), or Survival (CON)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5U1EpdOOHdXE95g3.WtNADIYVkeL8mCJ5"
+    },
+    {
+      "_id": "jVNNRdCPuk5XBhT0",
+      "type": "text",
+      "name": "Show Animal: Good First Impression (CHA), Light on Your Feet (DEX), or Performance (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5U1EpdOOHdXE95g3.jVNNRdCPuk5XBhT0"
+    },
+    {
+      "_id": "YdDmGFkwGvIvSvOM",
+      "type": "text",
+      "name": "Support Animal: Determine Value (None), First Aid (INT), or Perception (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5U1EpdOOHdXE95g3.YdDmGFkwGvIvSvOM"
+    },
+    {
+      "_id": "B4juqq9B0REKbJls",
+      "type": "text",
+      "name": "Working: Animal Handling (CHA), Endurance (CON), or Perception (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5U1EpdOOHdXE95g3.B4juqq9B0REKbJls"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!5U1EpdOOHdXE95g3"
+}

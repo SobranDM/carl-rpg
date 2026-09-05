@@ -1,0 +1,191 @@
+{
+  "_id": "9gHHxRX6nVRCw4jQ",
+  "name": "Table 16: Animal Youth Skills",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 16 (p.105).</em> Non-Human (animal) crawlers choose one of the six youth backgrounds and gain two of its three listed Skills, or roll 1d6 to select a background randomly. Both Skills you select start at Rank 1.</p>",
+  "results": [
+    {
+      "_id": "9Zvb9q1KLCV9t4c2",
+      "type": "text",
+      "name": "Abandoned: Hide in Shadows (DEX), Endurance (CON), or Survival (CON)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!9gHHxRX6nVRCw4jQ.9Zvb9q1KLCV9t4c2"
+    },
+    {
+      "_id": "4yGcjwn4o0E3ppGY",
+      "type": "text",
+      "name": "Farmed: Escape Artist (DEX), Climbing (STR), or Light on Your Feet (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!9gHHxRX6nVRCw4jQ.4yGcjwn4o0E3ppGY"
+    },
+    {
+      "_id": "blJ4I6u28bKb2kD1",
+      "type": "text",
+      "name": "Litter-Raised: Animal Handling (CHA), Detect Lies (INT), or Back Claw (STR)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!9gHHxRX6nVRCw4jQ.blJ4I6u28bKb2kD1"
+    },
+    {
+      "_id": "NchRcjc1zb27lbYN",
+      "type": "text",
+      "name": "Pampered: Negotiation (CHA), Good First Impression (CHA), or Persuasion (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!9gHHxRX6nVRCw4jQ.NchRcjc1zb27lbYN"
+    },
+    {
+      "_id": "61zMh7koNOYr3D71",
+      "type": "text",
+      "name": "Runt: Hide in Shadows (DEX), Escape Artist (DEX), or Stealth (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!9gHHxRX6nVRCw4jQ.61zMh7koNOYr3D71"
+    },
+    {
+      "_id": "QWAwlgc9w35xG2Wn",
+      "type": "text",
+      "name": "Stray: Back Claw (STR), Streetwise (CHA), or Survival (CON)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!9gHHxRX6nVRCw4jQ.QWAwlgc9w35xG2Wn"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!9gHHxRX6nVRCw4jQ"
+}

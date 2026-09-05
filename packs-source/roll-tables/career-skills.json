@@ -1,0 +1,353 @@
+{
+  "_id": "NzVqXNDpqarKdM9j",
+  "name": "Table 14: Career Skills",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 14 (p.105).</em> Choose one of the twelve descriptive career categories and pick two of its three listed Skills, or roll 1d12 to select a career randomly. Both Skills you select start at Rank 3.</p>",
+  "results": [
+    {
+      "_id": "cPwqmQsDA1Yk2YZd",
+      "type": "text",
+      "name": "Criminal: Deception (CHA), Stealth (DEX), or Streetwise (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.cPwqmQsDA1Yk2YZd"
+    },
+    {
+      "_id": "JPAJRHGgt03YB6wz",
+      "type": "text",
+      "name": "Service Industry: Dagger (DEX), Endurance (CON), or Sleight of Hand (DEX)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.JPAJRHGgt03YB6wz"
+    },
+    {
+      "_id": "kCb2gxpIhf3fG9FP",
+      "type": "text",
+      "name": "Small Business Owner: Determine Value (None), Negotiation (CHA), or Perception (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.kCb2gxpIhf3fG9FP"
+    },
+    {
+      "_id": "FNAYFl4RStfA08EJ",
+      "type": "text",
+      "name": "Medical: Sleight of Hand (DEX), Detect Lies (INT), or First Aid (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.FNAYFl4RStfA08EJ"
+    },
+    {
+      "_id": "QK4m9bH1kHTpueJY",
+      "type": "text",
+      "name": "Law Enforcement: Detect Lies (INT), Handgun (DEX), or Investigation (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.QK4m9bH1kHTpueJY"
+    },
+    {
+      "_id": "n13vM0eFjYjhltD9",
+      "type": "text",
+      "name": "Gig Worker: Driving (DEX), Escape Artist (STR), or Negotiation (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.n13vM0eFjYjhltD9"
+    },
+    {
+      "_id": "VD5ikqKGG06KIhd3",
+      "type": "text",
+      "name": "Teacher: Detect Lies (INT), Perception (INT), or Performance (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.VD5ikqKGG06KIhd3"
+    },
+    {
+      "_id": "lrs10khmr4sPG9FW",
+      "type": "text",
+      "name": "Office Drone: Dumpster Diving (INT), Endurance (CON), or Investigation (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.lrs10khmr4sPG9FW"
+    },
+    {
+      "_id": "sFHjJbMcGcQFTrD2",
+      "type": "text",
+      "name": "Entertainer: Deception (CHA), Good First Impression (CHA), or Performance (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.sFHjJbMcGcQFTrD2"
+    },
+    {
+      "_id": "LY4fz4Wt4Ru4NrDy",
+      "type": "text",
+      "name": "Unhoused: Dumpster Diving (INT), Streetwise (CHA), or Survival (CON)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.LY4fz4Wt4Ru4NrDy"
+    },
+    {
+      "_id": "2X4xTdCS9TwHhCqO",
+      "type": "text",
+      "name": "Middle Manager: Deception (CHA), Intimidate (STR), or Negotiation (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.2X4xTdCS9TwHhCqO"
+    },
+    {
+      "_id": "bjIdAVidnEvDWuvL",
+      "type": "text",
+      "name": "Military: Handgun (DEX), Survival (CON), or Tactics (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!NzVqXNDpqarKdM9j.bjIdAVidnEvDWuvL"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!NzVqXNDpqarKdM9j"
+}

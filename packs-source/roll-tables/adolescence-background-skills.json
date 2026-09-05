@@ -1,0 +1,353 @@
+{
+  "_id": "8pylWlfygzaAqYDO",
+  "name": "Table 13: Adolescence Background Skills",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 13 (p.105).</em> Choose one of the twelve descriptive backgrounds and pick two of its three listed Skills, or roll 1d12 to select a background randomly. Both Skills you select start at Rank 1.</p>",
+  "results": [
+    {
+      "_id": "Xzw6IfuQ8MQ8MXAp",
+      "type": "text",
+      "name": "Family Farm: Animal Handling (CHA), Fabricate (INT), or Tracking (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.Xzw6IfuQ8MQ8MXAp"
+    },
+    {
+      "_id": "vu3POwFoHWhpBdfa",
+      "type": "text",
+      "name": "Drama Nerd: Fabricate (INT), Deception (CHA), or Performance (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.vu3POwFoHWhpBdfa"
+    },
+    {
+      "_id": "KNO2lzGr93kbYvtj",
+      "type": "text",
+      "name": "Drop-Out: Chopper Pilot (DEX), Streetwise (CHA), or Survival (CON)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.KNO2lzGr93kbYvtj"
+    },
+    {
+      "_id": "cCZB2KPFIRKPlGzH",
+      "type": "text",
+      "name": "Greek Life: Negotiation (CHA), Intimidate (STR), or Taunt (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.cCZB2KPFIRKPlGzH"
+    },
+    {
+      "_id": "pw7Zt7nfzx6yLrI0",
+      "type": "text",
+      "name": "Influencer: Negotiation (CHA), Persuasion (CHA), or Performance (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.pw7Zt7nfzx6yLrI0"
+    },
+    {
+      "_id": "rh5hkYla7UNACaBB",
+      "type": "text",
+      "name": "Jock: Endurance (CON), Jumping (STR), or Throwing (STR)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.rh5hkYla7UNACaBB"
+    },
+    {
+      "_id": "hxA9zSqjhaAjuh0X",
+      "type": "text",
+      "name": "McJob: Determine Value (None), Negotiation (CHA), or Repair (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.hxA9zSqjhaAjuh0X"
+    },
+    {
+      "_id": "x6oTRmzJ9W8wJQVb",
+      "type": "text",
+      "name": "Popular: Good First Impression (CHA), Perception (INT), or Persuasion (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.x6oTRmzJ9W8wJQVb"
+    },
+    {
+      "_id": "OyxH67CNX2yhYDfQ",
+      "type": "text",
+      "name": "Religious: Catcher (None), First Aid (INT), or Persuasion (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.OyxH67CNX2yhYDfQ"
+    },
+    {
+      "_id": "pE2dfx8GHDKapbr0",
+      "type": "text",
+      "name": "Student Government: Deception (CHA), Persuasion (CHA), or Investigation (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.pE2dfx8GHDKapbr0"
+    },
+    {
+      "_id": "FlxkVXecY5geXVgw",
+      "type": "text",
+      "name": "Nerd: Investigation (INT), Repair (INT), or Fabricate (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.FlxkVXecY5geXVgw"
+    },
+    {
+      "_id": "3wjtbV35bMZVlW12",
+      "type": "text",
+      "name": "Weirdo: Streetwise (CHA), Intimidate (STR), or Fabricate (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8pylWlfygzaAqYDO.3wjtbV35bMZVlW12"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!8pylWlfygzaAqYDO"
+}

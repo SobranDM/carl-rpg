@@ -1,0 +1,191 @@
+{
+  "_id": "DrrfOwEswAvJwPUd",
+  "name": "Table 18: Animal Quirk Skills",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 18 (p.107).</em> Non-Human (animal) crawlers choose one of the six background quirks and gain two of its three listed Skills, or roll 1d6 to select a quirk randomly. Both Skills you select start at Rank 2.</p>",
+  "results": [
+    {
+      "_id": "iDFDMqOOjAP4LRlu",
+      "type": "text",
+      "name": "Chow Hound: Dumpster Diving (INT), Investigation (INT), or Intimidate (STR)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DrrfOwEswAvJwPUd.iDFDMqOOjAP4LRlu"
+    },
+    {
+      "_id": "yS5CUjmCFYc51cMw",
+      "type": "text",
+      "name": "Cuddly: Good First Impression (CHA), Persuasion (CHA), or Negotiation (CHA)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DrrfOwEswAvJwPUd.yS5CUjmCFYc51cMw"
+    },
+    {
+      "_id": "zz8MbFy4EcdWibZu",
+      "type": "text",
+      "name": "Curious: Climbing (STR), Perception (INT), or Swimming (STR)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DrrfOwEswAvJwPUd.zz8MbFy4EcdWibZu"
+    },
+    {
+      "_id": "Jxt69BLR2ktnD8Sb",
+      "type": "text",
+      "name": "Hunter: Hide in Shadows (DEX), Stealth (DEX), or Tracking (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DrrfOwEswAvJwPUd.Jxt69BLR2ktnD8Sb"
+    },
+    {
+      "_id": "2mvP9Vj7u9yBIzra",
+      "type": "text",
+      "name": "Playful: Persuasion (CHA), Dodge (None), or Intimidate (STR)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DrrfOwEswAvJwPUd.2mvP9Vj7u9yBIzra"
+    },
+    {
+      "_id": "QBuCZY18f4SK5Nvd",
+      "type": "text",
+      "name": "Social: Animal Handling (CHA), Taunt (CHA), or Perception (INT)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DrrfOwEswAvJwPUd.QBuCZY18f4SK5Nvd"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!DrrfOwEswAvJwPUd"
+}

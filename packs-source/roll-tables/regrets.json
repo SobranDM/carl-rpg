@@ -1,0 +1,353 @@
+{
+  "_id": "m3mN5qwSlnIGLB2c",
+  "name": "Table 24: Regrets",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 24 (p.114).</em> Describe a Regret for your crawler, or if you can't (or don't want to) think of your own, pick one or roll 1d12 to choose from this table.</p>",
+  "results": [
+    {
+      "_id": "GVR1z9tFePIHIAIh",
+      "type": "text",
+      "name": "I didn't ask them to marry me.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.GVR1z9tFePIHIAIh"
+    },
+    {
+      "_id": "tjz2C11gPlZK9DPM",
+      "type": "text",
+      "name": "I turned down the perfect job.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.tjz2C11gPlZK9DPM"
+    },
+    {
+      "_id": "TtfKGqYx3YofkMUQ",
+      "type": "text",
+      "name": "I stayed quiet when I shouldn't have.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.TtfKGqYx3YofkMUQ"
+    },
+    {
+      "_id": "kHzZEu0be0oLkiag",
+      "type": "text",
+      "name": "I chose my own safety when I should have leapt into action.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.kHzZEu0be0oLkiag"
+    },
+    {
+      "_id": "0mXa8l8Fp52eGQzj",
+      "type": "text",
+      "name": "I never said goodbye.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.0mXa8l8Fp52eGQzj"
+    },
+    {
+      "_id": "B2TgFxMEOEhhndGR",
+      "type": "text",
+      "name": "I spent way too much time on something pointless.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.B2TgFxMEOEhhndGR"
+    },
+    {
+      "_id": "CDWovC6d5e0BtKO2",
+      "type": "text",
+      "name": "I did something illegal, immoral, and probably both.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.CDWovC6d5e0BtKO2"
+    },
+    {
+      "_id": "T60vWFioyXbxaMBU",
+      "type": "text",
+      "name": "I lied to avoid an event important to those close to me.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.T60vWFioyXbxaMBU"
+    },
+    {
+      "_id": "Lp0yAv2Y7GrQ1snF",
+      "type": "text",
+      "name": "I kept a secret that hurt someone badly.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.Lp0yAv2Y7GrQ1snF"
+    },
+    {
+      "_id": "AYmEToHXb83iyvsu",
+      "type": "text",
+      "name": "I didn't apologize for something terrible that I did.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.AYmEToHXb83iyvsu"
+    },
+    {
+      "_id": "gklY3d9kSlP0Tpb9",
+      "type": "text",
+      "name": "I abandoned someone when they needed me the most.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.gklY3d9kSlP0Tpb9"
+    },
+    {
+      "_id": "EmStx120qmYT0xgK",
+      "type": "text",
+      "name": "I trusted the wrong people.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!m3mN5qwSlnIGLB2c.EmStx120qmYT0xgK"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!m3mN5qwSlnIGLB2c"
+}
