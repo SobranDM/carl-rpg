@@ -11,7 +11,8 @@ import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
 import { buildTargetEffectsFooter } from "../chat/target-effects-card.mjs";
 import { buildHealFooter } from "../chat/heal-card.mjs";
 import { buildDamageFooter } from "../chat/damage-card.mjs";
-import { getDegreeOfSuccess } from "../helpers/rules.mjs";
+import { buildEvadeLinkFooter } from "../chat/evade-link-card.mjs";
+import { getDegreeOfSuccess, degreeBadge, isHitDegree } from "../helpers/rules.mjs";
 import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
@@ -41,20 +42,6 @@ export function extractNaturalD20(roll) {
   const active = d20Term.results.filter((r) => r.active);
   if (!active.length) return null;
   return active[0].result;
-}
-
-function degreeBadge(degree) {
-  const label = game.i18n.localize(CARLRPG.degreesOfSuccess[degree] ?? degree);
-  const type = ["criticalHit", "amazingSuccess", "standardSuccess"].includes(degree)
-    ? "hit"
-    : ["criticalFail", "majorFail"].includes(degree)
-      ? "miss"
-      : "warn";
-  return { label, type };
-}
-
-function isHitDegree(degree) {
-  return ["criticalHit", "amazingSuccess", "standardSuccess"].includes(degree);
 }
 
 /**
@@ -512,9 +499,12 @@ export default class CarlDice {
     const hasDamage = Object.values(damageByType).some((v) => v);
     const flags = {};
     const footerParts = [];
-    // Both buttons key off the same snapshotted targetUuids (see rollAttack's
-    // top-of-function comment) - set once if either footer needs it.
-    if (targetEffects.length || hasDamage) flags.targetUuids = targetUuids;
+    // Every button below keys off the same snapshotted targetUuids (see
+    // rollAttack's top-of-function comment) - set whenever there's a target
+    // at all, not just when there's an effect/damage to apply, so "Roll
+    // Evade" (docs/known-gaps.md 5) still appears on a roll that missed the
+    // static Difficulty outright.
+    if (targetUuids.length) flags.targetUuids = targetUuids;
     if (targetEffects.length) {
       flags.targetEffects = targetEffects;
       footerParts.push(await buildTargetEffectsFooter(targetEffects));
@@ -526,6 +516,17 @@ export default class CarlDice {
       // different isMagicDamage is deliberately not tracked per-term.
       flags.damageIsMagic = skillItem.system.isMagicDamage;
       footerParts.push(await buildDamageFooter(damageByType));
+    }
+    if (targetUuids.length) {
+      // Lets a defending token actively roll Evade (Interrupt Action,
+      // Carl RPG p.81) against this specific Attack instead of silently
+      // accepting the static-Difficulty auto-resolution above - see
+      // module/chat/evade-link-card.mjs. attackerType feeds the PvP-vs-Mob
+      // Difficulty rule (p.87) at click time.
+      flags.attackTotal = attackTotal;
+      flags.targetDifficulty = targetDifficulty;
+      flags.attackerType = actor.type;
+      footerParts.push(await buildEvadeLinkFooter());
     }
     const footer = footerParts.length ? footerParts.join("") : undefined;
 
@@ -682,9 +683,17 @@ export default class CarlDice {
    * total). Surfaces Major/Critical Fail consequences as GM-facing text -
    * NOT auto-applied, per this project's "GM judgment call" instruction.
    * @param {Actor} actor
-   * @param {{difficulty?: number|null, skipDialog?: boolean}} [options]
+   * @param {{difficulty?: number|null, skipDialog?: boolean, post?: boolean}} [options]
+   *   post (default true): when false, don't post a ChatMessage - return the
+   *   raw roll data instead, so a caller (module/chat/evade-link-card.mjs)
+   *   can fold this roll into ITS OWN combined roll+outcome card instead of
+   *   posting two separate messages for one click. The standalone
+   *   actor-sheet Evade button always uses the default (post: true) and
+   *   sees no behavior change.
+   * @returns {Promise<ChatMessage|{roll: Roll, total: number, breakdown: string, naturalRoll: number|null, degree: string}|null>}
+   *   null if the roll-options dialog was cancelled, regardless of `post`.
    */
-  static async rollEvadeCheck(actor, { difficulty = null, skipDialog = false } = {}) {
+  static async rollEvadeCheck(actor, { difficulty = null, skipDialog = false, post = true } = {}) {
     const sys = actor.system;
     const rollData = actor.getRollData();
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, "evade");
@@ -714,6 +723,8 @@ export default class CarlDice {
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, options.difficulty);
 
+    if (!post) return { roll, total, breakdown, naturalRoll, degree };
+
     let body = "";
     if (degree === "majorFail") body = `<p>${game.i18n.localize("CARLRPG.Roll.EvadeMajorFail")}</p>`;
     else if (degree === "criticalFail") body = `<p>${game.i18n.localize("CARLRPG.Roll.EvadeCriticalFail")}</p>`;
@@ -727,6 +738,7 @@ export default class CarlDice {
       badge: degreeBadge(degree),
       body,
       actor,
+      flags: { evadeDegree: degree, evadeTotal: total },
     });
   }
 

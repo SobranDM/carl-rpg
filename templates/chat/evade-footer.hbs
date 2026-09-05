@@ -1,0 +1,14 @@
+{{!-- Rendered whenever an Attack roll snapshotted >=1 target (see
+      module/dice/dice.mjs's CarlDice.rollAttack and module/chat/
+      evade-link-card.mjs) - lets a defending token actively roll Evade
+      (Interrupt Action, Carl RPG p.81) instead of accepting the static
+      Difficulty auto-resolution above. The button's click handler and
+      GM/owner visibility gating are wired up client-side by the shared
+      registerChatListener (module/chat/chat-listener.mjs), via this
+      button's data-action and evade-link-card.mjs's evadeActionEntries -
+      not baked into this markup. --}}
+<div class="carl-evade-link">
+  <button type="button" class="carl-roll-evade" data-action="rollEvade">
+    <i class="fas fa-person-running"></i> {{localize "CARLRPG.Evade.RollButton"}}
+  </button>
+</div>

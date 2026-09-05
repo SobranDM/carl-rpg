@@ -5,7 +5,9 @@
       Apply Damage is actually clicked, against the target's live state, so
       no reduced number is shown here ahead of time. The button's click
       handler and GM/owner visibility gating are wired up client-side by
-      registerDamageChatListener, not baked into this markup. --}}
+      the shared registerChatListener (module/chat/chat-listener.mjs), via
+      this button's data-action and damage-card.mjs's damageActionEntries -
+      not baked into this markup. --}}
 <div class="carl-damage-card">
   <div class="carl-damage-portions">
     <span class="carl-damage-label">{{localize "CARLRPG.Damage.WillApply"}}</span>
@@ -13,7 +15,7 @@
     <span class="carl-damage-pill">{{this.amount}} {{this.label}}</span>
     {{/each}}
   </div>
-  <button type="button" class="carl-apply-damage">
+  <button type="button" class="carl-apply-damage" data-action="applyDamage">
     <i class="fas fa-heart-crack"></i> {{localize "CARLRPG.Damage.ApplyButton"}}
   </button>
 </div>

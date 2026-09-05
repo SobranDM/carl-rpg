@@ -11,6 +11,7 @@
  * ever affects whoever was actually targeted by that roll.
  */
 import { addConditionToActor, resolveTargetEffectLabel } from "../helpers/conditions.mjs";
+import { updateCardMessage } from "../helpers/chat-socket.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/target-effects-footer.hbs";
 
@@ -92,32 +93,25 @@ async function onApplyTargetEffects(event, message) {
     }
   }
 
-  await message.setFlag("carl-rpg", "targetEffectsApplied", true);
+  await updateCardMessage(message, { flags: { "carl-rpg": { targetEffectsApplied: true } } });
   ui.notifications.info(game.i18n.format("CARLRPG.TargetEffects.AppliedNotice", { count: actors.size }));
 }
 
 /**
- * Wire up every rendered chat card's Apply button: hide it from anyone who
- * isn't the GM or an owner of at least one snapshotted target, and reflect
- * an already-applied card as disabled (so it can't be double-clicked after
- * scrolling it back into view).
+ * Registry entries consumed by the shared registerChatListener (module/chat/
+ * chat-listener.mjs) - preserves this button's GM/owner visibility gating,
+ * one-shot "already applied" disabling, and (new) a "superseded by Evade"
+ * disabled state for whenever a linked Evade roll (module/chat/
+ * evade-link-card.mjs) has determined the real outcome instead.
  */
-export function registerTargetEffectsChatListener() {
-  Hooks.on("renderChatMessageHTML", (message, html) => {
-    const btn = html.querySelector(".carl-apply-target-effects");
-    if (!btn) return;
-
-    if (!canApplyTargetEffects(message)) {
-      btn.closest(".carl-target-effects")?.remove();
-      return;
-    }
-
-    if (message.getFlag("carl-rpg", "targetEffectsApplied")) {
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Applied")}`;
-      return;
-    }
-
-    btn.addEventListener("click", (event) => onApplyTargetEffects(event, message));
-  });
-}
+export const targetEffectsActionEntries = [{
+  action: "applyTargetEffects",
+  buttonSelector: ".carl-apply-target-effects",
+  wrapperSelector: ".carl-target-effects",
+  canAct: canApplyTargetEffects,
+  doneFlag: "targetEffectsApplied",
+  doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Applied")}`,
+  supersededFlag: "targetEffectsSuperseded",
+  supersededLabel: () => `<i class="fas fa-ban"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Superseded")}`,
+  onClick: onApplyTargetEffects,
+}];

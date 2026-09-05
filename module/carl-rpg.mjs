@@ -8,9 +8,9 @@ import * as models from './data/_module.mjs';
 import CarlDice from './dice/dice.mjs';
 import CarlToolbox from './apps/gm-toolbox.mjs';
 import CarlSpendStatPointsDialog from './apps/spend-stat-points-dialog.mjs';
-import { registerTargetEffectsChatListener } from './chat/target-effects-card.mjs';
-import { registerHealChatListener } from './chat/heal-card.mjs';
-import { registerDamageChatListener } from './chat/damage-card.mjs';
+import { registerChatListener } from './chat/chat-listener.mjs';
+import { registerChatSocket } from './helpers/chat-socket.mjs';
+import { bakeItemGrants } from './helpers/race-class-grants.mjs';
 
 Hooks.once('init', function () {
   game.carlrpg = {
@@ -40,19 +40,12 @@ Hooks.once('init', function () {
 
   CONFIG.CARLRPG = CARLRPG;
 
-  // "Apply to Target(s)" button on Attack chat cards (module/chat/
-  // target-effects-card.mjs) - wires click handling and GM/owner visibility
-  // gating per-viewer, since the chat card's stored HTML is identical for
-  // everyone.
-  registerTargetEffectsChatListener();
-
-  // "Apply Healing" / "Mend Debuff" buttons on Heal chat cards (module/chat/
-  // heal-card.mjs) - same per-viewer wiring purpose as the line above.
-  registerHealChatListener();
-
-  // "Apply Damage" button on Attack chat cards (module/chat/damage-card.mjs,
-  // docs/known-gaps.md 1.3/1.7) - same per-viewer wiring purpose as above.
-  registerDamageChatListener();
+  // Single delegated click router for every chat-card button (Apply to
+  // Target(s), Apply Healing/Mend Debuff, Apply Damage, Roll Evade/Add
+  // Injury Debuff) - wires click handling and GM/owner visibility gating
+  // per-viewer, since the chat card's stored HTML is identical for everyone.
+  // See module/chat/chat-listener.mjs.
+  registerChatListener();
 
   // PvE has no traditional initiative roll (see Playing the Game, p. 80-86);
   // this formula only matters for the PvP exception, which does use d20+DEX.
@@ -126,6 +119,12 @@ Handlebars.registerHelper('toLowerCase', function (str) {
 });
 
 Hooks.once('ready', function () {
+  // Relays a player's chat-card button click (Apply Damage, Roll Evade,
+  // etc.) to the active GM's client when the clicking user lacks direct
+  // update permission on that ChatMessage (module/helpers/chat-socket.mjs) -
+  // needs game.users/game.socket live, hence `ready` rather than `init`.
+  registerChatSocket();
+
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 
   // Persistent floating GM Toolbox singleton (see module/apps/gm-toolbox.mjs).
@@ -135,6 +134,26 @@ Hooks.once('ready', function () {
   if (game.user.isGM) {
     game.carlrpg.toolbox = new CarlToolbox();
     game.carlrpg.toolbox.render({ force: true });
+
+    // One-time-per-load catch-up sweep: bake any not-yet-baked Race/Class
+    // stat/skillRank grants on every Character actor (module/helpers/
+    // race-class-grants.mjs) - covers actors that already owned a Race/
+    // Class item before this fix existed, and re-checks level-gated grants
+    // in case Level changed while offline. Idempotent (each grant is only
+    // ever baked once, tracked via a flag on its granting item), so safe to
+    // run on every world load; only the GM runs it, to avoid every
+    // connected client redundantly racing the same writes. Awaited
+    // sequentially, one item at a time - two concurrent bakes touching the
+    // same actor's same Stat would otherwise race (each reading the same
+    // stale base before either write lands, so one delta silently loses).
+    (async () => {
+      for (const actor of game.actors) {
+        if (actor.type !== 'character') continue;
+        for (const item of actor.items) {
+          if (item.type === 'class' || item.type === 'race') await bakeItemGrants(item);
+        }
+      }
+    })();
   }
 });
 

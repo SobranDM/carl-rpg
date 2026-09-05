@@ -1,9 +1,27 @@
 // Chat card / roll-row / dialog styles. Unlike sheet components, chat
 // messages are NOT wrapped in a .carl-rpg element, so these selectors are
-// intentionally top-level (not nested under .carl-rpg).
+// intentionally top-level (not nested under .carl-rpg) - and, since the
+// --carl-* palette custom properties are normally only declared inside
+// .carl-rpg (src/scss/carl-rpg.scss), they're re-declared here on the
+// nearest real ancestor of every chat card so this file can actually use
+// them instead of falling back to hardcoded colors.
+@use '../utils/palette';
+@use '../utils/typography' as *;
+
+.chat-message:has(.carl-chat-card) {
+  @include palette.variables;
+  color: var(--carl-text);
+  background: var(--carl-bg-solid);
+  border-color: var(--carl-border-soft);
+
+  .message-header {
+    color: var(--carl-text-muted);
+  }
+}
 
 .carl-chat-card {
-  font-family: var(--font-primary);
+  font-family: $font-primary;
+  color: var(--carl-text);
 
   .carl-chat-header {
     display: flex;
@@ -26,11 +44,12 @@
     .carl-chat-title {
       font-weight: bold;
       font-size: 14px;
+      color: var(--carl-text);
     }
 
     .carl-chat-subtitle {
       font-size: 12px;
-      opacity: 0.8;
+      color: var(--carl-text-muted);
     }
   }
 
@@ -42,16 +61,66 @@
     text-transform: uppercase;
 
     &.carl-badge--hit {
-      background: #2e7d32;
-      color: #fff;
+      background: var(--carl-gold);
+      color: var(--carl-header-bg);
     }
     &.carl-badge--miss {
-      background: #b71c1c;
-      color: #fff;
+      background: var(--carl-danger);
+      color: var(--carl-header-text);
     }
     &.carl-badge--warn {
-      background: #8d6e00;
-      color: #fff;
+      background: var(--carl-hazard);
+      color: var(--carl-header-text);
+    }
+  }
+
+  .carl-chat-desc-drawer {
+    margin-top: 6px;
+    padding-top: 4px;
+    border-top: 1px solid var(--carl-border-soft);
+
+    .carl-chat-desc-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      width: 100%;
+      margin: 0;
+      padding: 2px 0;
+      background: none;
+      border: none;
+      box-shadow: none;
+      color: var(--carl-text);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+
+      .carl-caret {
+        flex: 0 0 auto;
+        transition: transform 0.15s ease;
+      }
+    }
+
+    .carl-chat-desc-body {
+      display: grid;
+      grid-template-rows: 1fr;
+      transition: grid-template-rows 200ms ease;
+
+      > .carl-chat-desc {
+        overflow: hidden;
+        min-height: 0;
+        padding-top: 0.25rem;
+      }
+    }
+
+    &.collapsed {
+      .carl-caret {
+        transform: rotate(-90deg);
+      }
+      .carl-chat-desc-body {
+        grid-template-rows: 0fr;
+      }
     }
   }
 
@@ -74,7 +143,7 @@
     .carl-chat-roll-detail {
       text-align: left;
       font-size: 11px;
-      opacity: 0.8;
+      color: var(--carl-text-muted);
       padding: 2px 4px;
     }
     .carl-chat-roll-total-cell {
@@ -89,7 +158,7 @@
     }
     .carl-chat-hint {
       cursor: help;
-      opacity: 0.7;
+      color: var(--carl-text-muted);
     }
   }
 
@@ -104,17 +173,28 @@
   .carl-chat-footer {
     margin-top: 4px;
     font-size: 11px;
-    opacity: 0.8;
+    color: var(--carl-text-muted);
+  }
+
+  // Shared panel treatment for every feature block below - matches the
+  // sheet's .carl-drawer/fieldset vocabulary (src/scss/components/
+  // _drawers.scss, _editors.scss): soft rose border, panel-tinted fill.
+  .carl-target-effects,
+  .carl-heal-card,
+  .carl-damage-card,
+  .carl-evade-link,
+  .carl-evade-consequence,
+  .carl-gm-digest {
+    margin-top: 6px;
+    padding: 6px 8px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
   }
 
   .carl-target-effects {
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px solid var(--color-border-light-tertiary, #999);
-
     .carl-target-effects-list {
       margin-bottom: 4px;
-      opacity: 1;
     }
 
     .carl-target-effects-label {
@@ -130,8 +210,8 @@
       padding: 1px 6px;
       margin: 0 3px 3px 0;
       border-radius: 3px;
-      background: #4a1414;
-      color: #fff;
+      background: var(--carl-danger);
+      color: var(--carl-header-text);
     }
 
     .carl-apply-target-effects {
@@ -148,10 +228,6 @@
   }
 
   .carl-heal-card {
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px solid var(--color-border-light-tertiary, #999);
-
     .carl-heal-summary {
       margin: 0 0 4px;
     }
@@ -176,10 +252,6 @@
   }
 
   .carl-damage-card {
-    margin-top: 4px;
-    padding-top: 4px;
-    border-top: 1px solid var(--color-border-light-tertiary, #999);
-
     .carl-damage-portions {
       margin-bottom: 4px;
     }
@@ -197,8 +269,8 @@
       padding: 1px 6px;
       margin: 0 3px 3px 0;
       border-radius: 3px;
-      background: #4a1414;
-      color: #fff;
+      background: var(--carl-danger);
+      color: var(--carl-header-text);
     }
 
     .carl-apply-damage {
@@ -211,6 +283,48 @@
         cursor: default;
         opacity: 0.6;
       }
+    }
+  }
+
+  .carl-evade-link,
+  .carl-evade-consequence {
+    .carl-roll-evade,
+    .carl-add-evade-debuff {
+      width: auto;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 2px 8px;
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  // Folded-in "Damage Applied" digest (module/chat/damage-card.mjs) -
+  // GM-only (hidden from non-GM viewers by module/chat/chat-listener.mjs's
+  // generic .carl-gm-only removal), dashed to read as supplementary/
+  // after-the-fact rather than another actionable panel.
+  .carl-gm-digest {
+    border-style: dashed;
+    font-size: 11px;
+
+    .carl-gm-digest-title {
+      display: inline-block;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: var(--carl-header-bg);
+      color: var(--carl-header-text);
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin-bottom: 4px;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.25em;
     }
   }
 }

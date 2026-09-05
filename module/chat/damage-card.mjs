@@ -28,7 +28,8 @@
  * either can be clicked (or not) without affecting the other.
  */
 import { computeDamageApplication } from "../helpers/damage-pipeline.mjs";
-import { createCardMessage } from "./chat-card.mjs";
+import { appendCardSection } from "./chat-card.mjs";
+import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/damage-footer.hbs";
@@ -91,8 +92,8 @@ function canApplyDamage(message) {
  * "Bludgeoning 8; Fire 4 -> 2 (Resisted) = 10 total, 2 slot(s) lost." Every
  * other roll/apply flow in this system shows its math in the chat log, not
  * just a toast - this is the GM-facing counterpart to that, since a
- * target's resistances/DR are often GM-only information (see the whisper in
- * the caller).
+ * target's resistances/DR are often GM-only information (see the
+ * .carl-gm-only fold-in in the caller).
  * @param {Actor} actor
  * @param {{perType: Array<{type: string, raw: number, afterDr: number, state: string, final: number}>, totalFinalDamage: number, slotsLost: number}} result
  * @returns {string}
@@ -121,11 +122,12 @@ function formatDamageDigestLine(actor, result) {
 /**
  * Run the damage pipeline against every snapshotted target's current
  * resistances/dr and apply the resulting whole-slot HB loss, then flag the
- * message so the button can't double-apply on a later re-render. Posts a
- * GM-whispered follow-up card showing exactly what the pipeline did per
- * target/type - Apply Damage previously only surfaced a bare "applied to N
- * target(s)" toast with the DR/Resistance/Vulnerability/Immunity math and
- * slots-lost count entirely invisible after the fact.
+ * message so the button can't double-apply on a later re-render. Folds a
+ * GM-only digest showing exactly what the pipeline did per target/type onto
+ * the SAME card (rather than posting a separate follow-up message) - Apply
+ * Damage previously only surfaced a bare "applied to N target(s)" toast with
+ * the DR/Resistance/Vulnerability/Immunity math and slots-lost count
+ * entirely invisible after the fact.
  * @param {PointerEvent} event
  * @param {ChatMessage} message
  */
@@ -168,37 +170,36 @@ async function onApplyDamage(event, message) {
     if (Object.keys(updates).length) await actor.update(updates);
   }
 
-  await message.setFlag("carl-rpg", "damageApplied", true);
+  // GM-only visibility of this digest is enforced generically by
+  // chat-listener.mjs's .carl-gm-only removal, not a bespoke check here -
+  // same client-side-only confidentiality level as the old whisper-targeted
+  // message (Foundry delivers whispers to every client's game.messages
+  // regardless of recipient; neither mechanism is server-enforced
+  // redaction), just folded onto the same card instead of a 4th message.
+  const digestHtml = `<div class="carl-gm-digest carl-gm-only">
+    <div class="carl-gm-digest-title">${game.i18n.localize("CARLRPG.Damage.DigestTitle")}</div>
+    <ul>${digestLines.map((l) => `<li>${l}</li>`).join("")}</ul>
+  </div>`;
+  const content = appendCardSection(message, digestHtml);
+  await updateCardMessage(message, { content, flags: { "carl-rpg": { damageApplied: true } } });
   ui.notifications.info(game.i18n.format("CARLRPG.Damage.AppliedNotice", { count: actors.size }));
-  await createCardMessage({
-    title: game.i18n.localize("CARLRPG.Damage.DigestTitle"),
-    body: `<ul>${digestLines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
-    whisper: ChatMessage.getWhisperRecipients("GM"),
-  });
 }
 
 /**
- * Wire up every rendered chat card's Apply Damage button: hide it from
- * anyone who isn't the GM or an owner of at least one snapshotted target,
- * and reflect an already-applied card as disabled (so it can't be
- * double-clicked after scrolling it back into view).
+ * Registry entries consumed by the shared registerChatListener (module/chat/
+ * chat-listener.mjs) - preserves this button's GM/owner visibility gating,
+ * one-shot "already applied" disabling, and (new) a "superseded by Evade"
+ * disabled state for whenever a linked Evade roll (module/chat/
+ * evade-link-card.mjs) has determined the real outcome instead.
  */
-export function registerDamageChatListener() {
-  Hooks.on("renderChatMessageHTML", (message, html) => {
-    const btn = html.querySelector(".carl-apply-damage");
-    if (!btn) return;
-
-    if (!canApplyDamage(message)) {
-      btn.closest(".carl-damage-card")?.remove();
-      return;
-    }
-
-    if (message.getFlag("carl-rpg", "damageApplied")) {
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Damage.Applied")}`;
-      return;
-    }
-
-    btn.addEventListener("click", (event) => onApplyDamage(event, message));
-  });
-}
+export const damageActionEntries = [{
+  action: "applyDamage",
+  buttonSelector: ".carl-apply-damage",
+  wrapperSelector: ".carl-damage-card",
+  canAct: canApplyDamage,
+  doneFlag: "damageApplied",
+  doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Damage.Applied")}`,
+  supersededFlag: "damageSuperseded",
+  supersededLabel: () => `<i class="fas fa-ban"></i> ${game.i18n.localize("CARLRPG.Damage.Superseded")}`,
+  onClick: onApplyDamage,
+}];

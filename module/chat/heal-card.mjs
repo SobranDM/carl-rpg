@@ -16,6 +16,7 @@
 import { removeConditionFromActor } from "../helpers/conditions.mjs";
 import { shortRestUpdates } from "../helpers/rest.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
+import { updateCardMessage } from "../helpers/chat-socket.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/heal-footer.hbs";
 
@@ -100,7 +101,7 @@ async function onApplyHeal(event, message) {
   }
 
   await actor.update(updates);
-  await message.setFlag("carl-rpg", "healApplied", true);
+  await updateCardMessage(message, { flags: { "carl-rpg": { healApplied: true } } });
   ui.notifications.info(game.i18n.format("CARLRPG.Heal.AppliedNotice", { name: actor.name }));
 }
 
@@ -133,7 +134,7 @@ async function onMendDebuff(event, message) {
   // pick from a list of one.
   if (conditions.length === 1) {
     await removeConditionFromActor(actor, 0);
-    await message.setFlag("carl-rpg", "healMended", true);
+    await updateCardMessage(message, { flags: { "carl-rpg": { healMended: true } } });
     ui.notifications.info(game.i18n.format("CARLRPG.Heal.MendedNotice", { name: actor.name }));
     return;
   }
@@ -153,45 +154,35 @@ async function onMendDebuff(event, message) {
   const index = Number(result.index);
   if (!Number.isInteger(index) || !conditions[index]) return;
   await removeConditionFromActor(actor, index);
-  await message.setFlag("carl-rpg", "healMended", true);
+  await updateCardMessage(message, { flags: { "carl-rpg": { healMended: true } } });
   ui.notifications.info(game.i18n.format("CARLRPG.Heal.MendedNotice", { name: actor.name }));
 }
 
 /**
- * Wire up every rendered Heal chat card: hide the buttons from anyone who
- * isn't the GM or the snapshotted actor's owner, and reflect an
- * already-used button (Apply or Mend) as disabled so neither can be
- * double-clicked after scrolling the card back into view - one cast grants
- * exactly one Mend, same as it grants exactly one Apply.
+ * Registry entries consumed by the shared registerChatListener (module/chat/
+ * chat-listener.mjs) - preserves this pair's GM/owner visibility gating and
+ * one-shot "already used" disabling per button (one cast grants exactly one
+ * Mend, same as it grants exactly one Apply). Both share `.carl-heal-card`
+ * as their wrapperSelector; if `!canApplyHeal`, the second `.remove()` call
+ * is a harmless no-op on an already-removed element.
  */
-export function registerHealChatListener() {
-  Hooks.on("renderChatMessageHTML", (message, html) => {
-    const card = html.querySelector(".carl-heal-card");
-    if (!card) return;
-
-    if (!canApplyHeal(message)) {
-      card.remove();
-      return;
-    }
-
-    const applyBtn = card.querySelector(".carl-apply-heal");
-    if (applyBtn) {
-      if (message.getFlag("carl-rpg", "healApplied")) {
-        applyBtn.disabled = true;
-        applyBtn.innerHTML = `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Heal.Applied")}`;
-      } else {
-        applyBtn.addEventListener("click", (event) => onApplyHeal(event, message));
-      }
-    }
-
-    const mendBtn = card.querySelector(".carl-mend-debuff");
-    if (mendBtn) {
-      if (message.getFlag("carl-rpg", "healMended")) {
-        mendBtn.disabled = true;
-        mendBtn.innerHTML = `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Heal.Mended")}`;
-      } else {
-        mendBtn.addEventListener("click", (event) => onMendDebuff(event, message));
-      }
-    }
-  });
-}
+export const healActionEntries = [
+  {
+    action: "applyHeal",
+    buttonSelector: ".carl-apply-heal",
+    wrapperSelector: ".carl-heal-card",
+    canAct: canApplyHeal,
+    doneFlag: "healApplied",
+    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Heal.Applied")}`,
+    onClick: onApplyHeal,
+  },
+  {
+    action: "mendDebuff",
+    buttonSelector: ".carl-mend-debuff",
+    wrapperSelector: ".carl-heal-card",
+    canAct: canApplyHeal,
+    doneFlag: "healMended",
+    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Heal.Mended")}`,
+    onClick: onMendDebuff,
+  },
+];

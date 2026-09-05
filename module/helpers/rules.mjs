@@ -57,3 +57,26 @@ export function getDegreeOfSuccess(naturalRoll, total, difficulty) {
   if (margin >= -9) return 'standardFail';
   return 'majorFail';
 }
+
+/**
+ * Build a chat-card badge {label, type} for a Degree of Success. Shared by
+ * module/dice/dice.mjs and module/chat/evade-link-card.mjs - lives here
+ * (rather than in dice.mjs) so the chat module can import it without a
+ * dice.mjs <-> chat/evade-link-card.mjs circular import.
+ * @param {string} degree
+ * @returns {{label: string, type: "hit"|"miss"|"warn"}}
+ */
+export function degreeBadge(degree) {
+  const label = game.i18n.localize(CARLRPG.degreesOfSuccess[degree] ?? degree);
+  const type = ['criticalHit', 'amazingSuccess', 'standardSuccess'].includes(degree)
+    ? 'hit'
+    : ['criticalFail', 'majorFail'].includes(degree)
+      ? 'miss'
+      : 'warn';
+  return { label, type };
+}
+
+/** Whether a Degree of Success counts as a hit (vs. a miss/near-miss). */
+export function isHitDegree(degree) {
+  return ['criticalHit', 'amazingSuccess', 'standardSuccess'].includes(degree);
+}

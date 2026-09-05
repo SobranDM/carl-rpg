@@ -10,10 +10,14 @@ export function defaultRollRowLabel() {
 /**
  * @param {Roll[]} rolls
  * @param {Array<{label?: string, detail?: string, breakdown?: string}>} rollMeta  Per-index row metadata.
- * @param {{isPrivate?: boolean}} [options]
+ * @param {{isPrivate?: boolean, extraRows?: Array<{label?: string, detail?: string, breakdown?: string, total?: string, insertAt?: number}>}} [options]
+ *   extraRows are non-Roll-backed rows spliced into the result at `insertAt`
+ *   (defaults to the end) - e.g. a supplemental context row with no dice
+ *   behind it. Ported from foundryvtt-wwn's roll-rows.mjs for factory parity;
+ *   no current caller passes one, kept as reusable infrastructure.
  * @returns {Promise<object[]>}
  */
-export async function buildRollRows(rolls = [], rollMeta = [], { isPrivate = false } = {}) {
+export async function buildRollRows(rolls = [], rollMeta = [], { isPrivate = false, extraRows = [] } = {}) {
   const rows = [];
   for (let i = 0; i < rolls.length; i++) {
     const roll = rolls[i];
@@ -31,6 +35,18 @@ export async function buildRollRows(rolls = [], rollMeta = [], { isPrivate = fal
       total: isPrivate ? "?" : (evaluated && roll?.total != null ? String(roll.total) : ""),
       tooltipHtml,
     });
+  }
+  for (const extra of extraRows) {
+    const row = {
+      label: extra.label ?? "",
+      detail: extra.detail ?? "",
+      breakdown: extra.breakdown ?? "",
+      formula: "",
+      total: extra.total ?? "",
+      tooltipHtml: "",
+    };
+    const at = Number.isInteger(extra.insertAt) ? extra.insertAt : rows.length;
+    rows.splice(Math.min(Math.max(at, 0), rows.length), 0, row);
   }
   return rows;
 }

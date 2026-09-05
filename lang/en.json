@@ -79,6 +79,8 @@
       "Class": "Class",
       "Race": "Race",
       "NoneSelected": "—",
+      "RaceAndClass": "Race & Class",
+      "Active": "Active",
       "MobTier": "Mob Tier",
       "BankedStatPoints": "Banked Stat Points",
       "Spend": "Spend",
@@ -221,12 +223,17 @@
       "Remove": "Remove",
       "Add": "Add Target Effect"
     },
+    "Chat": {
+      "Description": "Description",
+      "NoGMOnline": "No GM is currently connected to apply this action."
+    },
     "TargetEffects": {
       "WillApply": "On hit, apply:",
       "ApplyButton": "Apply to Target(s)",
       "Applied": "Applied",
       "AppliedNotice": "Applied to {count} target(s).",
-      "NoTargets": "No targets were selected when this roll was made."
+      "NoTargets": "No targets were selected when this roll was made.",
+      "Superseded": "Superseded by Evade"
     },
     "Damage": {
       "WillApply": "Damage on hit:",
@@ -236,7 +243,8 @@
       "NoTargets": "No targets were selected when this roll was made.",
       "DigestTitle": "Damage Applied",
       "DigestLine": "<strong>{name}</strong>: {parts} = {total} total, {slots} slot(s) lost",
-      "DigestShield": "Shield absorbed {absorbed} ({slots} slot(s))"
+      "DigestShield": "Shield absorbed {absorbed} ({slots} slot(s))",
+      "Superseded": "Superseded by Evade"
     },
     "Heal": {
       "Subtitle": "+{amount} HB",
@@ -253,6 +261,21 @@
       "NoConditions": "{name} has no active Conditions to mend.",
       "Mended": "Mended",
       "MendedNotice": "Mended a Debuff on {name}."
+    },
+    "Evade": {
+      "RollButton": "Roll Evade",
+      "Rolled": "Evade Rolled",
+      "OutcomeTitle": "{name}'s Evade Outcome",
+      "Evaded": "Evaded — no damage.",
+      "HitNormal": "Hit — damage applies as rolled.",
+      "HitMajorFail": "Major Fail — extra damage!",
+      "HitCriticalFail": "Critical Fail — double damage!",
+      "NoBaseDamage": "The original Attack rolled no damage to apply.",
+      "AddMinorInjury": "Add Minor Injury Debuff",
+      "AddMajorInjury": "Add Major Injury Debuff",
+      "DebuffAdded": "Debuff Added",
+      "DebuffAddedNotice": "{name} gains the Debuff.",
+      "NoActor": "Could not find the defending actor for this card."
     },
     "Roll": {
       "Formula": "Formula",
@@ -289,6 +312,10 @@
       "DamageEffect": "Damage Effect",
       "ManaCostBase": "Base cost",
       "ManaCostSpent": "Mana: {cost}"
+    },
+    "TokenResolution": {
+      "NoGMSelection": "Select a token on the canvas first.",
+      "NoActor": "You have no owned token selected and no assigned character."
     },
     "SpendStatPoints": {
       "Title": "Spend Stat Points",

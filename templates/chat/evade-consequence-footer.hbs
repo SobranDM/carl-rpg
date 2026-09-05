@@ -1,0 +1,12 @@
+{{!-- Rendered only on a linked-Evade outcome card (module/chat/
+      evade-link-card.mjs) when the Evade Check came back Major or Critical
+      Fail (Carl RPG p.79) - a one-click convenience for the GM-facing
+      "gains a Minor/Major Injury Debuff" text, never auto-applied. Click
+      handler and GM/owner visibility gating are wired up client-side by the
+      shared registerChatListener (module/chat/chat-listener.mjs), via this
+      button's data-action and evade-link-card.mjs's evadeActionEntries. --}}
+<div class="carl-evade-consequence">
+  <button type="button" class="carl-add-evade-debuff" data-action="addEvadeDebuff">
+    <i class="fas fa-band-aid"></i> {{debuffButtonLabel}}
+  </button>
+</div>
