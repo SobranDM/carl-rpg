@@ -24,6 +24,7 @@
     },
     "Toolbox": {
       "Title": "GM Toolbox",
+      "GMOnly": "Only the GM can open the GM Toolbox.",
       "RealWorldTimer": "Real-World Play Timer",
       "StartTimer": "Start Timer",
       "StopTimer": "Stop Timer",
@@ -52,9 +53,13 @@
       "Rest": {
         "ShortTitle": "Short Rest",
         "LongTitle": "Long Rest",
-        "FullDayTitle": "Full Day's Rest"
+        "FullDayTitle": "Full Day's Rest",
+        "PickerPrompt": "Choose which characters rest. Not everyone has to - someone could be on watch or otherwise occupied.",
+        "SelectAll": "Select All",
+        "Confirm": "Apply Rest"
       },
-      "RestApplied": "Applied to {count} character(s)/NPC(s).",
+      "RestApplied": "Applied to {count} character(s).",
+      "RestAppliedNone": "No characters were selected - no rest was applied.",
       "Other": "Other",
       "Grind": "Grind",
       "GrindTitle": "Grinding",

@@ -86,6 +86,27 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     };
   }
 
+  /**
+   * Defense-in-depth GM gate. `game.carlrpg.CarlToolbox` (the raw class) is
+   * exposed to every connected client so `game.carlrpg.toolbox` can be typed
+   * from macros/console, but that also means a non-GM could otherwise do
+   * `new game.carlrpg.CarlToolbox().render({force:true})` and open it
+   * directly, bypassing both the `ready`-hook's `if (game.user.isGM)` guard
+   * around auto-instantiation and the scene-control button's own
+   * `if (!game.user.isGM) return;` (module/carl-rpg.mjs) - neither of which
+   * touches this class itself. `_canRender` runs on every render attempt
+   * (not just the first), so this refuses the window outright for anyone
+   * but the GM, regardless of how/why render() was called.
+   * @override
+   */
+  _canRender(options) {
+    if (!game.user.isGM) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.GMOnly"));
+      return false;
+    }
+    return super._canRender(options);
+  }
+
   /** @override */
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
@@ -138,6 +159,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   static async #onToggleTimer(event, target) {
+    if (!game.user.isGM) return;
     const timer = game.settings.get("carl-rpg", "gameTimer");
     if (timer.running) {
       await game.settings.set("carl-rpg", "gameTimer", { running: false, startedAt: null, notified: false });
@@ -154,6 +176,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
    * without a click.
    */
   static async #onResolveTwoHourTick(event, target) {
+    if (!game.user.isGM) return;
     const rankFilter = await CarlToolbox.#promptRankFilter();
     if (!rankFilter) return;
 
@@ -191,6 +214,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
   /** Flat, no-roll +1 Level to every party character (the other half of the 2-hour rule). */
   static async #onPartyLevelUp(event, target) {
+    if (!game.user.isGM) return;
     const actors = game.actors.filter((a) => a.type === "character");
     for (const actor of actors) {
       const lvl = actor.system.attributes.level.value;
@@ -203,12 +227,14 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   static async #onFloorIncrement(event, target) {
+    if (!game.user.isGM) return;
     const floor = game.settings.get("carl-rpg", "currentFloor");
     await game.settings.set("carl-rpg", "currentFloor", floor + 1);
     this.render();
   }
 
   static async #onFloorDecrement(event, target) {
+    if (!game.user.isGM) return;
     const floor = game.settings.get("carl-rpg", "currentFloor");
     await game.settings.set("carl-rpg", "currentFloor", Math.max(0, floor - 1));
     this.render();
@@ -216,6 +242,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
   /** Per-floor Advancement cadence: Rank >=5 marked Skills only, then advance the floor counter. */
   static async #onNewFloor(event, target) {
+    if (!game.user.isGM) return;
     const actors = game.actors.filter((a) => a.type === "character");
     const digest = [];
     for (const actor of actors) {
@@ -236,28 +263,38 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   static async #onShortRest(event, target) {
+    if (!game.user.isGM) return;
     return CarlToolbox.#onRest("short");
   }
 
   static async #onLongRest(event, target) {
+    if (!game.user.isGM) return;
     return CarlToolbox.#onRest("long");
   }
 
   static async #onFullDayRest(event, target) {
+    if (!game.user.isGM) return;
     return CarlToolbox.#onRest("fullDay");
   }
 
   /**
-   * In-world Rest: advances Foundry's own game.time (unrelated to the
-   * wall-clock Play Timer above) and applies the documented recovery
-   * formulas (Playing the Game, p. 94).
+   * In-world Rest: shows a picker of Character actors (see
+   * #promptRestActors for the Character-only scoping rationale), then
+   * advances Foundry's own game.time (unrelated to the wall-clock Play
+   * Timer above) and applies the documented recovery formulas (Playing the
+   * Game, p. 94) to only the actors the GM selected - not every party
+   * member necessarily rests at the same time (one might be on watch, etc).
    */
   static async #onRest(kind) {
+    if (!game.user.isGM) return;
     const config = REST_CONFIG[kind];
+
+    const selectedActors = await CarlToolbox.#promptRestActors(config.titleKey);
+    if (!selectedActors) return; // Cancelled: no time advance, no updates.
+
     if (game.time?.advanceTime) await game.time.advanceTime(config.seconds);
 
-    const actors = game.actors.filter((a) => ["character", "npc"].includes(a.type));
-    for (const actor of actors) {
+    for (const actor of selectedActors) {
       const sys = actor.system;
       const effectiveMax = sys.hb?.effectiveMax ?? sys.hb?.max ?? 0;
 
@@ -278,8 +315,90 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
     await createCardMessage({
       title: game.i18n.localize(config.titleKey),
-      body: `<p>${game.i18n.format("CARLRPG.Toolbox.RestApplied", { count: actors.length })}</p>`,
+      body: selectedActors.length
+        ? `<p>${game.i18n.format("CARLRPG.Toolbox.RestApplied", { count: selectedActors.length })}</p>
+           <ul>${selectedActors.map((a) => `<li>${a.name}</li>`).join("")}</ul>`
+        : `<p>${game.i18n.localize("CARLRPG.Toolbox.RestAppliedNone")}</p>`,
     });
+  }
+
+  /**
+   * Rest actor picker.
+   *
+   * SCOPING DECISION: only `type: "character"` actors are listed/rest-able,
+   * never NPCs. Rest (Playing the Game, p. 94) is a party/crawler concept;
+   * NPCs in this ruleset are Mobs, not participants who "rest". The
+   * previous unconditional `game.actors.filter(a =>
+   * ["character","npc"].includes(a.type))` applied rest recovery (HB/mana
+   * refill, condition clearing) to literally every NPC in the world too -
+   * almost certainly an oversight in the original no-picker implementation
+   * rather than an intended feature, since hostile/neutral Mobs "resting"
+   * mid-crawl has no in-fiction meaning. Flagged here and in the task
+   * report for the maintainer to override if NPCs were actually wanted.
+   *
+   * Default-checked: any Character actor owned (OWNER level) by a
+   * currently-active, non-GM user - i.e. someone actually logged in to play
+   * them right now. Every other Character (nobody active owns it, or only
+   * the GM controls it - e.g. an absent player's PC, or a GM-run henchman)
+   * starts unchecked, since the GM must deliberately opt those in.
+   * @param {string} titleKey  i18n key for the specific rest kind's dialog title.
+   * @returns {Promise<Actor[]|null>} Selected actors, or null if cancelled.
+   */
+  static async #promptRestActors(titleKey) {
+    const actors = game.actors.filter((a) => a.type === "character");
+    if (!actors.length) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoCharacters"));
+      return null;
+    }
+
+    const isOwnedByActivePlayer = (actor) => game.users.some(
+      (u) => u.active && !u.isGM && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+    );
+
+    const rows = actors.map((a) => {
+      const checked = isOwnedByActivePlayer(a) ? "checked" : "";
+      return `<label class="carl-dialog-condition carl-rest-picker-option">
+        <input type="checkbox" name="actors.${a.id}" ${checked} />
+        ${a.name}
+      </label>`;
+    }).join("");
+
+    const content = `<div class="carl-dialog-body carl-rest-picker">
+      <p>${game.i18n.localize("CARLRPG.Toolbox.Rest.PickerPrompt")}</p>
+      <div class="form-group carl-dialog-conditions">
+        <label class="carl-dialog-condition">
+          <input type="checkbox" data-rest-select-all />
+          <strong>${game.i18n.localize("CARLRPG.Toolbox.Rest.SelectAll")}</strong>
+        </label>
+        <div class="form-fields carl-dialog-conditions-list carl-rest-picker-list">${rows}</div>
+      </div>
+    </div>`;
+
+    const result = await showCarlDialog({
+      title: game.i18n.localize(titleKey),
+      content,
+      buttons: [rollButton({ label: "CARLRPG.Toolbox.Rest.Confirm" }), cancelButton()],
+      // Wires the "Select All" checkbox up after the dialog's DOM exists:
+      // toggling it (de)selects every actor row, and toggling any single
+      // row keeps "Select All" in sync (checked only when all are checked).
+      onRender: (event, dialog) => {
+        const selectAll = dialog.element.querySelector('[data-rest-select-all]');
+        const boxes = [...dialog.element.querySelectorAll(".carl-rest-picker-option input[type=\"checkbox\"]")];
+        if (!selectAll || !boxes.length) return;
+        const syncSelectAll = () => { selectAll.checked = boxes.every((b) => b.checked); };
+        syncSelectAll();
+        selectAll.addEventListener("change", () => {
+          for (const box of boxes) box.checked = selectAll.checked;
+        });
+        for (const box of boxes) box.addEventListener("change", syncSelectAll);
+      },
+    });
+    if (!result) return null;
+
+    const selectedIds = new Set(
+      Object.entries(result.actors ?? {}).filter(([, checked]) => checked).map(([id]) => id),
+    );
+    return actors.filter((a) => selectedIds.has(a.id));
   }
 
   /**
@@ -289,6 +408,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
    * counter; otherwise just banks the hours as an item flag.
    */
   static async #onGrind(event, target) {
+    if (!game.user.isGM) return;
     const actors = game.actors.filter((a) => a.type === "character");
     if (!actors.length) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoCharacters"));
@@ -344,6 +464,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
    * populates their own tables.
    */
   static async #onRollLoot(event, target) {
+    if (!game.user.isGM) return;
     const tables = game.tables?.contents ?? [];
     if (!tables.length) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoRollTables"));
