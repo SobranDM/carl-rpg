@@ -1,0 +1,191 @@
+{
+  "_id": "fM2z6I21Q2SLKasn",
+  "name": "Table 42: Something Unique",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 42 (p.220).</em> Rolled once when \"Something Unique\" comes up on Table 39 or Table 41 (or Table 40, Enchanted Clothing, not included in this pack). Stop rolling further items for that loot box — the Unique result should be extra powerful, scaled to however many rolls were skipped.</p>",
+  "results": [
+    {
+      "_id": "MAoOnD3AEygRXrKq",
+      "type": "text",
+      "name": "GM's choice",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fM2z6I21Q2SLKasn.MAoOnD3AEygRXrKq"
+    },
+    {
+      "_id": "SS3znXhoY11pmH1R",
+      "type": "text",
+      "name": "Interacts with a god",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fM2z6I21Q2SLKasn.SS3znXhoY11pmH1R"
+    },
+    {
+      "_id": "VpWPWQNZ4NFKdgQP",
+      "type": "text",
+      "name": "The thing is intelligent",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fM2z6I21Q2SLKasn.VpWPWQNZ4NFKdgQP"
+    },
+    {
+      "_id": "XvJBlITyL1AofEp3",
+      "type": "text",
+      "name": "Summon minions to fight for you",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fM2z6I21Q2SLKasn.XvJBlITyL1AofEp3"
+    },
+    {
+      "_id": "MMsGyGUmI5gsojRc",
+      "type": "text",
+      "name": "Mimics something from the encounter where the loot box was earned",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fM2z6I21Q2SLKasn.MMsGyGUmI5gsojRc"
+    },
+    {
+      "_id": "wdF2WtzrN5KAD8iy",
+      "type": "text",
+      "name": "Player's choice (with GM approval)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fM2z6I21Q2SLKasn.wdF2WtzrN5KAD8iy"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!fM2z6I21Q2SLKasn"
+}

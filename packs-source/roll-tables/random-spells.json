@@ -1,0 +1,353 @@
+{
+  "_id": "1cmvNnH4XKWHMuEK",
+  "name": "Table 27: Random Spells",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 27 (p.116).</em> Used by Table 25: Starting Loot (Spell options) and Gold-tier Starting Loot (Spell Scroll of a random Spell). Each result links directly to the matching Spell item in the Skills & Spells compendium.</p>",
+  "results": [
+    {
+      "_id": "XlFXrroMw5Yj0vji",
+      "type": "document",
+      "name": "Astral Paw",
+      "img": "icons/svg/aura.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.j3CleJa3VuHhh5r3",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.XlFXrroMw5Yj0vji"
+    },
+    {
+      "_id": "8ya38iGZfqhxNPFh",
+      "type": "document",
+      "name": "Confusing Fog",
+      "img": "icons/svg/blind.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.eU1JJqz3zdmSRJaJ",
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.8ya38iGZfqhxNPFh"
+    },
+    {
+      "_id": "vS4sahumk6TsceVb",
+      "type": "document",
+      "name": "Drain Life",
+      "img": "icons/svg/blood.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.hZsCDGFAhcS58iKn",
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.vS4sahumk6TsceVb"
+    },
+    {
+      "_id": "rb2CUgxU05U2pjmH",
+      "type": "document",
+      "name": "Heal Others",
+      "img": "icons/svg/heal.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.Bi4kSJne8wrIPwFz",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.rb2CUgxU05U2pjmH"
+    },
+    {
+      "_id": "ScomkPErIotUKjag",
+      "type": "document",
+      "name": "Hole",
+      "img": "icons/svg/trap.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.NwEkYkSI1oC6Mf36",
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.ScomkPErIotUKjag"
+    },
+    {
+      "_id": "nttUzU3d0a94gFZv",
+      "type": "document",
+      "name": "Ice Blast",
+      "img": "icons/svg/frozen.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.J8pBK0tWX0BkpYuE",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.nttUzU3d0a94gFZv"
+    },
+    {
+      "_id": "n83MJf5TWfjIjmq7",
+      "type": "document",
+      "name": "Lightning Bolt",
+      "img": "icons/svg/lightning.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.zdlApml74rCdEKDr",
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.n83MJf5TWfjIjmq7"
+    },
+    {
+      "_id": "gkOcLQ0RoCmicdHF",
+      "type": "document",
+      "name": "Magic Missile",
+      "img": "icons/svg/lightning.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.mK52l4gB8AAiWOCw",
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.gkOcLQ0RoCmicdHF"
+    },
+    {
+      "_id": "cOPqJ2Uwc4BCROg5",
+      "type": "document",
+      "name": "Puddle Jumper",
+      "img": "icons/svg/wing.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.4FJtl4X78qvIaYXU",
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.cOPqJ2Uwc4BCROg5"
+    },
+    {
+      "_id": "vGy7QzUIzJtQjFq7",
+      "type": "document",
+      "name": "Second Chance",
+      "img": "icons/svg/skull.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.4fLPoiSPUhjUxmEh",
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.vGy7QzUIzJtQjFq7"
+    },
+    {
+      "_id": "CFyldZoEWf6fIAlj",
+      "type": "document",
+      "name": "Shield",
+      "img": "icons/svg/shield.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.OloGPmmqoCrHhsar",
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.CFyldZoEWf6fIAlj"
+    },
+    {
+      "_id": "QXBsgvFfgNcdLBQh",
+      "type": "document",
+      "name": "Wisp Armor",
+      "img": "icons/svg/aura.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.skills-and-spells.Item.8HzbBV3Ppsm974Cb",
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1cmvNnH4XKWHMuEK.QXBsgvFfgNcdLBQh"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!1cmvNnH4XKWHMuEK"
+}

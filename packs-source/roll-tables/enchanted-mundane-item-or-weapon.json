@@ -1,0 +1,191 @@
+{
+  "_id": "QY37R1vIGyHXLDmd",
+  "name": "Table 39: Enchanted Mundane Item or Weapon",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 39 (p.219).</em> Rolled from Table 38: Item Type (results 1–2). See \"X Values\" (p.219) for the actual bonus granted by tier.</p><p>*Inherent Spell results have a fixed Rank (GM's choice, following Skill Rank tier guidelines) and cost no Mana, but gain a cooldown — usually 2 hours per Spell Rank.</p>",
+  "results": [
+    {
+      "_id": "qlgb6kbCGc8VD8Ry",
+      "type": "text",
+      "name": "+X Stat Bonus",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QY37R1vIGyHXLDmd.qlgb6kbCGc8VD8Ry"
+    },
+    {
+      "_id": "kSSnG65Ls0fAHzkz",
+      "type": "text",
+      "name": "+X Skill Bonus",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QY37R1vIGyHXLDmd.kSSnG65Ls0fAHzkz"
+    },
+    {
+      "_id": "U9iDrPT4pj4Iigfh",
+      "type": "text",
+      "name": "A Buff (not Skill or Stat bonuses)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QY37R1vIGyHXLDmd.U9iDrPT4pj4Iigfh"
+    },
+    {
+      "_id": "AuzjVpZTLSWnXmyt",
+      "type": "text",
+      "name": "A Passive Skill at Rank equal to the Floor",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QY37R1vIGyHXLDmd.AuzjVpZTLSWnXmyt"
+    },
+    {
+      "_id": "oUNVkLYOXKgB0NUL",
+      "type": "text",
+      "name": "Inherent Spell* (no Mana cost; with Cooldown based on power level — GM's choice)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QY37R1vIGyHXLDmd.oUNVkLYOXKgB0NUL"
+    },
+    {
+      "_id": "DE20lwb03x4TkXeq",
+      "type": "document",
+      "name": "Something Unique — roll on Table 42",
+      "img": null,
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.fM2z6I21Q2SLKasn",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QY37R1vIGyHXLDmd.DE20lwb03x4TkXeq"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!QY37R1vIGyHXLDmd"
+}

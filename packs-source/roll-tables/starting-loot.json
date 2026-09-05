@@ -1,0 +1,137 @@
+{
+  "_id": "auysEXDcDnjH4xY7",
+  "name": "Table 25: Starting Loot",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 25 (p.116).</em> Roll or choose to see which Rarity tier (Bronze/Silver/Gold/Platinum) applies to each of your four Starting Loot categories: Weapon, Armor, Item, and Consumable. Weapon, Armor, and Item may each be swapped for Spells instead (see Table 27: Random Spells); Consumables cannot.</p>",
+  "results": [
+    {
+      "_id": "xk0TSVdGBnbOeW8s",
+      "type": "text",
+      "name": "Platinum Weapon/Spells, Gold Armor/Spells, Silver Item/Spells, Bronze Consumable",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!auysEXDcDnjH4xY7.xk0TSVdGBnbOeW8s"
+    },
+    {
+      "_id": "s1RNZvjFPDjBBOhF",
+      "type": "text",
+      "name": "Bronze Weapon/Spells, Platinum Armor/Spells, Gold Item/Spells, Silver Consumable",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!auysEXDcDnjH4xY7.s1RNZvjFPDjBBOhF"
+    },
+    {
+      "_id": "lHNSuZkVppMQzbAD",
+      "type": "text",
+      "name": "Silver Weapon/Spells, Bronze Armor/Spells, Platinum Item/Spells, Gold Consumable",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!auysEXDcDnjH4xY7.lHNSuZkVppMQzbAD"
+    },
+    {
+      "_id": "KF3H8Yo7mRTRudPH",
+      "type": "text",
+      "name": "Gold Weapon/Spells, Silver Armor/Spells, Bronze Item/Spells, Platinum Consumable",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!auysEXDcDnjH4xY7.KF3H8Yo7mRTRudPH"
+    }
+  ],
+  "formula": "1d4",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!auysEXDcDnjH4xY7"
+}

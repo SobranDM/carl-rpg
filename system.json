@@ -75,6 +75,13 @@
       "path": "packs/classes-and-races",
       "type": "Item",
       "system": "carl-rpg"
+    },
+    {
+      "name": "roll-tables",
+      "label": "Loot & Magic Items",
+      "path": "packs/roll-tables",
+      "type": "RollTable",
+      "system": "carl-rpg"
     }
   ],
   "packFolders": [ ],

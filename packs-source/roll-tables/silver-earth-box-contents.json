@@ -1,0 +1,191 @@
+{
+  "_id": "RHigxAgryOOId04d",
+  "name": "Table 73: Silver Earth Box Contents",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 73 (p.320).</em> Trinket contents for a Silver Earth Box, an incentive item tied to this system's Earth-Class/Race content (see the \"Earth-Based\" checkbox on Class and Race items).</p>",
+  "results": [
+    {
+      "_id": "dbdaX9FNF7CEsuyC",
+      "type": "text",
+      "name": "A bedroom item",
+      "img": null,
+      "description": "<p>Pillow, comfy pajamas, alarm clock, new-in-box toothbrush or toiletries</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!RHigxAgryOOId04d.dbdaX9FNF7CEsuyC"
+    },
+    {
+      "_id": "mnEKH9PGehbZlSsY",
+      "type": "text",
+      "name": "Entertainment Item",
+      "img": null,
+      "description": "<p>Set of DVDs and portable DVD player, set of books in a series, sports memorabilia, trading cards or a deck of cards</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!RHigxAgryOOId04d.mnEKH9PGehbZlSsY"
+    },
+    {
+      "_id": "UHntuk56E03Bk45m",
+      "type": "text",
+      "name": "Food-related Item",
+      "img": null,
+      "description": "<p>Chopsticks or a favored utensil, a can of something, a bag of candy, a gallon of Neapolitan ice cream</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!RHigxAgryOOId04d.UHntuk56E03Bk45m"
+    },
+    {
+      "_id": "2bSzTeYecHvPqWUh",
+      "type": "text",
+      "name": "Transportation Item",
+      "img": null,
+      "description": "<p>A rear-view window or dashboard bauble, a bumper sticker, a subway or train card</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!RHigxAgryOOId04d.2bSzTeYecHvPqWUh"
+    },
+    {
+      "_id": "3GZlzco5X92pZWeZ",
+      "type": "text",
+      "name": "Wallet/Purse Junk",
+      "img": null,
+      "description": "<p>A single condom or tampon, a ball of lint, a wad of useless cash, a coupon for a free food item (that a Bopca will attempt to honor)</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!RHigxAgryOOId04d.3GZlzco5X92pZWeZ"
+    },
+    {
+      "_id": "qlXm6dM5bLPfNXvl",
+      "type": "text",
+      "name": "Arts and Crafts Junk",
+      "img": null,
+      "description": "<p>A set of paints or markers, a plastic figurine to assemble, a full-sized potter's wheel, a hot glue gun with glue sticks, 100 googly eyes</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!RHigxAgryOOId04d.qlXm6dM5bLPfNXvl"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!RHigxAgryOOId04d"
+}

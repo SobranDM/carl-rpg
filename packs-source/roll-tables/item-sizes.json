@@ -1,0 +1,245 @@
+{
+  "_id": "VjYcQEfV5zp2DLmK",
+  "name": "Table 43: Item Sizes",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 43 (p.221).</em> Reference chart for the Fabricate/Engineering crafting rules: the size category of an uncommon item, an example, and the Misc. Junk points needed to craft it. Usually chosen deliberately rather than rolled, but included here as a d8 table for quick random inspiration.</p>",
+  "results": [
+    {
+      "_id": "N0IinYZMgRmdJSE2",
+      "type": "text",
+      "name": "Tiny — e.g. Soda Can (1 Misc. Junk to craft)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!VjYcQEfV5zp2DLmK.N0IinYZMgRmdJSE2"
+    },
+    {
+      "_id": "q8uAr3hjfgsNaAka",
+      "type": "text",
+      "name": "Small — e.g. Toaster (4 Misc. Junk to craft)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!VjYcQEfV5zp2DLmK.q8uAr3hjfgsNaAka"
+    },
+    {
+      "_id": "NLBMIr0uKUcLb7EN",
+      "type": "text",
+      "name": "Petite — e.g. Chair (16 Misc. Junk to craft)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!VjYcQEfV5zp2DLmK.NLBMIr0uKUcLb7EN"
+    },
+    {
+      "_id": "my2fALmxUDgGJDPj",
+      "type": "text",
+      "name": "Medium — e.g. Desk (32 Misc. Junk to craft)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!VjYcQEfV5zp2DLmK.my2fALmxUDgGJDPj"
+    },
+    {
+      "_id": "svcdpA6DUtL71HQD",
+      "type": "text",
+      "name": "Large — e.g. Statue (64 Misc. Junk to craft)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!VjYcQEfV5zp2DLmK.svcdpA6DUtL71HQD"
+    },
+    {
+      "_id": "WbmImqissylQ4ZFx",
+      "type": "text",
+      "name": "Huge — e.g. Dumpster (128 Misc. Junk to craft)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!VjYcQEfV5zp2DLmK.WbmImqissylQ4ZFx"
+    },
+    {
+      "_id": "OY2PIUXodGzwFACX",
+      "type": "text",
+      "name": "Colossal — e.g. Barn (256 Misc. Junk to craft)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!VjYcQEfV5zp2DLmK.OY2PIUXodGzwFACX"
+    },
+    {
+      "_id": "qZgxRgGVQ33w3vKD",
+      "type": "text",
+      "name": "Gargantuan — e.g. Grain Silo (512 Misc. Junk to craft)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!VjYcQEfV5zp2DLmK.qZgxRgGVQ33w3vKD"
+    }
+  ],
+  "formula": "1d8",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!VjYcQEfV5zp2DLmK"
+}
