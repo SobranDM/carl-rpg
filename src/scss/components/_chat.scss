@@ -362,4 +362,44 @@
     font-style: italic;
     opacity: 0.75;
   }
+
+  // Character-actor picker (module/apps/gm-toolbox.mjs's #promptActorPicker)
+  // shared by Rest/2-Hour Tick/Party Level Up - a live filter + running
+  // counter + scroll-capped, collapsible "Other Characters" section so a
+  // large roster stays manageable in a fixed-size dialog.
+  .carl-actor-picker-filter {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .carl-actor-picker-select-all {
+    justify-content: space-between;
+  }
+
+  .carl-actor-picker-count {
+    font-size: 11px;
+    opacity: 0.75;
+    font-weight: normal;
+  }
+
+  .carl-actor-picker-list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .carl-actor-picker-other {
+    margin-top: 4px;
+
+    summary {
+      cursor: pointer;
+      font-size: 11px;
+      opacity: 0.85;
+      padding: 2px 0;
+    }
+
+    .carl-actor-picker-option {
+      margin-left: 4px;
+    }
+  }
 }

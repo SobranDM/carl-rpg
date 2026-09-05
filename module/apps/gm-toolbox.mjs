@@ -180,7 +180,12 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const rankFilter = await CarlToolbox.#promptRankFilter();
     if (!rankFilter) return;
 
-    const actors = game.actors.filter((a) => a.type === "character");
+    const actors = await CarlToolbox.#promptActorPicker({
+      titleKey: "CARLRPG.Toolbox.ResolveTwoHourTitle",
+      promptKey: "CARLRPG.Toolbox.ResolveTwoHourPickerPrompt",
+    });
+    if (!actors) return;
+
     const digest = [];
     for (const actor of actors) {
       const results = await actor.rollMarkedAdvancementChecks({ rankFilter });
@@ -212,17 +217,29 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     });
   }
 
-  /** Flat, no-roll +1 Level to every party character (the other half of the 2-hour rule). */
+  /**
+   * Flat, no-roll +1 Level to the selected characters (the other half of
+   * the 2-hour rule) - not every Character actor in the world is
+   * necessarily part of tonight's party (an absent player's PC, a retired
+   * character, etc.), so this asks the same way Rest and the 2-Hour Tick do.
+   */
   static async #onPartyLevelUp(event, target) {
     if (!game.user.isGM) return;
-    const actors = game.actors.filter((a) => a.type === "character");
+    const actors = await CarlToolbox.#promptActorPicker({
+      titleKey: "CARLRPG.Toolbox.PartyLevelUpTitle",
+      promptKey: "CARLRPG.Toolbox.PartyLevelUpPickerPrompt",
+    });
+    if (!actors) return;
+
     for (const actor of actors) {
       const lvl = actor.system.attributes.level.value;
       await actor.update({ "system.attributes.level.value": Math.min(lvl + 1, 250) });
     }
     await createCardMessage({
       title: game.i18n.localize("CARLRPG.Toolbox.PartyLevelUpTitle"),
-      body: `<p>${game.i18n.format("CARLRPG.Toolbox.PartyLevelUpBody", { count: actors.length })}</p>`,
+      body: actors.length
+        ? `<p>${game.i18n.format("CARLRPG.Toolbox.PartyLevelUpBody", { count: actors.length })}</p>`
+        : `<p>${game.i18n.localize("CARLRPG.Toolbox.PartyLevelUpBodyNone")}</p>`,
     });
   }
 
@@ -279,7 +296,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
   /**
    * In-world Rest: shows a picker of Character actors (see
-   * #promptRestActors for the Character-only scoping rationale), then
+   * #promptActorPicker for the Character-only scoping rationale), then
    * advances Foundry's own game.time (unrelated to the wall-clock Play
    * Timer above) and applies the documented recovery formulas (Playing the
    * Game, p. 94) to only the actors the GM selected - not every party
@@ -289,7 +306,11 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     if (!game.user.isGM) return;
     const config = REST_CONFIG[kind];
 
-    const selectedActors = await CarlToolbox.#promptRestActors(config.titleKey);
+    const selectedActors = await CarlToolbox.#promptActorPicker({
+      titleKey: config.titleKey,
+      promptKey: "CARLRPG.Toolbox.Rest.PickerPrompt",
+      confirmLabelKey: "CARLRPG.Toolbox.Rest.Confirm",
+    });
     if (!selectedActors) return; // Cancelled: no time advance, no updates.
 
     if (game.time?.advanceTime) await game.time.advanceTime(config.seconds);
@@ -323,29 +344,33 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   /**
-   * Rest actor picker.
+   * Generic Character-actor picker shared by every toolbox action that
+   * shouldn't silently apply to every Character in the world (Rest, the
+   * 2-Hour Tick, Party Level Up) - not every Character actor is
+   * necessarily part of "the party, right now" (an absent player's PC, a
+   * retired character, a GM-run henchman, etc).
    *
-   * SCOPING DECISION: only `type: "character"` actors are listed/rest-able,
-   * never NPCs. Rest (Playing the Game, p. 94) is a party/crawler concept;
-   * NPCs in this ruleset are Mobs, not participants who "rest". The
-   * previous unconditional `game.actors.filter(a =>
-   * ["character","npc"].includes(a.type))` applied rest recovery (HB/mana
-   * refill, condition clearing) to literally every NPC in the world too -
-   * almost certainly an oversight in the original no-picker implementation
-   * rather than an intended feature, since hostile/neutral Mobs "resting"
-   * mid-crawl has no in-fiction meaning. Flagged here and in the task
-   * report for the maintainer to override if NPCs were actually wanted.
+   * SCOPING DECISION: only `type: "character"` actors are ever listed,
+   * never NPCs - NPCs in this ruleset are Mobs, not party members these
+   * bulk actions apply to.
    *
    * Default-checked: any Character actor owned (OWNER level) by a
-   * currently-active, non-GM user - i.e. someone actually logged in to play
-   * them right now. Every other Character (nobody active owns it, or only
-   * the GM controls it - e.g. an absent player's PC, or a GM-run henchman)
-   * starts unchecked, since the GM must deliberately opt those in.
-   * @param {string} titleKey  i18n key for the specific rest kind's dialog title.
-   * @returns {Promise<Actor[]|null>} Selected actors, or null if cancelled.
+   * currently-active, non-GM user - i.e. someone actually logged in to
+   * play them right now. Everyone else starts unchecked, in a collapsed
+   * "Other Characters" section, since the GM must deliberately opt those
+   * in. Also provides a live name filter (auto-expanding "Other
+   * Characters" on a match) and a running "N/Total selected" counter, so a
+   * large roster stays manageable.
+   * @param {object} options
+   * @param {string} options.titleKey  i18n key for the dialog title.
+   * @param {string} options.promptKey  i18n key for the intro line.
+   * @param {string} [options.confirmLabelKey]  i18n key for the confirm button.
+   * @returns {Promise<Actor[]|null>} Selected actors, or null if cancelled/none exist.
    */
-  static async #promptRestActors(titleKey) {
-    const actors = game.actors.filter((a) => a.type === "character");
+  static async #promptActorPicker({ titleKey, promptKey, confirmLabelKey = "CARLRPG.Toolbox.ActorPicker.Confirm" }) {
+    const actors = game.actors
+      .filter((a) => a.type === "character")
+      .sort((a, b) => a.name.localeCompare(b.name));
     if (!actors.length) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoCharacters"));
       return null;
@@ -354,43 +379,81 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const isOwnedByActivePlayer = (actor) => game.users.some(
       (u) => u.active && !u.isGM && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
     );
+    const active = actors.filter(isOwnedByActivePlayer);
+    const other = actors.filter((a) => !isOwnedByActivePlayer(a));
 
-    const rows = actors.map((a) => {
-      const checked = isOwnedByActivePlayer(a) ? "checked" : "";
-      return `<label class="carl-dialog-condition carl-rest-picker-option">
-        <input type="checkbox" name="actors.${a.id}" ${checked} />
-        ${a.name}
+    const row = (a, checked) => `<label class="carl-dialog-condition carl-actor-picker-option" data-actor-name="${foundry.utils.escapeHTML(a.name.toLowerCase())}">
+        <input type="checkbox" name="actors.${a.id}" ${checked ? "checked" : ""} />
+        ${foundry.utils.escapeHTML(a.name)}
       </label>`;
-    }).join("");
 
-    const content = `<div class="carl-dialog-body carl-rest-picker">
-      <p>${game.i18n.localize("CARLRPG.Toolbox.Rest.PickerPrompt")}</p>
+    const activeRows = active.map((a) => row(a, true)).join("");
+    const otherRows = other.map((a) => row(a, false)).join("");
+    const otherSection = other.length
+      ? `<details class="carl-actor-picker-other">
+          <summary>${game.i18n.format("CARLRPG.Toolbox.ActorPicker.OtherCharacters", { count: other.length })}</summary>
+          ${otherRows}
+        </details>`
+      : "";
+
+    const content = `<div class="carl-dialog-body carl-actor-picker">
+      <p>${game.i18n.localize(promptKey)}</p>
+      <input type="search" class="carl-actor-picker-filter" placeholder="${game.i18n.localize("CARLRPG.Toolbox.ActorPicker.FilterPlaceholder")}" />
       <div class="form-group carl-dialog-conditions">
-        <label class="carl-dialog-condition">
-          <input type="checkbox" data-rest-select-all />
-          <strong>${game.i18n.localize("CARLRPG.Toolbox.Rest.SelectAll")}</strong>
+        <label class="carl-dialog-condition carl-actor-picker-select-all">
+          <input type="checkbox" data-picker-select-all />
+          <strong>${game.i18n.localize("CARLRPG.Toolbox.ActorPicker.SelectAll")}</strong>
+          <span class="carl-actor-picker-count" data-picker-count></span>
         </label>
-        <div class="form-fields carl-dialog-conditions-list carl-rest-picker-list">${rows}</div>
+        <div class="form-fields carl-dialog-conditions-list carl-actor-picker-list">${activeRows}${otherSection}</div>
       </div>
     </div>`;
 
     const result = await showCarlDialog({
       title: game.i18n.localize(titleKey),
       content,
-      buttons: [rollButton({ label: "CARLRPG.Toolbox.Rest.Confirm" }), cancelButton()],
-      // Wires the "Select All" checkbox up after the dialog's DOM exists:
-      // toggling it (de)selects every actor row, and toggling any single
-      // row keeps "Select All" in sync (checked only when all are checked).
+      buttons: [rollButton({ label: confirmLabelKey }), cancelButton()],
+      // Wires the picker's interactive bits up after the dialog's DOM
+      // exists: Select All (de)selects every row and stays in sync with
+      // individual toggles; the running counter updates on any change; the
+      // name filter hides non-matching rows and auto-expands "Other
+      // Characters" so a match hidden inside the collapsed <details> isn't
+      // invisible.
       onRender: (event, dialog) => {
-        const selectAll = dialog.element.querySelector('[data-rest-select-all]');
-        const boxes = [...dialog.element.querySelectorAll(".carl-rest-picker-option input[type=\"checkbox\"]")];
-        if (!selectAll || !boxes.length) return;
-        const syncSelectAll = () => { selectAll.checked = boxes.every((b) => b.checked); };
+        const root = dialog.element;
+        const selectAll = root.querySelector("[data-picker-select-all]");
+        const countEl = root.querySelector("[data-picker-count]");
+        const filterInput = root.querySelector(".carl-actor-picker-filter");
+        const getRows = () => [...root.querySelectorAll(".carl-actor-picker-option")];
+        const getBoxes = () => getRows().map((r) => r.querySelector('input[type="checkbox"]'));
+
+        const updateCount = () => {
+          if (!countEl) return;
+          const boxes = getBoxes();
+          countEl.textContent = game.i18n.format("CARLRPG.Toolbox.ActorPicker.SelectedCount", {
+            count: boxes.filter((b) => b.checked).length,
+            total: boxes.length,
+          });
+        };
+        const syncSelectAll = () => {
+          const boxes = getBoxes();
+          if (selectAll) selectAll.checked = boxes.length > 0 && boxes.every((b) => b.checked);
+          updateCount();
+        };
+
         syncSelectAll();
-        selectAll.addEventListener("change", () => {
-          for (const box of boxes) box.checked = selectAll.checked;
+        selectAll?.addEventListener("change", () => {
+          for (const box of getBoxes()) box.checked = selectAll.checked;
+          updateCount();
         });
-        for (const box of boxes) box.addEventListener("change", syncSelectAll);
+        for (const box of getBoxes()) box.addEventListener("change", syncSelectAll);
+
+        filterInput?.addEventListener("input", () => {
+          const needle = filterInput.value.trim().toLowerCase();
+          for (const rowEl of getRows()) rowEl.hidden = !(!needle || rowEl.dataset.actorName.includes(needle));
+          const details = root.querySelector(".carl-actor-picker-other");
+          if (details && needle) details.open = true;
+        });
       },
     });
     if (!result) return null;

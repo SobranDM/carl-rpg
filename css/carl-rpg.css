@@ -519,6 +519,35 @@
   font-style: italic;
   opacity: 0.75;
 }
+.carl-dialog .carl-actor-picker-filter {
+  width: 100%;
+  box-sizing: border-box;
+}
+.carl-dialog .carl-actor-picker-select-all {
+  justify-content: space-between;
+}
+.carl-dialog .carl-actor-picker-count {
+  font-size: 11px;
+  opacity: 0.75;
+  font-weight: normal;
+}
+.carl-dialog .carl-actor-picker-list {
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.carl-dialog .carl-actor-picker-other {
+  margin-top: 4px;
+}
+.carl-dialog .carl-actor-picker-other summary {
+  cursor: pointer;
+  font-size: 11px;
+  opacity: 0.85;
+  padding: 2px 0;
+}
+.carl-dialog .carl-actor-picker-other .carl-actor-picker-option {
+  margin-left: 4px;
+}
 
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
