@@ -1,0 +1,191 @@
+{
+  "_id": "w922tRjycUwb5E2w",
+  "name": "Table 52: Playing to the Cameras",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 52 (p.281).</em> Reactions from the Audience, System AI, and Sponsors when a crawler Plays to the Cameras. This is keyed to the tier of a crawler's Skill Check result, not a random roll &mdash; select the row matching the actual check result rather than rolling; the die formula below is nominal, provided only for compendium/Foundry compatibility.</p>",
+  "results": [
+    {
+      "_id": "2EACi2BiEAMtYbox",
+      "type": "text",
+      "name": "Amazing Success or Critical Hit — Audience: Gain 2 Popularity. AI: Gain 2 AI Favor. Sponsors: Gain a Gold or Platinum Benefactor Box, or an interested Sponsor bids on your contract.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w922tRjycUwb5E2w.2EACi2BiEAMtYbox"
+    },
+    {
+      "_id": "XSA7CTC6Ebyqn80C",
+      "type": "text",
+      "name": "Standard Success — Audience: Gain 1 Popularity. AI: Gain 1 AI Favor. Sponsors: Gain a Bronze or Silver Benefactor Box.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w922tRjycUwb5E2w.XSA7CTC6Ebyqn80C"
+    },
+    {
+      "_id": "HzYfxQvdiI0iC5wL",
+      "type": "text",
+      "name": "Near Miss — Audience: No effect. AI: No effect. Sponsors: No effect.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w922tRjycUwb5E2w.HzYfxQvdiI0iC5wL"
+    },
+    {
+      "_id": "nIdkBdn9caO0DeLp",
+      "type": "text",
+      "name": "Standard Fail — Audience: Lose 1 Popularity. AI: Lose 1 AI Favor. Sponsors: Next Benefactor Box is reduced in quality (Platinum to Gold, Gold to Silver, etc.).",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w922tRjycUwb5E2w.nIdkBdn9caO0DeLp"
+    },
+    {
+      "_id": "AsNi4t4tx0FXfHX3",
+      "type": "text",
+      "name": "Major Fail — Audience: Lose 2 Popularity. AI: Lose 2 AI Favor. Sponsors: No Benefactor Box this Floor.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w922tRjycUwb5E2w.AsNi4t4tx0FXfHX3"
+    },
+    {
+      "_id": "djMSI2MO8ZTjpVGi",
+      "type": "text",
+      "name": "Critical Fail — Audience: If the crawler truly suffers, gain 1 Popularity. AI: The AI rides your ass, granting you no AI Favor for the day. Sponsors: They get embarrassed and drop you, or an interested Sponsor bids on your contract.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w922tRjycUwb5E2w.djMSI2MO8ZTjpVGi"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!w922tRjycUwb5E2w"
+}

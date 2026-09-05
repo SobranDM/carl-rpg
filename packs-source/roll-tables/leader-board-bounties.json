@@ -1,0 +1,191 @@
+{
+  "_id": "UPJ3MhXw3aFSFc8g",
+  "name": "Table 53: Leader Board Bounties",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 53 (p.282).</em> Bounties (in gold, delivered via a Legendary Bounty Box) for killing a member of the top ten Leader Board list, by placement and Floor. This is a lookup reference by known placement, not a randomly rolled result &mdash; select the row matching the target's actual placement rather than rolling; the die formula below is nominal, provided only for compendium/Foundry compatibility. (Body text also notes each subsequent Floor after the Fourth multiplies the Fourth Floor bounty: ×2 Fifth, ×3 Sixth, ×4 Seventh, ×5 Eighth, ×6 Ninth &mdash; matching the values below.)</p>",
+  "results": [
+    {
+      "_id": "yYwF6h3ge7MNX7vX",
+      "type": "text",
+      "name": "1st Place — 1,000,000g (Fourth Floor), 2,000,000g (Fifth), 3,000,000g (Sixth), 4,000,000g (Seventh), 5,000,000g (Eighth), 6,000,000g (Ninth)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UPJ3MhXw3aFSFc8g.yYwF6h3ge7MNX7vX"
+    },
+    {
+      "_id": "IdOmJOEa6PsG4k7B",
+      "type": "text",
+      "name": "2nd Place — 500,000g (Fourth Floor), 1,000,000g (Fifth), 1,500,000g (Sixth), 2,000,000g (Seventh), 2,500,000g (Eighth), 3,000,000g (Ninth)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UPJ3MhXw3aFSFc8g.IdOmJOEa6PsG4k7B"
+    },
+    {
+      "_id": "NbwzFsVXaRXlE64r",
+      "type": "text",
+      "name": "3rd Place — 400,000g (Fourth Floor), 800,000g (Fifth), 1,200,000g (Sixth), 1,600,000g (Seventh), 2,000,000g (Eighth), 2,400,000g (Ninth)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UPJ3MhXw3aFSFc8g.NbwzFsVXaRXlE64r"
+    },
+    {
+      "_id": "2lq5B9vpomoeiUfj",
+      "type": "text",
+      "name": "4th Place — 300,000g (Fourth Floor), 600,000g (Fifth), 900,000g (Sixth), 1,200,000g (Seventh), 1,500,000g (Eighth), 1,800,000g (Ninth)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UPJ3MhXw3aFSFc8g.2lq5B9vpomoeiUfj"
+    },
+    {
+      "_id": "9ABJhOVUV2mecibI",
+      "type": "text",
+      "name": "5th Place — 200,000g (Fourth Floor), 400,000g (Fifth), 600,000g (Sixth), 800,000g (Seventh), 1,000,000g (Eighth), 1,200,000g (Ninth)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UPJ3MhXw3aFSFc8g.9ABJhOVUV2mecibI"
+    },
+    {
+      "_id": "b0rJXQ25aG1vM7t9",
+      "type": "text",
+      "name": "6th–10th Place — 100,000g (Fourth Floor), 200,000g (Fifth), 300,000g (Sixth), 400,000g (Seventh), 500,000g (Eighth), 600,000g (Ninth)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UPJ3MhXw3aFSFc8g.b0rJXQ25aG1vM7t9"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!UPJ3MhXw3aFSFc8g"
+}

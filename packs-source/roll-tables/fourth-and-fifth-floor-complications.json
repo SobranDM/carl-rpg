@@ -1,0 +1,191 @@
+{
+  "_id": "IMyDuGrl83IDGlNT",
+  "name": "Table 61: Fourth and Fifth Floor Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 61 (p.293).</em> Roll or choose an additional complication that may arise on repeated appearances with the same interviewer or show on the Fourth or Fifth Floor.</p>",
+  "results": [
+    {
+      "_id": "5u83Z6F0pVW9hMua",
+      "type": "text",
+      "name": "A teleportation mishap swaps guest locations when returning them to the dungeon, dropping the party aboard a named line (Fourth Floor) or into a different bubble (Fifth Floor).",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!IMyDuGrl83IDGlNT.5u83Z6F0pVW9hMua"
+    },
+    {
+      "_id": "3gvDGzUKzzkzG4VZ",
+      "type": "text",
+      "name": "The host gets approval to bring all guests, including non-crawlers, into the dungeon to tour a train (Fourth Floor) or a tomb (Fifth Floor). They think Borant finally activated the dungeon protection system, not having heard that it's malfunctioning.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!IMyDuGrl83IDGlNT.3gvDGzUKzzkzG4VZ"
+    },
+    {
+      "_id": "4uKr8UmGXGZxK2cg",
+      "type": "text",
+      "name": "The host is hostile to a crawler's latest Sponsor and tries to make them look bad. The Sponsor finds ways to respond during or after the show, resulting in an escalating tit-for-tat.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!IMyDuGrl83IDGlNT.4uKr8UmGXGZxK2cg"
+    },
+    {
+      "_id": "yX6q4dfM3bQAK2Zb",
+      "type": "text",
+      "name": "The host invites extremist guests to stoke controversy over political commentary Borant inserted into depictions of Mobs. Crawlers have a chance to incite unrest among viewers.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!IMyDuGrl83IDGlNT.yX6q4dfM3bQAK2Zb"
+    },
+    {
+      "_id": "QWAV26Ey9la8SMKD",
+      "type": "text",
+      "name": "The host partially spoils a major surprise planned for the Floor before Admins and/or Liaisons can intervene, creating chaos that crawlers can exploit.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!IMyDuGrl83IDGlNT.QWAV26Ey9la8SMKD"
+    },
+    {
+      "_id": "fFFLK379vZbOSCaP",
+      "type": "text",
+      "name": "Another guest faces certain death (stuck on a named line or trapped in a quadrant) and begs to be saved. Depending on the show, there may be no way to do so, but Player Characters must somehow respond.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!IMyDuGrl83IDGlNT.fFFLK379vZbOSCaP"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!IMyDuGrl83IDGlNT"
+}

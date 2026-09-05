@@ -1,0 +1,164 @@
+{
+  "_id": "vFZJtIl9caDsFdym",
+  "name": "Table 56: Gaining and Losing Popularity",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 56 (p.288).</em> How a crawler's Skill Check result on an interview show appearance affects their Popularity. This is keyed to the tier of the check result, not a random roll &mdash; select the row matching the actual check result rather than rolling; the die formula below is nominal, provided only for compendium/Foundry compatibility.</p>",
+  "results": [
+    {
+      "_id": "yuSekW0FVeEX9IcZ",
+      "type": "text",
+      "name": "Critical Fail or Major Fail — -2 Popularity, or -1 Popularity and alienate the host",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vFZJtIl9caDsFdym.yuSekW0FVeEX9IcZ"
+    },
+    {
+      "_id": "WZVlO9MMKLx83PNc",
+      "type": "text",
+      "name": "Standard Fail — -1 Popularity",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vFZJtIl9caDsFdym.WZVlO9MMKLx83PNc"
+    },
+    {
+      "_id": "S0xvbtDGl74Sa7A5",
+      "type": "text",
+      "name": "Near Miss Fail — No Change",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vFZJtIl9caDsFdym.S0xvbtDGl74Sa7A5"
+    },
+    {
+      "_id": "GOF0rgqoNoqU80UU",
+      "type": "text",
+      "name": "Standard Success — +1 Popularity",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vFZJtIl9caDsFdym.GOF0rgqoNoqU80UU"
+    },
+    {
+      "_id": "klDwBfFLb10mIQNu",
+      "type": "text",
+      "name": "Amazing Success or Critical Hit — +2 Popularity, and the host likes you; or +1 Popularity for your whole party",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vFZJtIl9caDsFdym.klDwBfFLb10mIQNu"
+    }
+  ],
+  "formula": "1d5",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!vFZJtIl9caDsFdym"
+}

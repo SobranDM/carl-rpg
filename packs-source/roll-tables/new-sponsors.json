@@ -1,0 +1,299 @@
+{
+  "_id": "7T2mbNSehbraL3QA",
+  "name": "Table 54: New Sponsors",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 54 (p.284).</em> Example Sponsors that may bid for a crawler's contract, with their type and the sort of crawler behavior that tends to attract them.</p>",
+  "results": [
+    {
+      "_id": "6WfpuSEoEQK51DHE",
+      "type": "text",
+      "name": "Pantheon Plex, Inc. (Religious Media) — Crawler is devout or tells a good moral story",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.6WfpuSEoEQK51DHE"
+    },
+    {
+      "_id": "SqPtdXiOmZd0NzHq",
+      "type": "text",
+      "name": "SnackFrenzy Solutions (Snack Foods) — Crawler eats a lot of interesting things or talks about food",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.SqPtdXiOmZd0NzHq"
+    },
+    {
+      "_id": "jsoT5o3gbA7q2dFH",
+      "type": "text",
+      "name": "OmniGrin Entertainment (Comedy Media) — Crawler is good at jokes or is often the butt of jokes",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.jsoT5o3gbA7q2dFH"
+    },
+    {
+      "_id": "HoPOnpXL160Qt0GA",
+      "type": "text",
+      "name": "BioVantage Coagulate Labs (Pharma and Med Tech) — Crawler has Poison-type powers or is a healer",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.HoPOnpXL160Qt0GA"
+    },
+    {
+      "_id": "KAk1aAy63VST3xPe",
+      "type": "text",
+      "name": "GigaGroom Robotics (Beauty Robotics) — Crawler crafts things or grooms themselves or others",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.KAk1aAy63VST3xPe"
+    },
+    {
+      "_id": "rEbkZY9b5QO6MdIo",
+      "type": "text",
+      "name": "StellarSpine Logistics (Shipping and Logistics) — Crawler is organized or gets things done",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.rEbkZY9b5QO6MdIo"
+    },
+    {
+      "_id": "UZI1HlC4vIhSjWNL",
+      "type": "text",
+      "name": "Xylo P. Worthington, Esq. (Wealthy Socialite) — A strange attraction (not necessarily physical) or connection",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.UZI1HlC4vIhSjWNL"
+    },
+    {
+      "_id": "tH9Zjp3JmBWM8oII",
+      "type": "text",
+      "name": "NectarJack Nutritional Rations (Healthy and Military Foods) — Crawler leads a healthy lifestyle or wishes to … (sentence is cut off in the extracted rulebook source; original text past “wishes to” could not be recovered)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.tH9Zjp3JmBWM8oII"
+    },
+    {
+      "_id": "120URrb1govVMSyH",
+      "type": "text",
+      "name": "The Crimson Temporary Assurance (Intelligence) — Crawler is erudite or shrewd and makes creative plans",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.120URrb1govVMSyH"
+    },
+    {
+      "_id": "oFWGwdodnU1rs9dN",
+      "type": "text",
+      "name": "HappyWar Arms & Leisure (Arms Manufacturing) — Crawler uses high-tech weapons",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!7T2mbNSehbraL3QA.oFWGwdodnU1rs9dN"
+    }
+  ],
+  "formula": "1d10",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!7T2mbNSehbraL3QA"
+}

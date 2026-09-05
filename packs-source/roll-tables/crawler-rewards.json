@@ -1,0 +1,191 @@
+{
+  "_id": "aXLkbhilr5ieFgVw",
+  "name": "Table 59: Crawler Rewards",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 59 (p.293).</em> Roll or choose a reward some interview shows grant crawlers for appearing (e.g. Dungeon Sidekicks). Most are designed to go over well with fans rather than being extremely helpful.</p>",
+  "results": [
+    {
+      "_id": "77jHqhQSZIDL8miu",
+      "type": "text",
+      "name": "A shirt, hat, or other garment with a useful enchantment on it, but also a joke about another crawler they know. The joke will surely make that other crawler angry.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!aXLkbhilr5ieFgVw.77jHqhQSZIDL8miu"
+    },
+    {
+      "_id": "rzd0Hu2jZm15S69g",
+      "type": "text",
+      "name": "A memento of a Past Trauma, Loose Ends, or Regret. It may also have a useful benefit.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!aXLkbhilr5ieFgVw.rzd0Hu2jZm15S69g"
+    },
+    {
+      "_id": "pb58asqXFkTwGkgF",
+      "type": "text",
+      "name": "A weapon or Spell the crawler isn't trained in, preferably one that would have been useful if they got it earlier or associated with a rival crawler.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!aXLkbhilr5ieFgVw.pb58asqXFkTwGkgF"
+    },
+    {
+      "_id": "Yo2b6mLI1IfIQfT4",
+      "type": "text",
+      "name": "A high-quality but embarrassing hygiene product to treat an issue like hemorrhoids or halitosis. Using it properly takes about an hour, but it gives a temporary +10 bonus to Charisma for 30 hours.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!aXLkbhilr5ieFgVw.Yo2b6mLI1IfIQfT4"
+    },
+    {
+      "_id": "x9fcFTW7pOJ8i0zz",
+      "type": "text",
+      "name": "An embarrassing snick or other edited clip. It may have been organically created by fans or crafted specifically for the interview show. It goes viral in 30 hours, granting +1 to Popularity.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!aXLkbhilr5ieFgVw.x9fcFTW7pOJ8i0zz"
+    },
+    {
+      "_id": "01l5WxbhMcoskQRO",
+      "type": "text",
+      "name": "A prescient gift. Someone must know what the next Neighborhood or Boss the crawler will encounter is, and they included a gift that'll prove useful to overcome that. This gift may get the show canceled or turn the host into an adversary.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!aXLkbhilr5ieFgVw.01l5WxbhMcoskQRO"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!aXLkbhilr5ieFgVw"
+}

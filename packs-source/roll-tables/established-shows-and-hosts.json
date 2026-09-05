@@ -1,0 +1,245 @@
+{
+  "_id": "ITYthhOnU5pf7ASp",
+  "name": "Table 55: Established Shows and Hosts",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 55 (p.288).</em> Example interview shows referenced throughout the Dungeon Crawler Carl novels, with host, format, and known affiliation. Five of these are detailed further at pp.294–303 (Death Watch Extreme Dungeon Mayhem is hosted by Prince Maestro of the Skull Empire).</p>",
+  "results": [
+    {
+      "_id": "NZNrNizwdgi54I3z",
+      "type": "text",
+      "name": "Danger Zone with Ripper Wonton — Host: Ripper Wonton; Format: Round Table; Affiliation: Unknown",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ITYthhOnU5pf7ASp.NZNrNizwdgi54I3z"
+    },
+    {
+      "_id": "yY2f4D2bz9ri9nSO",
+      "type": "text",
+      "name": "Death Watch Extreme Dungeon Mayhem — Host: The Maestro (Prince Maestro); Format: Late Night Talk; Affiliation: Skull Empire",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ITYthhOnU5pf7ASp.yY2f4D2bz9ri9nSO"
+    },
+    {
+      "_id": "DCxXd89QSEa1794y",
+      "type": "text",
+      "name": "Dungeon Crawl Tactics — Host: Unknown Human; Format: Round Table; Affiliation: Unknown",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ITYthhOnU5pf7ASp.DCxXd89QSEa1794y"
+    },
+    {
+      "_id": "pwvObwGkheAbUIzl",
+      "type": "text",
+      "name": "Dungeon Crawler After Hours with Odette — Host: Odette; Format: Late Night Talk; Affiliation: Titan Conglomerate",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ITYthhOnU5pf7ASp.pwvObwGkheAbUIzl"
+    },
+    {
+      "_id": "c8maMIr8P71mwTiE",
+      "type": "text",
+      "name": "Dungeon Sidekicks — Host: Unknown; Format: One-on-One Interview; Affiliation: Unknown",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ITYthhOnU5pf7ASp.c8maMIr8P71mwTiE"
+    },
+    {
+      "_id": "7LOoQbz6harEoeT9",
+      "type": "text",
+      "name": "Plenty of Plenty — Host: Varies; Format: \"Round Table\" Q&A; Affiliation: The Plenty",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ITYthhOnU5pf7ASp.7LOoQbz6harEoeT9"
+    },
+    {
+      "_id": "lnQBChUGdzdbLft7",
+      "type": "text",
+      "name": "Shadow Boxer — Host: Rosetta Thagra; Format: One-on-One Interview; Affiliation: Open Intellect Pacifist Action Network",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ITYthhOnU5pf7ASp.lnQBChUGdzdbLft7"
+    },
+    {
+      "_id": "Qg8JVvU4oPPlPEtr",
+      "type": "text",
+      "name": "Uptown Hal Talks Tactics — Host: Uptown Hal; Format: Unknown; Affiliation: Unknown",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ITYthhOnU5pf7ASp.Qg8JVvU4oPPlPEtr"
+    }
+  ],
+  "formula": "1d8",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!ITYthhOnU5pf7ASp"
+}

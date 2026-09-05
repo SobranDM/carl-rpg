@@ -1,0 +1,191 @@
+{
+  "_id": "QJ8YpAvCKsfql6GY",
+  "name": "Table 57: Interview Show Quirks",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 57 (p.292).</em> Roll or choose a quirk to add personality or drama to any interview show appearance.</p>",
+  "results": [
+    {
+      "_id": "G8G4nOHWwDT5L4pD",
+      "type": "text",
+      "name": "The crawlers must sing a karaoke song.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QJ8YpAvCKsfql6GY.G8G4nOHWwDT5L4pD"
+    },
+    {
+      "_id": "2Et9OGRxpWlJrI0E",
+      "type": "text",
+      "name": "The crawlers must show off a Skill, talent-show style.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QJ8YpAvCKsfql6GY.2Et9OGRxpWlJrI0E"
+    },
+    {
+      "_id": "niZak3pUQtsYV67z",
+      "type": "text",
+      "name": "The crawlers must answer personal, probing, or unhinged questions from the audience.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QJ8YpAvCKsfql6GY.niZak3pUQtsYV67z"
+    },
+    {
+      "_id": "PCA6iyCKuVFVKZHM",
+      "type": "text",
+      "name": "The host brings out a rival or antagonist crawler to stir up drama.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QJ8YpAvCKsfql6GY.PCA6iyCKuVFVKZHM"
+    },
+    {
+      "_id": "CbkYaZIPXnznPlDE",
+      "type": "text",
+      "name": "The host initiates a competition of some sort, pitting two crawlers against each other.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QJ8YpAvCKsfql6GY.CbkYaZIPXnznPlDE"
+    },
+    {
+      "_id": "QqvK8ywBhHC4mc2d",
+      "type": "text",
+      "name": "The host lets the audience vote on what kind of prize the crawlers receive—if any.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QJ8YpAvCKsfql6GY.QqvK8ywBhHC4mc2d"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!QJ8YpAvCKsfql6GY"
+}
