@@ -1,0 +1,245 @@
+{
+  "_id": "MxTai9UPyKh2NbEt",
+  "name": "Table 63: Boons",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 63 (p.313).</em> Gods may reward especially fervent followers with a Boon. The GM can roll a selection or simply choose from the table, and adjust the duration until a Quest is completed.</p>",
+  "results": [
+    {
+      "_id": "cNKCBatCplKPbcLD",
+      "type": "text",
+      "name": "Signature Skill (Rank-Up)",
+      "img": null,
+      "description": "<p>An immediate Rank-Up Check for a god's signature Skill (once per Skill per Floor).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!MxTai9UPyKh2NbEt.cNKCBatCplKPbcLD"
+    },
+    {
+      "_id": "jaIO0ZjCg0JsRDq6",
+      "type": "text",
+      "name": "Stat Bonus",
+      "img": null,
+      "description": "<p>Advantage on all Stat or Skill Checks for one stat for 30 hours (GM will choose or roll 1d8: 1&mdash;Strength, 2&mdash;Constitution, 3&mdash;Dexterity, 4&mdash;Intelligence, 5&mdash;Charisma, 6&ndash;8&mdash;Deity's Favored Stat randomly).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!MxTai9UPyKh2NbEt.jaIO0ZjCg0JsRDq6"
+    },
+    {
+      "_id": "8BZMTSfEBcs27X3Z",
+      "type": "text",
+      "name": "Signature Buff or Debuff",
+      "img": null,
+      "description": "<p>Receive the deity's signature Buff for 30 hours, or all enemies encountered in the next 30 hours gain the deity's signature Debuff.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!MxTai9UPyKh2NbEt.8BZMTSfEBcs27X3Z"
+    },
+    {
+      "_id": "Ol1fRCkFf70wpjl9",
+      "type": "text",
+      "name": "Weapon Bonus",
+      "img": null,
+      "description": "<p>Gain Advantage for one Attack or Spell Skill for 30 hours.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!MxTai9UPyKh2NbEt.Ol1fRCkFf70wpjl9"
+    },
+    {
+      "_id": "y39mUcFnL2dXaUaO",
+      "type": "text",
+      "name": "Weapon Damage",
+      "img": null,
+      "description": "<p>Double the Stat Mod applied on Attack or Spell Skill damage for 30 hours.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!MxTai9UPyKh2NbEt.y39mUcFnL2dXaUaO"
+    },
+    {
+      "_id": "tf1QgeqGLhIIQGwy",
+      "type": "text",
+      "name": "Signature Skill (Grant)",
+      "img": null,
+      "description": "<p>Gain access to one of the deity's signature Skills for 30 hours at Rank 5.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!MxTai9UPyKh2NbEt.tf1QgeqGLhIIQGwy"
+    },
+    {
+      "_id": "6JyURpN1jnFkRzey",
+      "type": "text",
+      "name": "Evade Bonus",
+      "img": null,
+      "description": "<p>Gain Advantage on Evade Checks for 30 hours.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!MxTai9UPyKh2NbEt.6JyURpN1jnFkRzey"
+    },
+    {
+      "_id": "KHa3p9VT0gQDUKnZ",
+      "type": "text",
+      "name": "Forgiven",
+      "img": null,
+      "description": "<p>Return to the good graces of your god. You are no longer required to pay penance, nor are you Shunned or smote for any past offenses.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!MxTai9UPyKh2NbEt.KHa3p9VT0gQDUKnZ"
+    }
+  ],
+  "formula": "1d8",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!MxTai9UPyKh2NbEt"
+}

@@ -1,0 +1,191 @@
+{
+  "_id": "Wr1loJ26VZQEVxYX",
+  "name": "Table 72: Patron Favors",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 72 (p.317-318).</em> Patrons might also ask for unofficial favors that a Bard may ignore at their own risk, which usually provide some benefit if fulfilled. Descriptions include the possible reward listed alongside each favor.</p>",
+  "results": [
+    {
+      "_id": "Cl3ueFHDKkQn8cw4",
+      "type": "text",
+      "name": "Help the patron complete a task related to their work that is too dangerous or difficult for them to accomplish",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Gold or benefits where the patron works.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Wr1loJ26VZQEVxYX.Cl3ueFHDKkQn8cw4"
+    },
+    {
+      "_id": "Ed4Fx9TfFDCLA9Ni",
+      "type": "text",
+      "name": "Perform a task while outside the dungeon that helps the patron and isn't against dungeon rules",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Attention from sponsors or shows to whom the patron has connections.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Wr1loJ26VZQEVxYX.Ed4Fx9TfFDCLA9Ni"
+    },
+    {
+      "_id": "IQoh9v0x9f2efPsG",
+      "type": "text",
+      "name": "Do something that would get the patron in trouble if anyone knew they asked you to do it",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Secrets the patron knows&mdash;your fates are intertwined now.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Wr1loJ26VZQEVxYX.IQoh9v0x9f2efPsG"
+    },
+    {
+      "_id": "tgxjbUTTfi13dorT",
+      "type": "text",
+      "name": "Do something in a way that can't be traced to you, or you will get in trouble",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Something valuable&mdash;you're a Bard, use your Charisma to negotiate the hell out of this favor.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Wr1loJ26VZQEVxYX.tgxjbUTTfi13dorT"
+    },
+    {
+      "_id": "RiYPOWTS0Z7V37LU",
+      "type": "text",
+      "name": "Indulge a fancy of the patron's (collecting something, joining them in a silly hobby, anything that has no mechanical relevance but helps you both briefly forget the gallery of horrors that is now your lives)",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Friendship (it's magic, some would say).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Wr1loJ26VZQEVxYX.RiYPOWTS0Z7V37LU"
+    },
+    {
+      "_id": "oJCcvHr93fe0OIxd",
+      "type": "text",
+      "name": "Help the patron recreate or call back to a fan-favorite moment from a past Crawl",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Popularity increase.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Wr1loJ26VZQEVxYX.oJCcvHr93fe0OIxd"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Wr1loJ26VZQEVxYX"
+}

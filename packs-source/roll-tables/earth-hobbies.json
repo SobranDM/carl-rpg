@@ -1,0 +1,569 @@
+{
+  "_id": "wLCT9aPtbGLgYHsS",
+  "name": "Table 74: Earth Hobbies",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 74 (p.321).</em> An esoteric Earth-hobby skill name and its field, for use with Earth Hobby Potions and Earth-Based Class/Race flavor.</p>",
+  "results": [
+    {
+      "_id": "q8ADJGe52jusKLtB",
+      "type": "text",
+      "name": "Camel Beauty Pageants",
+      "img": null,
+      "description": "<p>Like Human beauty pageants, but for camels.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.q8ADJGe52jusKLtB"
+    },
+    {
+      "_id": "AWrrDvSSe6Vcl5Mf",
+      "type": "text",
+      "name": "Chronophilology",
+      "img": null,
+      "description": "<p>Watches, clocks, and other timepieces.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.AWrrDvSSe6Vcl5Mf"
+    },
+    {
+      "_id": "Z7rspd6uAI11TrCj",
+      "type": "text",
+      "name": "Conchology",
+      "img": null,
+      "description": "<p>Shells.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.Z7rspd6uAI11TrCj"
+    },
+    {
+      "_id": "o0jwHoouvNfNuTIi",
+      "type": "text",
+      "name": "Deltiology",
+      "img": null,
+      "description": "<p>Postcards.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.o0jwHoouvNfNuTIi"
+    },
+    {
+      "_id": "WyejJbkAm9hw1Slw",
+      "type": "text",
+      "name": "Lepidopterology",
+      "img": null,
+      "description": "<p>Butterflies and Moths.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.WyejJbkAm9hw1Slw"
+    },
+    {
+      "_id": "GqcZpxGvNr1Yztma",
+      "type": "text",
+      "name": "Numismatics",
+      "img": null,
+      "description": "<p>Coins.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.GqcZpxGvNr1Yztma"
+    },
+    {
+      "_id": "BJ4MDHbPVRZVkkFM",
+      "type": "text",
+      "name": "Oenology",
+      "img": null,
+      "description": "<p>Wine.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.BJ4MDHbPVRZVkkFM"
+    },
+    {
+      "_id": "fNyusesIttYZaLOe",
+      "type": "text",
+      "name": "Pato",
+      "img": null,
+      "description": "<p>An Argentinian game resembling polo and basketball.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.fNyusesIttYZaLOe"
+    },
+    {
+      "_id": "Sl8liLdxXLCdoSZg",
+      "type": "text",
+      "name": "Philately",
+      "img": null,
+      "description": "<p>Flags.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.Sl8liLdxXLCdoSZg"
+    },
+    {
+      "_id": "GvOh8MgFgALMmYXH",
+      "type": "text",
+      "name": "Philumeny",
+      "img": null,
+      "description": "<p>Matchboxes and Matchbooks.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.GvOh8MgFgALMmYXH"
+    },
+    {
+      "_id": "ZY2l8is4Axc6KG0o",
+      "type": "text",
+      "name": "Plangonology",
+      "img": null,
+      "description": "<p>Doll collecting.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.ZY2l8is4Axc6KG0o"
+    },
+    {
+      "_id": "fY80TH58sMPf9gsX",
+      "type": "text",
+      "name": "Pogonotrophy",
+      "img": null,
+      "description": "<p>Beards.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.fY80TH58sMPf9gsX"
+    },
+    {
+      "_id": "CKaZD6xUgEmd8pkx",
+      "type": "text",
+      "name": "Pomology",
+      "img": null,
+      "description": "<p>Fruit.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        13,
+        13
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.CKaZD6xUgEmd8pkx"
+    },
+    {
+      "_id": "lIH7f3w4oAC7MbXg",
+      "type": "text",
+      "name": "Scripophily",
+      "img": null,
+      "description": "<p>Stocks and Bonds.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        14,
+        14
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.lIH7f3w4oAC7MbXg"
+    },
+    {
+      "_id": "7d1eKZ03a7GGBPny",
+      "type": "text",
+      "name": "Sepak Takraw",
+      "img": null,
+      "description": "<p>A game resembling volleyball and soccer, often played in Southeast Asia.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        15,
+        15
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.7d1eKZ03a7GGBPny"
+    },
+    {
+      "_id": "jEoTQphiGNPEJiSg",
+      "type": "text",
+      "name": "Vexillology",
+      "img": null,
+      "description": "<p>Flags.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        16,
+        16
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.jEoTQphiGNPEJiSg"
+    },
+    {
+      "_id": "hvJ8haHORZxaphOh",
+      "type": "text",
+      "name": "Voice Acting",
+      "img": null,
+      "description": "<p>Acting, but with your voice.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        17,
+        17
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.hvJ8haHORZxaphOh"
+    },
+    {
+      "_id": "Cgv5sBluB6kqSVOZ",
+      "type": "text",
+      "name": "Wife Carrying",
+      "img": null,
+      "description": "<p>Obstacle racing while carrying a partner.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        18,
+        18
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.Cgv5sBluB6kqSVOZ"
+    },
+    {
+      "_id": "DgUGyo1XXM9o1yYn",
+      "type": "text",
+      "name": "Yelp Reviewing",
+      "img": null,
+      "description": "<p>A very specific type of online reviews.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        19,
+        19
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.DgUGyo1XXM9o1yYn"
+    },
+    {
+      "_id": "lnHF6CXhSZeA1wW0",
+      "type": "text",
+      "name": "Zythology",
+      "img": null,
+      "description": "<p>Beer.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        20,
+        20
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wLCT9aPtbGLgYHsS.lnHF6CXhSZeA1wW0"
+    }
+  ],
+  "formula": "1d20",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!wLCT9aPtbGLgYHsS"
+}

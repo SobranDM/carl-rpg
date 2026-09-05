@@ -1,0 +1,245 @@
+{
+  "_id": "a1o2mLOS7k8v8wyE",
+  "name": "Table 64: Divine Debuffs",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 64 (p.313).</em> Temporary effects applied to a crawler who is Shunned (penance unpaid) or given a less-lethal warning before a proper Smite. These are narrative/mechanical effects described directly by the rulebook, not linked to the system's Debuff config entries (see <code>CARLRPG.debuffs</code> in <code>module/helpers/config.mjs</code>), since most rows here are bespoke penalties rather than the system's predefined Debuffs.</p>",
+  "results": [
+    {
+      "_id": "fEl2IErC9VsqibFl",
+      "type": "text",
+      "name": "Stat",
+      "img": null,
+      "description": "<p>The highest Stat is halved.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!a1o2mLOS7k8v8wyE.fEl2IErC9VsqibFl"
+    },
+    {
+      "_id": "rRWYbLGor39rNesb",
+      "type": "text",
+      "name": "Skill",
+      "img": null,
+      "description": "<p>The highest-ranked Skill is halved.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!a1o2mLOS7k8v8wyE.rRWYbLGor39rNesb"
+    },
+    {
+      "_id": "UEnNI4FxKSYLgLwr",
+      "type": "text",
+      "name": "Movement",
+      "img": null,
+      "description": "<p>Movement speed is halved.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!a1o2mLOS7k8v8wyE.UEnNI4FxKSYLgLwr"
+    },
+    {
+      "_id": "5mK0Kv1ZAbrFimPp",
+      "type": "text",
+      "name": "Actions",
+      "img": null,
+      "description": "<p>The number of Actions the crawler can take in combat is reduced to 1 every other round.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!a1o2mLOS7k8v8wyE.5mK0Kv1ZAbrFimPp"
+    },
+    {
+      "_id": "kgU4sq1eGpLsjAyx",
+      "type": "text",
+      "name": "Resistance",
+      "img": null,
+      "description": "<p>A single Immunity or Resistance is removed (determined by the GM).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!a1o2mLOS7k8v8wyE.kgU4sq1eGpLsjAyx"
+    },
+    {
+      "_id": "rHKYC4jK9HXBxiPZ",
+      "type": "text",
+      "name": "Cooldown",
+      "img": null,
+      "description": "<p>All cooldown time doubles.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!a1o2mLOS7k8v8wyE.rHKYC4jK9HXBxiPZ"
+    },
+    {
+      "_id": "TPZro5Tn9BjLOZkI",
+      "type": "text",
+      "name": "Debuffs",
+      "img": null,
+      "description": "<p>The duration of all Debuffs doubles.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!a1o2mLOS7k8v8wyE.TPZro5Tn9BjLOZkI"
+    },
+    {
+      "_id": "qWuKaLBfvlXBXwOJ",
+      "type": "text",
+      "name": "Muted",
+      "img": null,
+      "description": "<p>Gain the Muted Debuff.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!a1o2mLOS7k8v8wyE.qWuKaLBfvlXBXwOJ"
+    }
+  ],
+  "formula": "1d8",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!a1o2mLOS7k8v8wyE"
+}

@@ -1,0 +1,569 @@
+{
+  "_id": "ayWCtOXLLWJE1Zno",
+  "name": "Table 86: Uncommon Colors",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 86 (p.427).</em> Uncommon color names for describing the Iron Tangle's many train lines (or anything else), picked because most players won't already know them.</p>",
+  "results": [
+    {
+      "_id": "MVn39BURD0xJqdTW",
+      "type": "text",
+      "name": "Alabaster",
+      "img": null,
+      "description": "<p>Pale Yellow/Green</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.MVn39BURD0xJqdTW"
+    },
+    {
+      "_id": "o8reXLkuHQyDIQTo",
+      "type": "text",
+      "name": "Bistre",
+      "img": null,
+      "description": "<p>Brown</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.o8reXLkuHQyDIQTo"
+    },
+    {
+      "_id": "50ZqDGTDNM747bXk",
+      "type": "text",
+      "name": "Buff",
+      "img": null,
+      "description": "<p>Yellow</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.50ZqDGTDNM747bXk"
+    },
+    {
+      "_id": "4gVuIcvU0987N7sC",
+      "type": "text",
+      "name": "Celadon",
+      "img": null,
+      "description": "<p>Green</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.4gVuIcvU0987N7sC"
+    },
+    {
+      "_id": "uXZ5dcByKwSlYtF5",
+      "type": "text",
+      "name": "Cerise",
+      "img": null,
+      "description": "<p>Pink/Red</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.uXZ5dcByKwSlYtF5"
+    },
+    {
+      "_id": "6I6wpOL5xzyvWEDO",
+      "type": "text",
+      "name": "Cinereous",
+      "img": null,
+      "description": "<p>Gray</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.6I6wpOL5xzyvWEDO"
+    },
+    {
+      "_id": "Yg1NwJuj86G9KBkw",
+      "type": "text",
+      "name": "Ecru",
+      "img": null,
+      "description": "<p>Tan</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.Yg1NwJuj86G9KBkw"
+    },
+    {
+      "_id": "p4ys09avVp2FX25Y",
+      "type": "text",
+      "name": "Fulvus",
+      "img": null,
+      "description": "<p>Yellow/Brown</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.p4ys09avVp2FX25Y"
+    },
+    {
+      "_id": "MXrVr607YuITABqo",
+      "type": "text",
+      "name": "Gamboge",
+      "img": null,
+      "description": "<p>Yellow/Brown</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.MXrVr607YuITABqo"
+    },
+    {
+      "_id": "zLxGXvSsTH20r80B",
+      "type": "text",
+      "name": "Glaucous",
+      "img": null,
+      "description": "<p>Blue</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.zLxGXvSsTH20r80B"
+    },
+    {
+      "_id": "9KKiuw37L24GVNU9",
+      "type": "text",
+      "name": "Gunmetal",
+      "img": null,
+      "description": "<p>Blackish Green</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.9KKiuw37L24GVNU9"
+    },
+    {
+      "_id": "4KieEPIdk9i0Kefo",
+      "type": "text",
+      "name": "Heliotrope",
+      "img": null,
+      "description": "<p>Vivid Purple</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.4KieEPIdk9i0Kefo"
+    },
+    {
+      "_id": "CBjIb5jUBQMFH8Pl",
+      "type": "text",
+      "name": "Incarnadine",
+      "img": null,
+      "description": "<p>Red</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        13,
+        13
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.CBjIb5jUBQMFH8Pl"
+    },
+    {
+      "_id": "ueqhI0vA5JQFpMV7",
+      "type": "text",
+      "name": "Periwinkle",
+      "img": null,
+      "description": "<p>Blue/Purple</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        14,
+        14
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.ueqhI0vA5JQFpMV7"
+    },
+    {
+      "_id": "KByaWIIrpXO6OFL1",
+      "type": "text",
+      "name": "Puce",
+      "img": null,
+      "description": "<p>Pink</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        15,
+        15
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.KByaWIIrpXO6OFL1"
+    },
+    {
+      "_id": "pIkhhM4cL6Rnm4AJ",
+      "type": "text",
+      "name": "Smalt",
+      "img": null,
+      "description": "<p>Blue</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        16,
+        16
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.pIkhhM4cL6Rnm4AJ"
+    },
+    {
+      "_id": "fss52A3lvF7nSIQI",
+      "type": "text",
+      "name": "Taupe",
+      "img": null,
+      "description": "<p>Black/Brown</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        17,
+        17
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.fss52A3lvF7nSIQI"
+    },
+    {
+      "_id": "3KYnJnbwfdUcJKXl",
+      "type": "text",
+      "name": "Tawny",
+      "img": null,
+      "description": "<p>Orange/Brown</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        18,
+        18
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.3KYnJnbwfdUcJKXl"
+    },
+    {
+      "_id": "DJPgRV1oNUjGgHGQ",
+      "type": "text",
+      "name": "Verdigris",
+      "img": null,
+      "description": "<p>Green/Blue</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        19,
+        19
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.DJPgRV1oNUjGgHGQ"
+    },
+    {
+      "_id": "X4TDWp3aUaa4Zp9E",
+      "type": "text",
+      "name": "Xanthus",
+      "img": null,
+      "description": "<p>Yellow/Orange</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        20,
+        20
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ayWCtOXLLWJE1Zno.X4TDWp3aUaa4Zp9E"
+    }
+  ],
+  "formula": "1d20",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!ayWCtOXLLWJE1Zno"
+}

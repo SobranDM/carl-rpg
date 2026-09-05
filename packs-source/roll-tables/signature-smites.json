@@ -1,0 +1,272 @@
+{
+  "_id": "SwJW19IdyrDZU4bU",
+  "name": "Table 67: Signature Smites",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 67 (p.314-315).</em> Each god has their own typical way of smiting. Use the signature smite for the first smite of a campaign, or let the dice tell you what to do (Tables 65/66). This is a reference list keyed by deity, not a numbered die-roll table in the book; ranges below are assigned in the rulebook's own alphabetical order purely for compendium/roll-tooling purposes.</p>",
+  "results": [
+    {
+      "_id": "VfmiNysQe8XRZrzW",
+      "type": "text",
+      "name": "Apito",
+      "img": null,
+      "description": "<p>The offender is banished to the Nothing (for NPCs) or nearly so (for PCs). PCs gain the Nearly Obliterated Debuff for the rest of the floor: they have only one HB slot and cannot regain any until the next floor.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.VfmiNysQe8XRZrzW"
+    },
+    {
+      "_id": "eSDB7LX7af6kZf7p",
+      "type": "text",
+      "name": "Eileithyia",
+      "img": null,
+      "description": "<p>NPC offenders are embraced and drift off to an endless sleep. PC offenders wake up but lose at least one day of time on the floor, two if the floor has more than 4 days remaining.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.eSDB7LX7af6kZf7p"
+    },
+    {
+      "_id": "cWCIfT0HoGv8oClP",
+      "type": "text",
+      "name": "Emberus",
+      "img": null,
+      "description": "<p>All fire resistance or immunity is completely removed, and NPC offenders are incinerated with Sheol fire. PC offenders need to survive d12+F damage for ten rounds instead.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.cWCIfT0HoGv8oClP"
+    },
+    {
+      "_id": "4yNoQRdXQFHFxX1P",
+      "type": "text",
+      "name": "Eris",
+      "img": null,
+      "description": "<p>Offender is given a five-sided coin to flip, with all outcomes deadly or nearly so for the offender and their companions.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.4yNoQRdXQFHFxX1P"
+    },
+    {
+      "_id": "ZOFWY8pajq3nBpcV",
+      "type": "text",
+      "name": "Grull",
+      "img": null,
+      "description": "<p>A mighty axe blow decapitating the offending NPC follower or removing a limb or two from a PC.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.ZOFWY8pajq3nBpcV"
+    },
+    {
+      "_id": "opCqZIQmzFvxuDic",
+      "type": "text",
+      "name": "Hellik",
+      "img": null,
+      "description": "<p>NPC offenders crumble to a pile of dirt, which then spouts a seedling. PC offenders sprout 1d2 seedlings per day for the remainder of the Floor, and each seedling sprouted fills one HB slot which cannot be healed until the next Floor.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.opCqZIQmzFvxuDic"
+    },
+    {
+      "_id": "Lh8BrjoFHFbSsyIu",
+      "type": "text",
+      "name": "Nekhebit",
+      "img": null,
+      "description": "<p>The offender has their eyes pecked out and then is swarmed by a mass of vultures. This is fatal to NPCs, but PCs are left with an incurable Blinded condition until the Floor ends.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.Lh8BrjoFHFbSsyIu"
+    },
+    {
+      "_id": "tTLPbt4oQu5cTj4b",
+      "type": "text",
+      "name": "Ogun",
+      "img": null,
+      "description": "<p>Ogun places a white-hot hand upon the head of the NPC offender until their skin is seared to the bone. PCs must pass a CON-check each round for 5 rounds. Each near miss deals 1 HB damage, 2 on a miss, 3 on a major failure, or 4 on a critical failure. These cannot be healed while the god's hand touches the crawler.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.tTLPbt4oQu5cTj4b"
+    },
+    {
+      "_id": "R6rOvqLgEOL41xaB",
+      "type": "text",
+      "name": "Taranis",
+      "img": null,
+      "description": "<p>Offender is struck by a lightning bolt from the heavens. This kills an NPC offender, but a PC offender must attempt a DEX-check against a difficulty of 31 to avoid taking a number of d12s of damage equal to the current floor.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SwJW19IdyrDZU4bU.R6rOvqLgEOL41xaB"
+    }
+  ],
+  "formula": "1d9",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!SwJW19IdyrDZU4bU"
+}

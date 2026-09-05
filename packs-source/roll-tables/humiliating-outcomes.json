@@ -1,0 +1,137 @@
+{
+  "_id": "g9eCSOcCSeJhCrWK",
+  "name": "Table 69: Humiliating Outcomes",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 69 (p.316).</em> If a prospective Bard patron's attitude is Opposed and a Check reduces their attitude further, they storm away and the crawler suffers one humiliation from this table.</p>",
+  "results": [
+    {
+      "_id": "hYZP0DQ7cyH98iyI",
+      "type": "text",
+      "name": "-1 Popularity",
+      "img": null,
+      "description": "<p>The moment goes viral.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g9eCSOcCSeJhCrWK.hYZP0DQ7cyH98iyI"
+    },
+    {
+      "_id": "IGAfnAY7ZBxN0tX8",
+      "type": "text",
+      "name": "Catchphrase",
+      "img": null,
+      "description": "<p>The prospective patron makes a scathing comment that other crawlers jokingly repeat, causing it to become a catchphrase associated with you.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g9eCSOcCSeJhCrWK.IGAfnAY7ZBxN0tX8"
+    },
+    {
+      "_id": "UQvDwZOQHlY8DIVP",
+      "type": "text",
+      "name": "Sad Trombone",
+      "img": null,
+      "description": "<p>Future Failures on the Skill Check that ended the audition have a chance of the AI playing a sad \"wa wa waaaa\" sound effect, which becomes more frequent if it evokes a reaction from you.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g9eCSOcCSeJhCrWK.UQvDwZOQHlY8DIVP"
+    },
+    {
+      "_id": "zBVcs2D5Cfc8rxfM",
+      "type": "text",
+      "name": "They Said No Box",
+      "img": null,
+      "description": "<p>Gold \"They Said No\" Box that contains a joke item.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g9eCSOcCSeJhCrWK.zBVcs2D5Cfc8rxfM"
+    }
+  ],
+  "formula": "1d4",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!g9eCSOcCSeJhCrWK"
+}

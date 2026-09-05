@@ -1,0 +1,299 @@
+{
+  "_id": "rVVxUeo9c0cp3szM",
+  "name": "Table 62: Bopca Names",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 62 (p.312).</em> Roll or choose a name for a Bopca NPC. Gender note as given in the rulebook is included in each result.</p>",
+  "results": [
+    {
+      "_id": "Wp3RjHWhzrl70Zgp",
+      "type": "text",
+      "name": "Gordo (Masculine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.Wp3RjHWhzrl70Zgp"
+    },
+    {
+      "_id": "ksaKCd33g8YxaFW9",
+      "type": "text",
+      "name": "Hirut (Feminine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.ksaKCd33g8YxaFW9"
+    },
+    {
+      "_id": "6syDdmelY4dDWvgU",
+      "type": "text",
+      "name": "Leilani (Feminine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.6syDdmelY4dDWvgU"
+    },
+    {
+      "_id": "BaRSFedRZ27QTU0s",
+      "type": "text",
+      "name": "Nadia (Feminine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.BaRSFedRZ27QTU0s"
+    },
+    {
+      "_id": "h2hmOIMDbhq6vtlT",
+      "type": "text",
+      "name": "Nora (Feminine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.h2hmOIMDbhq6vtlT"
+    },
+    {
+      "_id": "3EtTK2ei0lxxo41w",
+      "type": "text",
+      "name": "Pahzi (Masculine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.3EtTK2ei0lxxo41w"
+    },
+    {
+      "_id": "zrxD8o6mrcLoxfkm",
+      "type": "text",
+      "name": "Sebastian (Masculine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.zrxD8o6mrcLoxfkm"
+    },
+    {
+      "_id": "tpMQuBm8jp51JzOh",
+      "type": "text",
+      "name": "Tally (Masculine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.tpMQuBm8jp51JzOh"
+    },
+    {
+      "_id": "feJ5gVy9SZN85vjj",
+      "type": "text",
+      "name": "Qwist (Masculine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.feJ5gVy9SZN85vjj"
+    },
+    {
+      "_id": "7XlJGlKZeZ7YYj9s",
+      "type": "text",
+      "name": "Vitasy (Feminine)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!rVVxUeo9c0cp3szM.7XlJGlKZeZ7YYj9s"
+    }
+  ],
+  "formula": "1d10",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!rVVxUeo9c0cp3szM"
+}

@@ -1,0 +1,164 @@
+{
+  "_id": "szqZnTeVqhfQoydn",
+  "name": "Table 68: Audition Outcomes",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 68 (p.315-316).</em> When auditioning for a Bard patron, make three Skill Checks using different Skills that might impress the prospective Patron and consult this table after each Check for the result. This table is keyed off the Skill Check result tier reached, not rolled on its own; ranges below are assigned sequentially in the book's own order purely for compendium/roll-tooling purposes. An outcome can't drop attitude below Opposed or raise it above Enthusiastic.</p>",
+  "results": [
+    {
+      "_id": "8OKc3SS8pcegICZ8",
+      "type": "text",
+      "name": "Critical Fail or Major Fail",
+      "img": null,
+      "description": "<p>Reduce attitude by two levels.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!szqZnTeVqhfQoydn.8OKc3SS8pcegICZ8"
+    },
+    {
+      "_id": "fbWGSPdNctFzsVZ7",
+      "type": "text",
+      "name": "Standard Fail",
+      "img": null,
+      "description": "<p>Reduce attitude by one level.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!szqZnTeVqhfQoydn.fbWGSPdNctFzsVZ7"
+    },
+    {
+      "_id": "BJeDQGjK4WxDd6RN",
+      "type": "text",
+      "name": "Near Miss Fail",
+      "img": null,
+      "description": "<p>Reduce attitude by one level if current attitude is Reluctant or Willing, otherwise no change.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!szqZnTeVqhfQoydn.BJeDQGjK4WxDd6RN"
+    },
+    {
+      "_id": "ifvD2QCe1fYibeEr",
+      "type": "text",
+      "name": "Standard Success",
+      "img": null,
+      "description": "<p>Increase attitude by one level.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!szqZnTeVqhfQoydn.ifvD2QCe1fYibeEr"
+    },
+    {
+      "_id": "RlSPbyYpokXdb3L8",
+      "type": "text",
+      "name": "Amazing Success or Critical Hit",
+      "img": null,
+      "description": "<p>Increase attitude by two levels.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!szqZnTeVqhfQoydn.RlSPbyYpokXdb3L8"
+    }
+  ],
+  "formula": "1d5",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!szqZnTeVqhfQoydn"
+}

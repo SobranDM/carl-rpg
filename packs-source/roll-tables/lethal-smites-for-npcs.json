@@ -1,0 +1,137 @@
+{
+  "_id": "Ym6DcaMJCjfPxZHQ",
+  "name": "Table 65: Lethal Smites for NPCs",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 65 (p.314).</em> NPCs who receive a smite should almost always die a terrible, gruesome death. \"Signature Smite\" refers players to Table 67: Signature Smites for the offending deity.</p>",
+  "results": [
+    {
+      "_id": "DkhP2CGDvNgCGnGp",
+      "type": "text",
+      "name": "Signature Smite",
+      "img": null,
+      "description": "<p>See Table 67: Signature Smites.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ym6DcaMJCjfPxZHQ.DkhP2CGDvNgCGnGp"
+    },
+    {
+      "_id": "BU1zAQJEXYF9jYj0",
+      "type": "text",
+      "name": "Banished",
+      "img": null,
+      "description": "<p>The offender is teleported away to a distant portion of the dungeon and never returns.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ym6DcaMJCjfPxZHQ.BU1zAQJEXYF9jYj0"
+    },
+    {
+      "_id": "Mu0iLGUNvsRW6FcT",
+      "type": "text",
+      "name": "Wiped",
+      "img": null,
+      "description": "<p>The deity irrevocably removes all cognitive functions of the offender.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ym6DcaMJCjfPxZHQ.Mu0iLGUNvsRW6FcT"
+    },
+    {
+      "_id": "rqudr9AVUnOorH3s",
+      "type": "text",
+      "name": "Stilled",
+      "img": null,
+      "description": "<p>The deity horrifically and permanently removes all muscle control from the offender.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ym6DcaMJCjfPxZHQ.rqudr9AVUnOorH3s"
+    }
+  ],
+  "formula": "1d4",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Ym6DcaMJCjfPxZHQ"
+}

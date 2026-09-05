@@ -1,0 +1,164 @@
+{
+  "_id": "DqFwBlt6r3q53jjq",
+  "name": "Table 75: Soul Crystal Explosives",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 75 (p.322).</em> Physically touching a Soul Crystal can cause it to explode, dealing damage based on the crystal's grade to everything in a 50-foot radius (further 50-foot blast radius beyond that; halve both radii for crystals at half power or less). This table is keyed by crystal grade rather than randomly rolled in play; ranges below (A=1 .. E=5) are assigned for compendium/roll-tooling consistency.</p>",
+  "results": [
+    {
+      "_id": "7bBoFwHp69JvqiDv",
+      "type": "text",
+      "name": "A-Grade",
+      "img": null,
+      "description": "<p>Fd20+F Force damage.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DqFwBlt6r3q53jjq.7bBoFwHp69JvqiDv"
+    },
+    {
+      "_id": "BHzubxbmCy56ujRp",
+      "type": "text",
+      "name": "B-Grade",
+      "img": null,
+      "description": "<p>Fd12+F Force damage.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DqFwBlt6r3q53jjq.BHzubxbmCy56ujRp"
+    },
+    {
+      "_id": "S1IrMrAyfD5igHgt",
+      "type": "text",
+      "name": "C-Grade",
+      "img": null,
+      "description": "<p>Fd10+F Force damage.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DqFwBlt6r3q53jjq.S1IrMrAyfD5igHgt"
+    },
+    {
+      "_id": "bHjTVBrNE28ZzSwN",
+      "type": "text",
+      "name": "D-Grade",
+      "img": null,
+      "description": "<p>Fd8+F Force damage.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DqFwBlt6r3q53jjq.bHjTVBrNE28ZzSwN"
+    },
+    {
+      "_id": "t6NQKr5U5IfPz4a8",
+      "type": "text",
+      "name": "E-Grade",
+      "img": null,
+      "description": "<p>Fd6+F Force damage.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!DqFwBlt6r3q53jjq.t6NQKr5U5IfPz4a8"
+    }
+  ],
+  "formula": "1d5",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!DqFwBlt6r3q53jjq"
+}

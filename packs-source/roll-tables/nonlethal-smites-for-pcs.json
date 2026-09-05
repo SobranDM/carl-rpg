@@ -1,0 +1,137 @@
+{
+  "_id": "W6phSuTpS1PMUcT7",
+  "name": "Table 66: Nonlethal Smites for PCs",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 66 (p.314).</em> For player characters, Smites could also be instant death, but this table offers survivable alternatives. \"Signature Smite\" refers players to Table 67: Signature Smites for the offending deity.</p>",
+  "results": [
+    {
+      "_id": "A9dgjKsENXPFC8Xp",
+      "type": "text",
+      "name": "Signature Smite",
+      "img": null,
+      "description": "<p>See Table 67: Signature Smites.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!W6phSuTpS1PMUcT7.A9dgjKsENXPFC8Xp"
+    },
+    {
+      "_id": "7vZ1DOslQlYoJX45",
+      "type": "text",
+      "name": "Servant",
+      "img": null,
+      "description": "<p>A powerful servant of the god (typically equivalent to a City Boss or stronger) appears nearby and fights the offender to the death.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!W6phSuTpS1PMUcT7.7vZ1DOslQlYoJX45"
+    },
+    {
+      "_id": "hUvtRZwOWKcDSf4X",
+      "type": "text",
+      "name": "Watched",
+      "img": null,
+      "description": "<p>The god appears, glares at the offender, and leaves after making an ominous statement such as \"I'm watching you.\" The crawler gains the Omniscient Gaze Debuff until the end of the next Floor. The god can see everything the crawler does and enter the realm at any time. The god will then make good on the threat and cause numerous problems across this Floor and the next.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!W6phSuTpS1PMUcT7.hUvtRZwOWKcDSf4X"
+    },
+    {
+      "_id": "3a6jfzLhHZsD9sE7",
+      "type": "text",
+      "name": "Others",
+      "img": null,
+      "description": "<p>The deity kills, maims, or otherwise punishes the allies and loved ones of the offender. Few additional crawlers will trust them.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!W6phSuTpS1PMUcT7.3a6jfzLhHZsD9sE7"
+    }
+  ],
+  "formula": "1d4",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!W6phSuTpS1PMUcT7"
+}

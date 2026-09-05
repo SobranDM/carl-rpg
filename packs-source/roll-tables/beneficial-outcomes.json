@@ -1,0 +1,191 @@
+{
+  "_id": "L14oJJmzLuwTlUqq",
+  "name": "Table 70: Beneficial Outcomes",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 70 (p.316).</em> If a prospective Bard patron's attitude is Enthusiastic and a Check results in an increase in attitude, the crawler gains one benefit from this table. This bonus can occur multiple times during an amazing audition.</p>",
+  "results": [
+    {
+      "_id": "Mogvz79nsRbAjYsb",
+      "type": "text",
+      "name": "Failure Cushion",
+      "img": null,
+      "description": "<p>For the rest of the audition, a Near Miss or Standard Fail doesn't reduce attitude level, and a Critical or Major Fail only reduces attitude level by one.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!L14oJJmzLuwTlUqq.Mogvz79nsRbAjYsb"
+    },
+    {
+      "_id": "8bGrtQH3AucKi4CF",
+      "type": "text",
+      "name": "Apparel Box",
+      "img": null,
+      "description": "<p>Silver or Gold Apparel Box based on the GM's holistic assessment of the audition.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!L14oJJmzLuwTlUqq.8bGrtQH3AucKi4CF"
+    },
+    {
+      "_id": "Hd78EYKsryEx8sVX",
+      "type": "text",
+      "name": "+1 Popularity",
+      "img": null,
+      "description": "<p>Impressed viewers share the moment.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!L14oJJmzLuwTlUqq.Hd78EYKsryEx8sVX"
+    },
+    {
+      "_id": "aOcUuiL8HwNfL9XG",
+      "type": "text",
+      "name": "Advantage on Good First Impression",
+      "img": null,
+      "description": "<p>You can use the triggering Skill with Advantage for your next Good First Impression Check against an NPC or Mob who may have heard about your audition.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!L14oJJmzLuwTlUqq.aOcUuiL8HwNfL9XG"
+    },
+    {
+      "_id": "SSfBGara9zFW2p3X",
+      "type": "text",
+      "name": "Cheering Crowd",
+      "img": null,
+      "description": "<p>Your performance attracts a crowd to cheer you on, boosting your confidence and granting you a +1 bonus to Charisma-based Stat Checks for the rest of the day.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!L14oJJmzLuwTlUqq.SSfBGara9zFW2p3X"
+    },
+    {
+      "_id": "tXiCJOGXqHVFnqa8",
+      "type": "text",
+      "name": "Show Invitation",
+      "img": null,
+      "description": "<p>Invitation to perform with your patron on a show.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!L14oJJmzLuwTlUqq.tXiCJOGXqHVFnqa8"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!L14oJJmzLuwTlUqq"
+}

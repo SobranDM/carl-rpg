@@ -1,0 +1,191 @@
+{
+  "_id": "5jYQKhaSoZsC1e1w",
+  "name": "Table 71: Patron Quests",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 71 (p.317).</em> Patrons can give a Bard one Quest at a time, relevant to the patronage and managed by the AI like other Quests. Descriptions include the possible reward listed alongside each quest.</p>",
+  "results": [
+    {
+      "_id": "tsni86BfCzxXHybJ",
+      "type": "text",
+      "name": "Help another crawler complete a Quest",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Patron-sponsored loot box plus the Quest rewards if your presence turns it into a Group Quest.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5jYQKhaSoZsC1e1w.tsni86BfCzxXHybJ"
+    },
+    {
+      "_id": "5vXjtPtULzoKWvkc",
+      "type": "text",
+      "name": "Perform a difficult magic ritual for an NPC or deity",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Spellbook and possible friend designation by NPC type or church.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5jYQKhaSoZsC1e1w.5vXjtPtULzoKWvkc"
+    },
+    {
+      "_id": "cnURjP9WJaIIUb8I",
+      "type": "text",
+      "name": "Rescue a Bard or recover a Bard artifact",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Upgrade to a Bard Skill or item.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5jYQKhaSoZsC1e1w.cnURjP9WJaIIUb8I"
+    },
+    {
+      "_id": "fydk9V9iK6uFx3pD",
+      "type": "text",
+      "name": "Join or recruit for a Bard Guild in which the patron is a senior member",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Improved standing in the guild and access to better Guild Quests.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5jYQKhaSoZsC1e1w.fydk9V9iK6uFx3pD"
+    },
+    {
+      "_id": "00o4Dfcp2RqXVRZ9",
+      "type": "text",
+      "name": "Assassinate a priority target",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Platinum-level (or higher) loot box or equivalent value.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5jYQKhaSoZsC1e1w.00o4Dfcp2RqXVRZ9"
+    },
+    {
+      "_id": "QjmcyYZuaHEp3Nt9",
+      "type": "text",
+      "name": "Stage a performance to advance a floor storyline",
+      "img": null,
+      "description": "<p><strong>Possible Reward:</strong> Coupon for related service or upgrade.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!5jYQKhaSoZsC1e1w.QjmcyYZuaHEp3Nt9"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!5jYQKhaSoZsC1e1w"
+}
