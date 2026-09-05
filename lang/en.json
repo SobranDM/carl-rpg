@@ -160,6 +160,7 @@
     },
     "Ranked": {
       "GoverningStat": "Governing Stat",
+      "OpposedStat": "Opposed Stat (vs. target)",
       "Rank": "Rank",
       "Rank5": "Rank 5",
       "Rank10": "Rank 10",
@@ -277,6 +278,19 @@
       "DebuffAddedNotice": "{name} gains the Debuff.",
       "NoActor": "Could not find the defending actor for this card."
     },
+    "Taunt": {
+      "RollButton": "Taunt This Attack",
+      "Done": "Taunted",
+      "RollTitle": "{name}'s Taunt",
+      "Success": "Success — the Attack now targets you!",
+      "Fail": "Fail — the Attack is unchanged.",
+      "RedirectedNotice": "{name} taunts the attack onto themselves.",
+      "FailedNotice": "{name}'s Taunt fails — the attack is unchanged.",
+      "AlreadyResolved": "This Attack has already been resolved and can no longer be redirected.",
+      "CannotTauntSelf": "You're already the target of this Attack.",
+      "NoAttacker": "Could not find the attacking Mob for this card.",
+      "NoTauntSkill": "You don't have the Taunt Skill."
+    },
     "Roll": {
       "Formula": "Formula",
       "BreakdownHint": "Show breakdown",
@@ -309,9 +323,11 @@
       "SkillCheckTitle": "Skill Check: {name}",
       "AttackTitle": "Attack: {name}",
       "EvadeTitle": "Evade Check",
+      "OpposedCheckTitle": "Opposed Check: {name}",
       "DamageEffect": "Damage Effect",
       "ManaCostBase": "Base cost",
-      "ManaCostSpent": "Mana: {cost}"
+      "ManaCostSpent": "Mana: {cost}",
+      "AdvantageAutoApplied": "Advantage pre-selected — Nat 20/Amazing Success Evade bonus vs. this Mob."
     },
     "TokenResolution": {
       "NoGMSelection": "Select a token on the canvas first.",

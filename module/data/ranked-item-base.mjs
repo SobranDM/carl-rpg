@@ -15,6 +15,18 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
 
     schema.governingStat = new fields.StringField({ required: false, blank: true, initial: "" });
 
+    // Separate from governingStat (which governs this item's OWN roll bonus):
+    // the Stat an Opposed Skill Check's Difficulty is computed against on the
+    // OTHER side of the check (e.g. Taunt is Charisma-governed, but its
+    // Difficulty is "10 + the target Mob's INT Mod + Floor" - see
+    // docs/taunt-and-nat20-advantage-prompt.md). Blank = "not an Opposed
+    // Skill Check" (the vast majority of Skills/Spells/Damage Effects -
+    // Attack Skills use rollAttack's own DEX-vs-Evade convention instead of
+    // this field). Built generic rather than Taunt-specific, matching this
+    // project's precedent of standalone reusable infrastructure (see
+    // resolveActingActor in module/helpers/token-resolution.mjs).
+    schema.opposedStat = new fields.StringField({ required: false, blank: true, initial: "" });
+
     schema.rank = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0, max: 20 });
 
     // The Skill Advancement mark checkbox (Crawler Advancement, p. 169).

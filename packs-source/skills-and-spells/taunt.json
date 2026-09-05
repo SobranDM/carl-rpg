@@ -8,6 +8,7 @@
     "description": "<p>With a shout, some choice words, and maybe an obscene hand gesture, you attempt to draw the ire of enemies within 30 feet of you. After seeing where the Mob Attacks are headed, make an INT-Opposed Skill Check. On Success, Taunt one Attack of your choosing away from any target of your choosing and onto you. Higher degrees of Success allow you to Taunt additional Attacks onto you.</p>",
     "changes": [],
     "governingStat": "cha",
+    "opposedStat": "int",
     "rank": 0,
     "marked": false,
     "isPassive": false,

@@ -365,6 +365,7 @@
 .carl-chat-card .carl-damage-card,
 .carl-chat-card .carl-evade-link,
 .carl-chat-card .carl-evade-consequence,
+.carl-chat-card .carl-taunt-link,
 .carl-chat-card .carl-gm-digest {
   margin-top: 6px;
   padding: 6px 8px;
@@ -449,8 +450,13 @@
 }
 .carl-chat-card .carl-evade-link .carl-roll-evade,
 .carl-chat-card .carl-evade-link .carl-add-evade-debuff,
+.carl-chat-card .carl-evade-link .carl-taunt-attack,
 .carl-chat-card .carl-evade-consequence .carl-roll-evade,
-.carl-chat-card .carl-evade-consequence .carl-add-evade-debuff {
+.carl-chat-card .carl-evade-consequence .carl-add-evade-debuff,
+.carl-chat-card .carl-evade-consequence .carl-taunt-attack,
+.carl-chat-card .carl-taunt-link .carl-roll-evade,
+.carl-chat-card .carl-taunt-link .carl-add-evade-debuff,
+.carl-chat-card .carl-taunt-link .carl-taunt-attack {
   width: auto;
   font-size: 11px;
   line-height: 1.6;
@@ -458,8 +464,13 @@
 }
 .carl-chat-card .carl-evade-link .carl-roll-evade:disabled,
 .carl-chat-card .carl-evade-link .carl-add-evade-debuff:disabled,
+.carl-chat-card .carl-evade-link .carl-taunt-attack:disabled,
 .carl-chat-card .carl-evade-consequence .carl-roll-evade:disabled,
-.carl-chat-card .carl-evade-consequence .carl-add-evade-debuff:disabled {
+.carl-chat-card .carl-evade-consequence .carl-add-evade-debuff:disabled,
+.carl-chat-card .carl-evade-consequence .carl-taunt-attack:disabled,
+.carl-chat-card .carl-taunt-link .carl-roll-evade:disabled,
+.carl-chat-card .carl-taunt-link .carl-add-evade-debuff:disabled,
+.carl-chat-card .carl-taunt-link .carl-taunt-attack:disabled {
   cursor: default;
   opacity: 0.6;
 }
@@ -501,6 +512,12 @@
 .carl-dialog .carl-dialog-condition-source {
   opacity: 0.7;
   font-size: 11px;
+}
+.carl-dialog .carl-dialog-hint {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.75;
 }
 
 /* Styles limited to carl-rpg sheets */

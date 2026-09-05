@@ -184,6 +184,7 @@
   .carl-damage-card,
   .carl-evade-link,
   .carl-evade-consequence,
+  .carl-taunt-link,
   .carl-gm-digest {
     margin-top: 6px;
     padding: 6px 8px;
@@ -287,9 +288,11 @@
   }
 
   .carl-evade-link,
-  .carl-evade-consequence {
+  .carl-evade-consequence,
+  .carl-taunt-link {
     .carl-roll-evade,
-    .carl-add-evade-debuff {
+    .carl-add-evade-debuff,
+    .carl-taunt-attack {
       width: auto;
       font-size: 11px;
       line-height: 1.6;
@@ -351,5 +354,12 @@
   .carl-dialog-condition-source {
     opacity: 0.7;
     font-size: 11px;
+  }
+
+  .carl-dialog-hint {
+    margin: 2px 0 0;
+    font-size: 11px;
+    font-style: italic;
+    opacity: 0.75;
   }
 }

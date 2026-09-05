@@ -33,6 +33,10 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  * @param {object} options
  * @param {string} options.title
  * @param {number|null} [options.difficulty]  Pre-filled Difficulty, editable by the GM.
+ * @param {"advantage"|null} [options.defaultAdvantage]  Pre-selects the
+ *   Advantage radio and surfaces a hint explaining why (currently only the
+ *   Nat-20/Amazing-Success Evade entitlement - module/dice/dice.mjs's
+ *   rollAttack - sets this). Still fully overridable by the player/GM.
  * @param {boolean} [options.showDifficulty]
  * @param {object[]} [options.conditionalModifiers]  From collectApplicableConditionalModifiers().
  * @param {{id: string, name: string, rank: number}[]} [options.damageEffectChoices]  Rank-0
@@ -44,12 +48,13 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  *   null if the dialog was cancelled/closed.
  */
 export async function promptRollOptions({
-  title, difficulty = null, showDifficulty = true, conditionalModifiers = [], damageEffectChoices = [], manaCostChoices = [],
+  title, difficulty = null, showDifficulty = true, defaultAdvantage = null,
+  conditionalModifiers = [], damageEffectChoices = [], manaCostChoices = [],
 } = {}) {
   const result = await showCarlDialog({
     title,
     template: "systems/carl-rpg/templates/dialog/roll-options.hbs",
-    context: { difficulty, showDifficulty, conditions: conditionalModifiers, damageEffectChoices, manaCostChoices },
+    context: { difficulty, showDifficulty, defaultAdvantage, conditions: conditionalModifiers, damageEffectChoices, manaCostChoices },
     buttons: [rollButton(), cancelButton()],
   });
   if (!result) return null;

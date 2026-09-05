@@ -12,8 +12,10 @@ import { buildTargetEffectsFooter } from "../chat/target-effects-card.mjs";
 import { buildHealFooter } from "../chat/heal-card.mjs";
 import { buildDamageFooter } from "../chat/damage-card.mjs";
 import { buildEvadeLinkFooter } from "../chat/evade-link-card.mjs";
+import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree } from "../helpers/rules.mjs";
 import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
+import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 
@@ -290,6 +292,19 @@ function withManaCostSubtitle(subtitle, chosen) {
   return subtitle ? `${subtitle} · ${full}` : full;
 }
 
+/**
+ * An actor's own token, when it has one - same resolution order as
+ * module/chat/chat-card.mjs's getCarlSpeaker, so the uuid this produces
+ * matches whatever a chat card's speaker already points at. Used for
+ * attackerUuid (below) and for resolving the acting Combatant for the
+ * Nat-20/Amazing-Success Advantage entitlement.
+ * @param {Actor} actor
+ * @returns {TokenDocument|null}
+ */
+function resolveActorToken(actor) {
+  return actor?.token ?? actor?.getActiveTokens?.(true, true)?.[0] ?? null;
+}
+
 export default class CarlDice {
   /**
    * Skill Check: 1d20 (2d20kl if untrained Attack/Utility) + Rank + Stat Mod.
@@ -392,6 +407,25 @@ export default class CarlDice {
       targetDifficulty = 10 + dexMod + floor;
     }
 
+    // The attacking token's own uuid (same convention as targetUuids above) -
+    // lets a defending token's later Evade roll record "Advantage vs. THIS
+    // specific Mob-instance" (module/chat/evade-link-card.mjs), and lets a
+    // Taunt roll (module/chat/taunt-card.mjs) resolve the attacking Mob back
+    // off the chat card without re-snapshotting anything of its own.
+    const actingToken = resolveActorToken(actor);
+    const attackerUuid = actingToken?.uuid ?? actor.uuid;
+
+    // Nat-20/Amazing-Success Evade grants Advantage vs. that specific Mob on
+    // the evader's NEXT Attack against them (Degrees of Success table, p.79)
+    // - tracked as a flag on the ACTOR's own Combatant (set by
+    // evade-link-card.mjs), since it must survive from one roll to a later,
+    // separate roll within the same Combat. Combat-only by design: no
+    // game.combat at all means no entitlement to look up.
+    const actingCombatant = resolveCombatantFor({ actor, token: actingToken });
+    const advantageVsUuid = actingCombatant?.getFlag("carl-rpg", "advantageVsUuid") ?? null;
+    const targetTokenUuid = target?.document?.uuid ?? null;
+    const advantageEntitled = !!(advantageVsUuid && targetTokenUuid && advantageVsUuid === targetTokenUuid);
+
     const rollData = actor.getRollData();
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
 
@@ -409,11 +443,15 @@ export default class CarlDice {
 
     const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
 
-    let options = { advantage: "normal", difficulty: targetDifficulty, modifier: 0, checked: new Set(), manaCostChoice: 0 };
+    let options = {
+      advantage: advantageEntitled ? "advantage" : "normal",
+      difficulty: targetDifficulty, modifier: 0, checked: new Set(), manaCostChoice: 0,
+    };
     if (!skipDialog) {
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.AttackTitle", { name: skillItem.name }),
         difficulty: targetDifficulty,
+        defaultAdvantage: advantageEntitled ? "advantage" : null,
         conditionalModifiers,
         damageEffectChoices,
         manaCostChoices,
@@ -453,6 +491,15 @@ export default class CarlDice {
     const naturalRoll = extractNaturalD20(attackRoll);
     const degree = getDegreeOfSuccess(naturalRoll, attackTotal, difficulty);
     const hit = difficulty === null || isHitDegree(degree);
+
+    // The Advantage entitlement is consumed by attempting the roll against
+    // that Mob, not by hitting - clear regardless of this attack's own
+    // outcome. Only touched here because it was actually consulted for THIS
+    // target above; attacking a different Mob first left advantageEntitled
+    // false, so this is a no-op and the flag survives for later.
+    if (advantageEntitled && actingCombatant?.canUserModify(game.user, "update")) {
+      await actingCombatant.unsetFlag("carl-rpg", "advantageVsUuid");
+    }
 
     // "When you make an Attack that adds a Damage Effect, place a mark for
     // later Skill Advancement in either the Attack Skill or the Damage
@@ -526,7 +573,17 @@ export default class CarlDice {
       flags.attackTotal = attackTotal;
       flags.targetDifficulty = targetDifficulty;
       flags.attackerType = actor.type;
+      // The attacking token's own uuid - lets a defending token's Evade
+      // roll record "Advantage vs. THIS Mob-instance" (see advantageEntitled
+      // above) and lets a Taunt roll resolve the attacking Mob back off this
+      // card (module/chat/taunt-card.mjs), with no separate snapshot needed.
+      flags.attackerUuid = attackerUuid;
       footerParts.push(await buildEvadeLinkFooter());
+      // Taunt (Interrupt, Carl RPG p.81) - a THIRD PARTY may redirect this
+      // specific Attack onto themselves; see module/chat/taunt-card.mjs.
+      // Same gating condition as Roll Evade above (docs/
+      // taunt-and-nat20-advantage-prompt.md, Part B step 2).
+      footerParts.push(await buildTauntLinkFooter());
     }
     const footer = footerParts.length ? footerParts.join("") : undefined;
 
@@ -739,6 +796,81 @@ export default class CarlDice {
       body,
       actor,
       flags: { evadeDegree: degree, evadeTotal: total },
+    });
+  }
+
+  /**
+   * Opposed Skill Check: a plain Skill Check (d20 + Rank + governingStat
+   * Mod, same shape as rollSkillCheck) but against an explicit Difficulty
+   * supplied by the caller instead of one only entered by hand in the
+   * dialog - rollSkillCheck has no such override (confirmed by reading its
+   * full body - see docs/taunt-and-nat20-advantage-prompt.md's research), so
+   * this mirrors rollEvadeCheck's shape instead. Built standalone/generic
+   * (Taunt is the first caller - module/chat/taunt-card.mjs - but nothing
+   * here is Taunt-specific) rather than duplicated per-Skill, matching this
+   * project's precedent for reusable infrastructure (resolveActingActor).
+   * @param {Actor} actor
+   * @param {Item} skillItem  An Opposed-Check Skill (e.g. Taunt).
+   * @param {{difficulty?: number|null, skipDialog?: boolean, post?: boolean}} [options]
+   *   post (default true): when false, return the raw roll data instead of
+   *   posting a ChatMessage, so a caller can fold this roll into its own
+   *   follow-up handling (see rollEvadeCheck's identical option).
+   * @returns {Promise<ChatMessage|{roll: Roll, total: number, breakdown: string, naturalRoll: number|null, degree: string}|null>}
+   *   null if the roll-options dialog was cancelled, regardless of `post`.
+   */
+  static async rollOpposedSkillCheck(actor, skillItem, { difficulty = null, skipDialog = false, post = true } = {}) {
+    const sys = actor.system;
+    const skillSys = skillItem.system;
+    const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
+    const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
+
+    if (skillSys.isPassive) {
+      ui.notifications.warn(game.i18n.format("CARLRPG.Warning.PassiveNoCheck", { name: skillItem.name }));
+      return null;
+    }
+
+    const rollData = actor.getRollData();
+    const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
+
+    let options = { advantage: "normal", difficulty, modifier: 0, checked: new Set() };
+    if (!skipDialog) {
+      const prompted = await promptRollOptions({
+        title: game.i18n.format("CARLRPG.Dialog.OpposedCheckTitle", { name: skillItem.name }),
+        difficulty,
+        conditionalModifiers,
+      });
+      if (!prompted) return null;
+      options = prompted;
+    }
+    const finalDifficulty = options.difficulty ?? difficulty;
+
+    const untrained = rank === 0;
+    const statKey = skillSys.governingStat;
+    const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
+
+    const parts = new RollParts(rollData);
+    parts.add(resolveD20Formula(untrained, options.advantage), game.i18n.localize("CARLRPG.Roll.Die"));
+    if (!untrained) parts.add(rank, game.i18n.localize("CARLRPG.Roll.SkillRank"));
+    if (statKey) parts.add(statMod, game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey));
+    parts.add(options.modifier, game.i18n.localize("CARLRPG.Roll.Situational"));
+    applyCheckedConditionalModifiers(parts, conditionalModifiers, options.checked, ["skillRank", "stat", "rollMode", "custom"]);
+
+    const { roll, total, breakdown } = await parts.evaluate();
+    const naturalRoll = extractNaturalD20(roll);
+    const degree = getDegreeOfSuccess(naturalRoll, total, finalDifficulty);
+
+    await CarlDice.#markForAdvancement(skillItem);
+
+    if (!post) return { roll, total, breakdown, naturalRoll, degree };
+
+    return createRollMessage({
+      rolls: [roll],
+      rollMeta: [{ label: skillItem.name, breakdown }],
+      title: skillItem.name,
+      subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
+      img: skillItem.img,
+      badge: degreeBadge(degree),
+      actor,
     });
   }
 

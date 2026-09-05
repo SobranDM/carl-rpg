@@ -2,10 +2,13 @@
   <div class="form-group">
     <label>{{localize "CARLRPG.Dialog.RollMode"}}</label>
     <div class="form-fields">
-      <label><input type="radio" name="advantage" value="normal" checked /> {{localize "CARLRPG.Dialog.Normal"}}</label>
-      <label><input type="radio" name="advantage" value="advantage" /> {{localize "CARLRPG.Dialog.Advantage"}}</label>
+      <label><input type="radio" name="advantage" value="normal" {{#unless defaultAdvantage}}checked{{/unless}} /> {{localize "CARLRPG.Dialog.Normal"}}</label>
+      <label><input type="radio" name="advantage" value="advantage" {{#if (eq defaultAdvantage "advantage")}}checked{{/if}} /> {{localize "CARLRPG.Dialog.Advantage"}}</label>
       <label><input type="radio" name="advantage" value="disadvantage" /> {{localize "CARLRPG.Dialog.Disadvantage"}}</label>
     </div>
+    {{#if defaultAdvantage}}
+    <p class="carl-dialog-hint">{{localize "CARLRPG.Dialog.AdvantageAutoApplied"}}</p>
+    {{/if}}
   </div>
   {{#if showDifficulty}}
   <div class="form-group">

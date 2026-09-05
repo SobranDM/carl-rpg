@@ -9,6 +9,13 @@
     </select>
   </div>
   <div>
+    <label class="resource-label">{{localize "CARLRPG.Ranked.OpposedStat"}}</label>
+    <select class="carl-w-medium" name="system.opposedStat">
+      <option value=""></option>
+      {{selectOptions config.stats selected=system.opposedStat localize=true}}
+    </select>
+  </div>
+  <div>
     <label class="resource-label">{{localize "CARLRPG.Ranked.Rank"}}</label>
     <input type="text" class="carl-w-tiny" name="system.rank" value="{{system.rank}}" data-dtype="Number" />
   </div>

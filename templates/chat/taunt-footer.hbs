@@ -1,0 +1,13 @@
+{{!-- Rendered whenever an Attack roll snapshotted an attacker (attackerUuid,
+      see module/dice/dice.mjs's CarlDice.rollAttack) - lets a THIRD-PARTY
+      crawler (Taunt, Interrupt Action, Carl RPG p.81) roll an INT-Opposed
+      Taunt Skill Check against the attacking Mob and redirect this specific
+      Attack onto themselves. The button's click handler and one-shot
+      gating are wired up client-side by the shared registerChatListener
+      (module/chat/chat-listener.mjs), via this button's data-action and
+      taunt-card.mjs's tauntActionEntries - not baked into this markup. --}}
+<div class="carl-taunt-link">
+  <button type="button" class="carl-taunt-attack" data-action="tauntAttack">
+    <i class="fas fa-bullhorn"></i> {{localize "CARLRPG.Taunt.RollButton"}}
+  </button>
+</div>

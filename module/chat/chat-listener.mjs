@@ -30,12 +30,14 @@ import { damageActionEntries } from "./damage-card.mjs";
 import { targetEffectsActionEntries } from "./target-effects-card.mjs";
 import { healActionEntries } from "./heal-card.mjs";
 import { evadeActionEntries } from "./evade-link-card.mjs";
+import { tauntActionEntries } from "./taunt-card.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
   ...targetEffectsActionEntries,
   ...healActionEntries,
   ...evadeActionEntries,
+  ...tauntActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 

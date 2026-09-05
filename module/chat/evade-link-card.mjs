@@ -18,7 +18,7 @@
  */
 import CarlDice from "../dice/dice.mjs";
 import { degreeBadge, isHitDegree } from "../helpers/rules.mjs";
-import { resolveActingActor } from "../helpers/token-resolution.mjs";
+import { resolveActingActor, resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import { buildDamageFooter } from "./damage-card.mjs";
 import { buildTargetEffectsFooter } from "./target-effects-card.mjs";
@@ -127,6 +127,22 @@ async function onRollEvade(event, message) {
   const rollData = await CarlDice.rollEvadeCheck(resolved.actor, { difficulty, skipDialog: false, post: false });
   if (!rollData) return; // Dialog cancelled - nothing to record.
   const { roll, breakdown, degree } = rollData;
+
+  // Nat-20/Amazing-Success on Evade grants Advantage on the evader's NEXT
+  // Attack Skill Check against THIS SAME Mob (Degrees of Success table,
+  // p.79) - tracked on the evader's own Combatant so it survives to that
+  // later, separate roll (see module/dice/dice.mjs's rollAttack, which reads
+  // it back). Combat-only by design (docs/taunt-and-nat20-advantage-prompt.md):
+  // no game.combat means nothing to write. The evader is writing to their
+  // OWN Combatant, so this should already be permitted without the
+  // ChatMessage-flavored socket relay above - checked, not assumed.
+  if (degree === "criticalHit" || degree === "amazingSuccess") {
+    const attackerUuid = message.getFlag("carl-rpg", "attackerUuid");
+    const combatant = resolveCombatantFor(resolved);
+    if (attackerUuid && combatant?.canUserModify(game.user, "update")) {
+      await combatant.setFlag("carl-rpg", "advantageVsUuid", attackerUuid);
+    }
+  }
 
   // One combined write: this Evade roll is now authoritative for this
   // Attack, so the original card's own damage/target-effect buttons stop
