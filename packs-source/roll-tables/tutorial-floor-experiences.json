@@ -1,0 +1,191 @@
+{
+  "_id": "x6j7rwgN38X4lFea",
+  "name": "Table 28: Tutorial Floor Experiences",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 28 (p.118).</em> Roll or choose one of the six sub-tables below to generate a Tutorial Floor background experience (used during character creation, or as a GM-inspiration seed for early-campaign flashbacks and NPC hooks). Each sub-table result grants two Skills of your choice (roll 1d4 and 1d2 for starting Ranks) fitting the theme, plus a narrative. Two further tables, not part of this d6 choice, cover the Third and Fourth Floors: Table 35: Third Floor Events (p.126) and Table 36: Fourth Floor Events (p.127).</p><p>Note: Foundry's default RollTable draw follows a document-linked result into a sub-table automatically (the \"recursive\" draw option), so drawing this table may report both hops (the chooser result, then the sub-table's own result) in a single draw.</p>",
+  "results": [
+    {
+      "_id": "F47r8W5cQOEpJ9Nh",
+      "type": "document",
+      "name": "Table 29: Interactions with Other Crawlers",
+      "img": null,
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.TpiuNVhGa677Q0Oe",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.F47r8W5cQOEpJ9Nh"
+    },
+    {
+      "_id": "B5Eh108pcIitCogH",
+      "type": "document",
+      "name": "Table 30: Twists of Fate",
+      "img": null,
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.vs1DLpJGLEFCjKCB",
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.B5Eh108pcIitCogH"
+    },
+    {
+      "_id": "wr5NTA4ZtqV7RH4M",
+      "type": "document",
+      "name": "Table 31: Mobs & Boss Battles",
+      "img": null,
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.f6R9EaldpB7DUKUV",
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.wr5NTA4ZtqV7RH4M"
+    },
+    {
+      "_id": "pVUMEf2rqmSTE9jl",
+      "type": "document",
+      "name": "Table 32: Strange Places",
+      "img": null,
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.xWEeSsrgWwzkXQU3",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.pVUMEf2rqmSTE9jl"
+    },
+    {
+      "_id": "TxEZm0Bo2Xt1j9AP",
+      "type": "document",
+      "name": "Table 33: Traps & Accidents",
+      "img": null,
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.Qfbdq6iH2V4MqgAO",
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.TxEZm0Bo2Xt1j9AP"
+    },
+    {
+      "_id": "3CoXJ0Gfk62yVd0u",
+      "type": "document",
+      "name": "Table 34: Interview Show Experiences",
+      "img": null,
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.fdoaD0D5JmTVBARW",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.3CoXJ0Gfk62yVd0u"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!x6j7rwgN38X4lFea"
+}

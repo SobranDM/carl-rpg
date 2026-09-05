@@ -1,0 +1,353 @@
+{
+  "_id": "TpiuNVhGa677Q0Oe",
+  "name": "Table 29: Interactions with Other Crawlers",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 29 (p.120).</em> One of the six Tutorial Floor Experience sub-tables (see Table 28, p.118). Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
+  "results": [
+    {
+      "_id": "ZAlv2kCdgK4dCrOa",
+      "type": "text",
+      "name": "Skills Gained/Learned: Basic Science, Calligraphy, Engineering, Mathematical Modeling. In a saferoom that looked like a greasy spoon cafe, you met an elderly math professor who decided to wait for the floor to collapse. \"Me trying to survive this dungeon at my age is pointless. But I can teach you a few things that might be useful...\" He had exceedingly neat penmanship.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.ZAlv2kCdgK4dCrOa"
+    },
+    {
+      "_id": "6sooF07tcmx1XjQZ",
+      "type": "text",
+      "name": "Skills Gained/Learned: Aiming, Catcher, Perception, Lightning Rod. A hallway lined with electrified arrow traps was no obstacle for you. Through a combination of spotting them, disabling them from afar, and surviving some hits, your party made it through.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.6sooF07tcmx1XjQZ"
+    },
+    {
+      "_id": "FVSDOn3YRcCDMCOb",
+      "type": "text",
+      "name": "Skills Gained/Learned: Fabricate, Repair, Smithing, Sleep Anywhere. You and your fellow crawler hadn't slept in a couple days. Unable to find a saferoom, you worked together to build a small fort that kept you protected enough to catch a few good hours of shuteye.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.FVSDOn3YRcCDMCOb"
+    },
+    {
+      "_id": "JCKbsZB1d6ceEkQE",
+      "type": "text",
+      "name": "Skills Gained/Learned: Explosives Handling, Bomb Surgeon, Edged Weapon Skill of Choice, Bomb's Away. Hearing a loud explosion nearby, you rushed to the scene to find a legless crawler surrounded by burning Mob corpses. Still in shock at losing their limbs, the crawler babbled to you about the dangers of explosives and how they would have been better off just learning to use a blade.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.JCKbsZB1d6ceEkQE"
+    },
+    {
+      "_id": "B7s8UkxJvIRDhTpV",
+      "type": "text",
+      "name": "Skills Gained/Learned: Endurance, Hot Stuff Aura Spell, Wrasslin', Porn Star. You met another crawler in a saferoom, and sparks instantly flew. You got it on. Did the deed. Copulated. Boinked. Bow chicka wow wooed! They were gone when you woke up, but you'd better believe that clip is making the highlight reel.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.B7s8UkxJvIRDhTpV"
+    },
+    {
+      "_id": "JzY28jWidRcuAfiD",
+      "type": "text",
+      "name": "Skills Gained/Learned: Animal Handling, Heal Critter Spell, Running, Make Scents. Not long after entering the dungeon, you came across Crawler #1,554,877: Thumper 12, an unenhanced rabbit that somehow wandered in. You kept the poor beast alive until the very end of the First Floor before it finally met its sad end.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.JzY28jWidRcuAfiD"
+    },
+    {
+      "_id": "A6xNMaZNPd4Exnv9",
+      "type": "text",
+      "name": "Skills Gained/Learned: Cooking, Deception, Lore, Homey. A chance encounter in a saferoom kitchen led to a few fun hours of card games, sharing info, and a home-cooked meal. That's the kind of Human spirit these alien bastards will never understand!",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.A6xNMaZNPd4Exnv9"
+    },
+    {
+      "_id": "74Mu8n0O9IzfUqMQ",
+      "type": "text",
+      "name": "Skills Gained/Learned: Handgun, Intimidate, Streetwise, Impersonation. \"Do you feel lucky, punk?\" is all you had to say to the crawler who tried to rob you to get him to piss his britches and run away. Poor kid will never survive in a place like this.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.74Mu8n0O9IzfUqMQ"
+    },
+    {
+      "_id": "D7UnsUiZF52DlRsv",
+      "type": "text",
+      "name": "Skills Gained/Learned: Diplomacy, Leadership, Tactics, Authoritative. You entered the dungeon with a group of strangers and quickly became the de facto leader, uniting them into an effective group--by any means necessary.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.D7UnsUiZF52DlRsv"
+    },
+    {
+      "_id": "sqMUZOpvk3qFP59u",
+      "type": "text",
+      "name": "Skills Gained/Learned: Good First Impression, Persuasion, Mind Tickle Spell, No Skulls. Short tempers and a deadly location never bring out the best in people, but you managed to talk your way out of combat with a group of hostile crawlers.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.sqMUZOpvk3qFP59u"
+    },
+    {
+      "_id": "a4hR2GsKnTbXkNYd",
+      "type": "text",
+      "name": "Skills Gained/Learned: Escape Artist, Ropework, Sleight of Hand, Profiler. Another crawler took you captive, but you managed to escape. They might still be after you, but no knot can stop you.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.a4hR2GsKnTbXkNYd"
+    },
+    {
+      "_id": "9fmjYNQccJABvxlb",
+      "type": "text",
+      "name": "Skills Gained/Learned: Detect Lies, Double Tap, Weapon Skill of your choice, A Certain Reputation. You killed a fellow crawler and have the skull by your name to prove it. Was it an accident? Was it self-defense? Mercy? Straight-up murder? At this point, only you and the AI know for sure.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!TpiuNVhGa677Q0Oe.9fmjYNQccJABvxlb"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!TpiuNVhGa677Q0Oe"
+}

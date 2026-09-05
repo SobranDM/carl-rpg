@@ -1,0 +1,353 @@
+{
+  "_id": "sQdnd1cGPKrDN48B",
+  "name": "Table 35: Third Floor Events",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 35 (p.126).</em> An additional Tutorial Floor Experience table (see Table 28, p.118) for creating a crawler appropriate for the Third Floor onward. Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
+  "results": [
+    {
+      "_id": "sZw595tqCPvKQopM",
+      "type": "text",
+      "name": "Skills Gained/Learned: Drain Life Spell, Performance, Lore, Play by Ear. The Third Floor started with a bang as you found yourself having to perform for your life for an Elite NPC necromancer. You managed to do well enough to be allowed to live and learned a little more about the storylines of the Third Floor.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.sZw595tqCPvKQopM"
+    },
+    {
+      "_id": "GEEE3wczeGpSpHXD",
+      "type": "text",
+      "name": "Skills Gained/Learned: Infusion, First Aid, Alchemy, Melted Off Fingerprints. Mixing a bunch of chemicals together and seeing what happened wasn't the best way to learn, as evidenced by your melted fingernails, but you sure discovered how to make an effective acid.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.GEEE3wczeGpSpHXD"
+    },
+    {
+      "_id": "eH7mvlRSqwZTA96K",
+      "type": "text",
+      "name": "Skills Gained/Learned: Hide in Shadows, Intimidate, Perception, Batman-Wannabe. You decided to enter the Third Floor carefully, sticking to the shadows and waiting for the perfect moment to appear and strike fear into the hearts of those nearby. Dramatic much?",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.eH7mvlRSqwZTA96K"
+    },
+    {
+      "_id": "x5wQUqQXQmogJDwm",
+      "type": "text",
+      "name": "Skills Gained/Learned: Calligraphy, Religion, Holy Aura, God-Curious. On the Third Floor you discovered a quiet church that offered you a resting place and time to get your bearings. You probably won't be converting any time soon, but it taught you some useful Skills.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.x5wQUqQXQmogJDwm"
+    },
+    {
+      "_id": "AIBRDBwyWPCdKolB",
+      "type": "text",
+      "name": "Skills Gained/Learned: Engineering, Survival, Climbing, Just 'til Sunrise. You were caught outside at night, leaving you with no choice but to find a way to survive. You managed to build a shitty shelter up high to avoid the Mobs and live to see another day.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.AIBRDBwyWPCdKolB"
+    },
+    {
+      "_id": "0UsG8H6qogq5o2sL",
+      "type": "text",
+      "name": "Skills Gained/Learned: Incendiary Device Handling, Regeneration, Catcher, Meat Shield. Mobs sometimes throw explosives, and you, an absolute idiot, caught one and managed to save a fellow crawler's life. It nearly cost you your arm, but it eventually healed up. Mostly.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.0UsG8H6qogq5o2sL"
+    },
+    {
+      "_id": "SLszu8oKFQICFfEG",
+      "type": "text",
+      "name": "Skills Gained/Learned: Jumping, Dodge, Investigation, Mile High Club. You figured you'd be safer if you got up high and observed what was going on for this new floor, and hey, it kind of worked out. Too bad some Mobs can fly and hurl projectiles.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.SLszu8oKFQICFfEG"
+    },
+    {
+      "_id": "2EmiYKA4T20IV3D1",
+      "type": "text",
+      "name": "Skills Gained/Learned: Lockpicking, Improvised Explosive Device, Ropework, Short Fuse. A locked room seemed like it would be a treasure room for sure. Instead, you found a Borough Boss. Thanks to some quick thinking and an insane amount of explosive items tied together, you got a shiny new star by your name.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.2EmiYKA4T20IV3D1"
+    },
+    {
+      "_id": "bZVhwpYfmDy31bTx",
+      "type": "text",
+      "name": "Skills Gained/Learned: Explosives Handling, Basic Science, Tactics, Science is Messy. Sometimes it's worth taking your time to learn new Skills. But who has that luxury in the dungeon? You grabbed a handful of smoking bombs and hurled them into the center of several Mobs. It made a huge mess, but you can't make a cake without exploding a few hundred eggs, right?",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.bZVhwpYfmDy31bTx"
+    },
+    {
+      "_id": "EVrx9u7elVnFE6Bh",
+      "type": "text",
+      "name": "Skills Gained/Learned: Pathfinder, Regeneration, Dumpster Diving, Got My Tetanus Shot. Discovering a filthy castle filled with useless shit wasn't the best way to start the Third Floor, but you managed to turn trash into treasure by finding some valuable stuff in the pile of garbage, and you only got Super Tetanus twice!",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.EVrx9u7elVnFE6Bh"
+    },
+    {
+      "_id": "qdpVCTz5TRTJcR3l",
+      "type": "text",
+      "name": "Skills Gained/Learned: Riding, Animal Handling, Acute Ears, Yeehaw Buckaroo. Giant, deadly beasts tried to chase you down, but you managed to get the drop on one of them and rode it like a bucking bronco.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.qdpVCTz5TRTJcR3l"
+    },
+    {
+      "_id": "C3MKPC6wG3r6FMh1",
+      "type": "text",
+      "name": "Skills Gained/Learned: Shield Block, Aiming, Weapon Skill of your choice, It's Luck not Skill. A Borough Boss of epic size nearly killed you, but a well-aimed attack saved your ass. Then when the Boss blew up after death, your shield saved your head. You're one lucky SOB.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sQdnd1cGPKrDN48B.C3MKPC6wG3r6FMh1"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!sQdnd1cGPKrDN48B"
+}

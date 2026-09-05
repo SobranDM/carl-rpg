@@ -1,0 +1,353 @@
+{
+  "_id": "Qfbdq6iH2V4MqgAO",
+  "name": "Table 33: Traps & Accidents",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 33 (p.124).</em> One of the six Tutorial Floor Experience sub-tables (see Table 28, p.118). Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
+  "results": [
+    {
+      "_id": "YedGuQWYuPAnHZzf",
+      "type": "text",
+      "name": "Skills Gained/Learned: Weapon Skill of your choice, Acute Ears, Detect Traps, Hindsight is 20/20. While trying to practice with your new weapon, you set off a trap and nearly died. But you distinctly remember what that trap looked like, and it won't surprise you again.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.YedGuQWYuPAnHZzf"
+    },
+    {
+      "_id": "4cRP9fpCEgleS8Ft",
+      "type": "text",
+      "name": "Skills Gained/Learned: Regeneration, Dodge, First Aid, Pincushion. A sign, crudely made and with grammatical errors, indicated that you have found a stairwell that will lead you \"way out.\" Too bad the \"way out\" were spikes working their way in then out of your body.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.4cRP9fpCEgleS8Ft"
+    },
+    {
+      "_id": "HSIH75jk5xb1WbUW",
+      "type": "text",
+      "name": "Skills Gained/Learned: Running, Endurance, Oakhide Spell, Boulder Run. Giant boulders rolling down hallways were always a classic in movies. They're much less fun to experience in person.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.HSIH75jk5xb1WbUW"
+    },
+    {
+      "_id": "7FJDQrfJHarruj5y",
+      "type": "text",
+      "name": "Skills Gained/Learned: Climbing, Jumping, Escape Artist, Acrobat's Instinct. When the floor dropped out from under your feet, you managed to jump to safety at the last possible second, narrowly avoiding the pit of spikes waiting to impale you.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.7FJDQrfJHarruj5y"
+    },
+    {
+      "_id": "Up6CjtZsjAUREl5A",
+      "type": "text",
+      "name": "Skills Gained/Learned: Bomb Surgeon, Trap Engineer, Smithing, Trap Killer. Tired of dealing with the dungeon's traps, you made your own explosive filled with shrapnel and took out a few Mobs (and maybe another crawler or two).",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.Up6CjtZsjAUREl5A"
+    },
+    {
+      "_id": "TYcqojHKwT770D6l",
+      "type": "text",
+      "name": "Skills Gained/Learned: Incendiary Device Handling, Heal Spell, Hide in Shadows, Still Have All My Fingers. Throwing bombs from the shadows is one way to deal with your problems. Too bad one bomb blew up in your hand before you mastered the timing.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.TYcqojHKwT770D6l"
+    },
+    {
+      "_id": "7fNuK9mqSRWPJqkL",
+      "type": "text",
+      "name": "Skills Gained/Learned: Tactics, Basic Science, Detect Lies, Trust Issues. Another group of crawlers promised the path ahead was safe, but you noticed signs of explosive fun powder on the floor. Whether those crawlers knew and lied or were clueless, you dodged certain death.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.7fNuK9mqSRWPJqkL"
+    },
+    {
+      "_id": "yJMVLAm8QBhWhATq",
+      "type": "text",
+      "name": "Skills Gained/Learned: First Aid, Goblin Explosives, Diplomacy, Mother Teresa. A Goblin Bard got caught in a bear trap, and you, a naive kind soul, rescued them. In exchange, the Goblin Bard taught you a bit about explosives.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.yJMVLAm8QBhWhATq"
+    },
+    {
+      "_id": "AHqyxL3JH4Oi3NUa",
+      "type": "text",
+      "name": "Skills Gained/Learned: Alchemy, Detect Trap, Javelin, Natural Immunity. Trap-ception! A basic javelin spring trap in a sophisticated dungeon like this seemed too simple. You should have trusted your instincts, because the contact poison you touched while disabling the javelin almost killed you.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.AHqyxL3JH4Oi3NUa"
+    },
+    {
+      "_id": "pDJ6M5XlK4oZTMo5",
+      "type": "text",
+      "name": "Skills Gained/Learned: Jumping, Ropework, Puddle Jumper Spell, Slacklining. The floor of the room dropped away around you, leaving you stranded on a small platform surrounded by open air. A series of widely spaced platforms made a path to the far side of the room. Utilizing some rope from your inventory, some magic, and some pure athleticism, you made it to the other side.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.pDJ6M5XlK4oZTMo5"
+    },
+    {
+      "_id": "szkQFnR483kCPDUF",
+      "type": "text",
+      "name": "Skills Gained/Learned: Explosives Handling, Incendiary Device Handling, Regeneration, Fire in the Hole. It's a bad idea to hold explosives in your hands when you're being dive-bombed by fire-breathing flying monkeys wearing lederhosen. Your ability to heal was pushed to the limit, but you survived... unlike the monkeys.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.szkQFnR483kCPDUF"
+    },
+    {
+      "_id": "pXEm8xc23aSdqMLi",
+      "type": "text",
+      "name": "Skills Gained/Learned: Investigation, Lockpicking, Noggin Nocker, Hard Headed. Unbreakable steel doors closed around you, locking you in. On one door, a 10-minute timer and a complicated lock appeared. You tried everything to unlock that lock, to no avail. With 5 seconds left on the timer, you head-butted the door in frustration, breaking the lock and opening the door.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Qfbdq6iH2V4MqgAO.pXEm8xc23aSdqMLi"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Qfbdq6iH2V4MqgAO"
+}

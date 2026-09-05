@@ -1,0 +1,353 @@
+{
+  "_id": "fdoaD0D5JmTVBARW",
+  "name": "Table 34: Interview Show Experiences (Floor 2+)",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 34 (p.125).</em> One of the six Tutorial Floor Experience sub-tables (see Table 28, p.118). Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
+  "results": [
+    {
+      "_id": "MyEtx5jPfuntffKQ",
+      "type": "text",
+      "name": "Skills Gained/Learned: Deception, Diplomacy, Persuasion, Brown Noser. You appeared on Jaime's Guide to Game Guides, a Game Guide-ranking show! You managed to suitably impress the audience with how helpful your Game Guide has been, earning you, well... not much beyond the gratitude of your Game Guide.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.MyEtx5jPfuntffKQ"
+    },
+    {
+      "_id": "DytCcr3NSaaUsXVy",
+      "type": "text",
+      "name": "Skills Gained/Learned: Detect Trap, Escape Artist, Trap Engineer, Practice Makes Perfect. After making your way through a particularly dangerous trap, you were invited onto Diretusk's Traps, where you were forced to repeat the experience for a studio audience. The repetition was tiresome, but you did manage to refine your technique.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.DytCcr3NSaaUsXVy"
+    },
+    {
+      "_id": "jM0vl7Duni3T7gg9",
+      "type": "text",
+      "name": "Skills Gained/Learned: Detect Lies, Double Tap, Leadership, Social Butterfly. You were booked on The Great Big Stupid Interview Show! with a dozen other crawlers, but the host never appeared, and the show didn't air. You did get some great tips from the other guests, though.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.jM0vl7Duni3T7gg9"
+    },
+    {
+      "_id": "hyKPDz9P6KEDDEdG",
+      "type": "text",
+      "name": "Skills Gained/Learned: Endurance, Shield Block, Taunt, Sticks and Stones. On Psych Ward, the host gave you a shield and told you to stand in a spotlight in an otherwise completely dark studio. She talked about your past traumas while the audience taunted you and chainmail bean bags flew at your face. Despite her promises, you don't feel like it was a healing experience.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.hyKPDz9P6KEDDEdG"
+    },
+    {
+      "_id": "0RVLwVnUFTDG2sjb",
+      "type": "text",
+      "name": "Skills Gained/Learned: Calligraphy, Cooking, Tattoo Artistry, Artist's Way. According to the host of The Art of the Dungeon, it's truly a shame that crawlers have to spend so much time fighting and so little for cultured artistic endeavors. Practicing your art on the show was a peaceful interlude between floors.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.0RVLwVnUFTDG2sjb"
+    },
+    {
+      "_id": "wIs23oiWJg48xhE3",
+      "type": "text",
+      "name": "Skills Gained/Learned: Chopper Pilot, Driving, Religion, Missionary. Chariots of the Gods is a low-rated, extremely niche show that highlights different modes of transport preferred by various deities of the dungeon. You may not have made a bunch of new fans, but you did get to test drive a few cool vehicles!",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.wIs23oiWJg48xhE3"
+    },
+    {
+      "_id": "FAprivT3V02GyJuj",
+      "type": "text",
+      "name": "Skills Gained/Learned: Alchemy, Basic Science, Streetwise, Dealer. Skeeze and Staank are the hosts of DIY Dungeon Drugs, teaching viewers across the galaxy how to recreate the pharmaceuticals crawlers find in the dungeon. Your memory of your appearance on the show is mostly a blur of sparkling colors and your own way-too-fast heartbeat thundering in your ears.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.FAprivT3V02GyJuj"
+    },
+    {
+      "_id": "T6XXQT4Zs8mVC0xP",
+      "type": "text",
+      "name": "Skills Gained/Learned: Hide in Shadows, Stealth, Sleight of Hand, Timing. The Hide and Seek Dungeon show brings on six crawlers and lets the audience choose what Mob hunts them while they hide. You managed to hide the entire time, surviving the show and gaining some notoriety.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.T6XXQT4Zs8mVC0xP"
+    },
+    {
+      "_id": "FFFanDocr8OSPuoH",
+      "type": "text",
+      "name": "Skills Gained/Learned: Detect Lies, Gambling, Sleight of Hand, Poker Face. Poker exists in almost every world in the Syndicate, so it's no surprise that Cosmic Crawler Card Clash is a popular show. Of the six crawlers playing, you came in second, but you're pretty sure the winner was cheating. If you meet her in the dungeon, keep an eye on her.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.FFFanDocr8OSPuoH"
+    },
+    {
+      "_id": "Cqy0pxzKMFIFwWtp",
+      "type": "text",
+      "name": "Skills Gained/Learned: Good First Impression, Performance, Persuasion, Star Power. You appeared on Dungeon Crawler After Hours with Odette, one of the most popular shows in the galaxy. Your interview was cut short, though, because one of the producers was mauled by a dog belonging to the crawler slated to be on after you.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.Cqy0pxzKMFIFwWtp"
+    },
+    {
+      "_id": "1SPInxjMweh5d6I6",
+      "type": "text",
+      "name": "Skills Gained/Learned: Bow, Crossbow, Slingshot, Corporate Sellout. Crossfire is a show that interviews crawlers, weapons manufacturers, and hunting enthusiasts from across the galaxy about their use of ranged weaponry. Since the show is sponsored by the Crossbow Producers Consortium, every episode ends with the determination that crossbows are always the best for every situation.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.1SPInxjMweh5d6I6"
+    },
+    {
+      "_id": "lH9P6Y1CaRUlxdIa",
+      "type": "text",
+      "name": "Skills Gained/Learned: Cooking, Deception, Iron Stomach, Talented Tongue. Cake or Trap? showcases fantastic loot, terrain, other objects, and even Mobs crawlers might find in the Dungeon. It all looks real, but some of it is just exquisitely decorated cake. How is a crawler to tell the difference? Try to eat it. You keep what you can swallow.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!fdoaD0D5JmTVBARW.lH9P6Y1CaRUlxdIa"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!fdoaD0D5JmTVBARW"
+}

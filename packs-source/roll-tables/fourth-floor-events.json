@@ -1,0 +1,353 @@
+{
+  "_id": "cIC9q8MqQZdiLH1S",
+  "name": "Table 36: Fourth Floor Events",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 36 (p.127).</em> An additional Tutorial Floor Experience table (see Table 28, p.118) for creating a crawler appropriate for the Fourth or Fifth Floor. Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
+  "results": [
+    {
+      "_id": "uErLmEounl0IYcPY",
+      "type": "text",
+      "name": "Skills Gained/Learned: Smithing, Cartography, Arcane, Visualizer. You attempted the impossible: making a map of the Iron Tangle. Sure, it's a 3D monstrosity that takes up way too much space and isn't actually right at all, but damn, does it look impressive.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.uErLmEounl0IYcPY"
+    },
+    {
+      "_id": "Amr02m5EXHNHYzv1",
+      "type": "text",
+      "name": "Skills Gained/Learned: Balance, Endurance, Swimming, Blood in the Water. When you jumped on the Nattier Line, you didn't anticipate all the train cars would be filled with water and Concierge Sharks. Surviving the ride turned all the water bright-red, but hey, it was only partially because of your blood.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.Amr02m5EXHNHYzv1"
+    },
+    {
+      "_id": "4H6Ph6Xji4P2suQ0",
+      "type": "text",
+      "name": "Skills Gained/Learned: Attack of Opportunity, Catcher, Taunt, Seeing Red. The Neighborhood Boss didn't seem that bad at first--just a fuzzy little guy, but you know better than to trust that. You pissed off the Pooka into showing its real form (a giant goat) and managed to use its rage against it.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.4H6Ph6Xji4P2suQ0"
+    },
+    {
+      "_id": "NuOXtKLDSfzBFVdM",
+      "type": "text",
+      "name": "Skills Gained/Learned: Cooking, Iron Stomach, Diplomacy, Through Their Stomach. Another group of crawlers threatened you over a Quest item. You didn't back down and instead talked the group into joining you for a meal. Your sweet words and the delicious food made these enemies into allies.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.NuOXtKLDSfzBFVdM"
+    },
+    {
+      "_id": "BlDKtYj5rk0693MF",
+      "type": "text",
+      "name": "Skills Gained/Learned: Grand Illusion Spell, Determine Value, Investigation, Good Business. A marketplace stall, Treasures for Me, tried to rip you off, but you're smarter than that. You managed to spot the lie and get above value for everything you needed to sell, including that ugly conductor souvenir hat.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.BlDKtYj5rk0693MF"
+    },
+    {
+      "_id": "QM5KPmZmRvblBAsZ",
+      "type": "text",
+      "name": "Skills Gained/Learned: Find Trap, Perception, Streetwise, Derealization. Gas from a trap causes you to hallucinate vividly. In an environment as dangerous as the World Dungeon, it's hard to tell if the feline royalty in the corner shouting orders at you is real or just another denizen of the world.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.QM5KPmZmRvblBAsZ"
+    },
+    {
+      "_id": "yNyP3NOWXV1CanS9",
+      "type": "text",
+      "name": "Skills Gained/Learned: Deception, Religion, Sleight of Hand, Sticky Fingers. Causing a train derailment to steal an Engineer Key from the Mantaur engineer wasn't your brightest idea, and listening to him rant about Grull and glorious battles definitely wasn't the best use of your time. But you did manage to nick the key from the engineer without having to fight him.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.yNyP3NOWXV1CanS9"
+    },
+    {
+      "_id": "5hZOckYLBXVoLxUr",
+      "type": "text",
+      "name": "Skills Gained/Learned: Basic Science, Fabricate, Salvage, Stare into the Abyss. You reached station 436, the Abyss Station, and discovered a wreckage of train cars and a fuck-ton of Jikininki Janitor Ghouls. Thanks to the abundance of valuable items, you crafted yourself something nice before escaping.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.5hZOckYLBXVoLxUr"
+    },
+    {
+      "_id": "11MFa5DIlsMgBLWL",
+      "type": "text",
+      "name": "Skills Gained/Learned: Balance, Climbing, Ropework, Ferroequinologist. All those movies lied: Running across the tops of moving trains is not as easy as it looks! Thanks to some careful footwork and rope bridges, you managed to survive crossing train car roofs without plummeting to your death.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.11MFa5DIlsMgBLWL"
+    },
+    {
+      "_id": "iXvzr2dpBH0Xa5TW",
+      "type": "text",
+      "name": "Skills Gained/Learned: Intimidate, Leadership, Negotiation, Fair Deals or Bust. A shopkeeper NPC tried to make a deal with a clueless group of crawlers, and you stepped in to make sure they got a fair deal. Sure, you might have made the shop keeper cry from fear, but that's what tough negotiators do.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.iXvzr2dpBH0Xa5TW"
+    },
+    {
+      "_id": "5iEaOtBDO32YqzgZ",
+      "type": "text",
+      "name": "Skills Gained/Learned: Dodge, First Aid, Wisp Armor Spell, Tender Hearted. You heard another crawler yelling for help in a nearby train car. As a hero (idiot), obviously, you ran towards the danger. Avoiding the Fleshers, and defeating the War Mage, you saved the low-Level crawler.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.5iEaOtBDO32YqzgZ"
+    },
+    {
+      "_id": "KhDQCOzgmuXAN9GO",
+      "type": "text",
+      "name": "Skills Gained/Learned: Endurance, Running, Foot Soldier, Train Spotter. Trying to outrun a train was a really stupid decision, especially with those Cornets chasing you, but you are nothing if not stupidly tenacious. Not only did you not get run over, but you actually made it to the station in one piece.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!cIC9q8MqQZdiLH1S.KhDQCOzgmuXAN9GO"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!cIC9q8MqQZdiLH1S"
+}

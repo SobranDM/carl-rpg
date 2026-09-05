@@ -1,0 +1,353 @@
+{
+  "_id": "vs1DLpJGLEFCjKCB",
+  "name": "Table 30: Twists of Fate",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 30 (p.121).</em> One of the six Tutorial Floor Experience sub-tables (see Table 28, p.118). Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
+  "results": [
+    {
+      "_id": "SFbhoiMlaJ7W4KNS",
+      "type": "text",
+      "name": "Skills Gained/Learned: Negotiation, Performance, Earworm Spell, People Pleaser. In a saferoom advertising itself as \"Iowa I-80: the World's Largest Truck Stop,\" the Bopca shopkeeper was too depressed to sell you anything. Something you did really entertained her and cheered her up, though, so she gave you a discount!",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.SFbhoiMlaJ7W4KNS"
+    },
+    {
+      "_id": "1V2H1bzArlMdIs56",
+      "type": "text",
+      "name": "Skills Gained/Learned: Endurance, Improvised Explosive Device, Salvage, Got All My Fingers. You spent many hours trapped in a section of hallway after the ceiling collapsed due to an exploding Goblin Murder Dozer. Eventually realizing that if an explosion got you into this mess, an explosion could get you out of it, you improvised a small bomb and blasted a hole big enough for you to crawl out.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.1V2H1bzArlMdIs56"
+    },
+    {
+      "_id": "HtVcZsiDHp75ux6z",
+      "type": "text",
+      "name": "Skills Gained/Learned: First Aid, Dodge, Repair, Steel Bladder. You're one of the few crawlers who encountered and survived a toilet suction issue on the dungeon's First Floor. As the faulty machine tried to suck your insides out of you, your quick thinking and reflexes kicked in, saving your life (and your bowels).",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.HtVcZsiDHp75ux6z"
+    },
+    {
+      "_id": "9CGxpH7oGKwxREzO",
+      "type": "text",
+      "name": "Skills Gained/Learned: Ambush, Hand-to-Hand Combat Skill of your choice, Balance, All PR is Good PR. Your introduction to the viewers of the Crawl was tripping and tumbling down the stairwell, tumbling through the dungeon doors, and landing right in the middle of a group of Bugaboos who were just as surprised as you. Embarrassing but effective, and something you'll hopefully never repeat.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.9CGxpH7oGKwxREzO"
+    },
+    {
+      "_id": "szh6Uz9CxD62NNB9",
+      "type": "text",
+      "name": "Skills Gained/Learned: Acute Ears, Hide in Shadows, Stealth, Living Statue. You watched a group of 20 crawlers get torn to pieces by Blender Fiends on the First Floor. The only reason you didn't get blended with them is that you got good at being quiet and standing still really quickly.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.szh6Uz9CxD62NNB9"
+    },
+    {
+      "_id": "QJk2Ew8UE2EBjtNU",
+      "type": "text",
+      "name": "Skills Gained/Learned: Deception, Diplomacy, Good First Impression, Teacher's Pet. Your Game Guide claimed that people liking you is the key to surviving the dungeon and insisted that you practice Skills useful to that end.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.QJk2Ew8UE2EBjtNU"
+    },
+    {
+      "_id": "l9sWBsp5dCztJCfp",
+      "type": "text",
+      "name": "Skills Gained/Learned: First Aid, Riding, Animal Handling, Old Yeller. You came across a lone wounded Danger Dingo and felt bad for it. You gave it some food and patched up its injuries as best you could. It licked your face in thanks and gave you a ride to its kennel, where it ended up dying a painful death defending you from its Kobold handlers.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.l9sWBsp5dCztJCfp"
+    },
+    {
+      "_id": "wueSq9993T6MQhYP",
+      "type": "text",
+      "name": "Skills Gained/Learned: Dumpster Diving, Tracking, Cartography, Corpse Chaser. Following Brindle Grubs to corpses and looting the bodies before the Grubs could dispose of them turned out to be an educational experience. You learned some good scavenging techniques and some secret ways to navigate the dungeon.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.wueSq9993T6MQhYP"
+    },
+    {
+      "_id": "HcAr6PIwnPVCTqNG",
+      "type": "text",
+      "name": "Skills Gained/Learned: Arcane, Attack Spell of your choice, Utility Spell of your choice, Ill-Gotten Gains. What luck! You found a dead crawler who had Spell books in their inventory. They were dead when you got there, you swear!",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.HcAr6PIwnPVCTqNG"
+    },
+    {
+      "_id": "m5CuVKE5pRTsXexG",
+      "type": "text",
+      "name": "Skills Gained/Learned: Chopper Pilot, Escape Artist, Goblin Explosives, Cool Guys Don't Look at Explosions. You zoomed away on a Goblin chopper, but it exploded, leaving you trapped in a tangled, burning mess of metal. After freeing yourself from the wreckage, you realized the explosion was not entirely your fault: there had been a satchel of Goblin explosives on the back of the bike!",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.m5CuVKE5pRTsXexG"
+    },
+    {
+      "_id": "SZtVqhAQQajRbi5u",
+      "type": "text",
+      "name": "Skills Gained/Learned: Alchemy, Dagger, Tattoo Artistry, Human Canvas. It turns out that the blood of Rayzers can be easily crafted into tattoo ink. With this new knowledge, you used a dagger to crudely tattoo your arm with a phrase your therapist always said to you in sessions.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.SZtVqhAQQajRbi5u"
+    },
+    {
+      "_id": "SGMql6K1c1ZYHIEa",
+      "type": "text",
+      "name": "Skills Gained/Learned: Alchemy, Infusion, Salvage, Game Breaker. Before defeating a Neighborhood Boss called the Malpractitioner, you found a functional Alchemy Bench in his lair. Your Game Guide was very confused, claiming that crawlers shouldn't be able to use crafting tables this early and outside of personal spaces. But there it was, so you spent a little time experimenting.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vs1DLpJGLEFCjKCB.SGMql6K1c1ZYHIEa"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!vs1DLpJGLEFCjKCB"
+}

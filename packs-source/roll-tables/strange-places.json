@@ -1,0 +1,353 @@
+{
+  "_id": "xWEeSsrgWwzkXQU3",
+  "name": "Table 32: Strange Places",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 32 (p.123).</em> One of the six Tutorial Floor Experience sub-tables (see Table 28, p.118). Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
+  "results": [
+    {
+      "_id": "x5XGVpYtdUYiGFzQ",
+      "type": "text",
+      "name": "Skills Gained/Learned: Balance, Climbing, Running, King of the Jungle Gym. It must have been a wonderful kid's playground, but the dungeon made it deadly by covering the ground with acid, so any fall turned fatal. But you mastered it and escaped only slightly burned and scarred.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.x5XGVpYtdUYiGFzQ"
+    },
+    {
+      "_id": "gcjAcCiN2yZMQHIq",
+      "type": "text",
+      "name": "Skills Gained/Learned: Basic Science, Engineering, Shock Treatment Spell, Very Fishy. You stumbled into a room filled with water and bloodthirsty fish, but it didn't take you long to figure out that a simple bit of electricity would clear the space easily. The downside is the smell of fish just lingered on you for the rest of the floor, no matter how many times you showered or bathed.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.gcjAcCiN2yZMQHIq"
+    },
+    {
+      "_id": "znUAcse8S925KKEQ",
+      "type": "text",
+      "name": "Skills Gained/Learned: Investigation, Ropework, Jumping, Free Falling. Falling into a pit trap, you didn't expect to find a room filled with living ropes ready to strangle you. With some clever handiwork, you killed the ropes then used their limp bodies to escape the pit.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.znUAcse8S925KKEQ"
+    },
+    {
+      "_id": "X5LegsYD4EuP57s7",
+      "type": "text",
+      "name": "Skills Gained/Learned: Arcane, Alchemy, Lore, Secondhand Magic. Magic might not have been real in your world, but the school of magic studies you stumbled upon in the dungeon sure was. You ransacked everything and learned some new tricks before sentient potion bottles attacked you.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.X5LegsYD4EuP57s7"
+    },
+    {
+      "_id": "qNmJTggFRdd4MY1i",
+      "type": "text",
+      "name": "Skills Gained/Learned: Bomb Surgeon, Repair, Salvage, Minesweeper. You heard the loud series of explosions and found the remains of the crawlers who tried to cross the minefield hallway. From the remains of the exploded bombs, you learned quite a lot and found some decent scrap and other items that you could fix up to almost good as new.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.qNmJTggFRdd4MY1i"
+    },
+    {
+      "_id": "zejiZX7LFf48DpUV",
+      "type": "text",
+      "name": "Skills Gained/Learned: Smithing, Throwing, Dumpster Diving, I Have the High Ground. Trapped on the top of a mountain of trash and being swarmed by Mobs, you had no choice but to hurl make-shift weapons down and use the high ground to your advantage.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.zejiZX7LFf48DpUV"
+    },
+    {
+      "_id": "0u5nd2B9Z1WSHpT3",
+      "type": "text",
+      "name": "Skills Gained/Learned: Aiming, Survival, Tactics, All Steamed Up. A deadly sauna room almost killed you, but a well-aimed, well-timed rock forced the door to stay open just before you were steamed to death.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.0u5nd2B9Z1WSHpT3"
+    },
+    {
+      "_id": "QykRS0l9MrLbOf6U",
+      "type": "text",
+      "name": "Skills Gained/Learned: Cartography, Tracking, Lockpicking, Master of the Model Universe. The enormous orrery swung around your head, nearly hitting you with every rotation until you managed to finesse the mechanism to stop. Taking the time to look at the giant model, you learned quite a bit about how to track the movement of stars.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.QykRS0l9MrLbOf6U"
+    },
+    {
+      "_id": "u9QrxvfOGQ1aoKHA",
+      "type": "text",
+      "name": "Skills Gained/Learned: Balance, Fire Fingers Spell, Escape Artist, Fire Walker. A burning ring of fire surrounded you, and the only escape: a thin beam leading to an exit. While the tips of your fingers got a bit toasted, you escaped with your life.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.u9QrxvfOGQ1aoKHA"
+    },
+    {
+      "_id": "vsEKtjvGHwtlsdPc",
+      "type": "text",
+      "name": "Skills Gained/Learned: Weapon Skill of your choice, Deception, Acute Ears, Hammer a Machine. The casino looked just like it did back home, but the only gambling currency the slot machines would accept was blood. Their jaunty chimes as they stalked you still haunt your memories.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.vsEKtjvGHwtlsdPc"
+    },
+    {
+      "_id": "eOEg77XR7fNNvhlR",
+      "type": "text",
+      "name": "Skills Gained/Learned: Aiming, Perception, Torch Spell, Night Owl. Total darkness surrounded you unexpectedly. To survive, you had to learn to use all of your senses to navigate through the shadows until light returned.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.eOEg77XR7fNNvhlR"
+    },
+    {
+      "_id": "zGHAldVj7mq19TvX",
+      "type": "text",
+      "name": "Skills Gained/Learned: Trap Engineer, Ambush, Endurance, Bubbly Murderer. A bubble pit turned everything into a slippery, chaotic mess, but you used it to your advantage, staking out the space and taking out Mobs to grind some sweet experience.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xWEeSsrgWwzkXQU3.zGHAldVj7mq19TvX"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!xWEeSsrgWwzkXQU3"
+}

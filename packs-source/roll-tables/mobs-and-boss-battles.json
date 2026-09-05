@@ -1,0 +1,353 @@
+{
+  "_id": "f6R9EaldpB7DUKUV",
+  "name": "Table 31: Mobs & Boss Battles",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 31 (p.122).</em> One of the six Tutorial Floor Experience sub-tables (see Table 28, p.118). Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
+  "results": [
+    {
+      "_id": "XKL1Ww9g8sh6AIDZ",
+      "type": "text",
+      "name": "Skills Gained/Learned: Animal Handling, Weapon Skill of Your Choice, Shield Block, Jouster. The Kobold Riders charged down the hallway right at you on their Danger Dingoes, but quick use of a metal plate from your inventory saved your ass. You unmounted one of the riders, bent its mount to your will, and gave the remaining riders a taste of their own medicine. Joust on!",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.XKL1Ww9g8sh6AIDZ"
+    },
+    {
+      "_id": "YR5Y7iWozCDztke9",
+      "type": "text",
+      "name": "Skills Gained/Learned: Balance, Climbing, Jumping, Billy Goat Gruff. In a freezing-cold neighborhood of Chilly Goats, you were forced to battle a herd while navigating an icy chasm. You're no mountain goat, but it turns out you were better at it than you thought.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.YR5Y7iWozCDztke9"
+    },
+    {
+      "_id": "0gc2PnCVvjRz51M4",
+      "type": "text",
+      "name": "Skills Gained/Learned: Polearm, Tactics, Zone of Control, Slow and Steady. Surrounded by a horde of Rat Hooligans, you decided a slow, disciplined advance through their ranks would be more effective than a reckless charge. It took tense hours to get through that hallway, but the experience points were great, and the Mobs barely even touched you.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.0gc2PnCVvjRz51M4"
+    },
+    {
+      "_id": "5c3V6O0HvboWB6UA",
+      "type": "text",
+      "name": "Skills Gained/Learned: Regeneration, Stealth, First Aid, Bragging Rights. Satan's Lil' Hedgehogs made mincemeat out of most of your companions, but you managed to sneak away. You still got filled with armor-piercing quills that nearly killed you, but hey, you get credit for surviving a Mob that was patched out.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.5c3V6O0HvboWB6UA"
+    },
+    {
+      "_id": "01UqgGVaB7zjCQG1",
+      "type": "text",
+      "name": "Skills Gained/Learned: Leadership, Religion, Attack Spell of your choice, Riddler. You led a small group of crawlers into combat against The Messiah, a Boss who claimed to have the answer to everything. His bolts of divine retribution destroyed your team, but even he was surprised to learn he didn't have an answer to the Spell you took him down with.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.01UqgGVaB7zjCQG1"
+    },
+    {
+      "_id": "7vQTXw1eDqpluNQP",
+      "type": "text",
+      "name": "Skills Gained/Learned: Investigation, Noggin Nocker, Catcher, Reflective Medicine. Your family always said you were hard-headed, and you got to prove it in a battle against a ram-horned Boss called The Obdurate. He seemed immune to everything, but he fell quickly when you started using his own tactics against him.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.7vQTXw1eDqpluNQP"
+    },
+    {
+      "_id": "HYDU9FjTxjDVeMnx",
+      "type": "text",
+      "name": "Skills Gained/Learned: Balance, Foot Soldier, Quarterstaff, Meditative Murderer. A river of sizzling acid, and the only way to cross it was to defeat the guardian who stood in the middle of the narrow bridge: an Orc dressed as a medieval Monk twirling a quarterstaff. \"Ho! Ha-Ha! Guard! Turn! Parry! Dodge! Spin--\" And that's when you kicked him into the acid.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.HYDU9FjTxjDVeMnx"
+    },
+    {
+      "_id": "Y7cqyuiNR9ybtRwR",
+      "type": "text",
+      "name": "Skills Gained/Learned: Attack of Opportunity, Rapier, Taunt, Potty Mouth. Those Fuck Off Cockatiels didn't know who they were messing with. You skewered them handily and taught them what swearing really sounds like. Goddamn amateurs.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.Y7cqyuiNR9ybtRwR"
+    },
+    {
+      "_id": "qmqEpBHqv4xFxT1V",
+      "type": "text",
+      "name": "Skills Gained/Learned: Pugilism, Detect Traps, Investigation, Hands-On. A trapped hallway tried to slow you down, but after a few minutes of looking at it, you realized a swift punch was all you needed to disarm those traps.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.qmqEpBHqv4xFxT1V"
+    },
+    {
+      "_id": "Hnms6Yem1a5zbtzl",
+      "type": "text",
+      "name": "Skills Gained/Learned: Ambush, Double Tap, Stealth, Slothful Assassin. The very slow Great Sin of Sloth was an easy Boss Battle for you. Borant went too far, and the Human-animal hybrid was easy to sneak up on and eviscerate while it hung upside down in a ruined satanic church. Of course, if you were a little slower or less sneaky, its massive claws would have killed you.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.Hnms6Yem1a5zbtzl"
+    },
+    {
+      "_id": "tLpNIjy93VsZfypx",
+      "type": "text",
+      "name": "Skills Gained/Learned: Catcher, Perception, Warhammer, Boarding Party. The skate-by attacks of the Thrasher Yetis were devastating until you figured out how to knock them off their boards: wait for the perfect moment as they pushed toward your companion, intercept their attack, and then clobber the hell out of the plank wankers.",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.tLpNIjy93VsZfypx"
+    },
+    {
+      "_id": "LPCJZAz97EGAPDJw",
+      "type": "text",
+      "name": "Skills Gained/Learned: Improvised Weapons, Iron Stomach, Intimidate, No Funny Business. After having your weapon eaten by a Neighborhood Boss promoting the \"Ferrous Diet,\" you were forced to improvise. Your absolute brutality with a rubber chicken caused the Boss's minions to flee. Maybe there was something to that diet, though...",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!f6R9EaldpB7DUKUV.LPCJZAz97EGAPDJw"
+    }
+  ],
+  "formula": "1d12",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!f6R9EaldpB7DUKUV"
+}
