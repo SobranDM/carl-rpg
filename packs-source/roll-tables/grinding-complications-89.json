@@ -1,0 +1,191 @@
+{
+  "_id": "idugryv4cHAeuTLD",
+  "name": "Table 89: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 89 (p.460), Floor 4: The Iron Tangle.</em> Random complications for crawlers grinding for experience during Hot Toddy's demon-baby reveal party aboard the Chartreuse Line, involving Rivet, Fonzo, Toothless Nana, Sprinkles, Pebbles, and Penthos.</p>",
+  "results": [
+    {
+      "_id": "FpXwzZ9JDoftsqFK",
+      "type": "text",
+      "name": "Startled Psycho Sticker curls up",
+      "img": null,
+      "description": "<p>A loud noise spooks a Psycho Sticker into curling up in a ball, preventing further celebrations until rescued or eaten by Drek trying to reach the stage.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!idugryv4cHAeuTLD.FpXwzZ9JDoftsqFK"
+    },
+    {
+      "_id": "DFLlXv3hqdrIkBqm",
+      "type": "text",
+      "name": "Drunk off-duty employees board the train",
+      "img": null,
+      "description": "<p>Humanoid Iron Tangle employees on their night off board the train after departing a pub. They quickly become more inebriated and must be convinced to leave or end up massacred by Pebbles for ruining Hot Toddy's party.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!idugryv4cHAeuTLD.DFLlXv3hqdrIkBqm"
+    },
+    {
+      "_id": "a6U3oKWXSiI71mFy",
+      "type": "text",
+      "name": "Balloon-animal Psycho Sticker sparks a fire hazard",
+      "img": null,
+      "description": "<p>A Psycho Sticker trying to make balloon animals keeps popping them, building static in its spines. Sparks fly, lights flicker, and equipment glitches. Crawlers must intervene lest a discharge ignite alcohol, glitter poppers, or the wiring in the walls.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!idugryv4cHAeuTLD.a6U3oKWXSiI71mFy"
+    },
+    {
+      "_id": "dPsfsXZEkQtdmdox",
+      "type": "text",
+      "name": "Sprinkles confronts Hot Toddy",
+      "img": null,
+      "description": "<p>Sprinkles, a Grease Goblin, forces his way onto the train to confront Hot Toddy about stealing the employee of the month title from him. Rivet isn't usually one for fights, but the second Sprinkles starts breaking parts of the train, Rivet is ready to paint the train with Sprinkles.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!idugryv4cHAeuTLD.dPsfsXZEkQtdmdox"
+    },
+    {
+      "_id": "JUsAWLqBGaZdb25C",
+      "type": "text",
+      "name": "Toothless Nana fights over the entertainment tablet",
+      "img": null,
+      "description": "<p>Toothless Nana starts a fight trying to take the entertainment control tablet from Psycho Stickers who won't stop looping and singing along to \"Sweet Caroline.\"</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!idugryv4cHAeuTLD.JUsAWLqBGaZdb25C"
+    },
+    {
+      "_id": "ZSQUQeB79eweHA5p",
+      "type": "text",
+      "name": "Fonzo's mixed-up Rev-Up Immunity Shots",
+      "img": null,
+      "description": "<p>Fonzo panics upon realizing he's holding a bottle of Rev-Up Immunity Shots, not vodka. He's mixed at least one drink with the addictive drug. Can he track down the adulterated beverages before anyone drinks them?</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!idugryv4cHAeuTLD.ZSQUQeB79eweHA5p"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!idugryv4cHAeuTLD"
+}

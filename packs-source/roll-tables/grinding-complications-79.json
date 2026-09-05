@@ -1,0 +1,191 @@
+{
+  "_id": "SROVIKEuRgZfpLxa",
+  "name": "Table 79: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 79 (p.362).</em> Ruined Snowtime Neighborhood (Third Floor, The Over City; Redbrick Village) grinding complications. Features named NPCs Grampus, Crawler JB, and Castellain Kirett.</p>",
+  "results": [
+    {
+      "_id": "6VqouMYc9Ko0kQD3",
+      "type": "text",
+      "name": "Snared chasing a Gobblin' Hog",
+      "img": null,
+      "description": "<p>The crawler in the lead was chasing a Gobblin' Hog, hoping to kill it before the sun finished setting. They never noticed the snare. Now they're hanging upside down as the moon rises, and the Gobblin' Hog is standing up on two legs as more angry squeals sound nearby.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SROVIKEuRgZfpLxa.6VqouMYc9Ko0kQD3"
+    },
+    {
+      "_id": "dhYre8ys23YoASnX",
+      "type": "text",
+      "name": "Cracking ice over a frozen lake",
+      "img": null,
+      "description": "<p>As the crawlers search for more Mobs to fight, they find themselves in the middle of a broad expanse of snow, only to hear the cracking of ice beneath their feet. If they don't move fast enough, they may find themselves under the ice and swept into the darkness of a frozen lake.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SROVIKEuRgZfpLxa.dhYre8ys23YoASnX"
+    },
+    {
+      "_id": "panQSyBxz5F0zuGL",
+      "type": "text",
+      "name": "Crawler JB accused of theft",
+      "img": null,
+      "description": "<p>Crawler JB is confronted by a group of High Elves from Redbrick Village. They insist he stole something from their village, while he insists he has no idea what they're talking about. He's definitely lying.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SROVIKEuRgZfpLxa.panQSyBxz5F0zuGL"
+    },
+    {
+      "_id": "kGBHxCzc5qxqgrfA",
+      "type": "text",
+      "name": "Merry Militia practice singing",
+      "img": null,
+      "description": "<p>The crawlers find themselves in a snowy canyon. Ahead, an Overwhelming group of the Merry Militia has set up camp, insisting on practicing their singing to try to earn the rank of Merry Chorister. It's clearly not going well for them, and they're growing increasingly frustrated.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SROVIKEuRgZfpLxa.kGBHxCzc5qxqgrfA"
+    },
+    {
+      "_id": "kUmwqHKuDX3xsjDY",
+      "type": "text",
+      "name": "Grampus among slaughtered Gobblin' Hogs",
+      "img": null,
+      "description": "<p>Grampus stands in the middle of a group of slaughtered Gobblin' Hogs. He breathes heavily, covered in dirt and blood. He looks toward the sky and howls in anger that rapidly deteriorates into deep, wracking sobs. After a moment, he composes himself, turns to the crawlers, and demands to know if they saw anything.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SROVIKEuRgZfpLxa.kUmwqHKuDX3xsjDY"
+    },
+    {
+      "_id": "qzGTxcsze69YJCYz",
+      "type": "text",
+      "name": "Crawler JB wants real food",
+      "img": null,
+      "description": "<p>Crawler JB bumps into the party, asking if they've got anything to eat. He's friendly, and although he has a ton of Crawler Biscuits, he insists he'd rather starve than continue to eat them. He's willing to trade gold, song, or even help in their next fight for some \"real food.\"</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SROVIKEuRgZfpLxa.qzGTxcsze69YJCYz"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!SROVIKEuRgZfpLxa"
+}

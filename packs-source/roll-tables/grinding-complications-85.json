@@ -1,0 +1,299 @@
+{
+  "_id": "1Apq1VCgZWF1Vsqv",
+  "name": "Table 85: Fourth Floor Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 85 (p.426).</em> Fourth Floor (The Iron Tangle) grinding complications. Roll whenever crawlers grind for experience on the Fourth Floor, or when moving between train lines and stations.</p>",
+  "results": [
+    {
+      "_id": "3cvRLpgUrPRXUzvs",
+      "type": "text",
+      "name": "See the current Neighborhood",
+      "img": null,
+      "description": "<p>See the current Neighborhood.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.3cvRLpgUrPRXUzvs"
+    },
+    {
+      "_id": "WzWgdcj0oKae9h2a",
+      "type": "text",
+      "name": "Caught on the tracks between stations",
+      "img": null,
+      "description": "<p>You find yourself caught on the tracks between stations with a Strong number of Mobs coming from one direction. (GMs: You can use one of the Mobs from this floor if the players attempt to fight through them). The crawlers lose 1d2 hours hiding and backtracking, or are forced to a new station.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.WzWgdcj0oKae9h2a"
+    },
+    {
+      "_id": "zfVF1KS2Y54m9REW",
+      "type": "text",
+      "name": "A useful item someone wants back",
+      "img": null,
+      "description": "<p>You find a useful item that's very important to a friendly crawler or NPC, who'll want it back if they learn you have it.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.zfVF1KS2Y54m9REW"
+    },
+    {
+      "_id": "IJoIlTXc8LGzI3IC",
+      "type": "text",
+      "name": "Derailed train blocks the path",
+      "img": null,
+      "description": "<p>You encounter a derailed train in a huge pile blocking your path. You can either double back or try to pick your way through the wreckage. (GMs: If the players double back, they lose 1d2 hours of time. If they work their way through the wreckage, have them encounter a challenging Mob from this Neighborhood).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.IJoIlTXc8LGzI3IC"
+    },
+    {
+      "_id": "lS4Rb8KI7jvuF0vz",
+      "type": "text",
+      "name": "An NPC wandering in a stupor",
+      "img": null,
+      "description": "<p>You find an NPC wandering in a stupor (GMs: You can use one of the NPCs on this floor and have the players roleplay or battle with them.)</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.lS4Rb8KI7jvuF0vz"
+    },
+    {
+      "_id": "g6ztiXItYSfub2S9",
+      "type": "text",
+      "name": "A runaway train accelerating",
+      "img": null,
+      "description": "<p>You find yourselves on a fast-moving train that continues to accelerate. You must decide if you want to jump off or try to slow down or stop the train. Both will be challenging. And dangerous.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.g6ztiXItYSfub2S9"
+    },
+    {
+      "_id": "sMs4T2xVcxihaBQz",
+      "type": "text",
+      "name": "A deity suddenly appears",
+      "img": null,
+      "description": "<p>A deity suddenly enters the area the players are grinding in. (GMs: You may choose a deity one of your players worships or one that is friendly or hostile to the players. The players cannot harm the deity on this floor, so they'll need to figure out a way to get away from the deity).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.sMs4T2xVcxihaBQz"
+    },
+    {
+      "_id": "xZsWWdDmI3qzbDa8",
+      "type": "text",
+      "name": "A player triggers a trap",
+      "img": null,
+      "description": "<p>One of the players triggers a trap. (GMs: This could be a trap that holds the player in place for something else to happen, an alarm trap to alert an enemy nearby, or it could be a high-damage trap. Or an opportunity to check a trap-avoiding or disarming Skill for advancement.)</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        13,
+        13
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.xZsWWdDmI3qzbDa8"
+    },
+    {
+      "_id": "utCpQgYlrNHJf2oF",
+      "type": "text",
+      "name": "A juvenile Mob befriends you",
+      "img": null,
+      "description": "<p>You find a juvenile form of a Mob that befriends you (GMs: You can use this to bring a Boss from elsewhere on this floor to attack the players, or it can be purely for roleplay purposes).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        14,
+        14
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.utCpQgYlrNHJf2oF"
+    },
+    {
+      "_id": "yEMZfisWvMTrgkmi",
+      "type": "text",
+      "name": "Nothing bad happens",
+      "img": null,
+      "description": "<p>Nothing bad happens.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        15,
+        20
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1Apq1VCgZWF1Vsqv.yEMZfisWvMTrgkmi"
+    }
+  ],
+  "formula": "1d20",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!1Apq1VCgZWF1Vsqv"
+}

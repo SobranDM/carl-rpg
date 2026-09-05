@@ -1,0 +1,191 @@
+{
+  "_id": "e4w0UgGvwEW6uGjL",
+  "name": "Table 82: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 82 (p.397).</em> Most Fowl Murder Quest (Third Floor, The Over City) grinding complications, involving Crowlumbo, the Crowcorps, and the Skyfowl murder investigation.</p>",
+  "results": [
+    {
+      "_id": "xPnbH3SiPj66uCvq",
+      "type": "text",
+      "name": "Crowlumbo scatters accusing Skyfowl",
+      "img": null,
+      "description": "<p>A group of Skyfowl attacks the players, and after a few rounds of combat, Crowlumbo appears, causing the Skyfowl to scatter, calling out how the crawlers attacked them. Crowlumbo clearly doesn't believe them but notes how quickly or slowly the crawlers tried to kill the Skyfowl before leaving.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!e4w0UgGvwEW6uGjL.xPnbH3SiPj66uCvq"
+    },
+    {
+      "_id": "XagYMMM9aoDLgVLq",
+      "type": "text",
+      "name": "Mayor Mordhau's dig site",
+      "img": null,
+      "description": "<p>Mayor Mordhau is in the middle of a dig excursion. He waves the crawlers over, pointing out an (obviously recent) brutalized corpse of a Skyfowl. He begins making notes and idly hopes the Crowcorps won't find out about this, as they would surely interfere with his dig.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!e4w0UgGvwEW6uGjL.XagYMMM9aoDLgVLq"
+    },
+    {
+      "_id": "Srl6rt80THkWnA3z",
+      "type": "text",
+      "name": "Broadside Bootleggers try to goad a fight",
+      "img": null,
+      "description": "<p>Broadside Bootleggers drop from the sky, surrounding the crawlers. They'll mention how a group of Elven Enforcers told them the party liked to butcher Skyfowl. They try to goad the crawlers into a fight so they can either kill the crawlers or escape to claim they've located the murderers.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!e4w0UgGvwEW6uGjL.Srl6rt80THkWnA3z"
+    },
+    {
+      "_id": "GI7ejndlnsnsuN6o",
+      "type": "text",
+      "name": "Crowcorps plot against the crawlers",
+      "img": null,
+      "description": "<p>Three Crowcorps are talking among themselves. They don't believe Crowlumbo has what it takes to find the killer. They suggest hunting down the crawlers and killing them before they strike again.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!e4w0UgGvwEW6uGjL.GI7ejndlnsnsuN6o"
+    },
+    {
+      "_id": "u0IyOtqLVoMv7QGl",
+      "type": "text",
+      "name": "Pit trap leads to Headhunter Harrier",
+      "img": null,
+      "description": "<p>The crawlers fall into a pit trap dug by Elven Enforcers. Unless they can escape it quickly, a group of twice as many Elves as players arrives to escort them to Headhunter Harrier for an efficient interrogation, a speedy conviction, and a prompt execution.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!e4w0UgGvwEW6uGjL.u0IyOtqLVoMv7QGl"
+    },
+    {
+      "_id": "RE2zeH06PW2sLQf5",
+      "type": "text",
+      "name": "Peregrin's Perch Prowlers drop corpse parts",
+      "img": null,
+      "description": "<p>The crawlers find themselves under attack from above, as a group of Peregrin's Perch Prowlers begins dropping corpse parts upon them. This is meant as a \"prank,\" but if the crawlers engage, they'll take the opportunity to try to lift and drop at least one crawler to their death.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!e4w0UgGvwEW6uGjL.RE2zeH06PW2sLQf5"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!e4w0UgGvwEW6uGjL"
+}

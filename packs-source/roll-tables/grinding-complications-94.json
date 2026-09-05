@@ -1,0 +1,191 @@
+{
+  "_id": "mOvhuPQJ2QBHXePw",
+  "name": "Table 94: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 94 (p.517), Floor 4: The Iron Tangle, Fever Station (Lobe Gang vs. Gristle Gang territory, the Atomic Grail Quest).</em> Random complications for crawlers grinding for experience amid the gang warfare of the ruined former NYC subway.</p>",
+  "results": [
+    {
+      "_id": "NiVFY5KHi4WEGekp",
+      "type": "text",
+      "name": "Sometimes winning is losing",
+      "img": null,
+      "description": "<p>Sometimes winning is losing. You've gone through a lot of subway cars and some of the station, but you also earned the ire of one of the gangs. Either the Lobes or the Gristle harbor a grudge against you now. Once you're done grinding, they're gonna find you and make you pay.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mOvhuPQJ2QBHXePw.NiVFY5KHi4WEGekp"
+    },
+    {
+      "_id": "eTjvsdq4D8BUcoRZ",
+      "type": "text",
+      "name": "Stranded on top of the subway cars",
+      "img": null,
+      "description": "<p>Somehow or another, you wound up on top of the subway cars. However you got up here is no longer a viable way back down, but you're gonna have to figure out something because there's a tunnel coming. This isn't a cartoon, either, so you'd better move quickly or plan to roll like Ann Bolyn's head.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mOvhuPQJ2QBHXePw.eTjvsdq4D8BUcoRZ"
+    },
+    {
+      "_id": "ixCqqJV0i99skocW",
+      "type": "text",
+      "name": "Mobs stole your shoes",
+      "img": null,
+      "description": "<p>Mobs stole your shoes! You weren't paying enough attention, and your footwear is gone. Better find the Mobs that did it (or ones with a similar shoe size) unless you want to barefoot it like Carl.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mOvhuPQJ2QBHXePw.ixCqqJV0i99skocW"
+    },
+    {
+      "_id": "TdCO22HhKnRakAaG",
+      "type": "text",
+      "name": "Shakespeare-quoting Pizza Rat follows you",
+      "img": null,
+      "description": "<p>You remember Pizza Rat, don't you? The animatronic rodent from that kids casino-place your parents took you to for your birthday? Well, you've got one of those guys following you now. The weird thing is, in addition to hauling around that thin slice of pepperoni and millipedes, he's quoting Shakespeare. All the time. And he won't stop. OMG, it's getting annoying.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mOvhuPQJ2QBHXePw.TdCO22HhKnRakAaG"
+    },
+    {
+      "_id": "LljNs71BMTEwpcwM",
+      "type": "text",
+      "name": "Tape Heads hunt you for the Blessed Cassette Tape",
+      "img": null,
+      "description": "<p>The Tape Heads seem to think you have the Blessed Cassette Tape, the bootleg tape Sid Vicious supposedly made with Elvis before they both died. The Tape Heads won't ask for it nicely. Instead, they're getting a bunch of Mobs together to stomp the music out of you.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mOvhuPQJ2QBHXePw.LljNs71BMTEwpcwM"
+    },
+    {
+      "_id": "lqdIzkM4ITOtgD9H",
+      "type": "text",
+      "name": "A lost valuable item",
+      "img": null,
+      "description": "<p>Somewhere along the way you lost a valuable item. Is it in a pile of ick? Lost in the toilets? Do you want to go back and look? Are you sure?</p><p><em>\"That's really weird\" --Carl</em></p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mOvhuPQJ2QBHXePw.lqdIzkM4ITOtgD9H"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!mOvhuPQJ2QBHXePw"
+}

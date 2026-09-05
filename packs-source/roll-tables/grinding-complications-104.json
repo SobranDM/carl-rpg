@@ -1,0 +1,191 @@
+{
+  "_id": "wgEFxwoRzBVXQHcM",
+  "name": "Table 104: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 104 (p.606).</em> Floor 5 (The Bubbles), Tundra Rumble Neighborhood &mdash; random complications for grinding Skyfowl and Frost Maidens near Cloud Home and the Snow Fields, in the hunt for the Snow Shifter.</p>",
+  "results": [
+    {
+      "_id": "1FNeJm9zoxLxsPRd",
+      "type": "text",
+      "name": "Skyfowl try to snatch the smallest crawler",
+      "img": null,
+      "description": "A Strong group of Skyfowl swoops down from above, trying to grasp the smallest crawler and carry them away. Their goal is to drop them from a great height, use them as bait, or carry them back to Cloud Home.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wgEFxwoRzBVXQHcM.1FNeJm9zoxLxsPRd"
+    },
+    {
+      "_id": "dtBPrtZ2XXMsW1BO",
+      "type": "text",
+      "name": "The elderly Skyfowl Ackler's melancholy",
+      "img": null,
+      "description": "Crawlers find themselves staring at the elderly Skyfowl Ackler, who sits on a bench and stares out at the endless fields of snow and ice. He sighs deeply and asks them about the nature of futile struggles. How can someone continue when there's nothing good waiting for them at the end? After this, he is notably warmer any time they meet.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wgEFxwoRzBVXQHcM.dtBPrtZ2XXMsW1BO"
+    },
+    {
+      "_id": "DSG7lemsuBgytle6",
+      "type": "text",
+      "name": "Avalanche!",
+      "img": null,
+      "description": "That last fight was a bit too loud. A sudden cracking sound rips through the air. Then a loud roaring rushes toward you as everything disappears into the snow and ice. AVALANCHE!",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wgEFxwoRzBVXQHcM.DSG7lemsuBgytle6"
+    },
+    {
+      "_id": "mqrFLomazVuVREns",
+      "type": "text",
+      "name": "Caught by a Snowcutter",
+      "img": null,
+      "description": "As the crawler party hunts through the Snow Fields, a loud ping sounds as a Snowcutter (p. 605) captures one of the group. Slowly, the engine ratchets back, starting to pull the net tight against the crawler. If the party does not act fast, the crawler is diced to pieces.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wgEFxwoRzBVXQHcM.mqrFLomazVuVREns"
+    },
+    {
+      "_id": "d2X8TpvfFyLx3wCh",
+      "type": "text",
+      "name": "Frost Maidens' poker game",
+      "img": null,
+      "description": "A Moderate group of Frost Maidens has a poker game, using the frozen corpse of a polar bear as a table. One swears as her friends cackle. They wave the party over, inviting two of them to join the game... but what are the stakes?",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wgEFxwoRzBVXQHcM.d2X8TpvfFyLx3wCh"
+    },
+    {
+      "_id": "nmbhn3ZwDoipv8uA",
+      "type": "text",
+      "name": "The dead crawler's journal about the Snow Shifter",
+      "img": null,
+      "description": "The crawlers happen upon a campsite. A journal details the journey of a crawler, and its last entry describes how they lost their entire party to some unknown force, and they intend to hunt it down. They discovered a weakness. The snow beast seems resistant to magic, but it's weak against piercing weapons.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!wgEFxwoRzBVXQHcM.nmbhn3ZwDoipv8uA"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!wgEFxwoRzBVXQHcM"
+}

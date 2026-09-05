@@ -1,0 +1,299 @@
+{
+  "_id": "X5BtdbJsQyMiwkyJ",
+  "name": "Table 76: Third Floor Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 76 (p.331).</em> Third Floor (The Over City) grinding complications. Roll whenever crawlers grind for experience on the Third Floor, or when moving between Neighborhoods.</p>",
+  "results": [
+    {
+      "_id": "DnsjHsJlLqeF8qAK",
+      "type": "text",
+      "name": "See the current Neighborhood",
+      "img": null,
+      "description": "<p>See the current Neighborhood.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.DnsjHsJlLqeF8qAK"
+    },
+    {
+      "_id": "azQyJcTQckMyxzLa",
+      "type": "text",
+      "name": "Unexpected magic guild",
+      "img": null,
+      "description": "<p>You find an unexpected magic guild. If you spend four hours training and haggling and 500 gold, you can gain the first rank or advance one rank in one of the seven Spells they can teach. Unfortunately, the Spells the guild teaches are selected at random.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.azQyJcTQckMyxzLa"
+    },
+    {
+      "_id": "YrhQpLlLNTX8jowy",
+      "type": "text",
+      "name": "Party member falls into a Neighborhood Boss's lair",
+      "img": null,
+      "description": "<p>One of your party falls through a sinkhole into some ruins below the Over City. When you attempt to rescue them, they're in the lair of an unexpected Neighborhood Boss! (GMs: You can use a Neighborhood Boss from another Neighborhood or a Quest from this floor if you want to run this battle).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.YrhQpLlLNTX8jowy"
+    },
+    {
+      "_id": "N5leQXgyWD8xq4ZO",
+      "type": "text",
+      "name": "Struggling lower-Level crawlers",
+      "img": null,
+      "description": "<p>You encounter another group of crawlers grinding in the area who are lower Level and having difficulty. (GMs: You can use higher-Level Mobs from another Neighborhood or Quest if you want to run this battle).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.N5leQXgyWD8xq4ZO"
+    },
+    {
+      "_id": "yHSuD3Mc5m3JXnzl",
+      "type": "text",
+      "name": "A crawler from someone's past",
+      "img": null,
+      "description": "<p>You encounter another group that has a crawler from one of your party member's past. (GMs: You can use one of your players' backstories to create a roleplay situation).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.yHSuD3Mc5m3JXnzl"
+    },
+    {
+      "_id": "wEzr9sVD5kvN8t6L",
+      "type": "text",
+      "name": "Corpse of another crawler",
+      "img": null,
+      "description": "<p>You find the corpse of another crawler being consumed by Street Urchins. They may have been killed and looted by a rival or still have some loot if Mobs killed them.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.wEzr9sVD5kvN8t6L"
+    },
+    {
+      "_id": "r5NcbmyKxc5ukgnZ",
+      "type": "text",
+      "name": "Overpriced traveling merchant",
+      "img": null,
+      "description": "<p>A traveling merchant offers you random items and basic supplies you need at double the usual price. Some could be magical? Well, at least he says they are.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.r5NcbmyKxc5ukgnZ"
+    },
+    {
+      "_id": "WGmjiWVxuZshFd2h",
+      "type": "text",
+      "name": "NPC with a problem",
+      "img": null,
+      "description": "<p>You encounter one of the NPCs from this floor who has a big problem or important task they can't solve without help. (GMs: You can have the players start a quest elsewhere on this floor, or they can just take Mordecai's advice and ignore them).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        13,
+        13
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.WGmjiWVxuZshFd2h"
+    },
+    {
+      "_id": "XJBTkSP8ndKkqBxg",
+      "type": "text",
+      "name": "Entrance to the Desperado Club or Club Vanquisher",
+      "img": null,
+      "description": "<p>You find an entrance to the Desperado Club or Club Vanquisher.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        14,
+        14
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.XJBTkSP8ndKkqBxg"
+    },
+    {
+      "_id": "DEj5k3gyZk2ugaOL",
+      "type": "text",
+      "name": "Nothing bad happens",
+      "img": null,
+      "description": "<p>Nothing bad happens.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        15,
+        20
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!X5BtdbJsQyMiwkyJ.DEj5k3gyZk2ugaOL"
+    }
+  ],
+  "formula": "1d20",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!X5BtdbJsQyMiwkyJ"
+}

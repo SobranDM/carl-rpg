@@ -1,0 +1,191 @@
+{
+  "_id": "g2tsvg3uUp3E6Kfr",
+  "name": "Table 105: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 105 (p.617).</em> Floor 5 (The Bubbles), Quest: Lutin Plunder &mdash; random complications for grinding Lutins, Crocodilians, and Temple Guards while King LaClaw and Jaakop swindle the villagers over the (nonexistent) Staff of Smacking. Note: the book's own running heading for this table reads \"TABLE 105: GRINDING COMPLICATIONS\" (no \"Fifth Floor\" qualifier &mdash; that phrase belongs to Table 95 elsewhere in the same chapter).</p>",
+  "results": [
+    {
+      "_id": "A92Ur54eqE5NTsg0",
+      "type": "text",
+      "name": "The High-Punchers clash with Lutin Bounty Hunters",
+      "img": null,
+      "description": "The crawlers come upon the High-Punchers (a group of stand-up comedians--see p. 620) engaged in a battle with Lutin Bounty Hunters. The Lutins attack the crawler party regardless of which side they attempt to join. The High-Punchers break bread with the crawler party afterward and are very surprised to see someone else is the Chosen One, since Mac is also a Chosen One.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g2tsvg3uUp3E6Kfr.A92Ur54eqE5NTsg0"
+    },
+    {
+      "_id": "2fV1zLn1bksgC2Qw",
+      "type": "text",
+      "name": "The netted Lutin steals and flees",
+      "img": null,
+      "description": "A Lutin was caught in one of the Crocodilian nets. He reaches out, begging for the crawlers' help. The moment he's free, he steals an item from one of the crawlers and runs away cackling.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g2tsvg3uUp3E6Kfr.2fV1zLn1bksgC2Qw"
+    },
+    {
+      "_id": "IkvlUmN4xEa9tzvO",
+      "type": "text",
+      "name": "A sunbathing Crocodilian offers a game of dice",
+      "img": null,
+      "description": "A Crocodilian floats backward in a pool of water, sunning himself. He waves to the crawlers and offers to play a game of dice with them. He happily wagers and even pays up if he loses.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g2tsvg3uUp3E6Kfr.IkvlUmN4xEa9tzvO"
+    },
+    {
+      "_id": "is45YNNgod77Bbrx",
+      "type": "text",
+      "name": "Jaakop's prophecy of the true Chosen One",
+      "img": null,
+      "description": "Jaakop reads a copy of the Scrolls of Solace and tells the crawlers that a great Lutin Chosen One will rise soon. He suggests the players leave so the true Chosen One can reveal themselves.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g2tsvg3uUp3E6Kfr.is45YNNgod77Bbrx"
+    },
+    {
+      "_id": "aiYwNj11eOtlr2UM",
+      "type": "text",
+      "name": "Separated by a Sauce-Tosser trap",
+      "img": null,
+      "description": "A crawler becomes separated from the party by a Sauce-Tosser trap. They find themselves staring into the murderous face of a Lutin hunting party intent on carving them up for dinner.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g2tsvg3uUp3E6Kfr.aiYwNj11eOtlr2UM"
+    },
+    {
+      "_id": "8fpciViBZYSDUpvV",
+      "type": "text",
+      "name": "Temple Guards attack a Death-Roller",
+      "img": null,
+      "description": "A Weak group of Temple Guards attacks a Death-Roller. The Death-Roller calls for help. If the crawlers avoid the fight, the guards attack the party afterward. (This only triggers after Stage 3--see below.)",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!g2tsvg3uUp3E6Kfr.8fpciViBZYSDUpvV"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!g2tsvg3uUp3E6Kfr"
+}

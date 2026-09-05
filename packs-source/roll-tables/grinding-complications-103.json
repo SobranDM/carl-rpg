@@ -1,0 +1,191 @@
+{
+  "_id": "pSfgN4Dafo7h0gsY",
+  "name": "Table 103: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 103 (p.596).</em> Floor 5 (The Bubbles), Shaft of Despair Neighborhood &mdash; random complications for grinding Pudding Pals, Nude Glabers, and Arachnids around the Pudding Pits and Spider City.</p>",
+  "results": [
+    {
+      "_id": "7uK2Ngwjvqb4dhxC",
+      "type": "text",
+      "name": "Woodruff Pudding appears",
+      "img": null,
+      "description": "The crawlers encounter a group of Pudding Pals led by the ultra-rare Woodruff Pudding.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!pSfgN4Dafo7h0gsY.7uK2Ngwjvqb4dhxC"
+    },
+    {
+      "_id": "9cMvzwopjYACCFui",
+      "type": "text",
+      "name": "Nude Glabers dive into the Pudding Pits",
+      "img": null,
+      "description": "The village of Nude Glabers the crawlers are slaughtering decide they'd rather take their chances in the Pudding Pits, and they leap off an outcropping into the air. One of them does a beautiful swan dive.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!pSfgN4Dafo7h0gsY.9cMvzwopjYACCFui"
+    },
+    {
+      "_id": "zClw4fztB8z6tXXC",
+      "type": "text",
+      "name": "Weapon lost among the heaps of bodies",
+      "img": null,
+      "description": "A crawler who was grinding something other than a hand-held weapon has misplaced their weapon somewhere among the heaps of bodies. Only an Amazing Success with Tracking or Investigation finds it, each Check taking 1 hour.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!pSfgN4Dafo7h0gsY.zClw4fztB8z6tXXC"
+    },
+    {
+      "_id": "PbnYN6pKuQZPfMTQ",
+      "type": "text",
+      "name": "An unknown crawler steals the kill",
+      "img": null,
+      "description": "An unknown crawler shows up and decides to help with the Mob-slaying. They're incredibly effective, killing most of the Mobs alone. The party doesn't get much from this grinding session, but they potentially have a strong new ally.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!pSfgN4Dafo7h0gsY.PbnYN6pKuQZPfMTQ"
+    },
+    {
+      "_id": "jLLKBPt2wRo6P6X5",
+      "type": "text",
+      "name": "Queen Joro's Arachnid squad",
+      "img": null,
+      "description": "Queen Joro needs to speak with the crawlers about a matter they can help with, and she doesn't ask politely. A squad of highly skilled Arachnids shows up trying to web the party into submission and take them to Spider City.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!pSfgN4Dafo7h0gsY.jLLKBPt2wRo6P6X5"
+    },
+    {
+      "_id": "FCUU8QMXZlpnWE6m",
+      "type": "text",
+      "name": "Struck by a falling Mob",
+      "img": null,
+      "description": "While in Noxavel or the Pudding Pits, a random crawler is hit by a Mob that fell from the area above.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!pSfgN4Dafo7h0gsY.FCUU8QMXZlpnWE6m"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!pSfgN4Dafo7h0gsY"
+}

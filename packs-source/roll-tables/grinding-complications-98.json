@@ -1,0 +1,191 @@
+{
+  "_id": "KczjtZqogbuHgep8",
+  "name": "Table 98: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 98 (p.543), Floor 5: The Bubbles, Desert Wastes quadrant (near the Ziggurat and Girtablullu's city).</em> Random complications for crawlers grinding for experience against Thorny Devils and Pistol Pangolins in the desert wastes.</p>",
+  "results": [
+    {
+      "_id": "SGOCoSxFk9urP4GX",
+      "type": "text",
+      "name": "Skin-scouring sandstorm",
+      "img": null,
+      "description": "<p>A sandstorm erupts suddenly, choking the crawlers, reducing visibility to nothing. It scours off the outer layers of their skin. Unless they have some kind of protection and can see through the storm, they lose hours just waiting it out.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!KczjtZqogbuHgep8.SGOCoSxFk9urP4GX"
+    },
+    {
+      "_id": "jNiTyE5xFNHTsdCy",
+      "type": "text",
+      "name": "Purifier Vultures gather to clean up the dead",
+      "img": null,
+      "description": "<p>As the crawlers grind through Mob after Mob, Purifier Vultures start gathering on the city's power lines. At first, it's just a couple perched nearby, watching the slaughter. More of them show up gradually, and they seem increasingly agitated by the number of corpses they'll need to clean up.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!KczjtZqogbuHgep8.jNiTyE5xFNHTsdCy"
+    },
+    {
+      "_id": "K7sopOyraSnZiYKz",
+      "type": "text",
+      "name": "Mysterious Razor Fox ambush",
+      "img": null,
+      "description": "<p>A team of Razor Foxes ambushes the party while they fight other Mobs. Why are they here? Who sent them? And how can you convince these cool canids not to kick your asses?</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!KczjtZqogbuHgep8.K7sopOyraSnZiYKz"
+    },
+    {
+      "_id": "KJQ0iISp2qrtttwk",
+      "type": "text",
+      "name": "Fall into a buried tomb",
+      "img": null,
+      "description": "<p>The ground gives way, and the crawlers plummet into a previously undiscovered tomb full of traps and valuables.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!KczjtZqogbuHgep8.KJQ0iISp2qrtttwk"
+    },
+    {
+      "_id": "uWfUGhiDuRYe1C8M",
+      "type": "text",
+      "name": "Rival crawler claims a Quest on your kill",
+      "img": null,
+      "description": "<p>Just as a party member is about to land the killing blow on a Mob, a voice shouts out, \"No, wait! I have a Quest!\" Another crawler arrives to befriend that specific Mob for a Quest they have.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!KczjtZqogbuHgep8.uWfUGhiDuRYe1C8M"
+    },
+    {
+      "_id": "X7xas4QorRmDaj35",
+      "type": "text",
+      "name": "Conjoined Thorny Devil Queens",
+      "img": null,
+      "description": "<p>While grinding in the wastes, the crawlers stumble into a Thorny Devil nest containing two Queens who are conjoined twins. If the crawlers can help the Queens come to consensus, they'll share their loot.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!KczjtZqogbuHgep8.X7xas4QorRmDaj35"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!KczjtZqogbuHgep8"
+}

@@ -1,0 +1,191 @@
+{
+  "_id": "1HPNJDJ3K5UIRMfU",
+  "name": "Table 106: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 106 (p.626).</em> Floor 5 (The Bubbles), Quest: Toxic Positivity Protocol &mdash; random complications for grinding Bolt Hawks and other Mobs amid the Ursine, Bune, and Rainbow Sprites near the Painbow. Note: the book's running heading for this table has no colon, \"TABLE 106 GRINDING COMPLICATIONS,\" unlike most other tables in this cluster.</p>",
+  "results": [
+    {
+      "_id": "3fMQibGTaGHFXVwn",
+      "type": "text",
+      "name": "Impromptu flash-mob concert",
+      "img": null,
+      "description": "A lone drummer stumbles through a few drum patterns before launching into an incredible drum solo. Within moments, other musicians, a singer, and even dancers join in, flash-mob style, building to a full performance like this was planned... which it absolutely wasn't. I swear.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1HPNJDJ3K5UIRMfU.3fMQibGTaGHFXVwn"
+    },
+    {
+      "_id": "YlWYUVpgIPzxdUzT",
+      "type": "text",
+      "name": "Mysterious circular color-burst splatters",
+      "img": null,
+      "description": "The crawlers come upon a building splattered with perfectly circular bursts of color, each radiating outward from a small untouched center about the size of a head of lettuce. The overlapping patterns suggest repeated targeted impacts. Whatever made them is either very precise or very enthusiastic.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1HPNJDJ3K5UIRMfU.YlWYUVpgIPzxdUzT"
+    },
+    {
+      "_id": "5q0DuWhgZBzUZ9gj",
+      "type": "text",
+      "name": "The grieving Bune Lieutenant",
+      "img": null,
+      "description": "A lone Bune Lieutenant sits crying and mumbling to themselves. Should the crawlers get close enough, they overhear phrases like \"it didn't use to be like this...\" and \"She was such a kind soul once...\" The moment they're noticed, the Bune snaps upright, wipes their face, and insists everything is fine.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1HPNJDJ3K5UIRMfU.5q0DuWhgZBzUZ9gj"
+    },
+    {
+      "_id": "cU7Ph0hoF0de2JyA",
+      "type": "text",
+      "name": "A slain Ursine near a Bolt Hawk nest",
+      "img": null,
+      "description": "The crawlers find a slain Ursine with every hair standing on end, bearing scorch marks and deep slashing wounds caused by talons. The Ursine got too close to one of the rare surface-bound Bolt Hawk nests, which the crawlers have now stumbled into as well. Then, half a dozen Bolt Hawks launch themselves into the air and attack.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1HPNJDJ3K5UIRMfU.cU7Ph0hoF0de2JyA"
+    },
+    {
+      "_id": "oGy6rVILxDXpC8AA",
+      "type": "text",
+      "name": "Ursine failing to scrub off the graffiti",
+      "img": null,
+      "description": "A group of Ursine attempt to wash the colorful marks off of one of the town buildings and a nearby statue of Dominic Hawthorne built when he was still topping the charts. Their attempts are only moderately successful: colors smear, blend, and spread, turning the entire effort into a slow-motion disaster.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1HPNJDJ3K5UIRMfU.oGy6rVILxDXpC8AA"
+    },
+    {
+      "_id": "De63GJQnDWP3r3WQ",
+      "type": "text",
+      "name": "Star-like lights trailing rainbows",
+      "img": null,
+      "description": "A trio of star-like lights shoots through the sky high above, trailing translucent rainbows in their wake before disappearing into the clouds above.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!1HPNJDJ3K5UIRMfU.De63GJQnDWP3r3WQ"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!1HPNJDJ3K5UIRMfU"
+}

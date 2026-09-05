@@ -1,0 +1,191 @@
+{
+  "_id": "CrvPhv9yxnIIrp2e",
+  "name": "Table 92: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 92 (p.495), Floor 4: The Iron Tangle, Drake Caverns / Mudge-filled Station.</em> Random complications for crawlers grinding for experience among the Cave Mudges and Drakes, tied to Tiamat and the Grulke Aadhya.</p>",
+  "results": [
+    {
+      "_id": "XUAueQNRFXssXP1X",
+      "type": "text",
+      "name": "Shrine to Tiamat",
+      "img": null,
+      "description": "<p>The crawlers find a small shrine where they can pray to become worshipers of Tiamat. If they deface or destroy the shrine, Tiamat becomes their sworn enemy. She might also take offense if they just ignore it outright, too.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!CrvPhv9yxnIIrp2e.XUAueQNRFXssXP1X"
+    },
+    {
+      "_id": "luDqDZQWy7SxUF6o",
+      "type": "text",
+      "name": "Drake mating cave and the Gravid Debuff",
+      "img": null,
+      "description": "<p>The crawlers enter a cave covered in the active reproductive materials of both sexes of Drake. They must navigate very carefully or figure out how to clean up the place to avoid contracting the Gravid Debuff (p. 493).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!CrvPhv9yxnIIrp2e.luDqDZQWy7SxUF6o"
+    },
+    {
+      "_id": "4BwbcgYT4fxCztQt",
+      "type": "text",
+      "name": "Cave Mudge Judges crown a winner of Project Mudgeway",
+      "img": null,
+      "description": "<p>Three non-combatant Cave Mudge Judges (aptly named Heidi Gloom, Tim Mudd, and Muckel Kors) show up out of nowhere, admiring the crawlers' outfits and noisily proclaiming one of them to be the winner of some contest called Project Mudgeway. There is so much fanfare and interruptions that the party loses 2 hours of grinding time, but gain Cave Mudge Passes if they're willing to accept the tattoos from the judges.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!CrvPhv9yxnIIrp2e.4BwbcgYT4fxCztQt"
+    },
+    {
+      "_id": "0lR5H65XrvX8ZZwK",
+      "type": "text",
+      "name": "Sticky mud pit threatens to suffocate the party",
+      "img": null,
+      "description": "<p>A copious amount of sticky slimy mud collected in the low spot of a cave, and the crawlers get stuck in it while fighting. They slowly sink and potentially suffocate if they can't escape.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!CrvPhv9yxnIIrp2e.0lR5H65XrvX8ZZwK"
+    },
+    {
+      "_id": "DfonJpnXMNoj36ZS",
+      "type": "text",
+      "name": "Disciplined Bonkers fighting in military formation",
+      "img": null,
+      "description": "<p>A particularly cunning Cave Mudge Judge leads a Moderate unit of well-disciplined Bonkers who fight in formation and use military tactics. Where the hell did they learn that?</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!CrvPhv9yxnIIrp2e.DfonJpnXMNoj36ZS"
+    },
+    {
+      "_id": "J2zSMrTSLXyPHxjt",
+      "type": "text",
+      "name": "Injured crawler hiding from Aadhya",
+      "img": null,
+      "description": "<p>Another crawler enters the Drake Caverns, attempting to grind some experience, but they encountered Aadhya and got their ass handed to them. Still alive but sorely injured, they hide while Aadhya stalks them.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!CrvPhv9yxnIIrp2e.J2zSMrTSLXyPHxjt"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!CrvPhv9yxnIIrp2e"
+}

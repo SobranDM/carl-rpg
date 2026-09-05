@@ -1,0 +1,191 @@
+{
+  "_id": "Mk9ve9udlzK6XNnW",
+  "name": "Table 93: Cerulean Star Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 93 (p.505), Floor 4: The Iron Tangle, the Cerulean Star (All Revved Up Quest).</em> Random complications for crawlers grinding for experience aboard the MLM-themed Cerulean Star train, involving Clurichaun Aspirants, Pooka Goal Diggers, and Haddley Luanne Montgomery.</p>",
+  "results": [
+    {
+      "_id": "0lu7yoML267B7Lxc",
+      "type": "text",
+      "name": "Tug-of-war over a death pit",
+      "img": null,
+      "description": "<p>The crawlers stumble across two Moderate groups of Clurichaun Aspirants playing a game of tug-of-war over a pit in the train car floor. Pooka Goal Diggers egg them on, eager for one group to pull the other into the hole to die painfully on the tracks.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Mk9ve9udlzK6XNnW.0lu7yoML267B7Lxc"
+    },
+    {
+      "_id": "6zeyrl17QyrDxzLF",
+      "type": "text",
+      "name": "Aspirant hiding a critical case of the DTs",
+      "img": null,
+      "description": "<p>The crawlers find a Clurichaun Aspirant suffering from Stage 3 of the DTs (see p. 40 and make up something wicked). The trainee locked himself away to prevent the Pookas from finding out about his condition, but he's about to go critical.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Mk9ve9udlzK6XNnW.6zeyrl17QyrDxzLF"
+    },
+    {
+      "_id": "zcqUSorZJmhFfKIY",
+      "type": "text",
+      "name": "Feral Custodial Consultants and trapped Haddley",
+      "img": null,
+      "description": "<p>A pack of Jikininki Custodial Consultants are practically feral as they clean up the remains of an aspirant death match. They attack anyone who draws near, but one NPC remains trapped in the pile of viscera. This is Haddley, who owes the crawlers a favor, or an NPC crawler the group knows.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Mk9ve9udlzK6XNnW.zcqUSorZJmhFfKIY"
+    },
+    {
+      "_id": "4zDOLA5ih1txrPKb",
+      "type": "text",
+      "name": "Fresh aspirants join an ongoing fight",
+      "img": null,
+      "description": "<p>The train stops at a station during a fight, allowing a fresh group of Clurichaun Aspirants aboard who might just jump in on the ongoing battle.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Mk9ve9udlzK6XNnW.4zDOLA5ih1txrPKb"
+    },
+    {
+      "_id": "sbQpZVVlGgg3aLCS",
+      "type": "text",
+      "name": "Haddley Luanne Montgomery's ambush",
+      "img": null,
+      "description": "<p>Haddley Luanne Montgomery ambushes the crawlers along with a group of her future downline consultants--other Clurichaun Aspirants. She's hoping to kill or capture the crawlers so they stop spoiling her fun, but her efforts don't even delay them.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Mk9ve9udlzK6XNnW.sbQpZVVlGgg3aLCS"
+    },
+    {
+      "_id": "TUqwvCAPDU96RRaW",
+      "type": "text",
+      "name": "Spinning cylinder car with a headbutting Pooka",
+      "img": null,
+      "description": "<p>The crawlers find a train car whose only floor is a spinning wooden cylinder. A well-balanced Pooka in goat form stands in the middle, ready to headbutt anyone who tries to cross.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Mk9ve9udlzK6XNnW.TUqwvCAPDU96RRaW"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Mk9ve9udlzK6XNnW"
+}

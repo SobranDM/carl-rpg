@@ -1,0 +1,191 @@
+{
+  "_id": "JFLovbj27RdAy8NY",
+  "name": "Table 97: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 97 (p.531), Floor 5: The Bubbles, the Yard (Grass Jungle / Desert Sandbox quadrant).</em> Random complications for crawlers grinding for experience against Spiders, Snakes, Beetles, and Gerbils in the toy-strewn Yard.</p>",
+  "results": [
+    {
+      "_id": "poki5XV4c0yhKQne",
+      "type": "text",
+      "name": "Wolf Spider herds crawlers toward its web",
+      "img": null,
+      "description": "<p>A Wolf Spider begins hunting the crawlers through tall grass. It's toying with them, herding them toward an area of the yard dense with webs, where they are cornered.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JFLovbj27RdAy8NY.poki5XV4c0yhKQne"
+    },
+    {
+      "_id": "N0yuqlGqMeXpKGXB",
+      "type": "text",
+      "name": "Spider-riding Gerbil defectors demand tribute",
+      "img": null,
+      "description": "<p>The crawlers come across a group of nomadic Gerbils who defected from their kingdom. They each tamed a small Spider and use them as mounts. They demand the crawlers turn over all food and weapons, attacking if refused.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JFLovbj27RdAy8NY.N0yuqlGqMeXpKGXB"
+    },
+    {
+      "_id": "jFwG7FrV1RWofjHu",
+      "type": "text",
+      "name": "Bonneted Trapdoor Spider vendor",
+      "img": null,
+      "description": "<p>A Trapdoor Spider wearing a bonnet pops out of her burrow with a flourish. She's a vendor selling various spider-themed items.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JFLovbj27RdAy8NY.jFwG7FrV1RWofjHu"
+    },
+    {
+      "_id": "Jm8ickyJpAFG8xsX",
+      "type": "text",
+      "name": "Gigantic cookie swarmed by insects",
+      "img": null,
+      "description": "<p>The party comes across a gigantic cookie on the ground, towering over the area. A horde of insects surrounds it, tearing off chunks. If the crawlers linger, a territorial group of Beetles attack to protect their meal.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JFLovbj27RdAy8NY.Jm8ickyJpAFG8xsX"
+    },
+    {
+      "_id": "RdkXtxFLaRvpzlrm",
+      "type": "text",
+      "name": "Water Snake digesting a familiar crawler",
+      "img": null,
+      "description": "<p>A Nerodia Water Snake writhes on the ground, body distending oddly as it thrashes. The lump inside seems to be moving. It's eaten a crawler the party met before, and the unfortunate victim is trying to escape being digested.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JFLovbj27RdAy8NY.RdkXtxFLaRvpzlrm"
+    },
+    {
+      "_id": "I97g606YKzZgL4Mf",
+      "type": "text",
+      "name": "Tide of battling insects and a Snake",
+      "img": null,
+      "description": "<p>The crawlers hear the shouts and clatter of combat approaching, animalistic noises and the dull thud of limbs pounding one another resound through the clearing. A tide of Gerbils, Mantises, Beetles, Spiders, and a Snake locked in a battle quickly envelop them.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!JFLovbj27RdAy8NY.I97g606YKzZgL4Mf"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!JFLovbj27RdAy8NY"
+}

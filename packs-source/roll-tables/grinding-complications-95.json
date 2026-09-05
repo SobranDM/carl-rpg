@@ -1,0 +1,299 @@
+{
+  "_id": "ImRUlOyZ1pqEhg2M",
+  "name": "Table 95: Fifth Floor Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 95 (p.524), Floor 5: The Bubbles.</em> Random complications for crawlers grinding for experience within a bubble on the Fifth Floor, rolled on a d20.</p>",
+  "results": [
+    {
+      "_id": "slygJ87rNza55Th5",
+      "type": "text",
+      "name": "See the current Neighborhood",
+      "img": null,
+      "description": "<p>See the current Neighborhood.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.slygJ87rNza55Th5"
+    },
+    {
+      "_id": "A1mJmN87rUrjrMan",
+      "type": "text",
+      "name": "Extreme heat outdoors",
+      "img": null,
+      "description": "<p>You find yourselves caught outdoors as the heat of the day becomes extreme. (GM: Have the crawlers make an Unopposed Survival Skill Check to find or build some sort of makeshift shelter.)</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.A1mJmN87rUrjrMan"
+    },
+    {
+      "_id": "3zDObrOLwQzgwzuf",
+      "type": "text",
+      "name": "Wandering NPC children",
+      "img": null,
+      "description": "<p>You find a group of NPC children wandering in your area. (GM: This could lead to a quest.)</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.3zDObrOLwQzgwzuf"
+    },
+    {
+      "_id": "uAGiijzgQhLx5H2c",
+      "type": "text",
+      "name": "Caught between warring factions",
+      "img": null,
+      "description": "<p>You find yourselves between two warring factions. (GM: The players can choose to take a side or just find some way out of the situation.)</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.uAGiijzgQhLx5H2c"
+    },
+    {
+      "_id": "TOXxq9aus3fjYgx9",
+      "type": "text",
+      "name": "The bubble begins to shrink",
+      "img": null,
+      "description": "<p>The bubble you are in begins to shrink. (GM: This could prompt the players to focus back on their main task or quest.)</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.TOXxq9aus3fjYgx9"
+    },
+    {
+      "_id": "p1Ro5xjYZ6j8ScR6",
+      "type": "text",
+      "name": "High-level dignitary needs assistance",
+      "img": null,
+      "description": "<p>You encounter a high-level dignitary from another area who requires assistance.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        11,
+        11
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.p1Ro5xjYZ6j8ScR6"
+    },
+    {
+      "_id": "A2ez45vh4wDhvKHE",
+      "type": "text",
+      "name": "The party falls into a trap",
+      "img": null,
+      "description": "<p>The party falls into a trap!</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        12,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.A2ez45vh4wDhvKHE"
+    },
+    {
+      "_id": "b5u4f4VTz0CH84ym",
+      "type": "text",
+      "name": "Randomly transported tens of miles away",
+      "img": null,
+      "description": "<p>You find yourselves randomly transported to another portion of the area you are in, tens of miles away.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        13,
+        13
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.b5u4f4VTz0CH84ym"
+    },
+    {
+      "_id": "WSutYDyUfJ1mGgJD",
+      "type": "text",
+      "name": "Crashed airship",
+      "img": null,
+      "description": "<p>You encounter a crashed airship. (GM: This can initiate a fight with some Mobs from this floor or reveal an important clue about a Boss.)</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        14,
+        14
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.WSutYDyUfJ1mGgJD"
+    },
+    {
+      "_id": "6lTaBny135TPdkN8",
+      "type": "text",
+      "name": "Nothing bad happens",
+      "img": null,
+      "description": "<p>Nothing bad happens.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        15,
+        20
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ImRUlOyZ1pqEhg2M.6lTaBny135TPdkN8"
+    }
+  ],
+  "formula": "1d20",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!ImRUlOyZ1pqEhg2M"
+}

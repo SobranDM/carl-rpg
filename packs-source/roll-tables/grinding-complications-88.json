@@ -1,0 +1,191 @@
+{
+  "_id": "UjFYipreGflFxJ7m",
+  "name": "Table 88: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 88 (p.449), Floor 4: The Iron Tangle, Chartreuse Line, Construction Zone.</em> Random complications for crawlers grinding for experience amid the unfinished tunnels and rival Dwarven repair crews of the Construction Zone.</p>",
+  "results": [
+    {
+      "_id": "1r1Ji9yMCH2BgGDc",
+      "type": "text",
+      "name": "Union Dwarves vs. Blister Ghouls",
+      "img": null,
+      "description": "<p>The crawlers stumble upon a crew of union Dwarves locked in a brutal fight with a swarm of Blister Ghouls. Several Dwarves unleash roaring flamethrowers fueled by the same Forge Sprite that powers a nearby drilling rig. The crawlers can jump in on either side or grab some popcorn and see how the fight plays out.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UjFYipreGflFxJ7m.1r1Ji9yMCH2BgGDc"
+    },
+    {
+      "_id": "MJgPikh0PSYIGNMM",
+      "type": "text",
+      "name": "Drilling rig's trapped Forge Sprite",
+      "img": null,
+      "description": "<p>The shattered remains of a dwarven drilling rig are wedged halfway through a collapsed wall. Beyond it lies a train car torn open by the drill's massive tip. The rig begins glowing red-hot as the Forge Sprite trapped inside grows increasingly angry. If the crawlers can't calm the Sprite, the entire area explodes, followed by whatever comes running to investigate.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UjFYipreGflFxJ7m.MJgPikh0PSYIGNMM"
+    },
+    {
+      "_id": "q46SmIHkokume8RK",
+      "type": "text",
+      "name": "Fore-Dwarves debate the nature of the Company",
+      "img": null,
+      "description": "<p>Two union Fore-Dwarves have a heated debate about the nature of reality and the mysterious \"Company.\" Both agree the Company is terrible, but one believes they were deliberately abandoned by some unseen authority. The other insists it's just a labor dispute over unpaid overtime and vacation clauses. Nearby repair crews watch in growing confusion, and the argument looks close to turning violent.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UjFYipreGflFxJ7m.q46SmIHkokume8RK"
+    },
+    {
+      "_id": "8oHgSFTThyKybDFm",
+      "type": "text",
+      "name": "Stalled subway car repair crew",
+      "img": null,
+      "description": "<p>A numbered subway car sits idle in a dark tunnel while a group of Dwarves attempts to fix the engine. Unfortunately, they're far more interested in arguing about how to fix it and complaining about the terrible tools the Company provided than actually doing any work.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UjFYipreGflFxJ7m.8oHgSFTThyKybDFm"
+    },
+    {
+      "_id": "Jg24L31LOmuzENsL",
+      "type": "text",
+      "name": "System AI sends Janitor Ghouls to \"correct\" the rail line",
+      "img": null,
+      "description": "<p>An Overwhelming swarm of Jikininki Janitor Ghouls floods the tunnel, devouring everything in its path. This is the System AI's attempt to \"correct\" the paradox of the unfinished rail line. Unfortunately for everyone involved, the Ghouls aren't particularly subtle about their work.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UjFYipreGflFxJ7m.Jg24L31LOmuzENsL"
+    },
+    {
+      "_id": "uMJcLgvD73QGaCPE",
+      "type": "text",
+      "name": "Angry Forge Sprite crusading against the Dwarves",
+      "img": null,
+      "description": "<p>An angry superior Forge Sprite zips through the tunnel shouting angrily about freeing his brethren from their enslavement by the evil Dwarves. If the crawlers don't calm it down or convince it they're allies, the Sprite may decide they're part of the problem.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!UjFYipreGflFxJ7m.uMJcLgvD73QGaCPE"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!UjFYipreGflFxJ7m"
+}

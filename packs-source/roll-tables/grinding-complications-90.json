@@ -1,0 +1,191 @@
+{
+  "_id": "XZQjGHWP7KRSq2VA",
+  "name": "Table 90: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 90 (p.473), Floor 4: The Iron Tangle, Sandstone Line.</em> Random complications for crawlers grinding for experience along the British-accented Sandstone Line and its tunnels.</p>",
+  "results": [
+    {
+      "_id": "HQxiBhJD2Zt66RNl",
+      "type": "text",
+      "name": "Razor Fox lures crawlers into a trapped train car",
+      "img": null,
+      "description": "<p>The crawlers chase a Razor Fox into a seemingly abandoned train. The moment roughly half the crawlers are in the car, the door slams shut, and a strong group of Gross Atomizers rolls from the luggage racks, slowly drifting toward the trapped crawlers. The Razor Fox giggles and escapes through a small hole.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!XZQjGHWP7KRSq2VA.HQxiBhJD2Zt66RNl"
+    },
+    {
+      "_id": "sHiouRkmhUjlEqj6",
+      "type": "text",
+      "name": "Shadow drains a Red Cornet",
+      "img": null,
+      "description": "<p>The crawlers come upon a pair of Red Cornets stalking through the tunnels. As the crawlers watch, a shadow detaches from the wall and grasps a Red Cornet. It shrivels, struggling weakly before turning gray and lunging for its compatriot. The crawlers haven't been noticed yet.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!XZQjGHWP7KRSq2VA.sHiouRkmhUjlEqj6"
+    },
+    {
+      "_id": "K4s86rJIZnL8QOoD",
+      "type": "text",
+      "name": "Screaming crawler buried under rubble",
+      "img": null,
+      "description": "<p>Another crawler screams at the top of their lungs at a Bopca, and then storms out past the PCs. A few moments go by, and there is a loud crash. Examining the source reveals the crawler is buried under rubble, a rusted bolt rolling at their feet.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!XZQjGHWP7KRSq2VA.K4s86rJIZnL8QOoD"
+    },
+    {
+      "_id": "LGomwjhi6xnJEGMG",
+      "type": "text",
+      "name": "Razor Foxes battle Gray Cornets",
+      "img": null,
+      "description": "<p>As the crawlers round a corner, they find themselves staring at a Moderate group of Razor Foxes battling against a Weak group of Gray Cornets. One of the Razor Foxes notices the crawler party and launches a shuriken at them, in an attempt to draw them into the fight.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!XZQjGHWP7KRSq2VA.LGomwjhi6xnJEGMG"
+    },
+    {
+      "_id": "q8Fu1KXUuYKZkAi3",
+      "type": "text",
+      "name": "Brain Teasers feasting on a fallen crawler",
+      "img": null,
+      "description": "<p>A dry rustling sounds ahead, followed by sounds of a struggle, two loud crunches, and a horrific scream that reverberates through the tunnel. Rushing ahead reveals a Weak group of Brain Teasers feasting on the brain of a fallen crawler. Another Weak group of Brain Teasers lingers nearby.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!XZQjGHWP7KRSq2VA.q8Fu1KXUuYKZkAi3"
+    },
+    {
+      "_id": "ibMB5Cn5UQXEBjJN",
+      "type": "text",
+      "name": "Human crawler caught by an Energy Vampire",
+      "img": null,
+      "description": "<p>Crawlers drawn by the sounds of screaming watch in horror as a Human crawler struggles in the grasp of an Energy Vampire and begs them for help.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!XZQjGHWP7KRSq2VA.ibMB5Cn5UQXEBjJN"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!XZQjGHWP7KRSq2VA"
+}

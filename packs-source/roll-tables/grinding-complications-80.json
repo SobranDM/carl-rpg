@@ -1,0 +1,191 @@
+{
+  "_id": "R0tvAVRZBQ8VZBww",
+  "name": "Table 80: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 80 (p.373).</em> The Necropolis Neighborhood (Third Floor, The Over City) grinding complications, tied to the Hobgoblin Mortuary Assistants and the feuding funeral families.</p>",
+  "results": [
+    {
+      "_id": "QEytzEIdYudEk1Qy",
+      "type": "text",
+      "name": "The Dispenser crop-dusts the battlefield",
+      "img": null,
+      "description": "<p>Just as the crawlers leap out to attack a group of Shambling Berserkers, the Dispenser flies over, crop-dusting the battlefield with its red mist, making the fight much more difficult and giving them a taste of the upcoming Boss Battle.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!R0tvAVRZBQ8VZBww.QEytzEIdYudEk1Qy"
+    },
+    {
+      "_id": "NwD6jEI9GD7FHpPO",
+      "type": "text",
+      "name": "A disrespectful funeral duo",
+      "img": null,
+      "description": "<p>The crawlers encounter a Goblin and Hobgoblin duo supposedly performing a funeral for a group of grieving Elves, but they lack any of the decorum or respect commonly exhibited by the Hobgoblin Mortuary Assistants. The Goblin even passes a tip jar to the Elves, refusing to continue until a few coins are dropped in.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!R0tvAVRZBQ8VZBww.NwD6jEI9GD7FHpPO"
+    },
+    {
+      "_id": "EQ0ulA1fDFxt1tDh",
+      "type": "text",
+      "name": "Crashed hearses and Rumble Weeds",
+      "img": null,
+      "description": "<p>Hearses from two of the three families have crashed into each other, leading to a loud argument between the drivers, mismatched corpses, and the attention of some nearby Rumble Weeds.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!R0tvAVRZBQ8VZBww.EQ0ulA1fDFxt1tDh"
+    },
+    {
+      "_id": "JIVs64EbbperaNtW",
+      "type": "text",
+      "name": "Ruin Flocker nest holds a captive",
+      "img": null,
+      "description": "<p>The crawlers find a nest of Ruin Flocker eggs guarded by a territorial Level 16 Ruin Flocker mother hen. She has captured someone they know and trapped them in the nest as a makeshift egg-warmer while she patrols the perimeter.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!R0tvAVRZBQ8VZBww.JIVs64EbbperaNtW"
+    },
+    {
+      "_id": "BczYfUWNKDKgUpdb",
+      "type": "text",
+      "name": "Clan Boltcrank's experimental gas backfires",
+      "img": null,
+      "description": "<p>A scientist from Clan Boltcrank attempts to purge a mausoleum with an experimental gas that accidentally fuses all the Shambling Berserkers inside to create a monstrous Level 25 Berserker Pile. This becomes an upgraded Shambling Berserker with Constitution 40 (+5). Now the crawlers must fight the Mob, cover the scientist as they prepare another device to undo the fusion, seal the mausoleum, or flee for their lives.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!R0tvAVRZBQ8VZBww.BczYfUWNKDKgUpdb"
+    },
+    {
+      "_id": "m54J4qyHeXWEgOtV",
+      "type": "text",
+      "name": "Asked to serve as pallbearers",
+      "img": null,
+      "description": "<p>The crawlers are approached by a Hobgoblin Mortuary Assistant who asks them to serve as pallbearers for the funeral of someone who has no one to mourn them. This can be an antagonistic NPC, a crawler they used to know, or anyone else who might stir up some drama.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!R0tvAVRZBQ8VZBww.m54J4qyHeXWEgOtV"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!R0tvAVRZBQ8VZBww"
+}

@@ -1,0 +1,191 @@
+{
+  "_id": "Ey0LaQNZQptFJ7d0",
+  "name": "Table 100: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 100 (p.564).</em> Floor 5 (The Bubbles), Midnight City Neighborhood &mdash; random complications for grinding Pet Ghasts and Vampires in Countess Kesla's gothic undercity.</p>",
+  "results": [
+    {
+      "_id": "eHmS6onAlN7wxkjG",
+      "type": "text",
+      "name": "Pet Ghast hit-and-run into a cocoon ambush",
+      "img": null,
+      "description": "A Weak pack of Pet Ghasts coordinates, a hit-and-run attack. They then run into a plaza, hoping the crawlers will follow, where a Strong group of Pet Ghast cocoons is found--and all burst at once.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ey0LaQNZQptFJ7d0.eHmS6onAlN7wxkjG"
+    },
+    {
+      "_id": "rTkk4yY6snorLvII",
+      "type": "text",
+      "name": "Vampire's escaped \"pet\" Ghasts",
+      "img": null,
+      "description": "The crawlers come across a Vampire walking two leashed Pet Ghasts the size of golden retrievers. Startled by the party, the Vampire drops the leashes, and the Pet Ghasts run into the darkness. The Vampire asks for help retrieving them, attacking if refused.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ey0LaQNZQptFJ7d0.rTkk4yY6snorLvII"
+    },
+    {
+      "_id": "zvIvcLY5eoERJiL2",
+      "type": "text",
+      "name": "Night Elf experimenting with UV fungus",
+      "img": null,
+      "description": "In the basement of an unstable building, a Night Elf experiments with UV fungus on a Pet Ghast chained to a table. The Elf asks the crawlers to obtain a fresh undead specimen, as this one is nearly drained.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ey0LaQNZQptFJ7d0.zvIvcLY5eoERJiL2"
+    },
+    {
+      "_id": "aQgkW77bg3NFUZtZ",
+      "type": "text",
+      "name": "The staged duel is actually a secret romance",
+      "img": null,
+      "description": "The party encounters what appears to be a pitched battle between a Night Elf and a Vampire on a rooftop, observed by a small group of other Hunters on the street below and Vampires on a neighboring roof. The Hunter stakes the Vampire, who falls off the roof. The Hunter jumps down after him. If the crawlers go looking, they find the two combatants passionately embracing in a nearby alleyway.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ey0LaQNZQptFJ7d0.aQgkW77bg3NFUZtZ"
+    },
+    {
+      "_id": "ZFhIKBwrJlKg5DbO",
+      "type": "text",
+      "name": "Incompetent Night Elves mistake crawlers for Vampires",
+      "img": null,
+      "description": "A cadre of Night Elves mistake the crawlers for Vampires and hunt them through the streets, refusing to believe they aren't undead no matter the proof. They're incompetent, interfering with combats the crawlers engage in and fouling attempts to be stealthy.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ey0LaQNZQptFJ7d0.ZFhIKBwrJlKg5DbO"
+    },
+    {
+      "_id": "lHsidCHlnRCld3vc",
+      "type": "text",
+      "name": "The pale child with the blood lollipop",
+      "img": null,
+      "description": "A pale child stands in the street with a lollipop of congealed blood. She asks if they've seen her mother. If they approach, she screams loud enough to make ears bleed, attracting a pack of Pet Ghasts before attacking the crawlers.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Ey0LaQNZQptFJ7d0.lHsidCHlnRCld3vc"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Ey0LaQNZQptFJ7d0"
+}

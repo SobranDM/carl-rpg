@@ -1,0 +1,191 @@
+{
+  "_id": "l1NqBqggBZB4IFwN",
+  "name": "Table 83: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 83 (p.407).</em> A Shelf on an Elf Quest (Third Floor, The Over City) grinding complications, featuring the 404th revolutionaries and the Scolopendrini.</p>",
+  "results": [
+    {
+      "_id": "VDiUywN6DOnxEBgv",
+      "type": "text",
+      "name": "Strange coral-vine plants with blue pollen",
+      "img": null,
+      "description": "<p>Strange blue-and-yellow plants with vines that look like coral grow on the walls of several nearby buildings. The pollen produced by their flowers is a weird blue dust and is detailed under Quest Items (p. 406).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!l1NqBqggBZB4IFwN.VDiUywN6DOnxEBgv"
+    },
+    {
+      "_id": "6bPtpwt3DD1IUmkg",
+      "type": "text",
+      "name": "Scolopendrini burrow out to attack the 404th",
+      "img": null,
+      "description": "<p>Several revolutionaries from the 404th investigate a large hole in the ground when they spot the crawlers. While their response to the PCs depends on their relationship, it won't matter. Shortly after the crawlers are spotted, a cluster of hungry Scolopendrini burrows out of the ground. They attack the City Elves. Providing aid is up to the crawlers.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!l1NqBqggBZB4IFwN.6bPtpwt3DD1IUmkg"
+    },
+    {
+      "_id": "aCeBrDgFlkEVD5gU",
+      "type": "text",
+      "name": "A growing cloud of smoke overhead",
+      "img": null,
+      "description": "<p>The Mobs are lining up for their chance to be killed by crawlers. As each dies, a puff of smoke collects into a larger and larger cloud overhead. Should be fine, right?</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!l1NqBqggBZB4IFwN.aCeBrDgFlkEVD5gU"
+    },
+    {
+      "_id": "Sl2UhWiTdbNj3xiD",
+      "type": "text",
+      "name": "Rumbling ground and a collapsing wall",
+      "img": null,
+      "description": "<p>The ground beneath the feet of the crawlers begins to rumble and shift. Before long, it is extremely difficult for them to maintain their footing. Meanwhile, the wall of a nearby building begins to collapse on top of them.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!l1NqBqggBZB4IFwN.Sl2UhWiTdbNj3xiD"
+    },
+    {
+      "_id": "kd9ipKTsiEx0q1rv",
+      "type": "text",
+      "name": "A Goblin merchant hawking Goblin wares",
+      "img": null,
+      "description": "<p>The squeal of a rusty axle the next street over draws attention. A Goblin merchant dressed in dusty business attire pushes a tarp-covered cart down the road. If he spots the crawlers, he calls them and attempts to sell his Goblin wares. PCs with a Goblin Pass receive a discount.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!l1NqBqggBZB4IFwN.kd9ipKTsiEx0q1rv"
+    },
+    {
+      "_id": "EXdgKSb9ZgCMLVog",
+      "type": "text",
+      "name": "The watching centipede statue",
+      "img": null,
+      "description": "<p>A statue of an enormous centipede, composed mostly of rebar and the concrete remnants of a highway bridge, towers more than 30 feet in the air. Spotty black paint covers portions of the statue, giving it a mottled look. Its gaze appears to follow the crawlers as they move.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!l1NqBqggBZB4IFwN.EXdgKSb9ZgCMLVog"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!l1NqBqggBZB4IFwN"
+}

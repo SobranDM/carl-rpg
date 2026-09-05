@@ -1,0 +1,191 @@
+{
+  "_id": "2zIUoNXcRs5MeUto",
+  "name": "Table 77: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 77 (p.338).</em> Heavensworth Neighborhood (Third Floor, The Over City) grinding complications. Used when crawlers grind for experience in the ruins around Heavensworth.</p>",
+  "results": [
+    {
+      "_id": "unz9kHZn1zA54i6R",
+      "type": "text",
+      "name": "City Elves drawn by structural damage",
+      "img": null,
+      "description": "<p>The crawlers' repeated use of AOE attacks or heavy weapons causes structural damage, drawing the attention of a large Mob of City Elves who were in town for a major religious gathering.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!2zIUoNXcRs5MeUto.unz9kHZn1zA54i6R"
+    },
+    {
+      "_id": "slO73Zsjol6FsKtj",
+      "type": "text",
+      "name": "Bugaboos set ambushes",
+      "img": null,
+      "description": "<p>Bugaboos start noticing the crawlers' grinding patterns and begin setting up ambushes where the crawlers typically go to fight Mobs.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!2zIUoNXcRs5MeUto.slO73Zsjol6FsKtj"
+    },
+    {
+      "_id": "Za5rNFiCxwOEjXFK",
+      "type": "text",
+      "name": "Bored viewers send Brain Boilers",
+      "img": null,
+      "description": "<p>Viewers in the live audience get bored watching repetitive grinding, causing the AI to send Mobs of Brain Boilers raining down on the crawlers' position.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!2zIUoNXcRs5MeUto.Za5rNFiCxwOEjXFK"
+    },
+    {
+      "_id": "LOvKsS9XvGtfORu2",
+      "type": "text",
+      "name": "Curse raises undead Mobs",
+      "img": null,
+      "description": "<p>Excessive grinding in the ruins triggers a curse that begins raising undead versions of the recent Mob kills. The curse can be lifted by a complicated ritual in one of the fallen temples or just killing the head undead that emerged first.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!2zIUoNXcRs5MeUto.LOvKsS9XvGtfORu2"
+    },
+    {
+      "_id": "kPQ6Bo5Um550C5J9",
+      "type": "text",
+      "name": "Player-killers set traps",
+      "img": null,
+      "description": "<p>A group of player-killers stalks the crawlers, setting a variety of traps to funnel the crawlers into a kill zone where their Area of Effect attacks will hit the entire party.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!2zIUoNXcRs5MeUto.kPQ6Bo5Um550C5J9"
+    },
+    {
+      "_id": "d6qzojEX9TeXps0c",
+      "type": "text",
+      "name": "Skyfowl fine the crawlers",
+      "img": null,
+      "description": "<p>A Mob of Skyfowl notices the crawlers' repeated grinding activity and fines them for destruction of public property and littering.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!2zIUoNXcRs5MeUto.d6qzojEX9TeXps0c"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!2zIUoNXcRs5MeUto"
+}

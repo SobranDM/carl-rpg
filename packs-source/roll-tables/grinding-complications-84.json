@@ -1,0 +1,191 @@
+{
+  "_id": "FyrMZnHDvRlRJkEv",
+  "name": "Table 84: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 84 (p.419).</em> The Show Must Go On Quest (Third Floor, The Over City) grinding complications, set around the parasite-circus with Stilt Clowns, Mold Lions, and Former Circus Lemurs.</p>",
+  "results": [
+    {
+      "_id": "jTp4cr2cPknU41QZ",
+      "type": "text",
+      "name": "Stilt Clowns juggle volatile potions",
+      "img": null,
+      "description": "<p>One of the Stilt Clowns took the dangerous new hobby of juggling potions and alchemical solutions. Any time one is dropped or knocked from its hands, it explodes, unleashing its effects on nearby crawlers and Mobs.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FyrMZnHDvRlRJkEv.jTp4cr2cPknU41QZ"
+    },
+    {
+      "_id": "vrwyntaV07AUgMaZ",
+      "type": "text",
+      "name": "Lemur web-maze across the streets",
+      "img": null,
+      "description": "<p>A group of Lemurs constructed a web-like maze across several streets and alleyways. The web could be easily cut through, but anything disturbing the net brings the Lemurs to investigate, and possibly capture any crawlers for their next meal.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FyrMZnHDvRlRJkEv.vrwyntaV07AUgMaZ"
+    },
+    {
+      "_id": "QWdgLYPV5wk7CJCR",
+      "type": "text",
+      "name": "A stray shot breaks a potter's vase",
+      "img": null,
+      "description": "<p>A rogue projectile (magical or physical) escaped the arena of combat and broke a vase at a local pottery shop. The potter called the Village Guards over to adjudicate proper compensation.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FyrMZnHDvRlRJkEv.QWdgLYPV5wk7CJCR"
+    },
+    {
+      "_id": "9BJ4S6GlhsulGXQr",
+      "type": "text",
+      "name": "Mold Lioness and her uninfected cubs",
+      "img": null,
+      "description": "<p>The crawlers wander into the Mold Lions' den and come across a Mold Lionesses and their cubs. The cubs, unlike their parents, are not wholly under the influence of the spores.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FyrMZnHDvRlRJkEv.9BJ4S6GlhsulGXQr"
+    },
+    {
+      "_id": "1f10JmeYupXeIWHp",
+      "type": "text",
+      "name": "Former Circus Lemurs on the balconies",
+      "img": null,
+      "description": "<p>The only way forward through the alleys is a narrow passage with balconies crawling with Former Circus Lemurs poised to attack. The crawlers can choose an all-out brawl or attempt to pass under their noses undetected and unaccosted.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FyrMZnHDvRlRJkEv.1f10JmeYupXeIWHp"
+    },
+    {
+      "_id": "SoOd2FvcYHXNLi29",
+      "type": "text",
+      "name": "Ogres debate cooking captured crawlers",
+      "img": null,
+      "description": "<p>A group of Ogres kidnapped other crawlers and tied them up by a fire. The Ogres argue about the best method for cooking and eating the crawlers--maybe there's still a chance to save them?</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FyrMZnHDvRlRJkEv.SoOd2FvcYHXNLi29"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!FyrMZnHDvRlRJkEv"
+}

@@ -1,0 +1,191 @@
+{
+  "_id": "BgVfhasmx1q5Ynq9",
+  "name": "Table 102: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 102 (p.586).</em> Floor 5 (The Bubbles), Screaming Sea Neighborhood &mdash; random complications for grinding Pirates, Bubble Belugas, and Pain Amplifier Jellyfish around the Leviathan Tavern and the Maritime Mausoleum.</p>",
+  "results": [
+    {
+      "_id": "dJa1vMLRhpfdThZF",
+      "type": "text",
+      "name": "Scat Thug Pirates ride Bubble Belugas into battle",
+      "img": null,
+      "description": "A Scat Thug Pirate crew has tamed a pod of Bubble Belugas and now rides them into battle. They cut through the water, Pirates firing grappling hooks and leaping aboard, screaming \"blub for the blub god\" while the Belugas ram the ship from below.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!BgVfhasmx1q5Ynq9.dJa1vMLRhpfdThZF"
+    },
+    {
+      "_id": "idGqM7k8JOXMrANO",
+      "type": "text",
+      "name": "The old Pirate selling a treasure map",
+      "img": null,
+      "description": "The crawlers encounter a Pirate who claims to have a treasure map to an item of great power. He's too old to brave the Pain Amplifier Jellyfish that guard the approach and the Cannonback Tortoises patrolling the isle, but he's willing to sell the map for 3,000 gold.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!BgVfhasmx1q5Ynq9.idGqM7k8JOXMrANO"
+    },
+    {
+      "_id": "50jnq2eJZCeqJ7jh",
+      "type": "text",
+      "name": "Jellyfish bloom climbs the hull",
+      "img": null,
+      "description": "A bloom of Pain Amplifier Jellyfish swarms the crawler's ship, tentacles sticking to the hull, and they begin to climb aboard.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!BgVfhasmx1q5Ynq9.50jnq2eJZCeqJ7jh"
+    },
+    {
+      "_id": "KLUI6hY1zDv58se4",
+      "type": "text",
+      "name": "Caught in the whirlpool sea battle",
+      "img": null,
+      "description": "The party comes across a whirlpool, around which a sea battle takes place. The crawlers' ship gets caught in the vortex along with the Pirate ships, who attack once they notice the newcomers.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!BgVfhasmx1q5Ynq9.KLUI6hY1zDv58se4"
+    },
+    {
+      "_id": "a8lkNdl1deBPg8qr",
+      "type": "text",
+      "name": "The Pirate hunter commodore's fleet",
+      "img": null,
+      "description": "A flamboyant Pirate hunter commodore leads a small fleet of ships in an attack against the crawlers, unwilling to believe they aren't buccaneers.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!BgVfhasmx1q5Ynq9.a8lkNdl1deBPg8qr"
+    },
+    {
+      "_id": "h3eM50cOTQ2eyPq7",
+      "type": "text",
+      "name": "The cannonballs hatch",
+      "img": null,
+      "description": "Cannonballs on the crawlers' ship begin to hatch. Soon the deck swarms with Cannonback Tortoises.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!BgVfhasmx1q5Ynq9.h3eM50cOTQ2eyPq7"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!BgVfhasmx1q5Ynq9"
+}

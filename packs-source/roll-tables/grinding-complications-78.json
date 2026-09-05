@@ -1,0 +1,191 @@
+{
+  "_id": "3yjfourDdfQVjf5X",
+  "name": "Table 78: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 78 (p.350).</em> Noir Town Neighborhood (Third Floor, The Over City) grinding complications. Used when crawlers grind for experience through repeated Mob encounters in Noir Town.</p>",
+  "results": [
+    {
+      "_id": "5wzYewXspKqKtCw5",
+      "type": "text",
+      "name": "Wounded NPC key to a mystery",
+      "img": null,
+      "description": "<p>The crawlers find an NPC they previously met inside the room/building/alley of a Mob they just took down. The NPC is badly wounded and needs their help. What's more, that NPC may be key to a mystery (see Story Arcs, p. 344). Without their help, the crawlers can't solve the puzzle.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!3yjfourDdfQVjf5X.5wzYewXspKqKtCw5"
+    },
+    {
+      "_id": "N4kiDtABJ1zhYyEx",
+      "type": "text",
+      "name": "A second Mob arrives mid-fight",
+      "img": null,
+      "description": "<p>While fighting one Mob, another Mob arrives. Since Noir Town is a hotbed of gang activity and warring factions, the crawlers now have enemies on two sides.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!3yjfourDdfQVjf5X.N4kiDtABJ1zhYyEx"
+    },
+    {
+      "_id": "oYbysN8YqPzOvyTW",
+      "type": "text",
+      "name": "An important NPC dies in the crossfire",
+      "img": null,
+      "description": "<p>Someone important to Noir Town was caught in the crossfire of the crawlers' last fight, and they died. Now information is harder to come by, and the NPC folks in the streets clam up. Beat Cops are after the crawlers now as well.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!3yjfourDdfQVjf5X.oYbysN8YqPzOvyTW"
+    },
+    {
+      "_id": "65ynSJa6om0OnYtt",
+      "type": "text",
+      "name": "Wound needs a disgraced doctor",
+      "img": null,
+      "description": "<p>A wound taken during combat can only be fixed by an underground disgraced doctor who has the specific type of healing potion needed to address that condition. The party must find them and convince them to help.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!3yjfourDdfQVjf5X.65ynSJa6om0OnYtt"
+    },
+    {
+      "_id": "D4KIhWKnBfFF1pGm",
+      "type": "text",
+      "name": "Street urchins steal an item",
+      "img": null,
+      "description": "<p>While the crawlers are grinding, some NPC street urchins (metaphorical ones, not the floor's Janitor Mob) lifted an important item from one crawler. They must track down the right kid to get it back. This can tie into the sewers in the Red-Light District (p. 351).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!3yjfourDdfQVjf5X.D4KIhWKnBfFF1pGm"
+    },
+    {
+      "_id": "KtPUR2YnFBBHayfM",
+      "type": "text",
+      "name": "Adoring street urchins complicate things",
+      "img": null,
+      "description": "<p>A different NPC street urchin, or a pack of them, witnessed the crawlers' last battle. They now view them as heroes as they follow them everywhere. They're as annoying as a geezer going on about how things were in \"his day,\" and their presence complicates future Mob encounters.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!3yjfourDdfQVjf5X.KtPUR2YnFBBHayfM"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!3yjfourDdfQVjf5X"
+}

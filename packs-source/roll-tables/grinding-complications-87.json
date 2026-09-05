@@ -1,0 +1,191 @@
+{
+  "_id": "ijU597apbjrVs169",
+  "name": "Table 87: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 87 (p.431).</em> Training Day Neighborhood (Fourth Floor, The Iron Tangle) grinding complications. Used when crawlers hop from train to train in search of experience.</p>",
+  "results": [
+    {
+      "_id": "OgSbHt357uCw6Ld7",
+      "type": "text",
+      "name": "The train never reaches the next station",
+      "img": null,
+      "description": "<p>The crawlers slay the last monster on a train and wait for the next station... only it doesn't come. Minutes turn to hours. No matter how long they wait, it's clear this train is just crawling along, slow as can be. Crawlers lose 1d4 hours or 1d2 hours if they get out and walk.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ijU597apbjrVs169.OgSbHt357uCw6Ld7"
+    },
+    {
+      "_id": "Szv6A1ovnMqBUXKk",
+      "type": "text",
+      "name": "The train is a mimic",
+      "img": null,
+      "description": "<p>A train sits upon the tracks. No steam rises from it, but it rumbles as if it's active. The door to the engine car sits wide open, a manual waiting by the controls. If the crawlers enter, they note how plush the carpeting feels and how each step is strangely more difficult than the last. Then comes the smell of rotten meat, and a thick droplet of drool pools from the ceiling, as the door slams shut, revealing the train is a massive mimic--and they're standing on its tongue. (GM: A battle might ensue, or the crawlers narrowly escape, cutting their grind 1d2 hours short).</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ijU597apbjrVs169.Szv6A1ovnMqBUXKk"
+    },
+    {
+      "_id": "F1XDffbkmdA4nViJ",
+      "type": "text",
+      "name": "Multiple trains crashed ahead",
+      "img": null,
+      "description": "<p>The train upon which the crawlers find themselves grinds to a complete stop in the middle of the track. Ahead, multiple trains crashed into one another, leaving the tunnels completely blocked and antsy Mobs swarming. The Crawlers gain an extra 1d4 hours of grinding time from all the Mobs.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ijU597apbjrVs169.F1XDffbkmdA4nViJ"
+    },
+    {
+      "_id": "PiprFf2uPlpuL1gy",
+      "type": "text",
+      "name": "A blackened box radiates dread",
+      "img": null,
+      "description": "<p>As crawlers move from one car to another, they find a large box in the center of the car. The metal and the five-foot area around the box are blackened. The longer they stare at it, the more they feel the hair on the back of their necks rise.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ijU597apbjrVs169.PiprFf2uPlpuL1gy"
+    },
+    {
+      "_id": "g38kHPepa0anisAG",
+      "type": "text",
+      "name": "Mantaur engineers argue at a junction",
+      "img": null,
+      "description": "<p>Two trains come to a slow stop at a junction. Neither of them wants to go until the other does. The Mantaur engineers yell increasingly bawdy and boisterous things at each other, and it may well escalate into a brawl.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ijU597apbjrVs169.g38kHPepa0anisAG"
+    },
+    {
+      "_id": "a7e79G8VS5dqPLc5",
+      "type": "text",
+      "name": "Unresponsive smiling crawlers aboard",
+      "img": null,
+      "description": "<p>The crawlers board a train just as the doors close. At first, it appears there are other crawlers aboard. There are dots, the people have names, Levels, Classes, and Races. However, they're completely unresponsive. All of them simply follow the crawler party with their eyes and smile pleasantly.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!ijU597apbjrVs169.a7e79G8VS5dqPLc5"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!ijU597apbjrVs169"
+}

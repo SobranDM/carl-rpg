@@ -1,0 +1,191 @@
+{
+  "_id": "vxkcwT9mZWsIjH1r",
+  "name": "Table 81: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 81 (p.385).</em> Hate High Quest (Third Floor, The Over City) grinding complications, set within the parodic high-school Quest location.</p>",
+  "results": [
+    {
+      "_id": "ls1uqFifcnO2a1ba",
+      "type": "text",
+      "name": "Trapped under a toppled vending machine",
+      "img": null,
+      "description": "<p>It was all going well until a vending machine toppled over, and the thing is a lot heavier than you thought. Now you gotta free yourself before you're crushed or get caught by a Mob. Hope you brought some brutes and maybe a sturdy hand truck.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vxkcwT9mZWsIjH1r.ls1uqFifcnO2a1ba"
+    },
+    {
+      "_id": "a4B0ZSGRq9xcgYKE",
+      "type": "text",
+      "name": "Stuffed in a locker",
+      "img": null,
+      "description": "<p>During your last fight, one of you got stuffed into a locker, and you're still trapped inside. Look, it happens to the best of us, really. Okay, it pretty much only happens to nerds and dumbasses. Anyway, you don't have the combination. And an explosive spell would probably make things worse, right? Find your way out before something else finds you instead.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vxkcwT9mZWsIjH1r.a4B0ZSGRq9xcgYKE"
+    },
+    {
+      "_id": "uYxG086HKRKljdeo",
+      "type": "text",
+      "name": "Locked in detention with Student Bodies",
+      "img": null,
+      "description": "<p>Gah! You got detention. You're locked in some quasi-part of the school. A pseudo-prison room with a bunch of desks and the snores of a completely random amalgamation of sleeping Student Bodies. The room gets smaller every minute, and as soon as the Student Bodies wake up, things are gonna get messy.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vxkcwT9mZWsIjH1r.uYxG086HKRKljdeo"
+    },
+    {
+      "_id": "OUegQ5QduMtp6l4L",
+      "type": "text",
+      "name": "Trapped in the Skibidi Toilet pipes",
+      "img": null,
+      "description": "<p>Skibidi Toilet. Your party is stuck in one. More specifically, in the Mario-sized pipes under one. You're stuck between halls, between classrooms. Unfortunately for you, the toilets flushing and sinks running overhead are the least of your concerns. Fix the plumbing before the plumbing fixes you.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vxkcwT9mZWsIjH1r.OUegQ5QduMtp6l4L"
+    },
+    {
+      "_id": "a7qC7QdPDW7kkSNi",
+      "type": "text",
+      "name": "Bacon challenges you to a dance-off",
+      "img": null,
+      "description": "<p>You angered one of the Cool Kids. His name is Bacon, and now he wants a dance-off! Better get Footloose, crawlers, because you ain't getting out of here without some fancy footwork. Cue Kenny Loggins!</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vxkcwT9mZWsIjH1r.a7qC7QdPDW7kkSNi"
+    },
+    {
+      "_id": "L6x31IilV490Yfus",
+      "type": "text",
+      "name": "Recruited into the school play",
+      "img": null,
+      "description": "<p>Somewhere during combat, you got recruited for the school play: Biker Macbeth. \"In the grim wasteland of the far future, there is only... Macbeth.\" And you don't know your lines. Better improvise something cool or suffer the slings and arrows of the Mob audience that's watching your mandatory dress rehearsal.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!vxkcwT9mZWsIjH1r.L6x31IilV490Yfus"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!vxkcwT9mZWsIjH1r"
+}

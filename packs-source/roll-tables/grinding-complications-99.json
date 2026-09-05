@@ -1,0 +1,191 @@
+{
+  "_id": "E2YnN9ak7W8SG0Tx",
+  "name": "Table 99: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 99 (p.554).</em> Floor 5 (The Bubbles), Howling Winds Neighborhood &mdash; random complications for grinding among the Pterolykos and the City Elves of Castle Contractors, near Wolfwind Village and the Elven Camp.</p>",
+  "results": [
+    {
+      "_id": "2qGNUH6z5S59MCyS",
+      "type": "text",
+      "name": "Elder Silkpaw's question",
+      "img": null,
+      "description": "An elder Pterolykos (Elder Silkpaw, unless he is dead) is sitting upon the edge of the Cliff, staring out in a meditative trance. As you approach, he will ask, deceptively calmly, \"Do you walk among the trees? Or do you desire them for your own?\"",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!E2YnN9ak7W8SG0Tx.2qGNUH6z5S59MCyS"
+    },
+    {
+      "_id": "jp3OutqIkItCLSTu",
+      "type": "text",
+      "name": "Clear-Cutter ambush amid smoke and ash",
+      "img": null,
+      "description": "The crawlers have entered a section of the forest that smells of smoke and ash. Nearby, the Cliff's edge looms ominously. There's a whirring sound, and a tree falls as an Elven Clear-Cutter crawls up from the side of the Cliff and attacks. At the same time, two Clear-Cutters charge from the direction of the Lower Montane.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!E2YnN9ak7W8SG0Tx.jp3OutqIkItCLSTu"
+    },
+    {
+      "_id": "b7MYwaInzAG8htPj",
+      "type": "text",
+      "name": "Captured Pterolykos in a net",
+      "img": null,
+      "description": "City Elves have captured a Pterolykos in a net that has been tightened against a tree. They cackle as it struggles and threatens them. They begin to ready a spell as the crawlers watch.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!E2YnN9ak7W8SG0Tx.b7MYwaInzAG8htPj"
+    },
+    {
+      "_id": "7y2uq1ZKIt84FuwL",
+      "type": "text",
+      "name": "Pit trap and Pterolykos hunting party",
+      "img": null,
+      "description": "A crawler must make a roll to avoid falling into a pit trap. Whether they avoid it or not, a Moderate Pterolykos hunting party drops from above, proceeding to surround the party as one remains in the canopy, aiming a rifle at the party.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!E2YnN9ak7W8SG0Tx.7y2uq1ZKIt84FuwL"
+    },
+    {
+      "_id": "9yoI5NL9XhGczEmG",
+      "type": "text",
+      "name": "City Elf trappers drop from a drone helicopter",
+      "img": null,
+      "description": "As the crawlers hike through the forest, there's a distinct feeling they're being followed. Suddenly, the cloud fog begins to part around them. This seems like a positive thing until a Moderate group of City Elf trappers drops from a drone helicopter, and all of them begin whooping as they attack the crawlers.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!E2YnN9ak7W8SG0Tx.9yoI5NL9XhGczEmG"
+    },
+    {
+      "_id": "54ItCSbGLQ4po2Z3",
+      "type": "text",
+      "name": "Jerry Madd and Renato Martin 5 chase a Pterolykos",
+      "img": null,
+      "description": "Crawlers Jerry Madd and Renato Martin 5 are chasing a Pterolykos through the woods, trying to help City Elf trappers catch it. They're being incredibly careful and gentle with the wolf-person, but it's clear they're working with the City Elves.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!E2YnN9ak7W8SG0Tx.54ItCSbGLQ4po2Z3"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!E2YnN9ak7W8SG0Tx"
+}

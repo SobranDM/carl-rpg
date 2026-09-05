@@ -1,0 +1,191 @@
+{
+  "_id": "mmwvG5SeQ1etEKRW",
+  "name": "Table 91: Grinding Complications",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 91 (p.483), Floor 4: The Iron Tangle, Outer Platform Junction maintenance station.</em> Random complications for crawlers grinding for experience against Harvesters, Babababoons, and Bone Collectors in the immune-system-like maintenance station.</p>",
+  "results": [
+    {
+      "_id": "4OAgfAytQRCvOXOZ",
+      "type": "text",
+      "name": "Tape recorder plays an endless cry for help",
+      "img": null,
+      "description": "<p>Cries for help emanate from behind a large rocky outcropping. If the crawlers investigate, they find a tape recorder is the source of the cries. The first crawler to touch it starts up that same cry for the remainder of the grind.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mmwvG5SeQ1etEKRW.4OAgfAytQRCvOXOZ"
+    },
+    {
+      "_id": "bVx1twkFGccmpHdr",
+      "type": "text",
+      "name": "Employee's jetpack shack explodes",
+      "img": null,
+      "description": "<p>The crawlers come across a pack of Babababoons toying with a station employee. If the crawlers approach, he cries out \"Oh no! More of them!\" He runs inside his small shack and the Babababoons run off scared as shit. 15 seconds later the shack explodes: 3d6 Fire, 15ft Burst radius +10ft Splash, as he takes off strapped to an overclocked jetpack.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mmwvG5SeQ1etEKRW.bVx1twkFGccmpHdr"
+    },
+    {
+      "_id": "k5bAJ8mKp49q244y",
+      "type": "text",
+      "name": "Crawlers fall through the floor into a metal labyrinth",
+      "img": null,
+      "description": "<p>A support fails, and crawlers fall through the floor into a twisting metal labyrinth filled with Bone Collectors and Harvesters. They're hunted in the dark corridors until they find a way to escape.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mmwvG5SeQ1etEKRW.k5bAJ8mKp49q244y"
+    },
+    {
+      "_id": "SC6UK6XRAK618nAF",
+      "type": "text",
+      "name": "Volatile supply room disassembly",
+      "img": null,
+      "description": "<p>The crawlers come across Babababoons and Harvesters beginning the disassembly of a supply room. Next to them is a forklift, its bed loaded with volatile chemicals. The room can be cleared with an explosion, but it'll destroy the supplies inside.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mmwvG5SeQ1etEKRW.SC6UK6XRAK618nAF"
+    },
+    {
+      "_id": "TYE1TL8wA3yMfaS2",
+      "type": "text",
+      "name": "Literate Babababoon trades saferoom intel for his life",
+      "img": null,
+      "description": "<p>A lone Babababoon sits in a corner of the Dropworks, sounding out words from a repair manual. His augments grant him higher intelligence, and he questions his destructive instincts. He'll trade the location of a saferoom for his life.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mmwvG5SeQ1etEKRW.TYE1TL8wA3yMfaS2"
+    },
+    {
+      "_id": "WecnhUakgxVoeN11",
+      "type": "text",
+      "name": "Overwhelming Fleshers hanging from the ceiling",
+      "img": null,
+      "description": "<p>The crawlers enter a dark corridor filled with soft rustling sounds. An Overwhelming number of Fleshers hang upside down from the ceiling like bats. Moving through without disturbing them is possible, but any noise or touch awakens them all.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!mmwvG5SeQ1etEKRW.WecnhUakgxVoeN11"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": null,
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!mmwvG5SeQ1etEKRW"
+}
