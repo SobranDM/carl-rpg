@@ -29,17 +29,45 @@ export function buildConditionEntry(key, { stacks = 1, source = "", label = "" }
   };
 }
 
+// "A 2nd Minor/Major Injury converts to the matching Long-Term version"
+// (Table 11, Debuffs) - the second application doesn't stack alongside the
+// first, it escalates into a single worse condition instead.
+const INJURY_UPGRADES = {
+  minorInjury: "longTermMinorInjury",
+  majorInjury: "longTermMajorInjury",
+};
+
 /**
- * Push a new condition entry onto an actor's `system.conditions`.
+ * Push a new condition entry onto an actor's `system.conditions` -
+ * enforcing Table 11's `stackable` flag (CONFIG.CARLRPG.debuffs) along the
+ * way: a non-stackable Debuff already present doesn't get a duplicate row.
+ * A 2nd Minor/Major Injury is the one special case that isn't a simple
+ * refresh - it replaces the existing entry with the Long-Term version.
  * @param {Actor} actor
  * @param {string} key
  * @param {{stacks?: number, source?: string, label?: string}} [options]
  * @returns {Promise<Actor>}
  */
 export async function addConditionToActor(actor, key, options = {}) {
-  const entry = buildConditionEntry(key, options);
   const current = foundry.utils.deepClone(actor.system.conditions ?? []);
-  current.push(entry);
+  const existingIndex = current.findIndex((c) => c.key === key);
+
+  if (existingIndex !== -1) {
+    const upgradeKey = INJURY_UPGRADES[key];
+    if (upgradeKey) {
+      current.splice(existingIndex, 1, buildConditionEntry(upgradeKey, options));
+      return actor.update({ "system.conditions": current });
+    }
+    const preset = CONFIG.CARLRPG.debuffs[key];
+    if (preset?.stackable === false) {
+      // Already present and not meant to stack - refresh its duration (if
+      // it has one) instead of silently no-oping or pushing a duplicate row.
+      current[existingIndex] = buildConditionEntry(key, { ...options, stacks: current[existingIndex].stacks });
+      return actor.update({ "system.conditions": current });
+    }
+  }
+
+  current.push(buildConditionEntry(key, options));
   return actor.update({ "system.conditions": current });
 }
 

@@ -234,6 +234,7 @@
     "TargetEffect": {
       "Stacks": "Stacks",
       "CritOnly": "Crit Only",
+      "AmazingSuccessOnly": "Amazing Success Only",
       "LabelPlaceholder": "Label override (optional)",
       "Remove": "Remove",
       "Add": "Add Target Effect"
@@ -321,7 +322,8 @@
       "EvadeCriticalFail": "Critical Fail: this crawler takes double damage and gains a Major Injury Debuff after combat.",
       "AdvancementTitle": "Skill Advancement: {name}",
       "AdvancementSuccess": "Success! Rank {rank}",
-      "AdvancementFail": "No advancement"
+      "AdvancementFail": "No advancement",
+      "AdvancementAtCap": "Already at its Rank cap ({rank}) - no Check rolled."
     },
     "Dialog": {
       "Roll": "Roll",

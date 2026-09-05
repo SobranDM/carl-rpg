@@ -530,6 +530,7 @@ export default class CarlDice {
         ? sys.skills?.[slugifySkillName(damageEffectItem.name)]
         : null;
       const isCrit = naturalRoll === 20;
+      const isAmazingSuccess = degree === "amazingSuccess";
       const built = buildDamageRollParts({
         skillItem, skillEntry, damageEffectItem, damageEffectEntry, isCrit, rollData, conditionalModifiers, checked: options.checked,
       });
@@ -537,9 +538,19 @@ export default class CarlDice {
       rolls.push(...evaluated.rolls);
       rollMeta.push(...evaluated.rollMeta);
       damageByType = evaluated.damageByType;
+      // "Success by 10 or more (Amazing Success): the crawler's Attack
+      // deals extra damage equal to their current Floor Number" (Degrees
+      // of Success table, p.79) - distinct from Critical Hit (which
+      // doubles base dice instead), so no double-dip risk between the two.
+      // Added as untyped ("") damage, same convention as Evade's own
+      // Major-Fail +Floor bonus (module/chat/evade-link-card.mjs).
+      if (isAmazingSuccess) {
+        const floor = game.settings.get("carl-rpg", "currentFloor");
+        damageByType[""] = (damageByType[""] ?? 0) + floor;
+      }
       targetEffects = [
-        ...collectItemTargetEffects(skillItem, { isCrit }),
-        ...(damageEffectItem ? collectItemTargetEffects(damageEffectItem, { isCrit }) : []),
+        ...collectItemTargetEffects(skillItem, { isCrit, isAmazingSuccess }),
+        ...(damageEffectItem ? collectItemTargetEffects(damageEffectItem, { isCrit, isAmazingSuccess }) : []),
       ];
     }
 
@@ -569,9 +580,14 @@ export default class CarlDice {
       // Carl RPG p.81) against this specific Attack instead of silently
       // accepting the static-Difficulty auto-resolution above - see
       // module/chat/evade-link-card.mjs. attackerType feeds the PvP-vs-Mob
-      // Difficulty rule (p.87) at click time.
+      // Difficulty rule (p.87) at click time. Stores `difficulty` (the
+      // value actually used for THIS roll, which the GM may have
+      // overridden in the dialog - e.g. typing in a Mob's real printed
+      // to-hit value instead of the auto-computed default), NOT the raw
+      // auto-computed `targetDifficulty` - otherwise a GM's override would
+      // silently vanish the moment someone clicks "Roll Evade".
       flags.attackTotal = attackTotal;
-      flags.targetDifficulty = targetDifficulty;
+      flags.targetDifficulty = difficulty;
       flags.attackerType = actor.type;
       // The attacking token's own uuid - lets a defending token's Evade
       // roll record "Advantage vs. THIS Mob-instance" (see advantageEntitled
@@ -894,6 +910,23 @@ export default class CarlDice {
     // both are granted by a separate owned Race/Class item, not the Skill.
     const bonus = actor.system.advancementBonuses?.[slug] ?? 0;
     const rankCap = actor.system.rankCaps?.[slug] ?? 15;
+
+    // Already at the ceiling - don't roll at all, and don't report a
+    // cosmetic "success" that can't actually raise the Rank any further
+    // (the old behavior rolled anyway, always showed "+1 Rank 15", and
+    // still cleared the mark, which reads as progress when nothing moved).
+    if (currentRank >= rankCap) {
+      if (!silent) {
+        await createCardMessage({
+          title: game.i18n.format("CARLRPG.Roll.AdvancementTitle", { name: skillItem.name }),
+          body: `<p>${game.i18n.format("CARLRPG.Roll.AdvancementAtCap", { rank: rankCap })}</p>`,
+          img: skillItem.img,
+          actor,
+        });
+      }
+      return { success: false, roll: null, newRank: currentRank };
+    }
+
     const roll = new Roll(bonus ? `1d20 + ${bonus}` : "1d20");
     await roll.evaluate();
     const success = roll.total >= currentRank;

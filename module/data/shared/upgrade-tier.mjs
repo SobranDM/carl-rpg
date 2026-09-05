@@ -28,6 +28,17 @@ export function defineTargetEffectSchema() {
     stacks: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 1, min: 1 }),
     /** Only surface/apply this effect when the triggering roll was a natural 20 (e.g. Iron Punch, Fear). */
     critOnly: new fields.BooleanField({ required: true, initial: false }),
+    /**
+     * Only surface/apply this effect when the Attack's Degree of Success was
+     * Amazing Success (margin >=10) - the book's own "AS: Effect" weapon-
+     * enchant convention (e.g. Table 26: Scroll of Upgrade Weapon Effects)
+     * is explicit that Amazing Success and Critical Hit are mutually
+     * exclusive triggers ("A Critical Hit does not trigger such an effect",
+     * Crafting p.223) - keep this and critOnly as two independent flags
+     * rather than folding into one enum, so a future item could in theory
+     * (though none currently do) want neither/both.
+     */
+    amazingSuccessOnly: new fields.BooleanField({ required: true, initial: false }),
     /** Optional display override; falls back to CONFIG.CARLRPG.debuffs[debuffKey].label. */
     label: new fields.StringField({ required: false, blank: true, initial: "" }),
   };

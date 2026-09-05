@@ -20,6 +20,34 @@ export class CarlRPGActor extends Actor {
     super.prepareDerivedData();
   }
 
+  /**
+   * "When a crawler gains a Level, they also get 3 Stat points to assign"
+   * (Crawler Advancement, p.169) - grant `3 x levelDelta` into the same
+   * `bankedStatPoints` field module/apps/spend-stat-points-dialog.mjs
+   * spends from, whenever this actor's Level actually increases (a GM
+   * decrementing Level to correct a mistake doesn't claw points back,
+   * consistent with this project's "once baked in, they stay" philosophy
+   * for other permanent grants). Mutates `changed` directly so the points
+   * land in the SAME update operation as the Level change, rather than a
+   * second separate write - covers every path that can change Level (the
+   * GM Toolbox's Party Level Up button, the sheet's own Level field, a
+   * future Boss-kill/PvP Level-award action), not just one specific caller.
+   * @override
+   */
+  async _preUpdate(changed, options, user) {
+    const allowed = await super._preUpdate(changed, options, user);
+    if (allowed === false) return false;
+
+    const newLevel = foundry.utils.getProperty(changed, "system.attributes.level.value");
+    if (newLevel !== undefined) {
+      const delta = Number(newLevel) - (this.system.attributes?.level?.value ?? 0);
+      if (delta > 0) {
+        const currentBanked = this.system.bankedStatPoints ?? 0;
+        foundry.utils.setProperty(changed, "system.bankedStatPoints", currentBanked + 3 * delta);
+      }
+    }
+  }
+
   /** @override */
   getRollData() {
     return { ...super.getRollData(), ...this.system.getRollData?.() ?? null };

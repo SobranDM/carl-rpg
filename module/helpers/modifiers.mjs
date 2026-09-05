@@ -21,9 +21,18 @@
  * (add/subtract/multiply/override/upgrade/downgrade) are the same ones
  * DataField#applyChange implements, reimplemented here as simple, explicit,
  * version-stable arithmetic.
+ *
+ * One deliberate exception to "everything here is a live, per-render bonus
+ * on top of base": a `class`/`race` item's own `stat`/`skillRank` changes
+ * are a one-time, permanent bump to the BASE value instead (see
+ * module/helpers/race-class-grants.mjs, the write side of this) - this
+ * file's `applyOneChange` (`isBakedGrant`) skips the live delta for exactly
+ * that combination so the actor doesn't double-dip, while still applying
+ * any `capMax` ceiling on the same entry live, every pass, same as always.
  */
 
 import { getRankDamageDie } from "./rules.mjs";
+import { CARLRPG } from "./config.mjs";
 
 const RANKED_TYPES = new Set(["skill", "spell", "damageEffect"]);
 
@@ -118,7 +127,7 @@ function collectItemChanges(item) {
   const sourceItemRank = sys.rank ?? 0;
   const out = [];
   for (const change of sys.changes ?? []) {
-    out.push({ change, sourceLabel: item.name, sourceItemId: item.id, sourceItemRank });
+    out.push({ change, sourceLabel: item.name, sourceItemId: item.id, sourceItemRank, sourceItemType: item.type });
   }
   if (Array.isArray(sys.upgrades)) {
     for (const upgrade of sys.upgrades) {
@@ -129,6 +138,7 @@ function collectItemChanges(item) {
           sourceLabel: `${item.name} (Rank ${upgrade.rankThreshold})`,
           sourceItemId: item.id,
           sourceItemRank,
+          sourceItemType: item.type,
         });
       }
     }
@@ -141,7 +151,10 @@ function collectItemChanges(item) {
  * module/data/shared/upgrade-tier.mjs) from one item's unlocked Upgrade
  * tiers - i.e. "on hit, the target gains Debuff X". Rank-gated exactly like
  * collectItemChanges above (only tiers whose rankThreshold the item's own
- * current Rank meets); additionally crit-gated per-entry via `critOnly`.
+ * current Rank meets); additionally gated per-entry via `critOnly` (natural
+ * 20) and/or `amazingSuccessOnly` (Degree of Success "Amazing Success") -
+ * the book's own "AS: Effect" weapon-enchant convention (Crafting p.223)
+ * is explicit these are mutually exclusive triggers on a Critical Hit.
  *
  * Deliberately does NOT know about "hit" at all - that's the caller's job
  * (module/dice/dice.mjs only calls this once an Attack has already resolved
@@ -150,10 +163,10 @@ function collectItemChanges(item) {
  * (module/chat/target-effects-card.mjs) to offer.
  *
  * @param {Item} item
- * @param {{isCrit?: boolean}} [options]
+ * @param {{isCrit?: boolean, isAmazingSuccess?: boolean}} [options]
  * @returns {Array<{id: string, debuffKey: string, stacks: number, label: string, sourceLabel: string}>}
  */
-export function collectItemTargetEffects(item, { isCrit = false } = {}) {
+export function collectItemTargetEffects(item, { isCrit = false, isAmazingSuccess = false } = {}) {
   const sys = item.system;
   const sourceItemRank = sys.rank ?? 0;
   const out = [];
@@ -163,6 +176,7 @@ export function collectItemTargetEffects(item, { isCrit = false } = {}) {
     for (const te of upgrade.targetEffects ?? []) {
       if (!te.debuffKey) continue;
       if (te.critOnly && !isCrit) continue;
+      if (te.amazingSuccessOnly && !isAmazingSuccess) continue;
       out.push({
         id: te.id,
         debuffKey: te.debuffKey,
@@ -223,8 +237,29 @@ function seedSkillFromItem(skills, item) {
  * `conditionalModifiers` instead, for a roll dialog to offer as checkboxes
  * (see module/dice/roll-parts.mjs, Milestone 2) and apply only if checked.
  */
-function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx) {
+function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType) {
   const { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps } = ctx;
+  // Race/Class stat and skillRank grants are one-time, permanent bumps to
+  // the actor's BASE value (module/helpers/race-class-grants.mjs bakes them
+  // in on the way in, via a real actor.update/item.update) - NOT a live
+  // bonus recomputed every render pass like every other item type's
+  // changes. Skip the live delta for exactly these two targetType/
+  // sourceItemType combinations, or the actor double-dips (base already
+  // includes the grant, then the live bag would add it again on top).
+  // capMax/rankCap handling on these same entries is UNAFFECTED - those are
+  // ceilings tied to which items are CURRENTLY owned, not part of the
+  // one-time base bump, so they stay fully live (see the two cases below).
+  // A "stat" change only actually gets baked (module/helpers/
+  // race-class-grants.mjs's bakeItemGrants) when its target is a real stat
+  // key - validated here the same way, against the same
+  // CARLRPG.statAbbreviations table race-class-grants.mjs derives its own
+  // STAT_KEYS from, so the two can't silently drift apart and leave some
+  // invalid-target grant neither baked nor live. "skillRank" has no
+  // equivalent validity gate on the baking side - every skillRank change
+  // that reaches bakeItemGrants' pending list gets baked unconditionally.
+  const isBakedGrant = (sourceItemType === "class" || sourceItemType === "race")
+    && (change.targetType === "skillRank"
+      || (change.targetType === "stat" && !!CARLRPG.statAbbreviations[change.target]));
   // Level-gated grants (e.g. Bune's "At Level 50, +2 Dexterity") simply don't
   // apply at all below the threshold - re-evaluated fresh every
   // prepareDerivedData pass, so it turns on automatically the moment the
@@ -257,9 +292,16 @@ function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx) 
 
   switch (change.targetType) {
     case "skillRank": {
-      const entry = getOrCreateSkill(skills, change.target);
-      const value = resolveValue(change.value, scopedRollData);
-      entry.rank = applyScalarChange(entry.rank, change.mode, value);
+      // See isBakedGrant above - a Race/Class's own skillRank delta was
+      // already baked into the matching Skill/Spell/Damage-Effect item's
+      // real system.rank (module/helpers/race-class-grants.mjs), which
+      // seedSkillFromItem already seeded into this same skills bag before
+      // applyOneChange ever runs - applying it again here would double it.
+      if (!isBakedGrant) {
+        const entry = getOrCreateSkill(skills, change.target);
+        const value = resolveValue(change.value, scopedRollData);
+        entry.rank = applyScalarChange(entry.rank, change.mode, value);
+      }
       // Reuses capMax here for a different purpose than the stat/resource
       // case above: not a ceiling on the CURRENT value, but on how high
       // CarlDice.rollAdvancementCheck will let this Skill's Rank climb via
@@ -301,14 +343,21 @@ function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx) 
     }
     case "stat": {
       // Accumulate into the bonuses bag under "stats.<key>" - NEVER write to
-      // actorSystem.stats[key].value directly. That field is both the
-      // DB-persisted base value AND the sheet's editable input; mutating it
-      // here would bake the bonus into the "base" on the next form submit
+      // actorSystem.stats[key].value directly here for a live (gear/spell/
+      // feature/skill/etc.) bonus. That field is both the DB-persisted base
+      // value AND the sheet's editable input; mutating it on every pass
+      // would bake the bonus into the "base" on the next form submit
       // (submitOnChange posts the whole form) and re-apply on top of that
       // every subsequent pass, compounding without bound. The genuinely
       // derived "effective" value is computed once, safely, in
       // CarlRPGCharacter#prepareDerivedData from value + this bonus.
-      accumulateBonus(bonuses, `stats.${change.target}`, change, scopedRollData);
+      //
+      // Race/Class stat changes are the one deliberate exception - see
+      // isBakedGrant above: their delta was already written directly into
+      // stats.<key>.value (a real, one-time actor.update, NOT this
+      // per-render bonus bag) by module/helpers/race-class-grants.mjs, so
+      // it must NOT also accumulate here.
+      if (!isBakedGrant) accumulateBonus(bonuses, `stats.${change.target}`, change, scopedRollData);
       accumulateCap(caps, `stats.${change.target}`, change, scopedRollData);
       break;
     }
@@ -414,8 +463,8 @@ export function aggregateActorBonuses(actorSystem) {
 
   const ctx = { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps };
   for (const item of items) {
-    for (const { change, sourceLabel, sourceItemId, sourceItemRank } of collectItemChanges(item)) {
-      applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx);
+    for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
+      applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }
   }
 

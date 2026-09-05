@@ -122,7 +122,12 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     this.hb.slotValue = this.stats.con?.mod ?? 0;
     this.hb.bonusMax = this.bonuses?.["hb.max"] ?? 0;
     this.hb.effectiveMax = this.hb.max + this.hb.bonusMax;
-    this.mana.max = (this.stats.int?.value ?? 0) + (this.bonuses?.["mana.max"] ?? 0);
+    // "You gain Mana Points equal to your Enhanced Intelligence Stat. Not
+    // the Stat Mod this time, but the actual value." (p.110) - "Enhanced"
+    // means the bonused/effective Stat value, not the raw base .value, so
+    // a live (non-baked) INT bonus from gear/feature/spell isn't silently
+    // dropped from Max Mana.
+    this.mana.max = (this.stats.int?.effective ?? 0) + (this.bonuses?.["mana.max"] ?? 0);
 
     // Shield-style pool (docs/known-gaps.md 1.4): fully derived from
     // whichever owned toggled spell is currently active - see actor-base.mjs.

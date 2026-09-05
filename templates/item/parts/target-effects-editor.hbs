@@ -22,6 +22,10 @@
       <input type="checkbox" name="{{concat ../path '.' teIndex '.critOnly'}}" {{checked te.critOnly}} />
       {{localize "CARLRPG.TargetEffect.CritOnly"}}
     </label>
+    <label class="carl-target-effect-crit">
+      <input type="checkbox" name="{{concat ../path '.' teIndex '.amazingSuccessOnly'}}" {{checked te.amazingSuccessOnly}} />
+      {{localize "CARLRPG.TargetEffect.AmazingSuccessOnly"}}
+    </label>
     <input type="text" class="carl-w-medium" name="{{concat ../path '.' teIndex '.label'}}" value="{{te.label}}"
       placeholder="{{localize 'CARLRPG.TargetEffect.LabelPlaceholder'}}" />
     <a class="item-control" data-action="deleteArrayItem" data-path="{{../path}}" data-index="{{teIndex}}"
@@ -31,7 +35,7 @@
   </div>
   {{/each}}
   <a class="item-control carl-add-link" data-action="addArrayItem" data-path="{{path}}"
-    data-template='{"debuffKey":"","stacks":1,"critOnly":false,"label":""}'>
+    data-template='{"debuffKey":"","stacks":1,"critOnly":false,"amazingSuccessOnly":false,"label":""}'>
     <i class="fas fa-plus"></i> {{localize "CARLRPG.TargetEffect.Add"}}
   </a>
 </div>
