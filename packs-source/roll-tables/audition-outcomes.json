@@ -1,6 +1,6 @@
 {
   "_id": "szqZnTeVqhfQoydn",
-  "name": "Table 68: Audition Outcomes",
+  "name": "Audition Outcomes",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 68 (p.315-316).</em> When auditioning for a Bard patron, make three Skill Checks using different Skills that might impress the prospective Patron and consult this table after each Check for the result. This table is keyed off the Skill Check result tier reached, not rolled on its own; ranges below are assigned sequentially in the book's own order purely for compendium/roll-tooling purposes. An outcome can't drop attitude below Opposed or raise it above Enthusiastic.</p>",
   "results": [
@@ -143,7 +143,7 @@
   "formula": "1d5",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

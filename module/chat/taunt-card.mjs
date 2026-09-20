@@ -42,7 +42,7 @@ export async function buildTauntLinkFooter() {
   return renderTemplate(FOOTER_TEMPLATE, {});
 }
 
-function isCardLocked(message) {
+export function isCardLocked(message) {
   return LOCK_FLAGS.some((flag) => !!message.getFlag("carl-rpg", flag));
 }
 
@@ -71,7 +71,7 @@ async function resolveAttackerActor(message) {
  * clear toast rather than being expressed as a visibility predicate.
  * @returns {boolean}
  */
-function canActTaunt() {
+export function canActTaunt() {
   if (game.user.isGM) return true;
   return !!game.user.character || game.actors.some((a) => a.isOwner);
 }

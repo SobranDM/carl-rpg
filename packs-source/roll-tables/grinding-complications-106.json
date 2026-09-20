@@ -1,6 +1,6 @@
 {
   "_id": "1HPNJDJ3K5UIRMfU",
-  "name": "Table 106: Grinding Complications",
+  "name": "F5: Toxic Positivity Protocol",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 106 (p.626).</em> Floor 5 (The Bubbles), Quest: Toxic Positivity Protocol &mdash; random complications for grinding Bolt Hawks and other Mobs amid the Ursine, Bune, and Rainbow Sprites near the Painbow. Note: the book's running heading for this table has no colon, \"TABLE 106 GRINDING COMPLICATIONS,\" unlike most other tables in this cluster.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

@@ -1,6 +1,6 @@
 {
   "_id": "FyrMZnHDvRlRJkEv",
-  "name": "Table 84: Grinding Complications",
+  "name": "F3: The Show Must Go On",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 84 (p.419).</em> The Show Must Go On Quest (Third Floor, The Over City) grinding complications, set around the parasite-circus with Stilt Clowns, Mold Lions, and Former Circus Lemurs.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

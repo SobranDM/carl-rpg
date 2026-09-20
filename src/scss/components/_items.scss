@@ -115,6 +115,18 @@
       font-size: 12px;
     }
 
+    // Marks whichever Race/Class row (Boons tab) is the actor's active
+    // system.class/system.race reference - see actor-sheet.mjs's classId/
+    // raceId and header.hbs, which show the same active one.
+    .carl-race-class-active-badge {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--carl-accent);
+    }
+
     .items-header {
       height: 28px;
       margin: 2px 0;

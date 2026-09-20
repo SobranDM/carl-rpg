@@ -1,6 +1,6 @@
 {
   "_id": "vFZJtIl9caDsFdym",
-  "name": "Table 56: Gaining and Losing Popularity",
+  "name": "Gaining and Losing Popularity",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 56 (p.288).</em> How a crawler's Skill Check result on an interview show appearance affects their Popularity. This is keyed to the tier of the check result, not a random roll &mdash; select the row matching the actual check result rather than rolling; the die formula below is nominal, provided only for compendium/Foundry compatibility.</p>",
   "results": [
@@ -143,7 +143,7 @@
   "formula": "1d5",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

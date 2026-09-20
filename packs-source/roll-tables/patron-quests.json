@@ -1,6 +1,6 @@
 {
   "_id": "5jYQKhaSoZsC1e1w",
-  "name": "Table 71: Patron Quests",
+  "name": "Patron Quests",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 71 (p.317).</em> Patrons can give a Bard one Quest at a time, relevant to the patronage and managed by the AI like other Quests. Descriptions include the possible reward listed alongside each quest.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "MSZOKcNr8HD5Vvz1",
   "sort": 0,
   "ownership": {
     "default": 0

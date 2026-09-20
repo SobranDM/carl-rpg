@@ -18,6 +18,8 @@ import CarlDice from "../dice/dice.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "./carl-dialog.mjs";
 import { shortRestUpdates } from "../helpers/rest.mjs";
+import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
+import { rollMagicItem } from "../helpers/loot.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -49,17 +51,20 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       minimizable: true,
       resizable: false,
     },
-    // Pinned near the left edge below the scene navigation bar, out of the
-    // way of the canvas - not centered (Foundry centers any window lacking
-    // explicit left/top).
-    position: { width: 280, height: "auto", left: 20, top: 100 },
+    // Pinned near the left edge, out of the way of the canvas - not centered
+    // (Foundry centers any window lacking explicit left/top). This static
+    // top is only a fallback for the rare case #positionAbovePlayersList
+    // can't find ui.players' element; in the normal case, _onFirstRender
+    // repositions the window just above the connected-players list instead
+    // of at this fixed guess, since the players list's own height (and thus
+    // where "above it" actually is) depends on how many users are connected.
+    position: { width: 280, height: "auto", left: 20, top: 320 },
     actions: {
       toggleTimer: CarlToolbox.#onToggleTimer,
       resolveTwoHourTick: CarlToolbox.#onResolveTwoHourTick,
       partyLevelUp: CarlToolbox.#onPartyLevelUp,
       floorIncrement: CarlToolbox.#onFloorIncrement,
       floorDecrement: CarlToolbox.#onFloorDecrement,
-      newFloor: CarlToolbox.#onNewFloor,
       shortRest: CarlToolbox.#onShortRest,
       longRest: CarlToolbox.#onLongRest,
       fullDayRest: CarlToolbox.#onFullDayRest,
@@ -110,7 +115,28 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   /** @override */
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
+    this.#positionAbovePlayersList();
+    injectBloodSplatter(this);
     this.#startTicking();
+  }
+
+  /**
+   * Sit the window's bottom edge just above the connected-players list
+   * (ui.players) instead of the fixed guess in DEFAULT_OPTIONS.position -
+   * that list's own height (and so where "just above it" actually is)
+   * depends on how many users are connected, so a single static top can't
+   * get this right for every world. Only runs once, on first render - if
+   * the GM drags the window elsewhere afterward, a later content-only
+   * re-render (e.g. from #render() calls throughout this class) won't fight
+   * that back.
+   */
+  #positionAbovePlayersList() {
+    const playersEl = ui.players?.element;
+    if (!playersEl || !this.element) return;
+    const playersRect = playersEl.getBoundingClientRect();
+    const ownHeight = this.element.getBoundingClientRect().height;
+    const top = Math.max(8, playersRect.top - ownHeight - 8);
+    this.setPosition({ top });
   }
 
   /** @override */
@@ -257,28 +283,6 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     this.render();
   }
 
-  /** Per-floor Advancement cadence: Rank >=5 marked Skills only, then advance the floor counter. */
-  static async #onNewFloor(event, target) {
-    if (!game.user.isGM) return;
-    const actors = game.actors.filter((a) => a.type === "character");
-    const digest = [];
-    for (const actor of actors) {
-      const results = await actor.rollMarkedAdvancementChecks({ rankFilter: "gte5" });
-      for (const r of results) {
-        digest.push(`${actor.name} - ${r.item.name}: ${r.success ? `Rank ${r.newRank}` : game.i18n.localize("CARLRPG.Toolbox.NoChange")}`);
-      }
-    }
-    const floor = game.settings.get("carl-rpg", "currentFloor");
-    await game.settings.set("carl-rpg", "currentFloor", floor + 1);
-    await createCardMessage({
-      title: game.i18n.format("CARLRPG.Toolbox.NewFloorTitle", { floor: floor + 1 }),
-      body: digest.length
-        ? `<ul>${digest.map((d) => `<li>${d}</li>`).join("")}</ul>`
-        : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoMarkedSkills")}</p>`,
-    });
-    this.render();
-  }
-
   static async #onShortRest(event, target) {
     if (!game.user.isGM) return;
     return CarlToolbox.#onRest("short");
@@ -351,8 +355,8 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
    * retired character, a GM-run henchman, etc).
    *
    * SCOPING DECISION: only `type: "character"` actors are ever listed,
-   * never NPCs - NPCs in this ruleset are Mobs, not party members these
-   * bulk actions apply to.
+   * never Mobs - Mobs in this ruleset are monsters/NPCs, not party members
+   * these bulk actions apply to.
    *
    * Default-checked: any Character actor owned (OWNER level) by a
    * currently-active, non-GM user - i.e. someone actually logged in to
@@ -382,8 +386,11 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const active = actors.filter(isOwnedByActivePlayer);
     const other = actors.filter((a) => !isOwnedByActivePlayer(a));
 
+    // data-actor-id (read directly off the DOM by the confirm button below),
+    // not just a `name="actors.<id>"` for FormDataExtended to expand - see
+    // the confirm button's own callback for why.
     const row = (a, checked) => `<label class="carl-dialog-condition carl-actor-picker-option" data-actor-name="${foundry.utils.escapeHTML(a.name.toLowerCase())}">
-        <input type="checkbox" name="actors.${a.id}" ${checked ? "checked" : ""} />
+        <input type="checkbox" data-actor-id="${a.id}" ${checked ? "checked" : ""} />
         ${foundry.utils.escapeHTML(a.name)}
       </label>`;
 
@@ -412,7 +419,28 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const result = await showCarlDialog({
       title: game.i18n.localize(titleKey),
       content,
-      buttons: [rollButton({ label: confirmLabelKey }), cancelButton()],
+      // A dedicated button rather than the shared rollButton(): reads each
+      // checkbox's .checked directly off the live DOM instead of going
+      // through FormDataExtended's dotted-name-to-nested-object expansion
+      // (button.form's own FormData) - confirmed via manual testing that
+      // path was silently losing every checked actor (both a single manual
+      // check and Select All), even with no players logged in at all.
+      // Reading .checked straight off each <input> sidesteps whatever in
+      // that expansion was going wrong, with no dotted-path magic involved.
+      buttons: [
+        {
+          action: "roll",
+          icon: "fa-solid fa-dice-d20",
+          label: confirmLabelKey,
+          default: true,
+          callback: (event, button) => ({
+            selectedIds: [...(button.form ?? button.closest("form")).querySelectorAll("input[data-actor-id]")]
+              .filter((el) => el.checked)
+              .map((el) => el.dataset.actorId),
+          }),
+        },
+        cancelButton(),
+      ],
       // Wires the picker's interactive bits up after the dialog's DOM
       // exists: Select All (de)selects every row and stays in sync with
       // individual toggles; the running counter updates on any change; the
@@ -458,9 +486,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     });
     if (!result) return null;
 
-    const selectedIds = new Set(
-      Object.entries(result.actors ?? {}).filter(([, checked]) => checked).map(([id]) => id),
-    );
+    const selectedIds = new Set(result.selectedIds ?? []);
     return actors.filter((a) => selectedIds.has(a.id));
   }
 
@@ -522,26 +548,24 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   /**
-   * Roll Loot: hooks into Foundry's native RollTable document. Loot table
-   * content itself (Chapters 7-9) is out of scope for this pass - the GM
-   * populates their own tables.
+   * Roll Loot: prompts for a loot box tier, then runs the full Randomized
+   * Magic Item pipeline (Item Type -> matching sub-table x N rolls, with
+   * the Something Unique early-stop/power-multiplier rule) via
+   * module/helpers/loot.mjs's rollMagicItem, which posts the one
+   * consolidated result card itself.
    */
   static async #onRollLoot(event, target) {
     if (!game.user.isGM) return;
-    const tables = game.tables?.contents ?? [];
-    if (!tables.length) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoRollTables"));
-      return;
-    }
-    const options = tables.map((t) => `<option value="${t.id}">${t.name}</option>`).join("");
+
+    const options = Object.entries(CONFIG.CARLRPG.lootBoxTiers)
+      .map(([key, tier]) => `<option value="${key}">${game.i18n.localize(tier.label)}</option>`)
+      .join("");
     const result = await showCarlDialog({
       title: game.i18n.localize("CARLRPG.Toolbox.RollLootTitle"),
-      content: `<div class="carl-dialog-body"><div class="form-group"><select name="tableId">${options}</select></div></div>`,
+      content: `<div class="carl-dialog-body"><div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.LootTierLabel")}</label><select name="tier">${options}</select></div></div>`,
       buttons: [rollButton(), cancelButton()],
     });
     if (!result) return;
-    const table = game.tables.get(result.tableId);
-    if (!table) return;
-    await table.draw();
+    await rollMagicItem(result.tier);
   }
 }

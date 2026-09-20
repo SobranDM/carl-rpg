@@ -12,7 +12,7 @@
   <label class="resource-label">{{localize "CARLRPG.Ranked.TargetEffectsLegend"}}</label>
   {{#each targetEffects as |te teIndex|}}
   <div class="carl-target-effect-row flexrow">
-    <select class="carl-w-medium" name="{{concat ../path '.' teIndex '.debuffKey'}}">
+    <select class="carl-w-wide" name="{{concat ../path '.' teIndex '.debuffKey'}}">
       <option value=""></option>
       {{selectOptions ../config.debuffs selected=te.debuffKey localize=true}}
     </select>

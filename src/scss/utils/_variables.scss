@@ -8,7 +8,13 @@ $width-tiny: 3em;    // 1-3 digit numeric fields: stat value, rank, mana cost,
                       // quantity, weight, aiFavor, HB value/max, banked stat
                       // points, condition stacks/remaining
 $width-short: 6em;   // short text/codes and short-label selects: dice
-                      // notation, range, cooldown, duration, governingStat,
-                      // baseDamage.stat, attackType, rankThreshold
-$width-medium: 12em; // medium selects/text: category, advancementGate,
-                      // mobTier, tier, condition label/source
+                      // notation, range, cooldown, duration, attackType,
+                      // rankThreshold
+$width-medium: 12em; // medium selects/text: category, mobTier, tier,
+                      // condition label/source, governingStat/opposedStat,
+                      // baseDamage.stat, baseDamage.damageType, the
+                      // upgrade damageTypes.0/.1 split selects
+$width-wide: 18em;   // long-label selects whose options exceed medium's
+                      // ~168px: advancementGate ("Passive (marks until
+                      // Rank 5)", 28 chars), a Target Effect's debuffKey
+                      // ("Long-Term Major/Minor Injury", 22 chars)

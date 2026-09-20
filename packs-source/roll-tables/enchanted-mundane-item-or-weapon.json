@@ -1,6 +1,6 @@
 {
   "_id": "QY37R1vIGyHXLDmd",
-  "name": "Table 39: Enchanted Mundane Item or Weapon",
+  "name": "Enchanted Mundane Item or Weapon",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 39 (p.219).</em> Rolled from Table 38: Item Type (results 1–2). See \"X Values\" (p.219) for the actual bonus granted by tier.</p><p>*Inherent Spell results have a fixed Rank (GM's choice, following Skill Rank tier guidelines) and cost no Mana, but gain a cooldown — usually 2 hours per Spell Rank.</p>",
   "results": [
@@ -140,6 +140,33 @@
       "_key": "!tables.results!QY37R1vIGyHXLDmd.oUNVkLYOXKgB0NUL"
     },
     {
+      "_id": "Na2s32lFuju7PJ8p",
+      "type": "text",
+      "name": "Something Unique",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!QY37R1vIGyHXLDmd.Na2s32lFuju7PJ8p"
+    },
+    {
       "_id": "DE20lwb03x4TkXeq",
       "type": "document",
       "name": "Something Unique — roll on Table 42",
@@ -170,7 +197,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "w1Jo7BYmYZFJADyA",
   "sort": 0,
   "ownership": {
     "default": 0

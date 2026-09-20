@@ -1,6 +1,6 @@
 {
   "_id": "SwJW19IdyrDZU4bU",
-  "name": "Table 67: Signature Smites",
+  "name": "Signature Smites",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 67 (p.314-315).</em> Each god has their own typical way of smiting. Use the signature smite for the first smite of a campaign, or let the dice tell you what to do (Tables 65/66). This is a reference list keyed by deity, not a numbered die-roll table in the book; ranges below are assigned in the rulebook's own alphabetical order purely for compendium/roll-tooling purposes.</p>",
   "results": [
@@ -251,7 +251,7 @@
   "formula": "1d9",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "MSZOKcNr8HD5Vvz1",
   "sort": 0,
   "ownership": {
     "default": 0

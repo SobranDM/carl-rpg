@@ -1,6 +1,6 @@
 {
   "_id": "QJ8YpAvCKsfql6GY",
-  "name": "Table 57: Interview Show Quirks",
+  "name": "Interview Show Quirks",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 57 (p.292).</em> Roll or choose a quirk to add personality or drama to any interview show appearance.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

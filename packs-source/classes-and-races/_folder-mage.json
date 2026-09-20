@@ -1,12 +1,12 @@
 {
   "_id": "Ybp1E405ta3O8NKx",
-  "name": "Mage Classes",
+  "name": "Mage",
   "type": "Item",
   "description": "",
   "sorting": "a",
   "sort": 0,
   "color": null,
-  "folder": null,
+  "folder": "TaFk6xNnLG3e0Cng",
   "flags": {},
   "_key": "!folders!Ybp1E405ta3O8NKx"
 }

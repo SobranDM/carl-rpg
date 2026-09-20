@@ -1,6 +1,6 @@
 {
   "_id": "vxkcwT9mZWsIjH1r",
-  "name": "Table 81: Grinding Complications",
+  "name": "F3: Hate High",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 81 (p.385).</em> Hate High Quest (Third Floor, The Over City) grinding complications, set within the parodic high-school Quest location.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

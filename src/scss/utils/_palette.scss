@@ -26,6 +26,22 @@
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
   --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
 
+  // Nesting-level accents: several places box a bordered/panel-tinted
+  // element directly inside another one of the same kind (a chat card's
+  // action panel inside its own message, an Upgrade tier inside its
+  // fieldset, a Change group inside that) - with every level using the
+  // crimson --carl-border-soft/--carl-panel-bg pair, the boundary between
+  // levels disappeared ("everything is red"). These give the 2nd and 3rd
+  // nesting levels their own hue instead, same recipe as the level-1 pair
+  // above (a bright/saturated border, a barely-there color-mix panel tint).
+  --carl-accent-2: #9b59e0;
+  --carl-border-soft-2: rgba(181, 123, 240, 0.55);
+  --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
+
+  --carl-accent-3: #2f7fe0;
+  --carl-border-soft-3: rgba(91, 157, 255, 0.55);
+  --carl-panel-bg-3: color-mix(in srgb, var(--carl-accent-3) 6%, var(--color-text-primary) 4%);
+
   // Whole-window chrome tokens (components/_chrome.scss) - these own the
   // window background/titlebar/text wholesale, unlike the accents above
   // which only ever layered on top of Foundry's own --color-* vars. This

@@ -51,7 +51,7 @@ async function resolveHealActor(uuid) {
  * @returns {boolean} Whether the current user may click Apply/Mend for this
  *   card - a GM always can; otherwise only the owner of the snapshotted actor.
  */
-function canApplyHeal(message) {
+export function canApplyHeal(message) {
   if (game.user.isGM) return true;
   const uuid = message.getFlag("carl-rpg", "healActorUuid");
   if (!uuid) return false;
@@ -70,7 +70,7 @@ function canApplyHeal(message) {
  * @param {PointerEvent} event
  * @param {ChatMessage} message
  */
-async function onApplyHeal(event, message) {
+export async function onApplyHeal(event, message) {
   event.preventDefault();
   const uuid = message.getFlag("carl-rpg", "healActorUuid");
   const actor = await resolveHealActor(uuid);
@@ -115,7 +115,7 @@ async function onApplyHeal(event, message) {
  * @param {PointerEvent} event
  * @param {ChatMessage} message
  */
-async function onMendDebuff(event, message) {
+export async function onMendDebuff(event, message) {
   event.preventDefault();
   const uuid = message.getFlag("carl-rpg", "healActorUuid");
   const actor = await resolveHealActor(uuid);

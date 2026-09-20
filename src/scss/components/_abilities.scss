@@ -49,7 +49,8 @@
 
   // Effective (base + bonus) value - read-only display, not an editable
   // input; Stats are only ever changed via the Spend Stat Points dialog
-  // (see module/apps/spend-stat-points-dialog.mjs).
+  // (see module/apps/spend-stat-points-dialog.mjs), for both a Character
+  // and a Mob.
   .carl-stat-value {
     font-weight: 700;
     font-size: 14px;

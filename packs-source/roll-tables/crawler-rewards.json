@@ -1,6 +1,6 @@
 {
   "_id": "aXLkbhilr5ieFgVw",
-  "name": "Table 59: Crawler Rewards",
+  "name": "Crawler Rewards",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 59 (p.293).</em> Roll or choose a reward some interview shows grant crawlers for appearing (e.g. Dungeon Sidekicks). Most are designed to go over well with fans rather than being extremely helpful.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

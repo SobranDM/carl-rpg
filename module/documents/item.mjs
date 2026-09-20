@@ -1,5 +1,6 @@
 import CarlDice from "../dice/dice.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
+import { bakeItemGrants } from "../helpers/race-class-grants.mjs";
 
 /**
  * Extend the basic Item document.
@@ -9,6 +10,35 @@ export class CarlRPGItem extends Item {
   /** @override */
   prepareData() {
     super.prepareData();
+  }
+
+  /**
+   * Bake a newly-owned class/race item's eligible stat/skillRank grants
+   * into the actor's base values (see module/helpers/race-class-grants.mjs)
+   * - a one-time permanent bump, not a live bonus. No-ops for every other
+   * item type/ownership state.
+   * @override
+   */
+  async _onCreate(data, options, userId) {
+    super._onCreate(data, options, userId);
+    if (game.user.id !== userId) return;
+    if (this.type === "class" || this.type === "race") await bakeItemGrants(this);
+  }
+
+  /**
+   * If a GM hand-edits an owned class/race item's own Changes array (adding
+   * a new stat/skillRank grant after the item was already added), bake the
+   * new entry the same way item creation does - array fields don't have
+   * their own per-element create hook, so this is the only place a
+   * post-hoc addition gets picked up.
+   * @override
+   */
+  async _onUpdate(changed, options, userId) {
+    super._onUpdate(changed, options, userId);
+    if (game.user.id !== userId) return;
+    if ((this.type === "class" || this.type === "race") && foundry.utils.hasProperty(changed, "system.changes")) {
+      await bakeItemGrants(this);
+    }
   }
 
   /** @override */
@@ -30,15 +60,17 @@ export class CarlRPGItem extends Item {
     }
 
     if (this.type === "skill" || this.type === "spell") {
-      // Skills flag themselves directly (isAttack / category "attack").
-      // Spells instead carry a castingKeywords array (module/data/spell.mjs)
-      // - "attack" there is the equivalent signal (Fire Fingers, Magic
-      // Missile, Fireball, Fear all set it) and must route the same way:
-      // rollAttack is what actually rolls to-hit vs. Evade, rolls damage,
-      // and detects a Critical Hit, all of which the target-effects
-      // pipeline (module/chat/target-effects-card.mjs) depends on.
-      const isSkillAttack = this.type === "skill"
-        && (this.system.isAttack || this.system.category === "attack");
+      // Skills flag themselves directly via category "attack" (isAttack
+      // used to exist as a separate boolean, but an audit found every
+      // authored Skill kept it in lockstep with category - it was pure
+      // duplication, removed). Spells instead carry a castingKeywords
+      // array (module/data/spell.mjs) - "attack" there is the equivalent
+      // signal (Fire Fingers, Magic Missile, Fireball, Fear all set it)
+      // and must route the same way: rollAttack is what actually rolls
+      // to-hit vs. Evade, rolls damage, and detects a Critical Hit, all of
+      // which the target-effects pipeline (module/chat/target-effects-card.mjs)
+      // depends on.
+      const isSkillAttack = this.type === "skill" && this.system.category === "attack";
       const isSpellAttack = this.type === "spell" && this.system.castingKeywords?.includes("attack");
       if (isSkillAttack || isSpellAttack) {
         return CarlDice.rollAttack(this.actor, this);

@@ -2,10 +2,11 @@
       actor-sheet.mjs's _buildHbPips / #onSetHbValue) - no raw value input,
       per the book (whole slots, not raw HP). Characters always have 10
       slots (barring item bonuses, which flow through bonusMax automatically
-      - never a manually-edited base), so there's no max input either. NPCs'
-      slot count is a GM judgment call with no other UI to set it (Mob/Boss
-      tiers vary per Table 50), so they keep a max input. Shared by
-      header.hbs and header-npc.hbs. --}}
+      - never a manually-edited base), so there's no max input either. A
+      Mob's slot count is instead computed from Level/Tier per Table 50
+      (see mob.mjs's hbSlotsRule) - the input here binds to hbSlotsOverride,
+      an explicit GM override of that formula, not the raw hb.max itself.
+      Shared by header.hbs and header-mob.hbs. --}}
 <div class="resource flex-group-center carl-hb-resource">
   <label class="resource-label">{{localize "CARLRPG.Actor.HealthBar"}}</label>
   <div class="resource-content">
@@ -22,10 +23,11 @@
     {{else}}
     <span class="carl-hb-fallback">{{system.hb.value}} / {{system.hb.effectiveMax}}</span>
     {{/if}}
-    {{#if (eq actor.type "npc")}}
+    {{#if (eq actor.type "mob")}}
     <div class="carl-hb-edit flexrow flex-center flex-between">
-      <label>{{localize "CARLRPG.Actor.BaseValue"}}</label>
-      <input type="text" class="carl-w-tiny" name="system.hb.max" value="{{system.hb.max}}" data-dtype="Number" />
+      <label title="{{localize 'CARLRPG.Actor.HbSlotsOverrideHint'}}">{{localize "CARLRPG.Actor.HbSlotsOverride"}}</label>
+      <input type="text" class="carl-w-tiny" name="system.hbSlotsOverride" value="{{system.hbSlotsOverride}}"
+        placeholder="{{system.hbSlotsRule}}" data-dtype="Number" />
       {{#unless (eq system.hb.bonusMax 0)}}
       <span class="carl-stat-bonus" title="{{localize 'CARLRPG.Actor.BonusFromItemsSkills'}}">
         ({{numberFormat system.hb.bonusMax sign=true}} = {{system.hb.effectiveMax}})

@@ -1,6 +1,6 @@
 {
   "_id": "DrrfOwEswAvJwPUd",
-  "name": "Table 18: Animal Quirk Skills",
+  "name": "Animal Quirk Skills",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 18 (p.107).</em> Non-Human (animal) crawlers choose one of the six background quirks and gain two of its three listed Skills, or roll 1d6 to select a quirk randomly. Both Skills you select start at Rank 2.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "xc73wdZTf4ouYp1A",
   "sort": 0,
   "ownership": {
     "default": 0

@@ -1,4 +1,4 @@
-<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="attributes">
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="main">
   <div class="resource">
     <label class="resource-label">{{localize "CARLRPG.DamageEffect.Cooldown"}}</label>
     <input type="text" class="carl-w-short" name="system.cooldown" value="{{system.cooldown}}" />
@@ -20,6 +20,11 @@
     </a>
   </fieldset>
 
-  {{> "systems/carl-rpg/templates/item/parts/ranked-fields.hbs" system=system config=config canRollAdvancement=canRollAdvancement
-      item=item actorSkillNames=actorSkillNames}}
+  {{> "systems/carl-rpg/templates/item/parts/ranked-fields.hbs" system=system config=config
+      canRollAdvancement=canRollAdvancement isAttackFlavored=isAttackFlavored}}
+
+  <hr class="carl-section-divider" />
+  <h4 class="carl-section-header">{{localize "CARLRPG.Tab.Description"}}</h4>
+  <hr class="carl-section-divider" />
+  {{> "systems/carl-rpg/templates/item/parts/description-editor.hbs"}}
 </section>

@@ -1,6 +1,6 @@
 {
   "_id": "auysEXDcDnjH4xY7",
-  "name": "Table 25: Starting Loot",
+  "name": "Starting Loot",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 25 (p.116).</em> Roll or choose to see which Rarity tier (Bronze/Silver/Gold/Platinum) applies to each of your four Starting Loot categories: Weapon, Armor, Item, and Consumable. Weapon, Armor, and Item may each be swapped for Spells instead (see Table 27: Random Spells); Consumables cannot.</p>",
   "results": [
@@ -116,7 +116,7 @@
   "formula": "1d4",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "w1Jo7BYmYZFJADyA",
   "sort": 0,
   "ownership": {
     "default": 0

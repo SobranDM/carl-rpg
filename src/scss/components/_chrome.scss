@@ -4,20 +4,74 @@
 // sheets, and the GM Toolbox alike) via DEFAULT_OPTIONS.classes, and lands
 // on the real application root element - so this mixin, included once at
 // the top level in carl-rpg.scss, covers all three surfaces.
-// Blood-splatter watermark: a hand-authored cluster of irregular droplet
-// shapes, anchored in one corner at low opacity so it reads as background
-// texture rather than decoration. SVG data URIs can't reference CSS custom
-// properties, so the fill is a hardcoded oxblood hex (matching the spirit
-// of --carl-danger, not literally bound to it). Listed first in the
-// `background` shorthand below so it layers on TOP of the opaque --carl-bg
-// gradient - its own shapes are the only opaque-ish parts, everywhere else
-// on the SVG canvas is transparent, letting --carl-bg show through around it.
-$splatter-svg: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cg fill='%235c0f16' opacity='0.4'%3E%3Cpath d='M180,150 C200,145 220,160 225,180 C230,200 215,220 195,225 C175,230 155,220 150,200 C145,180 160,155 180,150 Z'/%3E%3Cpath d='M195,90 C205,85 218,92 220,105 C222,118 210,128 197,125 C185,122 180,108 185,98 C188,93 191,90 195,90 Z'/%3E%3Cellipse cx='140' cy='130' rx='8' ry='6' transform='rotate(-20 140 130)'/%3E%3Cellipse cx='118' cy='102' rx='5' ry='4' transform='rotate(15 118 102)'/%3E%3Cellipse cx='98' cy='78' rx='3.5' ry='3'/%3E%3Ccircle cx='75' cy='58' r='2.2'/%3E%3Ccircle cx='60' cy='40' r='1.5'/%3E%3C/g%3E%3C/svg%3E";
+// Blood-splatter watermark: the real hand-authored PNG (assets/
+// blood-splatter.png, transparent outside the splatter itself), injected as
+// a real <img> element by module/helpers/window-chrome.mjs's
+// injectBloodSplatter (called once per window from each of our three
+// ApplicationV2 classes' _onFirstRender) rather than a CSS background-image -
+// a background-image scaled this large a source (1536x1024) down this far
+// read as visibly pixelated in some browsers, where an <img> scales more
+// cleanly. .carl-splatter-crop/-img below are that injected markup's styling.
+//
+// Offset outward by exactly half its own width/height (see .carl-splatter-img
+// below) so the image's own CENTER lands on the sheet's bottom-right corner
+// instead of its edge - only its bottom-right quadrant ends up visible,
+// cropped by .carl-splatter-crop's overflow:hidden (by design).
+$splatter-width: 320px;
+$splatter-height: 213px; // preserves the source's 1536x1024 (3:2) aspect ratio
 
 @mixin styles {
-  background: url("#{$splatter-svg}") no-repeat bottom right / 220px 220px, var(--carl-bg);
+  background: var(--carl-bg);
   color: var(--carl-text);
   border-color: var(--carl-border-soft);
+
+  // Positioning context for .carl-splatter-crop lives on .window-content,
+  // NOT on .carl-rpg itself. .carl-rpg is the application's own root
+  // element, which Foundry's core CSS already gives `position: fixed` (its
+  // window-drag/resize/z-index management depends on that) via the same
+  // `.application` class every ApplicationV2 window also carries alongside
+  // ours - an earlier version of this rule set `position: relative` here
+  // directly, which won the cascade (system CSS loads after core CSS, both
+  // rules are single-class selectors of equal specificity) and silently
+  // overrode Foundry's own `position: fixed`, pulling every one of our
+  // windows into normal document flow and breaking the whole interface.
+  // .window-content is an inner child Foundry doesn't position at all, so
+  // giving IT `position: relative` is a normal, safe, fully-contained way
+  // to scope an absolutely-positioned decorative child without touching
+  // the outer window's own layout.
+  .window-content {
+    position: relative;
+  }
+
+  // Confines the splatter img's overflow:hidden crop to the content area
+  // (sized to it via inset:0) rather than the whole window, since
+  // .window-header's own opaque background would hide it there anyway.
+  //
+  // z-index: -1, not 0 - per the CSS stacking-order spec, a positioned
+  // z-index:0 (or auto) box actually paints ABOVE ordinary in-flow content
+  // regardless of DOM order (only negative z-index reliably paints below
+  // it), so 0 here would have covered .window-content's real children
+  // instead of sitting behind them despite being prepended first in the DOM.
+  .carl-splatter-crop {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .carl-splatter-img {
+    position: absolute;
+    right: calc(#{$splatter-width} / -2);
+    bottom: calc(#{$splatter-height} / -2);
+    width: #{$splatter-width};
+    height: #{$splatter-height};
+    // Real opacity on a real <img>, unlike the earlier background-image
+    // approach (which had no opacity channel of its own and needed a
+    // separate translucent-gradient layer as a workaround) - dials the
+    // source art's full vividness down to "background texture."
+    opacity: 0.4;
+  }
 
   .window-header {
     background: var(--carl-header-bg);

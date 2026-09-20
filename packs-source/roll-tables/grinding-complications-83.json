@@ -1,6 +1,6 @@
 {
   "_id": "l1NqBqggBZB4IFwN",
-  "name": "Table 83: Grinding Complications",
+  "name": "F3: A Shelf on an Elf",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 83 (p.407).</em> A Shelf on an Elf Quest (Third Floor, The Over City) grinding complications, featuring the 404th revolutionaries and the Scolopendrini.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

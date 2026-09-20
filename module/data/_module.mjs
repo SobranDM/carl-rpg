@@ -1,6 +1,6 @@
 export {default as CarlRPGActorBase} from "./actor-base.mjs";
 export {default as CarlRPGCharacter} from "./character.mjs";
-export {default as CarlRPGNPC} from "./npc.mjs";
+export {default as CarlRPGMob} from "./mob.mjs";
 
 export {default as CarlRPGItemBase} from "./item-base.mjs";
 export {default as CarlRPGRankedItemBase} from "./ranked-item-base.mjs";

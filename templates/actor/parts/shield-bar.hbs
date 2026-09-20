@@ -1,8 +1,8 @@
 {{!-- Shield-style secondary HP pool (docs/known-gaps.md 1.4) - only visible
       while a shield-granting spell is active (system.shield.effectiveMax >
-      0 only then); no NPC max-input branch like hb-bar.hbs has, since this
-      is always fully derived (see character.mjs/npc.mjs prepareDerivedData),
-      never GM-editable directly. Shared by header.hbs and header-npc.hbs. --}}
+      0 only then); no Mob max-input branch like hb-bar.hbs has, since this
+      is always fully derived (see character.mjs/mob.mjs prepareDerivedData),
+      never GM-editable directly. Shared by header.hbs and header-mob.hbs. --}}
 {{#if (gt system.shield.effectiveMax 0)}}
 <div class="resource flex-group-center carl-hb-resource carl-shield-resource">
   <label class="resource-label">{{localize "CARLRPG.Actor.Shield"}}</label>

@@ -101,7 +101,6 @@
       }
     ],
     "category": "attack",
-    "isAttack": true,
     "attackType": "melee",
     "range": "10 feet",
     "aiFavor": 0,

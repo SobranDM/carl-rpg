@@ -5,6 +5,7 @@ import { onToggleDrawer } from '../helpers/drawer-toggle.mjs';
 import { addConditionToActor } from '../helpers/conditions.mjs';
 import DragDropMixin from './mixins/drag-drop-mixin.mjs';
 import CarlSpendStatPointsDialog from '../apps/spend-stat-points-dialog.mjs';
+import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -85,9 +86,18 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /** @override */
   _configureRenderParts(options) {
     const parts = super._configureRenderParts(options);
-    parts.header.template = this.actor.type === 'npc'
-      ? `systems/carl-rpg/templates/actor/parts/header-npc.hbs`
+    const isMob = this.actor.type === 'mob';
+    parts.header.template = isMob
+      ? `systems/carl-rpg/templates/actor/parts/header-mob.hbs`
       : `systems/carl-rpg/templates/actor/parts/header.hbs`;
+    // Mob's stat-block layout (Level/Surprise/Evade/Move/DR, an Attacks
+    // list) is different enough content from the PC-shaped Abilities tab
+    // (banked stat points, class/race-driven bonuses) that branching inside
+    // one template would fight the grid rather than reuse it - same
+    // reasoning as the header swap above, just for a different part.
+    parts.abilities.template = isMob
+      ? `systems/carl-rpg/templates/actor/parts/abilities-mob.hbs`
+      : `systems/carl-rpg/templates/actor/parts/abilities.hbs`;
     return parts;
   }
 
@@ -138,11 +148,19 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
 
     // Active Class/Race display (header.hbs) - resolved on Character actors
     // only, see module/data/character.mjs#prepareDerivedData. Undefined on
-    // NPCs (no class/race fields there), which header-npc.hbs doesn't read.
+    // Mobs (no class/race fields there), which header-mob.hbs doesn't read.
     context.classId = actorData.classItem?.id ?? "";
     context.className = actorData.classItem?.name ?? "";
     context.raceId = actorData.raceItem?.id ?? "";
     context.raceName = actorData.raceItem?.name ?? "";
+
+    // Read-only "remaining" display for stats-column.hbs's Spend Stat
+    // Points fieldset on a Mob (a Character instead reads its own editable
+    // system.bankedStatPoints directly - see mob.mjs's statPointsAvailable/
+    // statPointsSpent docstring for why Mob has no equivalent stored pool).
+    if (actor.type === "mob") {
+      context.statPointsRemaining = Math.max(0, (actorData.statPointsAvailable ?? 0) - (actorData.statPointsSpent ?? 0));
+    }
 
     // Template convenience variables
     context.cssClass = [...this.options.classes, actor.type].join(' ');
@@ -181,6 +199,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const skills = [];
     const spells = [];
     const damageEffects = [];
+    const raceAndClass = [];
 
     for (let i of context.items) {
       i.img = i.img || Item.DEFAULT_ICON;
@@ -192,6 +211,16 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
         i.parentSkillsText = (i.system.parentSkills ?? []).join(', ');
         damageEffects.push(i);
       }
+      // Shown on the Boons tab (features-list.hbs) alongside Features, so a
+      // Race/Class can be opened or deleted from the sheet - previously
+      // only reachable via the header's single "active" link, with no
+      // delete affordance and no visibility into a second, unlinked one
+      // (e.g. mid Third-Floor re-selection). See _prepareContext's
+      // classId/raceId for which one (if any) is the active reference.
+      else if (i.type === 'class' || i.type === 'race') {
+        i.typeLabel = game.i18n.localize(`TYPES.Item.${i.type}`);
+        raceAndClass.push(i);
+      }
     }
 
     context.gear = gear;
@@ -199,6 +228,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.skills = skills;
     context.spells = spells;
     context.damageEffects = damageEffects;
+    context.raceAndClass = raceAndClass;
 
     // Many-to-one Skill<->Damage Effect nesting for the merged Abilities
     // tab (see abilities.hbs / skills-section-body.hbs). A Damage Effect
@@ -243,6 +273,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   }
 
   /* -------------------------------------------- */
+
+  /** @override */
+  async _onFirstRender(context, options) {
+    await super._onFirstRender(context, options);
+    injectBloodSplatter(this);
+  }
 
   /** @override */
   async _onRender(context, options) {

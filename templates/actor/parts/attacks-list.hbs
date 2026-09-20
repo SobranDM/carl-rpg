@@ -1,0 +1,51 @@
+{{!-- Mob's structured Attacks list ("Building a Mob", p.270-272) - matches
+      the printed stat block's own shape (name, to-hit formula, damage
+      formula + type, range, on-hit effect prose) directly, rather than
+      forcing every Mob attack to be an owned Skill item. Add/delete reuse
+      the generic array-editor mechanism (module/helpers/array-editor.mjs),
+      same convention as conditions.hbs/changes-editor.hbs. --}}
+<ol class="items-list carl-attacks-list">
+  <li class="item flexrow items-header">
+    <div class="item-name">{{localize "CARLRPG.Attack.Name"}}</div>
+    <div class="item-prop carl-attack-tohit">{{localize "CARLRPG.Attack.ToHit"}}</div>
+    <div class="item-prop carl-attack-damage">{{localize "CARLRPG.Attack.Damage"}}</div>
+    <div class="item-prop carl-attack-damage-type">{{localize "CARLRPG.Attack.DamageType"}}</div>
+    <div class="item-prop carl-attack-range">{{localize "CARLRPG.Attack.Range"}}</div>
+    <div class="item-prop carl-attack-effect">{{localize "CARLRPG.Attack.Effect"}}</div>
+    <div class="item-controls"></div>
+  </li>
+  {{#each system.attacks as |attack index|}}
+  <li class="item flexrow">
+    <div class="item-name">
+      <input type="text" name="{{concat 'system.attacks.' index '.name'}}" value="{{attack.name}}" />
+    </div>
+    <div class="item-prop carl-attack-tohit">
+      <input type="text" class="carl-w-tiny" name="{{concat 'system.attacks.' index '.toHit'}}" value="{{attack.toHit}}" placeholder="16+F" />
+    </div>
+    <div class="item-prop carl-attack-damage">
+      <input type="text" class="carl-w-tiny" name="{{concat 'system.attacks.' index '.damage'}}" value="{{attack.damage}}" placeholder="7d10+6" />
+    </div>
+    <div class="item-prop carl-attack-damage-type">
+      <select name="{{concat 'system.attacks.' index '.damageType'}}">
+        <option value=""></option>
+        {{selectOptions ../config.damageTypes selected=attack.damageType localize=true}}
+      </select>
+    </div>
+    <div class="item-prop carl-attack-range">
+      <input type="text" class="carl-w-tiny" name="{{concat 'system.attacks.' index '.range'}}" value="{{attack.range}}" placeholder="5ft" />
+    </div>
+    <div class="item-prop carl-attack-effect">
+      <input type="text" class="carl-w-full" name="{{concat 'system.attacks.' index '.effect'}}" value="{{attack.effect}}" />
+    </div>
+    <div class="item-controls">
+      <a class="item-control" data-action="deleteArrayItem" data-path="system.attacks" data-index="{{index}}">
+        <i class="fas fa-trash"></i>
+      </a>
+    </div>
+  </li>
+  {{/each}}
+</ol>
+<a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.attacks"
+  data-template='{"name":"","toHit":"","damage":"","damageType":"","range":"","effect":""}'>
+  <i class="fas fa-plus"></i> {{localize "CARLRPG.Attack.Add"}}
+</a>

@@ -231,7 +231,7 @@ function buildManaCostChoices(spellItem) {
 /**
  * The actor's active Class name (module/data/character.mjs's
  * system.class/classItem), used only for the Favored-Class Mana surcharge
- * below. Null for NPCs and for Characters with no Class selected yet.
+ * below. Null for Mobs and for Characters with no Class selected yet.
  * @param {Actor} actor
  * @returns {string|null}
  */

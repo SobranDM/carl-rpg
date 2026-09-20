@@ -58,6 +58,9 @@ export default class CarlRPGActorBase extends foundry.abstract.TypeDataModel {
     schema.uiState = new fields.SchemaField({
       skillsExpanded: new fields.BooleanField({ required: true, initial: true }),
       spellsExpanded: new fields.BooleanField({ required: true, initial: true }),
+      // Mob's Attacks list drawer (abilities-mob.hbs) - unused by Character,
+      // same pattern as skillsExpanded/spellsExpanded above.
+      attacksExpanded: new fields.BooleanField({ required: true, initial: true }),
       // Play-mode guard for the Skills/Spells lists: locked (the default)
       // hides each row's edit/delete controls and shows the Advancement
       // mark checkbox; unlocked does the reverse. Toggled via the lock icon

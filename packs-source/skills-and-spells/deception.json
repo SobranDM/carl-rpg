@@ -65,7 +65,6 @@
       }
     ],
     "category": "utility",
-    "isAttack": false,
     "attackType": "",
     "range": "",
     "aiFavor": 0,

@@ -1,0 +1,32 @@
+@use '../utils/variables' as *;
+
+// Mob's stat-block reference row (Surprise/Evade/Move/DR - abilities-mob.hbs)
+// and the Attacks list's per-column widths - everything else on that layout
+// (the Stats column, the Skills/Spells drawers) reuses _abilities.scss/
+// _items.scss unchanged.
+@mixin styles {
+  .carl-mob-statblock-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $padding-lg;
+    align-items: flex-end;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--carl-border-soft);
+  }
+
+  .carl-mob-statblock-field {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .carl-attacks-list {
+    .item-name { flex: 2; }
+    .carl-attack-tohit,
+    .carl-attack-damage,
+    .carl-attack-range { flex: 0 0 70px; }
+    .carl-attack-damage-type { flex: 0 0 100px; }
+    .carl-attack-effect { flex: 3; }
+  }
+}

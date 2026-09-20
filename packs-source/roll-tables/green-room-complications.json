@@ -1,6 +1,6 @@
 {
   "_id": "VkJMn54WTCgdH39J",
-  "name": "Table 58: Green Room Complications",
+  "name": "Green Room Complications",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 58 (p.292).</em> Roll or choose a complication that arises in the green room before or after an interview show appearance.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

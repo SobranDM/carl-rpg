@@ -1,6 +1,6 @@
 {
   "_id": "9gHHxRX6nVRCw4jQ",
-  "name": "Table 16: Animal Youth Skills",
+  "name": "Animal Youth Skills",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 16 (p.105).</em> Non-Human (animal) crawlers choose one of the six youth backgrounds and gain two of its three listed Skills, or roll 1d6 to select a background randomly. Both Skills you select start at Rank 1.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "xc73wdZTf4ouYp1A",
   "sort": 0,
   "ownership": {
     "default": 0

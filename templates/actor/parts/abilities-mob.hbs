@@ -1,0 +1,50 @@
+{{!-- Mob's Abilities tab ("Building a Mob", p.270-272) - a stat-block-shaped
+      layout (Surprise/Evade/Move/DR reference row, an editable Stat block,
+      a structured Attacks list) instead of the PC-shaped abilities.hbs
+      (banked stat points, class/race-driven bonuses). Skills/Spells stay
+      available below for the rare Mob that needs a real itemized Skill,
+      via the same partials/markup abilities.hbs uses. --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="abilities">
+  <div class="carl-abilities-layout">
+    {{> "systems/carl-rpg/templates/actor/parts/stats-column.hbs"}}
+
+    <div class="carl-abilities-main">
+      <div class="carl-mob-statblock-row">
+        <div class="carl-mob-statblock-field">
+          <label class="resource-label">{{localize "CARLRPG.Roll.Surprise"}}</label>
+          <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.SurpriseHint'}}">{{system.surpriseBase}}+F</span>
+        </div>
+        <div class="carl-mob-statblock-field">
+          <label class="resource-label">{{localize "CARLRPG.Roll.Evade"}}</label>
+          <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EvadeHint'}}">{{system.evadeBase}}+F</span>
+        </div>
+        <div class="carl-mob-statblock-field">
+          <label for="system.move" class="resource-label">{{localize "CARLRPG.Actor.Move"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.move" value="{{system.move}}" placeholder="20+S" />
+        </div>
+        <div class="carl-mob-statblock-field">
+          <label for="system.dr" class="resource-label">{{localize "CARLRPG.Actor.Dr"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
+        </div>
+      </div>
+
+      {{#> carlCollapsibleSection sectionId="attacks" expanded=system.uiState.attacksExpanded
+           label=(localize "CARLRPG.Tab.Attacks") toggleScope="actor" togglePath="system.uiState.attacksExpanded"}}
+        {{> "systems/carl-rpg/templates/actor/parts/attacks-list.hbs"}}
+      {{/carlCollapsibleSection}}
+
+      {{#> carlCollapsibleSection sectionId="skills" expanded=system.uiState.skillsExpanded
+           label=(localize "CARLRPG.Tab.Skills") toggleScope="actor" togglePath="system.uiState.skillsExpanded"
+           showLockToggle=true locked=system.uiState.itemsLocked}}
+        {{> "systems/carl-rpg/templates/actor/parts/skills-section-body.hbs"
+            skills=skills unmatchedDamageEffects=unmatchedDamageEffects config=config locked=system.uiState.itemsLocked}}
+      {{/carlCollapsibleSection}}
+
+      {{#> carlCollapsibleSection sectionId="spells" expanded=system.uiState.spellsExpanded
+           label=(localize "CARLRPG.Tab.Spells") toggleScope="actor" togglePath="system.uiState.spellsExpanded"
+           showMana=true manaValue=system.mana.value manaMax=system.mana.max}}
+        {{> "systems/carl-rpg/templates/actor/parts/spells-section-body.hbs" spells=spells locked=system.uiState.itemsLocked}}
+      {{/carlCollapsibleSection}}
+    </div>
+  </div>
+</section>

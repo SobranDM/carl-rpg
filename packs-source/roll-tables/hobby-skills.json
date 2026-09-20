@@ -1,6 +1,6 @@
 {
   "_id": "ntTyE5QTV31TaRAr",
-  "name": "Table 15: Hobby Skills",
+  "name": "Hobby Skills",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 15 (p.106).</em> Choose one of the twelve hobbies and take two of its three listed Skills, or roll 1d12 to select a hobby randomly. Unlike other background Skills, both hobby Skills you select start at Rank 2.</p>",
   "results": [
@@ -332,7 +332,7 @@
   "formula": "1d12",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "xc73wdZTf4ouYp1A",
   "sort": 0,
   "ownership": {
     "default": 0

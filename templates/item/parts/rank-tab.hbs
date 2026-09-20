@@ -1,0 +1,20 @@
+{{!-- One Rank 5/10/15 tab's content, shared by all three (item-sheet.mjs's
+      _configureRenderParts registers this same template for the rank5/
+      rank10/rank15 PARTS, and _preparePartContext injects `entries` -
+      that rank's pre-grouped upgrade-tier.hbs-ready bucket from
+      #groupUpgradesByRank - and `rankThreshold` - the plain number this
+      tab's own "Add Upgrade" link should pre-fill, since a shared template
+      has no other way to know which of the 3 it is). `config`/`item`/
+      `actorSkillNames` are the normal globally-set context (see
+      _prepareContext), available here like any other part. --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="{{tab.id}}">
+  {{#each entries as |entry|}}
+  {{> "systems/carl-rpg/templates/item/parts/upgrade-tier.hbs"
+      upgrade=entry.upgrade uIndex=entry.index damageTypeEntries=entry.damageTypeEntries
+      config=config item=item actorSkillNames=actorSkillNames}}
+  {{/each}}
+  <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.upgrades"
+    data-template='{"rankThreshold":{{rankThreshold}},"description":"","changes":[]}'>
+    <i class="fas fa-plus"></i> {{localize "CARLRPG.Ranked.AddUpgrade"}}
+  </a>
+</section>

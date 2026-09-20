@@ -1,6 +1,6 @@
 {
   "_id": "rVVxUeo9c0cp3szM",
-  "name": "Table 62: Bopca Names",
+  "name": "Bopca Names",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 62 (p.312).</em> Roll or choose a name for a Bopca NPC. Gender note as given in the rulebook is included in each result.</p>",
   "results": [
@@ -278,7 +278,7 @@
   "formula": "1d10",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "MSZOKcNr8HD5Vvz1",
   "sort": 0,
   "ownership": {
     "default": 0

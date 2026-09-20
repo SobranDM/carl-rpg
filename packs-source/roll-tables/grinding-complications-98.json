@@ -1,6 +1,6 @@
 {
   "_id": "KczjtZqogbuHgep8",
-  "name": "Table 98: Grinding Complications",
+  "name": "F5: Desert Wastes",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 98 (p.543), Floor 5: The Bubbles, Desert Wastes quadrant (near the Ziggurat and Girtablullu's city).</em> Random complications for crawlers grinding for experience against Thorny Devils and Pistol Pangolins in the desert wastes.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

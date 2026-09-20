@@ -1,6 +1,6 @@
 {
   "_id": "SROVIKEuRgZfpLxa",
-  "name": "Table 79: Grinding Complications",
+  "name": "F3: Ruined Snowtime",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 79 (p.362).</em> Ruined Snowtime Neighborhood (Third Floor, The Over City; Redbrick Village) grinding complications. Features named NPCs Grampus, Crawler JB, and Castellain Kirett.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

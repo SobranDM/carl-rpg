@@ -1,6 +1,6 @@
 {
   "_id": "Mk9ve9udlzK6XNnW",
-  "name": "Table 93: Cerulean Star Grinding Complications",
+  "name": "F4: Cerulean Star",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 93 (p.505), Floor 4: The Iron Tangle, the Cerulean Star (All Revved Up Quest).</em> Random complications for crawlers grinding for experience aboard the MLM-themed Cerulean Star train, involving Clurichaun Aspirants, Pooka Goal Diggers, and Haddley Luanne Montgomery.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

@@ -1,6 +1,6 @@
 {
   "_id": "pK91Ze92KdM8B2PM",
-  "name": "Table 60: Cruel Behavior",
+  "name": "Cruel Behavior",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 60 (p.293).</em> Roll or choose an option for cruel host behavior on shows catering to a bloodthirsty or emotionally dramatic audience. Keep in mind the suggestions for considerate play (p.11–12) when using this table.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

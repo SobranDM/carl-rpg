@@ -1,6 +1,6 @@
 {
   "_id": "cIC9q8MqQZdiLH1S",
-  "name": "Table 36: Fourth Floor Events",
+  "name": "Fourth Floor Events",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 36 (p.127).</em> An additional Tutorial Floor Experience table (see Table 28, p.118) for creating a crawler appropriate for the Fourth or Fifth Floor. Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
   "results": [
@@ -332,7 +332,7 @@
   "formula": "1d12",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "vgFitGPNDMzEQ8kf",
   "sort": 0,
   "ownership": {
     "default": 0

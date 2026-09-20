@@ -237,8 +237,8 @@ function seedSkillFromItem(skills, item) {
  * `conditionalModifiers` instead, for a roll dialog to offer as checkboxes
  * (see module/dice/roll-parts.mjs, Milestone 2) and apply only if checked.
  */
-function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType) {
-  const { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps } = ctx;
+export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType) {
+  const { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps, actorSystem } = ctx;
   // Race/Class stat and skillRank grants are one-time, permanent bumps to
   // the actor's BASE value (module/helpers/race-class-grants.mjs bakes them
   // in on the way in, via a real actor.update/item.update) - NOT a live
@@ -357,14 +357,38 @@ function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, 
       // stats.<key>.value (a real, one-time actor.update, NOT this
       // per-render bonus bag) by module/helpers/race-class-grants.mjs, so
       // it must NOT also accumulate here.
-      if (!isBakedGrant) accumulateBonus(bonuses, `stats.${change.target}`, change, scopedRollData);
+      // "multiply" needs the actor's real base Stat value (never the
+      // zeroed-per-pass bonus accumulator) to mean anything - rollData.stats
+      // is a deepClone of actorSystem.stats taken fresh at the start of this
+      // aggregation pass (see aggregateActorBonuses), so it reliably reflects
+      // the real persisted base value, not stale derived data.
+      const statBase = rollData.stats?.[change.target]?.value;
+      if (!isBakedGrant) {
+        accumulateBonus(bonuses, `stats.${change.target}`, change, scopedRollData,
+          typeof statBase === "number" ? statBase : undefined);
+      }
       accumulateCap(caps, `stats.${change.target}`, change, scopedRollData);
       break;
     }
     case "resource": {
       // Same reasoning as "stat" - e.g. target "hb.max" must never be
-      // written directly, since that's the editable base field too.
-      accumulateBonus(bonuses, change.target, change, scopedRollData);
+      // written directly, since that's the editable base field too. Only
+      // "dr" gets a real "multiply" base here: it's the one resourceTargets
+      // key with a genuinely stable, always-persisted base on BOTH actor
+      // types (actor-base.mjs's schema.dr, never touched by prepareDerivedData
+      // beyond the derived drBonus/drEffective). "hb.max" is a real editable
+      // base for Character but is fully recomputed from level/tier EVERY
+      // pass for Mob (see mob.mjs's hbSlotsRule, documented there as "the
+      // same pattern actor-base.mjs's own mana.max already uses for a
+      // fully-derived resource") - and "mana.max" is fully derived from
+      // stats.int.effective + bonus for BOTH actor types (never a real base
+      // at all, computed AFTER this aggregation pass even runs). Neither is
+      // safe to read here as "the base", so multiply on those two falls back
+      // to the old (documented, pre-existing) no-op-for-a-single-item
+      // behavior rather than silently reading a stale/wrong number.
+      const resourceBase = change.target === "dr" ? actorSystem?.dr : undefined;
+      accumulateBonus(bonuses, change.target, change, scopedRollData,
+        typeof resourceBase === "number" ? resourceBase : undefined);
       accumulateCap(caps, change.target, change, scopedRollData);
       break;
     }
@@ -398,16 +422,56 @@ function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, 
   }
 }
 
-/** Shared accumulation used by every targetType that writes into the (always non-schema, never form-bound) bonuses bag. */
-function accumulateBonus(bonuses, key, change, rollData) {
+/**
+ * Shared accumulation used by every targetType that writes into the (always
+ * non-schema, never form-bound) bonuses bag.
+ *
+ * `current` (the running per-render accumulator for this key, starting at 0
+ * every aggregation pass - see aggregateActorBonuses) is the right thing to
+ * compare against for add/subtract (multiple items' flat bonuses should
+ * simply sum) but it is NOT the actor's real base value, so multiply/
+ * override/upgrade/downgrade against it are meaningless (e.g. "multiply
+ * Strength by 2" against a zeroed accumulator is always 0 for the first/only
+ * contributing item). override/upgrade/downgrade are handled by keeping them
+ * OFF the Mode dropdown for every targetType that funnels through here (see
+ * CARLRPG.changeModesByTarget in config.mjs) rather than by trying to make
+ * "current" mean something it structurally can't (this bag is rebuilt from
+ * scratch every pass and never sees the actor's persisted base - see the
+ * comment on applyOneChange's "stat" case).
+ *
+ * multiply gets a real fix instead of just being hidden: when the caller
+ * supplies `baseValue` (the actor's genuine persisted base for this target -
+ * e.g. rollData.stats[target].value, or actorSystem.dr - NOT another
+ * ChangeEntry's contribution), a multiply ChangeEntry contributes
+ * `baseValue * (factor - 1)` into the bonus bag, so effective = base + bonus
+ * = base * factor for a single contributor. Design choice for MULTIPLE
+ * multiply contributors on the same key: each contributes independently
+ * against the same original base (bonus totals `n * base * (factor-1)`)
+ * rather than compounding multiplicatively against each other - this matches
+ * how every other mode here already combines (additively into one shared
+ * bag) and avoids an order-dependent result, at the cost of "two x2 items"
+ * yielding 3x total (not 4x).
+ *
+ * When no baseValue is available (custom/rollMode/advancementBonus targets,
+ * or a "resource" target other than "dr" - see applyOneChange's "resource"
+ * case for exactly which resource keys have a stable-enough base to scale),
+ * multiply falls back to the old current*value behavior - a known no-op for
+ * a single contributor, unchanged from before this fix, since there is no
+ * real base to scale.
+ */
+export function accumulateBonus(bonuses, key, change, rollData, baseValue) {
   const value = resolveValue(change.value, rollData);
   if (typeof value !== "number") return;
   const current = bonuses[key] ?? 0;
+  if (change.mode === "multiply" && typeof baseValue === "number") {
+    bonuses[key] = current + baseValue * (value - 1);
+    return;
+  }
   bonuses[key] = applyScalarChange(current, change.mode, value);
 }
 
 /** Records a ChangeEntry's optional `capMax` (an effective-value ceiling) into the caps bag, keeping the most restrictive (lowest) value per key. */
-function accumulateCap(caps, key, change, rollData) {
+export function accumulateCap(caps, key, change, rollData) {
   if (!change.capMax) return;
   const cap = resolveValue(change.capMax, rollData);
   if (typeof cap !== "number") return;
@@ -427,7 +491,7 @@ function accumulateCap(caps, key, change, rollData) {
  * (submitOnChange posts the whole form) and re-boosted again next pass -
  * silently compounding forever. Instead, everything lands in the bonuses
  * bag (never schema-backed, never form-bound), and CarlRPGCharacter/
- * CarlRPGNPC#prepareDerivedData reads specific known keys (e.g.
+ * CarlRPGMob#prepareDerivedData reads specific known keys (e.g.
  * "stats.str", "hb.max") to compute genuinely separate derived-only
  * fields (stats.*.bonus, hb.bonusMax, ...) after this call returns.
  *
@@ -461,7 +525,7 @@ export function aggregateActorBonuses(actorSystem) {
     if (RANKED_TYPES.has(item.type)) seedSkillFromItem(skills, item);
   }
 
-  const ctx = { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps };
+  const ctx = { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps, actorSystem };
   for (const item of items) {
     for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);

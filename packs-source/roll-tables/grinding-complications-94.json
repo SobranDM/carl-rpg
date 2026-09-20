@@ -1,6 +1,6 @@
 {
   "_id": "mOvhuPQJ2QBHXePw",
-  "name": "Table 94: Grinding Complications",
+  "name": "F4: Fever Station",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 94 (p.517), Floor 4: The Iron Tangle, Fever Station (Lobe Gang vs. Gristle Gang territory, the Atomic Grail Quest).</em> Random complications for crawlers grinding for experience amid the gang warfare of the ruined former NYC subway.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

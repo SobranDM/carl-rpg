@@ -1,7 +1,15 @@
 <div class="carl-spend-stat-points-body">
-  <p class="carl-hint">{{localize "CARLRPG.SpendStatPoints.Hint"}}</p>
+  <p class="carl-hint">
+    {{#if isMob}}{{localize "CARLRPG.SpendStatPoints.HintMob"}}{{else}}{{localize "CARLRPG.SpendStatPoints.Hint"}}{{/if}}
+  </p>
+  {{#if isMob}}
+  <p class="carl-hint carl-spend-stat-points-formula">
+    {{localize "CARLRPG.SpendStatPoints.MobFormula" level=level statPointsPerLevel=statPointsPerLevel statPointsBase=statPointsBase}}
+  </p>
+  {{/if}}
   <div class="carl-spend-stat-points-banked">
-    {{localize "CARLRPG.Actor.BankedStatPoints"}}: <strong>{{bankedStatPoints}}</strong>
+    {{#if isMob}}{{localize "CARLRPG.Actor.StatPointsRemaining"}}{{else}}{{localize "CARLRPG.Actor.BankedStatPoints"}}{{/if}}:
+    <strong>{{remainingPoints}}</strong>
   </div>
   <div class="carl-spend-stat-points-grid">
     <div class="carl-spend-stat-points-row carl-spend-stat-points-header">
@@ -18,7 +26,7 @@
           <i class="fas fa-minus"></i>
         </button>
         <button type="button" data-action="incrementStat" data-key="{{stat.key}}"
-          {{#if (lte bankedStatPoints 0)}}disabled{{/if}} title="{{localize 'CARLRPG.SpendStatPoints.Increment'}}">
+          {{#if (lte remainingPoints 0)}}disabled{{/if}} title="{{localize 'CARLRPG.SpendStatPoints.Increment'}}">
           <i class="fas fa-plus"></i>
         </button>
       </div>

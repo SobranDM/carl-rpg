@@ -1,6 +1,6 @@
 {
   "_id": "IMyDuGrl83IDGlNT",
-  "name": "Table 61: Fourth and Fifth Floor Complications",
+  "name": "Fourth and Fifth Floor Complications",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 61 (p.293).</em> Roll or choose an additional complication that may arise on repeated appearances with the same interviewer or show on the Fourth or Fifth Floor.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

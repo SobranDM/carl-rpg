@@ -68,7 +68,7 @@
         <div>
           <label class="resource-label">{{localize "CARLRPG.Change.Mode"}}</label>
           <select class="carl-w-full" name="{{concat ../path '.' cIndex '.mode'}}">
-            {{selectOptions ../config.changeModes selected=change.mode localize=true}}
+            {{selectOptions (changeModeChoices ../config.changeModes ../config.changeModesByTarget change.targetType ../item.type) selected=change.mode localize=true}}
           </select>
         </div>
         <div>
@@ -107,10 +107,16 @@
       </div>
     </fieldset>
     <div class="carl-change-row-meta flexrow">
-      <input type="text" class="carl-change-label" name="{{concat ../path '.' cIndex '.label'}}" value="{{change.label}}"
-        placeholder="{{localize 'CARLRPG.Change.LabelPlaceholder'}}" />
-      <input type="text" class="carl-w-tiny" data-dtype="Number" name="{{concat ../path '.' cIndex '.levelGate'}}" value="{{change.levelGate}}"
-        title="{{localize 'CARLRPG.Change.LevelGate'}}" placeholder="{{localize 'CARLRPG.Change.LevelGatePlaceholder'}}" />
+      <div class="carl-change-meta-field carl-change-meta-field--label">
+        <label class="resource-label">{{localize "CARLRPG.Change.Label"}}</label>
+        <input type="text" class="carl-change-label" name="{{concat ../path '.' cIndex '.label'}}" value="{{change.label}}"
+          placeholder="{{localize 'CARLRPG.Change.LabelPlaceholder'}}" />
+      </div>
+      <div class="carl-change-meta-field">
+        <label class="resource-label">{{localize "CARLRPG.Change.LevelGate"}}</label>
+        <input type="text" class="carl-w-tiny" data-dtype="Number" name="{{concat ../path '.' cIndex '.levelGate'}}" value="{{change.levelGate}}"
+          placeholder="{{localize 'CARLRPG.Change.LevelGatePlaceholder'}}" />
+      </div>
       <a class="item-control" data-action="deleteArrayItem" data-path="{{../path}}" data-index="{{cIndex}}"
         title="{{localize 'CARLRPG.Change.Remove'}}">
         <i class="fas fa-trash"></i>

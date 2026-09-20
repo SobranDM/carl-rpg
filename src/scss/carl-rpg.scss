@@ -9,6 +9,7 @@
 @use 'components/editors';
 @use 'components/actor-tabs';
 @use 'components/abilities';
+@use 'components/mob-statblock';
 @use 'components/drawers';
 @use 'components/hb-pips';
 @use 'components/toolbox';
@@ -25,6 +26,7 @@
   @include editors.styles;
   @include actor-tabs.styles;
   @include abilities.styles;
+  @include mob-statblock.styles;
   @include drawers.styles;
   @include hb-pips.styles;
   @include toolbox.styles;

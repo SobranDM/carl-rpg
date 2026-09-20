@@ -1,6 +1,6 @@
 {
   "_id": "w922tRjycUwb5E2w",
-  "name": "Table 52: Playing to the Cameras",
+  "name": "Playing to the Cameras",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 52 (p.281).</em> Reactions from the Audience, System AI, and Sponsors when a crawler Plays to the Cameras. This is keyed to the tier of a crawler's Skill Check result, not a random roll &mdash; select the row matching the actual check result rather than rolling; the die formula below is nominal, provided only for compendium/Foundry compatibility.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

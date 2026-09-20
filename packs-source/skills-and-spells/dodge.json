@@ -108,7 +108,6 @@
       }
     ],
     "category": "passive",
-    "isAttack": false,
     "attackType": "",
     "range": "",
     "aiFavor": 0,

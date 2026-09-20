@@ -1,0 +1,71 @@
+{{!-- One Upgrade tier's editable content, extracted from the old single-column
+      ranked-fields.hbs so it can be invoked once per Rank-5/10/15 tab's own
+      bucket (see rank-tab.hbs) instead of once per raw array entry.
+      Invoked with hash params `upgrade` (one system.upgrades[] entry) and
+      `uIndex` (its ORIGINAL index in the full system.upgrades array - not
+      its position within its rank bucket - required by deleteArrayItem's
+      data-index and every field's name path below), `damageTypeEntries`
+      (item-sheet.mjs's #groupUpgradesByRank - upgrade.damageTypes
+      pre-filtered to only its non-blank entries, each `{value, dtIndex}`
+      with dtIndex being the ORIGINAL index into the real damageTypes
+      array, same reasoning as uIndex above), plus `config`/`item`/
+      `actorSkillNames` passed straight through. Every reference here sits at
+      this partial's own top level (hash params, not an each-loop block
+      param) - unlike the old inline version, none of these need a `../`
+      EXCEPT inside the `{{#each damageTypeEntries}}` loop below, which
+      (being a fresh each-block) needs `../` for anything from this outer
+      scope, same as rank-tab.hbs's own each-loop. --}}
+<div class="carl-upgrade-tier">
+  <div class="carl-upgrade-tier-header flexrow">
+    <select class="carl-w-short" name="{{concat 'system.upgrades.' uIndex '.rankThreshold'}}" data-dtype="Number">
+      <option value="5" {{#if (eq upgrade.rankThreshold 5)}}selected{{/if}}>{{localize "CARLRPG.Ranked.Rank5"}}</option>
+      <option value="10" {{#if (eq upgrade.rankThreshold 10)}}selected{{/if}}>{{localize "CARLRPG.Ranked.Rank10"}}</option>
+      <option value="15" {{#if (eq upgrade.rankThreshold 15)}}selected{{/if}}>{{localize "CARLRPG.Ranked.Rank15"}}</option>
+    </select>
+    <a class="item-control" data-action="deleteArrayItem" data-path="system.upgrades" data-index="{{uIndex}}"
+      title="{{localize 'CARLRPG.Ranked.RemoveUpgrade'}}">
+      <i class="fas fa-trash"></i>
+    </a>
+  </div>
+  <textarea name="{{concat 'system.upgrades.' uIndex '.description'}}"
+    class="carl-upgrade-description">{{upgrade.description}}</textarea>
+  {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
+    changes=upgrade.changes path=(concat "system.upgrades." uIndex ".changes") config=config
+    item=item actorSkillNames=actorSkillNames}}
+  {{> "systems/carl-rpg/templates/item/parts/target-effects-editor.hbs"
+    targetEffects=upgrade.targetEffects path=(concat "system.upgrades." uIndex ".targetEffects") config=config}}
+  <div class="carl-upgrade-damage-split">
+    <label class="resource-label">{{localize "CARLRPG.Ranked.DamageTypeSplit"}}</label>
+    {{#each damageTypeEntries as |entry|}}
+    <div class="carl-string-list-row flexrow">
+      <select class="carl-w-medium" name="{{concat 'system.upgrades.' ../uIndex '.damageTypes.' entry.dtIndex}}">
+        <option value=""></option>
+        {{selectOptions ../config.damageTypes selected=entry.value localize=true}}
+      </select>
+      <a class="item-control" data-action="deleteArrayItem"
+        data-path="{{concat 'system.upgrades.' ../uIndex '.damageTypes'}}" data-index="{{entry.dtIndex}}">
+        <i class="fas fa-times"></i>
+      </a>
+    </div>
+    {{/each}}
+    <a class="item-control carl-add-link" data-action="addArrayItem"
+      data-path="{{concat 'system.upgrades.' uIndex '.damageTypes'}}" data-template="&quot;&quot;">
+      <i class="fas fa-plus"></i> {{localize "CARLRPG.Ranked.AddDamageType"}}
+    </a>
+  </div>
+  <div class="carl-field-grid carl-upgrade-heal">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.HealDice"}}</label>
+      <input type="text" class="carl-w-short" name="{{concat 'system.upgrades.' uIndex '.healDice'}}"
+        value="{{upgrade.healDice}}" placeholder="1d6" />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.HealToFull"}}</label>
+      <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.healToFull'}}" {{checked upgrade.healToFull}} />
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.HealMend"}}</label>
+      <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.healMend'}}" {{checked upgrade.healMend}} />
+    </div>
+  </div>
+</div>

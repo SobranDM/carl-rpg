@@ -7,7 +7,9 @@
   }
 
   .sheet-header {
-    flex: 0 auto;
+    flex: 0 0 auto; // never shrink - a flex sibling with much taller natural
+                     // content must not compress this fixed-height header's
+                     // 100px .profile-img below its real size
     overflow: hidden;
     display: flex;
     flex-direction: row;
@@ -41,7 +43,7 @@
   }
 
   // Name row: Level/Floor sit compact beside the name field rather than in
-  // their own grid row below (see header.hbs / header-npc.hbs).
+  // their own grid row below (see header.hbs / header-mob.hbs).
   .carl-name-row {
     align-items: center;
     gap: $padding-md;
@@ -127,6 +129,7 @@
   .carl-w-tiny { width: $width-tiny; text-align: center; }
   .carl-w-short { width: $width-short; }
   .carl-w-medium { width: $width-medium; }
+  .carl-w-wide { width: $width-wide; }
   .carl-w-full { width: 100%; }
 
   // Responsive field row: each field keeps its own natural width (driven by
@@ -145,7 +148,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: $padding-md;
-    margin: $padding-md 0;
+    margin: 13px 0; // +3px over $padding-md for a touch more breathing room between sections
 
     > div {
       display: flex;

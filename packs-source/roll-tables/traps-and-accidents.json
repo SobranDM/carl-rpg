@@ -1,6 +1,6 @@
 {
   "_id": "Qfbdq6iH2V4MqgAO",
-  "name": "Table 33: Traps & Accidents",
+  "name": "Traps & Accidents",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 33 (p.124).</em> One of the six Tutorial Floor Experience sub-tables (see Table 28, p.118). Pick two Skills fitting the theme (roll 1d4 and 1d2 for starting Ranks) to go with the narrative.</p>",
   "results": [
@@ -332,7 +332,7 @@
   "formula": "1d12",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "vgFitGPNDMzEQ8kf",
   "sort": 0,
   "ownership": {
     "default": 0

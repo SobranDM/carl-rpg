@@ -1,6 +1,6 @@
 {
   "_id": "1cmvNnH4XKWHMuEK",
-  "name": "Table 27: Random Spells",
+  "name": "Random Spells",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 27 (p.116).</em> Used by Table 25: Starting Loot (Spell options) and Gold-tier Starting Loot (Spell Scroll of a random Spell). Each result links directly to the matching Spell item in the Skills & Spells compendium.</p>",
   "results": [
@@ -332,7 +332,7 @@
   "formula": "1d12",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "w1Jo7BYmYZFJADyA",
   "sort": 0,
   "ownership": {
     "default": 0

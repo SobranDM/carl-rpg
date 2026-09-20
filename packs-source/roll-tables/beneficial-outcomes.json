@@ -1,6 +1,6 @@
 {
   "_id": "L14oJJmzLuwTlUqq",
-  "name": "Table 70: Beneficial Outcomes",
+  "name": "Beneficial Outcomes",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 70 (p.316).</em> If a prospective Bard patron's attitude is Enthusiastic and a Check results in an increase in attitude, the crawler gains one benefit from this table. This bonus can occur multiple times during an amazing audition.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

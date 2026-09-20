@@ -1,6 +1,6 @@
 {
   "_id": "VjYcQEfV5zp2DLmK",
-  "name": "Table 43: Item Sizes",
+  "name": "Item Sizes",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 43 (p.221).</em> Reference chart for the Fabricate/Engineering crafting rules: the size category of an uncommon item, an example, and the Misc. Junk points needed to craft it. Usually chosen deliberately rather than rolled, but included here as a d8 table for quick random inspiration.</p>",
   "results": [
@@ -224,7 +224,7 @@
   "formula": "1d8",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "iEqTnERWx6eQwVAW",
   "sort": 0,
   "ownership": {
     "default": 0

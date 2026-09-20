@@ -12,10 +12,12 @@
       "Item": "CarlRPG Item Sheet"
     },
     "Tab": {
+      "Main": "Main",
       "Abilities": "Abilities",
       "Stats": "Stats",
       "Skills": "Skills",
       "Spells": "Spells",
+      "Attacks": "Attacks",
       "DamageEffects": "Damage Effects",
       "Inventory": "Inventory",
       "Boons": "Boons",
@@ -47,8 +49,6 @@
       "FloorProgress": "Floor Progress",
       "FloorIncrement": "Increment Floor",
       "FloorDecrement": "Decrement Floor",
-      "NewFloor": "New Floor",
-      "NewFloorTitle": "Entering Floor {floor}",
       "InWorldRest": "In-World Rest",
       "ShortRest": "Short Rest (2h)",
       "LongRest": "Long Rest (8h)",
@@ -82,7 +82,13 @@
       "NoSkills": "{name} has no Skills/Spells/Damage Effects.",
       "RollLoot": "Roll Loot",
       "RollLootTitle": "Roll Loot",
-      "NoRollTables": "No Roll Tables exist in this world yet."
+      "LootTierLabel": "Loot Box Tier",
+      "LootNoItemTypeTable": "Could not find the \"Item Type\" table in the Roll Tables compendium.",
+      "LootCardTitle": "Random Magic Item",
+      "LootItemType": "Item Type: {name}",
+      "LootMundane": "Mundane item - no enchantment rolls.",
+      "LootSomethingUnique": "Something Unique ({multiplier}× power): {result}",
+      "LootXValues": "X Values: {values}"
     },
     "Actor": {
       "HealthBar": "Health Bar",
@@ -97,19 +103,36 @@
       "Active": "Active",
       "MobTier": "Mob Tier",
       "BankedStatPoints": "Banked Stat Points",
+      "StatPointsRemaining": "Stat Points Remaining",
+      "StatPointsRemainingHint": "Computed fresh from this Mob's Level and Tier - see the Spend Stat Points dialog for the exact formula.",
       "Spend": "Spend",
       "BaseValue": "Base value (never modified by items/skills)",
       "BonusFromItemsSkills": "Bonus from items/skills, applied on top of the base value",
       "EffectiveMod": "Effective modifier (base + bonus)",
       "EffectiveValue": "Effective value (base + bonus from items/skills)",
+      "Size": "Size",
+      "CreatureType": "Type",
+      "Move": "Move",
+      "SurpriseHint": "10 + INT Mod, +Floor at time of use (p.271) - not baked in, since Floor can change without this Mob being re-saved.",
+      "EvadeHint": "10 + DEX Mod, +Floor at time of use (p.271) - the Difficulty crawlers' attacks must beat to hit this Mob.",
+      "HbSlotsOverride": "HB Slots (override)",
+      "HbSlotsOverrideHint": "Leave blank to use the computed Level/Tier formula (shown as a placeholder); set a number to override it.",
       "Defenses": "Defenses",
       "Dr": "DR (flat damage reduction)",
       "Resistances": "Resistances",
       "ResistanceGrantedHint": "Overridden by an owned item's Resistance grant"
     },
+    "Attack": {
+      "Name": "Name",
+      "ToHit": "To Hit",
+      "Damage": "Damage",
+      "DamageType": "Type",
+      "Range": "Range",
+      "Effect": "Effect",
+      "Add": "Add Attack"
+    },
     "Skill": {
       "Category": "Category",
-      "IsAttack": "Is Attack",
       "AttackType": "Attack Type",
       "Range": "Range",
       "AiFavor": "AI Favor",
@@ -194,6 +217,7 @@
       "RemoveUpgrade": "Remove Upgrade",
       "TargetEffectsLegend": "On-Hit Target Effects",
       "DamageTypeSplit": "Damage Type Split (once unlocked, overrides/splits the default damage pool)",
+      "AddDamageType": "Add Additional Damage Type",
       "RollAdvancement": "Roll Advancement Check",
       "ToggleMark": "Toggle Advancement Mark",
       "ToggleDetails": "Show Description & Upgrades",
@@ -216,6 +240,7 @@
       "CapMaxPlaceholder": "e.g. 10 - no cap if blank",
       "LevelGate": "Level Gate (optional)",
       "LevelGatePlaceholder": "0 = always active",
+      "Label": "Label",
       "LabelPlaceholder": "Label (shown in roll tooltip)",
       "Remove": "Remove",
       "DefaultChecked": "Checked by default",
@@ -317,6 +342,7 @@
       "SplitEvenly": "split evenly",
       "Heal": "Heal",
       "Evade": "Evade",
+      "Surprise": "Surprise",
       "EvadeBonus": "Evade Bonus",
       "EvadeMajorFail": "Major Fail: this crawler takes extra damage equal to the current Floor Number and gains a Minor Injury Debuff after combat.",
       "EvadeCriticalFail": "Critical Fail: this crawler takes double damage and gains a Major Injury Debuff after combat.",
@@ -353,6 +379,8 @@
       "Title": "Spend Stat Points",
       "TitleFor": "Spend Stat Points: {name}",
       "Hint": "Each banked point buys +1 to one Stat's base value.",
+      "HintMob": "Each available point buys +1 to one Stat's base value. Available points are computed fresh from this Mob's Level and Tier, not banked over time.",
+      "MobFormula": "Level {level} x {statPointsPerLevel} points/Level, plus a base of {statPointsBase} in each Stat.",
       "Stat": "Stat",
       "Unmodified": "Base",
       "Modified": "Effective",
@@ -446,12 +474,21 @@
       "Heal": "Heal"
     },
     "MobTier": {
+      "Mob": "Mob",
       "Neighborhood": "Neighborhood Boss",
       "Borough": "Borough Boss",
       "City": "City Boss",
       "Province": "Province Boss",
       "Country": "Country Boss",
       "Floor": "Floor Boss"
+    },
+    "LootBox": {
+      "Bronze": { "Label": "Bronze" },
+      "Silver": { "Label": "Silver", "XValues": "+1 Skill Rank or +2 Stat" },
+      "Gold": { "Label": "Gold", "XValues": "+1–3 Skill Rank or +3–5 Stat" },
+      "Platinum": { "Label": "Platinum", "XValues": "+2–4 Skill Rank or +5% Stat" },
+      "Legendary": { "Label": "Legendary", "XValues": "+5 Skill Rank or +10% Stat" },
+      "Celestial": { "Label": "Celestial", "XValues": "+6 Skill Rank or +20% Stat" }
     },
     "Degree": {
       "CriticalHit": "Critical Hit",
@@ -496,7 +533,7 @@
   "TYPES": {
     "Actor": {
       "character": "Character",
-      "npc": "NPC"
+      "mob": "Mob"
     },
     "Item": {
       "item": "Item",

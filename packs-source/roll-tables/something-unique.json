@@ -1,6 +1,6 @@
 {
   "_id": "fM2z6I21Q2SLKasn",
-  "name": "Table 42: Something Unique",
+  "name": "Something Unique",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 42 (p.220).</em> Rolled once when \"Something Unique\" comes up on Table 39 or Table 41 (or Table 40, Enchanted Clothing, not included in this pack). Stop rolling further items for that loot box — the Unique result should be extra powerful, scaled to however many rolls were skipped.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "w1Jo7BYmYZFJADyA",
   "sort": 0,
   "ownership": {
     "default": 0

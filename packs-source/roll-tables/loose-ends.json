@@ -1,6 +1,6 @@
 {
   "_id": "JI4VFB1ID1pRLlPx",
-  "name": "Table 23: Loose Ends",
+  "name": "Loose Ends",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 23 (p.114).</em> Describe a Loose End for your crawler, or if you can't (or don't want to) think of your own, pick one or roll 1d12 to choose from this table.</p>",
   "results": [
@@ -332,7 +332,7 @@
   "formula": "1d12",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "uHxvb2kPeLfN8Qku",
   "sort": 0,
   "ownership": {
     "default": 0

@@ -1,12 +1,12 @@
 {
   "_id": "y9tTpVaTrC0psivS",
-  "name": "Monk Classes",
+  "name": "Monk",
   "type": "Item",
   "description": "",
   "sorting": "a",
   "sort": 0,
   "color": null,
-  "folder": null,
+  "folder": "TaFk6xNnLG3e0Cng",
   "flags": {},
   "_key": "!folders!y9tTpVaTrC0psivS"
 }

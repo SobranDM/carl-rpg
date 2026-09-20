@@ -106,6 +106,72 @@ CARLRPG.changeModes = {
   downgrade: 'CARLRPG.ChangeMode.Downgrade',
 };
 
+/**
+ * Per-targetType allow-list of which CARLRPG.changeModes options the Change
+ * Entry editor's Mode dropdown actually offers (see
+ * templates/item/parts/changes-editor.hbs and module/helpers/modifiers.mjs's
+ * accumulateBonus doc comment for the full reasoning).
+ *
+ * "skillRank" is the only targetType where a ChangeEntry's `current` is the
+ * real, live value (the owned Skill/Spell/Damage-Effect item's actual
+ * system.rank), not a per-render bonus-bag accumulator that starts at 0
+ * every aggregation pass - so Override ("set Rank to exactly X"), Upgrade
+ * ("at least Rank X"), and Downgrade ("at most Rank X") are all semantically
+ * sound there. For "stat"/"resource"/"rollMode"/"custom", those same three
+ * modes only ever look like they work when exactly one item contributes to
+ * that key (Override then equals what Add would've produced against a
+ * zeroed accumulator) - with two contributing items the second Override
+ * silently clobbers the first item's contribution instead of "overriding the
+ * effective value" the way the label implies. Add/Subtract stay correct for
+ * any number of contributors regardless; Multiply is now ALSO correct for
+ * any number of contributors wherever a real base value is available to
+ * scale (currently: "stat" targets, and "resource" target "dr" only - see
+ * accumulateBonus's doc comment and applyOneChange's "resource" case for
+ * exactly why "hb.max"/"mana.max" don't qualify) and is otherwise left as
+ * the pre-existing current*value no-op-for-a-first-contributor arithmetic
+ * for "rollMode"/"custom" (no real base exists for an arbitrary bag key) and
+ * for "hb.max"/"mana.max" specifically - unchanged by this fix either way,
+ * but still offered since it's genuinely computed, just not always useful.
+ * Add/Subtract/Multiply are offered as a group for all of "stat"/"resource"/
+ * "rollMode"/"custom" regardless of which of those get Multiply's real fix,
+ * since none of the three ever mis-fires the way Override/Upgrade/Downgrade
+ * do on this path.
+ *
+ * "advancementBonus" is narrower still: applyOneChange's own "advancementBonus"
+ * case (module/helpers/modifiers.mjs) never even reads `change.mode` - it
+ * unconditionally does `advancementBonuses[key] += value`, so Subtract and
+ * Multiply are ALSO no-ops there today (Subtract only "works" if the author
+ * manually types a negative value; Multiply does nothing), not just
+ * Override/Upgrade/Downgrade. That's a separate, pre-existing gap from the
+ * one this fix targets (not the zeroed-accumulator issue - mode is ignored
+ * entirely, not miscomputed) and out of scope to fix here, but the dropdown
+ * should not offer options that visibly do nothing, so only Add is listed.
+ *
+ * A targetType absent from this map (currently just "skillDamage") gets the
+ * full CARLRPG.changeModes list unfiltered - skillDamage implements Multiply
+ * and Override itself, entirely separately from accumulateBonus (see
+ * applyOneChange's "skillDamage" case pushing into entry.damage.multipliers/
+ * .overrides), so its dropdown is deliberately left alone here.
+ *
+ * NOT applied to "resistance": that targetType's Mode dropdown is already a
+ * pre-existing, separate oddity (applyOneChange's "resistance" case is pure
+ * SET semantics and never reads change.mode at all, for any of the six
+ * options) - out of scope for this fix, left as-is.
+ *
+ * Also NOT applied to a Class/Race item's "stat" ChangeEntry specifically -
+ * see the `changeModeChoices` Handlebars helper (module/carl-rpg.mjs) for why
+ * (those bake into the actor's real base value via race-class-grants.mjs,
+ * never through accumulateBonus at all, so all six modes are correct there).
+ */
+CARLRPG.changeModesByTarget = {
+  stat: ["add", "subtract", "multiply"],
+  resource: ["add", "subtract", "multiply"],
+  rollMode: ["add", "subtract", "multiply"],
+  custom: ["add", "subtract", "multiply"],
+  advancementBonus: ["add"],
+  skillRank: ["add", "subtract", "multiply", "override", "upgrade", "downgrade"],
+};
+
 /** Only meaningful when a ChangeEntry.targetType is "skillDamage" - see change-entry.mjs. */
 CARLRPG.damageDiceKinds = {
   base: 'CARLRPG.DamageDiceKind.Base',
@@ -129,7 +195,7 @@ CARLRPG.changeTargetTypes = {
 /**
  * The fixed, known set of ChangeEntry.target values for targetType
  * "resource" - the only two resource-bonus keys actually consumed anywhere
- * (see character.mjs/npc.mjs#prepareDerivedData). Unlike Skill Rank/Skill
+ * (see character.mjs/mob.mjs#prepareDerivedData). Unlike Skill Rank/Skill
  * Damage targets (arbitrary homebrew skill names with no master list), this
  * is a genuinely closed, enumerable set, so it gets a real dropdown.
  */
@@ -190,6 +256,53 @@ CARLRPG.mobTiers = {
   province: 'CARLRPG.MobTier.Province',
   country: 'CARLRPG.MobTier.Country',
   floor: 'CARLRPG.MobTier.Floor',
+};
+
+/**
+ * "Building a Mob" (p.270-272): a plain (non-Boss) Mob's stat-point budget -
+ * a base of 1 in each Stat, and 3 points to spend per Level (e.g. a Level 6
+ * Mob has 18 points to distribute). This is a DISTINCT rule from
+ * bossSeverity below, not an implicit "tier 0" row of it - the book only
+ * tabulates Boss severity in Table 50; a blank mobTier always uses these two
+ * constants instead, never a bossSeverity lookup. See mob.mjs#prepareDerivedData.
+ */
+CARLRPG.mobBaseStat = 1;
+CARLRPG.mobStatPointsPerLevel = 3;
+
+/**
+ * Table 50: Boss Severity (p.270). Every Boss tier shares the same base of 5
+ * in each Stat (statBase, vs. a plain Mob's 1 above) - keyed per-tier here
+ * anyway so a lookup never has to special-case it separately. hbSlotsBase is
+ * added to the current Floor for a Boss's total HB slot count; a plain Mob
+ * instead uses min(Level, 10) - see mob.mjs#prepareDerivedData.
+ */
+CARLRPG.bossSeverity = {
+  neighborhood: { statBase: 5, statsPerLevel: 3, hbSlotsBase: 10 },
+  borough: { statBase: 5, statsPerLevel: 4, hbSlotsBase: 15 },
+  city: { statBase: 5, statsPerLevel: 5, hbSlotsBase: 20 },
+  province: { statBase: 5, statsPerLevel: 6, hbSlotsBase: 25 },
+  country: { statBase: 5, statsPerLevel: 8, hbSlotsBase: 30 },
+  floor: { statBase: 5, statsPerLevel: 10, hbSlotsBase: 40 },
+};
+
+/**
+ * Randomized Magic Items (Skills, Spells & Gear, p.219-220): a loot box's
+ * tier sets how many times to roll on the Item Type sub-table it lands on
+ * to build up one item's properties (0 for Bronze - the item stays
+ * mundane, no rolls at all), and `xValues` is the book's own GM-facing
+ * guidance text for what a "+X Stat/Skill Bonus" result is worth at that
+ * tier - deliberately never auto-rolled/computed (see module/helpers/
+ * loot.mjs), since Platinum+ are percentages needing a specific
+ * character's current Stat to resolve, and Buffs/Inherent Spells/Passive
+ * Skill results already have no master list to automate against either.
+ */
+CARLRPG.lootBoxTiers = {
+  bronze: { label: 'CARLRPG.LootBox.Bronze.Label', rolls: 0 },
+  silver: { label: 'CARLRPG.LootBox.Silver.Label', rolls: 1, xValues: 'CARLRPG.LootBox.Silver.XValues' },
+  gold: { label: 'CARLRPG.LootBox.Gold.Label', rolls: 2, xValues: 'CARLRPG.LootBox.Gold.XValues' },
+  platinum: { label: 'CARLRPG.LootBox.Platinum.Label', rolls: 3, xValues: 'CARLRPG.LootBox.Platinum.XValues' },
+  legendary: { label: 'CARLRPG.LootBox.Legendary.Label', rolls: 4, xValues: 'CARLRPG.LootBox.Legendary.XValues' },
+  celestial: { label: 'CARLRPG.LootBox.Celestial.Label', rolls: 5, xValues: 'CARLRPG.LootBox.Celestial.XValues' },
 };
 
 /** Boon tiers (Crawler Advancement, p. 168's Acolyte/Devotee/Zealot pattern). */

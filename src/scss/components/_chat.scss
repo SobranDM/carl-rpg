@@ -176,9 +176,34 @@
     color: var(--carl-text-muted);
   }
 
+  // Every action button below (Apply Damage/Healing/Target Effects, Mend
+  // Debuff, Roll Evade, Add Evade Debuff, Taunt) only sets its own layout
+  // (width/font-size/padding) - none of them set color/background, and
+  // Foundry core's own button styling doesn't reliably inherit --carl-text
+  // from this dark card, leaving default dark button text on a dark
+  // background (unreadable). Same fix as the <select>/<option> theming in
+  // _forms.scss: an explicit, self-contained pairing rather than relying on
+  // inheritance - reuses the header-bg/header-text pairing already used for
+  // badges and the GM digest title above.
+  button {
+    background: var(--carl-header-bg);
+    color: var(--carl-header-text);
+    border: 1px solid var(--carl-border-soft);
+
+    &:hover:not(:disabled) {
+      background: var(--carl-accent);
+      border-color: var(--carl-accent);
+      color: var(--carl-header-text);
+    }
+  }
+
   // Shared panel treatment for every feature block below - matches the
   // sheet's .carl-drawer/fieldset vocabulary (src/scss/components/
-  // _drawers.scss, _editors.scss): soft rose border, panel-tinted fill.
+  // _drawers.scss, _editors.scss). Nesting level 2 (violet), not the
+  // level-1 crimson: every one of these panels already sits inside a
+  // chat message whose own border is crimson (.chat-message:has(.carl-chat-card)
+  // above) - keeping both that red and this box red made the message/panel
+  // boundary disappear.
   .carl-target-effects,
   .carl-heal-card,
   .carl-damage-card,
@@ -188,9 +213,9 @@
   .carl-gm-digest {
     margin-top: 6px;
     padding: 6px 8px;
-    border: 1px solid var(--carl-border-soft);
+    border: 1px solid var(--carl-border-soft-2);
     border-radius: 4px;
-    background: var(--carl-panel-bg);
+    background: var(--carl-panel-bg-2);
   }
 
   .carl-target-effects {

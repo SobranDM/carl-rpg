@@ -27,12 +27,14 @@
  * types in the given order, so every point of the original total is
  * accounted for (deterministic, no fractional/partial points).
  * @param {number} total
- * @param {string[]} types  Non-blank damage-type keys.
+ * @param {string[]} types  Damage-type keys - "" (untyped) is a valid,
+ *   meaningful key here (see computeDamageApplication below), so this only
+ *   drops genuinely missing entries (null/undefined), never blank strings.
  * @returns {Record<string, number>}
  */
 export function splitDamageEvenly(total, types) {
   const out = {};
-  const list = (types ?? []).filter(Boolean);
+  const list = (types ?? []).filter((type) => type !== null && type !== undefined);
   if (!list.length) return out;
   const amount = Math.max(0, Number(total) || 0);
   const base = Math.floor(amount / list.length);
@@ -137,7 +139,7 @@ export function reduceViaShield(rawTotal, shield) {
  */
 export function computeDamageApplication(damageByType, target, isMagic = true) {
   const sys = target?.system ?? {};
-  // drEffective/resistancesEffective (module/data/character.mjs,npc.mjs) fold
+  // drEffective/resistancesEffective (module/data/character.mjs,mob.mjs) fold
   // in any Race/Class/feature-granted DR bonus or Resistance/Immunity
   // override on top of the flat GM-set base - fall back to the raw base
   // fields for a plain data object that never went through prepareDerivedData.

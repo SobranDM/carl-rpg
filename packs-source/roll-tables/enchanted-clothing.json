@@ -1,0 +1,218 @@
+{
+  "_id": "xV1aNXhONpVdAJnr",
+  "name": "Enchanted Clothing",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p><em>Rulebook Table 40 (p.219).</em> Rolled from Table 38: Item Type (results 3–4). See \"X Values\" (p.219) for the actual bonus granted by tier.</p>",
+  "results": [
+    {
+      "_id": "hCa6RsUWshJWV8za",
+      "type": "text",
+      "name": "+X Stat Bonus",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xV1aNXhONpVdAJnr.hCa6RsUWshJWV8za"
+    },
+    {
+      "_id": "nLRyUq6eqDKvsTmL",
+      "type": "text",
+      "name": "+X Skill Bonus",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xV1aNXhONpVdAJnr.nLRyUq6eqDKvsTmL"
+    },
+    {
+      "_id": "s8oVVLA1Q8Ly5d4f",
+      "type": "text",
+      "name": "A Buff (not Skill or Stat bonuses)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xV1aNXhONpVdAJnr.s8oVVLA1Q8Ly5d4f"
+    },
+    {
+      "_id": "qs4LMiD96glIJbo1",
+      "type": "text",
+      "name": "Resistance to an uncommon damage type",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xV1aNXhONpVdAJnr.qs4LMiD96glIJbo1"
+    },
+    {
+      "_id": "iMzbD7zGgFF8IwHP",
+      "type": "text",
+      "name": "+1 Damage Resistance",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xV1aNXhONpVdAJnr.iMzbD7zGgFF8IwHP"
+    },
+    {
+      "_id": "anZjjd6ji6jt0AO5",
+      "type": "text",
+      "name": "Something Unique",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xV1aNXhONpVdAJnr.anZjjd6ji6jt0AO5"
+    },
+    {
+      "_id": "jE7hBqaJis0ZA0lN",
+      "type": "document",
+      "name": "Something Unique — roll on Table 42",
+      "img": null,
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.fM2z6I21Q2SLKasn",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!xV1aNXhONpVdAJnr.jE7hBqaJis0ZA0lN"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!xV1aNXhONpVdAJnr"
+}

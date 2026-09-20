@@ -73,7 +73,7 @@ async function resolveTargetActor(uuid) {
  * @returns {boolean} Whether the current user may click Apply for this card -
  *   a GM always can; otherwise only if they own at least one snapshotted target.
  */
-function canApplyDamage(message) {
+export function canApplyDamage(message) {
   if (game.user.isGM) return true;
   const targetUuids = message.getFlag("carl-rpg", "targetUuids") ?? [];
   return targetUuids.some((uuid) => {
@@ -131,7 +131,7 @@ function formatDamageDigestLine(actor, result) {
  * @param {PointerEvent} event
  * @param {ChatMessage} message
  */
-async function onApplyDamage(event, message) {
+export async function onApplyDamage(event, message) {
   event.preventDefault();
   const damageByType = message.getFlag("carl-rpg", "damageByType") ?? {};
   const targetUuids = message.getFlag("carl-rpg", "targetUuids") ?? [];

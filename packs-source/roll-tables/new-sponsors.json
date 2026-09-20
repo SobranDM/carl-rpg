@@ -1,6 +1,6 @@
 {
   "_id": "7T2mbNSehbraL3QA",
-  "name": "Table 54: New Sponsors",
+  "name": "New Sponsors",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 54 (p.284).</em> Example Sponsors that may bid for a crawler's contract, with their type and the sort of crawler behavior that tends to attract them.</p>",
   "results": [
@@ -278,7 +278,7 @@
   "formula": "1d10",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

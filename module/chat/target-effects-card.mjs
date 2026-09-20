@@ -47,7 +47,7 @@ async function resolveTargetActor(uuid) {
  * @returns {boolean} Whether the current user may click Apply for this card -
  *   a GM always can; otherwise only if they own at least one snapshotted target.
  */
-function canApplyTargetEffects(message) {
+export function canApplyTargetEffects(message) {
   if (game.user.isGM) return true;
   const targetUuids = message.getFlag("carl-rpg", "targetUuids") ?? [];
   return targetUuids.some((uuid) => {
@@ -67,7 +67,7 @@ function canApplyTargetEffects(message) {
  * @param {PointerEvent} event
  * @param {ChatMessage} message
  */
-async function onApplyTargetEffects(event, message) {
+export async function onApplyTargetEffects(event, message) {
   event.preventDefault();
   const targetEffects = message.getFlag("carl-rpg", "targetEffects") ?? [];
   const targetUuids = message.getFlag("carl-rpg", "targetUuids") ?? [];

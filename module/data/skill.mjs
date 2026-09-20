@@ -19,7 +19,6 @@ export default class CarlRPGSkill extends CarlRPGRankedItemBase {
       choices: ["attack", "utility", "passive"],
     });
 
-    schema.isAttack = new fields.BooleanField({ required: true, initial: false });
     schema.attackType = new fields.StringField({
       required: false, blank: true, initial: "",
       choices: ["", "melee", "ranged"],

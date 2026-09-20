@@ -1,9 +1,36 @@
 {
   "_id": "zcQF5GGXEPnwYsGJ",
-  "name": "Table 38: Item Type",
+  "name": "Item Type",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 38 (p.219).</em> Roll a number of times based on loot box rarity (Silver: 1, Gold: 2, Platinum: 3, Legendary: 4, Celestial: 5) to determine the category of each randomized magic item, then roll on the matching sub-table. If you roll \"Something Unique\" on any sub-table, stop rolling further items and resolve Table 42: Something Unique once instead.</p><p>Note: Foundry's default RollTable draw follows a document-linked result into a sub-table automatically (the \"recursive\" draw option), so drawing this table may report both hops (e.g. Item Type, then the sub-table's own result) in a single draw.</p>",
   "results": [
+    {
+      "_id": "WXmLhuFr6imUTiqL",
+      "type": "text",
+      "name": "Enchanted Mundane Item or Weapon",
+      "img": null,
+      "description": "Choose the type of weapon or item the PCs would use or what viewers would find funny.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!zcQF5GGXEPnwYsGJ.WXmLhuFr6imUTiqL"
+    },
     {
       "_id": "g22Ee0aRzBz4cC1r",
       "type": "document",
@@ -32,12 +59,39 @@
       "_key": "!tables.results!zcQF5GGXEPnwYsGJ.g22Ee0aRzBz4cC1r"
     },
     {
-      "_id": "un72p3kJhjVXCcyE",
+      "_id": "OdJsDJfpYKpKcK5U",
       "type": "text",
-      "name": "Enchanted Clothing — roll on Table 40 (not included in this pack; choose the type of clothing based on what the PCs wear or what viewers would find funny)",
+      "name": "Enchanted Clothing",
+      "img": null,
+      "description": "Choose the type of clothing based on what the PCs wear or what viewers would find funny.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!zcQF5GGXEPnwYsGJ.OdJsDJfpYKpKcK5U"
+    },
+    {
+      "_id": "un72p3kJhjVXCcyE",
+      "type": "document",
+      "name": "Enchanted Clothing — roll on Table 40",
       "img": null,
       "description": "",
-      "documentUuid": null,
+      "documentUuid": "Compendium.carl-rpg.roll-tables.RollTable.xV1aNXhONpVdAJnr",
       "weight": 2,
       "range": [
         3,
@@ -57,6 +111,33 @@
         "exportSource": null
       },
       "_key": "!tables.results!zcQF5GGXEPnwYsGJ.un72p3kJhjVXCcyE"
+    },
+    {
+      "_id": "2KoR71sir1rwYjBe",
+      "type": "text",
+      "name": "Enchanted Accessory",
+      "img": null,
+      "description": "Choose the type of accessory based on what the PCs might wear or what viewers would find funny.",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!zcQF5GGXEPnwYsGJ.2KoR71sir1rwYjBe"
     },
     {
       "_id": "ekueGRUtZrbriTtT",
@@ -89,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "w1Jo7BYmYZFJADyA",
   "sort": 0,
   "ownership": {
     "default": 0

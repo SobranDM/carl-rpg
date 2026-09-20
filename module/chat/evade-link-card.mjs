@@ -72,7 +72,7 @@ async function resolveTargetActor(uuid) {
  * @returns {boolean} Whether the current user may act on this button - a GM
  *   always can; otherwise only if they own at least one snapshotted actor.
  */
-function canActOnUuidFlag(message, flagKey) {
+export function canActOnUuidFlag(message, flagKey) {
   if (game.user.isGM) return true;
   const uuids = [message.getFlag("carl-rpg", flagKey)].flat().filter(Boolean);
   return uuids.some((uuid) => {
@@ -90,11 +90,11 @@ function canActOnUuidFlag(message, flagKey) {
  * Considerate Play and PvP (Carl RPG p.87): when both the attacker and the
  * defender are Characters, the attacker's own rolled Attack total becomes
  * the Evade Difficulty. Otherwise (Evade Interrupt Action, p.81, vs. a
- * Mob/NPC on either side), the already-computed static formula applies.
+ * Mob on either side), the already-computed static formula applies.
  * @param {{attackerType: string, defenderType: string, attackTotal: number, targetDifficulty: number|null}} args
  * @returns {number|null}
  */
-function resolveEvadeDifficulty({ attackerType, defenderType, attackTotal, targetDifficulty }) {
+export function resolveEvadeDifficulty({ attackerType, defenderType, attackTotal, targetDifficulty }) {
   return (attackerType === "character" && defenderType === "character") ? attackTotal : targetDifficulty;
 }
 

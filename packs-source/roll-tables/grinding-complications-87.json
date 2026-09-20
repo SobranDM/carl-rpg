@@ -1,6 +1,6 @@
 {
   "_id": "ijU597apbjrVs169",
-  "name": "Table 87: Grinding Complications",
+  "name": "F4: Training Day",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 87 (p.431).</em> Training Day Neighborhood (Fourth Floor, The Iron Tangle) grinding complications. Used when crawlers hop from train to train in search of experience.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

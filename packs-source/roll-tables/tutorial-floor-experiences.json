@@ -1,9 +1,36 @@
 {
   "_id": "x6j7rwgN38X4lFea",
-  "name": "Table 28: Tutorial Floor Experiences",
+  "name": "Tutorial Floor Experiences",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 28 (p.118).</em> Roll or choose one of the six sub-tables below to generate a Tutorial Floor background experience (used during character creation, or as a GM-inspiration seed for early-campaign flashbacks and NPC hooks). Each sub-table result grants two Skills of your choice (roll 1d4 and 1d2 for starting Ranks) fitting the theme, plus a narrative. Two further tables, not part of this d6 choice, cover the Third and Fourth Floors: Table 35: Third Floor Events (p.126) and Table 36: Fourth Floor Events (p.127).</p><p>Note: Foundry's default RollTable draw follows a document-linked result into a sub-table automatically (the \"recursive\" draw option), so drawing this table may report both hops (the chooser result, then the sub-table's own result) in a single draw.</p>",
   "results": [
+    {
+      "_id": "i1X36iA5mCPusjHl",
+      "type": "text",
+      "name": "Interactions with Other Crawlers",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.i1X36iA5mCPusjHl"
+    },
     {
       "_id": "F47r8W5cQOEpJ9Nh",
       "type": "document",
@@ -30,6 +57,33 @@
         "exportSource": null
       },
       "_key": "!tables.results!x6j7rwgN38X4lFea.F47r8W5cQOEpJ9Nh"
+    },
+    {
+      "_id": "iKl2DohETon2wQPW",
+      "type": "text",
+      "name": "Twists of Fate",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.iKl2DohETon2wQPW"
     },
     {
       "_id": "B5Eh108pcIitCogH",
@@ -59,6 +113,33 @@
       "_key": "!tables.results!x6j7rwgN38X4lFea.B5Eh108pcIitCogH"
     },
     {
+      "_id": "auSPyCp8d9j6HI3u",
+      "type": "text",
+      "name": "Mobs & Boss Battles",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.auSPyCp8d9j6HI3u"
+    },
+    {
       "_id": "wr5NTA4ZtqV7RH4M",
       "type": "document",
       "name": "Table 31: Mobs & Boss Battles",
@@ -84,6 +165,33 @@
         "exportSource": null
       },
       "_key": "!tables.results!x6j7rwgN38X4lFea.wr5NTA4ZtqV7RH4M"
+    },
+    {
+      "_id": "WValErIYEu2qyYE6",
+      "type": "text",
+      "name": "Strange Places",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.WValErIYEu2qyYE6"
     },
     {
       "_id": "pVUMEf2rqmSTE9jl",
@@ -113,6 +221,33 @@
       "_key": "!tables.results!x6j7rwgN38X4lFea.pVUMEf2rqmSTE9jl"
     },
     {
+      "_id": "ZgijU0kcFigRVEyp",
+      "type": "text",
+      "name": "Traps & Accidents",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.ZgijU0kcFigRVEyp"
+    },
+    {
       "_id": "TxEZm0Bo2Xt1j9AP",
       "type": "document",
       "name": "Table 33: Traps & Accidents",
@@ -138,6 +273,33 @@
         "exportSource": null
       },
       "_key": "!tables.results!x6j7rwgN38X4lFea.TxEZm0Bo2Xt1j9AP"
+    },
+    {
+      "_id": "MdAQ6DPcLZZeZjny",
+      "type": "text",
+      "name": "Interview Show Experiences (Floor 2+)",
+      "img": null,
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!x6j7rwgN38X4lFea.MdAQ6DPcLZZeZjny"
     },
     {
       "_id": "3CoXJ0Gfk62yVd0u",
@@ -170,7 +332,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "vgFitGPNDMzEQ8kf",
   "sort": 0,
   "ownership": {
     "default": 0

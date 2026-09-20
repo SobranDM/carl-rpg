@@ -1,6 +1,6 @@
 {
   "_id": "W6phSuTpS1PMUcT7",
-  "name": "Table 66: Nonlethal Smites for PCs",
+  "name": "Nonlethal Smites for PCs",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 66 (p.314).</em> For player characters, Smites could also be instant death, but this table offers survivable alternatives. \"Signature Smite\" refers players to Table 67: Signature Smites for the offending deity.</p>",
   "results": [
@@ -116,7 +116,7 @@
   "formula": "1d4",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "MSZOKcNr8HD5Vvz1",
   "sort": 0,
   "ownership": {
     "default": 0

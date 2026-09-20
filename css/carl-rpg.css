@@ -210,6 +210,12 @@
   --carl-gold: #ffd700;
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
   --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-accent-2: #9b59e0;
+  --carl-border-soft-2: rgba(181, 123, 240, 0.55);
+  --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
+  --carl-accent-3: #2f7fe0;
+  --carl-border-soft-3: rgba(91, 157, 255, 0.55);
+  --carl-panel-bg-3: color-mix(in srgb, var(--carl-accent-3) 6%, var(--color-text-primary) 4%);
   --carl-bg: linear-gradient(180deg, #160f10, #241315);
   --carl-bg-solid: #1a1213;
   --carl-header-bg: #3d0f14;
@@ -360,6 +366,16 @@
   font-size: 11px;
   color: var(--carl-text-muted);
 }
+.carl-chat-card button {
+  background: var(--carl-header-bg);
+  color: var(--carl-header-text);
+  border: 1px solid var(--carl-border-soft);
+}
+.carl-chat-card button:hover:not(:disabled) {
+  background: var(--carl-accent);
+  border-color: var(--carl-accent);
+  color: var(--carl-header-text);
+}
 .carl-chat-card .carl-target-effects,
 .carl-chat-card .carl-heal-card,
 .carl-chat-card .carl-damage-card,
@@ -369,9 +385,9 @@
 .carl-chat-card .carl-gm-digest {
   margin-top: 6px;
   padding: 6px 8px;
-  border: 1px solid var(--carl-border-soft);
+  border: 1px solid var(--carl-border-soft-2);
   border-radius: 4px;
-  background: var(--carl-panel-bg);
+  background: var(--carl-panel-bg-2);
 }
 .carl-chat-card .carl-target-effects .carl-target-effects-list {
   margin-bottom: 4px;
@@ -558,6 +574,12 @@
   --carl-gold: #ffd700;
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
   --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-accent-2: #9b59e0;
+  --carl-border-soft-2: rgba(181, 123, 240, 0.55);
+  --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
+  --carl-accent-3: #2f7fe0;
+  --carl-border-soft-3: rgba(91, 157, 255, 0.55);
+  --carl-panel-bg-3: color-mix(in srgb, var(--carl-accent-3) 6%, var(--color-text-primary) 4%);
   --carl-bg: linear-gradient(180deg, #160f10, #241315);
   --carl-bg-solid: #1a1213;
   --carl-header-bg: #3d0f14;
@@ -566,9 +588,27 @@
   --carl-text: #e8e0df;
   --carl-text-muted: rgba(232, 224, 223, 0.65);
   --carl-input-bg: rgba(255, 255, 255, 0.05);
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 240'%3E%3Cg fill='%235c0f16' opacity='0.4'%3E%3Cpath d='M180,150 C200,145 220,160 225,180 C230,200 215,220 195,225 C175,230 155,220 150,200 C145,180 160,155 180,150 Z'/%3E%3Cpath d='M195,90 C205,85 218,92 220,105 C222,118 210,128 197,125 C185,122 180,108 185,98 C188,93 191,90 195,90 Z'/%3E%3Cellipse cx='140' cy='130' rx='8' ry='6' transform='rotate(-20 140 130)'/%3E%3Cellipse cx='118' cy='102' rx='5' ry='4' transform='rotate(15 118 102)'/%3E%3Cellipse cx='98' cy='78' rx='3.5' ry='3'/%3E%3Ccircle cx='75' cy='58' r='2.2'/%3E%3Ccircle cx='60' cy='40' r='1.5'/%3E%3C/g%3E%3C/svg%3E") no-repeat bottom right/220px 220px, var(--carl-bg);
+  background: var(--carl-bg);
   color: var(--carl-text);
   border-color: var(--carl-border-soft);
+}
+.carl-rpg .window-content {
+  position: relative;
+}
+.carl-rpg .carl-splatter-crop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+.carl-rpg .carl-splatter-img {
+  position: absolute;
+  right: calc(320px / -2);
+  bottom: calc(213px / -2);
+  width: 320px;
+  height: 213px;
+  opacity: 0.4;
 }
 .carl-rpg .window-header {
   background: var(--carl-header-bg);
@@ -583,7 +623,7 @@
   font-family: "Roboto", sans-serif;
 }
 .carl-rpg .sheet-header {
-  flex: 0 auto;
+  flex: 0 0 auto;
   overflow: hidden;
   display: flex;
   flex-direction: row;
@@ -675,6 +715,9 @@
 .carl-rpg .carl-w-medium {
   width: 12em;
 }
+.carl-rpg .carl-w-wide {
+  width: 18em;
+}
 .carl-rpg .carl-w-full {
   width: 100%;
 }
@@ -682,7 +725,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  margin: 10px 0;
+  margin: 13px 0;
 }
 .carl-rpg .carl-field-grid > div {
   display: flex;
@@ -879,19 +922,17 @@
 }
 .carl-rpg fieldset.carl-base-damage,
 .carl-rpg fieldset.carl-base-heal,
-.carl-rpg fieldset.carl-upgrades,
 .carl-rpg fieldset.carl-changes,
 .carl-rpg fieldset.carl-string-list,
 .carl-rpg fieldset.carl-defenses {
   border: 1px solid var(--carl-border-soft);
   border-radius: 4px;
   background: var(--carl-panel-bg);
-  margin: 8px 0;
+  margin: 11px 0;
   padding: 6px 8px;
 }
 .carl-rpg fieldset.carl-base-damage legend,
 .carl-rpg fieldset.carl-base-heal legend,
-.carl-rpg fieldset.carl-upgrades legend,
 .carl-rpg fieldset.carl-changes legend,
 .carl-rpg fieldset.carl-string-list legend,
 .carl-rpg fieldset.carl-defenses legend {
@@ -904,11 +945,32 @@
   border-radius: 3px;
   padding: 2px 6px;
 }
+.carl-rpg .carl-upgrades {
+  margin: 11px 0;
+}
+.carl-rpg .carl-section-divider {
+  border: none;
+  border-top: 1px solid var(--carl-border-soft);
+  margin: 6px 0 0;
+}
+.carl-rpg .carl-section-divider + .carl-section-header {
+  margin-top: 4px;
+}
+.carl-rpg .carl-section-header {
+  margin: 4px 0;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+  color: var(--carl-header-text);
+}
 .carl-rpg .carl-upgrade-tier {
   border: 1px solid var(--carl-border-soft);
   border-radius: 4px;
+  background: var(--carl-panel-bg);
   padding: 8px;
-  margin-bottom: 8px;
+  margin-bottom: 11px;
 }
 .carl-rpg .carl-upgrade-tier:last-of-type {
   margin-bottom: 0;
@@ -932,21 +994,30 @@
   border: 1px solid var(--color-border-light-tertiary);
   border-radius: 3px;
   padding: 6px;
-  margin-bottom: 6px;
+  margin-bottom: 9px;
 }
 .carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-fields {
   margin: 0 0 4px;
 }
 .carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta {
-  align-items: center;
+  align-items: flex-end;
   gap: 6px;
 }
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-label {
+.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field--label {
   flex: 1;
 }
+.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field--label .carl-change-label {
+  width: 100%;
+}
 .carl-rpg .carl-changes-editor .carl-change-group {
-  border: 1px solid var(--carl-border-soft);
+  border: 1px solid var(--carl-border-soft-2);
   border-radius: 3px;
+  background: var(--carl-panel-bg-2);
   padding: 4px 6px 6px;
   margin-bottom: 4px;
 }
@@ -986,6 +1057,7 @@
 }
 .carl-rpg .carl-target-effects-editor .carl-target-effect-row {
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 4px;
 }
@@ -1019,16 +1091,15 @@
   font-weight: 700;
   color: var(--carl-accent);
 }
-.carl-rpg .carl-upgrade-damage-split > div {
-  display: flex;
-  gap: 6px;
+.carl-rpg .carl-upgrade-damage-split {
+  margin: 8px 0;
 }
 .carl-rpg .carl-string-list-row {
   align-items: center;
   gap: 6px;
   margin-bottom: 4px;
 }
-.carl-rpg .carl-string-list-row input[type=text] {
+.carl-rpg .carl-string-list-row input[type=text], .carl-rpg .carl-string-list-row select {
   flex: 1;
 }
 .carl-rpg .carl-skill-choice-editor {
@@ -1042,8 +1113,19 @@
 .carl-rpg .carl-skill-choice-row input[type=text] {
   flex: 1;
 }
+.carl-rpg .carl-advancement-row {
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+.carl-rpg .carl-marked-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
 .carl-rpg .carl-roll-advancement {
-  margin: 6px 0;
+  margin: 0;
 }
 .carl-rpg .item-type-label {
   font-size: 12px;
@@ -1145,6 +1227,34 @@
 .carl-rpg .carl-abilities-main {
   flex: 1;
   min-width: 0;
+}
+.carl-rpg .carl-mob-statblock-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--carl-border-soft);
+}
+.carl-rpg .carl-mob-statblock-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.carl-rpg .carl-attacks-list .item-name {
+  flex: 2;
+}
+.carl-rpg .carl-attacks-list .carl-attack-tohit,
+.carl-rpg .carl-attacks-list .carl-attack-damage,
+.carl-rpg .carl-attacks-list .carl-attack-range {
+  flex: 0 0 70px;
+}
+.carl-rpg .carl-attacks-list .carl-attack-damage-type {
+  flex: 0 0 100px;
+}
+.carl-rpg .carl-attacks-list .carl-attack-effect {
+  flex: 3;
 }
 .carl-rpg .carl-drawer {
   border: 1px solid var(--carl-border-soft);

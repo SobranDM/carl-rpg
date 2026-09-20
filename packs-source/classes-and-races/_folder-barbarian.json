@@ -1,12 +1,12 @@
 {
   "_id": "DsNuN60ndKOpEt8I",
-  "name": "Barbarian Classes",
+  "name": "Barbarian",
   "type": "Item",
   "description": "",
   "sorting": "a",
   "sort": 0,
   "color": null,
-  "folder": null,
+  "folder": "TaFk6xNnLG3e0Cng",
   "flags": {},
   "_key": "!folders!DsNuN60ndKOpEt8I"
 }

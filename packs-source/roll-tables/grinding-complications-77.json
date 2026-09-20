@@ -1,6 +1,6 @@
 {
   "_id": "2zIUoNXcRs5MeUto",
-  "name": "Table 77: Grinding Complications",
+  "name": "F3: Heavensworth",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 77 (p.338).</em> Heavensworth Neighborhood (Third Floor, The Over City) grinding complications. Used when crawlers grind for experience in the ruins around Heavensworth.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

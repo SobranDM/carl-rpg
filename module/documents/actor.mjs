@@ -1,4 +1,5 @@
 import CarlDice from "../dice/dice.mjs";
+import { recheckLevelGatedGrants } from "../helpers/race-class-grants.mjs";
 
 /**
  * Extend the base Actor document.
@@ -45,6 +46,22 @@ export class CarlRPGActor extends Actor {
         const currentBanked = this.system.bankedStatPoints ?? 0;
         foundry.utils.setProperty(changed, "system.bankedStatPoints", currentBanked + 3 * delta);
       }
+    }
+  }
+
+  /**
+   * Re-check every owned class/race item's level-gated grants (e.g. Bune's
+   * "At Level 50, +2 Dexterity") whenever Level changes - a grant that
+   * wasn't eligible when the Race/Class was added needs a second chance to
+   * bake into base once the gate is crossed. See
+   * module/helpers/race-class-grants.mjs.
+   * @override
+   */
+  async _onUpdate(changed, options, userId) {
+    super._onUpdate(changed, options, userId);
+    if (game.user.id !== userId) return;
+    if (foundry.utils.hasProperty(changed, "system.attributes.level.value")) {
+      await recheckLevelGatedGrants(this);
     }
   }
 

@@ -1,6 +1,6 @@
 {
   "_id": "3yjfourDdfQVjf5X",
-  "name": "Table 78: Grinding Complications",
+  "name": "F3: Noir Town",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 78 (p.350).</em> Noir Town Neighborhood (Third Floor, The Over City) grinding complications. Used when crawlers grind for experience through repeated Mob encounters in Noir Town.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

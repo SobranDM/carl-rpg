@@ -35,10 +35,22 @@
     "verified": "14",
     "maximum": "14"
   },
-  "esmodules": [ "module/carl-rpg.mjs" ],
+  "relationships": {
+    "recommends": [
+      {
+        "id": "quench",
+        "type": "module",
+        "reason": "Powers this system's in-system Quench test suite (module/quench/) - not required for normal play."
+      }
+    ]
+  },
+  "esmodules": [
+    "module/carl-rpg.mjs"
+  ],
   "documentTypes": {
     "Actor": {
       "character": {},
+      "mob": {},
       "npc": {}
     },
     "Item": {
@@ -52,7 +64,10 @@
     }
   },
   "styles": [
-    { "src": "css/carl-rpg.css", "layer": "system" }
+    {
+      "src": "css/carl-rpg.css",
+      "layer": "system"
+    }
   ],
   "languages": [
     {
@@ -78,13 +93,13 @@
     },
     {
       "name": "roll-tables",
-      "label": "Loot & Magic Items",
+      "label": "Roll Tables",
       "path": "packs/roll-tables",
       "type": "RollTable",
       "system": "carl-rpg"
     }
   ],
-  "packFolders": [ ],
+  "packFolders": [],
   "socket": true,
   "manifest": "Replace this with a link to the /latest release system.json so people can receive updates after they've installed the system",
   "download": "This must link to a .zip file of the current version",

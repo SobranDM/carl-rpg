@@ -2,6 +2,7 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { DocumentSheetV2 } = foundry.applications.api;
 import { onAddArrayItem, onDeleteArrayItem } from '../helpers/array-editor.mjs';
 import CarlDice from '../dice/dice.mjs';
+import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
 
 const ATTRIBUTES_TEMPLATES = {
   item: 'systems/carl-rpg/templates/item/parts/attributes-item.hbs',
@@ -74,10 +75,45 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
     return this.document;
   }
 
+  /**
+   * Ranked types (Skill/Spell/Damage Effect) get 4 tabs instead of the
+   * usual Description/Attributes pair - Main (non-rank fields + the shared
+   * rank/damage/heal preamble + Description) and one tab per Rank
+   * 5/10/15 Upgrade tier, so a tier's own Changes/Target Effects/Damage
+   * Type Split content isn't all competing for space on one page. Every
+   * other item type is untouched (still the static `TABS.primary`
+   * default via `super._getTabsConfig`).
+   * @override
+   */
+  _getTabsConfig(group) {
+    if (group === 'primary' && RANKED_TYPES.includes(this.item?.type)) {
+      return {
+        tabs: [
+          { id: 'main', label: 'CARLRPG.Tab.Main' },
+          { id: 'rank5', label: 'CARLRPG.Ranked.Rank5' },
+          { id: 'rank10', label: 'CARLRPG.Ranked.Rank10' },
+          { id: 'rank15', label: 'CARLRPG.Ranked.Rank15' },
+        ],
+        initial: 'main',
+      };
+    }
+    return super._getTabsConfig(group);
+  }
+
   /** @override */
   _configureRenderParts(options) {
     const parts = super._configureRenderParts(options);
-    parts.attributes.template = ATTRIBUTES_TEMPLATES[this.item.type] ?? ATTRIBUTES_TEMPLATES.item;
+    if (RANKED_TYPES.includes(this.item.type)) {
+      delete parts.description;
+      delete parts.attributes;
+      parts.main = { template: ATTRIBUTES_TEMPLATES[this.item.type], scrollable: [""] };
+      const rankTabTemplate = "systems/carl-rpg/templates/item/parts/rank-tab.hbs";
+      parts.rank5 = { template: rankTabTemplate, scrollable: [""] };
+      parts.rank10 = { template: rankTabTemplate, scrollable: [""] };
+      parts.rank15 = { template: rankTabTemplate, scrollable: [""] };
+    } else {
+      parts.attributes.template = ATTRIBUTES_TEMPLATES[this.item.type] ?? ATTRIBUTES_TEMPLATES.item;
+    }
     return parts;
   }
 
@@ -96,6 +132,15 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
       if (tab) {
         context.tab = tab;
       }
+    }
+    // The 3 Rank tabs share one template (rank-tab.hbs) - point it at the
+    // right pre-grouped bucket (context.rank5/rank10/rank15, already built
+    // by #groupUpgradesByRank in _prepareContext) and the matching
+    // rankThreshold (for the tab's own "Add Upgrade" link), since the
+    // shared template has no other way to know which of the 3 it is.
+    if (partId === 'rank5' || partId === 'rank10' || partId === 'rank15') {
+      context.entries = context[partId];
+      context.rankThreshold = Number(partId.slice('rank'.length));
     }
     return context;
   }
@@ -117,6 +162,19 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
     context.itemTypeLabel = `TYPES.Item.${item.type}`;
     context.isRanked = RANKED_TYPES.includes(item.type);
     context.canRollAdvancement = context.isRanked && !!item.actor;
+    // Gates ranked-fields.hbs's Base Damage/Heal fieldsets (and
+    // attributes-skill.hbs's AttackType) - one shared flag computed per
+    // type so that shared partial doesn't need to know each type's own
+    // "is this attack-flavored" signal. Skill's isAttack boolean used to
+    // exist separately from category - an audit found every authored
+    // Skill kept the two in lockstep, so it was removed as pure
+    // duplication (see module/documents/item.mjs's roll() routing).
+    context.isAttackFlavored = item.type === "skill" ? item.system.category === "attack"
+      : item.type === "spell" ? !!item.system.castingKeywords?.includes("attack")
+      : item.type === "damageEffect"; // always attack-flavored, no heal concept
+    if (context.isRanked) {
+      Object.assign(context, this.#groupUpgradesByRank(itemData.system.upgrades));
+    }
 
     // Suggestions for the Skill Rank / Skill Damage ChangeEntry target field
     // (see changes-editor.hbs) - Skill/Spell/Damage Effect names are
@@ -147,14 +205,55 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
     return context;
   }
 
+  /**
+   * Group a Ranked item's flat `system.upgrades` array (each entry carries
+   * its own `rankThreshold` - there's no fixed 3-slot structure) into the
+   * 3 buckets, one per Rank tab (rank-tab.hbs) - see _getTabsConfig/
+   * _configureRenderParts. String keys
+   * (`rank5`/`rank10`/`rank15`), not numeric, so `{{#each rank5}}` is a
+   * valid Handlebars dot-path. Each bucketed entry keeps its ORIGINAL
+   * index into the full array - required by deleteArrayItem's data-index
+   * and every field's `name="system.upgrades.{{index}}...."` path in
+   * upgrade-tier.hbs.
+   * Also pre-filters each upgrade's own `damageTypes` down to only its
+   * non-blank entries (`damageTypeEntries`, each `{value, dtIndex}` -
+   * `dtIndex` is that entry's ORIGINAL index into the real damageTypes
+   * array, needed for deleteArrayItem/name paths). The old fixed-2-slot UI
+   * always rendered (and could submitOnChange-save) two selects even when
+   * the GM never touched them, leaving many existing Upgrades with
+   * `damageTypes: ["", ""]` sitting in storage - blank entries the actual
+   * roll logic already ignores (damage-pipeline.mjs/dice.mjs filter them
+   * out too), so the sheet shouldn't display them as if they were real,
+   * intentionally-added rows either.
+   * @param {object[]} upgrades
+   * @returns {{rank5: {upgrade: object, index: number, damageTypeEntries: {value: string, dtIndex: number}[]}[], rank10: object[], rank15: object[]}}
+   */
+  #groupUpgradesByRank(upgrades = []) {
+    const buckets = { rank5: [], rank10: [], rank15: [] };
+    upgrades.forEach((upgrade, index) => {
+      const key = `rank${upgrade.rankThreshold}`;
+      const damageTypeEntries = (upgrade.damageTypes ?? [])
+        .map((value, dtIndex) => ({ value, dtIndex }))
+        .filter((entry) => entry.value);
+      (buckets[key] ?? buckets.rank5).push({ upgrade, index, damageTypeEntries });
+    });
+    return buckets;
+  }
+
   /* -------------------------------------------- */
+
+  /** @override */
+  async _onFirstRender(context, options) {
+    await super._onFirstRender(context, options);
+    injectBloodSplatter(this);
+  }
 
   /** @override */
   async _onRender(context, options) {
     await super._onRender(context, options);
 
     const activeTab = this.tabGroups?.primary
-      ?? this.constructor.TABS.primary.initial;
+      ?? this._getTabsConfig('primary')?.initial;
     if (activeTab && this.element.querySelector(`.tab[data-group="primary"][data-tab="${activeTab}"]`)) {
       this.changeTab(activeTab, "primary", { force: true, updatePosition: false });
     }

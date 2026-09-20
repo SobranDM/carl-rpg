@@ -1,6 +1,6 @@
 {
   "_id": "RHigxAgryOOId04d",
-  "name": "Table 73: Silver Earth Box Contents",
+  "name": "Silver Earth Box Contents",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 73 (p.320).</em> Trinket contents for a Silver Earth Box, an incentive item tied to this system's Earth-Class/Race content (see the \"Earth-Based\" checkbox on Class and Race items).</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "jQ1jlafL1od7xbYc",
   "sort": 0,
   "ownership": {
     "default": 0

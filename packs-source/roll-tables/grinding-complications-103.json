@@ -1,6 +1,6 @@
 {
   "_id": "pSfgN4Dafo7h0gsY",
-  "name": "Table 103: Grinding Complications",
+  "name": "F5: Shaft of Despair",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 103 (p.596).</em> Floor 5 (The Bubbles), Shaft of Despair Neighborhood &mdash; random complications for grinding Pudding Pals, Nude Glabers, and Arachnids around the Pudding Pits and Spider City.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

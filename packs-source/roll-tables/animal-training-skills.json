@@ -1,6 +1,6 @@
 {
   "_id": "8k2i91PTZZlF1vtI",
-  "name": "Table 17: Animal Training Skills",
+  "name": "Animal Training Skills",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 17 (p.107).</em> Non-Human (animal) crawlers choose one of the six training backgrounds and gain two of its three listed Skills, or roll 1d6 to select a background randomly. Both Skills you select start at Rank 1.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "xc73wdZTf4ouYp1A",
   "sort": 0,
   "ownership": {
     "default": 0

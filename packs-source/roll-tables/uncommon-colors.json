@@ -1,6 +1,6 @@
 {
   "_id": "ayWCtOXLLWJE1Zno",
-  "name": "Table 86: Uncommon Colors",
+  "name": "Uncommon Colors",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 86 (p.427).</em> Uncommon color names for describing the Iron Tangle's many train lines (or anything else), picked because most players won't already know them.</p>",
   "results": [
@@ -548,7 +548,7 @@
   "formula": "1d20",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "iEqTnERWx6eQwVAW",
   "sort": 0,
   "ownership": {
     "default": 0

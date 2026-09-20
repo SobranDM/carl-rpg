@@ -101,7 +101,6 @@
       }
     ],
     "category": "attack",
-    "isAttack": true,
     "attackType": "ranged",
     "range": "30 feet",
     "aiFavor": 1,

@@ -1,6 +1,6 @@
 {
   "_id": "g2tsvg3uUp3E6Kfr",
-  "name": "Table 105: Grinding Complications",
+  "name": "F5: Lutin Plunder",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 105 (p.617).</em> Floor 5 (The Bubbles), Quest: Lutin Plunder &mdash; random complications for grinding Lutins, Crocodilians, and Temple Guards while King LaClaw and Jaakop swindle the villagers over the (nonexistent) Staff of Smacking. Note: the book's own running heading for this table reads \"TABLE 105: GRINDING COMPLICATIONS\" (no \"Fifth Floor\" qualifier &mdash; that phrase belongs to Table 95 elsewhere in the same chapter).</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

@@ -1,6 +1,6 @@
 {
   "_id": "MxTai9UPyKh2NbEt",
-  "name": "Table 63: Boons",
+  "name": "Boons",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 63 (p.313).</em> Gods may reward especially fervent followers with a Boon. The GM can roll a selection or simply choose from the table, and adjust the duration until a Quest is completed.</p>",
   "results": [
@@ -224,7 +224,7 @@
   "formula": "1d8",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "MSZOKcNr8HD5Vvz1",
   "sort": 0,
   "ownership": {
     "default": 0

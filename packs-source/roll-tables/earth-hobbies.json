@@ -1,6 +1,6 @@
 {
   "_id": "wLCT9aPtbGLgYHsS",
-  "name": "Table 74: Earth Hobbies",
+  "name": "Earth Hobbies",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 74 (p.321).</em> An esoteric Earth-hobby skill name and its field, for use with Earth Hobby Potions and Earth-Based Class/Race flavor.</p>",
   "results": [
@@ -548,7 +548,7 @@
   "formula": "1d20",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "jQ1jlafL1od7xbYc",
   "sort": 0,
   "ownership": {
     "default": 0

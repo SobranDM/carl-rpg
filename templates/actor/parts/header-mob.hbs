@@ -1,0 +1,36 @@
+{{!-- Sheet Header (Mob) --}}
+<header class="sheet-header">
+  <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+  <div class="header-fields">
+    <div class="carl-name-row flexrow">
+      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name" /></h1>
+      <div class="resource flex-group-center carl-name-row-field">
+        <label for="system.level" class="resource-label">{{localize "CARLRPG.Actor.Level"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.level" value="{{system.level}}" data-dtype="Number" />
+      </div>
+      <div class="resource flex-group-center carl-name-row-field">
+        <label for="carl-floor-display" class="resource-label">{{localize "CARLRPG.Actor.Floor"}}</label>
+        <input id="carl-floor-display" type="text" class="carl-w-tiny carl-floor-readonly" value="{{currentFloor}}" disabled />
+      </div>
+      <div class="resource flex-group-center carl-name-row-field">
+        <label for="system.mobTier" class="resource-label">{{localize "CARLRPG.Actor.MobTier"}}</label>
+        <select class="carl-w-medium" name="system.mobTier">
+          <option value="">{{localize "CARLRPG.MobTier.Mob"}}</option>
+          {{selectOptions config.mobTiers selected=system.mobTier localize=true}}
+        </select>
+      </div>
+    </div>
+    <div class="carl-name-row flexrow">
+      <div class="resource flex-group-center carl-name-row-field">
+        <label for="system.size" class="resource-label">{{localize "CARLRPG.Actor.Size"}}</label>
+        <input type="text" class="carl-w-medium" name="system.size" value="{{system.size}}" placeholder="e.g. Medium (4)" />
+      </div>
+      <div class="resource flex-group-center carl-name-row-field">
+        <label for="system.creatureType" class="resource-label">{{localize "CARLRPG.Actor.CreatureType"}}</label>
+        <input type="text" class="carl-w-medium" name="system.creatureType" value="{{system.creatureType}}" placeholder="e.g. Humanoid" />
+      </div>
+    </div>
+    {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
+    {{> "systems/carl-rpg/templates/actor/parts/shield-bar.hbs"}}
+  </div>
+</header>

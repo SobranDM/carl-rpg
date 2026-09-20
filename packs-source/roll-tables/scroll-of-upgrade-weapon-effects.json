@@ -1,6 +1,6 @@
 {
   "_id": "Q5nRsm3SbdXHlxrr",
-  "name": "Table 26: Scroll of Upgrade Weapon Effects",
+  "name": "Scroll of Upgrade Weapon Effects",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 26 (p.117).</em> When a weapon gains a Scroll of Upgrade (see Table 25: Starting Loot, and Gold/Platinum loot boxes), roll or choose a flavor name addition and its on-Amazing-Success effect.</p>",
   "results": [
@@ -332,7 +332,7 @@
   "formula": "1d12",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "w1Jo7BYmYZFJADyA",
   "sort": 0,
   "ownership": {
     "default": 0

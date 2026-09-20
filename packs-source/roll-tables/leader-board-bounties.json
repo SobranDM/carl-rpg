@@ -1,6 +1,6 @@
 {
   "_id": "UPJ3MhXw3aFSFc8g",
-  "name": "Table 53: Leader Board Bounties",
+  "name": "Leader Board Bounties",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 53 (p.282).</em> Bounties (in gold, delivered via a Legendary Bounty Box) for killing a member of the top ten Leader Board list, by placement and Floor. This is a lookup reference by known placement, not a randomly rolled result &mdash; select the row matching the target's actual placement rather than rolling; the die formula below is nominal, provided only for compendium/Foundry compatibility. (Body text also notes each subsequent Floor after the Fourth multiplies the Fourth Floor bounty: ×2 Fifth, ×3 Sixth, ×4 Seventh, ×5 Eighth, ×6 Ninth &mdash; matching the values below.)</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

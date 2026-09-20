@@ -120,7 +120,6 @@
       }
     ],
     "category": "attack",
-    "isAttack": true,
     "attackType": "melee",
     "range": "",
     "aiFavor": 1,

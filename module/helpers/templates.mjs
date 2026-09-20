@@ -7,6 +7,8 @@ export const preloadHandlebarsTemplates = async function () {
   await foundry.applications.handlebars.loadTemplates([
     // Shared item-sheet partials (invoked via {{> "systems/carl-rpg/..."}}).
     'systems/carl-rpg/templates/item/parts/ranked-fields.hbs',
+    'systems/carl-rpg/templates/item/parts/upgrade-tier.hbs',
+    'systems/carl-rpg/templates/item/parts/description-editor.hbs',
     'systems/carl-rpg/templates/item/parts/changes-editor.hbs',
     'systems/carl-rpg/templates/item/parts/target-effects-editor.hbs',
     'systems/carl-rpg/templates/item/parts/skill-choice-grants-editor.hbs',
@@ -17,6 +19,7 @@ export const preloadHandlebarsTemplates = async function () {
     'systems/carl-rpg/templates/actor/parts/damage-effect-row.hbs',
     'systems/carl-rpg/templates/actor/parts/hb-bar.hbs',
     'systems/carl-rpg/templates/actor/parts/shield-bar.hbs',
+    'systems/carl-rpg/templates/actor/parts/attacks-list.hbs',
     // Chat / dialog templates.
     'systems/carl-rpg/templates/chat/card-shell.hbs',
     'systems/carl-rpg/templates/chat/target-effects-footer.hbs',

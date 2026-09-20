@@ -1,6 +1,6 @@
 {
   "_id": "idugryv4cHAeuTLD",
-  "name": "Table 89: Grinding Complications",
+  "name": "F4: Chartreuse Line",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 89 (p.460), Floor 4: The Iron Tangle.</em> Random complications for crawlers grinding for experience during Hot Toddy's demon-baby reveal party aboard the Chartreuse Line, involving Rivet, Fonzo, Toothless Nana, Sprinkles, Pebbles, and Penthos.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

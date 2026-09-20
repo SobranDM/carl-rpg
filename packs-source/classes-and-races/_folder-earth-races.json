@@ -1,12 +1,12 @@
 {
   "_id": "molOulShS3qHIPyY",
-  "name": "Earth Races",
+  "name": "Earth",
   "type": "Item",
   "description": "",
   "sorting": "a",
   "sort": 0,
   "color": null,
-  "folder": null,
+  "folder": "EVDLxjA3dHhboapL",
   "flags": {},
   "_key": "!folders!molOulShS3qHIPyY"
 }

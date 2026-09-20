@@ -1,5 +1,6 @@
 {{!-- Narrow vertical Stats column - embedded in the merged Abilities tab
-      (see abilities.hbs). Extracted from the old standalone stats.hbs tab. --}}
+      (see abilities.hbs / abilities-mob.hbs). Extracted from the old
+      standalone stats.hbs tab. --}}
 <div class="carl-stats-column">
   <a class="rollable flex-group-center carl-evade-link" data-action="rollEvade">
     <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
@@ -16,13 +17,24 @@
   </div>
   {{/each}}
 
-  {{#if (eq actor.type "character")}}
+  {{!-- Character spends from a banked pool accrued via leveling up (see
+        actor.mjs's _preUpdate); a Mob has no such pool - its budget is
+        computed fresh from Level/Tier every time (mob.mjs's
+        statPointsAvailable/statPointsSpent), so it gets a read-only
+        remaining-points display here instead of an editable input. Both
+        open the same Spend Stat Points dialog, which branches on actor
+        type internally (module/apps/spend-stat-points-dialog.mjs). --}}
   <fieldset class="carl-banked-stat-points">
-    <legend>{{localize "CARLRPG.Actor.BankedStatPoints"}}</legend>
+    <legend>
+      {{#if (eq actor.type "mob")}}{{localize "CARLRPG.Actor.StatPointsRemaining"}}{{else}}{{localize "CARLRPG.Actor.BankedStatPoints"}}{{/if}}
+    </legend>
     <div class="carl-banked-stat-points-row">
+      {{#if (eq actor.type "mob")}}
+      <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.StatPointsRemainingHint'}}">{{statPointsRemaining}}</span>
+      {{else}}
       <input type="text" class="carl-w-tiny" name="system.bankedStatPoints" value="{{system.bankedStatPoints}}" data-dtype="Number" />
+      {{/if}}
       <button type="button" data-action="spendStatPoints">{{localize "CARLRPG.Actor.Spend"}}</button>
     </div>
   </fieldset>
-  {{/if}}
 </div>

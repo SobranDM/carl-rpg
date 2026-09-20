@@ -1,6 +1,6 @@
 {
   "_id": "g9eCSOcCSeJhCrWK",
-  "name": "Table 69: Humiliating Outcomes",
+  "name": "Humiliating Outcomes",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 69 (p.316).</em> If a prospective Bard patron's attitude is Opposed and a Check reduces their attitude further, they storm away and the crawler suffers one humiliation from this table.</p>",
   "results": [
@@ -116,7 +116,7 @@
   "formula": "1d4",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0

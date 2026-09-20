@@ -1,6 +1,6 @@
 {
   "_id": "Wr1loJ26VZQEVxYX",
-  "name": "Table 72: Patron Favors",
+  "name": "Patron Favors",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 72 (p.317-318).</em> Patrons might also ask for unofficial favors that a Bard may ignore at their own risk, which usually provide some benefit if fulfilled. Descriptions include the possible reward listed alongside each favor.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "MSZOKcNr8HD5Vvz1",
   "sort": 0,
   "ownership": {
     "default": 0

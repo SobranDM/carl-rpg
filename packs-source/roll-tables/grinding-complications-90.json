@@ -1,6 +1,6 @@
 {
   "_id": "XZQjGHWP7KRSq2VA",
-  "name": "Table 90: Grinding Complications",
+  "name": "F4: Sandstone Line",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 90 (p.473), Floor 4: The Iron Tangle, Sandstone Line.</em> Random complications for crawlers grinding for experience along the British-accented Sandstone Line and its tunnels.</p>",
   "results": [
@@ -170,7 +170,7 @@
   "formula": "1d6",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "5tgKurrFN1hfGHFO",
   "sort": 0,
   "ownership": {
     "default": 0

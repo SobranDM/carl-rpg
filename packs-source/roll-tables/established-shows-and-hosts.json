@@ -1,6 +1,6 @@
 {
   "_id": "ITYthhOnU5pf7ASp",
-  "name": "Table 55: Established Shows and Hosts",
+  "name": "Established Shows and Hosts",
   "img": "icons/svg/d20-grey.svg",
   "description": "<p><em>Rulebook Table 55 (p.288).</em> Example interview shows referenced throughout the Dungeon Crawler Carl novels, with host, format, and known affiliation. Five of these are detailed further at pp.294–303 (Death Watch Extreme Dungeon Mayhem is hosted by Prince Maestro of the Skull Empire).</p>",
   "results": [
@@ -224,7 +224,7 @@
   "formula": "1d8",
   "replacement": true,
   "displayRoll": true,
-  "folder": null,
+  "folder": "baLpzplRcZP8AOSx",
   "sort": 0,
   "ownership": {
     "default": 0
