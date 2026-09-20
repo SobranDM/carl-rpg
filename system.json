@@ -5,22 +5,14 @@
   "type": "system",
   "authors": [
     {
-      "name": "Asacolips",
-      "discord": "asacolips"
-    },
-    {
-      "name": "Lee Talman",
-      "discord": ".pizzaWizard"
-    },
-    {
       "name": "Aaron Lutomski",
       "discord": "SobranDM"
     }
   ],
-  "url": "Replace this with a link to your public repository",
+  "url": "https://github.com/SobranDM/carl-rpg",
   "license": "LICENSE.txt",
   "readme": "README.md",
-  "bugs": "Replace this with a link to file issues or tickets",
+  "bugs": "https://github.com/SobranDM/carl-rpg/issues",
   "changelog": "CHANGELOG.md",
   "media": [
     {
@@ -29,7 +21,7 @@
       "thumbnail": "systems/carl-rpg/assets/anvil-impact.png"
     }
   ],
-  "version": "2.1.0",
+  "version": "0.5.0",
   "compatibility": {
     "minimum": "14",
     "verified": "14",
@@ -101,8 +93,8 @@
   ],
   "packFolders": [],
   "socket": true,
-  "manifest": "Replace this with a link to the /latest release system.json so people can receive updates after they've installed the system",
-  "download": "This must link to a .zip file of the current version",
+  "manifest": "https://github.com/SobranDM/carl-rpg/releases/latest/download/system.json",
+  "download": "https://github.com/SobranDM/carl-rpg/releases/latest/download/carl-rpg.zip",
   "background": "systems/carl-rpg/assets/anvil-impact.png",
   "grid": {
     "type": 0,

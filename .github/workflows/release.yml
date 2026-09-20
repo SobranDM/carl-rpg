@@ -1,0 +1,81 @@
+# Builds and publishes a release zip whenever a version tag is pushed.
+# Mirrors the sibling foundryvtt-wwn system's release workflow.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Node Setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build CSS
+        run: npm run build
+
+      - name: Build Compendium Packs
+        run: npm run build:packs
+
+      - name: Get Version
+        id: get_version
+        uses: dhkatz/get-version-action@v3.0.0
+
+      - name: Substitute Manifest/Download Links For Versioned Ones
+        uses: TomaszKandula/variable-substitution@v1.0.1
+        with:
+          files: "system.json"
+        env:
+          version: ${{ steps.get_version.outputs.version-without-v }}
+          download: https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/carl-rpg.zip
+
+      - name: Zip
+        # This list is a whitelist, not a blacklist -- anything not named
+        # here is excluded automatically. In particular packs-source/
+        # (hand-authored compendium JSON, not needed at runtime), src/ (Sass
+        # source -- only the compiled css/carl-rpg.css ships), tools/ (dev
+        # build scripts), lib/some-lib/ (an unreferenced generator-template
+        # leftover), and module/quench/ (dev-only Quench test batches,
+        # dynamically imported only when the Quench module is present --
+        # never on a release install) must stay out of it.
+        run: |
+          zip -r carl-rpg.zip \
+            system.json \
+            README.md \
+            CHANGELOG.md \
+            LICENSE.txt \
+            assets \
+            lang \
+            css/carl-rpg.css \
+            templates \
+            packs \
+            module \
+            -x "module/quench/*"
+
+      - name: Update Release with Artifacts
+        uses: ncipollo/release-action@v1.13.0
+        with:
+          allowUpdates: true
+          omitPrereleaseDuringUpdate: true
+          tag: ${{ github.ref_name }}
+          artifacts: "./carl-rpg.zip, ./system.json"
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+defaults:
+  run:
+    shell: bash
