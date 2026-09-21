@@ -210,6 +210,7 @@
   .carl-evade-link,
   .carl-evade-consequence,
   .carl-taunt-link,
+  .carl-mark-choice,
   .carl-gm-digest {
     margin-top: 6px;
     padding: 6px 8px;
@@ -318,6 +319,26 @@
     .carl-roll-evade,
     .carl-add-evade-debuff,
     .carl-taunt-attack {
+      width: auto;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 2px 8px;
+
+      &:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .carl-mark-choice {
+    .carl-mark-choice-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .carl-mark-choice-skill,
+    .carl-mark-choice-damage-effect {
       width: auto;
       font-size: 11px;
       line-height: 1.6;

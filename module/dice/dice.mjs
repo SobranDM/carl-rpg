@@ -6,13 +6,14 @@
  * foundryvtt-wwn's module/dice/dice.mjs.
  */
 import { RollParts } from "./roll-parts.mjs";
-import { promptRollOptions, collectApplicableConditionalModifiers } from "./roll-prompt.mjs";
+import { promptRollOptions, promptParentSkillChoice, collectApplicableConditionalModifiers } from "./roll-prompt.mjs";
 import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
 import { buildTargetEffectsFooter } from "../chat/target-effects-card.mjs";
 import { buildHealFooter } from "../chat/heal-card.mjs";
 import { buildDamageFooter } from "../chat/damage-card.mjs";
 import { buildEvadeLinkFooter } from "../chat/evade-link-card.mjs";
 import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
+import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree } from "../helpers/rules.mjs";
 import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
@@ -360,7 +361,7 @@ export default class CarlDice {
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, options.difficulty);
 
-    await CarlDice.#markForAdvancement(skillItem);
+    await CarlDice.markForAdvancement(skillItem);
 
     const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
@@ -427,19 +428,32 @@ export default class CarlDice {
     const advantageEntitled = !!(advantageVsUuid && targetTokenUuid && advantageVsUuid === targetTokenUuid);
 
     const rollData = actor.getRollData();
-    const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
 
     // Candidates are matched by name against parentSkills, same rule the
     // actor sheet uses to list a Skill's Damage Effects (module/sheets/
     // actor-sheet.mjs) - not id/uuid, and not gated by item type, since
     // parentSkills can list Spells too. Rank-0 (untrained) ones are excluded
-    // here so they never even appear in the dropdown (docs/known-gaps.md
-    // 1.5) - Damage Effects are Passive Skills, and Passive Skills can't be
-    // used untrained.
-    const damageEffectChoices = actor.items
-      .filter((i) => i.type === "damageEffect" && (i.system.parentSkills ?? []).includes(skillItem.name))
-      .map((de) => ({ id: de.id, name: de.name, rank: sys.skills?.[slugifySkillName(de.name)]?.rank ?? de.system.rank ?? 0 }))
-      .filter((de) => de.rank > 0);
+    // - Damage Effects are Passive Skills, and Passive Skills can't be used
+    // untrained.
+    const rankedDamageEffectCandidates = (damageEffectItem ? [damageEffectItem] : actor.items
+      .filter((i) => i.type === "damageEffect" && (i.system.parentSkills ?? []).includes(skillItem.name)))
+      .filter((de) => (sys.skills?.[slugifySkillName(de.name)]?.rank ?? de.system.rank ?? 0) > 0);
+
+    // Omitted entirely (dropdown-wise) when a Damage Effect was already
+    // supplied by the caller (CarlDice.rollDamageEffect, rolling FROM the
+    // Damage Effect's own button) - the player already chose by clicking
+    // that row, so re-offering the dropdown (and possibly having them pick a
+    // DIFFERENT one, or blank it back out) would be confusing.
+    const damageEffectChoices = damageEffectItem ? [] : rankedDamageEffectCandidates
+      .map((de) => ({ id: de.id, name: de.name, rank: sys.skills?.[slugifySkillName(de.name)]?.rank ?? de.system.rank ?? 0 }));
+
+    // Surfaces every CANDIDATE Damage Effect's own conditions (e.g. Choke
+    // Out/Smush/Skullcracker's grapple-check bonuses target THEMSELVES, not
+    // the parent Skill, so they'd never otherwise appear here) - narrowed to
+    // only the actually-chosen one below, once damageEffectItem is final.
+    const conditionalModifiers = collectApplicableConditionalModifiers(
+      sys, skillItem.name, rankedDamageEffectCandidates.map((de) => de.id)
+    );
 
     const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
 
@@ -476,6 +490,20 @@ export default class CarlDice {
       }
     }
 
+    // Narrow to only what's actually eligible for THIS resolved roll: the
+    // rolled Skill's own conditions (already scoped by name above) plus,
+    // only if a Damage Effect ended up chosen, that ONE Damage Effect's own
+    // conditions - every OTHER candidate's conditions were surfaced in the
+    // dialog too (see conditionalModifiers/damageEffectChoices above), so a
+    // checked box for a Damage Effect that isn't the one actually used here
+    // is silently dropped rather than leaking its bonus onto this attack.
+    const skillKey = slugifySkillName(skillItem.name);
+    const activeConditionalModifiers = conditionalModifiers.filter((cm) => {
+      if (cm.targetType !== "skillRank" && cm.targetType !== "skillDamage") return true;
+      if (slugifySkillName(cm.target) === skillKey) return true;
+      return !!damageEffectItem && cm.sourceItemId === damageEffectItem.id;
+    });
+
     const untrained = rank === 0;
     const statKey = skillSys.governingStat;
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
@@ -485,7 +513,7 @@ export default class CarlDice {
     if (!untrained) attackParts.add(rank, game.i18n.localize("CARLRPG.Roll.SkillRank"));
     if (statKey) attackParts.add(statMod, game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey));
     attackParts.add(options.modifier, game.i18n.localize("CARLRPG.Roll.Situational"));
-    applyCheckedConditionalModifiers(attackParts, conditionalModifiers, options.checked, ["skillRank", "stat", "rollMode", "custom"]);
+    applyCheckedConditionalModifiers(attackParts, activeConditionalModifiers, options.checked, ["skillRank", "stat", "rollMode", "custom"]);
 
     const { roll: attackRoll, total: attackTotal, breakdown: attackBreakdown } = await attackParts.evaluate();
     const naturalRoll = extractNaturalD20(attackRoll);
@@ -503,8 +531,25 @@ export default class CarlDice {
 
     // "When you make an Attack that adds a Damage Effect, place a mark for
     // later Skill Advancement in either the Attack Skill or the Damage
-    // Effect, not both." (Skills, Spells & Gear)
-    await CarlDice.#markForAdvancement(damageEffectItem ?? skillItem);
+    // Effect, not both." (Skills, Spells & Gear) - if only one of the two is
+    // currently eligible-and-unmarked, there's no real choice to make, so
+    // mark it automatically same as always; if BOTH still are, don't guess -
+    // defer to the chat card's mark-choice buttons below instead (see
+    // markChoicePending, resolved once flags/footerParts exist).
+    let markChoicePending = null;
+    if (damageEffectItem) {
+      const skillMarkable = CarlDice.#isMarkable(skillItem) && !skillItem.system.marked;
+      const deMarkable = CarlDice.#isMarkable(damageEffectItem) && !damageEffectItem.system.marked;
+      if (skillMarkable && deMarkable) {
+        markChoicePending = { skillItem, damageEffectItem };
+      } else if (skillMarkable) {
+        await CarlDice.markForAdvancement(skillItem);
+      } else if (deMarkable) {
+        await CarlDice.markForAdvancement(damageEffectItem);
+      }
+    } else {
+      await CarlDice.markForAdvancement(skillItem);
+    }
 
     // Mana is spent for casting, not the outcome - deduct/surface regardless
     // of hit/miss (docs/known-gaps.md 1.6).
@@ -532,7 +577,7 @@ export default class CarlDice {
       const isCrit = naturalRoll === 20;
       const isAmazingSuccess = degree === "amazingSuccess";
       const built = buildDamageRollParts({
-        skillItem, skillEntry, damageEffectItem, damageEffectEntry, isCrit, rollData, conditionalModifiers, checked: options.checked,
+        skillItem, skillEntry, damageEffectItem, damageEffectEntry, isCrit, rollData, conditionalModifiers: activeConditionalModifiers, checked: options.checked,
       });
       const evaluated = await evaluateDamageGroups(built);
       rolls.push(...evaluated.rolls);
@@ -557,6 +602,11 @@ export default class CarlDice {
     const hasDamage = Object.values(damageByType).some((v) => v);
     const flags = {};
     const footerParts = [];
+    if (markChoicePending) {
+      flags.markChoiceSkillUuid = markChoicePending.skillItem.uuid;
+      flags.markChoiceDamageEffectUuid = markChoicePending.damageEffectItem.uuid;
+      footerParts.push(await buildMarkChoiceFooter(markChoicePending.skillItem, markChoicePending.damageEffectItem));
+    }
     // Every button below keys off the same snapshotted targetUuids (see
     // rollAttack's top-of-function comment) - set whenever there's a target
     // at all, not just when there's an effect/damage to apply, so "Roll
@@ -616,6 +666,50 @@ export default class CarlDice {
   }
 
   /**
+   * Roll a Damage Effect directly (its own "roll" button, module/documents/
+   * item.mjs's CarlRPGItem#roll): "choose one available Damage Effect
+   * before you make the Attack Skill Check" (Playing the Game) - resolve
+   * which owned Skill/Spell it's attached to (its `parentSkills`), prompting
+   * only when there's more than one candidate, then delegate to the exact
+   * same rollAttack every Skill/Spell-initiated Attack uses, with this
+   * Damage Effect pre-supplied.
+   * @param {Actor} actor
+   * @param {Item} damageEffectItem
+   * @returns {Promise<ChatMessage|null>} null if there's no usable parent
+   *   Skill/Spell, the untrained-DE check fails, or a dialog was cancelled.
+   */
+  static async rollDamageEffect(actor, damageEffectItem) {
+    const sys = actor.system;
+    // Same untrained gate rollAttack applies defensively when a
+    // damageEffectItem is passed in directly - checked here too so a
+    // DE-initiated roll fails fast with a clear reason instead of silently
+    // rolling the parent Skill/Spell alone (rollAttack's own fallback,
+    // appropriate for the Skill-initiated dropdown, would be confusing here
+    // since the whole point of this button IS the Damage Effect).
+    const deRank = sys.skills?.[slugifySkillName(damageEffectItem.name)]?.rank ?? damageEffectItem.system.rank ?? 0;
+    if (deRank === 0) {
+      ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectUntrained", { name: damageEffectItem.name }));
+      return null;
+    }
+
+    const parentNames = damageEffectItem.system.parentSkills ?? [];
+    const candidates = actor.items.filter((i) => (i.type === "skill" || i.type === "spell") && parentNames.includes(i.name));
+    if (!candidates.length) {
+      ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectNoParentSkill", { name: damageEffectItem.name }));
+      return null;
+    }
+
+    let skillItem = candidates[0];
+    if (candidates.length > 1) {
+      const chosenId = await promptParentSkillChoice(damageEffectItem, candidates);
+      if (!chosenId) return null;
+      skillItem = candidates.find((c) => c.id === chosenId) ?? skillItem;
+    }
+
+    return CarlDice.rollAttack(actor, skillItem, { damageEffectItem });
+  }
+
+  /**
    * Heal roll: Heal Self and similar Heal-type Spells (`castingKeywords`
    * includes `"heal"`) aren't Skill Checks - no d20, no to-hit, no Rank
    * bonus applied to the roll itself. Skills, Spells & Gear's Heal Self text
@@ -653,7 +747,7 @@ export default class CarlDice {
     const canMend = unlocked.some((u) => u.healMend);
     const formula = diceTier?.healDice || skillSys.healDice || "1d4";
 
-    await CarlDice.#markForAdvancement(skillItem);
+    await CarlDice.markForAdvancement(skillItem);
 
     // Casting always spends Mana, whether or not the tier rolls dice
     // (docs/known-gaps.md 1.6) - no picker here, per this function's own
@@ -875,7 +969,7 @@ export default class CarlDice {
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, finalDifficulty);
 
-    await CarlDice.#markForAdvancement(skillItem);
+    await CarlDice.markForAdvancement(skillItem);
 
     if (!post) return { roll, total, breakdown, naturalRoll, degree };
 
@@ -964,12 +1058,21 @@ export default class CarlDice {
    * calls this unconditionally for isPassive Heal spells (Heal Self), since
    * casting is itself the qualifying action there, not a Skill Check. So
    * this only needs to respect advancementGate, including the Dodge-style
-   * "marks only below Rank 5".
+   * "marks only below Rank 5". Public (not #-private) because module/chat/
+   * mark-choice-card.mjs's chat-card button also calls this directly, with
+   * its own fresh !marked re-check at click time (the item's state can
+   * change between roll time and click time).
    */
-  static async #markForAdvancement(item) {
-    if (!item) return;
-    if (item.system.advancementGate === "magic-only") return;
-    if (item.system.advancementGate === "passive-until-5" && (item.system.rank ?? 0) >= 5) return;
+  static async markForAdvancement(item) {
+    if (!item || !CarlDice.#isMarkable(item)) return;
     if (!item.system.marked) await item.update({ "system.marked": true });
+  }
+
+  /** Whether advancementGate currently allows marking this item at all. */
+  static #isMarkable(item) {
+    if (!item) return false;
+    if (item.system.advancementGate === "magic-only") return false;
+    if (item.system.advancementGate === "passive-until-5" && (item.system.rank ?? 0) >= 5) return false;
+    return true;
   }
 }

@@ -1,0 +1,19 @@
+{{!-- Rendered only when CarlDice.rollAttack found BOTH the Attack Skill and
+      the chosen Damage Effect still eligible-and-unmarked (see
+      module/dice/dice.mjs's markChoicePending) - otherwise the one eligible
+      candidate is marked automatically with no card needed. The buttons'
+      click handlers and GM/owner visibility gating are wired up
+      client-side by the shared registerChatListener (module/chat/
+      chat-listener.mjs), via module/chat/mark-choice-card.mjs's
+      markChoiceActionEntries - not baked into this markup. --}}
+<div class="carl-mark-choice">
+  <label class="resource-label">{{localize "CARLRPG.MarkChoice.Prompt"}}</label>
+  <div class="carl-mark-choice-buttons">
+    <button type="button" class="carl-mark-choice-skill" data-action="markChoiceSkill">
+      {{localize "CARLRPG.MarkChoice.MarkItem" name=skillItem.name}}
+    </button>
+    <button type="button" class="carl-mark-choice-damage-effect" data-action="markChoiceDamageEffect">
+      {{localize "CARLRPG.MarkChoice.MarkItem" name=damageEffectItem.name}}
+    </button>
+  </div>
+</div>

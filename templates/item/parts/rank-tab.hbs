@@ -11,7 +11,7 @@
   {{#each entries as |entry|}}
   {{> "systems/carl-rpg/templates/item/parts/upgrade-tier.hbs"
       upgrade=entry.upgrade uIndex=entry.index damageTypeEntries=entry.damageTypeEntries
-      config=config item=item actorSkillNames=actorSkillNames}}
+      config=../config item=../item actorSkillNames=../actorSkillNames}}
   {{/each}}
   <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.upgrades"
     data-template='{"rankThreshold":{{rankThreshold}},"description":"","changes":[]}'>

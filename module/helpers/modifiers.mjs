@@ -126,13 +126,27 @@ function collectItemChanges(item) {
   if (sys.isToggled && !sys.active) return [];
   const sourceItemRank = sys.rank ?? 0;
   const out = [];
+  // A Damage Effect is never an always-on modifier - "choose one available
+  // Damage Effect before you make the Attack Skill Check... if the Attack
+  // hits, apply the chosen Damage Effect" (Playing the Game) means its
+  // bonus only ever applies to the ONE attack it's explicitly picked for,
+  // via CarlDice.rollAttack's ad-hoc damageEffectItem merge - never as a
+  // standing buff to its parentSkills merely from being owned. A change
+  // targeting the Damage Effect's OWN name still applies here as usual (its
+  // own Rank-gated upgrades, e.g. Iron Punch Rank 5's own rank damage die -
+  // read back via that same ad-hoc merge at roll time); only a change
+  // targeting something ELSE is excluded.
+  const isDamageEffect = item.type === "damageEffect";
+  const targetsSelf = (change) => !change.target || slugifySkillName(change.target) === slugifySkillName(item.name);
   for (const change of sys.changes ?? []) {
+    if (isDamageEffect && !targetsSelf(change)) continue;
     out.push({ change, sourceLabel: item.name, sourceItemId: item.id, sourceItemRank, sourceItemType: item.type });
   }
   if (Array.isArray(sys.upgrades)) {
     for (const upgrade of sys.upgrades) {
       if (sourceItemRank < upgrade.rankThreshold) continue;
       for (const change of upgrade.changes ?? []) {
+        if (isDamageEffect && !targetsSelf(change)) continue;
         out.push({
           change,
           sourceLabel: `${item.name} (Rank ${upgrade.rankThreshold})`,

@@ -28,6 +28,7 @@ export const preloadHandlebarsTemplates = async function () {
     'systems/carl-rpg/templates/chat/evade-footer.hbs',
     'systems/carl-rpg/templates/chat/evade-consequence-footer.hbs',
     'systems/carl-rpg/templates/chat/taunt-footer.hbs',
+    'systems/carl-rpg/templates/chat/mark-choice-footer.hbs',
     'systems/carl-rpg/templates/dialog/roll-options.hbs',
     // GM Toolbox.
     'systems/carl-rpg/templates/apps/gm-toolbox.hbs',

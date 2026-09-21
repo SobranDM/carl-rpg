@@ -9,21 +9,54 @@ import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mj
 import { slugifySkillName } from "../helpers/modifiers.mjs";
 
 /**
+ * When a Damage Effect with more than one `parentSkills` entry is rolled
+ * directly (CarlDice.rollDamageEffect), the player must pick which owned
+ * Skill/Spell candidate to attack with - one button per candidate, plus
+ * Cancel. Not needed (and never called) when there's only one candidate.
+ * @param {Item} damageEffectItem
+ * @param {Item[]} candidates  Owned Skill/Spell items matching parentSkills.
+ * @returns {Promise<string|null>} The chosen candidate's id, or null if cancelled.
+ */
+export async function promptParentSkillChoice(damageEffectItem, candidates) {
+  const buttons = candidates.map((c) => ({
+    action: c.id,
+    label: c.name,
+    callback: () => c.id,
+  }));
+  buttons.push(cancelButton());
+  return showCarlDialog({
+    title: game.i18n.format("CARLRPG.Dialog.ChooseParentSkillTitle", { name: damageEffectItem.name }),
+    content: `<p>${game.i18n.format("CARLRPG.Dialog.ChooseParentSkillBody", { name: damageEffectItem.name })}</p>`,
+    buttons,
+  });
+}
+
+/**
  * Conditional modifiers relevant to rolling a specific skill/spell/damage
  * effect: every conditionalModifier targeting that skill by name
  * (skillRank/skillDamage), plus every non-skill-scoped one
  * (stat/resource/rollMode/custom), which are offered on any roll for this
- * actor.
+ * actor, plus - for an Attack roll - every skillRank/skillDamage-targeted
+ * conditionalModifier sourced from one of `extraSourceItemIds` (a Damage
+ * Effect candidate for this Attack). A Damage Effect's own conditions
+ * target ITSELF, not the parent Skill (e.g. Choke Out/Smush/Skullcracker's
+ * grapple-check bonuses), so without this they'd never surface at all when
+ * rolling the Skill they're attached to. Surfacing every CANDIDATE's
+ * conditions here (not just the one that ends up chosen) is deliberate -
+ * CarlDice.rollAttack narrows to only the actually-chosen Damage Effect's
+ * conditions once it's known, after the dialog resolves.
  * @param {foundry.abstract.TypeDataModel} actorSystem
  * @param {string|null} skillName
+ * @param {string[]} [extraSourceItemIds]
  * @returns {object[]}
  */
-export function collectApplicableConditionalModifiers(actorSystem, skillName = null) {
+export function collectApplicableConditionalModifiers(actorSystem, skillName = null, extraSourceItemIds = []) {
   const list = actorSystem?.conditionalModifiers ?? [];
   const skillKey = skillName ? slugifySkillName(skillName) : null;
   return list.filter((cm) => {
     if (cm.targetType === "skillRank" || cm.targetType === "skillDamage") {
-      return !!skillKey && slugifySkillName(cm.target) === skillKey;
+      if (skillKey && slugifySkillName(cm.target) === skillKey) return true;
+      return extraSourceItemIds.includes(cm.sourceItemId);
     }
     return true;
   });

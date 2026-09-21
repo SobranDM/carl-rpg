@@ -369,7 +369,9 @@
       "DamageEffect": "Damage Effect",
       "ManaCostBase": "Base cost",
       "ManaCostSpent": "Mana: {cost}",
-      "AdvantageAutoApplied": "Advantage pre-selected — Nat 20/Amazing Success Evade bonus vs. this Mob."
+      "AdvantageAutoApplied": "Advantage pre-selected — Nat 20/Amazing Success Evade bonus vs. this Mob.",
+      "ChooseParentSkillTitle": "Attack With: {name}",
+      "ChooseParentSkillBody": "Which Skill or Spell are you attacking with, applying {name}?"
     },
     "TokenResolution": {
       "NoGMSelection": "Select a token on the canvas first.",
@@ -391,7 +393,14 @@
       "PassiveNoCheck": "{name} is a Passive Skill - it doesn't use Skill Checks.",
       "CannotCastUntrained": "{name} can't be cast untrained (Rank 0).",
       "RollNeedsOwner": "This item has no owning Actor to roll for.",
-      "DamageEffectUntrained": "{name} is untrained (Rank 0) and can't be applied as a Damage Effect."
+      "DamageEffectUntrained": "{name} is untrained (Rank 0) and can't be applied as a Damage Effect.",
+      "DamageEffectNoParentSkill": "You don't know any Skill or Spell that can use {name}."
+    },
+    "MarkChoice": {
+      "Prompt": "Mark for Skill Advancement:",
+      "MarkItem": "Mark {name}",
+      "Done": "Marked",
+      "ItemGone": "That item no longer exists."
     },
     "Toggle": {
       "Activated": "Activated",

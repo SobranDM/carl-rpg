@@ -33,14 +33,22 @@ export async function showCarlDialog({
   }).catch(() => null);
 }
 
-/** Standard roll button: resolves with the dialog's form data. */
+/**
+ * Standard roll button: resolves with the dialog's form data. Expanded, not
+ * the bare `.object` - FormDataExtended.object is FLAT, keyed by each
+ * field's exact `name` string ("conditions.abc.def": true), never nested,
+ * so a dotted-path field (roll-options.hbs's per-condition checkboxes,
+ * name="conditions.{{cm.id}}.{{cond.id}}") needs foundry.utils.expandObject
+ * to become the nested `{conditions: {abc: {def: true}}}` shape every
+ * caller (promptRollOptions's `result.conditions?.[cm.id]`) expects.
+ */
 export function rollButton({ label = "CARLRPG.Dialog.Roll" } = {}) {
   return {
     action: "roll",
     icon: "fa-solid fa-dice-d20",
     label,
     default: true,
-    callback: (event, button) => new foundry.applications.ux.FormDataExtended(button.form).object,
+    callback: (event, button) => foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(button.form).object),
   };
 }
 

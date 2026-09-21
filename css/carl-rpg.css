@@ -382,6 +382,7 @@
 .carl-chat-card .carl-evade-link,
 .carl-chat-card .carl-evade-consequence,
 .carl-chat-card .carl-taunt-link,
+.carl-chat-card .carl-mark-choice,
 .carl-chat-card .carl-gm-digest {
   margin-top: 6px;
   padding: 6px 8px;
@@ -487,6 +488,22 @@
 .carl-chat-card .carl-taunt-link .carl-roll-evade:disabled,
 .carl-chat-card .carl-taunt-link .carl-add-evade-debuff:disabled,
 .carl-chat-card .carl-taunt-link .carl-taunt-attack:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.carl-chat-card .carl-mark-choice .carl-mark-choice-buttons {
+  display: flex;
+  gap: 6px;
+}
+.carl-chat-card .carl-mark-choice .carl-mark-choice-skill,
+.carl-chat-card .carl-mark-choice .carl-mark-choice-damage-effect {
+  width: auto;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 2px 8px;
+}
+.carl-chat-card .carl-mark-choice .carl-mark-choice-skill:disabled,
+.carl-chat-card .carl-mark-choice .carl-mark-choice-damage-effect:disabled {
   cursor: default;
   opacity: 0.6;
 }

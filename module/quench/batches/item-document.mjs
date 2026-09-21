@@ -70,7 +70,8 @@ export default function register(quench) {
       describe("roll(): type-based routing", function () {
         useQuenchTimeout(this);
 
-        // Not covered here: routing an Attack Skill/Spell to rollAttack.
+        // Not covered here: routing an Attack Skill/Spell (or a Damage
+        // Effect with a resolvable parent Skill/Spell) to rollAttack.
         // Item#roll() calls CarlDice.rollAttack(this.actor, this) with no
         // options at all, so skipDialog defaults to false and a real
         // promptRollOptions dialog opens and awaits a click that never comes
@@ -102,12 +103,35 @@ export default function register(quench) {
           }
         });
 
-        it("routes a Damage Effect to a description card, never a roll", async function () {
+        it("routes a Damage Effect to CarlDice.rollDamageEffect, which warns and posts nothing without an owned parent Skill/Spell", async function () {
           const actor = await createTestCharacter();
           try {
-            const de = await createTestItem(actor, "damageEffect", "Powerful Strike", { system: { description: "Extra oomph." } });
-            const message = await de.roll();
-            assert.include(message.content, "Extra oomph.");
+            const de = await createTestItem(actor, "damageEffect", "Powerful Strike", {
+              system: { description: "Extra oomph.", rank: 5, parentSkills: ["Pugilism"] },
+            });
+            // The actor owns no Skill/Spell named "Pugilism" - roll() should
+            // warn and resolve to null rather than post a card (no attack
+            // to roll, and definitely not the old description-only card -
+            // Damage Effects are rollable now, see rollDamageEffect).
+            const result = await de.roll();
+            assert.isNull(result);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("rollDamageEffect warns and returns null for an untrained (Rank 0) Damage Effect", async function () {
+          const actor = await createTestCharacter();
+          try {
+            // createTestItem's data param overrides the auto-generated
+            // "Quench <label> <id>" name - an exact name match is required
+            // here since rollDamageEffect matches parentSkills by name.
+            await createTestItem(actor, "skill", "Pugilism", { name: "Pugilism", system: { category: "attack", rank: 5 } });
+            const de = await createTestItem(actor, "damageEffect", "Powerful Strike", {
+              system: { rank: 0, parentSkills: ["Pugilism"] },
+            });
+            const result = await de.roll();
+            assert.isNull(result);
           } finally {
             await deleteTestActor(actor);
           }

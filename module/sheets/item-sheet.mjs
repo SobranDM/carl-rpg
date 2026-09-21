@@ -122,16 +122,23 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
   /** @override */
   async _preparePartContext(partId, context, options) {
     context = await super._preparePartContext(partId, context, options);
-    // For the tabs navigation part, convert tabs object to array
+    // For the tabs navigation part, convert tabs object to array. This
+    // MUST NOT mutate `context.tabs` in place - Foundry's core render loop
+    // calls this method once per part, passing the SAME shared context
+    // object reference every time, so an in-place reassignment here would
+    // permanently turn `context.tabs` into an array for every part
+    // rendered afterward (header/tabs run first, then main/rank5/rank10/
+    // rank15), breaking the `context.tabs?.[partId]` object-keyed lookup
+    // below for all of them - leaving every tab content section's
+    // `context.tab` unset and, for rank-tab.hbs (which needs `tab.id` for
+    // its `data-tab` attribute), its section permanently un-selectable.
     if (partId === 'tabs' && context.tabs) {
-      context.tabs = Object.values(context.tabs);
+      return { ...context, tabs: Object.values(context.tabs) };
     }
     // For tab content parts, provide the tab context
-    else {
-      const tab = context.tabs?.[partId];
-      if (tab) {
-        context.tab = tab;
-      }
+    const tab = context.tabs?.[partId];
+    if (tab) {
+      context.tab = tab;
     }
     // The 3 Rank tabs share one template (rank-tab.hbs) - point it at the
     // right pre-grouped bucket (context.rank5/rank10/rank15, already built
@@ -252,8 +259,17 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
   async _onRender(context, options) {
     await super._onRender(context, options);
 
-    const activeTab = this.tabGroups?.primary
-      ?? this._getTabsConfig('primary')?.initial;
+    // this.tabGroups.primary starts out as the STATIC TABS.primary.initial
+    // ("description") before this sheet's own dynamic _getTabsConfig
+    // override ever runs, so for a Ranked item (whose tabs are main/rank5/
+    // rank10/rank15, not description/attributes) it's already set to a tab
+    // that doesn't exist here. Fall back to the dynamic initial whenever
+    // the current value doesn't match an actual rendered tab, not just
+    // when it's unset, or no tab ever ends up active.
+    let activeTab = this.tabGroups?.primary;
+    if (!activeTab || !this.element.querySelector(`.tab[data-group="primary"][data-tab="${activeTab}"]`)) {
+      activeTab = this._getTabsConfig('primary')?.initial;
+    }
     if (activeTab && this.element.querySelector(`.tab[data-group="primary"][data-tab="${activeTab}"]`)) {
       this.changeTab(activeTab, "primary", { force: true, updatePosition: false });
     }

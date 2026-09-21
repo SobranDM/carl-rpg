@@ -98,14 +98,12 @@ export class CarlRPGItem extends Item {
     }
 
     if (this.type === "damageEffect") {
-      // Damage Effects are selected at attack time (see CarlDice.rollAttack's
-      // damageEffectItem option), not rolled standalone.
-      return createCardMessage({
-        title: this.name,
-        img: this.img,
-        body: this.system.description ?? "",
-        actor: this.actor,
-      });
+      // "Choose one available Damage Effect before you make the Attack
+      // Skill Check" (Playing the Game) - rolling a Damage Effect directly
+      // resolves which owned Skill/Spell it's attached to (parentSkills)
+      // and rolls THAT Attack with this Damage Effect applied, rather than
+      // posting a description-only card.
+      return CarlDice.rollDamageEffect(this.actor, this);
     }
 
     return createCardMessage({
