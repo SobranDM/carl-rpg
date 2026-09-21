@@ -11,7 +11,6 @@ import CarlSpendStatPointsDialog from './apps/spend-stat-points-dialog.mjs';
 import { registerChatListener } from './chat/chat-listener.mjs';
 import { registerChatSocket } from './helpers/chat-socket.mjs';
 import { bakeItemGrants } from './helpers/race-class-grants.mjs';
-import { registerCarlRpgQuenchTests } from './quench/register.mjs';
 
 Hooks.once('init', function () {
   game.carlrpg = {
@@ -79,11 +78,22 @@ Hooks.once('init', function () {
 
   CONFIG.CARLRPG = CARLRPG;
 
-  // In-system Quench test suite (module/quench/) - a no-op unless the
-  // Quench module is installed and active, since it only ever registers a
-  // "quenchReady" listener that Quench itself is what fires. See
-  // module/quench/register.mjs's own docstring for the CI-exclusion note.
-  registerCarlRpgQuenchTests();
+  // Dev-only Quench integration tests (module/quench/). Registering this
+  // listener costs nothing when Quench isn't active - the event simply never
+  // fires, and the dynamic import below is only attempted once it does.
+  // module/quench/ is deliberately excluded from the release zip
+  // (.github/workflows/release.yml's zip step is a path whitelist that never
+  // names it), so a normal end-user install never has these files on disk;
+  // the try/catch keeps that expected 404 from surfacing as an error in the
+  // rare case Quench is active in someone else's non-dev world.
+  Hooks.once('quenchReady', async (quench) => {
+    try {
+      const { registerCarlRpgQuenchTests } = await import('./quench/register.mjs');
+      registerCarlRpgQuenchTests(quench);
+    } catch (err) {
+      console.warn('CarlRPG | Quench dev-test batches unavailable (expected on a normal release install):', err);
+    }
+  });
 
   // Single delegated click router for every chat-card button (Apply to
   // Target(s), Apply Healing/Mend Debuff, Apply Damage, Roll Evade/Add

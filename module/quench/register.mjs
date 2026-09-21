@@ -6,13 +6,11 @@
  * an explicit maintainer decision, so smoke-testing rules/combat/character-
  * advancement changes doesn't require re-testing everything by hand.
  *
- * Registering the `quenchReady` listener below is always harmless and free
- * even when the Quench module isn't installed/active - the hook simply
- * never fires. This whole directory has exactly one inbound reference from
- * the rest of the system: the `registerCarlRpgQuenchTests()` call in
- * module/carl-rpg.mjs. Whenever real CI/distribution tooling gets built for
- * this system, excluding Quench tests from what ships is a two-line job:
- * drop that one import line and exclude this directory from the build.
+ * This directory is excluded from the release zip
+ * (.github/workflows/release.yml's zip step is a path whitelist that never
+ * names it) and is only ever reached via the dynamic `import()` inside
+ * module/carl-rpg.mjs's `quenchReady` hook handler, so it's never fetched
+ * on a normal end-user install.
  */
 import registerRules from "./batches/rules.mjs";
 import registerModifiers from "./batches/modifiers.mjs";
@@ -48,9 +46,7 @@ const BATCH_REGISTRARS = [
   registerChatCards,
 ];
 
-export function registerCarlRpgQuenchTests() {
-  Hooks.on("quenchReady", (quench) => {
-    for (const register of BATCH_REGISTRARS) register(quench);
-    console.log(`CarlRPG | Registered ${BATCH_REGISTRARS.length} Quench batches`);
-  });
+export function registerCarlRpgQuenchTests(quench) {
+  for (const register of BATCH_REGISTRARS) register(quench);
+  console.log(`CarlRPG | Registered ${BATCH_REGISTRARS.length} Quench batches`);
 }
