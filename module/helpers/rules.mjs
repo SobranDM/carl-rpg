@@ -80,3 +80,15 @@ export function degreeBadge(degree) {
 export function isHitDegree(degree) {
   return ['criticalHit', 'amazingSuccess', 'standardSuccess'].includes(degree);
 }
+
+/**
+ * A creature's static Evade before the Floor and any Debuffs: 10 + DEX Mod
+ * + any Evade bonus (Dodge's "rollMode" evadeBonus). The one formula behind
+ * both a Mob sheet's Evade (module/data/mob.mjs) and the Difficulty an
+ * Attack rolls against (CarlDice.rollAttack, which adds the Floor).
+ * @param {object} sys  An actor's system data.
+ * @returns {number}
+ */
+export function staticEvade(sys) {
+  return 10 + (sys?.stats?.dex?.mod ?? 0) + (sys?.bonuses?.evadeBonus ?? 0);
+}

@@ -65,8 +65,8 @@ export default function register(quench) {
           let message;
           try {
             // Untyped ("") damage - the same flag shape as an Amazing Success/
-            // Evade Major-Fail +Floor bonus - now that splitDamageEvenly no
-            // longer drops the "" key during Apply Damage's re-split.
+            // Evade Major-Fail +Floor bonus - Apply Damage's re-split
+            // (splitDamageProportionally) keeps the "" key.
             message = await ChatMessage.create({
               content: "<div></div>",
               flags: { "carl-rpg": { targetUuids: [target.uuid], damageByType: { "": 12 }, damageIsMagic: true } },

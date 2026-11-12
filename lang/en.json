@@ -79,7 +79,6 @@
       "GrindThresholdReached": "{name} has accrued enough hours - rolling a Skill Advancement Check.",
       "GrindProgress": "{name}: {accrued}/{rank} hours accrued.",
       "NoCharacters": "No character Actors found.",
-      "NoSkills": "{name} has no Skills/Spells/Damage Effects.",
       "RollLoot": "Roll Loot",
       "RollLootTitle": "Roll Loot",
       "LootTierLabel": "Loot Box Tier",
@@ -521,6 +520,19 @@
       "StandardFail": "Standard Fail",
       "MajorFail": "Major Fail",
       "CriticalFail": "Critical Fail"
+    },
+    "Grind": {
+      "SurplusTitle": "Surplus Grinding Hours",
+      "SurplusSubtitle": "{hours} hour(s) to apply",
+      "SurplusBody": "{name} ground {hours} more hour(s) than {skill} needed. Hours can't be banked on the same Skill, so apply them to another one.",
+      "ApplyButton": "Apply to another Skill",
+      "Applied": "Applied",
+      "PickTitle": "Apply {hours} Grinding Hour(s)",
+      "PickPrompt": "Which of {name}'s Skills gets the {hours} hour(s)?",
+      "ApplyConfirm": "Apply",
+      "TargetOption": "{name} (Rank {rank}, {accrued}/{rank} hours)",
+      "NoTargets": "{name} has no Skill that can take grinding hours right now. A Skill needs Rank 1 or more, must be below its Rank cap, and must be able to advance through use (not a Passive Spell).",
+      "ActorGone": "The grinding character no longer exists."
     },
     "DebuffRow": {
       "Difficulty": "Difficulty {value}",

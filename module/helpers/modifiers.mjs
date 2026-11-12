@@ -124,6 +124,9 @@ function collectItemChanges(item) {
   // type/state, which is "always active while owned" per this function's own
   // established behavior.
   if (sys.isToggled && !sys.active) return [];
+  // "Only gear in your Gear Slots grants its benefits" (p.98) - an owned
+  // but unequipped gear item contributes nothing.
+  if (item.type === "item" && !sys.equipped) return [];
   const sourceItemRank = sys.rank ?? 0;
   const out = [];
   // A Damage Effect is never an always-on modifier - "choose one available

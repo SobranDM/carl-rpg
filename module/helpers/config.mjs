@@ -343,6 +343,8 @@ CARLRPG.featureTiers = {
  *      countdown: true      Dying's "CON Mod rounds until death" countdown;
  *                           each instance of damage also takes 1 off it.
  *      endsOnHealing: true  Removed when the creature regains >=1 HB slot.
+ *      endsOnRest: kind     Removed by a rest of at least this length: "short" (2h),
+ *                           "long" (8h) or "fullDay" (30h) - module/helpers/rest.mjs.
  *      endsWithCombat: true Removed when the Combat ends ("end of combat or
  *                           5 minutes").
  *      endsOnHbLoss: true   Removed when the creature loses >=1 HB slot.
@@ -410,7 +412,7 @@ CARLRPG.debuffs = {
     mobEffect: 'CARLRPG.Debuff.Fatigued.MobEffect',
     durationType: 'until-condition',
     stackable: true,
-    mechanics: { penalty: 1 },
+    mechanics: { penalty: 1, endsOnRest: 'long' },
   },
   held: {
     label: 'CARLRPG.Debuff.Held.Label',
@@ -425,7 +427,7 @@ CARLRPG.debuffs = {
     mobEffect: 'CARLRPG.Debuff.LongTermMajorInjury.MobEffect',
     durationType: 'until-condition',
     stackable: false,
-    mechanics: { penalty: 5 },
+    mechanics: { penalty: 5, endsOnRest: 'fullDay' },
   },
   longTermMinorInjury: {
     label: 'CARLRPG.Debuff.LongTermMinorInjury.Label',
@@ -433,7 +435,7 @@ CARLRPG.debuffs = {
     mobEffect: 'CARLRPG.Debuff.LongTermMinorInjury.MobEffect',
     durationType: 'until-condition',
     stackable: false,
-    mechanics: { penalty: 2 },
+    mechanics: { penalty: 2, endsOnRest: 'long' },
   },
   majorInjury: {
     label: 'CARLRPG.Debuff.MajorInjury.Label',
@@ -441,7 +443,7 @@ CARLRPG.debuffs = {
     mobEffect: 'CARLRPG.Debuff.MajorInjury.MobEffect',
     durationType: 'until-condition',
     stackable: false,
-    mechanics: { penalty: 5 },
+    mechanics: { penalty: 5, endsOnRest: 'long' },
   },
   minorInjury: {
     label: 'CARLRPG.Debuff.MinorInjury.Label',
@@ -449,7 +451,7 @@ CARLRPG.debuffs = {
     mobEffect: 'CARLRPG.Debuff.MinorInjury.MobEffect',
     durationType: 'until-condition',
     stackable: false,
-    mechanics: { penalty: 2 },
+    mechanics: { penalty: 2, endsOnRest: 'short' },
   },
   muted: {
     label: 'CARLRPG.Debuff.Muted.Label',
@@ -487,7 +489,7 @@ CARLRPG.debuffs = {
     mobEffect: 'CARLRPG.Debuff.Sepsis.MobEffect',
     durationType: 'until-condition',
     stackable: false,
-    mechanics: { dot: { formula: '1d10 + @floor', damageType: 'poison' }, alsoApplies: ['staggered'] },
+    mechanics: { dot: { formula: '1d10 + @floor', damageType: 'poison' }, alsoApplies: ['staggered'], endsOnHealing: true },
   },
   shitFaced: {
     label: 'CARLRPG.Debuff.ShitFaced.Label',

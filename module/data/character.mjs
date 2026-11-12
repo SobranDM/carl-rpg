@@ -49,8 +49,9 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     }
     schema.stats = new fields.SchemaField(statsSchema);
 
-    // Active Debuffs/Buffs (Table 11). Resolved through the same modifier
-    // engine as everything else, not a bespoke status-effect system.
+    // Active Debuffs/Buffs (Table 11). Their effects come from each entry's
+    // CONFIG.CARLRPG.debuffs mechanics (module/helpers/debuff-effects.mjs,
+    // round-end.mjs), not the item ChangeEntry engine.
     schema.conditions = new fields.ArrayField(
       new fields.SchemaField({
         id: new fields.StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() }),

@@ -64,9 +64,9 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     // 0 means "this item doesn't grant a shield pool" (the vast majority of
     // items). Rank-gated overrides live on the Upgrade tier (see
     // module/data/shared/upgrade-tier.mjs), mirroring healDice's own
-    // base-field-plus-tier-override shape. A future phase (not this one) reads
-    // this to size an actor's actual shield pool while the granting spell is
-    // toggled active.
+    // base-field-plus-tier-override shape. Sizes the actor's shield pool while
+    // the granting Spell is toggled active (modifiers.mjs's
+    // computeActiveShieldSlots).
     schema.shieldSlots = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
 
     schema.upgrades = defineUpgradesField();

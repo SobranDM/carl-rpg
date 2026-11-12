@@ -211,6 +211,7 @@
   .carl-evade-consequence,
   .carl-taunt-link,
   .carl-mark-choice,
+  .carl-grind-surplus,
   .carl-gm-digest {
     margin-top: 6px;
     padding: 6px 8px;
@@ -315,10 +316,12 @@
 
   .carl-evade-link,
   .carl-evade-consequence,
-  .carl-taunt-link {
+  .carl-taunt-link,
+  .carl-grind-surplus {
     .carl-roll-evade,
     .carl-add-evade-debuff,
-    .carl-taunt-attack {
+    .carl-taunt-attack,
+    .carl-grind-surplus-apply {
       width: auto;
       font-size: 11px;
       line-height: 1.6;

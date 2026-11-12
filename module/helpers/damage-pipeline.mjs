@@ -11,15 +11,44 @@
  * user against the book, resolving what was previously flagged here as an
  * open content-accuracy question). Concretely: sum the roll-time per-type
  * subtotals, subtract DR once, then re-split the DR-reduced total across the
- * same types (same deterministic remainder distribution as the original
- * roll-time split) before running Resistance/Vulnerability/Immunity on each
- * of those portions.
+ * same types IN PROPORTION to their raw amounts (splitDamageProportionally)
+ * before running Resistance/Vulnerability/Immunity on each of those portions
+ * - so 30 Fire + 4 untyped (an Amazing Success's +F) keeps its 30:4 shape
+ * and a Fire-immune target still takes the 4.
  *
  * Never writes anything to a Document - this is pure math. The caller
  * (module/chat/damage-card.mjs's "Apply Damage" button) applies the result.
  */
 
 /** @typedef {"none"|"resist"|"vulnerable"|"immune"} ResistanceState */
+
+/**
+ * Split a total across damage types in proportion to their raw amounts
+ * (largest-remainder rounding; ties go to the earlier type), so every point
+ * is accounted for and no type gains or loses share.
+ * @param {number} total
+ * @param {Record<string, number>} weights  Raw per-type amounts, in order.
+ * @returns {Record<string, number>}
+ */
+export function splitDamageProportionally(total, weights) {
+  const types = Object.keys(weights ?? {}).filter((type) => (Number(weights[type]) || 0) > 0);
+  const out = {};
+  if (!types.length) return out;
+  const amount = Math.max(0, Math.floor(Number(total) || 0));
+  const sum = types.reduce((s, type) => s + Number(weights[type]), 0);
+  const shares = types.map((type, index) => {
+    const exact = (amount * Number(weights[type])) / sum;
+    return { type, index, floor: Math.floor(exact), frac: exact - Math.floor(exact) };
+  });
+  let remainder = amount - shares.reduce((s, x) => s + x.floor, 0);
+  for (const share of [...shares].sort((a, b) => (b.frac - a.frac) || (a.index - b.index))) {
+    if (remainder <= 0) break;
+    share.floor += 1;
+    remainder -= 1;
+  }
+  for (const share of shares) out[share.type] = share.floor;
+  return out;
+}
 
 /**
  * Split a total amount evenly across N damage types. Any remainder (from
@@ -158,12 +187,10 @@ export function computeDamageApplication(damageByType, target, isMagic = true, {
     : { remaining: rawTotal, slotsLost: 0, absorbed: 0 };
 
   const totalAfterDr = Math.max(0, shieldResult.remaining - dr);
-  // Re-split the DR-reduced total across the same types the roll-time split
-  // produced - DR is a flat, un-typed reduction on the whole hit, not
-  // type-gated, so it doesn't matter which type's portion "absorbs" it;
-  // redistributing evenly keeps this consistent with how the original
-  // (also even) roll-time split worked.
-  const splitAfterDr = splitDamageEvenly(totalAfterDr, types);
+  // Re-split the DR-reduced total across the same types in proportion to
+  // their raw amounts - DR is a flat, un-typed reduction on the whole hit,
+  // so each type keeps its share (an evenly split roll stays even).
+  const splitAfterDr = splitDamageProportionally(totalAfterDr, damageByType);
 
   const perType = [];
   let totalFinalDamage = 0;

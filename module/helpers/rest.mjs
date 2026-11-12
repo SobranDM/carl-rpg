@@ -1,3 +1,5 @@
+import { CARLRPG } from "./config.mjs";
+
 /**
  * Shared short-rest recovery formula (Playing the Game, p. 94): +5 Health
  * Bar slots and +half of max Mana, both clamped to their max. Extracted out
@@ -15,4 +17,24 @@ export function shortRestUpdates(actor) {
     "system.hb.value": Math.min((sys.hb?.value ?? 0) + 5, effectiveMax),
     "system.mana.value": Math.min((sys.mana?.value ?? 0) + Math.floor((sys.mana?.max ?? 0) / 2), sys.mana?.max ?? 0),
   };
+}
+
+const REST_LENGTH = { short: 1, long: 2, fullDay: 3 };
+
+/**
+ * The conditions left after a rest (Playing the Game p.94/96, Table 11): a
+ * Debuff whose `mechanics.endsOnRest` is this rest's length or shorter ends -
+ * Minor Injury on a short rest; Fatigued, Major and Long-Term Minor Injury on
+ * a long rest; Long-Term Major Injury on a full day's rest. A longer rest
+ * includes everything a shorter one ends.
+ * @param {object[]} conditions  An actor's system.conditions.
+ * @param {"short"|"long"|"fullDay"} restKind
+ * @returns {object[]}
+ */
+export function conditionsAfterRest(conditions, restKind) {
+  const length = REST_LENGTH[restKind] ?? 0;
+  return (conditions ?? []).filter((c) => {
+    const endsOn = CARLRPG.debuffs[c.key]?.mechanics?.endsOnRest;
+    return !(endsOn && REST_LENGTH[endsOn] <= length);
+  });
 }

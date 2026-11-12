@@ -1,6 +1,6 @@
 /**
- * CarlDice: the four roll flows described in the system design plan -
- * Skill Check, Attack (+ Damage), Evade Check, and Skill Advancement Check -
+ * CarlDice: every roll flow - Stat, Skill, Opposed and Evade Checks; Attacks
+ * (+ Damage) and Mob Attacks; Heals, toggled Spells, and Skill Advancement -
  * built from RollParts (module/dice/roll-parts.mjs) and posted via the chat
  * card factory (module/chat/chat-card.mjs). Pattern adapted from
  * foundryvtt-wwn's module/dice/dice.mjs.
@@ -14,7 +14,7 @@ import { buildDamageFooter } from "../chat/damage-card.mjs";
 import { buildEvadeLinkFooter } from "../chat/evade-link-card.mjs";
 import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
-import { getDegreeOfSuccess, degreeBadge, isHitDegree } from "../helpers/rules.mjs";
+import { getDegreeOfSuccess, degreeBadge, isHitDegree, staticEvade } from "../helpers/rules.mjs";
 import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
@@ -116,6 +116,34 @@ function damageRowLabel(types) {
 }
 
 /**
+ * "A Critical Hit... roll twice as many base damage dice" (p.79/p.92) - the
+ * dice COUNT doubles (1d10 -> 2d10, 3d6 -> 6d6), so the result has the
+ * spread of the larger pool. A computed count doubles too ("(@rank)d6" ->
+ * "(2*(@rank))d6"). Flat numbers in the same term aren't dice and stay as
+ * they are.
+ * @param {string} formula
+ * @returns {string}
+ */
+export function doubleDiceCount(formula) {
+  let out = String(formula ?? "");
+  // Parenthesised counts, right to left so earlier indices stay valid.
+  const computed = [...out.matchAll(/\)d\d/gi)].map((m) => m.index).reverse();
+  for (const close of computed) {
+    let depth = 0;
+    let open = -1;
+    for (let i = close; i >= 0; i--) {
+      if (out[i] === ")") depth++;
+      else if (out[i] === "(" && --depth === 0) { open = i; break; }
+    }
+    if (open < 0) continue;
+    out = `${out.slice(0, open)}(2*${out.slice(open, close + 1)})${out.slice(close + 1)}`;
+  }
+  // Literal counts ("1d10", "d8").
+  return out.replace(/(^|[^\w@.)])(\d*)d(\d+)/gi, (match, lead, count, faces) =>
+    `${lead}${2 * (Number(count) || 1)}d${faces}`);
+}
+
+/**
  * Build the damage RollParts for an Attack Skill/Spell, grouped by
  * *effective damage type* (docs/known-gaps.md 1.3/1.7) rather than one flat
  * total: a term's own damageType override (ChangeEntry.damageType) wins,
@@ -150,7 +178,7 @@ function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageE
   function addDamageTerms(damage, defaultType) {
     if (!damage) return;
     for (const term of damage.baseDice) {
-      getGroup(term.damageType || defaultType).add(isCrit ? `2 * (${term.formula})` : term.formula, term.label);
+      getGroup(term.damageType || defaultType).add(isCrit ? doubleDiceCount(term.formula) : term.formula, term.label);
     }
     for (const term of damage.rankDice) getGroup(term.damageType || defaultType).add(term.formula, term.label);
     for (const term of damage.flatBonuses) getGroup(term.damageType || defaultType).add(term.formula, term.label);
@@ -241,32 +269,26 @@ function buildManaCostChoices(spellItem) {
 }
 
 /**
- * The actor's active Class name (module/data/character.mjs's
- * system.class/classItem), used only for the Favored-Class Mana surcharge
- * below. Null for Mobs and for Characters with no Class selected yet.
- * @param {Actor} actor
- * @returns {string|null}
- */
-function getActorClassName(actor) {
-  return actor.system.classItem?.name ?? null;
-}
-
-/**
  * "If a Spell is Favored by any particular Classes, other Classes pay 1
- * additional Mana to cast it" (module/data/spell.mjs's favoredClasses field).
- * A Spell with no favoredClasses at all charges everyone the same; a caster
- * with no Class selected is never "favored", so pays the surcharge like any
- * other non-favored Class.
+ * additional Mana to cast it" (p.201; module/data/spell.mjs's
+ * favoredClasses). A Spell lists Class CATEGORIES ("Mage", "Cleric"...),
+ * which a Class item carries as `classTypes` - "Boring Ol' Mage" is a Mage
+ * - so the match is against those (and the Class's own name, for a Spell
+ * that names one). A Spell with no favoredClasses charges everyone the
+ * same, and a caster with no Class yet isn't an "other Class", so pays no
+ * surcharge either.
  * @param {Item} spellItem
  * @param {Actor} actor
  * @param {number} manaCost
  * @returns {number}
  */
-function applyFavoredClassSurcharge(spellItem, actor, manaCost) {
+export function applyFavoredClassSurcharge(spellItem, actor, manaCost) {
   const favored = spellItem.system.favoredClasses ?? [];
   if (!favored.length) return manaCost;
-  const className = getActorClassName(actor);
-  return className && favored.includes(className) ? manaCost : manaCost + 1;
+  const classItem = actor.system.classItem;
+  if (!classItem) return manaCost;
+  const categories = [...(classItem.system?.classTypes ?? []), classItem.name];
+  return categories.some((c) => favored.includes(c)) ? manaCost : manaCost + 1;
 }
 
 /**
@@ -316,6 +338,20 @@ function isBlockedByDebuff(actor, { isSpell = false } = {}) {
   const reason = getActionBlockReason(actor, { isSpell });
   if (!reason) return false;
   ui.notifications.warn(reason);
+  return true;
+}
+
+/**
+ * "You can't cast a Spell you have no Ranks in" (p.58/p.201) - unlike an
+ * untrained Attack/Utility Skill, which rolls with Disadvantage. Warns and
+ * returns true when the roll must not proceed.
+ * @param {Item} item
+ * @param {number} rank
+ * @returns {boolean}
+ */
+function isBlockedUntrainedSpell(item, rank) {
+  if (item?.type !== "spell" || rank > 0) return false;
+  ui.notifications.warn(game.i18n.format("CARLRPG.Warning.CannotCastUntrained", { name: item.name }));
   return true;
 }
 
@@ -438,10 +474,7 @@ export default class CarlDice {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.PassiveNoCheck", { name: skillItem.name }));
       return null;
     }
-    if (rank === 0 && skillItem.type === "spell") {
-      ui.notifications.warn(game.i18n.format("CARLRPG.Warning.CannotCastUntrained", { name: skillItem.name }));
-      return null;
-    }
+    if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
 
     const rollData = actor.getRollData();
@@ -511,6 +544,7 @@ export default class CarlDice {
     const skillSys = skillItem.system;
     const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
     const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
+    if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
 
     // Snapshot targets NOW, at roll time - not at chat-card-click time. The
@@ -530,7 +564,7 @@ export default class CarlDice {
     if (target?.actor) {
       const targetSys = target.actor.system;
       const floor = game.settings.get("carl-rpg", "currentFloor");
-      targetDifficulty = 10 + (targetSys.stats?.dex?.mod ?? 0) + floor;
+      targetDifficulty = staticEvade(targetSys) + floor;
       const ownerName = target.actor.name;
       // A Mob's Evade is a static Difficulty, so every one of its Debuffs
       // that would touch a d20 Evade lowers it instead (p.96 - Disadvantage
@@ -664,7 +698,8 @@ export default class CarlDice {
     const { roll: attackRoll, total: attackTotal, breakdown: attackBreakdown } = await attackParts.evaluate();
     const naturalRoll = extractNaturalD20(attackRoll);
     const degree = getDegreeOfSuccess(naturalRoll, attackTotal, difficulty);
-    const hit = difficulty === null || isHitDegree(degree);
+    // "A Nat 1 always misses" (p.92) - even with no Difficulty to roll against.
+    const hit = difficulty === null ? degree !== "criticalFail" : isHitDegree(degree);
 
     // The Advantage entitlement is consumed by attempting the roll against
     // that Mob, not by hitting - clear regardless of this attack's own
@@ -690,8 +725,8 @@ export default class CarlDice {
     // markChoicePending, resolved once flags/footerParts exist).
     let markChoicePending = null;
     if (damageEffectItem) {
-      const skillMarkable = CarlDice.#isMarkable(skillItem) && !skillItem.system.marked;
-      const deMarkable = CarlDice.#isMarkable(damageEffectItem) && !damageEffectItem.system.marked;
+      const skillMarkable = CarlDice.isAdvancedByUse(skillItem) && !skillItem.system.marked;
+      const deMarkable = CarlDice.isAdvancedByUse(damageEffectItem) && !damageEffectItem.system.marked;
       if (skillMarkable && deMarkable) {
         markChoicePending = { skillItem, damageEffectItem };
       } else if (skillMarkable) {
@@ -1018,6 +1053,7 @@ export default class CarlDice {
   static async rollHeal(actor, skillItem) {
     const skillSys = skillItem.system;
     const rank = skillSys.rank ?? 0;
+    if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
 
     const unlocked = (skillSys.upgrades ?? [])
@@ -1093,11 +1129,7 @@ export default class CarlDice {
 
     if (turningOn) {
       if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
-      const rank = skillSys.rank ?? 0;
-      if (rank === 0) {
-        ui.notifications.warn(game.i18n.format("CARLRPG.Warning.CannotCastUntrained", { name: skillItem.name }));
-        return null;
-      }
+      if (isBlockedUntrainedSpell(skillItem, skillSys.rank ?? 0)) return null;
       manaCostSpent = applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost);
       await applyManaCost(actor, manaCostSpent);
       await removeConditionsById(actor, endedConditionIds(actor.system, []));
@@ -1235,6 +1267,7 @@ export default class CarlDice {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.PassiveNoCheck", { name: skillItem.name }));
       return null;
     }
+    if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
 
     const rollData = actor.getRollData();
@@ -1301,11 +1334,18 @@ export default class CarlDice {
    * clears the mark. This is the roll the GM Toolbox calls in bulk.
    * @param {Actor} actor
    * @param {Item} skillItem
-   * @param {{apply?: boolean, silent?: boolean}} [options]  apply: write the
-   *   Rank/mark changes back to the item. silent: skip the chat card.
+   * @param {{apply?: boolean, silent?: boolean, debuffs?: boolean, floorBonus?: boolean, clearMark?: boolean}} [options]
+   *   apply: write the Rank/mark changes back to the item. silent: skip the
+   *   chat card. The rest exist for grinding's check (module/helpers/
+   *   grinding.mjs): debuffs applies the actor's Debuff penalties (p.170);
+   *   floorBonus: false drops the Race/Class "at the end of each floor, add
+   *   1" bonus, which only belongs to end-of-floor checks; clearMark: false
+   *   leaves the use-mark for that end-of-floor check.
    * @returns {Promise<{success: boolean, roll: Roll, newRank: number}>}
    */
-  static async rollAdvancementCheck(actor, skillItem, { apply = true, silent = false } = {}) {
+  static async rollAdvancementCheck(actor, skillItem, {
+    apply = true, silent = false, debuffs = false, floorBonus = true, clearMark = true,
+  } = {}) {
     const currentRank = skillItem.system.rank ?? 0;
     const slug = slugifySkillName(skillItem.name);
     // "At the end of each floor, add 1 to your Skill Advancement Checks for
@@ -1313,7 +1353,7 @@ export default class CarlDice {
     // be raised to Rank 20" (targetType "skillRank"'s capMax) both key off
     // the actor's per-skill bags rather than the Skill item itself, since
     // both are granted by a separate owned Race/Class item, not the Skill.
-    const bonus = actor.system.advancementBonuses?.[slug] ?? 0;
+    const bonus = floorBonus ? (actor.system.advancementBonuses?.[slug] ?? 0) : 0;
     const rankCap = actor.system.rankCaps?.[slug] ?? 15;
 
     // Already at the ceiling - don't roll at all, and don't report a
@@ -1332,13 +1372,22 @@ export default class CarlDice {
       return { success: false, roll: null, newRank: currentRank };
     }
 
-    const roll = new Roll(bonus ? `1d20 + ${bonus}` : "1d20");
+    // Grinding's check: "Any penalties from Debuffs (Fatigued is common)
+    // apply to this check" (p.170) - the actor's Check-scoped Debuff rows,
+    // as an automatic roll (not an Action, nothing is consumed).
+    const debuffEffect = debuffs
+      ? resolveRollerRows(collectDebuffRows(actor.system, "check", { ownAction: false }))
+      : { penalties: [], advantageCount: 0, disadvantageCount: 0, applied: [] };
+    const penalty = debuffEffect.penalties.reduce((sum, p) => sum + p.value, 0);
+    const formula = [resolveD20Formula(false, "normal", debuffEffect), bonus ? `${bonus}` : null, penalty ? `(${penalty})` : null]
+      .filter(Boolean).join(" + ");
+    const roll = new Roll(formula);
     await roll.evaluate();
     const success = roll.total >= currentRank;
     const newRank = success ? Math.min(currentRank + 1, rankCap) : currentRank;
 
     if (apply) {
-      await skillItem.update({ "system.rank": newRank, "system.marked": false });
+      await skillItem.update(clearMark ? { "system.rank": newRank, "system.marked": false } : { "system.rank": newRank });
     }
 
     if (!silent) {
@@ -1351,6 +1400,7 @@ export default class CarlDice {
           : game.i18n.localize("CARLRPG.Roll.AdvancementFail"),
         img: skillItem.img,
         badge: { label: success ? "+1" : "—", type: success ? "hit" : "warn" },
+        body: buildDebuffNote(decorateRows(debuffEffect.applied, "roll")),
         actor,
       });
     }
@@ -1365,25 +1415,33 @@ export default class CarlDice {
    * path), Damage Effects are a deliberate rules exception - "When you make
    * an Attack that adds a Damage Effect, place a mark... in either the
    * Attack Skill or the Damage Effect" overrides the general
-   * Passive-skills-rarely-mark rule for that specific case - and rollHeal
-   * calls this unconditionally for isPassive Heal spells (Heal Self), since
-   * casting is itself the qualifying action there, not a Skill Check. So
-   * this only needs to respect advancementGate, including the Dodge-style
-   * "marks only below Rank 5". Public (not #-private) because module/chat/
+   * Passive-skills-rarely-mark rule for that specific case. isAdvancedByUse
+   * below covers the rest: advancementGate (including the Dodge-style
+   * "marks only below Rank 5") and Passive Spells, which never mark (p.202). Public (not #-private) because module/chat/
    * mark-choice-card.mjs's chat-card button also calls this directly, with
    * its own fresh !marked re-check at click time (the item's state can
    * change between roll time and click time).
    */
   static async markForAdvancement(item) {
-    if (!item || !CarlDice.#isMarkable(item)) return;
+    if (!item || !CarlDice.isAdvancedByUse(item)) return;
     if (!item.system.marked) await item.update({ "system.marked": true });
   }
 
-  /** Whether advancementGate currently allows marking this item at all. */
-  static #isMarkable(item) {
+  /**
+   * Whether this item's Rank can rise through use - marking it on a Check,
+   * or grinding it (module/helpers/grinding.mjs). Not when advancementGate
+   * says otherwise, and not for a Passive Spell: "Spells that don't require
+   * a Check... are tagged as Passive and simply happen, but those are not
+   * marked for Skill Advancement... their Ranks must be raised via magical
+   * means or trained at a guild" (p.202).
+   * @param {Item} item
+   * @returns {boolean}
+   */
+  static isAdvancedByUse(item) {
     if (!item) return false;
     if (item.system.advancementGate === "magic-only") return false;
     if (item.system.advancementGate === "passive-until-5" && (item.system.rank ?? 0) >= 5) return false;
+    if (item.type === "spell" && item.system.castingKeywords?.includes("passive")) return false;
     return true;
   }
 }

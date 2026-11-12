@@ -14,12 +14,13 @@
  *    advanceTime), which is unrelated to wall-clock time and only moves
  *    when a GM clicks a button.
  */
-import CarlDice from "../dice/dice.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "./carl-dialog.mjs";
-import { shortRestUpdates } from "../helpers/rest.mjs";
+import { shortRestUpdates, conditionsAfterRest } from "../helpers/rest.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import { rollMagicItem } from "../helpers/loot.mjs";
+import { isGrindTarget, grindTargetOptions } from "../helpers/grinding.mjs";
+import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -327,13 +328,9 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         ? shortRestUpdates(actor)
         : { "system.hb.value": effectiveMax, "system.mana.value": sys.mana?.max ?? 0 };
 
-      if (kind === "long" || kind === "fullDay") {
-        let conditions = (sys.conditions ?? []).filter((c) => c.key !== "fatigued");
-        if (kind === "fullDay") {
-          conditions = conditions.filter((c) => c.key !== "longTermMajorInjury" && c.key !== "longTermMinorInjury");
-        }
-        updates["system.conditions"] = conditions;
-      }
+      // Injuries and Fatigued end by rest length (rest.mjs's conditionsAfterRest).
+      const conditions = conditionsAfterRest(sys.conditions, kind);
+      if (conditions.length !== (sys.conditions ?? []).length) updates["system.conditions"] = conditions;
 
       await actor.update(updates);
     }
@@ -491,10 +488,11 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   /**
-   * Grinding: GM picks an actor, a Skill, and accrued hours. Once the total
-   * meets the Skill's current Rank, immediately rolls the Advancement Check
-   * (the GM already opted into this by using the tool) and resets the
-   * counter; otherwise just banks the hours as an item flag.
+   * Grinding (p.170): GM picks an actor, hours, and a Skill that can take
+   * them (module/helpers/grinding.mjs's isGrindTarget). Once the
+   * Skill's accrued hours meet its Rank, the Advancement Check is rolled
+   * immediately, with Debuff penalties; hours beyond that go to a chat card
+   * offering them to another Skill (module/chat/grind-surplus-card.mjs).
    */
   static async #onGrind(event, target) {
     if (!game.user.isGM) return;
@@ -519,12 +517,12 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const hours = Number(actorResult.hours) || 0;
     if (!actor || hours <= 0) return;
 
-    const skillItems = actor.items.filter((i) => ["skill", "spell", "damageEffect"].includes(i.type));
+    const skillItems = actor.items.filter((i) => isGrindTarget(actor, i));
     if (!skillItems.length) {
-      ui.notifications.warn(game.i18n.format("CARLRPG.Toolbox.NoSkills", { name: actor.name }));
+      ui.notifications.warn(game.i18n.format("CARLRPG.Grind.NoTargets", { name: actor.name }));
       return;
     }
-    const skillOptions = skillItems.map((i) => `<option value="${i.id}">${i.name} (Rank ${i.system.rank})</option>`).join("");
+    const skillOptions = grindTargetOptions(skillItems);
     const skillResult = await showCarlDialog({
       title: game.i18n.format("CARLRPG.Toolbox.GrindSkillTitle", { name: actor.name }),
       content: `<div class="carl-dialog-body"><div class="form-group"><select name="itemId">${skillOptions}</select></div></div>`,
@@ -532,19 +530,8 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     });
     if (!skillResult) return;
     const item = actor.items.get(skillResult.itemId);
-    if (!item) return;
-
-    const rank = item.system.rank ?? 0;
-    const accrued = (item.getFlag("carl-rpg", "grindHours") ?? 0) + hours;
-
-    if (accrued >= rank) {
-      await item.setFlag("carl-rpg", "grindHours", Math.max(0, accrued - rank));
-      ui.notifications.info(game.i18n.format("CARLRPG.Toolbox.GrindThresholdReached", { name: item.name }));
-      await CarlDice.rollAdvancementCheck(actor, item);
-    } else {
-      await item.setFlag("carl-rpg", "grindHours", accrued);
-      ui.notifications.info(game.i18n.format("CARLRPG.Toolbox.GrindProgress", { name: item.name, accrued, rank }));
-    }
+    if (!item || !isGrindTarget(actor, item)) return;
+    await grindAndOfferSurplus(actor, item, hours);
   }
 
   /**

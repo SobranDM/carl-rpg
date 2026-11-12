@@ -1,5 +1,5 @@
 import CarlRPGActorBase from "./actor-base.mjs";
-import { getStatMod } from "../helpers/rules.mjs";
+import { getStatMod, staticEvade } from "../helpers/rules.mjs";
 import { aggregateActorBonuses, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
 import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effects.mjs";
 
@@ -147,7 +147,7 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // the roll dialog is where a per-roll call (e.g. sight-based Blinded on
     // a Surprise check) gets made. *DebuffDelta lets the sheet flag a
     // debuffed value.
-    const evade = resolveDifficultyRows(10 + (this.stats.dex?.mod ?? 0), collectDebuffRows(this, "evade", { ownAction: false }));
+    const evade = resolveDifficultyRows(staticEvade(this), collectDebuffRows(this, "evade", { ownAction: false }));
     const surprise = resolveDifficultyRows(10 + (this.stats.int?.mod ?? 0), collectDebuffRows(this, "check", { ownAction: false }));
     this.evadeBase = evade.difficulty;
     this.evadeDebuffDelta = evade.delta;

@@ -76,9 +76,9 @@ export default class CarlRPGActorBase extends foundry.abstract.TypeDataModel {
     // Mobs are static stat blocks ("Building a Mob", see mob.mjs) - kept
     // minimal, not built up from granting items the way PC bonuses
     // are, and no bestiary content exists yet to need anything fancier.
-    // Granting a resistance via an item/feature's ChangeEntry (targetType
-    // "resistance") is a plausible future extension, deliberately not built
-    // ahead of a real use case - see docs/known-gaps.md 1.3.
+    // An item/feature can also grant a Resistance through a ChangeEntry
+    // (targetType "resistance", folded into resistancesEffective) - see
+    // docs/known-gaps.md section 4.
     schema.dr = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
     const resistancesSchema = {};
     for (const type of Object.keys(CONFIG.CARLRPG.damageTypes)) {

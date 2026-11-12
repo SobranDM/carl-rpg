@@ -383,6 +383,7 @@
 .carl-chat-card .carl-evade-consequence,
 .carl-chat-card .carl-taunt-link,
 .carl-chat-card .carl-mark-choice,
+.carl-chat-card .carl-grind-surplus,
 .carl-chat-card .carl-gm-digest {
   margin-top: 6px;
   padding: 6px 8px;
@@ -468,12 +469,19 @@
 .carl-chat-card .carl-evade-link .carl-roll-evade,
 .carl-chat-card .carl-evade-link .carl-add-evade-debuff,
 .carl-chat-card .carl-evade-link .carl-taunt-attack,
+.carl-chat-card .carl-evade-link .carl-grind-surplus-apply,
 .carl-chat-card .carl-evade-consequence .carl-roll-evade,
 .carl-chat-card .carl-evade-consequence .carl-add-evade-debuff,
 .carl-chat-card .carl-evade-consequence .carl-taunt-attack,
+.carl-chat-card .carl-evade-consequence .carl-grind-surplus-apply,
 .carl-chat-card .carl-taunt-link .carl-roll-evade,
 .carl-chat-card .carl-taunt-link .carl-add-evade-debuff,
-.carl-chat-card .carl-taunt-link .carl-taunt-attack {
+.carl-chat-card .carl-taunt-link .carl-taunt-attack,
+.carl-chat-card .carl-taunt-link .carl-grind-surplus-apply,
+.carl-chat-card .carl-grind-surplus .carl-roll-evade,
+.carl-chat-card .carl-grind-surplus .carl-add-evade-debuff,
+.carl-chat-card .carl-grind-surplus .carl-taunt-attack,
+.carl-chat-card .carl-grind-surplus .carl-grind-surplus-apply {
   width: auto;
   font-size: 11px;
   line-height: 1.6;
@@ -482,12 +490,19 @@
 .carl-chat-card .carl-evade-link .carl-roll-evade:disabled,
 .carl-chat-card .carl-evade-link .carl-add-evade-debuff:disabled,
 .carl-chat-card .carl-evade-link .carl-taunt-attack:disabled,
+.carl-chat-card .carl-evade-link .carl-grind-surplus-apply:disabled,
 .carl-chat-card .carl-evade-consequence .carl-roll-evade:disabled,
 .carl-chat-card .carl-evade-consequence .carl-add-evade-debuff:disabled,
 .carl-chat-card .carl-evade-consequence .carl-taunt-attack:disabled,
+.carl-chat-card .carl-evade-consequence .carl-grind-surplus-apply:disabled,
 .carl-chat-card .carl-taunt-link .carl-roll-evade:disabled,
 .carl-chat-card .carl-taunt-link .carl-add-evade-debuff:disabled,
-.carl-chat-card .carl-taunt-link .carl-taunt-attack:disabled {
+.carl-chat-card .carl-taunt-link .carl-taunt-attack:disabled,
+.carl-chat-card .carl-taunt-link .carl-grind-surplus-apply:disabled,
+.carl-chat-card .carl-grind-surplus .carl-roll-evade:disabled,
+.carl-chat-card .carl-grind-surplus .carl-add-evade-debuff:disabled,
+.carl-chat-card .carl-grind-surplus .carl-taunt-attack:disabled,
+.carl-chat-card .carl-grind-surplus .carl-grind-surplus-apply:disabled {
   cursor: default;
   opacity: 0.6;
 }

@@ -1,5 +1,6 @@
 import {
   splitDamageEvenly,
+  splitDamageProportionally,
   reduceDamagePortion,
   computeSlotsLost,
   reduceViaShield,
@@ -92,17 +93,30 @@ export default function register(quench) {
           assert.isAbove(result.shieldAbsorbed, 0);
         });
 
-        it("applies DR once to the combined multi-type total, then re-splits evenly", function () {
+        it("applies DR once to the combined multi-type total, then re-splits in proportion", function () {
           const t = target({ drEffective: 4, resistancesEffective: { fire: "resist" } });
           const result = computeDamageApplication({ fire: 10, force: 6 }, t, true);
-          // Combined 16 - DR 4 = 12, split evenly (6/6), fire then halved -> 3, force -> 6.
+          // Combined 16 - DR 4 = 12, split 10:6 -> 7.5/4.5 -> 8/4 (tie to the first), fire halved -> 4.
           const fire = result.perType.find((p) => p.type === "fire");
           const force = result.perType.find((p) => p.type === "force");
-          assert.equal(fire.afterDr, 6);
-          assert.equal(fire.final, 3);
-          assert.equal(force.afterDr, 6);
-          assert.equal(force.final, 6);
-          assert.equal(result.totalFinalDamage, 9);
+          assert.equal(fire.afterDr, 8);
+          assert.equal(fire.final, 4);
+          assert.equal(force.afterDr, 4);
+          assert.equal(force.final, 4);
+          assert.equal(result.totalFinalDamage, 8);
+        });
+
+        it("an immune type's share stays its own (30 Fire + 4 untyped vs Fire immunity -> 4)", function () {
+          const t = target({ resistancesEffective: { fire: "immune" } });
+          const result = computeDamageApplication({ fire: 30, "": 4 }, t, true);
+          assert.equal(result.totalFinalDamage, 4);
+        });
+
+        it("splitDamageProportionally keeps every point and each type's share", function () {
+          assert.deepEqual(splitDamageProportionally(12, { fire: 10, force: 6 }), { fire: 8, force: 4 });
+          assert.deepEqual(splitDamageProportionally(10, { a: 1, b: 1, c: 1 }), { a: 4, b: 3, c: 3 });
+          assert.deepEqual(splitDamageProportionally(5, { fire: 0, ice: 3 }), { ice: 5 });
+          assert.deepEqual(splitDamageProportionally(0, { fire: 3 }), { fire: 0 });
         });
 
         it("an untyped ('') portion has no matching resistance and passes through", function () {

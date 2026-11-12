@@ -35,6 +35,7 @@ import { healActionEntries } from "./heal-card.mjs";
 import { evadeActionEntries } from "./evade-link-card.mjs";
 import { tauntActionEntries } from "./taunt-card.mjs";
 import { markChoiceActionEntries } from "./mark-choice-card.mjs";
+import { grindSurplusActionEntries } from "./grind-surplus-card.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
@@ -43,6 +44,7 @@ const REGISTRY = [
   ...evadeActionEntries,
   ...tauntActionEntries,
   ...markChoiceActionEntries,
+  ...grindSurplusActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 

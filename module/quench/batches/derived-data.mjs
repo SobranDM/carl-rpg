@@ -33,9 +33,23 @@ export default function register(quench) {
         it("hb.effectiveMax includes a 'resource' ChangeEntry bonus targeting hb.max", async function () {
           const actor = await createTestCharacter();
           try {
-            await createTestItem(actor, "item", "gear", { system: { changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "5" }] } });
+            await createTestItem(actor, "item", "gear", { system: { equipped: true, changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "5" }] } });
             await settle();
             assert.equal(actor.system.hb.effectiveMax, 15); // 10 base + 5 bonus
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("unequipped gear grants nothing until it's equipped (p.98)", async function () {
+          const actor = await createTestCharacter();
+          try {
+            const gear = await createTestItem(actor, "item", "gear", { system: { changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "5" }] } });
+            await settle();
+            assert.equal(actor.system.hb.effectiveMax, 10);
+            await gear.update({ "system.equipped": true });
+            await settle();
+            assert.equal(actor.system.hb.effectiveMax, 15);
           } finally {
             await deleteTestActor(actor);
           }
@@ -45,11 +59,11 @@ export default function register(quench) {
           const actor = await createTestCharacter("character", { system: { stats: { int: { value: 10 } } } });
           const mob = await createTestMob("mob", { system: { stats: { int: { value: 10 } } } });
           try {
-            await createTestItem(actor, "item", "gear", { system: { changes: [{ targetType: "stat", target: "int", mode: "add", value: "5" }] } });
+            await createTestItem(actor, "item", "gear", { system: { equipped: true, changes: [{ targetType: "stat", target: "int", mode: "add", value: "5" }] } });
             await settle();
             assert.equal(actor.system.mana.max, 15, "Character: Mana Max should track the live INT bonus");
 
-            await mob.createEmbeddedDocuments("Item", [{ name: "gear", type: "item", system: { changes: [{ targetType: "stat", target: "int", mode: "add", value: "5" }] } }]);
+            await mob.createEmbeddedDocuments("Item", [{ name: "gear", type: "item", system: { equipped: true, changes: [{ targetType: "stat", target: "int", mode: "add", value: "5" }] } }]);
             await settle();
             assert.equal(mob.system.mana.max, 15, "Mob: Mana Max should track the live INT bonus too (mob.mjs matches character.mjs)");
           } finally {

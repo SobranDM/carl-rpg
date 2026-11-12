@@ -15,7 +15,7 @@
  */
 import { removeConditionFromActor } from "../helpers/conditions.mjs";
 import { findConditionWithMechanic, conditionLabel } from "../helpers/debuff-effects.mjs";
-import { shortRestUpdates } from "../helpers/rest.mjs";
+import { shortRestUpdates, conditionsAfterRest } from "../helpers/rest.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 
@@ -101,12 +101,12 @@ export async function onApplyHeal(event, message) {
     ? { ...shortRestUpdates(actor), "system.hb.value": effectiveMax }
     : { "system.hb.value": Math.min((sys.hb?.value ?? 0) + amount, effectiveMax) };
 
-  // Rank 15's "benefits of a short rest" additionally clears every Minor
-  // Injury outright, on top of the Short Rest's own hb/mana formula - this
-  // happens before (and independently of) the separate Mend Debuff button,
-  // which still lets the caster pick one more Debuff/Major Injury to remove.
+  // Rank 15's "benefits of a short rest" also ends whatever a short rest
+  // ends (Minor Injury - rest.mjs's conditionsAfterRest), on top of the
+  // Short Rest's hb/mana formula - independent of the separate Mend Debuff
+  // button, which still lets the caster pick one more Debuff to remove.
   if (full) {
-    updates["system.conditions"] = (sys.conditions ?? []).filter((c) => c.key !== "minorInjury");
+    updates["system.conditions"] = conditionsAfterRest(sys.conditions, "short");
   }
 
   await actor.update(updates);
