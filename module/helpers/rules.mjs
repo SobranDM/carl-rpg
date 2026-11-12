@@ -92,3 +92,45 @@ export function isHitDegree(degree) {
 export function staticEvade(sys) {
   return 10 + (sys?.stats?.dex?.mod ?? 0) + (sys?.bonuses?.evadeBonus ?? 0);
 }
+
+/**
+ * The roll dialog's Difficulty presets (The Core Mechanic, p.59), at the
+ * current Floor: Unopposed "10 + [Floor Number x 2]", Stat Check "10 + Floor
+ * Number", and - when there's an opponent - Opposed "10 + antagonist's
+ * relevant Stat Mod + Floor Number". `given` adds the Difficulty the caller
+ * already computed (an Attack's Evade, a Taunt's...). "Custom" keeps
+ * whatever is typed. "The GM may simply assign a Difficulty of their
+ * choosing" - every preset is just a starting value.
+ * @param {object} options
+ * @param {number} options.floor
+ * @param {"custom"|"unopposed"|"stat"|"opposed"|"given"} [options.selected]
+ * @param {{name: string, stat: string, mod: number}|null} [options.opposed]
+ * @param {{label: string, value: number}|null} [options.given]
+ * @returns {{key: string, label: string, value: number|null, selected: boolean}[]}
+ */
+export function buildDifficultyPresets({ floor, selected = "custom", opposed = null, given = null }) {
+  const f = Number(floor) || 0;
+  const i18n = game.i18n;
+  const presets = [];
+  if (given && given.value !== null && given.value !== undefined) {
+    presets.push({ key: "given", label: `${given.label}: ${given.value}`, value: given.value });
+  }
+  presets.push({ key: "unopposed", label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: 10 + 2 * f }), value: 10 + 2 * f });
+  presets.push({ key: "stat", label: i18n.format("CARLRPG.Dialog.Preset.Stat", { value: 10 + f }), value: 10 + f });
+  if (opposed) {
+    const value = 10 + (Number(opposed.mod) || 0) + f;
+    presets.push({ key: "opposed", label: i18n.format("CARLRPG.Dialog.Preset.Opposed", { name: opposed.name, stat: opposed.stat, value }), value });
+  }
+  presets.push({ key: "custom", label: i18n.localize("CARLRPG.Dialog.Preset.Custom"), value: null });
+  const pick = presets.some((p) => p.key === selected) ? selected : "custom";
+  return presets.map((p) => ({ ...p, selected: p.key === pick }));
+}
+
+/**
+ * The value of the preset a dialog opens on (null for "custom").
+ * @param {{value: number|null, selected: boolean}[]} presets
+ * @returns {number|null}
+ */
+export function selectedPresetValue(presets) {
+  return presets.find((p) => p.selected)?.value ?? null;
+}

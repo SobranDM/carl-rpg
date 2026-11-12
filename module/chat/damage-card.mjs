@@ -121,6 +121,61 @@ function formatDamageDigestLine(actor, result) {
 }
 
 /**
+ * Apply one damage instance to one actor: the pipeline (Shield -> DR ->
+ * Resistances -> whole slots) against its live state, or - for a Dying
+ * creature - 1 off the countdown instead ("Each time a Dying Crawler would
+ * take damage from any source, they instead subtract 1", Table 11). Ends
+ * `endsOnHbLoss` Debuffs (Terrified) when a slot is lost. Shared by this
+ * card's Apply Damage and the per-target rows on an Attack card
+ * (module/chat/attack-targets-card.mjs).
+ * @param {Actor} actor
+ * @param {Record<string, number>} damageByType
+ * @param {boolean} isMagic
+ * @returns {Promise<string[]>} GM digest lines.
+ */
+export async function applyDamageToActor(actor, damageByType, isMagic) {
+  const lines = [];
+  const result = computeDamageApplication(damageByType, actor, isMagic);
+
+  const dying = (actor.system.conditions ?? []).find((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown);
+  if (dying) {
+    const left = dying.remaining ?? Math.max(0, actor.system.stats?.con?.mod ?? 0);
+    if (result.totalFinalDamage > 0 && left > 0) {
+      const conditions = foundry.utils.deepClone(actor.system.conditions);
+      conditions.find((c) => c.id === dying.id).remaining = left - 1;
+      await actor.update({ "system.conditions": conditions });
+      lines.push(game.i18n.format("CARLRPG.Damage.DyingCountdown", {
+        name: foundry.utils.escapeHTML(actor.name), rounds: left - 1,
+      }));
+    }
+    return lines;
+  }
+
+  lines.push(formatDamageDigestLine(actor, result));
+  // Both writes are batched into one actor.update() call, per shield and
+  // HB both potentially changing from the same hit - avoids two separate
+  // awaited writes racing/double-rendering (docs/known-gaps.md 1.4).
+  const updates = {};
+  if (result.shieldSlotsLost > 0) {
+    const currentShield = actor.system.shield?.value ?? 0;
+    updates["system.shield.value"] = Math.max(0, currentShield - result.shieldSlotsLost);
+  }
+  if (result.slotsLost > 0) {
+    const currentHb = actor.system.hb?.value ?? 0;
+    updates["system.hb.value"] = Math.max(0, currentHb - result.slotsLost);
+  }
+  if (Object.keys(updates).length) await actor.update(updates);
+  // "...or you take at least 1 HB slot damage" (Terrified, Table 11).
+  if (result.slotsLost > 0) {
+    const ended = await removeConditionsWithMechanic(actor, "endsOnHbLoss");
+    if (ended.length) {
+      lines.push(game.i18n.format("CARLRPG.Damage.DebuffEnded", { name: actor.name, debuffs: ended.join(", ") }));
+    }
+  }
+  return lines;
+}
+
+/**
  * Run the damage pipeline against every snapshotted target's current
  * resistances/dr and apply the resulting whole-slot HB loss, then flag the
  * message so the button can't double-apply on a later re-render. Folds a
@@ -154,45 +209,7 @@ export async function onApplyDamage(event, message) {
 
   const digestLines = [];
   for (const actor of actors.values()) {
-    const result = computeDamageApplication(damageByType, actor, isMagic);
-
-    // "Each time a Dying Crawler would take damage from any source, they
-    // instead subtract 1 from the countdown value" (Dying, Table 11).
-    const dying = (actor.system.conditions ?? []).find((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown);
-    if (dying) {
-      const left = dying.remaining ?? Math.max(0, actor.system.stats?.con?.mod ?? 0);
-      if (result.totalFinalDamage > 0 && left > 0) {
-        const conditions = foundry.utils.deepClone(actor.system.conditions);
-        conditions.find((c) => c.id === dying.id).remaining = left - 1;
-        await actor.update({ "system.conditions": conditions });
-        digestLines.push(game.i18n.format("CARLRPG.Damage.DyingCountdown", {
-          name: foundry.utils.escapeHTML(actor.name), rounds: left - 1,
-        }));
-      }
-      continue;
-    }
-
-    digestLines.push(formatDamageDigestLine(actor, result));
-    // Both writes are batched into one actor.update() call, per shield and
-    // HB both potentially changing from the same hit - avoids two separate
-    // awaited writes racing/double-rendering (docs/known-gaps.md 1.4).
-    const updates = {};
-    if (result.shieldSlotsLost > 0) {
-      const currentShield = actor.system.shield?.value ?? 0;
-      updates["system.shield.value"] = Math.max(0, currentShield - result.shieldSlotsLost);
-    }
-    if (result.slotsLost > 0) {
-      const currentHb = actor.system.hb?.value ?? 0;
-      updates["system.hb.value"] = Math.max(0, currentHb - result.slotsLost);
-    }
-    if (Object.keys(updates).length) await actor.update(updates);
-    // "...or you take at least 1 HB slot damage" (Terrified, Table 11).
-    if (result.slotsLost > 0) {
-      const ended = await removeConditionsWithMechanic(actor, "endsOnHbLoss");
-      if (ended.length) {
-        digestLines.push(game.i18n.format("CARLRPG.Damage.DebuffEnded", { name: actor.name, debuffs: ended.join(", ") }));
-      }
-    }
+    digestLines.push(...await applyDamageToActor(actor, damageByType, isMagic));
   }
 
   // GM-only visibility of this digest is enforced generically by

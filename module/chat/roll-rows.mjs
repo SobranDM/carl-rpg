@@ -9,7 +9,9 @@ export function defaultRollRowLabel() {
 
 /**
  * @param {Roll[]} rolls
- * @param {Array<{label?: string, detail?: string, breakdown?: string}>} rollMeta  Per-index row metadata.
+ * @param {Array<{label?: string, detail?: string, breakdown?: string, rowClass?: string}>} rollMeta  Per-index row metadata.
+ *   rowClass is added to the row's <tbody> (e.g. "carl-damage-roll", which an
+ *   Attack card hides until some target is hit - module/chat/attack-targets-card.mjs).
  * @param {{isPrivate?: boolean, extraRows?: Array<{label?: string, detail?: string, breakdown?: string, total?: string, insertAt?: number}>}} [options]
  *   extraRows are non-Roll-backed rows spliced into the result at `insertAt`
  *   (defaults to the end) - e.g. a supplemental context row with no dice
@@ -34,6 +36,7 @@ export async function buildRollRows(rolls = [], rollMeta = [], { isPrivate = fal
       formula: isPrivate ? "???" : String(roll?._formula ?? roll?.formula ?? ""),
       total: isPrivate ? "?" : (evaluated && roll?.total != null ? String(roll.total) : ""),
       tooltipHtml,
+      rowClass: meta.rowClass ?? "",
     });
   }
   for (const extra of extraRows) {

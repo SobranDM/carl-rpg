@@ -1,6 +1,6 @@
 import { CarlRPGActor } from './documents/actor.mjs';
 import { CarlRPGItem } from './documents/item.mjs';
-import { CarlRPGCombat } from './documents/combat.mjs';
+import { CarlRPGCombat, CarlRPGCombatant } from './documents/combat.mjs';
 import { CarlRPGActorSheet } from './sheets/actor-sheet.mjs';
 import { CarlRPGItemSheet } from './sheets/item-sheet.mjs';
 import { preloadHandlebarsTemplates } from './helpers/templates.mjs';
@@ -93,14 +93,16 @@ Hooks.once('init', function () {
   // See module/chat/chat-listener.mjs.
   registerChatListener();
 
-  // PvE has no traditional initiative roll (see Playing the Game, p. 80-86);
-  // this formula only matters for the PvP exception, which does use d20+DEX.
+  // PvE has no initiative roll (Playing the Game, p.80-86) - CarlRPGCombat
+  // gives Mobs-first fixed values instead. This formula is only rolled for
+  // PvP (crawlers only), every round (p.87).
   CONFIG.Combat.initiative = {
     formula: '1d20 + @stats.dex.mod',
     decimals: 2,
   };
   // End-of-round/end-of-combat Debuff automation (module/helpers/round-end.mjs).
   CONFIG.Combat.documentClass = CarlRPGCombat;
+  CONFIG.Combatant.documentClass = CarlRPGCombatant;
 
   CONFIG.Actor.documentClass = CarlRPGActor;
   Object.assign(CONFIG.Actor.dataModels, {

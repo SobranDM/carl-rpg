@@ -65,6 +65,8 @@ export default function register(quench) {
           assert.equal(doubleDiceCount("1d4 + @floor"), "2d4 + @floor");
           assert.equal(doubleDiceCount("(@rank)d6"), "(2*(@rank))d6");
           assert.equal(doubleDiceCount("(1+1)d8 + 2d6"), "(2*(1+1))d8 + 4d6");
+          assert.equal(doubleDiceCount("floor(@rank/2)d6"), "(2*floor(@rank/2))d6", "a function call doubles as a whole");
+          assert.equal(doubleDiceCount("(1d4)d6"), "(2*(1d4))d6", "dice inside a computed count aren't doubled too");
         });
       });
 
@@ -75,6 +77,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const spell = await createTestItem(actor, "spell", "Zap", { system: { rank: 0, castingKeywords: ["attack"] } });
+            await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
             assert.isNull(await CarlDice.rollAttack(actor, spell, { skipDialog: true }));
           } finally {
             await deleteTestActor(actor);
@@ -85,6 +88,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const spell = await createTestItem(actor, "spell", "Mind Spike", { system: { rank: 0 } });
+            await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
             assert.isNull(await CarlDice.rollOpposedSkillCheck(actor, spell, { difficulty: 10, skipDialog: true, post: false }));
           } finally {
             await deleteTestActor(actor);
@@ -95,6 +99,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const spell = await createTestItem(actor, "spell", "Heal", { system: { rank: 0, castingKeywords: ["heal", "passive"] } });
+            await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
             assert.isNull(await CarlDice.rollHeal(actor, spell));
           } finally {
             await deleteTestActor(actor);

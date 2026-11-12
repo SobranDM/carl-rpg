@@ -14,15 +14,21 @@
  * can overshoot again, which simply posts another card.
  */
 import { applyGrindHours, isGrindTarget, grindTargetOptions } from "../helpers/grinding.mjs";
-import { createCardMessage } from "./chat-card.mjs";
-import { canActOnUuidFlag } from "./evade-link-card.mjs";
+import { createCardMessage, esc } from "./chat-card.mjs";
+import { canActOnUuidFlag, resolveTargetActor } from "./evade-link-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 
-const esc = (value) => foundry.utils.escapeHTML(String(value ?? ""));
 
 /** Surplus cards this client is applying right now - blocks a second click before the first lands. */
 const inFlight = new Set();
+
+/**
+ * Cards this client has already spent. A player's "spent" write reaches the
+ * card through the GM's client a moment later, so until then it's treated as
+ * spent here - a second click can't apply the same hours again.
+ */
+const spentLocally = new Set();
 
 /**
  * Grind hours into a Skill and, if they overshoot it, post the surplus card.
@@ -76,7 +82,7 @@ export function grindSurplusTargets(actor, sourceItemId) {
 
 async function onApplyGrindSurplus(event, message) {
   event.preventDefault();
-  if (inFlight.has(message.id)) return;
+  if (inFlight.has(message.id) || spentLocally.has(message.id)) return;
   inFlight.add(message.id);
   try {
     await applySurplus(message);
@@ -95,8 +101,7 @@ async function applySurplus(message) {
     return;
   }
   const { actorUuid, hours = 0, sourceItemId } = message.getFlag("carl-rpg", "grindSurplus") ?? {};
-  const doc = actorUuid ? await fromUuid(actorUuid) : null;
-  const actor = doc instanceof Actor ? doc : doc?.actor ?? null;
+  const actor = await resolveTargetActor(actorUuid);
   if (!actor) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Grind.ActorGone"));
     return;
@@ -124,7 +129,8 @@ async function applySurplus(message) {
   // can't apply the same hours twice.
   const item = actor.items.get(result.itemId);
   if (!item || item.id === sourceItemId || !isGrindTarget(actor, item)) return;
-  if (message.getFlag("carl-rpg", "grindSurplusApplied")) return;
+  if (message.getFlag("carl-rpg", "grindSurplusApplied") || spentLocally.has(message.id)) return;
+  spentLocally.add(message.id);
   await updateCardMessage(message, { flags: { "carl-rpg": { grindSurplusApplied: true } } });
   await grindAndOfferSurplus(actor, item, hours);
 }

@@ -18,6 +18,7 @@
  */
 import CarlDice from "../dice/dice.mjs";
 import { slugifySkillName } from "./modifiers.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 
 const SCOPE = "carl-rpg";
 const GRINDABLE_TYPES = new Set(["skill", "spell", "damageEffect"]);
@@ -80,4 +81,32 @@ export async function applyGrindHours(actor, item, hours) {
   ui.notifications.info(game.i18n.format("CARLRPG.Toolbox.GrindThresholdReached", { name: item.name }));
   await CarlDice.rollAdvancementCheck(actor, item, { debuffs: true, floorBonus: false, clearMark: false });
   return { rolled: true, accrued: rank, surplus: accrued - rank };
+}
+
+/**
+ * Grinding toward a Level (p.171): "Keep a running total of all your
+ * grinding hours and erase it only when you level up... You gain a Level
+ * when you grind a number of hours equal to your current Level." The total
+ * resets in CarlRPGActor#_preUpdate on any Level gain. "The party member
+ * with the lowest Level gains 1d2 Levels when they level up this way" is
+ * left to the GM (the card says so).
+ * @param {Actor} actor  A character.
+ * @param {number} hours
+ * @returns {Promise<{leveled: boolean, total: number}>}
+ */
+export async function addGrindLevelHours(actor, hours) {
+  if (actor?.type !== "character") return { leveled: false, total: 0 };
+  const level = actor.system.attributes?.level?.value ?? 1;
+  const total = (actor.system.grindLevelHours ?? 0) + Math.max(0, Math.floor(Number(hours) || 0));
+  if (total < level || level >= 250) {
+    await actor.update({ "system.grindLevelHours": total });
+    return { leveled: false, total };
+  }
+  await actor.update({ "system.attributes.level.value": level + 1 });
+  await createCardMessage({
+    title: game.i18n.localize("CARLRPG.Grind.LevelTitle"),
+    body: `<p>${game.i18n.format("CARLRPG.Grind.LevelBody", { name: foundry.utils.escapeHTML(actor.name), level: level + 1 })}</p>`,
+    actor,
+  });
+  return { leveled: true, total };
 }

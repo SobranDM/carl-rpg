@@ -212,6 +212,7 @@
   .carl-taunt-link,
   .carl-mark-choice,
   .carl-grind-surplus,
+  .carl-attack-targets,
   .carl-gm-digest {
     margin-top: 6px;
     padding: 6px 8px;
@@ -220,7 +221,8 @@
     background: var(--carl-panel-bg-2);
   }
 
-  .carl-target-effects {
+  .carl-target-effects,
+  .carl-attack-targets {
     .carl-target-effects-list {
       margin-bottom: 4px;
     }
@@ -279,7 +281,8 @@
     }
   }
 
-  .carl-damage-card {
+  .carl-damage-card,
+  .carl-attack-targets {
     .carl-damage-portions {
       margin-bottom: 4px;
     }
@@ -331,6 +334,68 @@
         cursor: default;
         opacity: 0.6;
       }
+    }
+  }
+
+  // Per-target rows on an Attack card (module/chat/attack-targets-card.mjs).
+  .carl-attack-targets {
+    .carl-area-tag {
+      font-size: 10px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 3px;
+    }
+
+    .carl-damage-portions,
+    .carl-target-effects-list {
+      margin-bottom: 4px;
+    }
+
+    .carl-target-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px 6px;
+      padding: 3px 0;
+      border-top: 1px solid var(--carl-border-soft-2);
+
+      .carl-target-name {
+        font-weight: bold;
+      }
+
+      .carl-target-zone {
+        font-size: 10px;
+        text-transform: uppercase;
+        padding: 0 4px;
+        border-radius: 3px;
+        border: 1px solid var(--carl-border-soft-2);
+      }
+
+      .carl-target-status {
+        flex: 1 1 100%;
+        font-size: 11px;
+        opacity: 0.85;
+      }
+
+      .carl-target-buttons {
+        display: flex;
+        gap: 4px;
+      }
+    }
+
+    .carl-row-evade,
+    .carl-row-apply,
+    .carl-apply-all {
+      width: auto;
+      font-size: 11px;
+      line-height: 1.6;
+      padding: 2px 8px;
+    }
+
+    .carl-apply-all-row {
+      margin-top: 4px;
+      text-align: right;
     }
   }
 

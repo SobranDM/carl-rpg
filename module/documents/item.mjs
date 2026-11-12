@@ -13,6 +13,21 @@ export class CarlRPGItem extends Item {
   }
 
   /**
+   * A Spell can't be cast without Ranks (p.58/p.201), and a crawler only owns
+   * a Spell once they've learned it - so a Spell added to an actor at Rank 0
+   * (every compendium Spell is authored that way, including the starting
+   * Heal) arrives at Rank 1. A Rank set on purpose afterwards is left alone.
+   * @override
+   */
+  async _preCreate(data, options, user) {
+    const allowed = await super._preCreate(data, options, user);
+    if (allowed === false) return false;
+    if (this.type === "spell" && this.parent && (this.system.rank ?? 0) < 1) {
+      this.updateSource({ "system.rank": 1 });
+    }
+  }
+
+  /**
    * Bake a newly-owned class/race item's eligible stat/skillRank grants
    * into the actor's base values (see module/helpers/race-class-grants.mjs)
    * - a one-time permanent bump, not a live bonus. No-ops for every other

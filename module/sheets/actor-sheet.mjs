@@ -8,6 +8,9 @@ import CarlSpendStatPointsDialog from '../apps/spend-stat-points-dialog.mjs';
 import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
 import CarlDice from '../dice/dice.mjs';
 
+/** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
+const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
+
 /**
  * Extend the basic ActorSheet with some very simple modifications
  * @extends {DocumentSheetV2}
@@ -163,15 +166,18 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // statPointsSpent docstring for why Mob has no equivalent stored pool).
     if (actor.type === "mob") {
       context.statPointsRemaining = Math.max(0, (actorData.statPointsAvailable ?? 0) - (actorData.statPointsSpent ?? 0));
+    } else {
+      // "Crawlers are limited to three Sponsors each" (p.284).
+      context.canAddSponsor = (actorData.sponsors?.length ?? 0) < 3;
     }
 
     // Template convenience variables
     context.cssClass = [...this.options.classes, actor.type].join(' ');
     context.owner = actor.isOwner;
 
-    // Add items array for compatibility with legacy getData() structure
+    // Add items array for compatibility with legacy getData() structure;
+    // _prepareItems sorts each list.
     context.items = Array.from(actor.items.values());
-    context.items.sort((a, b) => (a.sort || 0) - (b.sort || 0));
 
     this._prepareItems(context);
 
@@ -225,6 +231,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
         raceAndClass.push(i);
       }
     }
+
+    // Fixed ordering for every list: Skills by category (Attack, Utility,
+    // Passive) then name; everything else by name (Race before Class).
+    const byName = (a, b) => a.name.localeCompare(b.name, game.i18n.lang, { sensitivity: "base" });
+    const categoryRank = (s) => SKILL_CATEGORY_ORDER.indexOf(s.system.category) + 1 || SKILL_CATEGORY_ORDER.length + 1;
+    skills.sort((a, b) => (categoryRank(a) - categoryRank(b)) || byName(a, b));
+    for (const list of [gear, features, spells, damageEffects]) list.sort(byName);
+    raceAndClass.sort((a, b) => (a.type === b.type ? 0 : a.type === "race" ? -1 : 1) || byName(a, b));
 
     context.gear = gear;
     context.features = features;
@@ -505,16 +519,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /* -------------------------------------------- */
 
   /**
-   * Handle a dropped Item: create an embedded copy, or sort if it was
-   * already embedded on this same Actor.
+   * Handle a dropped Item: create an embedded copy. Dropping an item back
+   * onto its own Actor does nothing - every list has a fixed order
+   * (_prepareItems), so manual reordering is gone.
    * @override
    */
   async _onDropItem(event, item) {
     if (!this.actor.isOwner) return null;
-    if (this.actor.uuid === item.parent?.uuid) {
-      const result = await this._onSortItem(event, item);
-      return result?.length ? item : null;
-    }
+    if (this.actor.uuid === item.parent?.uuid) return null;
     const keepId = !this.actor.items.has(item.id);
     const itemData = game.items.fromCompendium(item, { clearFolder: true, keepId });
     const created = await Item.create(itemData, { parent: this.actor, keepId });
@@ -534,34 +546,5 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     }
 
     return created ?? null;
-  }
-
-  /**
-   * Sort an existing embedded Item relative to its siblings, based on where
-   * it was dropped in one of the sheet's item lists.
-   * @param {DragEvent} event
-   * @param {Item} item
-   * @returns {Promise<Item[]>|void}
-   * @protected
-   */
-  _onSortItem(event, item) {
-    const dropTarget = event.target.closest("[data-item-id]");
-    if (!dropTarget) return;
-    const targetId = dropTarget.dataset.itemId;
-    if (targetId === item.id) return;
-    const target = this.actor.items.get(targetId);
-    if (!target) return;
-
-    const siblings = [];
-    for (const el of dropTarget.parentElement.children) {
-      const siblingId = el.dataset?.itemId;
-      if (!siblingId || siblingId === item.id) continue;
-      const sibling = this.actor.items.get(siblingId);
-      if (sibling) siblings.push(sibling);
-    }
-
-    const sortUpdates = foundry.utils.performIntegerSort(item, { target, siblings });
-    const updateData = sortUpdates.map((u) => ({ ...u.update, _id: u.target._id }));
-    return this.actor.updateEmbeddedDocuments("Item", updateData);
   }
 }

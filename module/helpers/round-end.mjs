@@ -34,9 +34,8 @@ import { CARLRPG } from "./config.mjs";
 import { computeDamageApplication } from "./damage-pipeline.mjs";
 import { collectDebuffRows, resolveRollerRows, consumedConditionIds, conditionLabel } from "./debuff-effects.mjs";
 import { resolveD20Formula } from "../dice/dice.mjs";
-import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
+import { createRollMessage, createCardMessage, esc } from "../chat/chat-card.mjs";
 
-const esc = (value) => foundry.utils.escapeHTML(String(value ?? ""));
 
 function mechanicsOf(condition) {
   return CARLRPG.debuffs[condition.key]?.mechanics ?? null;

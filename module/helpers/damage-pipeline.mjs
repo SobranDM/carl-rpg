@@ -211,3 +211,24 @@ export function computeDamageApplication(damageByType, target, isMagic = true, {
     shieldSlotsLost: shieldResult.slotsLost, shieldAbsorbed: shieldResult.absorbed,
   };
 }
+
+/**
+ * Scale a rolled damage-by-type map for one target, before its own DR and
+ * Resistances: Splash half, an Area-Attack Evade half (p.83 - "Such damage
+ * is rounded down as usual"), an Evade Critical Fail x2; then any flat extra
+ * (an Evade Major Fail's +Floor) as untyped damage.
+ * @param {Record<string, number>} damageByType
+ * @param {number} factor
+ * @param {number} [extraUntyped]
+ * @returns {Record<string, number>}  Only the nonzero types.
+ */
+export function scaleDamageByType(damageByType, factor, extraUntyped = 0) {
+  const out = {};
+  for (const [type, amount] of Object.entries(damageByType ?? {})) {
+    const scaled = Math.floor((Number(amount) || 0) * factor);
+    if (scaled > 0) out[type] = scaled;
+  }
+  const extra = Math.max(0, Math.floor(Number(extraUntyped) || 0));
+  if (extra) out[""] = (out[""] ?? 0) + extra;
+  return out;
+}

@@ -14,12 +14,6 @@
         <i class="fas fa-dice-d20"></i> {{localize "CARLRPG.Toolbox.ResolveTwoHour"}}
       </button>
     </div>
-    <div class="carl-toolbox-row">
-      <button type="button" data-action="partyLevelUp" data-pulse-target
-        class="{{#if thresholdReached}}pulse{{/if}}">
-        <i class="fas fa-arrow-up"></i> {{localize "CARLRPG.Toolbox.PartyLevelUp"}}
-      </button>
-    </div>
   </fieldset>
 
   <fieldset class="carl-toolbox-section">
@@ -33,6 +27,14 @@
         <i class="fas fa-plus"></i>
       </button>
     </div>
+    <div class="carl-toolbox-row">
+      <button type="button" data-action="endFloor" title="{{localize 'CARLRPG.Toolbox.EndFloorHint'}}">
+        <i class="fas fa-stairs"></i> {{localize "CARLRPG.Toolbox.EndFloor"}}
+      </button>
+      <button type="button" data-action="bossKilled" title="{{localize 'CARLRPG.Toolbox.BossKilledHint'}}">
+        <i class="fas fa-skull"></i> {{localize "CARLRPG.Toolbox.BossKilled"}}
+      </button>
+    </div>
   </fieldset>
 
   <fieldset class="carl-toolbox-section">
@@ -41,6 +43,11 @@
       <button type="button" data-action="shortRest">{{localize "CARLRPG.Toolbox.ShortRest"}}</button>
       <button type="button" data-action="longRest">{{localize "CARLRPG.Toolbox.LongRest"}}</button>
       <button type="button" data-action="fullDayRest">{{localize "CARLRPG.Toolbox.FullDayRest"}}</button>
+    </div>
+    <div class="carl-toolbox-row">
+      <button type="button" data-action="mend" title="{{localize 'CARLRPG.Toolbox.MendHint'}}">
+        <i class="fas fa-bandage"></i> {{localize "CARLRPG.Toolbox.Mend"}}
+      </button>
     </div>
   </fieldset>
 

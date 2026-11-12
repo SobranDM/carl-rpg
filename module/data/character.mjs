@@ -21,6 +21,25 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     // to distribute Stat points gained from leveling).
     schema.bankedStatPoints = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
 
+    // Numbers the rules have a crawler track on their sheet (p.112-115,
+    // p.24/p.279, p.23): AI Favor (spent 1 at a time - a d20 reroll or an
+    // extra non-Attack Action, p.61), Popularity (one rating, can drop),
+    // Gold (one Inventory slot), Move/Step in feet.
+    schema.aiFavor = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
+    schema.popularity = new fields.NumberField({ ...requiredInteger, initial: 0 });
+    schema.gold = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
+    schema.move = new fields.NumberField({ ...requiredInteger, initial: 20, min: 0 });
+    schema.step = new fields.NumberField({ ...requiredInteger, initial: 10, min: 0 });
+    // "Keep a running total of all your grinding hours and erase it only when
+    // you level up... You gain a Level when you grind a number of hours equal
+    // to your current Level" (p.171) - reset by CarlRPGActor#_preUpdate.
+    schema.grindLevelHours = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
+    // "Crawlers are limited to three Sponsors each" (p.284).
+    schema.sponsors = new fields.ArrayField(new fields.SchemaField({
+      name: new fields.StringField({ required: true, blank: true, initial: "" }),
+      note: new fields.StringField({ required: false, blank: true, initial: "" }),
+    }), { required: false, initial: [] });
+
     // The _id of this Character's active Class/Race Item (Race & Class
     // Selection, p.127). An explicit reference, not "the sole owned item of
     // that type" - nothing hard-blocks owning a second class/race-type item

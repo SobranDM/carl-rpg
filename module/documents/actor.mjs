@@ -1,5 +1,7 @@
 import CarlDice from "../dice/dice.mjs";
 import { recheckLevelGatedGrants } from "../helpers/race-class-grants.mjs";
+import { buildConditionEntry } from "../helpers/conditions.mjs";
+import { syncDefeated } from "../helpers/defeat.mjs";
 
 /**
  * Extend the base Actor document.
@@ -45,6 +47,27 @@ export class CarlRPGActor extends Actor {
       if (delta > 0) {
         const currentBanked = this.system.bankedStatPoints ?? 0;
         foundry.utils.setProperty(changed, "system.bankedStatPoints", currentBanked + 3 * delta);
+        // "Keep a running total of all your grinding hours and erase it only
+        // when you level up" (p.171) - any Level gain, whatever its source.
+        if (this.type === "character") foundry.utils.setProperty(changed, "system.grindLevelHours", 0);
+      }
+    }
+
+    // "If a crawler loses their last Health Bar slot, they gain the Dying
+    // Debuff" (p.94) - added in this same update, with its "CON Mod rounds"
+    // countdown (Table 11). Mobs instead die outright (see _onUpdate).
+    // HB before this update, for _onUpdate's defeat sync (it only un-marks
+    // "defeated" on a heal up from 0). Options travel with the update.
+    if (foundry.utils.hasProperty(changed, "system.hb.value")) options.carlPreviousHb = this.system.hb?.value ?? 0;
+
+    const droppedHb = foundry.utils.getProperty(changed, "system.hb.value");
+    if (this.type === "character" && droppedHb !== undefined && Number(droppedHb) <= 0 && (this.system.hb?.value ?? 0) > 0) {
+      const conditions = foundry.utils.getProperty(changed, "system.conditions") ?? this.system.toObject().conditions ?? [];
+      if (!conditions.some((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown)) {
+        const dying = buildConditionEntry("dying", { source: game.i18n.localize("CARLRPG.Actor.HealthBar") });
+        dying.id = foundry.utils.randomID();
+        dying.remaining = Math.max(0, this.system.stats?.con?.mod ?? 0);
+        foundry.utils.setProperty(changed, "system.conditions", [...conditions, dying]);
       }
     }
 
@@ -69,6 +92,14 @@ export class CarlRPGActor extends Actor {
    */
   async _onUpdate(changed, options, userId) {
     super._onUpdate(changed, options, userId);
+    // Defeat/death marking (module/helpers/defeat.mjs): a Mob at 0 HB, or a
+    // crawler whose Dying countdown has run out. The active GM does it, so it
+    // works whoever applied the damage.
+    if (game.users.activeGM?.isSelf
+      && (foundry.utils.hasProperty(changed, "system.hb.value") || foundry.utils.hasProperty(changed, "system.conditions"))) {
+      syncDefeated(this, { previousHb: options.carlPreviousHb ?? null })
+        .catch((err) => console.error("CarlRPG | defeat sync failed", err));
+    }
     if (game.user.id !== userId) return;
     if (foundry.utils.hasProperty(changed, "system.attributes.level.value")) {
       await recheckLevelGatedGrants(this);
@@ -105,10 +136,13 @@ export class CarlRPGActor extends Actor {
    * two-hour real-world-timer cadence) vs Rank >=5 (the per-floor cadence).
    * See Crawler Advancement, p. 169. Intended for the GM Toolbox (Milestone 4)
    * but usable directly for testing.
-   * @param {{rankFilter?: "lte4"|"gte5"|"all"}} [options]
+   * @param {{rankFilter?: "lte4"|"gte5"|"all", floorBonus?: boolean}} [options]
+   *   floorBonus: whether the Race/Class "at the end of each floor, add 1"
+   *   bonus applies - only the End Floor checks (Rank 5+) get it, not the
+   *   2-hour checks.
    * @returns {Promise<Array<{item: Item, success: boolean, newRank: number}>>}
    */
-  async rollMarkedAdvancementChecks({ rankFilter = "all" } = {}) {
+  async rollMarkedAdvancementChecks({ rankFilter = "all", floorBonus = true } = {}) {
     const results = [];
     const marked = this.items.filter((i) =>
       ["skill", "spell", "damageEffect"].includes(i.type) && i.system.marked
@@ -117,7 +151,7 @@ export class CarlRPGActor extends Actor {
       const rank = item.system.rank ?? 0;
       if (rankFilter === "lte4" && rank > 4) continue;
       if (rankFilter === "gte5" && rank < 5) continue;
-      const { success, newRank } = await CarlDice.rollAdvancementCheck(this, item, { silent: true });
+      const { success, newRank } = await CarlDice.rollAdvancementCheck(this, item, { silent: true, floorBonus });
       results.push({ item, success, newRank });
     }
     return results;

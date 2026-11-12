@@ -1,4 +1,5 @@
 import CarlDice from "../../dice/dice.mjs";
+import { rowOutcome } from "../../helpers/attack-targets.mjs";
 import { createTestCharacter, createTestMob, createTestItem, deleteTestActor, settle, withFakeTargets, withPinnedDice, PIN_D20_MID, withSetting, useQuenchTimeout } from "../helpers.mjs";
 
 export default function register(quench) {
@@ -28,8 +29,12 @@ export default function register(quench) {
               ),
             );
             assert.exists(message);
-            const damageByType = message.getFlag("carl-rpg", "damageByType");
-            assert.equal(damageByType[""], 1, "the skill has no base damage of its own, so only the +Floor bonus should appear");
+            // The +Floor is per target now: the row records the Amazing
+            // Success and adds it when applied (module/helpers/attack-targets.mjs).
+            const row = message.getFlag("carl-rpg", "targetRows").t0;
+            assert.isTrue(row.amazing);
+            const outcome = rowOutcome(row, { damageByType: message.getFlag("carl-rpg", "damageByType") ?? {}, isArea: false, floor: 1 });
+            assert.equal(outcome.damage[""], 1, "the skill has no base damage of its own, so only the +Floor bonus should appear");
             // Not covered here: a GM's dialog-entered Difficulty override
             // surviving onto this same flag (the A3 regression fix) - that
             // needs simulating promptRollOptions' own dialog resolution, which
@@ -85,6 +90,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const spell = await createTestItem(actor, "spell", "spell", { system: { rank: 0 } });
+            await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
             const result = await CarlDice.rollSkillCheck(actor, spell, { skipDialog: true });
             assert.isNull(result);
           } finally {
@@ -152,6 +158,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const spell = await createTestItem(actor, "spell", "spell", { system: { isToggled: true, active: false, rank: 0 } });
+            await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
             const result = await CarlDice.rollToggleSpell(actor, spell);
             assert.isNull(result);
             assert.isFalse(spell.system.active);

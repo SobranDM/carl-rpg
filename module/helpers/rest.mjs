@@ -38,3 +38,21 @@ export function conditionsAfterRest(conditions, restKind) {
     return !(endsOn && REST_LENGTH[endsOn] <= length);
   });
 }
+
+/**
+ * Hourly mending (p.95): "For every full hour spent outside of combat or
+ * other stressful situations, they mend their wounds and recover 1 HB slot
+ * and 5 Mana." Both clamped to their max; the book sets no cap on hours.
+ * @param {Actor} actor
+ * @param {number} hours  Whole hours of calm.
+ * @returns {{"system.hb.value": number, "system.mana.value": number}}
+ */
+export function mendingUpdates(actor, hours) {
+  const sys = actor.system;
+  const n = Math.max(0, Math.floor(Number(hours) || 0));
+  const effectiveMax = sys.hb?.effectiveMax ?? sys.hb?.max ?? 0;
+  return {
+    "system.hb.value": Math.min((sys.hb?.value ?? 0) + n, effectiveMax),
+    "system.mana.value": Math.min((sys.mana?.value ?? 0) + 5 * n, sys.mana?.max ?? 0),
+  };
+}

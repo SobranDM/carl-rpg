@@ -1,7 +1,6 @@
 import CarlDice from "../../dice/dice.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
 import { processActorRoundEnd, processCombatEnd } from "../../helpers/round-end.mjs";
-import { isFreeEvadeAvailable } from "../../chat/evade-link-card.mjs";
 import {
   createTestCharacter, createTestMob, createTestItem, createTestCombat, deleteTestActor, deleteTestCombat,
   settle, waitFor, withFakeTargets, withPinnedDice, PIN_D20_MID, withSetting, useQuenchTimeout,
@@ -9,9 +8,6 @@ import {
 
 const keys = (actor) => (actor.system.conditions ?? []).map((c) => c.key);
 const condition = (actor, key) => actor.system.conditions.find((c) => c.key === key);
-
-/** A ChatMessage stand-in for flag-only helpers. */
-const fakeMessage = (flags) => ({ getFlag: (scope, key) => flags[key] });
 
 export default function register(quench) {
   quench.registerBatch(
@@ -181,12 +177,25 @@ export default function register(quench) {
           }
         });
 
-        it("each target gets its own free Evade", function () {
-          const flags = { freeEvade: true, targetUuids: ["A", "B"], freeEvadeUsedBy: ["A"] };
-          assert.isFalse(isFreeEvadeAvailable(fakeMessage(flags), "A"));
-          assert.isTrue(isFreeEvadeAvailable(fakeMessage(flags), "B"));
-          assert.isTrue(isFreeEvadeAvailable(fakeMessage(flags)), "button still offers it while B hasn't used theirs");
-          assert.isFalse(isFreeEvadeAvailable(fakeMessage({ ...flags, freeEvadeUsedBy: ["A", "B"] })));
+        it("each defender's row gets its own Difficulty and free Evade", async function () {
+          const mob = await createTestMob("attacker", { system: { attacks: [bite] } });
+          const pcA = await createTestCharacter("defenderA");
+          const pcB = await createTestCharacter("defenderB");
+          try {
+            await addConditionToActor(mob, "terrified");
+            await addConditionToActor(pcB, "held");
+            const message = await withSetting("currentFloor", 1, () =>
+              withFakeTargets([{ actor: pcA }, { actor: pcB }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true })));
+            const rows = message.getFlag("carl-rpg", "targetRows");
+            assert.equal(rows.t0.difficulty, 12, "Terrified: 17 - 5");
+            assert.isTrue(rows.t0.freeEvade);
+            assert.equal(rows.t1.difficulty, 17, "Held cancels the Disadvantage for B only");
+            assert.isFalse(rows.t1.freeEvade);
+          } finally {
+            await deleteTestActor(mob);
+            await deleteTestActor(pcA);
+            await deleteTestActor(pcB);
+          }
         });
 
         it("a Held defender's Advantage cancels the Mob's Disadvantage", async function () {

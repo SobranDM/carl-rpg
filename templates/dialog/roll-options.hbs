@@ -13,10 +13,43 @@
   </div>
   {{/if}}
   {{#if showDifficulty}}
+  {{#if difficultyPresets.length}}
+  {{!-- p.59's Difficulty formulas at the current Floor; picking one fills the
+        number below (module/dice/roll-prompt.mjs wires the change). --}}
+  <div class="form-group">
+    <label>{{localize "CARLRPG.Dialog.DifficultyPreset"}}</label>
+    <div class="form-fields">
+      <select name="difficultyPreset" data-carl-difficulty-preset>
+        {{#each difficultyPresets as |preset|}}
+        <option value="{{preset.key}}" data-value="{{preset.value}}" {{#if preset.selected}}selected{{/if}}>{{preset.label}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+  {{/if}}
   <div class="form-group">
     <label>{{#if difficultyLabel}}{{difficultyLabel}}{{else}}{{localize "CARLRPG.Dialog.Difficulty"}}{{/if}}</label>
     <div class="form-fields">
       <input type="number" name="difficulty" value="{{difficulty}}" placeholder="{{localize 'CARLRPG.Dialog.DifficultyPlaceholder'}}" />
+    </div>
+  </div>
+  {{/if}}
+  {{#if areaTargets.length}}
+  {{!-- Area Attack (p.83): one roll, damage to everyone in the area; Splash
+        targets take half. Pre-ticked when the Skill/Spell/Attack reads as an
+        area (module/helpers/area.mjs). --}}
+  <div class="form-group">
+    <label>{{localize "CARLRPG.Dialog.AreaAttack"}}</label>
+    <div class="form-fields">
+      <label><input type="checkbox" name="isArea" data-carl-area-toggle {{#if isArea}}checked{{/if}} /> {{localize "CARLRPG.Dialog.AreaAttackHint"}}</label>
+    </div>
+  </div>
+  <div class="form-group carl-splash-targets" {{#unless isArea}}style="display: none"{{/unless}}>
+    <label>{{localize "CARLRPG.Dialog.SplashTargets"}}</label>
+    <div class="form-fields carl-dialog-checklist">
+      {{#each areaTargets as |t index|}}
+      <label><input type="checkbox" name="{{concat 'splash.' index}}" /> {{t.name}}</label>
+      {{/each}}
     </div>
   </div>
   {{/if}}

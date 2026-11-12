@@ -14,7 +14,7 @@
  * automatically - no new apply-side code needed here at all. The Taunt roll
  * itself posts as its own small chat message (reusing CarlDice's roll-then-
  * post shape via rollOpposedSkillCheck, post:false + this file's own
- * createRollMessage call, exactly like evade-link-card.mjs's onRollEvade
+ * createRollMessage call, exactly like the per-target Evade (attack-targets-card.mjs)
  * folds its own roll into a combined outcome write) so the roll stays
  * visible, separate from the (unchanged in appearance, just re-flagged)
  * Attack card.
@@ -24,12 +24,15 @@ import { degreeBadge, isHitDegree } from "../helpers/rules.mjs";
 import { resolveActingActor } from "../helpers/token-resolution.mjs";
 import { createRollMessage } from "./chat-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
+import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow, nextRowId } from "../helpers/attack-targets.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/taunt-footer.hbs";
 
 // Once any of these has fired, the Attack card's outcome is already
 // resolved - retroactively changing who it targeted doesn't make sense
-// (see docs/taunt-and-nat20-advantage-prompt.md, Part B step 4).
+// (see docs/taunt-and-nat20-advantage-prompt.md, Part B step 4). The
+// per-target rows (module/chat/attack-targets-card.mjs) lock it too, once
+// any row has been Evaded or applied.
 const LOCK_FLAGS = ["damageApplied", "targetEffectsApplied", "evadeRolled"];
 
 /**
@@ -43,7 +46,31 @@ export async function buildTauntLinkFooter() {
 }
 
 export function isCardLocked(message) {
-  return LOCK_FLAGS.some((flag) => !!message.getFlag("carl-rpg", flag));
+  if (LOCK_FLAGS.some((flag) => !!message.getFlag("carl-rpg", flag))) return true;
+  return activeRows(message.getFlag("carl-rpg", "targetRows")).some((row) => row.applied || row.evade);
+}
+
+/**
+ * The taunter's new target row: a Mob Attack re-resolves its to-hit for the
+ * taunter (their Held/Take Down); a crawler's Attack checks its rolled total
+ * against the taunter's own Evade.
+ * @param {ChatMessage} message
+ * @param {{actor: Actor, token: TokenDocument|null}} taunter
+ * @returns {object}
+ */
+function taunterRow(message, taunter) {
+  const flags = message.flags["carl-rpg"];
+  const id = nextRowId(flags.targetRows);
+  const target = { uuid: taunter.token?.uuid ?? taunter.actor.uuid, actor: taunter.actor };
+  if (flags.attackerType !== "character") {
+    return mobAttackRow({ id, target, base: flags.mobBase ?? flags.targetDifficulty, ownRows: flags.mobOwnRows ?? [] }).row;
+  }
+  const floor = flags.floor ?? game.settings.get("carl-rpg", "currentFloor");
+  return crawlerAttackRow({
+    id, target,
+    difficulty: crawlerAttackDifficulty(taunter.actor, floor).difficulty,
+    attackTotal: flags.attackTotal, naturalRoll: flags.naturalRoll ?? null,
+  });
 }
 
 /**
@@ -91,6 +118,10 @@ async function onTauntAttack(event, message) {
   event.preventDefault();
   if (isCardLocked(message)) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.AlreadyResolved"));
+    return;
+  }
+  if (message.getFlag("carl-rpg", "isArea")) {
+    ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.NotArea"));
     return;
   }
 
@@ -149,8 +180,21 @@ async function onTauntAttack(event, message) {
   // tauntedBy is this button's own one-shot doneFlag (set on ANY outcome,
   // not just Success) - the Interrupt Action is spent either way, mirroring
   // Roll Evade's evadeRolled locking regardless of the Evade's own outcome.
+  // On Success the Attack's target rows are swapped for one taunter row
+  // (old rows are marked replaced - flag subtrees can't be deleted by a
+  // merge update).
   const flags = { tauntedBy: taunterUuid };
-  if (success) flags.targetUuids = [taunterUuid];
+  if (success) {
+    flags.targetUuids = [taunterUuid];
+    const rows = message.getFlag("carl-rpg", "targetRows");
+    if (rows) {
+      const row = taunterRow(message, resolved);
+      flags.targetRows = Object.fromEntries([
+        ...Object.keys(rows).map((id) => [id, { replaced: true }]),
+        [row.id, row],
+      ]);
+    }
+  }
   await updateCardMessage(message, { flags: { "carl-rpg": flags } });
 
   ui.notifications.info(game.i18n.format(

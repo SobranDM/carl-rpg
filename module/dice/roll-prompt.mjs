@@ -84,22 +84,31 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  *   Disadvantage radios - a Mob Attack (CarlDice.rollMobAttack) has no d20.
  * @param {string|null} [options.difficultyLabel]  Overrides the Difficulty
  *   field's label (e.g. "Base Difficulty" when debuff rows adjust it).
- * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number}|null>}
+ * @param {{key: string, label: string, value: number|null, selected?: boolean}[]} [options.difficultyPresets]
+ *   p.59's formulas (module/helpers/rules.mjs's buildDifficultyPresets);
+ *   picking one fills the Difficulty field. The selected one should match
+ *   `difficulty`.
+ * @param {{name: string}[]} [options.areaTargets]  The targeted tokens, in
+ *   order - shown as Splash checkboxes for an Area Attack (p.83).
+ * @param {boolean} [options.isArea]  Pre-ticks "Area Attack".
+ * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number, isArea: boolean, splash: Set<number>}|null>}
  *   null if the dialog was cancelled/closed.
  */
 export async function promptRollOptions({
   title, difficulty = null, showDifficulty = true, defaultAdvantage = null,
   conditionalModifiers = [], damageEffectChoices = [], manaCostChoices = [],
   debuffRows = [], showRollMode = true, difficultyLabel = null,
+  difficultyPresets = [], areaTargets = [], isArea = false,
 } = {}) {
   const result = await showCarlDialog({
     title,
     template: "systems/carl-rpg/templates/dialog/roll-options.hbs",
     context: {
       difficulty, showDifficulty, defaultAdvantage, conditions: conditionalModifiers, damageEffectChoices, manaCostChoices,
-      debuffRows, showRollMode, difficultyLabel,
+      debuffRows, showRollMode, difficultyLabel, difficultyPresets, areaTargets, isArea,
     },
     buttons: [rollButton(), cancelButton()],
+    onRender: (event, dialog) => wireRollOptions(dialog.element ?? dialog),
   });
   if (!result) return null;
 
@@ -122,5 +131,27 @@ export async function promptRollOptions({
     checked,
     damageEffectId: result.damageEffectId || null,
     manaCostChoice: result.manaCostChoice !== undefined && result.manaCostChoice !== "" ? Number(result.manaCostChoice) : 0,
+    isArea: areaTargets.length ? !!result.isArea : false,
+    splash: new Set(areaTargets.map((_, i) => i).filter((i) => result.isArea && result.splash?.[i])),
   };
+}
+
+/**
+ * Dialog wiring: a Difficulty preset fills the number field; the Area Attack
+ * checkbox shows/hides the Splash target list.
+ * @param {HTMLElement} root
+ */
+function wireRollOptions(root) {
+  if (!(root instanceof HTMLElement)) return;
+  const preset = root.querySelector("[data-carl-difficulty-preset]");
+  const field = root.querySelector('input[name="difficulty"]');
+  if (preset && field) {
+    preset.addEventListener("change", () => {
+      const value = preset.selectedOptions[0]?.dataset.value;
+      if (value !== undefined && value !== "") field.value = value;
+    });
+  }
+  const area = root.querySelector("[data-carl-area-toggle]");
+  const splash = root.querySelector(".carl-splash-targets");
+  if (area && splash) area.addEventListener("change", () => { splash.style.display = area.checked ? "" : "none"; });
 }

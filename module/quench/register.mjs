@@ -30,6 +30,7 @@ import registerChatCards from "./batches/chat-cards.mjs";
 import registerDebuffEffectsPure from "./batches/debuff-effects-pure.mjs";
 import registerDebuffAutomation from "./batches/debuff-automation.mjs";
 import registerRulesFixes from "./batches/rules-fixes.mjs";
+import registerTableBatch from "./batches/table-batch.mjs";
 
 const BATCH_REGISTRARS = [
   registerRules,
@@ -50,6 +51,7 @@ const BATCH_REGISTRARS = [
   registerDebuffEffectsPure,
   registerDebuffAutomation,
   registerRulesFixes,
+  registerTableBatch,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

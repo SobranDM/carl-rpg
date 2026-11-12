@@ -384,6 +384,7 @@
 .carl-chat-card .carl-taunt-link,
 .carl-chat-card .carl-mark-choice,
 .carl-chat-card .carl-grind-surplus,
+.carl-chat-card .carl-attack-targets,
 .carl-chat-card .carl-gm-digest {
   margin-top: 6px;
   padding: 6px 8px;
@@ -391,13 +392,16 @@
   border-radius: 4px;
   background: var(--carl-panel-bg-2);
 }
-.carl-chat-card .carl-target-effects .carl-target-effects-list {
+.carl-chat-card .carl-target-effects .carl-target-effects-list,
+.carl-chat-card .carl-attack-targets .carl-target-effects-list {
   margin-bottom: 4px;
 }
-.carl-chat-card .carl-target-effects .carl-target-effects-label {
+.carl-chat-card .carl-target-effects .carl-target-effects-label,
+.carl-chat-card .carl-attack-targets .carl-target-effects-label {
   margin-right: 4px;
 }
-.carl-chat-card .carl-target-effects .carl-target-effect-pill {
+.carl-chat-card .carl-target-effects .carl-target-effect-pill,
+.carl-chat-card .carl-attack-targets .carl-target-effect-pill {
   display: inline-block;
   font-size: 10px;
   font-weight: bold;
@@ -409,13 +413,15 @@
   background: var(--carl-danger);
   color: var(--carl-header-text);
 }
-.carl-chat-card .carl-target-effects .carl-apply-target-effects {
+.carl-chat-card .carl-target-effects .carl-apply-target-effects,
+.carl-chat-card .carl-attack-targets .carl-apply-target-effects {
   width: auto;
   font-size: 11px;
   line-height: 1.6;
   padding: 2px 8px;
 }
-.carl-chat-card .carl-target-effects .carl-apply-target-effects:disabled {
+.carl-chat-card .carl-target-effects .carl-apply-target-effects:disabled,
+.carl-chat-card .carl-attack-targets .carl-apply-target-effects:disabled {
   cursor: default;
   opacity: 0.6;
 }
@@ -438,13 +444,16 @@
   cursor: default;
   opacity: 0.6;
 }
-.carl-chat-card .carl-damage-card .carl-damage-portions {
+.carl-chat-card .carl-damage-card .carl-damage-portions,
+.carl-chat-card .carl-attack-targets .carl-damage-portions {
   margin-bottom: 4px;
 }
-.carl-chat-card .carl-damage-card .carl-damage-label {
+.carl-chat-card .carl-damage-card .carl-damage-label,
+.carl-chat-card .carl-attack-targets .carl-damage-label {
   margin-right: 4px;
 }
-.carl-chat-card .carl-damage-card .carl-damage-pill {
+.carl-chat-card .carl-damage-card .carl-damage-pill,
+.carl-chat-card .carl-attack-targets .carl-damage-pill {
   display: inline-block;
   font-size: 10px;
   font-weight: bold;
@@ -456,13 +465,15 @@
   background: var(--carl-danger);
   color: var(--carl-header-text);
 }
-.carl-chat-card .carl-damage-card .carl-apply-damage {
+.carl-chat-card .carl-damage-card .carl-apply-damage,
+.carl-chat-card .carl-attack-targets .carl-apply-damage {
   width: auto;
   font-size: 11px;
   line-height: 1.6;
   padding: 2px 8px;
 }
-.carl-chat-card .carl-damage-card .carl-apply-damage:disabled {
+.carl-chat-card .carl-damage-card .carl-apply-damage:disabled,
+.carl-chat-card .carl-attack-targets .carl-apply-damage:disabled {
   cursor: default;
   opacity: 0.6;
 }
@@ -505,6 +516,56 @@
 .carl-chat-card .carl-grind-surplus .carl-grind-surplus-apply:disabled {
   cursor: default;
   opacity: 0.6;
+}
+.carl-chat-card .carl-attack-targets .carl-area-tag {
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 3px;
+}
+.carl-chat-card .carl-attack-targets .carl-damage-portions,
+.carl-chat-card .carl-attack-targets .carl-target-effects-list {
+  margin-bottom: 4px;
+}
+.carl-chat-card .carl-attack-targets .carl-target-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  padding: 3px 0;
+  border-top: 1px solid var(--carl-border-soft-2);
+}
+.carl-chat-card .carl-attack-targets .carl-target-row .carl-target-name {
+  font-weight: bold;
+}
+.carl-chat-card .carl-attack-targets .carl-target-row .carl-target-zone {
+  font-size: 10px;
+  text-transform: uppercase;
+  padding: 0 4px;
+  border-radius: 3px;
+  border: 1px solid var(--carl-border-soft-2);
+}
+.carl-chat-card .carl-attack-targets .carl-target-row .carl-target-status {
+  flex: 1 1 100%;
+  font-size: 11px;
+  opacity: 0.85;
+}
+.carl-chat-card .carl-attack-targets .carl-target-row .carl-target-buttons {
+  display: flex;
+  gap: 4px;
+}
+.carl-chat-card .carl-attack-targets .carl-row-evade,
+.carl-chat-card .carl-attack-targets .carl-row-apply,
+.carl-chat-card .carl-attack-targets .carl-apply-all {
+  width: auto;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 2px 8px;
+}
+.carl-chat-card .carl-attack-targets .carl-apply-all-row {
+  margin-top: 4px;
+  text-align: right;
 }
 .carl-chat-card .carl-mark-choice .carl-mark-choice-buttons {
   display: flex;
@@ -1272,6 +1333,23 @@
   gap: 6px;
 }
 .carl-rpg .carl-banked-stat-points-row input {
+  text-align: center;
+}
+.carl-rpg .carl-sponsor-row {
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.carl-rpg .carl-sponsor-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.carl-rpg .carl-sponsor-row .item-control {
+  flex: 0 0 auto;
+}
+.carl-rpg .carl-sponsors .carl-add-link {
+  display: block;
+  font-size: 11px;
   text-align: center;
 }
 .carl-rpg .carl-evade-link {

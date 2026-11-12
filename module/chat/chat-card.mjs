@@ -125,3 +125,12 @@ export function appendCardSection(message, html) {
   div.querySelector(".carl-chat-card")?.insertAdjacentHTML("beforeend", html);
   return div.innerHTML;
 }
+
+/**
+ * Escape a value for HTML text - the one helper every card builder uses.
+ * @param {*} value
+ * @returns {string}
+ */
+export function esc(value) {
+  return foundry.utils.escapeHTML(String(value ?? ""));
+}

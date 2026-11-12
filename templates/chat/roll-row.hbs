@@ -1,5 +1,5 @@
 {{#if tooltipHtml}}
-<tbody class="dice-roll carl-chat-roll" data-action="expandRoll">
+<tbody class="dice-roll carl-chat-roll {{rowClass}}" data-action="expandRoll">
   <tr class="carl-chat-roll-summary">
     <td class="carl-chat-roll-label-cell">
       <span class="carl-chat-roll-label">{{label}}</span>
@@ -18,7 +18,7 @@
   </tr>
 </tbody>
 {{else}}
-<tbody class="carl-chat-roll">
+<tbody class="carl-chat-roll {{rowClass}}">
   <tr class="carl-chat-roll-summary">
     <td class="carl-chat-roll-label-cell">
       <span class="carl-chat-roll-label">{{label}}</span>

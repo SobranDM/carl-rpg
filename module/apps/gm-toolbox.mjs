@@ -14,18 +14,20 @@
  *    advanceTime), which is unrelated to wall-clock time and only moves
  *    when a GM clicks a button.
  */
-import { createCardMessage } from "../chat/chat-card.mjs";
+import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "./carl-dialog.mjs";
-import { shortRestUpdates, conditionsAfterRest } from "../helpers/rest.mjs";
+import { shortRestUpdates, conditionsAfterRest, mendingUpdates } from "../helpers/rest.mjs";
+import { BOSS_TIERS, collapseDays, endOfFloorPopularityDelta } from "../helpers/floor.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import { rollMagicItem } from "../helpers/loot.mjs";
-import { isGrindTarget, grindTargetOptions } from "../helpers/grinding.mjs";
+import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+
 
 const REST_CONFIG = {
   short: { seconds: 2 * 3600, titleKey: "CARLRPG.Toolbox.Rest.ShortTitle" },
@@ -63,7 +65,9 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     actions: {
       toggleTimer: CarlToolbox.#onToggleTimer,
       resolveTwoHourTick: CarlToolbox.#onResolveTwoHourTick,
-      partyLevelUp: CarlToolbox.#onPartyLevelUp,
+      endFloor: CarlToolbox.#onEndFloor,
+      bossKilled: CarlToolbox.#onBossKilled,
+      mend: CarlToolbox.#onMend,
       floorIncrement: CarlToolbox.#onFloorIncrement,
       floorDecrement: CarlToolbox.#onFloorDecrement,
       shortRest: CarlToolbox.#onShortRest,
@@ -197,16 +201,14 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   /**
-   * Bulk-resolve Skill Advancement Checks for every marked Skill/Spell/
-   * Damage Effect on every party character, then reset the wall-clock
-   * timer. The GM chooses the rank scope explicitly - this never happens
-   * without a click.
+   * The 2-hour rule (Crawler Advancement, p.169): "At the end of every 2
+   * hours of play, each party member gains 1 Level", and every marked Skill
+   * at Rank 4 or lower rolls its Advancement Check. One click does both for
+   * the picked characters (Rank 5+ waits for End Floor), then resets the
+   * wall-clock timer.
    */
   static async #onResolveTwoHourTick(event, target) {
     if (!game.user.isGM) return;
-    const rankFilter = await CarlToolbox.#promptRankFilter();
-    if (!rankFilter) return;
-
     const actors = await CarlToolbox.#promptActorPicker({
       titleKey: "CARLRPG.Toolbox.ResolveTwoHourTitle",
       promptKey: "CARLRPG.Toolbox.ResolveTwoHourPickerPrompt",
@@ -215,59 +217,143 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
     const digest = [];
     for (const actor of actors) {
-      const results = await actor.rollMarkedAdvancementChecks({ rankFilter });
-      for (const r of results) {
-        digest.push(`${actor.name} - ${r.item.name}: ${r.success ? `Rank ${r.newRank}` : game.i18n.localize("CARLRPG.Toolbox.NoChange")}`);
-      }
+      const results = await actor.rollMarkedAdvancementChecks({ rankFilter: "lte4", floorBonus: false });
+      digest.push(...CarlToolbox.#advancementLines(actor, results));
+      const level = await CarlToolbox.#gainLevels(actor, 1);
+      digest.push(game.i18n.format("CARLRPG.Toolbox.LevelGained", { name: esc(actor.name), level }));
     }
 
     await createCardMessage({
       title: game.i18n.localize("CARLRPG.Toolbox.TwoHourResultsTitle"),
       body: digest.length
         ? `<ul>${digest.map((d) => `<li>${d}</li>`).join("")}</ul>`
-        : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoMarkedSkills")}</p>`,
+        : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoCharactersPicked")}</p>`,
     });
 
     await game.settings.set("carl-rpg", "gameTimer", { running: false, startedAt: null, notified: false });
     this.render();
   }
 
-  static async #promptRankFilter() {
-    return showCarlDialog({
-      title: game.i18n.localize("CARLRPG.Toolbox.ResolveTwoHourTitle"),
-      content: `<p>${game.i18n.localize("CARLRPG.Toolbox.ResolveTwoHourPrompt")}</p>`,
-      buttons: [
-        { action: "lte4", icon: "fas fa-check", label: "CARLRPG.Toolbox.RankLte4Only", default: true, callback: () => "lte4" },
-        { action: "all", icon: "fas fa-list", label: "CARLRPG.Toolbox.AllMarkedSkills", callback: () => "all" },
-        cancelButton(),
-      ],
+  /**
+   * End Floor (p.169, p.63, p.280): for the picked characters,
+   *  1. every marked Skill at Rank 5+ rolls its Advancement Check ("roll a
+   *     Skill Advancement Check at the end of each floor"), with any
+   *     Race/Class "at the end of each floor, add 1" bonus;
+   *  2. all remaining marks are erased ("After resolving these rolls, erase
+   *     all marks and start fresh");
+   *  3. the automatic Popularity change from Charisma vs. the Floor;
+   * then the Floor advances, and one card lists the results plus the
+   * end-of-floor items that stay the GM's call. No Level is gained for
+   * finishing a floor - Levels come from play time, Bosses and kills.
+   */
+  static async #onEndFloor(event, target) {
+    if (!game.user.isGM) return;
+    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const actors = await CarlToolbox.#promptActorPicker({
+      titleKey: "CARLRPG.Toolbox.EndFloorTitle",
+      promptKey: "CARLRPG.Toolbox.EndFloorPickerPrompt",
+      confirmLabelKey: "CARLRPG.Toolbox.EndFloorConfirm",
+    });
+    if (!actors) return;
+
+    const digest = [];
+    for (const actor of actors) {
+      const results = await actor.rollMarkedAdvancementChecks({ rankFilter: "gte5" });
+      digest.push(...CarlToolbox.#advancementLines(actor, results));
+
+      const stillMarked = actor.items.filter((i) => i.system?.marked);
+      if (stillMarked.length) {
+        await actor.updateEmbeddedDocuments("Item", stillMarked.map((i) => ({ _id: i.id, "system.marked": false })));
+      }
+
+      const delta = endOfFloorPopularityDelta(actor.system.stats?.cha?.effective, floor);
+      if (delta) {
+        await actor.update({ "system.popularity": (actor.system.popularity ?? 0) + delta });
+        digest.push(game.i18n.format(delta > 0 ? "CARLRPG.Toolbox.EndFloorPopularityUp" : "CARLRPG.Toolbox.EndFloorPopularityDown", {
+          name: esc(actor.name), limit: delta > 0 ? 5 * floor : 2 * floor,
+        }));
+      }
+    }
+
+    const next = floor + 1;
+    await game.settings.set("carl-rpg", "currentFloor", next);
+    this.render();
+
+    const days = collapseDays(next);
+    const reminders = [
+      game.i18n.localize("CARLRPG.Toolbox.EndFloorReminder.Cooldowns"),
+      game.i18n.localize("CARLRPG.Toolbox.EndFloorReminder.Popularity"),
+      game.i18n.localize("CARLRPG.Toolbox.EndFloorReminder.Boxes"),
+      game.i18n.localize("CARLRPG.Toolbox.EndFloorReminder.RaceClass"),
+      days
+        ? game.i18n.format("CARLRPG.Toolbox.EndFloorReminder.Collapse", { floor: next, days })
+        : game.i18n.format("CARLRPG.Toolbox.EndFloorReminder.CollapseCustom", { floor: next }),
+    ];
+    await createCardMessage({
+      title: game.i18n.format("CARLRPG.Toolbox.EndFloorCardTitle", { floor }),
+      subtitle: game.i18n.format("CARLRPG.Toolbox.EndFloorCardSubtitle", { floor: next }),
+      body: `${digest.length ? `<ul>${digest.map((d) => `<li>${d}</li>`).join("")}</ul>` : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoMarkedSkills")}</p>`}
+        <div class="carl-gm-digest carl-gm-only">
+          <div class="carl-gm-digest-title">${game.i18n.localize("CARLRPG.Toolbox.EndFloorReminderTitle")}</div>
+          <ul>${reminders.map((r) => `<li>${r}</li>`).join("")}</ul>
+        </div>`,
     });
   }
 
   /**
-   * Flat, no-roll +1 Level to the selected characters (the other half of
-   * the 2-hour rule) - not every Character actor in the world is
-   * necessarily part of tonight's party (an absent player's PC, a retired
-   * character, etc.), so this asks the same way Rest and the 2-Hour Tick do.
+   * Boss Killed (p.170): "When a party kills a Boss, each member gains Levels
+   * based on the tier of the Boss" - Neighborhood 1 up to Floor Boss 6.
    */
-  static async #onPartyLevelUp(event, target) {
+  static async #onBossKilled(event, target) {
     if (!game.user.isGM) return;
-    const actors = await CarlToolbox.#promptActorPicker({
-      titleKey: "CARLRPG.Toolbox.PartyLevelUpTitle",
-      promptKey: "CARLRPG.Toolbox.PartyLevelUpPickerPrompt",
+    const options = Object.entries(BOSS_TIERS)
+      .map(([key, tier]) => `<option value="${key}">${game.i18n.format("CARLRPG.Toolbox.BossTierOption", {
+        tier: game.i18n.localize(tier.label), levels: tier.levels,
+      })}</option>`).join("");
+    const choice = await showCarlDialog({
+      title: game.i18n.localize("CARLRPG.Toolbox.BossKilledTitle"),
+      content: `<div class="carl-dialog-body"><div class="form-group">
+        <label>${game.i18n.localize("CARLRPG.Toolbox.BossTierLabel")}</label>
+        <select name="tier">${options}</select>
+      </div></div>`,
+      buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
     });
-    if (!actors) return;
+    const tier = BOSS_TIERS[choice?.tier];
+    if (!tier) return;
 
+    const actors = await CarlToolbox.#promptActorPicker({
+      titleKey: "CARLRPG.Toolbox.BossKilledTitle",
+      promptKey: "CARLRPG.Toolbox.BossKilledPickerPrompt",
+    });
+    if (!actors?.length) return;
+
+    const lines = [];
     for (const actor of actors) {
-      const lvl = actor.system.attributes.level.value;
-      await actor.update({ "system.attributes.level.value": Math.min(lvl + 1, 250) });
+      const level = await CarlToolbox.#gainLevels(actor, tier.levels);
+      lines.push(game.i18n.format("CARLRPG.Toolbox.LevelsGained", { name: esc(actor.name), levels: tier.levels, level }));
     }
     await createCardMessage({
-      title: game.i18n.localize("CARLRPG.Toolbox.PartyLevelUpTitle"),
-      body: actors.length
-        ? `<p>${game.i18n.format("CARLRPG.Toolbox.PartyLevelUpBody", { count: actors.length })}</p>`
-        : `<p>${game.i18n.localize("CARLRPG.Toolbox.PartyLevelUpBodyNone")}</p>`,
+      title: game.i18n.localize("CARLRPG.Toolbox.BossKilledTitle"),
+      subtitle: game.i18n.localize(tier.label),
+      body: `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
     });
+  }
+
+  /** "{name} - {skill}: Rank N / no change" lines for a card. */
+  static #advancementLines(actor, results) {
+    return results.map((r) => `${esc(actor.name)} - ${esc(r.item.name)}: ${r.success
+      ? `Rank ${r.newRank}` : game.i18n.localize("CARLRPG.Toolbox.NoChange")}`);
+  }
+
+  /**
+   * Raise a character's Level (capped at 250). Stat points bank, and the
+   * grinding-toward-Level total resets, in CarlRPGActor#_preUpdate.
+   * @returns {Promise<number>} The new Level.
+   */
+  static async #gainLevels(actor, levels) {
+    const level = Math.min((actor.system.attributes?.level?.value ?? 1) + levels, 250);
+    await actor.update({ "system.attributes.level.value": level });
+    return level;
   }
 
   static async #onFloorIncrement(event, target) {
@@ -297,6 +383,42 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   static async #onFullDayRest(event, target) {
     if (!game.user.isGM) return;
     return CarlToolbox.#onRest("fullDay");
+  }
+
+  /**
+   * Hourly mending (p.95): "For every full hour spent outside of combat or
+   * other stressful situations, they ... recover 1 HB slot and 5 Mana."
+   * Asks for the hours, then who mended; advances the world clock.
+   */
+  static async #onMend(event, target) {
+    if (!game.user.isGM) return;
+    const input = await showCarlDialog({
+      title: game.i18n.localize("CARLRPG.Toolbox.MendTitle"),
+      content: `<div class="carl-dialog-body"><div class="form-group">
+        <label>${game.i18n.localize("CARLRPG.Toolbox.MendHours")}</label>
+        <input type="number" name="hours" value="1" min="1" />
+      </div><p class="hint">${game.i18n.localize("CARLRPG.Toolbox.MendHint")}</p></div>`,
+      buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
+    });
+    const hours = Math.floor(Number(input?.hours) || 0);
+    if (hours < 1) return;
+
+    const actors = await CarlToolbox.#promptActorPicker({
+      titleKey: "CARLRPG.Toolbox.MendTitle",
+      promptKey: "CARLRPG.Toolbox.MendPickerPrompt",
+    });
+    if (!actors) return;
+
+    if (game.time?.advanceTime) await game.time.advanceTime(hours * 3600);
+    for (const actor of actors) await actor.update(mendingUpdates(actor, hours));
+
+    await createCardMessage({
+      title: game.i18n.localize("CARLRPG.Toolbox.MendTitle"),
+      subtitle: game.i18n.format("CARLRPG.Toolbox.MendSubtitle", { hours, hb: hours, mana: 5 * hours }),
+      body: actors.length
+        ? `<ul>${actors.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>`
+        : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoCharactersPicked")}</p>`,
+    });
   }
 
   /**
@@ -532,6 +654,8 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const item = actor.items.get(skillResult.itemId);
     if (!item || !isGrindTarget(actor, item)) return;
     await grindAndOfferSurplus(actor, item, hours);
+    // The same hours also count toward the next Level (p.171).
+    await addGrindLevelHours(actor, hours);
   }
 
   /**

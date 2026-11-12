@@ -1,42 +1,17 @@
 /**
- * The "Roll Evade" button on an Attack chat card (docs/known-gaps.md 5) -
- * lets a defending token actively roll a live Evade Check (Interrupt
- * Action, Carl RPG p.81) instead of silently accepting CarlDice.rollAttack's
- * static-Difficulty auto-resolution.
- *
- * Rolling Evade is the authoritative determination for this specific
- * Attack: once rolled, the original Attack card's own "Apply Damage"/
- * "Apply to Target(s)" buttons are marked superseded (disabled, relabeled -
- * see damageActionEntries/targetEffectsActionEntries' supersededFlag), and
- * this roll's own "Evade Outcome" card carries whatever actually applies
- * instead - the (possibly Major/Critical-Fail-adjusted) damage, and the
- * original attack's on-hit targetEffects forwarded onto this card whenever
- * the evade fails (an evaded-clean result means nothing applies at all).
- * The Evade Outcome card's damage/target-effect buttons reuse module/chat/
- * damage-card.mjs's/target-effects-card.mjs's existing footer builders and
- * registry entries verbatim (same flag shapes) - no new apply-side code.
+ * Shared Evade pieces for Attack cards. The Evade roll itself is per target
+ * now - each target row on an Attack card has its own Roll Evade (module/
+ * chat/attack-targets-card.mjs) - so this module keeps what that flow and
+ * the other cards share:
+ *  - the PvP Evade Difficulty rule (resolveEvadeDifficulty);
+ *  - the GM/owner gate many card buttons use (canActOnUuidFlag);
+ *  - the Evade outcome card's "Add Minor/Major Injury Debuff" button for a
+ *    Major or Critical Fail (p.79-80) - never auto-applied.
  */
-import CarlDice from "../dice/dice.mjs";
-import { degreeBadge, isHitDegree } from "../helpers/rules.mjs";
-import { resolveActingActor, resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
-import { buildDamageFooter } from "./damage-card.mjs";
-import { buildTargetEffectsFooter } from "./target-effects-card.mjs";
-import { createRollMessage } from "./chat-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 
-const EVADE_FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/evade-footer.hbs";
 const CONSEQUENCE_FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/evade-consequence-footer.hbs";
-
-/**
- * Render the "Roll Evade" footer. Rendered whenever rollAttack snapshotted
- * at least one target - see CarlDice.rollAttack.
- * @returns {Promise<string>}
- */
-export async function buildEvadeLinkFooter() {
-  const { renderTemplate } = foundry.applications.handlebars;
-  return renderTemplate(EVADE_FOOTER_TEMPLATE, {});
-}
 
 /**
  * Render the "Add Minor/Major Injury Debuff" footer for an Evade-outcome
@@ -44,7 +19,7 @@ export async function buildEvadeLinkFooter() {
  * @param {string} debuffKey  "minorInjury" | "majorInjury"
  * @returns {Promise<string>}
  */
-async function buildEvadeConsequenceFooter(debuffKey) {
+export async function buildEvadeConsequenceFooter(debuffKey) {
   const { renderTemplate } = foundry.applications.handlebars;
   const debuffButtonLabel = game.i18n.localize(
     debuffKey === "majorInjury" ? "CARLRPG.Evade.AddMajorInjury" : "CARLRPG.Evade.AddMinorInjury"
@@ -59,11 +34,28 @@ async function buildEvadeConsequenceFooter(debuffKey) {
  * @param {string} uuid
  * @returns {Promise<Actor|null>}
  */
-async function resolveTargetActor(uuid) {
+export async function resolveTargetActor(uuid) {
   if (!uuid) return null;
   const doc = await fromUuid(uuid);
   if (!doc) return null;
   return doc instanceof Actor ? doc : (doc.actor ?? null);
+}
+
+/**
+ * Whether the current user owns the actor behind a token/actor uuid (a GM
+ * always does).
+ * @param {string} uuid
+ * @returns {boolean}
+ */
+export function userOwnsUuid(uuid) {
+  if (game.user.isGM) return true;
+  try {
+    const doc = fromUuidSync(uuid);
+    const actor = doc instanceof Actor ? doc : doc?.actor;
+    return !!actor?.isOwner;
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
@@ -75,15 +67,7 @@ async function resolveTargetActor(uuid) {
 export function canActOnUuidFlag(message, flagKey) {
   if (game.user.isGM) return true;
   const uuids = [message.getFlag("carl-rpg", flagKey)].flat().filter(Boolean);
-  return uuids.some((uuid) => {
-    try {
-      const doc = fromUuidSync(uuid);
-      const actor = doc instanceof Actor ? doc : doc?.actor;
-      return !!actor?.isOwner;
-    } catch (e) {
-      return false;
-    }
-  });
+  return uuids.some((uuid) => userOwnsUuid(uuid));
 }
 
 /**
@@ -96,196 +80,6 @@ export function canActOnUuidFlag(message, flagKey) {
  */
 export function resolveEvadeDifficulty({ attackerType, defenderType, attackTotal, targetDifficulty }) {
   return (attackerType === "character" && defenderType === "character") ? attackTotal : targetDifficulty;
-}
-
-/**
- * Roll a live Evade Check for the acting user's resolved token/actor against
- * this specific Attack's Difficulty, mark the original Attack card's own
- * damage/target-effect buttons superseded, and post ONE combined card
- * carrying both the Evade roll itself and the final outcome: evaded clean,
- * hit as normal, or hit with Major/Critical Fail consequences (extra/doubled
- * damage plus a convenience Debuff button - never auto-applied, matching
- * CarlDice.rollEvadeCheck's own "GM judgment call" design). The original
- * attack's on-hit targetEffects are forwarded onto this card whenever the
- * evade fails, so they aren't silently dropped now that this roll (not the
- * static auto-resolution) determines whether the attack actually landed.
- * @param {PointerEvent} event
- * @param {ChatMessage} message  The original Attack chat message.
- */
-async function onRollEvade(event, message) {
-  event.preventDefault();
-  const resolved = resolveActingActor();
-  if (!resolved) return;
-
-  const attackTotal = message.getFlag("carl-rpg", "attackTotal");
-  const targetDifficulty = message.getFlag("carl-rpg", "targetDifficulty") ?? null;
-  const attackerType = message.getFlag("carl-rpg", "attackerType");
-  const difficulty = resolveEvadeDifficulty({
-    attackerType, defenderType: resolved.actor.type, attackTotal, targetDifficulty,
-  });
-
-  // The free Evade (p.96) is each target's own, and isn't an Action - so it
-  // neither triggers nor ends a "next Action" Debuff (Queasy, Staggered).
-  const evaderKey = resolved.token?.uuid ?? resolved.actor.uuid;
-  const isFreeEvade = isFreeEvadeAvailable(message, evaderKey);
-  const rollData = await CarlDice.rollEvadeCheck(resolved.actor, {
-    difficulty, skipDialog: false, post: false, isAction: !isFreeEvade,
-  });
-  if (!rollData) return; // Dialog cancelled - nothing to record.
-  const { roll, breakdown, degree, debuffNote = "" } = rollData;
-  const freeEvadeUsedBy = isFreeEvade
-    ? { freeEvadeUsedBy: [...(message.getFlag("carl-rpg", "freeEvadeUsedBy") ?? []), evaderKey] }
-    : {};
-
-  // Nat-20/Amazing-Success on Evade grants Advantage on the evader's NEXT
-  // Attack Skill Check against THIS SAME Mob (Degrees of Success table,
-  // p.79) - tracked on the evader's own Combatant so it survives to that
-  // later, separate roll (see module/dice/dice.mjs's rollAttack, which reads
-  // it back). Combat-only by design (docs/taunt-and-nat20-advantage-prompt.md):
-  // no game.combat means nothing to write. The evader is writing to their
-  // OWN Combatant, so this should already be permitted without the
-  // ChatMessage-flavored socket relay above - checked, not assumed.
-  if (degree === "criticalHit" || degree === "amazingSuccess") {
-    const attackerUuid = message.getFlag("carl-rpg", "attackerUuid");
-    const combatant = resolveCombatantFor(resolved);
-    if (attackerUuid && combatant?.canUserModify(game.user, "update")) {
-      await combatant.setFlag("carl-rpg", "advantageVsUuid", attackerUuid);
-    }
-  }
-
-  // A Disadvantaged Mob Attack's free Evade (p.96): "If they fail that free
-  // Check, they may still spend an Action to Evade as usual and try again."
-  // A failed free Evade changes nothing on the Attack card - its damage and
-  // Roll Evade buttons stay live for that second, real attempt.
-  if (isFreeEvade && !isHitDegree(degree)) {
-    await updateCardMessage(message, { flags: { "carl-rpg": freeEvadeUsedBy } });
-    await createRollMessage({
-      rolls: [roll],
-      rollMeta: [{ label: game.i18n.localize("CARLRPG.Evade.FreeEvade"), breakdown }],
-      title: game.i18n.format("CARLRPG.Evade.OutcomeTitle", { name: resolved.actor.name }),
-      img: resolved.actor.img,
-      subtitle: game.i18n.localize("CARLRPG.Evade.FreeEvadeFailed"),
-      badge: degreeBadge(degree),
-      body: `${debuffNote}<p>${game.i18n.localize("CARLRPG.Evade.FreeEvadeFailedBody")}</p>`,
-      actor: resolved.actor,
-      token: resolved.token,
-    });
-    return;
-  }
-
-  // One combined write: this Evade roll is now authoritative for this
-  // Attack, so the original card's own damage/target-effect buttons stop
-  // being separately clickable.
-  await updateCardMessage(message, {
-    flags: { "carl-rpg": { evadeRolled: true, damageSuperseded: true, targetEffectsSuperseded: true, ...freeEvadeUsedBy } },
-  });
-
-  const baseDamageByType = message.getFlag("carl-rpg", "damageByType") ?? {};
-  const isMagic = message.getFlag("carl-rpg", "damageIsMagic") ?? true;
-  const originalTargetEffects = message.getFlag("carl-rpg", "targetEffects") ?? [];
-  const floor = game.settings.get("carl-rpg", "currentFloor");
-
-  let adjusted = {};
-  let debuffKey = null;
-  let subtitleKey = "CARLRPG.Evade.Evaded";
-  if (isHitDegree(degree)) {
-    // Evaded clean - no damage, no target effects, no consequence.
-  } else if (degree === "majorFail") {
-    // "Takes extra damage equal to the current Floor Number" (p.79) - added
-    // as untyped ("") damage, the same convention computeDamageApplication
-    // already treats as generic/typeless.
-    adjusted = { ...baseDamageByType, "": (baseDamageByType[""] ?? 0) + floor };
-    debuffKey = "minorInjury";
-    subtitleKey = "CARLRPG.Evade.HitMajorFail";
-  } else if (degree === "criticalFail") {
-    adjusted = Object.fromEntries(Object.entries(baseDamageByType).map(([k, v]) => [k, v * 2]));
-    debuffKey = "majorInjury";
-    subtitleKey = "CARLRPG.Evade.HitCriticalFail";
-  } else {
-    // standardFail / nearMissFail - hit as normal, unmodified damage.
-    adjusted = { ...baseDamageByType };
-    subtitleKey = "CARLRPG.Evade.HitNormal";
-  }
-
-  const hasAdjustedDamage = Object.values(adjusted).some((v) => v);
-  // The attack still connects whenever Evade fails in any of its 3 failure
-  // buckets - the on-hit targetEffects the original card would have applied
-  // still apply, just via this card's own (reused, unmodified) button.
-  const forwardTargetEffects = !isHitDegree(degree) && originalTargetEffects.length > 0;
-  const footerParts = [];
-  const flags = {};
-  const defenderUuid = resolved.token?.uuid ?? resolved.actor.uuid;
-  if (hasAdjustedDamage) {
-    // Same flag shape damage-card.mjs already reads - its existing
-    // damageActionEntries/Apply Damage button picks this up with no further
-    // wiring needed here.
-    flags.targetUuids = [defenderUuid];
-    flags.damageByType = adjusted;
-    flags.damageIsMagic = isMagic;
-    footerParts.push(await buildDamageFooter(adjusted));
-  }
-  if (forwardTargetEffects) {
-    flags.targetUuids = [defenderUuid];
-    flags.targetEffects = originalTargetEffects;
-    footerParts.push(await buildTargetEffectsFooter(originalTargetEffects));
-  }
-  if (debuffKey) {
-    flags.debuffKey = debuffKey;
-    flags.debuffActorUuid = defenderUuid;
-    footerParts.push(await buildEvadeConsequenceFooter(debuffKey));
-  }
-  // The original Attack rolled no damage at all (it missed the static
-  // formula outright) and Critical Fail's "double nothing" stays empty -
-  // say so plainly rather than showing a damage footer for a zero roll.
-  const body = debuffNote + ((!hasAdjustedDamage && (debuffKey || forwardTargetEffects))
-    ? `<p>${game.i18n.localize("CARLRPG.Evade.NoBaseDamage")}</p>`
-    : "");
-
-  await createRollMessage({
-    rolls: [roll],
-    rollMeta: [{ label: game.i18n.localize("CARLRPG.Roll.Evade"), breakdown }],
-    title: game.i18n.format("CARLRPG.Evade.OutcomeTitle", { name: resolved.actor.name }),
-    img: resolved.actor.img,
-    subtitle: game.i18n.localize(subtitleKey),
-    badge: degreeBadge(degree),
-    body,
-    footer: footerParts.length ? footerParts.join("") : undefined,
-    flags,
-    actor: resolved.actor,
-    token: resolved.token,
-  });
-}
-
-/**
- * Whether this Attack card still offers a free Evade (a net-Disadvantaged
- * Mob Attack, p.96 - set by CarlDice.rollMobAttack). Every target gets its
- * own, tracked by token (or actor) uuid in `freeEvadeUsedBy`.
- * @param {ChatMessage} message
- * @param {string|null} [evaderKey]  The evading token/actor uuid; omitted =
- *   "does any target still have theirs?" (the button label).
- * @returns {boolean}
- */
-export function isFreeEvadeAvailable(message, evaderKey = null) {
-  if (!message.getFlag("carl-rpg", "freeEvade")) return false;
-  const used = message.getFlag("carl-rpg", "freeEvadeUsedBy") ?? [];
-  if (evaderKey) return !used.includes(evaderKey);
-  const targets = message.getFlag("carl-rpg", "targetUuids") ?? [];
-  return used.length < Math.max(1, targets.length);
-}
-
-/**
- * The viewing player's own evader key for the button label - a quiet,
- * render-time version of resolveActingActor (no warnings). null for a GM
- * (who could be evading as any target), which falls back to "does any
- * target still have theirs?".
- * @returns {string|null}
- */
-function viewerEvaderKey() {
-  if (game.user.isGM) return null;
-  const owned = (canvas.tokens?.controlled ?? []).find((t) => t.actor?.isOwner);
-  if (owned) return owned.document.uuid;
-  const character = game.user.character;
-  return character?.getActiveTokens?.(true, true)?.[0]?.document?.uuid ?? character?.uuid ?? null;
 }
 
 /**
@@ -312,21 +106,18 @@ async function onAddEvadeDebuff(event, message) {
 
 /**
  * Registry entries consumed by the shared registerChatListener (module/chat/
- * chat-listener.mjs) - preserves both buttons' GM/owner visibility gating
- * and one-shot idempotency exactly as before, now registry-shaped.
+ * chat-listener.mjs).
  */
 export const evadeActionEntries = [
+  // Attack cards posted before the per-target rows still carry the old
+  // single "Roll Evade" button - say so instead of ignoring the click.
   {
     action: "rollEvade",
-    buttonSelector: ".carl-roll-evade",
-    wrapperSelector: ".carl-evade-link",
-    canAct: (m) => canActOnUuidFlag(m, "targetUuids"),
-    doneFlag: "evadeRolled",
-    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Evade.Rolled")}`,
-    liveLabel: (m) => (isFreeEvadeAvailable(m, viewerEvaderKey())
-      ? `<i class="fas fa-person-running"></i> ${game.i18n.localize("CARLRPG.Evade.RollFreeButton")}`
-      : null),
-    onClick: onRollEvade,
+    custom: true,
+    onClick: (event) => {
+      event.preventDefault();
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Targets.OldCard"));
+    },
   },
   {
     action: "addEvadeDebuff",

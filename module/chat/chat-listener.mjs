@@ -36,6 +36,7 @@ import { evadeActionEntries } from "./evade-link-card.mjs";
 import { tauntActionEntries } from "./taunt-card.mjs";
 import { markChoiceActionEntries } from "./mark-choice-card.mjs";
 import { grindSurplusActionEntries } from "./grind-surplus-card.mjs";
+import { attackTargetsActionEntries, decorateTargetRows } from "./attack-targets-card.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
@@ -45,10 +46,15 @@ const REGISTRY = [
   ...tauntActionEntries,
   ...markChoiceActionEntries,
   ...grindSurplusActionEntries,
+  ...attackTargetsActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 
 function isBlocked(entry, message) {
+  // A `custom` entry's buttons are drawn per viewer by its own decorator
+  // (e.g. module/chat/attack-targets-card.mjs's per-target rows), and its
+  // handler re-checks everything for the button clicked.
+  if (entry.custom) return false;
   return !entry.canAct(message)
     || !!message.getFlag("carl-rpg", entry.doneFlag)
     || !!(entry.supersededFlag && message.getFlag("carl-rpg", entry.supersededFlag));
@@ -63,7 +69,11 @@ export function registerChatListener() {
       html.querySelectorAll(".carl-gm-only").forEach((el) => el.remove());
     }
 
+    // Per-viewer content drawn from flags (an Attack card's target rows).
+    decorateTargetRows(message, html);
+
     for (const entry of REGISTRY) {
+      if (entry.custom) continue;
       const btn = html.querySelector(entry.buttonSelector);
       if (!btn) continue;
 
@@ -111,7 +121,7 @@ export function registerChatListener() {
       if (isBlocked(entry, message)) return; // re-check at click time: closes
                                               // a race if two clients click
                                               // near-simultaneously.
-      void entry.onClick(event, message);
+      void entry.onClick(event, message, target);
     });
   });
 }

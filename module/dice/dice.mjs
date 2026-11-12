@@ -8,13 +8,13 @@
 import { RollParts } from "./roll-parts.mjs";
 import { promptRollOptions, promptParentSkillChoice, collectApplicableConditionalModifiers } from "./roll-prompt.mjs";
 import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
-import { buildTargetEffectsFooter } from "../chat/target-effects-card.mjs";
 import { buildHealFooter } from "../chat/heal-card.mjs";
-import { buildDamageFooter } from "../chat/damage-card.mjs";
-import { buildEvadeLinkFooter } from "../chat/evade-link-card.mjs";
 import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
+import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
+import { crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow } from "../helpers/attack-targets.mjs";
+import { isAreaItem, isAreaMobAttack } from "../helpers/area.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
-import { getDegreeOfSuccess, degreeBadge, isHitDegree, staticEvade } from "../helpers/rules.mjs";
+import { getDegreeOfSuccess, degreeBadge, isHitDegree, staticEvade, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
 import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
@@ -126,9 +126,14 @@ function damageRowLabel(types) {
  */
 export function doubleDiceCount(formula) {
   let out = String(formula ?? "");
-  // Parenthesised counts, right to left so earlier indices stay valid.
-  const computed = [...out.matchAll(/\)d\d/gi)].map((m) => m.index).reverse();
-  for (const close of computed) {
+  // Computed counts - "(@rank)d6", "floor(@rank/2)d6", "(1d4)d6" - right to
+  // left, each whole count (function name included) wrapped in 2*(...) and
+  // parked behind a placeholder so the literal pass below can't double the
+  // dice inside it too.
+  const groups = [];
+  const closes = [...out.matchAll(/\)d\d/gi)].map((m) => m.index).reverse();
+  for (const close of closes) {
+    if (out[close] !== ")") continue;
     let depth = 0;
     let open = -1;
     for (let i = close; i >= 0; i--) {
@@ -136,11 +141,15 @@ export function doubleDiceCount(formula) {
       else if (out[i] === "(" && --depth === 0) { open = i; break; }
     }
     if (open < 0) continue;
-    out = `${out.slice(0, open)}(2*${out.slice(open, close + 1)})${out.slice(close + 1)}`;
+    while (open > 0 && /[\w.]/.test(out[open - 1])) open--;
+    groups.push(`(2*${out.slice(open, close + 1)})`);
+    out = `${out.slice(0, open)}\u0000${groups.length - 1}\u0000${out.slice(close + 1)}`;
   }
   // Literal counts ("1d10", "d8").
-  return out.replace(/(^|[^\w@.)])(\d*)d(\d+)/gi, (match, lead, count, faces) =>
+  out = out.replace(/(^|[^\w@.)\u0000])(\d*)d(\d+)/gi, (match, lead, count, faces) =>
     `${lead}${2 * (Number(count) || 1)}d${faces}`);
+  while (/\u0000\d+\u0000/.test(out)) out = out.replace(/\u0000(\d+)\u0000/g, (m, i) => groups[Number(i)]);
+  return out;
 }
 
 /**
@@ -355,6 +364,30 @@ function isBlockedUntrainedSpell(item, rank) {
   return true;
 }
 
+/**
+ * Difficulty presets for a Skill Check (p.59): Opposed when the Skill names
+ * an opposed Stat and a token is targeted (10 + its Mod + Floor), otherwise
+ * Unopposed (10 + 2xFloor).
+ * @param {Item} skillItem
+ * @returns {ReturnType<typeof buildDifficultyPresets>}
+ */
+function buildSkillCheckPresets(skillItem) {
+  const statKey = skillItem.system.opposedStat;
+  const targetActor = Array.from(game.user.targets ?? [])[0]?.actor ?? null;
+  const opposed = statKey && targetActor
+    ? {
+      name: targetActor.name,
+      stat: game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey),
+      mod: targetActor.system.stats?.[statKey]?.mod ?? 0,
+    }
+    : null;
+  return buildDifficultyPresets({
+    floor: game.settings.get("carl-rpg", "currentFloor"),
+    selected: opposed ? "opposed" : "unopposed",
+    opposed,
+  });
+}
+
 /** Add each Debuff penalty (Minor Injury -2, Woozy's lost DEX Mod, ...) as its own labeled roll term. */
 function addDebuffPenalties(parts, penalties) {
   for (const p of penalties) parts.add(p.value, p.label);
@@ -421,9 +454,15 @@ export default class CarlDice {
 
     let options = { advantage: "normal", difficulty, modifier: 0, checkedDebuffs: null };
     if (!skipDialog) {
+      const difficultyPresets = buildDifficultyPresets({
+        floor: game.settings.get("carl-rpg", "currentFloor"),
+        selected: difficulty === null ? "stat" : "given",
+        given: difficulty === null ? null : { label: game.i18n.localize("CARLRPG.Dialog.Preset.Given"), value: difficulty },
+      });
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.StatCheckTitle", { name: statLabel }),
-        difficulty,
+        difficulty: selectedPresetValue(difficultyPresets),
+        difficultyPresets,
         showDifficulty: true,
         debuffRows,
       });
@@ -484,8 +523,11 @@ export default class CarlDice {
 
     let options = { advantage: "normal", difficulty: null, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null };
     if (!skipDialog) {
+      const difficultyPresets = buildSkillCheckPresets(skillItem);
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.SkillCheckTitle", { name: skillItem.name }),
+        difficulty: selectedPresetValue(difficultyPresets),
+        difficultyPresets,
         showDifficulty: true,
         conditionalModifiers,
         manaCostChoices,
@@ -629,6 +671,9 @@ export default class CarlDice {
     const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
     const rollerRows = decorateRows(collectDebuffRows(sys, "attack", { usesDex: skillSys.governingStat === "dex" }), "roll");
 
+    // Area Attack (p.83) - pre-ticked in the dialog when the Skill/Spell (or
+    // the Damage Effect passed in) reads as one (module/helpers/area.mjs).
+    const detectedArea = isAreaItem(skillItem, rank) || isAreaItem(damageEffectItem);
     let options = {
       advantage: advantageEntitled ? "advantage" : "normal",
       difficulty: targetDifficulty, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null,
@@ -643,6 +688,8 @@ export default class CarlDice {
         damageEffectChoices,
         manaCostChoices,
         debuffRows: [...rollerRows, ...advantageRows, ...targetRows],
+        areaTargets: targets.map((t) => ({ name: t.actor?.name ?? t.name ?? "?" })),
+        isArea: detectedArea,
       });
       if (!prompted) return null;
       options = prompted;
@@ -650,6 +697,8 @@ export default class CarlDice {
         damageEffectItem = actor.items.get(prompted.damageEffectId) ?? damageEffectItem;
       }
     }
+    const isArea = targets.length ? (skipDialog ? detectedArea : !!options.isArea) : false;
+    const splash = options.splash ?? new Set();
     // The dialog's Difficulty field is the BASE value (still GM-editable,
     // e.g. to type in a printed Evade); the target's Debuff rows ticked in
     // the dialog adjust it from there.
@@ -687,8 +736,9 @@ export default class CarlDice {
     const statKey = skillSys.governingStat;
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
 
+    const primaryFormula = resolveD20Formula(untrained, options.advantage, rollerEffect);
     const attackParts = new RollParts(rollData);
-    attackParts.add(resolveD20Formula(untrained, options.advantage, rollerEffect), game.i18n.localize("CARLRPG.Roll.Die"));
+    attackParts.add(primaryFormula, game.i18n.localize("CARLRPG.Roll.Die"));
     if (!untrained) attackParts.add(rank, game.i18n.localize("CARLRPG.Roll.SkillRank"));
     if (statKey) attackParts.add(statMod, game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey));
     addDebuffPenalties(attackParts, rollerEffect.penalties);
@@ -700,6 +750,62 @@ export default class CarlDice {
     const degree = getDegreeOfSuccess(naturalRoll, attackTotal, difficulty);
     // "A Nat 1 always misses" (p.92) - even with no Difficulty to roll against.
     const hit = difficulty === null ? degree !== "criticalFail" : isHitDegree(degree);
+
+    // One row per target (module/helpers/attack-targets.mjs). An Area Attack
+    // is one roll against the chosen foe (the first target) that lands on
+    // everyone or no one (p.83); any other Attack is checked against each
+    // target's own Evade. The dialog's Difficulty and Debuff ticks shape the
+    // first target's row; the others use their own defaults.
+    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const shared = isArea ? { hit, amazing: degree === "amazingSuccess" } : null;
+
+    // Per-target Advantage on a non-area Attack: each other target's own
+    // Held/Take Down ("Attacks against a Held foe are made with Advantage")
+    // with the roller's own Debuffs and the dialog's choice. When targets
+    // disagree, one extra d20 is rolled and each row keeps the die its own
+    // Advantage/Disadvantage allows; the rest of the total is shared.
+    const ownEffect = resolveRollerRows(rollerRows, options.checkedDebuffs);
+    const rowFormulas = targets.map((t, i) => (i === 0 || isArea || !t.actor ? primaryFormula
+      : resolveD20Formula(untrained, options.advantage, {
+        advantageCount: ownEffect.advantageCount + collectAdvantageAgainstRows(t.actor.system).length,
+        disadvantageCount: ownEffect.disadvantageCount,
+      })));
+    const d20Results = (attackRoll.dice ?? []).find((d) => d.faces === 20)?.results ?? [];
+    const firstDie = d20Results[0]?.result ?? naturalRoll;
+    let secondDie = d20Results[1]?.result ?? null;
+    const extraD20Rolls = [];
+    if (secondDie === null && rowFormulas.some((f) => f !== "1d20")) {
+      const extra = await new Roll("1d20").evaluate();
+      extraD20Rolls.push(extra);
+      secondDie = extra.total;
+    }
+    const rowNatural = (formula) => {
+      if (formula === "2d20kh") return Math.max(firstDie, secondDie);
+      if (formula === "2d20kl") return Math.min(firstDie, secondDie);
+      return firstDie;
+    };
+
+    const extraConsumed = [];
+    const targetRowList = targets.map((t, i) => {
+      const id = `t${i}`;
+      const ref = { uuid: t.document?.uuid ?? t.actor?.uuid, actor: t.actor };
+      let rowDifficulty = difficulty;
+      let rowNat = naturalRoll;
+      if (i > 0 && t.actor) {
+        const other = crawlerAttackDifficulty(t.actor, floor);
+        rowDifficulty = other.difficulty;
+        if (!isArea) {
+          extraConsumed.push([t.actor, consumedConditionIds(other.applied)]);
+          rowNat = rowFormulas[i] === primaryFormula ? naturalRoll : rowNatural(rowFormulas[i]);
+        }
+      }
+      return crawlerAttackRow({
+        id, target: ref, difficulty: rowDifficulty,
+        attackTotal: attackTotal - (naturalRoll ?? 0) + (rowNat ?? 0), naturalRoll: rowNat,
+        zone: isArea && splash.has(i) ? "splash" : "full", shared,
+      });
+    });
+    const anyHit = targetRowList.length ? targetRowList.some((r) => r.hit) : hit;
 
     // The Advantage entitlement is consumed by attempting the roll against
     // that Mob, not by hitting - clear regardless of this attack's own
@@ -715,6 +821,7 @@ export default class CarlDice {
     // attacker, and on a Mob target whose Difficulty they lowered.
     await removeConditionsById(actor, endedConditionIds(sys, rollerEffect.applied));
     if (target?.actor) await removeConditionsById(target.actor, consumedConditionIds(targetEffect.applied));
+    for (const [other, ids] of extraConsumed) await removeConditionsById(other, ids);
 
     // "When you make an Attack that adds a Damage Effect, place a mark for
     // later Skill Advancement in either the Attack Skill or the Damage
@@ -743,8 +850,11 @@ export default class CarlDice {
     const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
-    const rolls = [attackRoll];
-    const rollMeta = [{ label: skillItem.name, detail: target?.actor ? `vs. ${target.actor.name}` : "", breakdown: attackBreakdown }];
+    const rolls = [attackRoll, ...extraD20Rolls];
+    const rollMeta = [
+      { label: skillItem.name, detail: target?.actor ? `vs. ${target.actor.name}` : "", breakdown: attackBreakdown },
+      ...extraD20Rolls.map(() => ({ label: game.i18n.localize("CARLRPG.Targets.ExtraD20"), detail: game.i18n.localize("CARLRPG.Targets.ExtraD20Hint") })),
+    ];
 
     // "On hit, the target gains Debuff X" (see docs/known-gaps.md 1.1's
     // original writeup, now resolved). Only ever collected on a hit - never
@@ -757,7 +867,11 @@ export default class CarlDice {
     // system.resistances/system.dr, same roll-now/apply-on-click shape as
     // the target-effect and heal flows above.
     let damageByType = {};
-    if (hit) {
+    // Rolled for any targeted non-area Attack, even one that missed
+    // everyone, so a Taunt redirect onto someone it does hit has damage to
+    // apply (module/chat/taunt-card.mjs). The card hides the damage until
+    // some row is a hit (module/chat/attack-targets-card.mjs).
+    if (anyHit || (targetRowList.length && !isArea)) {
       const damageEffectEntry = damageEffectItem
         ? sys.skills?.[slugifySkillName(damageEffectItem.name)]
         : null;
@@ -768,7 +882,7 @@ export default class CarlDice {
       });
       const evaluated = await evaluateDamageGroups(built);
       rolls.push(...evaluated.rolls);
-      rollMeta.push(...evaluated.rollMeta);
+      rollMeta.push(...evaluated.rollMeta.map((meta) => ({ ...meta, rowClass: "carl-damage-roll" })));
       damageByType = evaluated.damageByType;
       // "Success by 10 or more (Amazing Success): the crawler's Attack
       // deals extra damage equal to their current Floor Number" (Degrees
@@ -776,8 +890,9 @@ export default class CarlDice {
       // doubles base dice instead), so no double-dip risk between the two.
       // Added as untyped ("") damage, same convention as Evade's own
       // Major-Fail +Floor bonus (module/chat/evade-link-card.mjs).
-      if (isAmazingSuccess) {
-        const floor = game.settings.get("carl-rpg", "currentFloor");
+      // With targets, each row adds it for its own Amazing Success instead
+      // (module/helpers/attack-targets.mjs's rowOutcome).
+      if (isAmazingSuccess && !targetRowList.length) {
         damageByType[""] = (damageByType[""] ?? 0) + floor;
       }
       targetEffects = [
@@ -794,50 +909,37 @@ export default class CarlDice {
       flags.markChoiceDamageEffectUuid = markChoicePending.damageEffectItem.uuid;
       footerParts.push(await buildMarkChoiceFooter(markChoicePending.skillItem, markChoicePending.damageEffectItem));
     }
-    // Every button below keys off the same snapshotted targetUuids (see
-    // rollAttack's top-of-function comment) - set whenever there's a target
-    // at all, not just when there's an effect/damage to apply, so "Roll
-    // Evade" (docs/known-gaps.md 5) still appears on a roll that missed the
-    // static Difficulty outright.
-    if (targetUuids.length) flags.targetUuids = targetUuids;
-    if (targetEffects.length) {
-      flags.targetEffects = targetEffects;
-      footerParts.push(await buildTargetEffectsFooter(targetEffects));
-    }
+    if (targetEffects.length) flags.targetEffects = targetEffects;
     if (hasDamage) {
       flags.damageByType = damageByType;
       // Whichever Skill/Spell was actually rolled governs the whole hit's
       // magic-ness (docs/known-gaps.md 1.4) - a damageEffectItem with a
       // different isMagicDamage is deliberately not tracked per-term.
       flags.damageIsMagic = skillItem.system.isMagicDamage;
-      footerParts.push(await buildDamageFooter(damageByType));
     }
     if (targetUuids.length) {
-      // Lets a defending token actively roll Evade (Interrupt Action,
-      // Carl RPG p.81) against this specific Attack instead of silently
-      // accepting the static-Difficulty auto-resolution above - see
-      // module/chat/evade-link-card.mjs. attackerType feeds the PvP-vs-Mob
-      // Difficulty rule (p.87) at click time. Stores `difficulty` (the
-      // value actually used for THIS roll, which the GM may have
-      // overridden in the dialog - e.g. typing in a Mob's real printed
-      // to-hit value instead of the auto-computed default), NOT the raw
-      // auto-computed `targetDifficulty` - otherwise a GM's override would
-      // silently vanish the moment someone clicks "Roll Evade".
+      // Per-target rows (module/chat/attack-targets-card.mjs): each target's
+      // own hit/miss, Roll Evade and Apply. targetDifficulty is the first
+      // target's (the GM may have overridden it in the dialog). attackTotal
+      // and attackerType feed the PvP Evade rule (p.87); attackerUuid lets
+      // an Evade record "Advantage vs. this attacker" and a Taunt find the
+      // attacker (module/chat/taunt-card.mjs).
+      flags.targetUuids = targetUuids;
+      flags.targetRows = Object.fromEntries(targetRowList.map((row) => [row.id, row]));
+      flags.isArea = isArea;
+      flags.floor = floor;
       flags.attackTotal = attackTotal;
+      flags.naturalRoll = naturalRoll;
       flags.targetDifficulty = difficulty;
       flags.attackerType = actor.type;
-      // The attacking token's own uuid - lets a defending token's Evade
-      // roll record "Advantage vs. THIS Mob-instance" (see advantageEntitled
-      // above) and lets a Taunt roll resolve the attacking Mob back off this
-      // card (module/chat/taunt-card.mjs), with no separate snapshot needed.
       flags.attackerUuid = attackerUuid;
-      footerParts.push(await buildEvadeLinkFooter());
-      // Taunt (Interrupt, Carl RPG p.81) - a THIRD PARTY may redirect this
-      // specific Attack onto themselves; see module/chat/taunt-card.mjs.
-      // Same gating condition as Roll Evade above (docs/
-      // taunt-and-nat20-advantage-prompt.md, Part B step 2).
-      footerParts.push(await buildTauntLinkFooter());
     }
+    if (targetUuids.length || hasDamage || targetEffects.length) {
+      footerParts.push(buildAttackTargetsFooter({ damageByType, targetEffects, isArea }));
+    }
+    // Taunt (Interrupt, p.81) - a third party may redirect a single-target
+    // Attack onto themselves (module/chat/taunt-card.mjs). Not an Area Attack.
+    if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
     const footer = footerParts.length ? footerParts.join("") : undefined;
 
     return createRollMessage({
@@ -890,6 +992,8 @@ export default class CarlDice {
       : [];
     const debuffRows = decorateRows([...ownRows, ...defenderRows], "difficulty");
 
+    // Area Attack (p.83): "30ft Cone", "15ft Burst radius"... in the stat line.
+    const detectedArea = isAreaMobAttack(attack);
     let options = { difficulty: baseToHit, modifier: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const prompted = await promptRollOptions({
@@ -898,14 +1002,35 @@ export default class CarlDice {
         difficultyLabel: game.i18n.localize("CARLRPG.MobAttack.ToHitLabel"),
         showRollMode: false,
         debuffRows,
+        areaTargets: targets.map((t) => ({ name: t.actor?.name ?? t.name ?? "?" })),
+        isArea: detectedArea,
       });
       if (!prompted) return null;
       options = prompted;
     }
+    const isArea = targets.length ? (skipDialog ? detectedArea : !!options.isArea) : false;
+    const splash = options.splash ?? new Set();
     const base = options.difficulty ?? baseToHit;
-    const resolved = resolveDifficultyRows(base === null ? null : base + (options.modifier || 0), debuffRows, options.checkedDebuffs);
+    const mobBase = base === null ? null : base + (options.modifier || 0);
+    const resolved = resolveDifficultyRows(mobBase, debuffRows, options.checkedDebuffs);
     const difficulty = resolved.difficulty;
-    const freeEvade = resolved.netAdvantage < 0 && targetUuids.length > 0;
+
+    // One row per defender (module/helpers/attack-targets.mjs): the to-hit
+    // adjusted by the Mob's own Debuffs and by that defender's Held/Take
+    // Down, and a free Evade when that nets Disadvantage (p.96). The first
+    // target uses the dialog's ticks; the others, the Mob's ticked rows
+    // plus their own defaults.
+    const ownApplied = resolveDifficultyRows(mobBase, ownRows, options.checkedDebuffs).applied
+      .map((r) => ({ ...r, defaultOn: true }));
+    const targetRowList = targets.map((t, i) => mobAttackRow({
+      id: `t${i}`,
+      target: { uuid: t.document?.uuid ?? t.actor?.uuid, actor: t.actor },
+      base: mobBase,
+      ownRows: i === 0 ? ownRows : ownApplied,
+      checked: i === 0 ? options.checkedDebuffs : null,
+      zone: isArea && splash.has(i) ? "splash" : "full",
+    }).row);
+    const freeEvade = !!targetRowList[0]?.freeEvade;
 
     // Damage: the printed formula, "+F" resolved to the current Floor.
     const rolls = [];
@@ -938,31 +1063,36 @@ export default class CarlDice {
     const hasDamage = Object.values(damageByType).some((v) => v);
     const flags = {};
     const footerParts = [];
-    if (targetUuids.length) flags.targetUuids = targetUuids;
     if (hasDamage) {
       flags.damageByType = damageByType;
       // Mob stat blocks don't mark an Attack magical or not; blank and
       // physical damage types are treated as non-magic (a Shield pool can
       // absorb them - docs/known-gaps.md 1.4), every other type as magic.
       flags.damageIsMagic = !!damageType && !PHYSICAL_DAMAGE_TYPES.has(damageType);
-      footerParts.push(await buildDamageFooter(damageByType));
     }
     if (targetUuids.length) {
+      flags.targetUuids = targetUuids;
+      flags.targetRows = Object.fromEntries(targetRowList.map((row) => [row.id, row]));
+      flags.isArea = isArea;
+      flags.floor = floor;
       flags.attackTotal = difficulty;
       flags.targetDifficulty = difficulty;
       flags.attackerType = actor.type;
       flags.attackerUuid = resolveActorToken(actor)?.uuid ?? actor.uuid;
+      // What a Taunt redirect re-resolves against (module/chat/taunt-card.mjs).
+      flags.mobBase = mobBase;
+      flags.mobOwnRows = ownApplied;
       if (freeEvade) flags.freeEvade = true;
-      footerParts.push(await buildEvadeLinkFooter());
-      footerParts.push(await buildTauntLinkFooter());
     }
+    if (targetUuids.length || hasDamage) footerParts.push(buildAttackTargetsFooter({ damageByType, isArea }));
+    if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
 
     const esc = foundry.utils.escapeHTML;
     let body = "";
     if (attack.effect) body += `<p class="carl-mob-attack-effect"><em>${esc(attack.effect)}</em></p>`;
     if (attack.range) body += `<p class="carl-mob-attack-range">${esc(game.i18n.localize("CARLRPG.Attack.Range"))}: ${esc(attack.range)}</p>`;
     body += buildDebuffNote(resolved.applied);
-    if (freeEvade) body += `<p class="carl-free-evade-note"><i class="fas fa-person-running"></i> ${game.i18n.localize("CARLRPG.MobAttack.FreeEvadeNote")}</p>`;
+    if (targetRowList.some((r) => r.freeEvade)) body += `<p class="carl-free-evade-note"><i class="fas fa-person-running"></i> ${game.i18n.localize("CARLRPG.MobAttack.FreeEvadeNote")}</p>`;
 
     const subtitle = difficulty === null
       ? game.i18n.localize("CARLRPG.MobAttack.NoToHit")
@@ -1187,9 +1317,15 @@ export default class CarlDice {
 
     let options = { advantage: "normal", difficulty, modifier: 0, checked: new Set(), checkedDebuffs: null };
     if (!skipDialog) {
+      const difficultyPresets = difficulty === null ? [] : buildDifficultyPresets({
+        floor: game.settings.get("carl-rpg", "currentFloor"),
+        selected: "given",
+        given: { label: game.i18n.localize("CARLRPG.Dialog.Preset.Given"), value: difficulty },
+      });
       const prompted = await promptRollOptions({
         title: game.i18n.localize("CARLRPG.Dialog.EvadeTitle"),
         difficulty,
+        difficultyPresets,
         conditionalModifiers,
         debuffRows,
       });
@@ -1279,9 +1415,15 @@ export default class CarlDice {
 
     let options = { advantage: "normal", difficulty, modifier: 0, checked: new Set(), checkedDebuffs: null };
     if (!skipDialog) {
+      const difficultyPresets = difficulty === null ? buildSkillCheckPresets(skillItem) : buildDifficultyPresets({
+        floor: game.settings.get("carl-rpg", "currentFloor"),
+        selected: "given",
+        given: { label: game.i18n.localize("CARLRPG.Dialog.Preset.Given"), value: difficulty },
+      });
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.OpposedCheckTitle", { name: skillItem.name }),
-        difficulty,
+        difficulty: difficulty ?? selectedPresetValue(difficultyPresets),
+        difficultyPresets,
         difficultyLabel: opponentRows.length ? game.i18n.localize("CARLRPG.Dialog.BaseDifficulty") : null,
         conditionalModifiers,
         debuffRows: [...rollerRows, ...opponentRows],
