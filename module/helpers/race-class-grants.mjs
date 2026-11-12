@@ -83,7 +83,7 @@ function isEligibleNow(change, actorLevel) {
  * @param {string} name
  * @returns {Promise<Item|null>}
  */
-async function findSkillLikeItem(name) {
+export async function findSkillLikeItem(name) {
   const slug = slugifySkillName(name);
   for (const pack of game.packs) {
     if (pack.documentName !== "Item") continue;

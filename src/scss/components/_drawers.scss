@@ -1,4 +1,4 @@
-@use '../utils/variables' as *;
+@use "../utils/variables" as *;
 
 @mixin styles {
   // Whole-section drawers (Skills+DamageEffects, Spells) on the merged
@@ -161,6 +161,17 @@
     strong {
       color: var(--carl-accent);
       margin-right: 6px;
+    }
+  }
+
+  .carl-skill-edit {
+    display: inline-block;
+    margin-top: 2px;
+    opacity: 0.8;
+
+    &:hover {
+      color: var(--carl-accent);
+      opacity: 1;
     }
   }
 

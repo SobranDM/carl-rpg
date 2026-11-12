@@ -1,37 +1,58 @@
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="description">
-  {{!-- Damage-type pipeline (docs/known-gaps.md 1.3): direct, GM/player-
-        editable schema fields (module/data/actor-base.mjs), not modifier-
-        engine-driven - see that file's docstring for why. --}}
-  <fieldset class="carl-defenses">
-    <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
-    <div class="carl-field-grid">
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Actor.Dr"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
-        {{#if system.drBonus}}
-        <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EffectiveValue'}}">= {{system.drEffective}}</span>
-        {{/if}}
-      </div>
+  {{!-- Important Things I've Killed, Clubs, Personal Space, Deity, Sponsors
+        (from the printed sheet's Pet page). Character only: textSlots is
+        built for characters in actor-sheet.mjs's _prepareContext. --}}
+  {{#if (eq actor.type "character")}}
+  <div class="carl-sheet-columns">
+    <div class="carl-sheet-column">
+      <fieldset class="carl-text-list">
+        <legend>{{localize "CARLRPG.Actor.ImportantKills"}}</legend>
+        {{> "carlTextSlots" slots=textSlots.importantKills}}
+      </fieldset>
+      <fieldset class="carl-text-list">
+        <legend>{{localize "CARLRPG.Actor.Clubs"}}</legend>
+        {{> "carlTextSlots" slots=textSlots.clubs}}
+      </fieldset>
     </div>
-    <label class="resource-label">{{localize "CARLRPG.Actor.Resistances"}}</label>
-    <div class="carl-resistances-grid">
-      {{#each config.damageTypes as |label type|}}
-      <div class="carl-resistance-row">
-        <span class="carl-resistance-type">{{localize label}}</span>
-        <select class="carl-w-short" name="{{concat 'system.resistances.' type}}">
-          {{selectOptions ../config.resistanceStates selected=(lookup ../system.resistances type) localize=true}}
-        </select>
-        {{#with (lookup ../system.resistancesEffective type) as |effectiveState|}}
-        {{#unless (eq effectiveState (lookup ../../system.resistances type))}}
-        <span class="carl-resistance-granted" title="{{localize 'CARLRPG.Actor.ResistanceGrantedHint'}}">
-          ({{localize (lookup ../../config.resistanceStates effectiveState)}})
-        </span>
-        {{/unless}}
-        {{/with}}
-      </div>
-      {{/each}}
+
+    <div class="carl-sheet-column">
+      <fieldset class="carl-personal-space">
+        <legend>{{localize "CARLRPG.Actor.PersonalSpace"}}</legend>
+        <label class="carl-sheet-line">
+          <span>{{localize "CARLRPG.Actor.Tier"}}</span>
+          <input type="text" name="system.personalSpace.tier" value="{{system.personalSpace.tier}}" />
+        </label>
+        <label class="carl-sheet-line">
+          <span>{{localize "CARLRPG.Actor.Size"}}</span>
+          <input type="text" name="system.personalSpace.size" value="{{system.personalSpace.size}}" />
+        </label>
+        <label class="carl-sheet-line">
+          <span>{{localize "CARLRPG.Actor.Amenities"}}</span>
+          <input type="text" name="system.personalSpace.amenities" value="{{system.personalSpace.amenities}}" />
+        </label>
+        {{> "carlTextSlots" slots=textSlots.personalSpaceNotes}}
+      </fieldset>
+      <fieldset class="carl-text-list">
+        <legend>{{localize "CARLRPG.Actor.Deity"}}</legend>
+        {{> "carlTextSlots" slots=textSlots.deity}}
+      </fieldset>
+      <fieldset class="carl-text-list">
+        <legend>{{localize "CARLRPG.Actor.Sponsors"}}</legend>
+        {{> "carlTextSlots" slots=textSlots.sponsors multiline=true}}
+      </fieldset>
     </div>
+  </div>
+  {{!-- Story notes (the printed/Roll20 sheet's Hotlist page). --}}
+  <fieldset class="carl-story">
+    <legend>{{localize "CARLRPG.Actor.Story"}}</legend>
+    {{#each config.storyFields as |label key|}}
+    <label class="carl-sheet-box">
+      <span class="resource-label">{{localize label}}</span>
+      <textarea name="{{concat 'system.story.' key}}" rows="3">{{lookup ../system.story key}}</textarea>
+    </label>
+    {{/each}}
   </fieldset>
+  {{/if}}
   {{!-- The editor itself has no border/background while inactive (Foundry
         core only shows its rendered content, no chrome, until hovered) - a
         heading here is the only visual signal this section exists at all,

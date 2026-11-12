@@ -1,0 +1,39 @@
+// "Import Rulebook PDF" dialog (module/pdf-import/import-dialog.mjs).
+@mixin styles {
+  .carl-pdf-import {
+    fieldset {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 16px;
+    }
+
+    .carl-pdf-import-kind {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .carl-pdf-import-maps {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 8px;
+      width: 100%;
+      max-height: 420px;
+      overflow-y: auto;
+    }
+
+    .carl-pdf-import-map {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 11px;
+
+      img {
+        width: 100%;
+        height: 110px;
+        object-fit: cover;
+        border: 1px solid var(--color-border, #555);
+      }
+    }
+  }
+}

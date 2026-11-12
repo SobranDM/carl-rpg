@@ -3,6 +3,7 @@ import { CarlRPGItem } from './documents/item.mjs';
 import { CarlRPGCombat, CarlRPGCombatant } from './documents/combat.mjs';
 import { CarlRPGActorSheet } from './sheets/actor-sheet.mjs';
 import { CarlRPGItemSheet } from './sheets/item-sheet.mjs';
+import { CarlRPGLootBoxSheet } from './sheets/loot-box-sheet.mjs';
 import { preloadHandlebarsTemplates } from './helpers/templates.mjs';
 import { CARLRPG } from './helpers/config.mjs';
 import * as models from './data/_module.mjs';
@@ -11,7 +12,10 @@ import CarlToolbox from './apps/gm-toolbox.mjs';
 import CarlSpendStatPointsDialog from './apps/spend-stat-points-dialog.mjs';
 import { registerChatListener } from './chat/chat-listener.mjs';
 import { registerChatSocket } from './helpers/chat-socket.mjs';
+import { registerLootBoxSocket } from './helpers/loot-box.mjs';
 import { bakeItemGrants } from './helpers/race-class-grants.mjs';
+import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
+import { openRulebookImporter, RulebookImportMenu } from './pdf-import/import-dialog.mjs';
 
 Hooks.once('init', function () {
   game.carlrpg = {
@@ -21,6 +25,8 @@ Hooks.once('init', function () {
     CarlToolbox,
     CarlSpendStatPointsDialog,
     rollItemMacro,
+    importCrawlerForgeCrawler,
+    openRulebookImporter,
   };
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
@@ -67,6 +73,17 @@ Hooks.once('init', function () {
     },
   });
 
+  // "Import Rulebook PDF" (module/pdf-import/): GM-only, also reachable from
+  // the Items sidebar header button below.
+  game.settings.registerMenu('carl-rpg', 'rulebookImport', {
+    name: 'CARLRPG.PdfImport.Title',
+    label: 'CARLRPG.PdfImport.Open',
+    hint: 'CARLRPG.PdfImport.MenuHint',
+    icon: 'fa-solid fa-file-pdf',
+    type: RulebookImportMenu,
+    restricted: true,
+  });
+
   CONFIG.CARLRPG = CARLRPG;
 
   // Dev-only Quench integration tests (module/quench/). Registering this
@@ -108,6 +125,7 @@ Hooks.once('init', function () {
   Object.assign(CONFIG.Actor.dataModels, {
     character: models.CarlRPGCharacter,
     mob: models.CarlRPGMob,
+    lootBox: models.CarlRPGLootBox,
   });
 
   CONFIG.Item.documentClass = CarlRPGItem;
@@ -125,6 +143,11 @@ Hooks.once('init', function () {
     types: ['character', 'mob'],
     makeDefault: true,
     label: 'CARLRPG.SheetLabels.Actor',
+  });
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(Actor, 'carl-rpg', CarlRPGLootBoxSheet, {
+    types: ['lootBox'],
+    makeDefault: true,
+    label: 'CARLRPG.SheetLabels.LootBox',
   });
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Item, 'carl-rpg', CarlRPGItemSheet, {
     types: ['item', 'feature', 'skill', 'damageEffect', 'spell', 'class', 'race'],
@@ -162,6 +185,55 @@ Hooks.on('getSceneControlButtons', (controls) => {
       },
     },
   };
+});
+
+// "Import CrawlerForge" button in the Actors sidebar header: reads a
+// crawlerforge.com crawler Export file into a new Character (see
+// module/helpers/crawlerforge-import.mjs). Only shown to users who can
+// create Actors.
+Hooks.on('renderActorDirectory', (app, html) => {
+  if (!game.user.can('ACTOR_CREATE')) return;
+  const actions = html.querySelector('.directory-header .header-actions');
+  if (!actions || actions.querySelector('.carl-crawlerforge-import')) return;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.classList.add('carl-crawlerforge-import');
+  button.innerHTML = `<i class="fa-solid fa-file-import"></i> ${game.i18n.localize('CARLRPG.CrawlerForge.Import')}`;
+  button.addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.addEventListener('change', async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const json = JSON.parse(await foundry.utils.readTextFromFile(file));
+        const actor = await importCrawlerForgeCrawler(json);
+        ui.notifications.info(game.i18n.format('CARLRPG.CrawlerForge.Imported', { name: actor.name }));
+        actor.sheet.render({ force: true });
+      } catch (err) {
+        console.error('CarlRPG | CrawlerForge import failed', err);
+        ui.notifications.error(game.i18n.format('CARLRPG.CrawlerForge.Failed', { error: err.message }));
+      }
+    });
+    input.click();
+  });
+  actions.append(button);
+});
+
+// "Import Rulebook PDF" button in the Items sidebar header: reads the GM's
+// own copy of a rulebook into world Items, Mobs, Journal pages and Scenes
+// (see module/pdf-import/import-dialog.mjs). GM-only.
+Hooks.on('renderItemDirectory', (app, html) => {
+  if (!game.user.isGM) return;
+  const actions = html.querySelector('.directory-header .header-actions');
+  if (!actions || actions.querySelector('.carl-pdf-import-button')) return;
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.classList.add('carl-pdf-import-button');
+  button.innerHTML = `<i class="fa-solid fa-file-pdf"></i> ${game.i18n.localize('CARLRPG.PdfImport.Open')}`;
+  button.addEventListener('click', () => openRulebookImporter());
+  actions.append(button);
 });
 
 Handlebars.registerHelper('toLowerCase', function (str) {
@@ -224,6 +296,9 @@ Hooks.once('ready', function () {
   // update permission on that ChatMessage (module/helpers/chat-socket.mjs) -
   // needs game.users/game.socket live, hence `ready` rather than `init`.
   registerChatSocket();
+  // Players taking items out of a Loot Box they only observe (see
+  // module/helpers/loot-box.mjs).
+  registerLootBoxSocket();
 
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 

@@ -1,0 +1,1051 @@
+{
+  "schemaVersion": 1,
+  "kind": "crawler",
+  "exportedAt": "2026-11-11T12:03:56.794Z",
+  "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+  "events": [
+    {
+      "id": "bc99a6f9-98b7-4d34-8580-7b90e89add4c",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T14:30:42.168Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "crawler.created",
+      "payload": {
+        "name": "Marigold \"Mags\" Pruitt",
+        "pronouns": "she/her",
+        "crawlerNumber": 1204553,
+        "floor": 3,
+        "level": 8,
+        "unenhanced": {
+          "str": 2,
+          "int": 4,
+          "con": 3,
+          "dex": 6,
+          "cha": 5
+        },
+        "skills": [
+          {
+            "name": "Rebar Club",
+            "rank": 4,
+            "definition": {
+              "id": "rebar-club",
+              "name": "Rebar Club",
+              "updatedAt": "2026-01-01T00:00:00.000Z",
+              "crawlerforge": true,
+              "category": "attack",
+              "passive": false,
+              "stat": "str",
+              "checkType": "evade",
+              "description": "Concrete's gift to the discerning crawler. The building fell down; the rebar is a participation prize. Swing it like you mean it: the audience loves commitment.",
+              "upgrades": {
+                "rank5": "+1d4 base damage.",
+                "rank10": "On an Amazing Success, the target is Staggered.",
+                "rank15": "+1d4 base damage."
+              },
+              "upgradeRiders": {
+                "rank5": [
+                  {
+                    "type": "baseDice",
+                    "dice": "1d4"
+                  }
+                ],
+                "rank10": [
+                  {
+                    "type": "debuff",
+                    "debuffId": "staggered",
+                    "when": {
+                      "kind": "degree",
+                      "atLeast": "amazingSuccess"
+                    }
+                  }
+                ],
+                "rank15": [
+                  {
+                    "type": "baseDice",
+                    "dice": "1d4"
+                  }
+                ]
+              },
+              "advancement": {
+                "byUse": true
+              },
+              "limited": false,
+              "attack": {
+                "type": "melee",
+                "weaponCategory": "bashing",
+                "baseDamage": {
+                  "dice": "1d8",
+                  "damageType": "bludgeoning"
+                }
+              }
+            }
+          },
+          {
+            "name": "Smooth Talk",
+            "rank": 3,
+            "definition": {
+              "id": "smooth-talk",
+              "name": "Smooth Talk",
+              "updatedAt": "2026-01-01T00:00:00.000Z",
+              "crawlerforge": true,
+              "category": "utility",
+              "passive": false,
+              "stat": "cha",
+              "checkType": "opposed",
+              "description": "Say the thing that keeps you alive. The dungeon loves a talker, right up until it doesn't.",
+              "upgrades": {
+                "rank5": "Reroll a Near Miss once per scene."
+              },
+              "advancement": {
+                "byUse": true
+              },
+              "limited": false,
+              "tags": ["Social"]
+            }
+          },
+          {
+            "name": "Scavenge",
+            "rank": 3,
+            "definition": {
+              "id": "scavenge",
+              "name": "Scavenge",
+              "updatedAt": "2026-01-01T00:00:00.000Z",
+              "crawlerforge": true,
+              "category": "utility",
+              "passive": false,
+              "stat": "int",
+              "checkType": "unopposed",
+              "description": "One crawler's corpse-adjacent debris is your retirement plan. Finders keepers is now enforceable law.",
+              "upgrades": {
+                "rank5": "Roll with Advantage when searching corpses."
+              },
+              "advancement": {
+                "byUse": true
+              },
+              "limited": false
+            }
+          },
+          {
+            "name": "Sidestep",
+            "rank": 2,
+            "definition": {
+              "id": "sidestep",
+              "name": "Sidestep",
+              "updatedAt": "2026-01-01T00:00:00.000Z",
+              "crawlerforge": true,
+              "category": "utility",
+              "passive": true,
+              "stat": "dex",
+              "checkType": "evade",
+              "description": "The art of being where the pain isn't. Passive, like your survival instinct should have been.",
+              "upgrades": {
+                "rank5": "+1 to Evade Checks."
+              },
+              "advancement": {
+                "byUse": true,
+                "untilRank": 5
+              },
+              "limited": false,
+              "tags": ["Movement"]
+            }
+          },
+          {
+            "name": "Cat Nap",
+            "rank": 1,
+            "definition": {
+              "id": "cat-nap",
+              "name": "Cat Nap",
+              "updatedAt": "2026-01-01T00:00:00.000Z",
+              "crawlerforge": true,
+              "category": "utility",
+              "passive": true,
+              "stat": "none",
+              "checkType": "none",
+              "description": "Sleep like something with no natural predators. Incorrect, but restful.",
+              "upgrades": {
+                "rank5": "A Short Rest takes one hour instead of two."
+              },
+              "advancement": {
+                "byUse": false
+              },
+              "limited": false
+            }
+          }
+        ],
+        "aiFavor": 1,
+        "size": {
+          "name": "Small",
+          "value": 2
+        },
+        "unassignedStatPoints": 3,
+        "pastTrauma": "Spent twenty years pricing other people's lives at estate sales, a sticker at a time.",
+        "looseEnds": "Somewhere down here is a brass floor lamp she let go for four dollars. She wants it back.",
+        "regrets": "Telling the lamp's buyer it was 'probably nothing.' It was not nothing.",
+        "race": {
+          "definition": {
+            "id": "gutter-sprite",
+            "name": "Gutter Sprite",
+            "updatedAt": "2026-01-01T00:00:00.000Z",
+            "crawlerforge": true,
+            "description": "Small, quick, and most comfortable inside the walls. The AI lists their origin as 'REDACTED, but adorable.' The walls are not talking, and neither are they.",
+            "image": "stock:gutter-sprite",
+            "origin": "earth",
+            "size": {
+              "name": "Small",
+              "value": 2
+            },
+            "build": {
+              "benefits": [
+                {
+                  "id": "dex",
+                  "tier": "minor",
+                  "cost": 2,
+                  "text": "+2 Dexterity",
+                  "flavor": "the walls prefer tenants who can dodge.",
+                  "effects": [
+                    {
+                      "type": "stat",
+                      "stat": "dex",
+                      "amount": 2
+                    }
+                  ],
+                  "template": {
+                    "id": "stat",
+                    "params": {
+                      "stat": "dex",
+                      "amount": 2
+                    }
+                  }
+                },
+                {
+                  "id": "cha",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "+1 Charisma",
+                  "flavor": "practice smiling at things that would rather eat you.",
+                  "effects": [
+                    {
+                      "type": "stat",
+                      "stat": "cha",
+                      "amount": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "stat",
+                    "params": {
+                      "stat": "cha",
+                      "amount": 1
+                    }
+                  }
+                },
+                {
+                  "id": "parkour",
+                  "tier": "moderate",
+                  "cost": 4,
+                  "text": "+2 Parkour Skill",
+                  "flavor": "you grew up treating floors as a suggestion.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Parkour"
+                      },
+                      "ranks": 2
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Parkour",
+                      "ranks": 2
+                    }
+                  }
+                },
+                {
+                  "id": "scavenge",
+                  "tier": "moderate",
+                  "cost": 4,
+                  "text": "+2 Scavenge Skill",
+                  "flavor": "one crawler's trash is a Gutter Sprite's retirement plan.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Scavenge"
+                      },
+                      "ranks": 2
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Scavenge",
+                      "ranks": 2
+                    }
+                  }
+                },
+                {
+                  "id": "sidestep",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "+1 Sidestep Skill",
+                  "flavor": "dodging became a personality trait early.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Sidestep"
+                      },
+                      "ranks": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Sidestep",
+                      "ranks": 1
+                    }
+                  }
+                },
+                {
+                  "id": "grit",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "+1 Grit Skill",
+                  "flavor": "the walls toughen you up whether you consent or not.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Grit"
+                      },
+                      "ranks": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Grit",
+                      "ranks": 1
+                    }
+                  }
+                },
+                {
+                  "id": "cartwheel",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "+1 Cartwheel Skill",
+                  "flavor": "falling with style, mandatory since childhood.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Cartwheel"
+                      },
+                      "ranks": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Cartwheel",
+                      "ranks": 1
+                    }
+                  }
+                },
+                {
+                  "id": "movement-cap",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "All Movement Skills can be raised to Rank 20",
+                  "flavor": "the walls have stopped keeping score.",
+                  "effects": [
+                    {
+                      "type": "rankCap20",
+                      "skill": {
+                        "kind": "group",
+                        "label": "all Skills tagged Movement",
+                        "group": {
+                          "by": "tag",
+                          "tag": "Movement"
+                        }
+                      }
+                    }
+                  ],
+                  "template": {
+                    "id": "rank-cap",
+                    "params": {
+                      "scope": "group",
+                      "group": {
+                        "by": "tag",
+                        "tag": "Movement"
+                      }
+                    }
+                  }
+                },
+                {
+                  "id": "size",
+                  "tier": "major",
+                  "cost": 3,
+                  "text": "Size Small (2)",
+                  "flavor": "less of you for the dungeon to aim at.",
+                  "effects": [
+                    {
+                      "type": "size",
+                      "value": 2,
+                      "name": "Small"
+                    }
+                  ],
+                  "template": {
+                    "id": "size-small",
+                    "params": {
+                      "size": "2"
+                    }
+                  }
+                },
+                {
+                  "id": "darkvision",
+                  "name": "Darkvision",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "You can see in total darkness. The walls were generous about at least one thing.",
+                  "effects": [],
+                  "template": {
+                    "id": "darkvision",
+                    "params": {
+                      "name": "Darkvision"
+                    }
+                  }
+                },
+                {
+                  "id": "clutter",
+                  "name": "Clutter vanish",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "Once per session, vanish into clutter for a scene; nothing that relies on sight can find you. The audience loses the plot too.",
+                  "effects": [],
+                  "template": {
+                    "id": "session-perk",
+                    "params": {
+                      "condition": "you vanish into clutter for a scene",
+                      "grants": "nothing that relies on sight can find you",
+                      "name": "Clutter vanish"
+                    }
+                  }
+                },
+                {
+                  "id": "falls",
+                  "name": "Fall resistance",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "Resistance to damage from falling. You've had a lot of unscheduled practice.",
+                  "effects": [],
+                  "template": {
+                    "id": "environment-resistance",
+                    "params": {
+                      "name": "Fall resistance"
+                    }
+                  }
+                }
+              ],
+              "detriments": [
+                {
+                  "id": "str",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "-2 Strength",
+                  "flavor": "the walls don't reward pushing things.",
+                  "effects": [
+                    {
+                      "type": "stat",
+                      "stat": "str",
+                      "amount": -2
+                    }
+                  ],
+                  "template": {
+                    "id": "stat-penalty",
+                    "params": {
+                      "rows": [
+                        {
+                          "stat": "str",
+                          "amount": 2
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "budget": 25
+          },
+          "choices": {}
+        },
+        "class": {
+          "definition": {
+            "id": "dumpster-sommelier",
+            "name": "Dumpster Sommelier",
+            "updatedAt": "2026-01-01T00:00:00.000Z",
+            "crawlerforge": true,
+            "description": "You can tell what a thing is worth by the smell. The dungeon generates garbage at production scale; somebody has to appraise it, and the somebody smells like victory.",
+            "image": "stock:dumpster-sommelier",
+            "classTypes": ["bard", "rogue"],
+            "build": {
+              "benefits": [
+                {
+                  "id": "cha",
+                  "tier": "minor",
+                  "cost": 2,
+                  "text": "+2 Charisma",
+                  "flavor": "confidence sells garbage at wine prices.",
+                  "effects": [
+                    {
+                      "type": "stat",
+                      "stat": "cha",
+                      "amount": 2
+                    }
+                  ],
+                  "template": {
+                    "id": "stat",
+                    "params": {
+                      "stat": "cha",
+                      "amount": 2
+                    }
+                  }
+                },
+                {
+                  "id": "int",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "+1 Intelligence",
+                  "flavor": "enough to know which garbage is lying to you.",
+                  "effects": [
+                    {
+                      "type": "stat",
+                      "stat": "int",
+                      "amount": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "stat",
+                    "params": {
+                      "stat": "int",
+                      "amount": 1
+                    }
+                  }
+                },
+                {
+                  "id": "scavenge",
+                  "tier": "moderate",
+                  "cost": 4,
+                  "text": "+2 Scavenge Skill",
+                  "flavor": "the nose pays union dues.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Scavenge"
+                      },
+                      "ranks": 2
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Scavenge",
+                      "ranks": 2
+                    }
+                  }
+                },
+                {
+                  "id": "smooth-talk",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "+1 Smooth Talk Skill",
+                  "flavor": "talk the price up before the buyer can smell it.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Smooth Talk"
+                      },
+                      "ranks": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Smooth Talk",
+                      "ranks": 1
+                    }
+                  }
+                },
+                {
+                  "id": "trapfinder",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "+1 Trapfinder Skill",
+                  "flavor": "some of the best garbage comes professionally booby-trapped.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Trapfinder"
+                      },
+                      "ranks": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Trapfinder",
+                      "ranks": 1
+                    }
+                  }
+                },
+                {
+                  "id": "static-cling",
+                  "tier": "moderate",
+                  "cost": 4,
+                  "text": "+2 Static Cling Spell",
+                  "flavor": "static builds up fast around that much old fabric.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Static Cling"
+                      },
+                      "ranks": 2
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Static Cling",
+                      "ranks": 2
+                    }
+                  }
+                },
+                {
+                  "id": "weapon",
+                  "tier": "moderate",
+                  "cost": 4,
+                  "text": "+2 to a Bashing Weapon Skill of your choice",
+                  "flavor": "appraisal disputes get physical.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "choice",
+                        "label": "a Bashing Weapon Skill of your choice",
+                        "from": {
+                          "group": {
+                            "by": "weapon",
+                            "category": "bashing"
+                          }
+                        }
+                      },
+                      "ranks": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "cartwheel",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "+1 Cartwheel Skill",
+                  "flavor": "dodging whatever lives in the good piles.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Cartwheel"
+                      },
+                      "ranks": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Cartwheel",
+                      "ranks": 1
+                    }
+                  }
+                },
+                {
+                  "id": "grit",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "+1 Grit Skill",
+                  "flavor": "the smell alone builds character.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Grit"
+                      },
+                      "ranks": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "skill",
+                    "params": {
+                      "skill": "Grit",
+                      "ranks": 1
+                    }
+                  }
+                },
+                {
+                  "id": "dr",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "+1 DR",
+                  "flavor": "years of digging through debris toughens more than the nose.",
+                  "effects": [
+                    {
+                      "type": "dr",
+                      "amount": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "dr",
+                    "params": {}
+                  }
+                },
+                {
+                  "id": "union",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "Membership in the Salvagers' Union",
+                  "flavor": "dues paid in gossip and finder's fees.",
+                  "effects": [
+                    {
+                      "type": "membership",
+                      "club": "Salvagers' Union"
+                    }
+                  ],
+                  "template": {
+                    "id": "club-any",
+                    "params": {
+                      "club": "Salvagers' Union"
+                    }
+                  }
+                },
+                {
+                  "id": "appraise",
+                  "name": "Appraisal",
+                  "tier": "moderate",
+                  "cost": 2,
+                  "text": "Once per session, sniff an item and learn what it is worth and who wants it. The nose has never once been wrong, allegedly.",
+                  "effects": []
+                },
+                {
+                  "id": "scavenge-bonus",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "+1 on Skill Advancement Checks for Scavenge",
+                  "flavor": "the nose learns fast when it has to.",
+                  "effects": [
+                    {
+                      "type": "advancementBonus",
+                      "skill": {
+                        "kind": "named",
+                        "name": "Scavenge"
+                      },
+                      "bonus": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "advancement",
+                    "params": {
+                      "skill": "Scavenge"
+                    }
+                  }
+                },
+                {
+                  "id": "charm",
+                  "tier": "extreme",
+                  "cost": 4,
+                  "text": "+1 to all Charisma-based Skills",
+                  "flavor": "garbage sells itself when the seller believes.",
+                  "effects": [
+                    {
+                      "type": "skill",
+                      "skill": {
+                        "kind": "group",
+                        "label": "all Charisma-based Skills",
+                        "group": {
+                          "by": "stat",
+                          "stat": "cha"
+                        }
+                      },
+                      "ranks": 1
+                    }
+                  ],
+                  "template": {
+                    "id": "skill-group",
+                    "params": {
+                      "group": {
+                        "by": "stat",
+                        "stat": "cha"
+                      }
+                    }
+                  }
+                }
+              ],
+              "detriments": [
+                {
+                  "id": "dex",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "-2 Dexterity",
+                  "flavor": "you move like someone who has smelled worse than the average corpse.",
+                  "effects": [
+                    {
+                      "type": "stat",
+                      "stat": "dex",
+                      "amount": -2
+                    }
+                  ],
+                  "template": {
+                    "id": "stat-penalty",
+                    "params": {
+                      "rows": [
+                        {
+                          "stat": "dex",
+                          "amount": 2
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "id": "necrotic",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "Vulnerability: Necrotic damage",
+                  "flavor": "some of what you handle was never meant to be handled.",
+                  "effects": [
+                    {
+                      "type": "damageResponse",
+                      "damageType": "necrotic",
+                      "response": "vulnerability"
+                    }
+                  ],
+                  "template": {
+                    "id": "vulnerability",
+                    "params": {
+                      "damageType": "necrotic"
+                    }
+                  }
+                },
+                {
+                  "id": "lodge",
+                  "tier": "minor",
+                  "cost": 1,
+                  "text": "Cannot choose this Class if you have access to the Concourse Adventurers' Lodge",
+                  "flavor": "the Union remembers who crossed the picket line.",
+                  "effects": [
+                    {
+                      "type": "clubExclusion",
+                      "club": "Concourse Adventurers' Lodge"
+                    }
+                  ],
+                  "template": {
+                    "id": "club-exclusion",
+                    "params": {
+                      "club": "Concourse Adventurers' Lodge"
+                    }
+                  }
+                }
+              ]
+            },
+            "budget": 30
+          },
+          "choices": {}
+        },
+        "sample": true
+      }
+    },
+    {
+      "id": "e186ba41-9dbf-449d-a9fe-2a3f4004c8fe",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T14:30:42.169Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "item.added",
+      "payload": {
+        "id": "0e54ac5b-4ba8-4045-90a2-9b699e6a69a9",
+        "name": "Rebar Club",
+        "quantity": 1,
+        "notes": "A length of structural steel, liberated from a building that no longer needed it. The AI has classified it as 'a weapon, technically.' +1 Strength while held, because commitment counts.",
+        "slot": "hand",
+        "equipped": true,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "str",
+            "amount": 1
+          }
+        ],
+        "image": "stock:rebar-club"
+      }
+    },
+    {
+      "id": "5310e89e-f62f-4dc2-b3f2-a59216056524",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T14:30:42.170Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "item.added",
+      "payload": {
+        "id": "683f91dc-8cf4-4d8b-9b29-531356ec970a",
+        "name": "Duct Tape Greaves",
+        "quantity": 1,
+        "notes": "Shin guards made of tape, cardboard, and the memory of a better idea. Damage Resistance 1. The audience voted them 'most likely to be on fire later.'",
+        "slot": "legs",
+        "equipped": true,
+        "effects": [
+          {
+            "type": "dr",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "3e612d5e-c0ad-4edd-b1cd-a8342b7ad230",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T14:30:42.171Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "item.added",
+      "payload": {
+        "id": "86ff62a4-f55e-4ef6-933a-5e8260b6ae5b",
+        "name": "Gutter Ring",
+        "quantity": 1,
+        "notes": "A ring found in a drain, still slightly damp. +1 Dexterity, +1 to every unwanted question about where you found it.",
+        "slot": "accessory",
+        "equipped": true,
+        "effects": [
+          {
+            "type": "stat",
+            "stat": "dex",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "93046ae6-82cf-4a1e-9761-3ba5de5d2358",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T14:30:42.172Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "item.added",
+      "payload": {
+        "id": "2f41e83e-3b0f-410d-8857-2111e8d92911",
+        "name": "Emergency Biscuit",
+        "quantity": 2,
+        "notes": "Rations of uncertain origin. No effects, no expiry date, no promises. The AI recommends against reading the ingredients.",
+        "slot": null,
+        "equipped": false,
+        "effects": []
+      }
+    },
+    {
+      "id": "273fc325-d4c8-4539-b25f-6810ee20116c",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T14:30:42.173Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "gold.changed",
+      "payload": {
+        "gold": 140
+      }
+    },
+    {
+      "id": "4a4ea5bd-f255-4db5-8181-fba1905224a3",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T14:30:45.900Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "crawler.kept",
+      "payload": {}
+    },
+    {
+      "id": "f0a84a5f-11a7-42c7-bba7-ba59da2dbb06",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T15:05:50.793Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "hotlist.set",
+      "payload": {
+        "entries": ["Rebar Club"]
+      }
+    },
+    {
+      "id": "f5383dea-fb53-40c0-99af-59a13bfa0ee7",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T15:05:52.991Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "hotlist.set",
+      "payload": {
+        "entries": ["Rebar Club", "", "Duct Tape Greaves"]
+      }
+    },
+    {
+      "id": "c89c493e-3c8b-4746-b5a7-cdaedec3ec10",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T15:05:55.141Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "hotlist.set",
+      "payload": {
+        "entries": ["Rebar Club", "Duct Tape Greaves", "Duct Tape Greaves"]
+      }
+    },
+    {
+      "id": "5c6a6dd2-2657-40ca-b07a-4b3bbfe7546a",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T15:05:57.670Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "hotlist.set",
+      "payload": {
+        "entries": ["Rebar Club", "Duct Tape Greaves", "Duct Tape Greaves", "Gutter Ring"]
+      }
+    },
+    {
+      "id": "445cbbce-f53d-49fd-96ea-f22f5784e8ba",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-10-21T15:06:04.573Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "hotlist.set",
+      "payload": {
+        "entries": ["Rebar Club", "Duct Tape Greaves", "Emergency Biscuit", "Gutter Ring"]
+      }
+    },
+    {
+      "id": "fbd571f8-bf9c-4a4c-bf02-143c71e99981",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-11-11T12:03:51.376Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "event.retracted",
+      "payload": {
+        "eventId": "445cbbce-f53d-49fd-96ea-f22f5784e8ba"
+      }
+    },
+    {
+      "id": "0402f903-2e05-4c35-875b-0c60f9eb7cf1",
+      "crawlerId": "e375b573-26ad-4ab0-8e41-9c14e0773def",
+      "occurredAt": "2026-11-11T12:03:53.432Z",
+      "deviceId": "d10b4bed-ed72-4298-be29-8b10a3fb323e",
+      "type": "event.retracted",
+      "payload": {
+        "eventId": "5c6a6dd2-2657-40ca-b07a-4b3bbfe7546a"
+      }
+    }
+  ]
+}

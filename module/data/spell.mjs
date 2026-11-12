@@ -1,7 +1,6 @@
 import CarlRPGRankedItemBase from "./ranked-item-base.mjs";
 
 export default class CarlRPGSpell extends CarlRPGRankedItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const requiredInteger = { required: true, nullable: false, integer: true };
@@ -14,16 +13,17 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
 
     schema.castingKeywords = new fields.ArrayField(
       new fields.StringField({
-        required: true, blank: false,
+        required: true,
+        blank: false,
         choices: ["attack", "passive", "interrupt", "areaOfEffect", "mindControl", "heal"],
       }),
-      { required: false, initial: [] }
+      { required: false, initial: [] },
     );
 
     // Classes that DON'T pay the +1 Mana surcharge for casting this Spell.
     schema.favoredClasses = new fields.ArrayField(
       new fields.StringField({ required: true, blank: false }),
-      { required: false, initial: [] }
+      { required: false, initial: [] },
     );
 
     // Alternate Mana-cost/damage tradeoffs, e.g. Magic Missile's
@@ -33,7 +33,7 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
         manaCost: new fields.NumberField({ ...requiredInteger, initial: 1, min: 0 }),
         description: new fields.StringField({ required: true, blank: true }),
       }),
-      { required: false, initial: [] }
+      { required: false, initial: [] },
     );
 
     // Spell damage defaults to magical, overriding ranked-item-base's
@@ -49,6 +49,10 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
     // fiction says the duration elapsed (see CarlDice.rollToggleSpell).
     schema.isToggled = new fields.BooleanField({ required: true, initial: false });
     schema.active = new fields.BooleanField({ required: true, initial: false });
+
+    // Persisted sheet UI state: is this Spell's read-only description/
+    // upgrades detail drawer open (toggled by clicking the Spell's name)?
+    schema.detailsExpanded = new fields.BooleanField({ required: true, initial: false });
 
     return schema;
   }

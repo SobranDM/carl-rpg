@@ -15,16 +15,18 @@ const { DialogV2 } = foundry.applications.api;
  * @param {object} [config.context]
  * @param {Array} [config.buttons]
  * @param {Function} [config.onRender]
+ * @param {object} [config.position]  Window position/size, e.g. {width: 720}.
  * @returns {Promise<*>} The chosen button's callback result, or null if cancelled/closed.
  */
 export async function showCarlDialog({
-  title, content, template, context = {}, buttons, onRender, rejectClose = false, classes = [],
+  title, content, template, context = {}, buttons, onRender, rejectClose = false, classes = [], position,
 } = {}) {
   if (template) {
     content = await foundry.applications.handlebars.renderTemplate(template, context);
   }
   return DialogV2.wait({
     window: { title },
+    ...(position ? { position } : {}),
     classes: ["carl-rpg", "carl-dialog", ...classes],
     content,
     buttons: buttons ?? [rollButton()],

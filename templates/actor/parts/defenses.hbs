@@ -1,0 +1,51 @@
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="defenses">
+  {{!-- Damage-type pipeline (docs/known-gaps.md 1.3): direct, GM/player-
+        editable schema fields (module/data/actor-base.mjs), not modifier-
+        engine-driven - see that file's docstring for why. --}}
+  <fieldset class="carl-defenses">
+    <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Dr"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
+        {{#if system.drBonus}}
+        <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EffectiveValue'}}">= {{system.drEffective}}</span>
+        {{/if}}
+      </div>
+      {{#if (eq actor.type "character")}}
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Move"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.details.move" value="{{system.details.move}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Step"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.details.step" value="{{system.details.step}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Size"}}</label>
+        <select class="carl-w-medium" name="system.details.size" data-dtype="Number">
+          {{selectOptions config.sizes selected=system.details.size localize=true}}
+        </select>
+      </div>
+      {{/if}}
+    </div>
+    <label class="resource-label">{{localize "CARLRPG.Actor.Resistances"}}</label>
+    <div class="carl-resistances-grid">
+      {{#each config.damageTypes as |label type|}}
+      <div class="carl-resistance-row">
+        <span class="carl-resistance-type">{{localize label}}</span>
+        <select class="carl-w-short" name="{{concat 'system.resistances.' type}}">
+          {{selectOptions ../config.resistanceStates selected=(lookup ../system.resistances type) localize=true}}
+        </select>
+        {{#with (lookup ../system.resistancesEffective type) as |effectiveState|}}
+        {{#unless (eq effectiveState (lookup ../../system.resistances type))}}
+        <span class="carl-resistance-granted" title="{{localize 'CARLRPG.Actor.ResistanceGrantedHint'}}">
+          ({{localize (lookup ../../config.resistanceStates effectiveState)}})
+        </span>
+        {{/unless}}
+        {{/with}}
+      </div>
+      {{/each}}
+    </div>
+  </fieldset>
+</section>

@@ -266,9 +266,12 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         await actor.updateEmbeddedDocuments("Item", stillMarked.map((i) => ({ _id: i.id, "system.marked": false })));
       }
 
+      // Popularity can't drop below 0 (system.details.popularity has min 0),
+      // so a crawler already at 0 has nothing to lose - and no line.
       const delta = endOfFloorPopularityDelta(actor.system.stats?.cha?.effective, floor);
-      if (delta) {
-        await actor.update({ "system.popularity": (actor.system.popularity ?? 0) + delta });
+      const popularity = actor.system.details?.popularity ?? 0;
+      if (delta && popularity + delta >= 0) {
+        await actor.update({ "system.details.popularity": popularity + delta });
         digest.push(game.i18n.format(delta > 0 ? "CARLRPG.Toolbox.EndFloorPopularityUp" : "CARLRPG.Toolbox.EndFloorPopularityDown", {
           name: esc(actor.name), limit: delta > 0 ? 5 * floor : 2 * floor,
         }));

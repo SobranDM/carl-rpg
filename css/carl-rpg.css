@@ -918,6 +918,19 @@
 .carl-rpg .items-header .item-controls a {
   color: var(--carl-accent);
 }
+.carl-rpg .items-header .carl-sort-header {
+  cursor: pointer;
+  user-select: none;
+}
+.carl-rpg .items-header .carl-sort-header i {
+  margin-left: 3px;
+}
+.carl-rpg .items-header .carl-sort-header i.fa-sort {
+  opacity: 0.35;
+}
+.carl-rpg .items-header .carl-sort-header:hover i.fa-sort {
+  opacity: 0.8;
+}
 .carl-rpg .items-list {
   list-style: none;
   margin: 0;
@@ -940,7 +953,8 @@
   align-items: center;
   display: flex;
 }
-.carl-rpg .items-list .item-name h3, .carl-rpg .items-list .item-name h4 {
+.carl-rpg .items-list .item-name h3,
+.carl-rpg .items-list .item-name h4 {
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -1189,15 +1203,21 @@
 }
 .carl-rpg .carl-resistances-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px 10px;
   margin: 4px 0 10px;
 }
 .carl-rpg .carl-resistance-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  gap: 2px 6px;
+}
+.carl-rpg .carl-resistance-row select {
+  width: 100%;
+}
+.carl-rpg .carl-resistance-row .carl-resistance-granted {
+  grid-column: 2;
 }
 .carl-rpg .carl-resistance-type {
   font-size: 12px;
@@ -1333,23 +1353,6 @@
   gap: 6px;
 }
 .carl-rpg .carl-banked-stat-points-row input {
-  text-align: center;
-}
-.carl-rpg .carl-sponsor-row {
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 2px;
-}
-.carl-rpg .carl-sponsor-row input {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.carl-rpg .carl-sponsor-row .item-control {
-  flex: 0 0 auto;
-}
-.carl-rpg .carl-sponsors .carl-add-link {
-  display: block;
-  font-size: 11px;
   text-align: center;
 }
 .carl-rpg .carl-evade-link {
@@ -1494,6 +1497,15 @@
 .carl-rpg .carl-skill-upgrade strong {
   color: var(--carl-accent);
   margin-right: 6px;
+}
+.carl-rpg .carl-skill-edit {
+  display: inline-block;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+.carl-rpg .carl-skill-edit:hover {
+  color: var(--carl-accent);
+  opacity: 1;
 }
 .carl-rpg .carl-unmatched-damage-effects {
   margin-top: 10px;
@@ -1677,4 +1689,294 @@
 .carl-rpg .carl-spend-stat-points-value {
   text-align: center;
   font-variant-numeric: tabular-nums;
+}
+.carl-rpg .carl-details-row {
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-sheet-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+.carl-rpg .carl-sheet-columns > fieldset,
+.carl-rpg .carl-sheet-columns > .carl-sheet-column {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.carl-rpg .carl-text-slots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.carl-rpg .carl-text-slots .carl-text-slot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.carl-rpg .carl-text-slots .carl-text-slot-index {
+  flex: 0 0 2em;
+  text-align: right;
+}
+.carl-rpg .carl-text-slots input,
+.carl-rpg .carl-text-slots textarea {
+  flex: 1;
+  min-width: 0;
+}
+.carl-rpg .carl-inventory-layout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.carl-rpg .carl-inventory-layout > .items-list {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.carl-rpg .carl-equip-panel {
+  flex: 0 0 240px;
+}
+.carl-rpg .carl-equip-panel fieldset {
+  margin: 0 0 10px;
+}
+.carl-rpg .carl-equip-slot {
+  border: 1px dashed var(--carl-border-soft);
+  border-radius: 3px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-equip-slot.filled {
+  border-style: solid;
+  background: var(--carl-panel-bg);
+  color: var(--color-text-primary);
+}
+.carl-rpg .carl-equip-slot .carl-equip-slot-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-rpg .carl-hotlist-slots {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.carl-rpg .carl-hotlist-slot {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 0 4px;
+}
+.carl-rpg .carl-hotlist-slot .carl-hotlist-index {
+  flex: 0 0 1.5em;
+  text-align: right;
+}
+.carl-rpg .carl-hotlist-slot img {
+  flex: 0 0 20px;
+  border: none;
+}
+.carl-rpg .carl-hotlist-slot .carl-equip-slot-name {
+  flex: 1;
+}
+.carl-rpg .carl-gear-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-areas: ". head ." "arms torso gloves" "mainHand legs offHand" ". feet .";
+  gap: 4px;
+}
+.carl-rpg .carl-gear-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  aspect-ratio: 1;
+  padding: 2px;
+  font-size: var(--font-size-11);
+  text-align: center;
+}
+.carl-rpg .carl-gear-slot .carl-gear-icon {
+  width: 60%;
+  aspect-ratio: 1;
+  background-color: currentColor;
+  opacity: 0.6;
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+.carl-rpg .carl-gear-slot img {
+  width: 32px;
+  height: 32px;
+  border: none;
+}
+.carl-rpg .carl-gear-slot .carl-equip-slot-name {
+  max-width: 100%;
+}
+.carl-rpg .carl-gear-slot .carl-slot-clear {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+}
+.carl-rpg .carl-accessories-label {
+  margin: 10px 0 4px;
+}
+.carl-rpg .carl-accessory-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+.carl-rpg .carl-sheet-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+.carl-rpg .carl-sheet-line > span {
+  flex: 0 0 7em;
+}
+.carl-rpg .carl-sheet-line input,
+.carl-rpg .carl-sheet-line textarea {
+  flex: 1;
+  min-width: 0;
+}
+.carl-rpg .carl-sheet-box {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-sheet-box textarea {
+  width: 100%;
+}
+.carl-rpg .carl-companion-hb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0;
+}
+.carl-rpg .carl-companion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2px 10px;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-companion-grid label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+.carl-rpg .carl-pdf-import fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.carl-rpg .carl-pdf-import .carl-pdf-import-kind {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-pdf-import .carl-pdf-import-maps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  width: 100%;
+  max-height: 420px;
+  overflow-y: auto;
+}
+.carl-rpg .carl-pdf-import .carl-pdf-import-map {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+.carl-rpg .carl-pdf-import .carl-pdf-import-map img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border: 1px solid var(--color-border, #555);
+}
+.carl-rpg.loot-box .window-content {
+  padding: 0;
+}
+.carl-rpg .carl-loot-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 8px;
+}
+.carl-rpg .carl-loot-box .sheet-header {
+  flex: 0 0 auto;
+}
+.carl-rpg .carl-loot-box prose-mirror,
+.carl-rpg .carl-loot-box .carl-loot-notes {
+  flex: 0 0 auto;
+  min-height: 80px;
+}
+.carl-rpg .carl-loot-controls {
+  align-items: flex-end;
+  gap: 8px;
+}
+.carl-rpg .carl-loot-controls select {
+  min-width: 120px;
+}
+.carl-rpg .carl-loot-generate {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.carl-rpg .carl-loot-list {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+.carl-rpg .carl-loot-card {
+  padding: 6px 8px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-loot-card img {
+  flex: 0 0 28px;
+  border: none;
+}
+.carl-rpg .carl-loot-card-head {
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-loot-card-head .item-controls {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 6px;
+}
+.carl-rpg .carl-loot-name {
+  flex: 1 1 auto;
+  font-weight: bold;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-loot-tier {
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-loot-description {
+  font-size: 12px;
+}
+.carl-rpg .carl-loot-description p,
+.carl-rpg .carl-loot-description ol {
+  margin: 2px 0;
+}
+.carl-rpg .carl-loot-empty {
+  padding: 12px;
+  text-align: center;
+  color: var(--carl-text-muted);
 }

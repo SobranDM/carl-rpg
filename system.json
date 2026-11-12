@@ -36,13 +36,12 @@
       }
     ]
   },
-  "esmodules": [
-    "module/carl-rpg.mjs"
-  ],
+  "esmodules": ["module/carl-rpg.mjs"],
   "documentTypes": {
     "Actor": {
       "character": {},
-      "mob": {}
+      "mob": {},
+      "lootBox": {}
     },
     "Item": {
       "item": {},

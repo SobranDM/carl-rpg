@@ -5,7 +5,7 @@ import { CARLRPG } from "./config.mjs";
  * Bar slots and +half of max Mana, both clamped to their max. Extracted out
  * of module/apps/gm-toolbox.mjs's Short Rest button so CarlDice.rollHeal's
  * Rank 15 tier ("gain the benefits of a short rest" - see Heal Self,
- * packs-source/spells/heal-self.json) can apply the exact same math instead
+ * packs-source/skills-and-spells/heal-self.json) can apply the exact same math instead
  * of re-deriving it, per docs/known-gaps.md 1.2's instruction.
  * @param {Actor} actor
  * @returns {{"system.hb.value": number, "system.mana.value": number}}

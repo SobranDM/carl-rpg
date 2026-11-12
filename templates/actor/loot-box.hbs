@@ -1,0 +1,62 @@
+{{!-- Loot Box sheet (module/sheets/loot-box-sheet.mjs). The GM picks a tier
+      and rolls loot; anyone who can see the box takes items out, by the Take
+      link or by dragging a card onto a sheet they own. --}}
+<div class="carl-loot-box">
+  <header class="sheet-header">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="64" width="64" />
+    <div class="header-fields">
+      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="{{localize 'Name'}}" /></h1>
+      <div class="carl-loot-controls flexrow">
+        <label class="resource flex-group-center">
+          <span class="resource-label">{{localize "CARLRPG.LootBox.Tier"}}</span>
+          <select name="system.tier">
+            {{selectOptions tierChoices selected=system.tier localize=true}}
+          </select>
+        </label>
+        {{#if isGM}}
+        <label class="resource flex-group-center">
+          <span class="resource-label">{{localize "CARLRPG.LootBox.Crawlers"}}</span>
+          <input type="number" class="carl-w-tiny" name="system.crawlers" value="{{system.crawlers}}" min="1" max="20" />
+        </label>
+        <button type="button" class="carl-loot-generate" data-action="generateLoot">
+          <i class="fas fa-dice-d20"></i> {{localize "CARLRPG.LootBox.Generate"}}
+        </button>
+        {{/if}}
+      </div>
+    </div>
+  </header>
+
+  <ol class="carl-loot-list">
+    {{#each items as |item|}}
+    <li class="carl-loot-card" data-item-id="{{item.id}}">
+      <div class="carl-loot-card-head flexrow">
+        <img src="{{item.img}}" alt="" width="28" height="28" />
+        <a class="carl-loot-name" data-action="editItem" title="{{#if @root.isGM}}{{localize 'DOCUMENT.Update' type='Item'}}{{else}}{{localize 'CARLRPG.LootBox.View'}}{{/if}}">{{item.name}}</a>
+        <div class="item-controls">
+          {{#if @root.takeTarget}}
+          <a class="item-control carl-loot-take" data-action="takeItem" title="{{localize 'CARLRPG.LootBox.TakeHint' name=@root.takeTarget}}">
+            <i class="fas fa-hand-holding"></i> {{localize "CARLRPG.LootBox.Take"}}
+          </a>
+          {{/if}}
+          {{#if @root.isGM}}
+          <a class="item-control" data-action="rerollItem" title="{{localize 'CARLRPG.LootBox.Reroll'}}"><i class="fas fa-rotate"></i></a>
+          <a class="item-control" data-action="deleteItem" title="{{localize 'DOCUMENT.Delete' type='Item'}}"><i class="fas fa-trash"></i></a>
+          {{/if}}
+        </div>
+      </div>
+      {{#if item.tierLabel}}<div class="carl-loot-tier">{{localize item.tierLabel}}</div>{{/if}}
+      <div class="carl-loot-description">{{{item.descriptionHTML}}}</div>
+    </li>
+    {{else}}
+    <li class="carl-loot-empty">{{localize (ifThen isGM "CARLRPG.LootBox.EmptyGM" "CARLRPG.LootBox.Empty")}}</li>
+    {{/each}}
+  </ol>
+
+  {{#if isGM}}
+  <prose-mirror name="system.description" toggled value="{{system.description}}" data-document-uuid="{{actor.uuid}}">
+    {{{descriptionHTML}}}
+  </prose-mirror>
+  {{else if system.description}}
+  <div class="carl-loot-notes">{{{descriptionHTML}}}</div>
+  {{/if}}
+</div>

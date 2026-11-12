@@ -1,0 +1,11 @@
+{
+  "ignorePatterns": [
+    "packs-source/**",
+    "templates/**",
+    "css/**",
+    "packs/**",
+    "lib/**",
+    "module/vendor/**",
+    "tests/e2e/node_modules/**"
+  ]
+}

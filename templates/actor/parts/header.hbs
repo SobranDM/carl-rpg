@@ -30,27 +30,26 @@
         {{/if}}
       </div>
     </div>
-    {{!-- Crawler numbers the rules track on the sheet (p.112-115, p.24, p.23). --}}
-    <div class="carl-name-row flexrow carl-tracked-row">
+    <div class="carl-details-row flexrow">
       <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.aiFavor" class="resource-label" title="{{localize 'CARLRPG.Actor.AiFavorHint'}}">{{localize "CARLRPG.Actor.AiFavor"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.aiFavor" value="{{system.aiFavor}}" data-dtype="Number" />
+        <label class="resource-label">{{localize "CARLRPG.Actor.Pronouns"}}</label>
+        <input type="text" class="carl-w-short" name="system.details.pronouns" value="{{system.details.pronouns}}" />
       </div>
       <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.popularity" class="resource-label">{{localize "CARLRPG.Actor.Popularity"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.popularity" value="{{system.popularity}}" data-dtype="Number" />
+        <label class="resource-label">{{localize "CARLRPG.Actor.CrawlerNumber"}}</label>
+        <input type="text" class="carl-w-short" name="system.details.crawlerNumber" value="{{system.details.crawlerNumber}}" />
       </div>
       <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.gold" class="resource-label">{{localize "CARLRPG.Actor.Gold"}}</label>
-        <input type="text" class="carl-w-short" name="system.gold" value="{{system.gold}}" data-dtype="Number" />
+        <label class="resource-label">{{localize "CARLRPG.Actor.Popularity"}}</label>
+        <input type="text" class="carl-w-short" name="system.details.popularity" value="{{system.details.popularity}}" data-dtype="Number" />
       </div>
       <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.move" class="resource-label">{{localize "CARLRPG.Actor.Move"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.move" value="{{system.move}}" data-dtype="Number" />
+        <label class="resource-label" title="{{localize 'CARLRPG.Actor.AiFavorHint'}}">{{localize "CARLRPG.Actor.AiFavor"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.details.aiFavor" value="{{system.details.aiFavor}}" data-dtype="Number" />
       </div>
       <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.step" class="resource-label">{{localize "CARLRPG.Actor.Step"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.step" value="{{system.step}}" data-dtype="Number" />
+        <label class="resource-label">{{localize "CARLRPG.Actor.Gold"}}</label>
+        <input type="text" class="carl-w-short" name="system.details.gold" value="{{system.details.gold}}" data-dtype="Number" />
       </div>
     </div>
     {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}

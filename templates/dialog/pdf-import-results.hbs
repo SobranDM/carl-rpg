@@ -1,0 +1,26 @@
+<div class="carl-dialog-body carl-pdf-import">
+  <p>{{localize "CARLRPG.PdfImport.ResultsHint" title=title}}</p>
+  <fieldset>
+    <legend>{{localize "CARLRPG.PdfImport.Content"}}</legend>
+    {{#each kinds as |kind|}}
+    <label class="carl-pdf-import-kind">
+      <input type="checkbox" name="kind.{{kind.key}}" {{#if kind.count}}checked{{else}}disabled{{/if}} />
+      {{kind.label}} ({{kind.count}})
+    </label>
+    {{/each}}
+  </fieldset>
+  {{#if maps.length}}
+  <fieldset>
+    <legend>{{localize "CARLRPG.PdfImport.Maps"}}</legend>
+    <p class="carl-dialog-hint">{{localize "CARLRPG.PdfImport.MapsHint"}}</p>
+    <div class="carl-pdf-import-maps">
+      {{#each maps as |map|}}
+      <label class="carl-pdf-import-map">
+        <img src="{{map.thumb}}" alt="" />
+        <span><input type="checkbox" name="map.{{map.page}}" {{#if map.likely}}checked{{/if}} /> {{map.name}}</span>
+      </label>
+      {{/each}}
+    </div>
+  </fieldset>
+  {{/if}}
+</div>

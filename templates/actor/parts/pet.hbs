@@ -1,0 +1,94 @@
+{{!-- Printed/Roll20 sheet's Pet page: Pet and Mount/Vehicle stat blocks
+      (inline, not linked Actors). The page's Important Things I've Killed,
+      Clubs, Personal Space, Deity, and Sponsors live on the Description tab
+      (description.hbs). Character only (see actor-sheet.mjs's
+      CHARACTER_ONLY_TABS). --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="pet">
+  <div class="carl-sheet-columns">
+    <div class="carl-sheet-column">
+      <fieldset class="carl-companion carl-pet">
+        <legend>{{localize "CARLRPG.Actor.Pet"}}</legend>
+        <label class="carl-sheet-line">
+          <span>{{localize "Name"}}</span>
+          <input type="text" name="system.pet.name" value="{{system.pet.name}}" />
+        </label>
+        <div class="carl-companion-hb">
+          <span class="resource-label">{{localize "CARLRPG.Actor.HealthBar"}}</span>
+          <input type="text" class="carl-w-tiny" name="system.pet.hb.value" value="{{system.pet.hb.value}}" data-dtype="Number" />
+          <span>/</span>
+          <input type="text" class="carl-w-tiny" name="system.pet.hb.max" value="{{system.pet.hb.max}}" data-dtype="Number" />
+        </div>
+        <div class="carl-companion-grid">
+          {{#each config.stats as |label key|}}
+          <label>
+            <span>{{localize label}}</span>
+            <input type="text" class="carl-w-tiny" name="{{concat 'system.pet.' key}}" value="{{lookup ../system.pet key}}" data-dtype="Number" />
+          </label>
+          {{/each}}
+          <label>
+            <span>{{localize "CARLRPG.Actor.Level"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.pet.level" value="{{system.pet.level}}" data-dtype="Number" />
+          </label>
+          <label>
+            <span>{{localize "CARLRPG.Actor.DrShort"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.pet.dr" value="{{system.pet.dr}}" data-dtype="Number" />
+          </label>
+          <label>
+            <span>{{localize "CARLRPG.Actor.Evade"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.pet.evade" value="{{system.pet.evade}}" data-dtype="Number" />
+          </label>
+          <label>
+            <span>{{localize "CARLRPG.Actor.Move"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.pet.move" value="{{system.pet.move}}" data-dtype="Number" />
+          </label>
+          <label>
+            <span>{{localize "CARLRPG.Actor.Size"}}</span>
+            <input type="text" class="carl-w-short" name="system.pet.size" value="{{system.pet.size}}" />
+          </label>
+        </div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.PetAttacks"}}</label>
+        {{> "carlTextSlots" slots=textSlots.petAttacks}}
+        <label class="carl-sheet-box">
+          <span class="resource-label">{{localize "CARLRPG.Actor.Special"}}</span>
+          <textarea name="system.pet.special" rows="3">{{system.pet.special}}</textarea>
+        </label>
+      </fieldset>
+
+      <fieldset class="carl-companion carl-mount">
+        <legend>{{localize "CARLRPG.Actor.Mount"}}</legend>
+        <label class="carl-sheet-line">
+          <span>{{localize "Name"}}</span>
+          <input type="text" name="system.mount.name" value="{{system.mount.name}}" />
+        </label>
+        <div class="carl-companion-hb">
+          <span class="resource-label">{{localize "CARLRPG.Actor.HealthBar"}}</span>
+          <input type="text" class="carl-w-tiny" name="system.mount.hb.value" value="{{system.mount.hb.value}}" data-dtype="Number" />
+          <span>/</span>
+          <input type="text" class="carl-w-tiny" name="system.mount.hb.max" value="{{system.mount.hb.max}}" data-dtype="Number" />
+        </div>
+        <div class="carl-companion-grid">
+          <label>
+            <span>{{localize "CARLRPG.Actor.Size"}}</span>
+            <input type="text" class="carl-w-short" name="system.mount.size" value="{{system.mount.size}}" />
+          </label>
+          <label>
+            <span>{{localize "CARLRPG.Actor.Move"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.mount.move" value="{{system.mount.move}}" data-dtype="Number" />
+          </label>
+          <label>
+            <span>{{localize "CARLRPG.Actor.Occupants"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.mount.occupants" value="{{system.mount.occupants}}" data-dtype="Number" />
+          </label>
+          <label>
+            <span>{{localize "CARLRPG.Actor.DrShort"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.mount.dr" value="{{system.mount.dr}}" data-dtype="Number" />
+          </label>
+        </div>
+        <label class="carl-sheet-box">
+          <span class="resource-label">{{localize "CARLRPG.Actor.Accessories"}}</span>
+          <textarea name="system.mount.accessories" rows="3">{{system.mount.accessories}}</textarea>
+        </label>
+      </fieldset>
+    </div>
+  </div>
+</section>

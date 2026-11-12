@@ -21,20 +21,31 @@ const ROLL_TABLES_PACK = `${game.system?.id ?? "carl-rpg"}.roll-tables`;
 const ITEM_TYPE_TABLE_NAME = "Item Type";
 
 /**
+ * Roll one Randomized Magic Item and post it as a chat card.
  * @param {string} tierKey  A key into CONFIG.CARLRPG.lootBoxTiers.
  * @returns {Promise<ChatMessage|null>}
  */
 export async function rollMagicItem(tierKey) {
+  const result = await generateMagicItem(tierKey);
+  if (!result) return null;
+  return createCardMessage({
+    title: game.i18n.localize("CARLRPG.Toolbox.LootCardTitle"),
+    subtitle: game.i18n.localize(result.tier.label),
+    body: describeMagicItem(result),
+  });
+}
+
+/**
+ * Roll one Randomized Magic Item without posting anything.
+ * @param {string} tierKey  A key into CONFIG.CARLRPG.lootBoxTiers.
+ * @returns {Promise<{tierKey: string, tier: object, itemType: string, properties: {unique: boolean, multiplier?: number, text: string}[]}|null>}
+ *   itemType is "" for a mundane (Bronze) item. Null when the tier is
+ *   unknown or the roll tables are missing.
+ */
+export async function generateMagicItem(tierKey) {
   const tier = CONFIG.CARLRPG.lootBoxTiers[tierKey];
   if (!tier) return null;
-
-  if (tier.rolls === 0) {
-    return createCardMessage({
-      title: game.i18n.localize("CARLRPG.Toolbox.LootCardTitle"),
-      subtitle: game.i18n.localize(tier.label),
-      body: `<p>${game.i18n.localize("CARLRPG.Toolbox.LootMundane")}</p>`,
-    });
-  }
+  if (tier.rolls === 0) return { tierKey, tier, itemType: "", properties: [] };
 
   const pack = game.packs.get(ROLL_TABLES_PACK);
   const index = await pack?.getIndex();
@@ -46,7 +57,7 @@ export async function rollMagicItem(tierKey) {
   }
 
   const { results: itemTypeResults } = await itemTypeTable.roll({ recursive: false });
-  const itemTypeLabel = itemTypeResults.find((r) => r.type === "text")?.name ?? "";
+  const itemType = itemTypeResults.find((r) => r.type === "text")?.name ?? "";
   const subTableLink = itemTypeResults.find((r) => r.type === "document");
   const subTable = subTableLink ? await fromUuid(subTableLink.documentUuid) : null;
   if (!subTable) {
@@ -61,7 +72,9 @@ export async function rollMagicItem(tierKey) {
     if (uniqueLink) {
       const multiplier = tier.rolls - i + 1;
       const uniqueTable = await fromUuid(uniqueLink.documentUuid);
-      const uniqueResult = uniqueTable ? (await uniqueTable.roll({ recursive: false })).results[0] : null;
+      const uniqueResult = uniqueTable
+        ? (await uniqueTable.roll({ recursive: false })).results[0]
+        : null;
       properties.push({ unique: true, multiplier, text: uniqueResult?.name ?? "" });
       break;
     }
@@ -69,25 +82,56 @@ export async function rollMagicItem(tierKey) {
     properties.push({ unique: false, text: textResult?.name ?? "" });
   }
 
+  return { tierKey, tier, itemType, properties };
+}
+
+/**
+ * HTML body for a rolled item: its type, one line per property, and the
+ * tier's X values when a "+X" property came up.
+ * @param {Awaited<ReturnType<typeof generateMagicItem>>} result
+ * @returns {string}
+ */
+export function describeMagicItem({ tier, itemType, properties }) {
+  if (tier.rolls === 0) return `<p>${game.i18n.localize("CARLRPG.Toolbox.LootMundane")}</p>`;
+
   const rows = properties
     .map((p) =>
       p.unique
-        ? game.i18n.format("CARLRPG.Toolbox.LootSomethingUnique", { multiplier: p.multiplier, result: p.text })
-        : p.text
+        ? game.i18n.format("CARLRPG.Toolbox.LootSomethingUnique", {
+            multiplier: p.multiplier,
+            result: p.text,
+          })
+        : p.text,
     )
     .map((line) => `<li>${line}</li>`)
     .join("");
 
-  const showXValues = tier.xValues && properties.some((p) => !p.unique && (p.text === "+X Stat Bonus" || p.text === "+X Skill Bonus"));
+  const showXValues =
+    tier.xValues &&
+    properties.some(
+      (p) => !p.unique && (p.text === "+X Stat Bonus" || p.text === "+X Skill Bonus"),
+    );
   const xValuesHtml = showXValues
     ? `<p><em>${game.i18n.format("CARLRPG.Toolbox.LootXValues", { values: game.i18n.localize(tier.xValues) })}</em></p>`
     : "";
 
-  const body = `<p>${game.i18n.format("CARLRPG.Toolbox.LootItemType", { name: itemTypeLabel })}</p><ol>${rows}</ol>${xValuesHtml}`;
+  return `<p>${game.i18n.format("CARLRPG.Toolbox.LootItemType", { name: itemType })}</p><ol>${rows}</ol>${xValuesHtml}`;
+}
 
-  return createCardMessage({
-    title: game.i18n.localize("CARLRPG.Toolbox.LootCardTitle"),
-    subtitle: game.i18n.localize(tier.label),
-    body,
-  });
+/**
+ * Turn a rolled item into gear Item data, named for its tier and type
+ * ("Gold Enchanted Accessory") so the GM has a starting point to rename and
+ * rebalance before handing it out.
+ * @param {Awaited<ReturnType<typeof generateMagicItem>>} result
+ * @returns {object}  Item creation data.
+ */
+export function buildLootItemData(result) {
+  const tierLabel = game.i18n.localize(result.tier.label);
+  const typeLabel = result.itemType || game.i18n.localize("CARLRPG.LootBox.MundaneItem");
+  return {
+    name: `${tierLabel} ${typeLabel}`,
+    type: "item",
+    system: { description: describeMagicItem(result) },
+    flags: { "carl-rpg": { lootTier: result.tierKey } },
+  };
 }

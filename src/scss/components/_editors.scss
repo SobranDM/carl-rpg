@@ -214,16 +214,21 @@
   // CONFIG.CARLRPG.resistanceStates.
   .carl-resistances-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 4px $padding-md;
     margin: 4px 0 10px;
   }
 
+  // Fixed label column so every dropdown starts at the same x, with the
+  // granted-state note on its own line under the dropdown.
   .carl-resistance-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: 7.5em minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
-    gap: 6px;
+    gap: 2px 6px;
+
+    select { width: 100%; }
+    .carl-resistance-granted { grid-column: 2; }
   }
 
   .carl-resistance-type {

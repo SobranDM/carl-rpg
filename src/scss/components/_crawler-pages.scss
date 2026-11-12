@@ -1,0 +1,234 @@
+@use "../utils/variables" as *;
+
+// Character-only Pet tab (pet.hbs), the Inventory
+// tab's Hotlist/Equipped drop slots (items-list.hbs), the Description
+// tab's character lists and story notes (description.hbs), and the shared
+// fixed-length free-text list partial (text-slots.hbs), plus the header's
+// second details row (header.hbs).
+@mixin styles {
+  .carl-details-row {
+    align-items: center;
+    gap: $padding-md;
+    margin-bottom: 4px;
+  }
+
+  .carl-sheet-columns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $padding-md;
+    align-items: flex-start;
+
+    > fieldset,
+    > .carl-sheet-column {
+      flex: 1 1 200px;
+      min-width: 0;
+    }
+  }
+
+  .carl-text-slots {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    .carl-text-slot {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+
+    .carl-text-slot-index {
+      flex: 0 0 2em;
+      text-align: right;
+    }
+
+    input,
+    textarea {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  // Inventory tab: item list on the left, Hotlist + Equipped on the right.
+  .carl-inventory-layout {
+    display: flex;
+    gap: $padding-md;
+    align-items: flex-start;
+
+    > .items-list {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  .carl-equip-panel {
+    flex: 0 0 240px;
+
+    fieldset {
+      margin: 0 0 $padding-md;
+    }
+  }
+
+  // Shared drop-slot look: dashed when empty, solid panel when filled.
+  .carl-equip-slot {
+    border: 1px dashed var(--carl-border-soft);
+    border-radius: 3px;
+    color: var(--carl-text-muted);
+
+    &.filled {
+      border-style: solid;
+      background: var(--carl-panel-bg);
+      color: var(--color-text-primary);
+    }
+
+    .carl-equip-slot-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .carl-hotlist-slots {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .carl-hotlist-slot {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 26px;
+    padding: 0 4px;
+
+    .carl-hotlist-index {
+      flex: 0 0 1.5em;
+      text-align: right;
+    }
+
+    img {
+      flex: 0 0 20px;
+      border: none;
+    }
+
+    .carl-equip-slot-name {
+      flex: 1;
+    }
+  }
+
+  // Head / Arms Torso Gloves / Main Hand Legs Off Hand / Feet.
+  .carl-gear-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-areas:
+      ". head ."
+      "arms torso gloves"
+      "mainHand legs offHand"
+      ". feet .";
+    gap: 4px;
+  }
+
+  .carl-gear-slot {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    aspect-ratio: 1;
+    padding: 2px;
+    font-size: var(--font-size-11);
+    text-align: center;
+
+    // Monochrome slot art, tinted by the text color via a mask. The
+    // template sets mask-image inline: a url() in this stylesheet (or in a
+    // custom property used here) would resolve against css/, not the page.
+    .carl-gear-icon {
+      width: 60%;
+      aspect-ratio: 1;
+      background-color: currentColor;
+      opacity: 0.6;
+      mask-position: center;
+      mask-size: contain;
+      mask-repeat: no-repeat;
+    }
+
+    img {
+      width: 32px;
+      height: 32px;
+      border: none;
+    }
+
+    .carl-equip-slot-name {
+      max-width: 100%;
+    }
+
+    .carl-slot-clear {
+      position: absolute;
+      top: 1px;
+      right: 3px;
+    }
+  }
+
+  .carl-accessories-label {
+    margin: $padding-md 0 4px;
+  }
+
+  .carl-accessory-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+
+  .carl-sheet-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+
+    > span {
+      flex: 0 0 7em;
+    }
+
+    input,
+    textarea {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  .carl-sheet-box {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 4px;
+
+    textarea {
+      width: 100%;
+    }
+  }
+
+  .carl-companion-hb {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 4px 0;
+  }
+
+  .carl-companion-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px $padding-md;
+    margin-bottom: 4px;
+
+    label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+  }
+}

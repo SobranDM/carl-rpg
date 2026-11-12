@@ -27,6 +27,21 @@
     .item-controls a {
       color: var(--carl-accent);
     }
+    // Click to sort (actor-sheet.mjs#onSortList). Idle columns show a faint
+    // fa-sort so it's discoverable without competing with the label.
+    .carl-sort-header {
+      cursor: pointer;
+      user-select: none;
+      i {
+        margin-left: 3px;
+      }
+      i.fa-sort {
+        opacity: 0.35;
+      }
+      &:hover i.fa-sort {
+        opacity: 0.8;
+      }
+    }
   }
 
   .items-list {
@@ -51,7 +66,8 @@
       text-align: left;
       align-items: center;
       display: flex;
-      h3, h4 {
+      h3,
+      h4 {
         margin: 0;
         white-space: nowrap;
         // Shorthand (not overflow-x alone): per spec, setting only one axis
@@ -96,7 +112,9 @@
       align-items: center;
       padding: 0 2px;
       border-bottom: 1px solid var(--color-border-light-primary);
-      &:last-child { border-bottom: none; }
+      &:last-child {
+        border-bottom: none;
+      }
       .item-name {
         .item-image {
           flex: 0 0 30px;

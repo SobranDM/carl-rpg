@@ -9,6 +9,16 @@
     </a>
   </div>
 
+  {{#if textSlots}}
+  {{!-- "External Buffs (Max 3)": free-text notes of buffs cast on this
+        crawler by someone else. Mechanical effects still belong in the
+        Conditions list below. --}}
+  <fieldset class="carl-text-list carl-external-buffs">
+    <legend>{{localize "CARLRPG.Actor.ExternalBuffs"}}</legend>
+    {{> "carlTextSlots" slots=textSlots.externalBuffs numbered=true}}
+  </fieldset>
+  {{/if}}
+
   <ol class="items-list carl-conditions-list">
     <li class="item flexrow items-header">
       <div class="item-name">{{localize "CARLRPG.Condition.Label"}}</div>

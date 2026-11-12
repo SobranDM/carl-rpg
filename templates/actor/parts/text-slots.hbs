@@ -1,0 +1,16 @@
+{{!-- A fixed-length free-text list (Hotlist, Accessories, Deity...) - one
+      input per slot, bound by index into a string ArrayField. `slots` comes
+      from actor-sheet.mjs's _buildTextSlots; pass `multiline=true` for
+      textareas and `numbered=true` to prefix each line with its number. --}}
+<ol class="carl-text-slots{{#if multiline}} carl-text-slots-multiline{{/if}}">
+  {{#each slots as |slot|}}
+  <li class="carl-text-slot">
+    {{#if ../numbered}}<span class="carl-text-slot-index">{{slot.number}}.</span>{{/if}}
+    {{#if ../multiline}}
+    <textarea name="{{slot.name}}" rows="2">{{slot.value}}</textarea>
+    {{else}}
+    <input type="text" name="{{slot.name}}" value="{{slot.value}}" />
+    {{/if}}
+  </li>
+  {{/each}}
+</ol>

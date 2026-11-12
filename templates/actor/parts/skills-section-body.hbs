@@ -5,9 +5,9 @@
       below. --}}
 <ol class="items-list carl-skills-list">
   <li class="item flexrow items-header">
-    <div class="item-name">{{localize "Name"}}</div>
-    <div class="item-prop">{{localize "CARLRPG.Skill.Category"}}</div>
-    <div class="item-prop">{{localize "CARLRPG.Ranked.Rank"}}</div>
+    <div class="item-name carl-sort-header" data-action="sortList" data-list="skills" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.skills.name}}"></i></div>
+    <div class="item-prop carl-sort-header" data-action="sortList" data-list="skills" data-sort-key="category">{{localize "CARLRPG.Skill.Category"}} <i class="fas {{@root.listSort.skills.category}}"></i></div>
+    <div class="item-prop carl-sort-header" data-action="sortList" data-list="skills" data-sort-key="rank">{{localize "CARLRPG.Ranked.Rank"}} <i class="fas {{@root.listSort.skills.rank}}"></i></div>
     <div class="item-controls">
       <a class="item-control item-create" data-action="createItem" data-type="skill">
         <i class="fas fa-plus"></i> {{localize "DOCUMENT.New" type="Skill"}}
@@ -51,7 +51,9 @@
       {{/if}}
     </div>
   </li>
-  {{#if (or skill.system.description skill.system.upgrades.length)}}
+  {{!-- Always rendered (even with no description/upgrades) so the Edit
+        button below is reachable while locked - that's how players add
+        Rank upgrades to a Skill they already own. --}}
   <li class="carl-nested-drawer{{#unless skill.system.detailsExpanded}} collapsed{{/unless}}">
     <div class="carl-skill-details">
       <div class="carl-skill-details-inner">
@@ -64,10 +66,12 @@
           {{#if upgrade.description}}<span>{{upgrade.description}}</span>{{/if}}
         </div>
         {{/each}}
+        <a class="carl-skill-edit" data-action="editItem" data-item-id="{{skill._id}}" title="{{localize 'DOCUMENT.Update' type='Skill'}}">
+          <i class="fas fa-edit"></i> {{localize "CARLRPG.Skill.EditDetails"}}
+        </a>
       </div>
     </div>
   </li>
-  {{/if}}
   {{#if skill.damageEffects.length}}
   <li class="carl-nested-drawer{{#unless skill.system.damageEffectsExpanded}} collapsed{{/unless}}">
     <ol class="items-list carl-nested-damage-effects">

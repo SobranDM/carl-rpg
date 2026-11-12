@@ -1,0 +1,97 @@
+@mixin styles {
+  &.loot-box .window-content {
+    padding: 0;
+  }
+
+  .carl-loot-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    padding: 8px;
+
+    .sheet-header {
+      flex: 0 0 auto;
+    }
+
+    prose-mirror,
+    .carl-loot-notes {
+      flex: 0 0 auto;
+      min-height: 80px;
+    }
+  }
+
+  .carl-loot-controls {
+    align-items: flex-end;
+    gap: 8px;
+
+    select {
+      min-width: 120px;
+    }
+  }
+
+  .carl-loot-generate {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+
+  .carl-loot-list {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    overflow-y: auto;
+  }
+
+  .carl-loot-card {
+    padding: 6px 8px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
+
+    img {
+      flex: 0 0 28px;
+      border: none;
+    }
+  }
+
+  .carl-loot-card-head {
+    align-items: center;
+    gap: 6px;
+
+    .item-controls {
+      flex: 0 0 auto;
+      display: flex;
+      gap: 6px;
+    }
+  }
+
+  .carl-loot-name {
+    flex: 1 1 auto;
+    font-weight: bold;
+    color: var(--carl-gold);
+  }
+
+  .carl-loot-tier {
+    font-size: 11px;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-loot-description {
+    font-size: 12px;
+
+    p,
+    ol {
+      margin: 2px 0;
+    }
+  }
+
+  .carl-loot-empty {
+    padding: 12px;
+    text-align: center;
+    color: var(--carl-text-muted);
+  }
+}

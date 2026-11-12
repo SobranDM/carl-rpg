@@ -9,7 +9,8 @@
     },
     "SheetLabels": {
       "Actor": "CarlRPG Actor Sheet",
-      "Item": "CarlRPG Item Sheet"
+      "Item": "CarlRPG Item Sheet",
+      "LootBox": "CarlRPG Loot Box Sheet"
     },
     "Tab": {
       "Main": "Main",
@@ -22,7 +23,45 @@
       "Inventory": "Inventory",
       "Boons": "Boons",
       "Conditions": "Conditions",
+      "Defenses": "Defenses",
+      "Pet": "Pet",
       "Description": "Description"
+    },
+    "CrawlerForge": {
+      "Import": "Import CrawlerForge",
+      "Imported": "Imported {name} from CrawlerForge.",
+      "Failed": "CrawlerForge import failed: {error}"
+    },
+    "PdfImport": {
+      "Title": "Import Rulebook PDF",
+      "Open": "Import Rulebook PDF",
+      "MenuHint": "Read your own copy of a Dungeon Crawler Carl RPG book into this world: gear, spells, Mobs, achievements and maps.",
+      "PickHint": "Pick your own copy of a Dungeon Crawler Carl RPG book. It is read in your browser; nothing is uploaded except map images, which are saved to your Foundry Data folder.",
+      "File": "Rulebook PDF",
+      "Read": "Read PDF",
+      "Import": "Import",
+      "GMOnly": "Only the GM can import a rulebook.",
+      "Reading": "Reading {title}...",
+      "ReadingPage": "Reading {title}: page {done} of {total}",
+      "CheckingMaps": "Looking for maps: {n} of {total}",
+      "ResultsHint": "Found in {title}. Everything goes into folders named after the book; importing the same book again updates those documents instead of copying them.",
+      "Content": "Content",
+      "Maps": "Maps",
+      "MapsHint": "Pages that look like maps are checked. Uncheck any that are art, or check any the importer missed.",
+      "Importing": "Importing {title}...",
+      "Done": "Imported {title}: {summary}.",
+      "SummaryLine": "{kind} {created} new, {updated} updated",
+      "Failed": "Rulebook import failed: {error}",
+      "NoWebp": "This browser cannot save WebP images.",
+      "Achievements": "Achievements",
+      "Kind": {
+        "gear": "Gear",
+        "spells": "Spells",
+        "items": "Items",
+        "mobs": "Mobs",
+        "achievements": "Achievements",
+        "maps": "Maps"
+      }
     },
     "Toolbox": {
       "Title": "GM Toolbox",
@@ -137,14 +176,8 @@
       "BankedStatPoints": "Banked Stat Points",
       "AiFavor": "AI Favor",
       "AiFavorHint": "Spend 1 to reroll a d20 (not a Nat 1) or, once per round, take an extra non-Attack Action (p.61).",
-      "Popularity": "Popularity",
       "Gold": "Gold",
-      "Move": "Move",
-      "Step": "Step",
       "GrindLevelHours": "Grinding Hours toward Level",
-      "Sponsors": "Sponsors",
-      "SponsorName": "Sponsor",
-      "AddSponsor": "Add Sponsor",
       "StatPointsRemaining": "Stat Points Remaining",
       "StatPointsRemainingHint": "Computed fresh from this Mob's Level and Tier - see the Spend Stat Points dialog for the exact formula.",
       "Spend": "Spend",
@@ -161,11 +194,63 @@
       "HbSlotsOverrideHint": "Leave blank to use the computed Level/Tier formula (shown as a placeholder); set a number to override it.",
       "Defenses": "Defenses",
       "Dr": "DR (flat damage reduction)",
-      "DrEditHint": "Edit on the Description tab",
+      "DrEditHint": "Edit on the Defenses tab",
       "DebuffedValueHint": "Adjusted for this Mob's Debuffs",
       "Biography": "Biography",
       "Resistances": "Resistances",
-      "ResistanceGrantedHint": "Overridden by an owned item's Resistance grant"
+      "ResistanceGrantedHint": "Overridden by an owned item's Resistance grant",
+      "DrShort": "DR",
+      "Evade": "Evade",
+      "Step": "Step",
+      "Pronouns": "Pronouns",
+      "CrawlerNumber": "Crawler#",
+      "Popularity": "Popularity",
+      "ExternalBuffs": "External Buffs (Max 3)",
+      "Hotlist": "Hotlist",
+      "GearSlots": "Gear Slots / Tattoos / Patches",
+      "AccessoriesCount": "Accessories · {count} of {max}",
+      "AddAccessory": "Add",
+      "ClearSlot": "Clear slot",
+      "DropItemHere": "Drop an item here",
+      "SlotGearOnly": "Only gear can go in a gear or accessory slot.",
+      "Accessories": "Accessories",
+      "Story": "Story",
+      "PastTrauma": "Past Trauma",
+      "LooseEnds": "Loose Ends",
+      "Regrets": "Regrets",
+      "Notes": "Notes",
+      "Pet": "Pet",
+      "PetAttacks": "Attacks",
+      "Special": "Special",
+      "Mount": "Mount / Vehicle",
+      "Occupants": "Occupants",
+      "ImportantKills": "Important Things I've Killed",
+      "Clubs": "Clubs, Societies, Guilds, Etc.",
+      "PersonalSpace": "Personal Space",
+      "Tier": "Tier",
+      "Amenities": "Amenities",
+      "Deity": "Deity",
+      "Sponsors": "Sponsors"
+    },
+    "GearSlot": {
+      "Head": "Head",
+      "Arms": "Arms",
+      "Torso": "Torso",
+      "Gloves": "Gloves",
+      "MainHand": "Main Hand",
+      "Legs": "Legs",
+      "OffHand": "Off Hand",
+      "Feet": "Feet"
+    },
+    "Size": {
+      "Tiny": "Tiny (1)",
+      "Small": "Small (2)",
+      "Petite": "Petite (3)",
+      "Medium": "Medium (4)",
+      "Large": "Large (5)",
+      "Huge": "Huge (6)",
+      "Colossal": "Colossal (7)",
+      "Gargantuan": "Gargantuan (8)"
     },
     "Attack": {
       "Name": "Name",
@@ -182,7 +267,8 @@
       "Range": "Range",
       "AiFavor": "AI Favor",
       "Cooldown": "Cooldown",
-      "Limitations": "Limitations"
+      "Limitations": "Limitations",
+      "EditDetails": "Edit Skill / Add Ranks"
     },
     "Spell": {
       "ManaCost": "Mana Cost",
@@ -191,7 +277,8 @@
       "Cooldown": "Cooldown",
       "CastingKeywords": "Casting Keywords",
       "FavoredClasses": "Favored Classes (no Mana surcharge)",
-      "AddFavoredClass": "Add Favored Class"
+      "AddFavoredClass": "Add Favored Class",
+      "EditDetails": "Edit Spell / Add Ranks"
     },
     "DamageEffect": {
       "Cooldown": "Cooldown",
@@ -583,6 +670,21 @@
       "Floor": "Floor Boss"
     },
     "LootBox": {
+      "Tier": "Loot Box Tier",
+      "Crawlers": "Crawlers",
+      "Generate": "Generate Loot",
+      "Reroll": "Reroll",
+      "Take": "Take",
+      "TakeHint": "Give this item to {name}. You can also drag it onto any sheet you own.",
+      "View": "View item",
+      "Empty": "This box is empty.",
+      "EmptyGM": "Empty. Pick a tier and click Generate Loot, or drop items here.",
+      "MundaneItem": "Mundane Item",
+      "Taken": "{actor} took {item} from {box}.",
+      "TakeFailed": "{item} couldn't be given out, so it stayed in the box.",
+      "NoCharacter": "You have no assigned Character. Drag the item onto your sheet instead.",
+      "NotYourActor": "You don't own {name}.",
+      "NoGMOnline": "A GM needs to be online to hand out loot.",
       "Bronze": { "Label": "Bronze" },
       "Silver": { "Label": "Silver", "XValues": "+1 Skill Rank or +2 Stat" },
       "Gold": { "Label": "Gold", "XValues": "+1–3 Skill Rank or +3–5 Stat" },
@@ -650,40 +752,122 @@
       "CombatEnded": "{name}: {debuffs} ended with the combat."
     },
     "Debuff": {
-      "Blinded": { "Label": "Blinded", "Effect": "Roll all sight-based Skill Checks with Disadvantage.", "MobEffect": "Sight-based Difficulties of this Mob (its Attacks, and usually its Evade) drop by 5." },
-      "BloodTrail": { "Label": "Blood Trail", "Effect": "1d6+Floor damage/round. Stackable.", "MobEffect": "1d6+Floor damage, applied at end of round. Stackable." },
-      "Burned": { "Label": "Burned", "Effect": "1d10+Floor Fire damage/round.", "MobEffect": "1d10+Floor Fire damage, applied at end of round." },
-      "Drowning": { "Label": "Drowning", "Effect": "1d6+Floor damage/round.", "MobEffect": "1d6+Floor damage, applied at end of round." },
-      "Dying": { "Label": "Dying", "Effect": "Can't act. CON Mod = rounds until death; further damage just ticks the countdown." },
+      "Blinded": {
+        "Label": "Blinded",
+        "Effect": "Roll all sight-based Skill Checks with Disadvantage.",
+        "MobEffect": "Sight-based Difficulties of this Mob (its Attacks, and usually its Evade) drop by 5."
+      },
+      "BloodTrail": {
+        "Label": "Blood Trail",
+        "Effect": "1d6+Floor damage/round. Stackable.",
+        "MobEffect": "1d6+Floor damage, applied at end of round. Stackable."
+      },
+      "Burned": {
+        "Label": "Burned",
+        "Effect": "1d10+Floor Fire damage/round.",
+        "MobEffect": "1d10+Floor Fire damage, applied at end of round."
+      },
+      "Drowning": {
+        "Label": "Drowning",
+        "Effect": "1d6+Floor damage/round.",
+        "MobEffect": "1d6+Floor damage, applied at end of round."
+      },
+      "Dying": {
+        "Label": "Dying",
+        "Effect": "Can't act. CON Mod = rounds until death; further damage just ticks the countdown."
+      },
       "Enraged": { "Label": "Enraged", "Effect": "May only perform Attack and Move Actions." },
-      "Fatigued": { "Label": "Fatigued", "Effect": "-1 penalty to all Checks; Move halved. Stackable.", "MobEffect": "-1 per stack to this Mob's Difficulties (Evade, Attacks, Stat Difficulties); Move halved." },
-      "Held": { "Label": "Held", "Effect": "Can't use Move Actions or take a Step. Attacks against you made with Advantage." },
-      "LongTermMajorInjury": { "Label": "Long-Term Major Injury", "Effect": "-5 penalty to all Checks.", "MobEffect": "-5 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties)." },
-      "LongTermMinorInjury": { "Label": "Long-Term Minor Injury", "Effect": "-2 penalty to all Checks.", "MobEffect": "-2 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties)." },
-      "MajorInjury": { "Label": "Major Injury", "Effect": "-5 penalty to all Checks. A 2nd Major Injury upgrades to Long-Term Major Injury.", "MobEffect": "-5 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties). A 2nd Major Injury upgrades to Long-Term Major Injury." },
-      "MinorInjury": { "Label": "Minor Injury", "Effect": "-2 penalty to all Checks. A 2nd Minor Injury upgrades to Long-Term Minor Injury.", "MobEffect": "-2 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties). A 2nd Minor Injury upgrades to Long-Term Minor Injury." },
+      "Fatigued": {
+        "Label": "Fatigued",
+        "Effect": "-1 penalty to all Checks; Move halved. Stackable.",
+        "MobEffect": "-1 per stack to this Mob's Difficulties (Evade, Attacks, Stat Difficulties); Move halved."
+      },
+      "Held": {
+        "Label": "Held",
+        "Effect": "Can't use Move Actions or take a Step. Attacks against you made with Advantage."
+      },
+      "LongTermMajorInjury": {
+        "Label": "Long-Term Major Injury",
+        "Effect": "-5 penalty to all Checks.",
+        "MobEffect": "-5 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties)."
+      },
+      "LongTermMinorInjury": {
+        "Label": "Long-Term Minor Injury",
+        "Effect": "-2 penalty to all Checks.",
+        "MobEffect": "-2 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties)."
+      },
+      "MajorInjury": {
+        "Label": "Major Injury",
+        "Effect": "-5 penalty to all Checks. A 2nd Major Injury upgrades to Long-Term Major Injury.",
+        "MobEffect": "-5 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties). A 2nd Major Injury upgrades to Long-Term Major Injury."
+      },
+      "MinorInjury": {
+        "Label": "Minor Injury",
+        "Effect": "-2 penalty to all Checks. A 2nd Minor Injury upgrades to Long-Term Minor Injury.",
+        "MobEffect": "-2 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties). A 2nd Minor Injury upgrades to Long-Term Minor Injury."
+      },
       "Muted": { "Label": "Muted", "Effect": "Can't speak or cast Spells." },
-      "Poisoned": { "Label": "Poisoned", "Effect": "1d8+Floor Poison damage/round. Stackable.", "MobEffect": "1d8+Floor Poison damage, applied at end of round. Stackable." },
+      "Poisoned": {
+        "Label": "Poisoned",
+        "Effect": "1d8+Floor Poison damage/round. Stackable.",
+        "MobEffect": "1d8+Floor Poison damage, applied at end of round. Stackable."
+      },
       "Paralyzed": { "Label": "Paralyzed", "Effect": "Can't take any Actions." },
-      "Queasy": { "Label": "Queasy", "Effect": "Next Action requiring a roll is made with Disadvantage.", "MobEffect": "This Mob's next Attack Difficulty drops by 5; the target gets a free Evade Check." },
-      "Sepsis": { "Label": "Sepsis", "Effect": "Gains Staggered; 1d10+Floor Poison damage/round until healed.", "MobEffect": "Gains Staggered; 1d10+Floor Poison damage, applied at end of round, until healed." },
-      "ShitFaced": { "Label": "Shit-Faced", "Effect": "All Checks made with Disadvantage.", "MobEffect": "All of this Mob's Difficulties (Evade, Attacks, Stat Difficulties) drop by 5." },
+      "Queasy": {
+        "Label": "Queasy",
+        "Effect": "Next Action requiring a roll is made with Disadvantage.",
+        "MobEffect": "This Mob's next Attack Difficulty drops by 5; the target gets a free Evade Check."
+      },
+      "Sepsis": {
+        "Label": "Sepsis",
+        "Effect": "Gains Staggered; 1d10+Floor Poison damage/round until healed.",
+        "MobEffect": "Gains Staggered; 1d10+Floor Poison damage, applied at end of round, until healed."
+      },
+      "ShitFaced": {
+        "Label": "Shit-Faced",
+        "Effect": "All Checks made with Disadvantage.",
+        "MobEffect": "All of this Mob's Difficulties (Evade, Attacks, Stat Difficulties) drop by 5."
+      },
       "Shocked": { "Label": "Shocked", "Effect": "Lose your next Action." },
-      "SoreAsShit": { "Label": "Sore as Shit", "Effect": "-1 penalty to all rolls.", "MobEffect": "-1 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties)." },
-      "Staggered": { "Label": "Staggered", "Effect": "Next Action can't be a Move; if it's an Attack, made with Disadvantage; can't take a 10ft Step.", "MobEffect": "Next Action can't be a Move; if it's an Attack, its Difficulty drops by 5 (target gets a free Evade Check); can't take a 10ft Step." },
+      "SoreAsShit": {
+        "Label": "Sore as Shit",
+        "Effect": "-1 penalty to all rolls.",
+        "MobEffect": "-1 to this Mob's Difficulties (Evade, Attacks, Stat Difficulties)."
+      },
+      "Staggered": {
+        "Label": "Staggered",
+        "Effect": "Next Action can't be a Move; if it's an Attack, made with Disadvantage; can't take a 10ft Step.",
+        "MobEffect": "Next Action can't be a Move; if it's an Attack, its Difficulty drops by 5 (target gets a free Evade Check); can't take a 10ft Step."
+      },
       "StiffLegs": { "Label": "Stiff Legs", "Effect": "Can't take 10ft Steps." },
-      "Stunned": { "Label": "Stunned", "Effect": "Next Check made with Disadvantage.", "MobEffect": "The next Difficulty a crawler rolls against this Mob drops by 5 (if it's this Mob's Attack, the target also gets a free Evade Check)." },
-      "TakeDown": { "Label": "Take Down", "Effect": "Fall prone; Attacks against you made with Advantage." },
-      "Terrified": { "Label": "Terrified", "Effect": "Can't take Move Actions or 10ft Steps; Attacks made with Disadvantage.", "MobEffect": "Can't take Move Actions or 10ft Steps; this Mob's Attack Difficulties drop by 5 (target gets a free Evade Check)." },
+      "Stunned": {
+        "Label": "Stunned",
+        "Effect": "Next Check made with Disadvantage.",
+        "MobEffect": "The next Difficulty a crawler rolls against this Mob drops by 5 (if it's this Mob's Attack, the target also gets a free Evade Check)."
+      },
+      "TakeDown": {
+        "Label": "Take Down",
+        "Effect": "Fall prone; Attacks against you made with Advantage."
+      },
+      "Terrified": {
+        "Label": "Terrified",
+        "Effect": "Can't take Move Actions or 10ft Steps; Attacks made with Disadvantage.",
+        "MobEffect": "Can't take Move Actions or 10ft Steps; this Mob's Attack Difficulties drop by 5 (target gets a free Evade Check)."
+      },
       "TheTaint": { "Label": "The Taint", "Effect": "Can't be healed." },
-      "Woozy": { "Label": "Woozy", "Effect": "Can't add DEX Mod to Attack or Evade Checks.", "MobEffect": "This Mob's Evade (and any DEX-based Attack) Difficulty doesn't include its DEX Mod." }
+      "Woozy": {
+        "Label": "Woozy",
+        "Effect": "Can't add DEX Mod to Attack or Evade Checks.",
+        "MobEffect": "This Mob's Evade (and any DEX-based Attack) Difficulty doesn't include its DEX Mod."
+      }
     }
   },
 
   "TYPES": {
     "Actor": {
       "character": "Character",
-      "mob": "Mob"
+      "mob": "Mob",
+      "lootBox": "Loot Box"
     },
     "Item": {
       "item": "Item",

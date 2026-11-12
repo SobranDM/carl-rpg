@@ -1,0 +1,16 @@
+{
+  "name": "carl-rpg-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cypress harness that drives a live Foundry instance to run the carl-rpg Quench suite.",
+  "type": "module",
+  "scripts": {
+    "cypress:install": "cypress install",
+    "tests": "cypress open",
+    "tests:ci": "cypress run --headless --browser chrome"
+  },
+  "devDependencies": {
+    "cypress": "^15.17.0",
+    "cypress-if": "^1.13.2"
+  }
+}

@@ -2,9 +2,9 @@
       Abilities tab (see abilities.hbs / collapsible-section.hbs). --}}
 <ol class="items-list">
   <li class="item flexrow items-header">
-    <div class="item-name">{{localize "Name"}}</div>
-    <div class="item-prop">{{localize "CARLRPG.Spell.ManaCost"}}</div>
-    <div class="item-prop">{{localize "CARLRPG.Ranked.Rank"}}</div>
+    <div class="item-name carl-sort-header" data-action="sortList" data-list="spells" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.spells.name}}"></i></div>
+    <div class="item-prop carl-sort-header" data-action="sortList" data-list="spells" data-sort-key="manaCost">{{localize "CARLRPG.Spell.ManaCost"}} <i class="fas {{@root.listSort.spells.manaCost}}"></i></div>
+    <div class="item-prop carl-sort-header" data-action="sortList" data-list="spells" data-sort-key="rank">{{localize "CARLRPG.Ranked.Rank"}} <i class="fas {{@root.listSort.spells.rank}}"></i></div>
     <div class="item-controls">
       <a class="item-control item-create" data-action="createItem" data-type="spell">
         <i class="fas fa-plus"></i> {{localize "DOCUMENT.New" type="Spell"}}
@@ -19,7 +19,10 @@
           <img src="{{item.img}}" title="{{item.name}}" width="24" height="24" />
         </a>
       </div>
-      <h4>{{item.name}}{{#if item.system.active}} <i class="fas fa-bolt carl-spell-active-indicator" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}</h4>
+      <a class="carl-item-name-toggle" data-action="toggleDrawer" data-scope="item" data-path="system.detailsExpanded"
+        title="{{localize 'CARLRPG.Ranked.ToggleDetails'}}">
+        <h4>{{item.name}}{{#if item.system.active}} <i class="fas fa-bolt carl-spell-active-indicator" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}</h4>
+      </a>
     </div>
     <div class="item-prop">{{item.system.manaCost}}</div>
     <div class="item-prop">{{item.system.rank}}</div>
@@ -36,6 +39,26 @@
         <i class="fas fa-trash"></i>
       </a>
       {{/if}}
+    </div>
+  </li>
+  {{!-- Always rendered, same as the Skill details drawer, so the Edit
+        button is reachable while locked. --}}
+  <li class="carl-nested-drawer{{#unless item.system.detailsExpanded}} collapsed{{/unless}}">
+    <div class="carl-skill-details">
+      <div class="carl-skill-details-inner">
+        {{#if item.system.description}}
+        <div class="carl-skill-description">{{{item.system.description}}}</div>
+        {{/if}}
+        {{#each item.system.upgrades as |upgrade|}}
+        <div class="carl-skill-upgrade">
+          <strong>{{localize "CARLRPG.Ranked.Rank"}} {{upgrade.rankThreshold}}</strong>
+          {{#if upgrade.description}}<span>{{upgrade.description}}</span>{{/if}}
+        </div>
+        {{/each}}
+        <a class="carl-skill-edit" data-action="editItem" data-item-id="{{item._id}}" title="{{localize 'DOCUMENT.Update' type='Spell'}}">
+          <i class="fas fa-edit"></i> {{localize "CARLRPG.Spell.EditDetails"}}
+        </a>
+      </div>
     </div>
   </li>
   {{/each}}

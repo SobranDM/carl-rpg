@@ -1159,7 +1159,7 @@ export default class CarlDice {
    * includes `"heal"`) aren't Skill Checks - no d20, no to-hit, no Rank
    * bonus applied to the roll itself. Skills, Spells & Gear's Heal Self text
    * is just "you heal N Health Bar slots" at increasing dice tiers per Rank
-   * (see packs-source/spells/heal-self.json's `healDice`/`healToFull`/
+   * (see packs-source/skills-and-spells/heal-self.json's `healDice`/`healToFull`/
    * `healMend` upgrade-tier fields, module/data/shared/upgrade-tier.mjs).
    * This rolls the currently-unlocked tier's `healDice` - or, at a
    * `healToFull` tier, skips dice entirely, per docs/known-gaps.md 1.2's

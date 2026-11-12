@@ -49,23 +49,5 @@
     </div>
   </fieldset>
 
-  {{!-- "Crawlers are limited to three Sponsors each" (p.284). --}}
-  <fieldset class="carl-banked-stat-points carl-sponsors">
-    <legend>{{localize "CARLRPG.Actor.Sponsors"}}</legend>
-    {{#each system.sponsors as |sponsor index|}}
-    <div class="carl-sponsor-row flexrow">
-      <input type="text" name="{{concat 'system.sponsors.' index '.name'}}" value="{{sponsor.name}}"
-        placeholder="{{localize 'CARLRPG.Actor.SponsorName'}}" />
-      <a class="item-control" data-action="deleteArrayItem" data-path="system.sponsors" data-index="{{index}}">
-        <i class="fas fa-trash"></i>
-      </a>
-    </div>
-    {{/each}}
-    {{#if canAddSponsor}}
-    <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.sponsors" data-template='{"name":"","note":""}'>
-      <i class="fas fa-plus"></i> {{localize "CARLRPG.Actor.AddSponsor"}}
-    </a>
-    {{/if}}
-  </fieldset>
   {{/unless}}
 </div>

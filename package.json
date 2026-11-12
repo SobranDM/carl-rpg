@@ -1,27 +1,38 @@
 {
   "name": "carl-rpg",
   "version": "0.5.0",
-  "description": "Dungeon Crawler Carl RPG system for Foundry VTT",
-  "scripts": {
-    "build": "sass src/scss/carl-rpg.scss css/carl-rpg.css --style=expanded --no-source-map",
-    "watch": "sass src/scss/carl-rpg.scss css/carl-rpg.css --style=expanded --source-map --watch",
-    "build:packs": "node tools/build-packs.mjs",
-    "unpack:packs": "node tools/unpack-packs.mjs"
-  },
-  "browserslist": [
-    "last 3 versions"
-  ],
-  "author": "SobranDM",
-  "license": "MIT",
   "private": true,
+  "description": "Dungeon Crawler Carl RPG system for Foundry VTT",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "author": "SobranDM",
   "repository": {
     "type": "git",
     "url": "https://github.com/SobranDM/carl-rpg.git"
   },
+  "type": "module",
+  "scripts": {
+    "build": "sass src/scss/carl-rpg.scss css/carl-rpg.css --style=expanded --no-source-map",
+    "watch": "sass src/scss/carl-rpg.scss css/carl-rpg.css --style=expanded --source-map --watch",
+    "build:packs": "node tools/build-packs.mjs",
+    "unpack:packs": "node tools/unpack-packs.mjs",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "dev:sync": "node tools/dev-sync.mjs",
+    "dev:world": "node tools/ensure-world.mjs",
+    "dev": "npm run build && npm run build:packs && npm run dev:sync && npm run dev:world",
+    "test": "npm run build && npm run build:packs && npm run dev:sync && npm run test:e2e",
+    "test:e2e": "cd tests/e2e && npm run tests:ci",
+    "test:e2e:open": "cd tests/e2e && npm run tests",
+    "import:pdf": "node tools/pdf-import/extract-rulebook.mjs"
+  },
   "devDependencies": {
     "@foundryvtt/foundryvtt-cli": "^3.0.4",
     "fvtt-types": "14.366.0-beta.20260825144710",
+    "oxfmt": "^0.78.0",
     "sass": "^1.93.2",
     "typescript": "^5.9.3"
-  }
+  },
+  "browserslist": [
+    "last 3 versions"
+  ]
 }
