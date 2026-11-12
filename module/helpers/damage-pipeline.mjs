@@ -20,6 +20,8 @@
  * (module/chat/damage-card.mjs's "Apply Damage" button) applies the result.
  */
 
+import { normalizeDamageType } from "./damage-types.mjs";
+
 /** @typedef {"none"|"resist"|"vulnerable"|"immune"} ResistanceState */
 
 /**
@@ -73,6 +75,31 @@ export function splitDamageEvenly(total, types) {
     if (remainder > 0) remainder -= 1;
   }
   return out;
+}
+
+/**
+ * "An Immunity also ignores any additional effects that come from that
+ * damage, such as Debuffs" (Damage Immunity, p.93). An Attack's on-hit
+ * Debuffs come from its damage as a whole, so they're ignored only when the
+ * target is Immune to every type the hit carries. A typed portion it isn't
+ * Immune to still lands them, and a hit with no typed damage at all isn't
+ * covered. The untyped +Floor bonus (Amazing Success, an Evade Major Fail)
+ * doesn't count either way - it's a bonus on the hit, not damage the
+ * Debuffs come from - so the answer is the same whichever path added it.
+ * @param {Record<string, number>} damageByType  The Attack's raw rolled damage.
+ * @param {Actor|{system: object}} target
+ * @returns {boolean}
+ */
+export function isImmuneToAllDamage(damageByType, target) {
+  const sys = target?.system ?? {};
+  const resistances = sys.resistancesEffective ?? sys.resistances ?? {};
+  const portions = Object.entries(damageByType ?? {})
+    .filter(([type, amount]) => type !== "" && (Number(amount) || 0) > 0);
+  if (!portions.length) return false;
+  return portions.every(([type]) => {
+    const key = normalizeDamageType(type);
+    return !!key && resistances[key] === "immune";
+  });
 }
 
 /**
@@ -198,7 +225,7 @@ export function computeDamageApplication(damageByType, target, isMagic = true, {
     const afterDr = splitAfterDr[type] ?? 0;
     // An untyped ("") portion has no matching resistances key - it still
     // took its share of DR above but never Resist/Vulnerable/Immune.
-    const state = resistances[type] || "none";
+    const state = resistances[normalizeDamageType(type) || type] || "none";
     const result = reduceDamagePortion(afterDr, state);
     perType.push({ type, raw: damageByType[type] || 0, afterDr, state, final: result.final });
     totalFinalDamage += result.final;

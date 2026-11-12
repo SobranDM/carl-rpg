@@ -366,6 +366,25 @@
   font-size: 11px;
   color: var(--carl-text-muted);
 }
+.carl-chat-card .carl-ai-reroll {
+  margin-top: 4px;
+}
+.carl-chat-card .carl-ai-reroll button {
+  width: 100%;
+}
+.carl-chat-card .carl-reroll-note {
+  font-style: italic;
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-reroll-superseded {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--carl-accent);
+}
+.carl-chat-card.carl-rerolled {
+  opacity: 0.6;
+}
 .carl-chat-card button {
   background: var(--carl-header-bg);
   color: var(--carl-header-text);

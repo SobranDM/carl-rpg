@@ -22,7 +22,9 @@ import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { appendCardSection, createRollMessage, esc } from "./chat-card.mjs";
 import { applyDamageToActor } from "./damage-card.mjs";
+import { isImmuneToAllDamage } from "../helpers/damage-pipeline.mjs";
 import { buildEvadeConsequenceFooter, userOwnsUuid } from "./evade-link-card.mjs";
+import { aiRerollFlags } from "../helpers/ai-favor.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -158,7 +160,7 @@ function clickedRow(message, button) {
 }
 
 /** Resolve a row's token/actor uuid to {actor, token}. */
-async function resolveRowTarget(row) {
+export async function resolveRowTarget(row) {
   const doc = row?.uuid ? await fromUuid(row.uuid) : null;
   if (!doc) return null;
   if (doc instanceof Actor) return { actor: doc, token: null };
@@ -208,69 +210,105 @@ async function onRowEvade(event, message, button) {
     }
     if (!target.actor.isOwner && !game.user.isGM) return;
 
-    const flags = message.flags[SCOPE];
     const free = row.freeEvade && !row.freeUsed;
-    const difficulty = rowEvadeDifficulty(row, flags);
+    const difficulty = rowEvadeDifficulty(row, message.flags[SCOPE]);
     const rollData = await CarlDice.rollEvadeCheck(target.actor, { difficulty, skipDialog: false, post: false, isAction: !free });
     if (!rollData) return;
-    const { roll, breakdown, degree, debuffNote = "" } = rollData;
-    const success = isHitDegree(degree);
+    await recordRowEvade(message, row, target, { ...rollData, free });
+  });
+}
 
-    // Nat 20 / Amazing Success: Advantage on the evader's next Attack against
-    // this attacker (Degrees of Success, p.79) - see CarlDice.rollAttack.
-    if ((degree === "criticalHit" || degree === "amazingSuccess") && flags.attackerUuid) {
-      const combatant = resolveCombatantFor(target);
-      if (combatant?.canUserModify(game.user, "update")) {
+const GREAT_EVADE = ["criticalHit", "amazingSuccess"];
+
+/**
+ * Record a row's Evade result on the Attack card and post the outcome card.
+ * Shared by the row's Roll Evade and an AI Favor reroll of that Evade
+ * (module/chat/ai-favor-reroll.mjs), which passes `reroll` (the original
+ * roll's data) - its result replaces the earlier one.
+ * @param {ChatMessage} message  The Attack card.
+ * @param {object} row
+ * @param {{actor: Actor, token: TokenDocument|null}} target
+ * @param {{roll: Roll, breakdown: string, degree: string, debuffNote?: string, free: boolean,
+ *   formula?: string, naturalRoll?: number|null, total?: number, difficulty?: number|null, reroll?: object|null}} result
+ * @returns {Promise<void>}
+ */
+export async function recordRowEvade(message, row, target, {
+  roll, breakdown, degree, debuffNote = "", free, formula, naturalRoll, total, difficulty, reroll = null,
+}) {
+  const flags = message.flags[SCOPE];
+  const success = isHitDegree(degree);
+
+  // Nat 20 / Amazing Success: Advantage on the evader's next Attack against
+  // this attacker (Degrees of Success, p.79) - see CarlDice.rollAttack. A
+  // reroll that loses that result takes the Advantage back.
+  if (flags.attackerUuid) {
+    const combatant = resolveCombatantFor(target);
+    if (combatant?.canUserModify(game.user, "update")) {
+      if (GREAT_EVADE.includes(degree)) {
         await combatant.setFlag(SCOPE, "advantageVsUuid", flags.attackerUuid);
+      } else if (GREAT_EVADE.includes(reroll?.degree)
+        && combatant.getFlag(SCOPE, "advantageVsUuid") === flags.attackerUuid) {
+        await combatant.unsetFlag(SCOPE, "advantageVsUuid");
       }
     }
+  }
 
-    if (free && !success) {
-      await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: { [row.id]: { freeUsed: true } } } } });
-      await createRollMessage({
-        rolls: [roll],
-        rollMeta: [{ label: game.i18n.localize("CARLRPG.Evade.FreeEvade"), breakdown }],
-        title: game.i18n.format("CARLRPG.Evade.OutcomeTitle", { name: target.actor.name }),
-        img: target.actor.img,
-        subtitle: game.i18n.localize("CARLRPG.Evade.FreeEvadeFailed"),
-        badge: degreeBadge(degree),
-        body: `${debuffNote}<p>${game.i18n.localize("CARLRPG.Evade.FreeEvadeFailedBody")}</p>`,
-        actor: target.actor,
-        token: target.token,
-      });
-      return;
-    }
-
-    markLocal(message, row.id, { evaded: true });
-    await updateCardMessage(message, {
-      flags: { [SCOPE]: { targetRows: { [row.id]: { evade: { degree, success }, freeUsed: row.freeUsed || free } } } },
+  // The outcome card offers the AI Favor reroll (once - a reroll's own card
+  // carries it as used).
+  const rerollFlags = reroll
+    ? { aiReroll: { ...reroll, used: true } }
+    : aiRerollFlags(target.actor, {
+      kind: "rowEvade", formula, natural: naturalRoll, total, difficulty, breakdown, body: debuffNote,
+      attackMessageId: message.id, rowId: row.id, free, degree,
     });
+  const rerollNote = reroll ? `<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>` : "";
 
-    const subtitleKey = success
-      ? (flags.isArea ? "CARLRPG.Targets.EvadedHalf" : "CARLRPG.Evade.Evaded")
-      : degree === "majorFail" ? "CARLRPG.Evade.HitMajorFail"
-        : degree === "criticalFail" ? "CARLRPG.Evade.HitCriticalFail" : "CARLRPG.Evade.HitNormal";
-    const debuffKey = degree === "majorFail" ? "minorInjury" : degree === "criticalFail" ? "majorInjury" : null;
-    const outcomeFlags = {};
-    let footer;
-    if (debuffKey) {
-      outcomeFlags.debuffKey = debuffKey;
-      outcomeFlags.debuffActorUuid = row.uuid;
-      footer = await buildEvadeConsequenceFooter(debuffKey);
-    }
+  if (free && !success) {
+    await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: { [row.id]: { freeUsed: true } } } } });
     await createRollMessage({
       rolls: [roll],
-      rollMeta: [{ label: game.i18n.localize("CARLRPG.Roll.Evade"), breakdown }],
+      rollMeta: [{ label: game.i18n.localize("CARLRPG.Evade.FreeEvade"), breakdown }],
       title: game.i18n.format("CARLRPG.Evade.OutcomeTitle", { name: target.actor.name }),
       img: target.actor.img,
-      subtitle: game.i18n.localize(subtitleKey),
+      subtitle: game.i18n.localize("CARLRPG.Evade.FreeEvadeFailed"),
       badge: degreeBadge(degree),
-      body: `${debuffNote}<p>${game.i18n.localize("CARLRPG.Targets.ApplyFromCard")}</p>`,
-      footer,
-      flags: outcomeFlags,
+      body: `${debuffNote}<p>${game.i18n.localize("CARLRPG.Evade.FreeEvadeFailedBody")}</p>${rerollNote}`,
+      flags: rerollFlags,
       actor: target.actor,
       token: target.token,
     });
+    return;
+  }
+
+  markLocal(message, row.id, { evaded: true });
+  await updateCardMessage(message, {
+    flags: { [SCOPE]: { targetRows: { [row.id]: { evade: { degree, success }, freeUsed: row.freeUsed || free } } } },
+  });
+
+  const subtitleKey = success
+    ? (flags.isArea ? "CARLRPG.Targets.EvadedHalf" : "CARLRPG.Evade.Evaded")
+    : degree === "majorFail" ? "CARLRPG.Evade.HitMajorFail"
+      : degree === "criticalFail" ? "CARLRPG.Evade.HitCriticalFail" : "CARLRPG.Evade.HitNormal";
+  const debuffKey = degree === "majorFail" ? "minorInjury" : degree === "criticalFail" ? "majorInjury" : null;
+  const outcomeFlags = { ...rerollFlags };
+  let footer;
+  if (debuffKey) {
+    outcomeFlags.debuffKey = debuffKey;
+    outcomeFlags.debuffActorUuid = row.uuid;
+    footer = await buildEvadeConsequenceFooter(debuffKey);
+  }
+  await createRollMessage({
+    rolls: [roll],
+    rollMeta: [{ label: game.i18n.localize("CARLRPG.Roll.Evade"), breakdown }],
+    title: game.i18n.format("CARLRPG.Evade.OutcomeTitle", { name: target.actor.name }),
+    img: target.actor.img,
+    subtitle: game.i18n.localize(subtitleKey),
+    badge: degreeBadge(degree),
+    body: `${debuffNote}<p>${game.i18n.localize("CARLRPG.Targets.ApplyFromCard")}</p>${rerollNote}`,
+    footer,
+    flags: outcomeFlags,
+    actor: target.actor,
+    token: target.token,
   });
 }
 
@@ -300,7 +338,12 @@ export async function applyRow(message, row) {
   if (Object.values(outcome.damage).some((v) => v)) {
     lines.push(...await applyDamageToActor(target.actor, outcome.damage, flags.damageIsMagic ?? true));
   }
-  if (outcome.effects) {
+  // An Immunity to the whole hit also ignores its Debuffs (p.93).
+  const immune = outcome.effects && (flags.targetEffects ?? []).length
+    && isImmuneToAllDamage(flags.damageByType, target.actor);
+  if (immune) {
+    lines.push(game.i18n.format("CARLRPG.Targets.ImmuneNoEffects", { name: esc(target.actor.name) }));
+  } else if (outcome.effects) {
     for (const te of flags.targetEffects ?? []) {
       await addConditionToActor(target.actor, te.debuffKey, { stacks: te.stacks, source: te.sourceLabel, label: te.label });
     }

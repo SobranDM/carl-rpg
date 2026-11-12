@@ -37,6 +37,7 @@ import { tauntActionEntries } from "./taunt-card.mjs";
 import { markChoiceActionEntries } from "./mark-choice-card.mjs";
 import { grindSurplusActionEntries } from "./grind-surplus-card.mjs";
 import { attackTargetsActionEntries, decorateTargetRows } from "./attack-targets-card.mjs";
+import { aiRerollActionEntries, decorateAiReroll } from "./ai-favor-reroll.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
@@ -47,10 +48,14 @@ const REGISTRY = [
   ...markChoiceActionEntries,
   ...grindSurplusActionEntries,
   ...attackTargetsActionEntries,
+  ...aiRerollActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 
 function isBlocked(entry, message) {
+  // A card replaced by an AI Favor reroll (module/chat/ai-favor-reroll.mjs)
+  // no longer does anything - its replacement does.
+  if (message.getFlag("carl-rpg", "aiRerolled")) return true;
   // A `custom` entry's buttons are drawn per viewer by its own decorator
   // (e.g. module/chat/attack-targets-card.mjs's per-target rows), and its
   // handler re-checks everything for the button clicked.
@@ -71,6 +76,9 @@ export function registerChatListener() {
 
     // Per-viewer content drawn from flags (an Attack card's target rows).
     decorateTargetRows(message, html);
+    // The AI Favor reroll button, or a replaced card's "rerolled" state -
+    // after the rows, so it can switch their buttons off too.
+    decorateAiReroll(message, html);
 
     for (const entry of REGISTRY) {
       if (entry.custom) continue;

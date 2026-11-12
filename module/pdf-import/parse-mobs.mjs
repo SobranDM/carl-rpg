@@ -15,6 +15,7 @@
  */
 
 import { bodySize, escapeHtml, isHeading, joinText } from "./page-text.mjs";
+import { findDamageType } from "../helpers/damage-types.mjs";
 
 const CLASS_RE = /^([A-Z][A-Za-z ]{1,30});\s*([A-Za-z]+)\s*\((\d+)\),\s*(.+)$/;
 // One % per slot; a % is sometimes missing or mistyped in print ("50 60%", "80&").
@@ -30,22 +31,6 @@ const NOTE_TITLE_RE = /^([A-Z][\w’'!?,()&. -]{1,40})—/;
 const EFFECT_START_RE = /^(On an?y? |Any |Make a |If |Each |\(Secret!?\))/;
 const TIERS = ["neighborhood", "borough", "city", "province", "country", "floor"];
 const STAT_KEYS = { str: "str", int: "int", con: "con", dex: "dex", cha: "cha" };
-const DAMAGE_TYPES = [
-  "acid",
-  "bludgeoning",
-  "electric",
-  "fire",
-  "force",
-  "holy",
-  "ice",
-  "necrotic",
-  "piercing",
-  "poison",
-  "psychic",
-  "slashing",
-  "sonic",
-];
-
 /**
  * @param {object[]} pages  From scan.mjs readPages.
  * @returns {{name: string, page: number, data: object}[]}
@@ -225,7 +210,8 @@ function finishAttack({ name, toHit, main, effect }) {
     rangeText = rangeText.slice(0, semi);
   }
   const dice = damagePart.match(/\d*d\d+(?:\s*[+−-]\s*\d+)?/)?.[0]?.replace(/\s+/g, "") ?? "";
-  const damageType = DAMAGE_TYPES.find((t) => new RegExp(`\\b${t}\\b`, "i").test(damagePart)) ?? "";
+  // "Psionic", a line-broken "Bludgeon-" etc. map onto the book's types.
+  const damageType = findDamageType(damagePart);
   return {
     name,
     toHit: /to hit/i.test(toHit) ? toHit.replace(/\s*to hit/i, "") : "",

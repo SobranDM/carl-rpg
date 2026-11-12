@@ -84,14 +84,27 @@ async function chooseContent(title, found, maps) {
 
 function summarize(results) {
   return Object.entries(results)
-    .map(([key, r]) =>
-      game.i18n.format("CARLRPG.PdfImport.SummaryLine", {
+    .map(([key, r]) => {
+      const line = game.i18n.format("CARLRPG.PdfImport.SummaryLine", {
         kind: game.i18n.localize(`CARLRPG.PdfImport.Kind.${key}`),
         created: r.created,
         updated: r.updated,
-      }),
-    )
+      });
+      return r.skipped?.length
+        ? `${line} ${game.i18n.format("CARLRPG.PdfImport.SummarySkipped", { skipped: r.skipped.length })}`
+        : line;
+    })
     .join(", ");
+}
+
+/** Names of documents a re-import left alone because the GM edited them. */
+function skippedNotice(results) {
+  const names = Object.values(results).flatMap((r) => r.skipped ?? []);
+  if (!names.length) return null;
+  const shown = names.slice(0, 12).join(", ");
+  return game.i18n.format("CARLRPG.PdfImport.SkippedEdited", {
+    names: names.length > 12 ? `${shown}, ...` : shown,
+  });
 }
 
 /** Entry point: the Items sidebar button and the settings menu both call this. */
@@ -142,6 +155,8 @@ export async function openRulebookImporter() {
     ui.notifications.info(
       game.i18n.format("CARLRPG.PdfImport.Done", { title, summary: summarize(results) }),
     );
+    const skipped = skippedNotice(results);
+    if (skipped) ui.notifications.warn(skipped, { permanent: true });
   } catch (err) {
     console.error("CarlRPG | Rulebook PDF import failed", err);
     ui.notifications.error(game.i18n.format("CARLRPG.PdfImport.Failed", { error: err.message }));

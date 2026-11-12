@@ -12,6 +12,7 @@
  */
 import { addConditionToActor, resolveTargetEffectLabel } from "../helpers/conditions.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
+import { isImmuneToAllDamage } from "../helpers/damage-pipeline.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/target-effects-footer.hbs";
 
@@ -83,7 +84,13 @@ export async function onApplyTargetEffects(event, message) {
     return;
   }
 
+  const damageByType = message.getFlag("carl-rpg", "damageByType") ?? {};
   for (const actor of actors.values()) {
+    // An Immunity to the whole hit also ignores its Debuffs (p.93).
+    if (isImmuneToAllDamage(damageByType, actor)) {
+      ui.notifications.info(game.i18n.format("CARLRPG.Targets.ImmuneNoEffects", { name: actor.name }));
+      continue;
+    }
     for (const te of targetEffects) {
       await addConditionToActor(actor, te.debuffKey, {
         stacks: te.stacks,

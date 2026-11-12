@@ -250,9 +250,9 @@ export default function register(quench) {
           };
           const kinds = ["gear", "mobs", "achievements"];
           const first = await importBook({ title, found, kinds, maps: [] });
-          assert.deepEqual(first.items, { created: 1, updated: 0 });
-          assert.deepEqual(first.mobs, { created: 2, updated: 0 });
-          assert.deepEqual(first.achievements, { created: 1, updated: 0 });
+          assert.deepEqual(first.items, { created: 1, updated: 0, skipped: [] });
+          assert.deepEqual(first.mobs, { created: 2, updated: 0, skipped: [] });
+          assert.deepEqual(first.achievements, { created: 1, updated: 0, skipped: [] });
 
           const blob = game.actors.find((a) => a.name === "Test Blob" && a.folder?.name === title);
           assert.equal(blob.system.hb.max, 3);
@@ -260,9 +260,27 @@ export default function register(quench) {
           assert.equal(blob.flags["carl-rpg"].pdfImport.book, "quench-pdf-import-test-book");
 
           const second = await importBook({ title, found, kinds, maps: [] });
-          assert.deepEqual(second.items, { created: 0, updated: 1 });
-          assert.deepEqual(second.mobs, { created: 0, updated: 2 });
-          assert.deepEqual(second.achievements, { created: 0, updated: 1 });
+          assert.deepEqual(second.items, { created: 0, updated: 1, skipped: [] });
+          assert.deepEqual(second.mobs, { created: 0, updated: 2, skipped: [] });
+          assert.deepEqual(second.achievements, { created: 0, updated: 1, skipped: [] });
+        });
+
+        it("leaves a document the GM edited alone on re-import", async function () {
+          const found = {
+            gear: parseGear([GEAR_PAGE]),
+            spells: [],
+            mobs: parseMobs([MOB_PAGE]),
+            achievements: [],
+          };
+          const kinds = ["gear", "mobs"];
+          await importBook({ title, found, kinds, maps: [] });
+          const blob = game.actors.find((a) => a.name === "Test Blob" && a.folder?.name === title);
+          await blob.update({ "system.stats.con.value": 9 });
+
+          const again = await importBook({ title, found, kinds, maps: [] });
+          assert.deepEqual(again.mobs.skipped, ["Test Blob"]);
+          assert.equal(again.mobs.updated, 1, "the unedited Mob still updates");
+          assert.equal(blob.system.stats.con.value, 9, "the GM's edit survives");
         });
       });
     },

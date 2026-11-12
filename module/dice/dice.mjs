@@ -11,13 +11,15 @@ import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
 import { buildHealFooter } from "../chat/heal-card.mjs";
 import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
 import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
-import { crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow } from "../helpers/attack-targets.mjs";
+import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow } from "../helpers/attack-targets.mjs";
+import { aiRerollFlags, keptD20, rerollFormula } from "../helpers/ai-favor.mjs";
 import { isAreaItem, isAreaMobAttack } from "../helpers/area.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree, staticEvade, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
 import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
+import { normalizeDamageType } from "../helpers/damage-types.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 import {
   collectDebuffRows, collectAdvantageAgainstRows, decorateRows, resolveRollerRows, resolveDifficultyRows,
@@ -239,14 +241,19 @@ async function evaluateDamageGroups({ groups, skillDefaultType, splitTypes }) {
   const rollMeta = [];
   const damageByType = {};
 
-  for (const [typeKey, parts] of groups) {
+  // Another spelling of a book type ("cold" on an imported Spell) rolls as
+  // that type, so Resistances keyed by the book's types apply to it.
+  const canonical = (type) => normalizeDamageType(type) || type;
+  for (const [groupKey, parts] of groups) {
     if (parts.isEmpty) continue;
     const { roll, total, breakdown } = await parts.evaluate();
     rolls.push(roll);
+    const typeKey = canonical(groupKey);
 
-    if (typeKey === skillDefaultType && splitTypes.length) {
-      rollMeta.push({ label: damageRowLabel(splitTypes), breakdown });
-      const split = splitDamageEvenly(total, splitTypes);
+    if (groupKey === skillDefaultType && splitTypes.length) {
+      const types = [...new Set(splitTypes.map(canonical))];
+      rollMeta.push({ label: damageRowLabel(types), breakdown });
+      const split = splitDamageEvenly(total, types);
       for (const [type, amount] of Object.entries(split)) {
         damageByType[type] = (damageByType[type] ?? 0) + amount;
       }
@@ -328,7 +335,7 @@ async function applyManaCost(actor, manaCost) {
 }
 
 /** Append the spent Mana (and, for a non-base variant, its descriptive delta) to a subtitle. */
-function withManaCostSubtitle(subtitle, chosen) {
+export function withManaCostSubtitle(subtitle, chosen) {
   if (!chosen?.manaCost) return subtitle;
   const label = game.i18n.format("CARLRPG.Dialog.ManaCostSpent", { cost: chosen.manaCost });
   const full = chosen.isBase ? label : `${label} (${chosen.description})`;
@@ -433,6 +440,32 @@ function resolveActorToken(actor) {
   return actor?.token ?? actor?.getActiveTokens?.(true, true)?.[0] ?? null;
 }
 
+/**
+ * Narrow an Attack's conditional modifiers to what's eligible for the roll
+ * as resolved: the rolled Skill's own, plus - only if a Damage Effect ended
+ * up chosen - that one Damage Effect's. Every other candidate Damage
+ * Effect's conditions were surfaced in the dialog too, so a box ticked for
+ * one that isn't used is dropped rather than leaking its bonus.
+ * @param {object[]} conditionalModifiers
+ * @param {Item} skillItem
+ * @param {Item|null} damageEffectItem
+ * @returns {object[]}
+ */
+function narrowConditionalModifiers(conditionalModifiers, skillItem, damageEffectItem) {
+  const skillKey = slugifySkillName(skillItem.name);
+  return conditionalModifiers.filter((cm) => {
+    if (cm.targetType !== "skillRank" && cm.targetType !== "skillDamage") return true;
+    if (slugifySkillName(cm.target) === skillKey) return true;
+    return !!damageEffectItem && cm.sourceItemId === damageEffectItem.id;
+  });
+}
+
+/** The d20 expression a RollParts check rolled ("1d20", "2d20kh", ...). */
+function d20Formula(roll) {
+  const term = roll.dice?.find((d) => d.faces === 20);
+  return term ? `${term.number}d20${(term.modifiers ?? []).join("")}` : null;
+}
+
 export default class CarlDice {
   /**
    * Stat Check: 1d20 + Stat Mod (the sheet's Stats column). Goes through the
@@ -483,6 +516,7 @@ export default class CarlDice {
 
     await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied));
 
+    const body = buildDebuffNote(debuffEffect.applied);
     return createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: statLabel, breakdown }],
@@ -490,8 +524,12 @@ export default class CarlDice {
       subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
       img: actor.img,
       badge: degreeBadge(degree),
-      body: buildDebuffNote(debuffEffect.applied),
+      body,
       actor,
+      flags: aiRerollFlags(actor, {
+        kind: "check", formula: d20Formula(roll), natural: naturalRoll, total, difficulty: options.difficulty,
+        title: statLabel, img: actor.img, label: statLabel, breakdown, body,
+      }),
     });
   }
 
@@ -560,6 +598,7 @@ export default class CarlDice {
     const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
+    const body = buildDebuffNote(debuffEffect.applied);
     return createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
@@ -567,8 +606,12 @@ export default class CarlDice {
       subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
-      body: buildDebuffNote(debuffEffect.applied),
+      body,
       actor,
+      flags: aiRerollFlags(actor, {
+        kind: "check", formula: d20Formula(roll), natural: naturalRoll, total, difficulty: options.difficulty,
+        title: skillItem.name, img: skillItem.img, label: skillItem.name, breakdown, body, chosenManaCost,
+      }),
     });
   }
 
@@ -725,12 +768,7 @@ export default class CarlDice {
     // dialog too (see conditionalModifiers/damageEffectChoices above), so a
     // checked box for a Damage Effect that isn't the one actually used here
     // is silently dropped rather than leaking its bonus onto this attack.
-    const skillKey = slugifySkillName(skillItem.name);
-    const activeConditionalModifiers = conditionalModifiers.filter((cm) => {
-      if (cm.targetType !== "skillRank" && cm.targetType !== "skillDamage") return true;
-      if (slugifySkillName(cm.target) === skillKey) return true;
-      return !!damageEffectItem && cm.sourceItemId === damageEffectItem.id;
-    });
+    const activeConditionalModifiers = narrowConditionalModifiers(conditionalModifiers, skillItem, damageEffectItem);
 
     const untrained = rank === 0;
     const statKey = skillSys.governingStat;
@@ -779,11 +817,7 @@ export default class CarlDice {
       extraD20Rolls.push(extra);
       secondDie = extra.total;
     }
-    const rowNatural = (formula) => {
-      if (formula === "2d20kh") return Math.max(firstDie, secondDie);
-      if (formula === "2d20kl") return Math.min(firstDie, secondDie);
-      return firstDie;
-    };
+    const rowNatural = (formula) => keptD20(formula, firstDie, secondDie);
 
     const extraConsumed = [];
     const targetRowList = targets.map((t, i) => {
@@ -872,18 +906,14 @@ export default class CarlDice {
     // apply (module/chat/taunt-card.mjs). The card hides the damage until
     // some row is a hit (module/chat/attack-targets-card.mjs).
     if (anyHit || (targetRowList.length && !isArea)) {
-      const damageEffectEntry = damageEffectItem
-        ? sys.skills?.[slugifySkillName(damageEffectItem.name)]
-        : null;
-      const isCrit = naturalRoll === 20;
       const isAmazingSuccess = degree === "amazingSuccess";
-      const built = buildDamageRollParts({
-        skillItem, skillEntry, damageEffectItem, damageEffectEntry, isCrit, rollData, conditionalModifiers: activeConditionalModifiers, checked: options.checked,
+      const damage = await CarlDice.rollAttackDamage(actor, skillItem, {
+        damageEffectItem, isCrit: naturalRoll === 20, isAmazingSuccess,
+        conditionalModifiers: activeConditionalModifiers, checked: options.checked,
       });
-      const evaluated = await evaluateDamageGroups(built);
-      rolls.push(...evaluated.rolls);
-      rollMeta.push(...evaluated.rollMeta.map((meta) => ({ ...meta, rowClass: "carl-damage-roll" })));
-      damageByType = evaluated.damageByType;
+      rolls.push(...damage.rolls);
+      rollMeta.push(...damage.rollMeta);
+      damageByType = damage.damageByType;
       // "Success by 10 or more (Amazing Success): the crawler's Attack
       // deals extra damage equal to their current Floor Number" (Degrees
       // of Success table, p.79) - distinct from Critical Hit (which
@@ -895,10 +925,7 @@ export default class CarlDice {
       if (isAmazingSuccess && !targetRowList.length) {
         damageByType[""] = (damageByType[""] ?? 0) + floor;
       }
-      targetEffects = [
-        ...collectItemTargetEffects(skillItem, { isCrit, isAmazingSuccess }),
-        ...(damageEffectItem ? collectItemTargetEffects(damageEffectItem, { isCrit, isAmazingSuccess }) : []),
-      ];
+      targetEffects = damage.targetEffects;
     }
 
     const hasDamage = Object.values(damageByType).some((v) => v);
@@ -941,6 +968,18 @@ export default class CarlDice {
     // Attack onto themselves (module/chat/taunt-card.mjs). Not an Area Attack.
     if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
     const footer = footerParts.length ? footerParts.join("") : undefined;
+    const body = buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]);
+
+    // AI Favor reroll (module/helpers/ai-favor.mjs): enough to re-resolve
+    // this Attack from a new d20 - see CarlDice.rerollAttack.
+    Object.assign(flags, aiRerollFlags(actor, {
+      kind: "attack", formula: primaryFormula, natural: naturalRoll, total: attackTotal, difficulty,
+      breakdown: attackBreakdown, body, chosenManaCost,
+      detail: target?.actor ? `vs. ${target.actor.name}` : "",
+      skillItemId: skillItem.id, damageEffectItemId: damageEffectItem?.id ?? null,
+      checked: [...(options.checked ?? [])],
+      rowFormulas: Object.fromEntries(targetRowList.map((row, i) => [row.id, rowFormulas[i]])),
+    }));
 
     return createRollMessage({
       rolls, rollMeta,
@@ -948,9 +987,173 @@ export default class CarlDice {
       subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
-      body: buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]),
+      body,
       footer,
       flags,
+      actor,
+    });
+  }
+
+  /**
+   * An Attack's damage roll and on-hit effects - shared by rollAttack and
+   * its AI Favor reroll (rerollAttack), so both roll damage the same way.
+   * Each damage row carries rowClass "carl-damage-roll" (hidden while no
+   * target is hit - module/chat/attack-targets-card.mjs).
+   * @param {Actor} actor
+   * @param {Item} skillItem
+   * @param {{damageEffectItem?: Item|null, isCrit?: boolean, isAmazingSuccess?: boolean, conditionalModifiers?: object[], checked?: Set<string>}} [options]
+   * @returns {Promise<{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>, targetEffects: object[]}>}
+   */
+  static async rollAttackDamage(actor, skillItem, {
+    damageEffectItem = null, isCrit = false, isAmazingSuccess = false, conditionalModifiers = [], checked = new Set(),
+  } = {}) {
+    const sys = actor.system;
+    const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
+    const damageEffectEntry = damageEffectItem ? sys.skills?.[slugifySkillName(damageEffectItem.name)] : null;
+    const built = buildDamageRollParts({
+      skillItem, skillEntry, damageEffectItem, damageEffectEntry, isCrit,
+      rollData: actor.getRollData(), conditionalModifiers, checked,
+    });
+    const evaluated = await evaluateDamageGroups(built);
+    return {
+      rolls: evaluated.rolls,
+      rollMeta: evaluated.rollMeta.map((meta) => ({ ...meta, rowClass: "carl-damage-roll" })),
+      damageByType: evaluated.damageByType,
+      targetEffects: [
+        ...collectItemTargetEffects(skillItem, { isCrit, isAmazingSuccess }),
+        ...(damageEffectItem ? collectItemTargetEffects(damageEffectItem, { isCrit, isAmazingSuccess }) : []),
+      ],
+    };
+  }
+
+  /**
+   * Re-resolve an Attack card from a new d20 (an AI Favor reroll, module/
+   * chat/ai-favor-reroll.mjs) and post the result as a new card. Only the
+   * d20 changes: the rest of the total, each target's Difficulty and zone,
+   * and the dialog's choices come from the original card. Hit/miss, Critical
+   * Hit, Amazing Success and so the damage and on-hit effects follow the new
+   * die - damage is rolled after the d20 at the table too, so it's rolled
+   * afresh. Nothing the original spent (Mana, the use-mark, consumed
+   * Debuffs, the Nat-20 Advantage) is spent again.
+   * @param {ChatMessage} message  The original Attack card.
+   * @returns {Promise<ChatMessage|null>}
+   */
+  static async rerollAttack(message) {
+    const flags = message.flags["carl-rpg"] ?? {};
+    const spec = flags.aiReroll;
+    const actor = spec ? await fromUuid(spec.actorUuid) : null;
+    const skillItem = actor?.items.get(spec.skillItemId);
+    if (!skillItem) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
+      return null;
+    }
+    const damageEffectItem = spec.damageEffectItemId ? (actor.items.get(spec.damageEffectItemId) ?? null) : null;
+
+    const roll = await new Roll(rerollFormula(spec)).evaluate();
+    const naturalRoll = extractNaturalD20(roll);
+    const attackTotal = roll.total;
+    const difficulty = spec.difficulty;
+    const degree = getDegreeOfSuccess(naturalRoll, attackTotal, difficulty);
+    const hit = difficulty === null ? degree !== "criticalFail" : isHitDegree(degree);
+
+    const isArea = !!flags.isArea;
+    const shared = isArea ? { hit, amazing: degree === "amazingSuccess" } : null;
+    const oldRows = activeRows(flags.targetRows);
+    const rowFormulas = spec.rowFormulas ?? {};
+    const d20Results = (roll.dice ?? []).find((d) => d.faces === 20)?.results ?? [];
+    const firstDie = d20Results[0]?.result ?? naturalRoll;
+    let secondDie = d20Results[1]?.result ?? null;
+    const extraD20Rolls = [];
+    if (secondDie === null && oldRows.some((row) => (rowFormulas[row.id] ?? spec.formula) !== "1d20")) {
+      const extra = await new Roll("1d20").evaluate();
+      extraD20Rolls.push(extra);
+      secondDie = extra.total;
+    }
+    const targetRowList = oldRows.map((row, i) => {
+      const formula = rowFormulas[row.id] ?? spec.formula;
+      const rowNat = (i === 0 || isArea || formula === spec.formula) ? naturalRoll : keptD20(formula, firstDie, secondDie);
+      return crawlerAttackRow({
+        id: row.id,
+        target: { uuid: row.uuid, actor: { name: row.name, type: row.isCharacter ? "character" : "mob" } },
+        difficulty: row.difficulty,
+        attackTotal: attackTotal - (naturalRoll ?? 0) + (rowNat ?? 0), naturalRoll: rowNat,
+        zone: row.zone, shared,
+      });
+    });
+    const anyHit = targetRowList.length ? targetRowList.some((row) => row.hit) : hit;
+
+    const rolls = [roll, ...extraD20Rolls];
+    const rollMeta = [
+      { label: skillItem.name, detail: game.i18n.localize("CARLRPG.Reroll.Detail"), breakdown: spec.breakdown },
+      ...extraD20Rolls.map(() => ({ label: game.i18n.localize("CARLRPG.Targets.ExtraD20"), detail: game.i18n.localize("CARLRPG.Targets.ExtraD20Hint") })),
+    ];
+    let damageByType = {};
+    let targetEffects = [];
+    if (anyHit || (targetRowList.length && !isArea)) {
+      const conditionalModifiers = narrowConditionalModifiers(
+        collectApplicableConditionalModifiers(actor.system, skillItem.name, damageEffectItem ? [damageEffectItem.id] : []),
+        skillItem, damageEffectItem,
+      );
+      const isAmazingSuccess = degree === "amazingSuccess";
+      const damage = await CarlDice.rollAttackDamage(actor, skillItem, {
+        damageEffectItem, isCrit: naturalRoll === 20, isAmazingSuccess,
+        conditionalModifiers, checked: new Set(spec.checked ?? []),
+      });
+      rolls.push(...damage.rolls);
+      rollMeta.push(...damage.rollMeta);
+      damageByType = damage.damageByType;
+      if (isAmazingSuccess && !targetRowList.length) {
+        damageByType[""] = (damageByType[""] ?? 0) + (flags.floor ?? game.settings.get("carl-rpg", "currentFloor"));
+      }
+      targetEffects = damage.targetEffects;
+    }
+
+    const hasDamage = Object.values(damageByType).some((v) => v);
+    const newFlags = { aiReroll: { ...spec, used: true } };
+    const footerParts = [];
+    // A Skill-or-Damage-Effect mark choice still open on the old card moves
+    // to the new one.
+    if (flags.markChoiceSkillUuid && !flags.markChoiceDone) {
+      const skillChoice = await fromUuid(flags.markChoiceSkillUuid);
+      const effectChoice = await fromUuid(flags.markChoiceDamageEffectUuid);
+      if (skillChoice && effectChoice) {
+        newFlags.markChoiceSkillUuid = flags.markChoiceSkillUuid;
+        newFlags.markChoiceDamageEffectUuid = flags.markChoiceDamageEffectUuid;
+        footerParts.push(await buildMarkChoiceFooter(skillChoice, effectChoice));
+      }
+    }
+    if (targetEffects.length) newFlags.targetEffects = targetEffects;
+    if (hasDamage) {
+      newFlags.damageByType = damageByType;
+      newFlags.damageIsMagic = skillItem.system.isMagicDamage;
+    }
+    if (targetRowList.length) {
+      Object.assign(newFlags, {
+        targetUuids: flags.targetUuids,
+        targetRows: Object.fromEntries(targetRowList.map((row) => [row.id, row])),
+        isArea,
+        floor: flags.floor,
+        attackTotal,
+        naturalRoll,
+        targetDifficulty: difficulty,
+        attackerType: flags.attackerType,
+        attackerUuid: flags.attackerUuid,
+      });
+    }
+    if (targetRowList.length || hasDamage || targetEffects.length) {
+      footerParts.push(buildAttackTargetsFooter({ damageByType, targetEffects, isArea }));
+    }
+    if (targetRowList.length && !isArea) footerParts.push(await buildTauntLinkFooter());
+
+    return createRollMessage({
+      rolls, rollMeta,
+      title: skillItem.name,
+      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), spec.chosenManaCost),
+      img: skillItem.img,
+      badge: degreeBadge(degree),
+      body: `${spec.body ?? ""}<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>`,
+      footer: footerParts.length ? footerParts.join("") : undefined,
+      flags: newFlags,
       actor,
     });
   }
@@ -1352,7 +1555,8 @@ export default class CarlDice {
 
     await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied, { isAction }));
 
-    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote };
+    const formula = d20Formula(roll);
+    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote, formula, difficulty: options.difficulty };
 
     let body = debuffNote;
     if (degree === "majorFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeMajorFail")}</p>`;
@@ -1367,7 +1571,14 @@ export default class CarlDice {
       badge: degreeBadge(degree),
       body,
       actor,
-      flags: { evadeDegree: degree, evadeTotal: total },
+      flags: {
+        evadeDegree: degree, evadeTotal: total,
+        ...aiRerollFlags(actor, {
+          kind: "check", variant: "evade", formula, natural: naturalRoll, total, difficulty: options.difficulty,
+          title: game.i18n.localize("CARLRPG.Roll.Evade"), img: actor.img,
+          label: game.i18n.localize("CARLRPG.Roll.Evade"), breakdown, body: debuffNote,
+        }),
+      },
     });
   }
 
@@ -1408,12 +1619,14 @@ export default class CarlDice {
 
     const rollData = actor.getRollData();
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
+    // An opposed Spell is still cast - it costs Mana like any other (p.173).
+    const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
     const rollerRows = decorateRows(collectDebuffRows(sys, "check"), "roll");
     const opponentRows = opponent && opponent.type !== "character"
       ? decorateRows(collectDebuffRows(opponent.system, "check", { ownerName: opponent.name, idPrefix: "opp", ownAction: false }), "difficulty")
       : [];
 
-    let options = { advantage: "normal", difficulty, modifier: 0, checked: new Set(), checkedDebuffs: null };
+    let options = { advantage: "normal", difficulty, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const difficultyPresets = difficulty === null ? buildSkillCheckPresets(skillItem) : buildDifficultyPresets({
         floor: game.settings.get("carl-rpg", "currentFloor"),
@@ -1426,6 +1639,7 @@ export default class CarlDice {
         difficultyPresets,
         difficultyLabel: opponentRows.length ? game.i18n.localize("CARLRPG.Dialog.BaseDifficulty") : null,
         conditionalModifiers,
+        manaCostChoices,
         debuffRows: [...rollerRows, ...opponentRows],
       });
       if (!prompted) return null;
@@ -1456,17 +1670,26 @@ export default class CarlDice {
     if (opponent) await removeConditionsById(opponent, consumedConditionIds(opponentEffect.applied));
     await CarlDice.markForAdvancement(skillItem);
 
-    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote };
+    // Spent before the post: false return, so a caller folding this roll
+    // into its own card (Taunt) pays too.
+    const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
+    if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+
+    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote, chosenManaCost };
 
     return createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
       title: skillItem.name,
-      subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
+      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
       body: debuffNote,
       actor,
+      flags: aiRerollFlags(actor, {
+        kind: "check", formula: d20Formula(roll), natural: naturalRoll, total, difficulty: finalDifficulty,
+        title: skillItem.name, img: skillItem.img, label: skillItem.name, breakdown, body: debuffNote, chosenManaCost,
+      }),
     });
   }
 

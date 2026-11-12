@@ -8,6 +8,7 @@
 
 import { bodySize, escapeHtml, isHeading, joinText, titleCase } from "./page-text.mjs";
 import { changeEntry, toBlocks } from "./shared.mjs";
+import { normalizeDamageType } from "../helpers/damage-types.mjs";
 
 const SLOT_RE = /^Gear Slot:\s*(.*)$/;
 const STAT_WORDS = {
@@ -17,22 +18,6 @@ const STAT_WORDS = {
   intelligence: "int",
   charisma: "cha",
 };
-const DAMAGE_TYPES = [
-  "acid",
-  "bludgeoning",
-  "electric",
-  "fire",
-  "force",
-  "holy",
-  "ice",
-  "necrotic",
-  "piercing",
-  "poison",
-  "psychic",
-  "slashing",
-  "sonic",
-];
-
 /**
  * @param {object[]} pages  From scan.mjs readPages.
  * @returns {{name: string, page: number, data: object}[]}
@@ -94,8 +79,8 @@ export function bulletToChanges(text, label) {
     ];
     return m[2]
       .split(/,|\band\b/)
-      .map((t) => t.trim().toLowerCase())
-      .filter((t) => DAMAGE_TYPES.includes(t))
+      .map((t) => normalizeDamageType(t))
+      .filter(Boolean)
       .map((t) =>
         changeEntry({ label, targetType: "resistance", target: t, mode: "override", value: state }),
       );

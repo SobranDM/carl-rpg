@@ -176,6 +176,32 @@
     color: var(--carl-text-muted);
   }
 
+  // AI Favor reroll (module/chat/ai-favor-reroll.mjs): the button, the note
+  // on a reroll's own card, and the faded look of the card it replaced.
+  .carl-ai-reroll {
+    margin-top: 4px;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .carl-reroll-note {
+    font-style: italic;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-reroll-superseded {
+    margin: 4px 0 0;
+    font-size: 11px;
+    font-style: italic;
+    color: var(--carl-accent);
+  }
+
+  &.carl-rerolled {
+    opacity: 0.6;
+  }
+
   // Every action button below (Apply Damage/Healing/Target Effects, Mend
   // Debuff, Roll Evade, Add Evade Debuff, Taunt) only sets its own layout
   // (width/font-size/padding) - none of them set color/background, and

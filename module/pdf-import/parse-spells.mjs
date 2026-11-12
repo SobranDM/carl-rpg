@@ -7,6 +7,7 @@
  */
 
 import { joinText, titleCase } from "./page-text.mjs";
+import { findDamageType } from "../helpers/damage-types.mjs";
 
 const STATS = {
   strength: "str",
@@ -16,22 +17,6 @@ const STATS = {
   charisma: "cha",
 };
 const STAT_ABBR = new Set(Object.values(STATS));
-
-const DAMAGE_TYPES = [
-  "acid",
-  "cold",
-  "electric",
-  "fire",
-  "force",
-  "necrotic",
-  "piercing",
-  "poison",
-  "psychic",
-  "radiant",
-  "slashing",
-  "bludgeoning",
-  "sonic",
-];
 
 const FIELD_RE = /^(Mana Cost|Range|Duration|Limitations|Cooldown|AI Favor):\s*(.*)$/;
 const RANK_RE = /^Rank (\d+):\s*(.*)$/;
@@ -178,10 +163,8 @@ function toItem(rawName, page, s) {
   const dmgText = joinText(s.baseDamage);
   const dice = dmgText.match(/\d+d\d+/)?.[0] ?? "";
   const dmgStat = dmgText.match(/\+\s*(Str|Dex|Con|Int|Cha)\b/i)?.[1]?.toLowerCase();
-  const dmgType =
-    DAMAGE_TYPES.find((t) => new RegExp(`\\b${t}\\b`, "i").test(dmgText)) ??
-    DAMAGE_TYPES.find((t) => lowerType.includes(t)) ??
-    "";
+  // Other spellings ("Cold", "Radiant") map onto the book's types.
+  const dmgType = findDamageType(dmgText) || findDamageType(lowerType);
   const governingStat = STATS[statWord] ?? (STAT_ABBR.has(dmgStat) ? dmgStat : "int");
 
   const paras = [];
