@@ -19,4 +19,113 @@
     {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
       changes=system.changes path="system.changes" config=config item=item actorSkillNames=actorSkillNames}}
   </fieldset>
+
+  {{!-- Single-use items (Item Rules, p.99) - module/helpers/consumables.mjs. --}}
+  <fieldset class="carl-consumable">
+    <legend>{{localize "CARLRPG.Consumable.Title"}}</legend>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.KindLabel"}}</label>
+        <select name="system.consumable.kind">
+          {{selectOptions config.consumableKinds selected=system.consumable.kind localize=true}}
+        </select>
+      </div>
+    </div>
+    {{#with system.consumable as |c|}}
+    {{#if (or (eq c.kind "potion") (eq c.kind "other"))}}
+    <p class="carl-dialog-hint">{{localize "CARLRPG.Consumable.PotionHint"}}</p>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.HealSlots"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.consumable.heal.slots" value="{{c.heal.slots}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.HealFull"}}</label>
+        <input type="checkbox" name="system.consumable.heal.full" {{checked c.heal.full}} />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.MendLabel"}}</label>
+        <select name="system.consumable.heal.mend">
+          {{selectOptions @root.config.consumableMend selected=c.heal.mend localize=true}}
+        </select>
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.ManaAmount"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.consumable.mana.amount" value="{{c.mana.amount}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.ManaFull"}}</label>
+        <input type="checkbox" name="system.consumable.mana.full" {{checked c.mana.full}} />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.Cures"}}</label>
+        <select name="system.consumable.cures" multiple size="4">
+          {{selectOptions @root.config.debuffs selected=c.cures labelAttr="label" localize=true}}
+        </select>
+      </div>
+    </div>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentLabel"}}</label>
+        <select name="system.consumable.permanent.kind">
+          {{selectOptions @root.config.consumablePermanent selected=c.permanent.kind localize=true}}
+        </select>
+      </div>
+      {{#if (eq c.permanent.kind "stat")}}
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentStat"}}</label>
+        <select name="system.consumable.permanent.target">
+          {{selectOptions @root.config.statAbbreviations selected=c.permanent.target localize=true blank=""}}
+        </select>
+      </div>
+      {{else if (eq c.permanent.kind "skill")}}
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentSkill"}}</label>
+        <input type="text" name="system.consumable.permanent.target" value="{{c.permanent.target}}" placeholder="{{localize 'CARLRPG.Consumable.AnySkill'}}" />
+      </div>
+      {{/if}}
+      {{#if c.permanent.kind}}
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentValue"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.consumable.permanent.value" value="{{c.permanent.value}}" data-dtype="Number" />
+      </div>
+      {{/if}}
+    </div>
+    <fieldset class="carl-consumable-buff">
+      <legend>{{localize "CARLRPG.Consumable.BuffTitle"}}</legend>
+      <div class="carl-field-grid">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Consumable.BuffLabel"}}</label>
+          <input type="text" name="system.consumable.buff.label" value="{{c.buff.label}}" />
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Consumable.BuffDuration"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.consumable.buff.duration" value="{{c.buff.duration}}" data-dtype="Number" />
+          <select name="system.consumable.buff.unit">
+            {{selectOptions @root.config.consumableUnits selected=c.buff.unit localize=true}}
+          </select>
+        </div>
+      </div>
+      {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
+        changes=c.buff.changes path="system.consumable.buff.changes" config=@root.config item=@root.item actorSkillNames=@root.actorSkillNames}}
+    </fieldset>
+    {{else if (or (eq c.kind "scroll") (eq c.kind "spellbook"))}}
+    <p class="carl-dialog-hint">{{localize (concat "CARLRPG.Consumable.SpellHint." c.kind)}}</p>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.SpellName"}}</label>
+        <input type="text" name="system.consumable.spell.name" value="{{c.spell.name}}" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.SpellRank"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.consumable.spell.rank" value="{{c.spell.rank}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Consumable.SpellUuid"}}</label>
+        <input type="text" name="system.consumable.spell.uuid" value="{{c.spell.uuid}}" />
+      </div>
+    </div>
+    {{/if}}
+    {{/with}}
+  </fieldset>
 </section>

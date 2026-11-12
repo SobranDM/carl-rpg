@@ -176,4 +176,24 @@
     flex: 0 0 200px;
     padding: 0 8px;
   }
+
+  // Item sheet's Consumable fieldset (templates/item/parts/attributes-item.hbs).
+  .carl-consumable {
+    margin-top: 6px;
+
+    select[multiple] {
+      min-width: 12em;
+    }
+
+    .carl-consumable-buff {
+      margin-top: 6px;
+    }
+  }
+
+  // Conditions tab: "ends in 29 min" for a timed entry.
+  .carl-condition-expiry {
+    font-size: 11px;
+    color: var(--carl-text-muted);
+    white-space: nowrap;
+  }
 }

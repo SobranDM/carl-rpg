@@ -26,6 +26,7 @@
 
 import { applyScalarChange, slugifySkillName } from "./modifiers.mjs";
 import { CARLRPG } from "./config.mjs";
+import { queueForActor } from "./actor-queue.mjs";
 
 const BAKEABLE_TARGET_TYPES = new Set(["stat", "skillRank"]);
 // Derived from the same table modifiers.mjs's isBakedGrant validates a
@@ -34,22 +35,13 @@ const BAKEABLE_TARGET_TYPES = new Set(["stat", "skillRank"]);
 // out of sync and leave some future stat's grants unbaked-but-also-
 // unapplied (neither side would touch it).
 const STAT_KEYS = new Set(Object.keys(CARLRPG.statAbbreviations));
-const SKILL_LIKE_TYPES = ["skill", "spell", "damageEffect"];
+export const SKILL_LIKE_TYPES = ["skill", "spell", "damageEffect"];
 
-// Serializes bakeItemGrants per actor: two near-simultaneous grants (e.g. a
-// Race and Class added in the same drag-drop or import-script batch) must
-// not both read the same pre-update stat value before either write
-// commits, or one grant's bump silently overwrites the other's. A plain
-// Promise chain is enough here - everything that touches actor.update for
-// this feature runs through this same queue, on this same client.
-const actorBakeQueues = new Map();
-
-function queueForActor(actorId, task) {
-  const previous = actorBakeQueues.get(actorId) ?? Promise.resolve();
-  const next = previous.then(task, task);
-  actorBakeQueues.set(actorId, next.catch(() => {}));
-  return next;
-}
+// bakeItemGrants runs per actor through helpers/actor-queue.mjs: two
+// near-simultaneous grants (e.g. a Race and Class added in the same
+// drag-drop or import-script batch) must not both read the same pre-update
+// stat value before either write commits, or one grant's bump silently
+// overwrites the other's.
 
 // "If you have that Skill, add the bonus, up to 10" (Race & Class
 // Selection, p.127) - a Rank-10 ceiling specifically during grant
@@ -104,6 +96,57 @@ export async function findSkillLikeItem(name) {
 }
 
 /**
+ * The actor's owned Skill, Spell or Damage Effect with this name - matched
+ * by slug (modifiers.mjs's slugifySkillName), the convention the skills bag
+ * uses, so a case/spacing difference doesn't look like a different Skill.
+ * @param {Actor} actor
+ * @param {string} name
+ * @param {string[]} [types]
+ * @returns {Item|undefined}
+ */
+export function findOwnedSkillLike(actor, name, types = SKILL_LIKE_TYPES) {
+  const slug = slugifySkillName(name);
+  return actor.items.find((i) => types.includes(i.type) && slugifySkillName(i.name) === slug);
+}
+
+/**
+ * Creation data for a clean owned copy of a Skill-like item at a Rank: no
+ * id, folder, stats or ownership from the source, no carried-over use-mark,
+ * and a Spell starts switched off. Shared by grants, the CrawlerForge
+ * importer, Skill potions, Spellbooks and Scrolls.
+ * @param {Item|object} source  An Item, or its toObject() data.
+ * @param {number} rank
+ * @returns {object}
+ */
+export function cleanSkillLikeCopy(source, rank) {
+  const data = foundry.utils.deepClone(typeof source.toObject === "function" ? source.toObject() : source);
+  delete data._id;
+  delete data.folder;
+  delete data._stats;
+  delete data.ownership;
+  data.system = { ...(data.system ?? {}), rank, marked: false };
+  if (data.type === "spell") data.system.active = false;
+  return data;
+}
+
+/**
+ * Give the actor a Skill-like item it doesn't own yet, at a Rank: a clean
+ * copy of the compendium/world one with that name, or a bare Utility Skill.
+ * @param {Actor} actor
+ * @param {string} name
+ * @param {number} rank
+ * @returns {Promise<Item|null>}
+ */
+export async function learnSkillLike(actor, name, rank) {
+  const found = await findSkillLikeItem(name);
+  const data = found
+    ? cleanSkillLikeCopy(found, rank)
+    : { name, type: "skill", system: { rank, category: "utility" } };
+  const [created] = await actor.createEmbeddedDocuments("Item", [data]);
+  return created ?? null;
+}
+
+/**
  * Bake one skillRank grant into the actor's persisted state: bump an
  * already-owned matching item's Rank, or - if none is owned - copy a
  * matching compendium/world item onto the actor at the granted Rank, or
@@ -120,8 +163,7 @@ async function bakeSkillRankGrant(actor, change) {
   // convention the live aggregation engine uses to key its skills bag - a
   // raw i.name === name comparison would miss a case/whitespace mismatch
   // and create a duplicate item instead of bumping the real one's rank.
-  const targetSlug = slugifySkillName(name);
-  const existing = actor.items.find((i) => SKILL_LIKE_TYPES.includes(i.type) && slugifySkillName(i.name) === targetSlug);
+  const existing = findOwnedSkillLike(actor, name);
   if (existing) {
     const current = existing.system.rank ?? 0;
     let next = applyScalarChange(current, change.mode, delta);
@@ -134,24 +176,7 @@ async function bakeSkillRankGrant(actor, change) {
     return;
   }
 
-  const rank = Math.max(0, delta);
-  const found = await findSkillLikeItem(name);
-  if (found) {
-    const itemData = found.toObject();
-    delete itemData._id;
-    itemData.system.rank = rank;
-    itemData.system.marked = false;
-    // isToggled state is spell-only (module/data/spell.mjs) - don't write
-    // it onto a copied skill/damageEffect item, which has no such field.
-    if (found.type === "spell") itemData.system.active = false;
-    await Item.create(itemData, { parent: actor });
-  } else {
-    await Item.create({
-      name,
-      type: "skill",
-      system: { rank, category: "utility" },
-    }, { parent: actor });
-  }
+  await learnSkillLike(actor, name, Math.max(0, delta));
 }
 
 /**
@@ -169,10 +194,10 @@ export async function bakeItemGrants(item) {
   if (!actor || actor.type !== "character") return;
   if (item.type !== "class" && item.type !== "race") return;
 
-  // Serialized per-actor (see actorBakeQueues above) so a second grant
+  // Serialized per-actor (helpers/actor-queue.mjs's queueForActor) so a second grant
   // landing while this one is still mid-bake can't read a stale pre-update
   // stat value.
-  return queueForActor(actor.id, () => bakeEligibleGrants(item, actor));
+  return queueForActor(actor.uuid, () => bakeEligibleGrants(item, actor));
 }
 
 async function bakeEligibleGrants(item, actor) {

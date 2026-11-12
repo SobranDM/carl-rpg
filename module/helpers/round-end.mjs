@@ -35,6 +35,12 @@ import { computeDamageApplication } from "./damage-pipeline.mjs";
 import { collectDebuffRows, resolveRollerRows, consumedConditionIds, conditionLabel } from "./debuff-effects.mjs";
 import { resolveD20Formula } from "../dice/dice.mjs";
 import { createRollMessage, createCardMessage, esc } from "../chat/chat-card.mjs";
+import { queueForActor } from "./actor-queue.mjs";
+
+/** An entry's own duration type (Potion Sickness's Poisoned) wins over its preset's. */
+function durationTypeOf(condition) {
+  return condition.durationType ?? CARLRPG.debuffs[condition.key]?.durationType ?? null;
+}
 
 
 function mechanicsOf(condition) {
@@ -62,7 +68,13 @@ export function combatActors(combat) {
  * @returns {Promise<{lines: string[], gmLines: string[], rolls: Roll[], rollMeta: object[]}|null>}
  *   null when the actor has no conditions at all. `lines` are trusted HTML.
  */
-export async function processActorRoundEnd(actor) {
+export function processActorRoundEnd(actor) {
+  // One writer at a time: the timed-effect expiry sweep (module/helpers/
+  // expiry.mjs) also rewrites conditions, on the same round advance.
+  return queueForActor(actor.uuid, () => runActorRoundEnd(actor));
+}
+
+async function runActorRoundEnd(actor) {
   const sys = actor.system;
   const conditions = foundry.utils.deepClone(sys.conditions ?? []);
   if (!conditions.length) return null;
@@ -167,8 +179,7 @@ export async function processActorRoundEnd(actor) {
   // 4. "rounds"-duration ticks.
   for (const condition of conditions) {
     if (removeIds.has(condition.id) || condition === dying) continue;
-    const preset = CARLRPG.debuffs[condition.key];
-    if (preset?.durationType !== "rounds") continue;
+    if (durationTypeOf(condition) !== "rounds") continue;
     if (condition.remaining === null || condition.remaining === undefined) continue;
     condition.remaining -= 1;
     if (condition.remaining <= 0) {
@@ -238,21 +249,23 @@ export async function processRoundEnd(combat, round) {
 export async function processCombatEnd(combat) {
   const lines = [];
   for (const actor of combatActors(combat)) {
-    const current = actor.system.conditions ?? [];
-    const ending = current.filter((c) => {
-      const preset = CARLRPG.debuffs[c.key];
-      return preset?.mechanics?.endsWithCombat || preset?.durationType === "rounds";
+    await queueForActor(actor.uuid, async () => {
+      const current = actor.system.conditions ?? [];
+      const ending = current.filter((c) => {
+        const preset = CARLRPG.debuffs[c.key];
+        return preset?.mechanics?.endsWithCombat || durationTypeOf(c) === "rounds";
+      });
+      if (!ending.length) return;
+      try {
+        await actor.update({ "system.conditions": current.filter((c) => !ending.includes(c)) });
+        lines.push(game.i18n.format("CARLRPG.RoundEnd.CombatEnded", {
+          name: esc(actor.name),
+          debuffs: ending.map((c) => esc(conditionLabel(c))).join(", "),
+        }));
+      } catch (err) {
+        console.error(`CarlRPG | End-of-combat Debuff cleanup failed for ${actor.name}`, err);
+      }
     });
-    if (!ending.length) continue;
-    try {
-      await actor.update({ "system.conditions": current.filter((c) => !ending.includes(c)) });
-      lines.push(game.i18n.format("CARLRPG.RoundEnd.CombatEnded", {
-        name: esc(actor.name),
-        debuffs: ending.map((c) => esc(conditionLabel(c))).join(", "),
-      }));
-    } catch (err) {
-      console.error(`CarlRPG | End-of-combat Debuff cleanup failed for ${actor.name}`, err);
-    }
   }
   if (!lines.length) return null;
   return createCardMessage({

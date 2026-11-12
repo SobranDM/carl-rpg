@@ -20,7 +20,7 @@
  */
 
 import { CARLRPG } from "./config.mjs";
-import { findSkillLikeItem } from "./race-class-grants.mjs";
+import { cleanSkillLikeCopy, findSkillLikeItem } from "./race-class-grants.mjs";
 import { changeEntry } from "../pdf-import/shared.mjs";
 import { escapeHtml } from "../pdf-import/page-text.mjs";
 
@@ -348,16 +348,7 @@ export async function importCrawlerForgeCrawler(exportJson) {
   for (const skill of data.skills) {
     const existing = await findSkillLikeItem(skill.name);
     if (existing) {
-      // Same clean copy as race-class-grants.mjs's bakeSkillRankGrant: no
-      // carried-over use mark, toggled-on Spell, folder or stats.
-      const copy = existing.toObject();
-      delete copy._id;
-      delete copy.folder;
-      delete copy._stats;
-      copy.system.rank = skill.system.rank;
-      copy.system.marked = false;
-      if (existing.type === "spell") copy.system.active = false;
-      skills.push(copy);
+      skills.push(cleanSkillLikeCopy(existing, skill.system.rank));
     } else {
       skills.push(skill);
     }

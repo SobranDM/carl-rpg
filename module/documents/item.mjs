@@ -1,6 +1,7 @@
 import CarlDice from "../dice/dice.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { bakeItemGrants } from "../helpers/race-class-grants.mjs";
+import { useConsumable } from "../helpers/consumables.mjs";
 
 /**
  * Extend the basic Item document.
@@ -119,6 +120,12 @@ export class CarlRPGItem extends Item {
       // and rolls THAT Attack with this Damage Effect applied, rather than
       // posting a description-only card.
       return CarlDice.rollDamageEffect(this.actor, this);
+    }
+
+    // A consumable (Potion, Scroll, Spellbook...) is used, not described -
+    // module/helpers/consumables.mjs.
+    if (this.type === "item" && this.system.consumable?.kind) {
+      return useConsumable(this.actor, this);
     }
 
     return createCardMessage({

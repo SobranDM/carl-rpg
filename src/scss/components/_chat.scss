@@ -488,9 +488,14 @@
     color: var(--carl-text);
   }
 
-  .carl-round-end-list {
+  .carl-round-end-list,
+  .carl-consumable-list {
     margin: 4px 0;
     padding-left: 1.25em;
+  }
+
+  .carl-consumable-apply button {
+    width: 100%;
   }
 }
 

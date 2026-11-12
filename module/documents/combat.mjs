@@ -41,6 +41,9 @@ export class CarlRPGCombat extends Combat {
    */
   async syncPveInitiative() {
     if (!game.users.activeGM?.isSelf || this.isPvP) return;
+    // The debounced sync can fire after the combat was deleted (a quick
+    // add-then-end, or a test) - nothing left to update.
+    if (!game.combats.has(this.id)) return;
     const updates = this.combatants
       .filter((c) => c.initiative === null || c.initiative === undefined)
       .map((c) => ({ _id: c.id, initiative: pveInitiativeFor(c.actor) }));

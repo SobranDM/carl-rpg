@@ -158,7 +158,9 @@ export async function rerollMessage(message) {
 
   // Everything the reroll needs, checked before any AI Favor is spent.
   let target = null;
-  if (spec.kind === "attack" && !actor.items.get(spec.skillItemId)) {
+  // A Scroll's cast (spec.castAs) rebuilds its Spell; anything else needs
+  // the Skill/Spell it rolled.
+  if (spec.kind === "attack" && !spec.castAs && !actor.items.get(spec.skillItemId)) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
     return false;
   }

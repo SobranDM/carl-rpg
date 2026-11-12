@@ -15,6 +15,7 @@ import {
 } from "../helpers/equip-slots.mjs";
 import CarlDice from "../dice/dice.mjs";
 import { isLootBoxItem, takeLootItem } from "../helpers/loot-box.mjs";
+import { useConsumable } from "../helpers/consumables.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -47,6 +48,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       rollStat: CarlRPGActorSheet.#onRollStat,
       toggleMark: CarlRPGActorSheet.#onToggleMark,
       toggleEquipped: CarlRPGActorSheet.#onToggleEquipped,
+      useItem: CarlRPGActorSheet.#onUseItem,
       addCondition: CarlRPGActorSheet.#onAddCondition,
       addArrayItem: CarlRPGActorSheet.#onAddArrayItem,
       deleteArrayItem: CarlRPGActorSheet.#onDeleteArrayItem,
@@ -137,6 +139,31 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @type {Object<string, {key: string, dir: 1|-1}>}
    */
   #listSort = {};
+
+  /**
+   * Rows of an array of objects (the Conditions tab, a Mob's Attacks) submit
+   * only the fields they show, keyed by index ("system.conditions.0.label").
+   * Foundry replaces an array outright, so each submitted row is merged onto
+   * the stored entry here - otherwise an edit would drop the fields no input
+   * shows (a condition's key and id, a timed Buff's changes and expiry).
+   * Arrays of plain values (the Hotlist's text slots) are left to Foundry.
+   * @override
+   */
+  _processFormData(event, form, formData) {
+    const data = super._processFormData(event, form, formData);
+    const submitted = data.system;
+    if (!submitted || typeof submitted !== "object") return data;
+    const source = this.actor.system.toObject();
+    for (const [key, value] of Object.entries(submitted)) {
+      const current = source[key];
+      if (!Array.isArray(current) || !value || typeof value !== "object" || Array.isArray(value)) continue;
+      if (!current.some((entry) => entry && typeof entry === "object")) continue;
+      submitted[key] = current.map((entry, i) => (value[i] && typeof entry === "object"
+        ? foundry.utils.mergeObject(foundry.utils.deepClone(entry), value[i], { inplace: false })
+        : entry));
+    }
+    return data;
+  }
 
   /** @override */
   _configureRenderParts(options) {
@@ -434,11 +461,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   _buildEquipSlots(system) {
     const { hotlist: hotlistMax, accessories: accessoryMax } = CONFIG.CARLRPG.characterListSlots;
-    const hotlist = Array.from({ length: Math.max(hotlistMax, system.hotlist.length) }, (_, i) => ({
-      index: i,
-      number: i + 1,
-      ...resolveSlotValue(this.actor, system.hotlist[i]),
-    }));
+    const hotlist = Array.from({ length: Math.max(hotlistMax, system.hotlist.length) }, (_, i) => {
+      const slot = { index: i, number: i + 1, ...resolveSlotValue(this.actor, system.hotlist[i]) };
+      // "Use a Hotlist Item" (p.64): a potion, scroll... gets a Use button.
+      slot.usable = !!this.actor.items.get(slot.itemId)?.system.consumable?.kind;
+      return slot;
+    });
     const gear = Object.entries(CONFIG.CARLRPG.gearSlots).map(([key, { label, icon }]) => ({
       key,
       label,
@@ -601,6 +629,19 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       return unwearItem(this.actor, item);
     }
     return item.update({ "system.equipped": !item.system.equipped });
+  }
+
+  /**
+   * Use a consumable - a Potion, Scroll, Spellbook... (module/helpers/
+   * consumables.mjs) - from its inventory row or its Hotlist slot.
+   * @private
+   */
+  static #onUseItem(event, target) {
+    event.preventDefault();
+    const itemId = target.dataset.itemId ?? target.closest("[data-item-id]")?.dataset.itemId;
+    const item = this.actor.items.get(itemId);
+    if (!item) return;
+    return useConsumable(this.actor, item);
   }
 
   /**

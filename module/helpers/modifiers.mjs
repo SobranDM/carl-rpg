@@ -232,6 +232,44 @@ export function computeActiveShieldSlots(items) {
   return 0;
 }
 
+/**
+ * The Rank a Skill/Spell can be raised to on this actor: the normal ceiling
+ * (CONFIG skillRankCap, 15) unless a Race/Class raises it.
+ * @param {object} actorSystem
+ * @param {string} name  The Skill/Spell's name.
+ * @returns {number}
+ */
+export function skillRankCap(actorSystem, name) {
+  return actorSystem?.rankCaps?.[slugifySkillName(name)] ?? CARLRPG.skillRankCap;
+}
+
+/**
+ * One Skill/Spell item's own skill-bag entry, as if it were the only thing
+ * the actor owned: its base damage, Rank and the changes its unlocked
+ * Upgrade tiers add to itself. A Scroll casts its Spell this way - at the
+ * scroll's fixed Rank, from an item the caster doesn't own (module/helpers/
+ * consumables.mjs) - so the caster's own copy of the Spell and their gear
+ * don't change it ("cannot change the Rank of the Spell being cast", p.99).
+ * @param {object} actorSystem  The caster's system data (for roll data).
+ * @param {Item} item  An embedded (possibly unsaved) Skill or Spell.
+ * @returns {{skillEntry: object, conditionalModifiers: object[]}}
+ */
+export function buildItemSkillEntry(actorSystem, item) {
+  const ctx = makeAggregationContext(actorSystem);
+  const { skills } = ctx;
+  seedSkillFromItem(skills, item);
+  const key = slugifySkillName(item.name);
+  for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
+    // Only what the Spell does to itself - not a change it makes to some
+    // other Skill, which would land in a bag nothing reads.
+    if (change.target && slugifySkillName(change.target) !== key) continue;
+    // The Rank is the scroll's, fixed.
+    if (change.targetType === "skillRank") continue;
+    applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
+  }
+  return { skillEntry: skills[key], conditionalModifiers: ctx.conditionalModifiers };
+}
+
 function seedSkillFromItem(skills, item) {
   const entry = getOrCreateSkill(skills, item.name);
   entry.itemId = item.id;
@@ -496,6 +534,31 @@ export function accumulateCap(caps, key, change, rollData) {
 }
 
 /**
+ * A fresh set of bags for one aggregation pass (applyOneChange's ctx), with
+ * the roll data its formulas read (@stats, @lvl, @floor). Shared by the
+ * actor-wide pass and a Scroll's single-item pass (buildItemSkillEntry).
+ * @param {object} actorSystem
+ * @returns {object}
+ */
+function makeAggregationContext(actorSystem) {
+  return {
+    skills: {},
+    bonuses: {},
+    rollData: {
+      stats: actorSystem.stats ? foundry.utils.deepClone(actorSystem.stats) : {},
+      lvl: actorSystem.attributes?.level?.value ?? 1,
+      floor: game.settings.get("carl-rpg", "currentFloor"),
+    },
+    conditionalModifiers: [],
+    caps: {},
+    resistances: {},
+    advancementBonuses: {},
+    rankCaps: {},
+    actorSystem,
+  };
+}
+
+/**
  * Aggregate every embedded item's structured changes into:
  *  - actorSystem.skills            dynamic bag keyed by slugified skill name
  *  - actorSystem.bonuses           dotted-key bag for stat/resource/rollMode/custom targets
@@ -524,28 +587,24 @@ export function aggregateActorBonuses(actorSystem) {
   const actor = actorSystem.parent;
   const items = actor?.items ? Array.from(actor.items) : [];
 
-  const skills = {};
-  const bonuses = {};
-  const conditionalModifiers = [];
-  const caps = {};
-  const resistances = {};
-  const advancementBonuses = {};
-  const rankCaps = {};
-
-  const rollData = {
-    stats: actorSystem.stats ? foundry.utils.deepClone(actorSystem.stats) : {},
-    lvl: actorSystem.attributes?.level?.value ?? 1,
-    floor: game.settings.get("carl-rpg", "currentFloor"),
-  };
+  const ctx = makeAggregationContext(actorSystem);
+  const { skills, bonuses, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps } = ctx;
 
   for (const item of items) {
     if (RANKED_TYPES.has(item.type)) seedSkillFromItem(skills, item);
   }
 
-  const ctx = { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps, actorSystem };
   for (const item of items) {
     for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
+    }
+  }
+  // A condition entry carrying its own changes (a timed Buff such as an
+  // Iron Skin Potion's "DR x2" - module/helpers/consumables.mjs) applies
+  // them like a worn item, for as long as the entry lasts.
+  for (const condition of actorSystem.conditions ?? []) {
+    for (const change of condition.changes ?? []) {
+      applyOneChange(change, condition.label || condition.source || "", null, 0, ctx, "condition");
     }
   }
 

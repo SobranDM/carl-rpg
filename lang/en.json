@@ -482,6 +482,125 @@
       "ImmuneNoEffects": "{name} is immune to this damage, so its Debuffs don't apply (p.93).",
       "OldCard": "This Attack card is from an older version - re-roll the Attack to get per-target Evade buttons."
     },
+    "Consumable": {
+      "Title": "Consumable",
+      "KindLabel": "Kind",
+      "Kind": {
+        "none": "Not consumable",
+        "potion": "Potion",
+        "scroll": "Scroll",
+        "spellbook": "Spellbook",
+        "other": "Other single-use item"
+      },
+      "PotionHint": "Applies to the one targeted token, or else the user. A Potion counts toward Potion Sickness (more than one every other round in combat); other items don't.",
+      "HealSlots": "Heal HB slots",
+      "HealFull": "Heal to full",
+      "MendLabel": "Mend",
+      "Mend": {
+        "none": "Nothing",
+        "minor": "One Minor Injury",
+        "any": "One Minor or Major Injury"
+      },
+      "ManaAmount": "Restore Mana",
+      "ManaFull": "Full Mana",
+      "Cures": "Cures",
+      "PermanentLabel": "Permanent boost",
+      "Permanent": {
+        "none": "None",
+        "stat": "Stat",
+        "skill": "Skill"
+      },
+      "PermanentStat": "Stat",
+      "PermanentSkill": "Skill",
+      "PermanentValue": "+ Amount",
+      "AnySkill": "a Skill of your choice",
+      "BuffTitle": "Timed Buff",
+      "BuffLabel": "Buff name",
+      "BuffDuration": "Lasts",
+      "Unit": {
+        "rounds": "rounds",
+        "minutes": "minutes",
+        "hours": "hours"
+      },
+      "SpellHint": {
+        "scroll": "Casts the Spell once at this Rank with no Mana, then turns to dust. Blank fields are read from a name like \"Scroll of Magic Missile (Rank 3)\".",
+        "spellbook": "Teaches the Spell at this Rank (blank: 1d6-1, minimum 1), then disappears. Blank fields are read from a name like \"Spellbook of Hole (Rank 2)\"."
+      },
+      "SpellName": "Spell",
+      "SpellRank": "Rank",
+      "SpellUuid": "Spell link (optional UUID)",
+      "Use": "Use",
+      "Drink": "Drink",
+      "UseYourself": "Use it yourself",
+      "GiveTo": "Give to {name}",
+      "ChooseRecipient": "{name} is targeted. Use {item} yourself, or give it to them?",
+      "SpellbookKnown": "{name} already knows {spell} at Rank {rank} - this book can't teach more. It's kept.",
+      "ChooseSkill": "Skill",
+      "ChooseSkillHint": "Choose the Skill this potion raises.",
+      "OtherSkill": "Or another Skill by name",
+      "UsedBy": "Used by {name}",
+      "GivenTo": "{name} gives it to {target}",
+      "ApplyTo": "Apply to {name}",
+      "Applied": "Applied",
+      "NoRecipient": "Whoever this was for no longer exists.",
+      "ApplyFailed": "Couldn't apply it - see the console. Apply is still available to try again.",
+      "NoneLeft": "There's no {item} left.",
+      "CrawlersOnly": "{item} only works on a crawler.",
+      "NoStat": "{item} doesn't say which Stat it raises - set it on the item.",
+      "SkillAtCap": "{name}'s {skill} is already as high as it can go - the potion is kept.",
+      "LimitReached": {
+        "stat": "{name} has already drunk two Stat potions - the most a crawler ever can.",
+        "skill": "{name} has already drunk two Skill potions - the most a crawler ever can."
+      },
+      "NoSpell": "{item}: couldn't find the Spell \"{spell}\" - link it on the item.",
+      "NoRank": "{item} doesn't say its Rank - set it on the item.",
+      "ScrollCast": "Cast from a scroll at Rank {rank} - no Mana",
+      "UpgradeRank": "Rank {rank}:",
+      "RandomRank": "Spellbook Rank",
+      "PotionSickness": "Potion Sickness",
+      "Expired": "{name}: {effects} ended.",
+      "ExpiredTitle": "Timed effects ended",
+      "EndsIn": {
+        "Seconds": "ends in {amount}s",
+        "Minutes": "ends in {amount} min",
+        "Hours": "ends in {amount} h"
+      },
+      "Does": {
+        "Heal": "Heals {slots} Health Bar slots",
+        "HealFull": "Heals to full",
+        "MendMinor": "Mends one Minor Injury",
+        "MendAny": "Mends one Minor or Major Injury",
+        "Mana": "Restores {amount} Mana",
+        "ManaFull": "Restores full Mana",
+        "Cure": "Cures {debuff}",
+        "Stat": "+{value} {stat} (permanent)",
+        "Skill": "+{value} Ranks in {skill} (permanent)",
+        "Buff": "Buff: {buff}",
+        "BuffFor": "Buff: {buff} for {duration} {unit}"
+      },
+      "Result": {
+        "Healed": "{name} heals {slots} Health Bar slots.",
+        "AlreadyHealthy": "{name} is already at full health.",
+        "HealBlocked": "{name} can't be healed ({debuff}).",
+        "Mended": "{name}'s {debuff} is mended.",
+        "Mana": "{name} regains {amount} Mana.",
+        "Cured": "{name} is cured of {debuff}.",
+        "Stat": "{name} gains +{value} {stat}, permanently.",
+        "Skill": "{name}'s {skill} is now Rank {rank}.",
+        "SkillAtCap": "{name}'s {skill} is already at its highest Rank ({rank}) - nothing gained.",
+        "CrawlersOnly": "Only a crawler can gain a permanent boost - {name} gets nothing from it.",
+        "LimitReached": {
+          "stat": "{name} has already drunk two Stat potions - this one does nothing.",
+          "skill": "{name} has already drunk two Skill potions - this one does nothing."
+        },
+        "Buff": "{name} gains {buff}.",
+        "BuffRefreshed": "{name}'s {buff} starts over.",
+        "Sickness": "Potion Sickness: {name} drank another potion within two rounds and is Poisoned until the end of next round.",
+        "SpellLearned": "{name} learns {spell} at Rank {rank}.",
+        "SpellRaised": "{name}'s {spell} rises to Rank {rank}.",
+        "SpellKnown": "{name} already knows {spell} at Rank {rank} - the book teaches nothing new."
+      }
+    },
     "Reroll": {
       "Button": "Reroll (AI Favor: {favor})",
       "Hint": "Spend 1 AI Favor to reroll this Check's d20, keeping everything else (p.61). Once per Check; not on a Natural 1.",

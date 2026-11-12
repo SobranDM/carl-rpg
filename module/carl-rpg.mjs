@@ -13,6 +13,7 @@ import CarlSpendStatPointsDialog from './apps/spend-stat-points-dialog.mjs';
 import { registerChatListener } from './chat/chat-listener.mjs';
 import { registerChatSocket } from './helpers/chat-socket.mjs';
 import { registerLootBoxSocket } from './helpers/loot-box.mjs';
+import { registerExpirySweep } from './helpers/expiry.mjs';
 import { bakeItemGrants } from './helpers/race-class-grants.mjs';
 import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
 import { openRulebookImporter, RulebookImportMenu } from './pdf-import/import-dialog.mjs';
@@ -117,6 +118,12 @@ Hooks.once('init', function () {
     formula: '1d20 + @stats.dex.mod',
     decimals: 2,
   };
+  // "Each round lasts for 10 seconds" (p.62). Core Combat advances world
+  // time by this much per round, so timed effects with an expiry (Potion
+  // Buffs - module/helpers/expiry.mjs) run out in combat as well as out.
+  CONFIG.time.roundTime = 10;
+  registerExpirySweep();
+
   // End-of-round/end-of-combat Debuff automation (module/helpers/round-end.mjs).
   CONFIG.Combat.documentClass = CarlRPGCombat;
   CONFIG.Combatant.documentClass = CarlRPGCombatant;
@@ -238,6 +245,19 @@ Hooks.on('renderItemDirectory', (app, html) => {
 
 Handlebars.registerHelper('toLowerCase', function (str) {
   return str.toLowerCase();
+});
+
+// "Ends in 29 min" for a timed condition entry (expiresAt, world seconds -
+// module/helpers/expiry.mjs), for the Conditions tab.
+Handlebars.registerHelper('conditionExpiry', function (expiresAt) {
+  if (expiresAt === null || expiresAt === undefined) return '';
+  const left = Math.max(0, expiresAt - (game.time?.worldTime ?? 0));
+  let amount;
+  let unit;
+  if (left < 60) { amount = Math.ceil(left); unit = 'Seconds'; }
+  else if (left < 3600) { amount = Math.ceil(left / 60); unit = 'Minutes'; }
+  else { amount = Math.round(left / 360) / 10; unit = 'Hours'; }
+  return game.i18n.format(`CARLRPG.Consumable.EndsIn.${unit}`, { amount });
 });
 
 // Resolves a system.conditions[].key entry to its localized "what this does"

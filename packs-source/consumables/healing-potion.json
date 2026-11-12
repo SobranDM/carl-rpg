@@ -1,0 +1,61 @@
+{
+  "_id": "pE9m1aDQwwYqj0gK",
+  "name": "Healing Potion",
+  "type": "item",
+  "folder": "vCFDxrAT5809BESA",
+  "img": "icons/consumables/potions/bottle-round-corked-red.webp",
+  "system": {
+    "description": "<p>Heals 5 Health Bar slots.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "consumable": {
+      "kind": "potion",
+      "heal": {
+        "slots": 5,
+        "full": false,
+        "mend": ""
+      },
+      "mana": {
+        "amount": null,
+        "full": false
+      },
+      "cures": [],
+      "permanent": {
+        "kind": "",
+        "target": "",
+        "value": 1
+      },
+      "buff": {
+        "label": "",
+        "duration": 0,
+        "unit": "minutes",
+        "changes": []
+      },
+      "spell": {
+        "name": "",
+        "uuid": "",
+        "rank": null
+      }
+    }
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!pE9m1aDQwwYqj0gK"
+}

@@ -1,0 +1,61 @@
+{
+  "_id": "iXIJQ3sJWrl3VCiQ",
+  "name": "Potion of +3 Skill",
+  "type": "item",
+  "folder": "vCFDxrAT5809BESA",
+  "img": "icons/consumables/potions/bottle-pear-corked-labeled-ornamental-purple.webp",
+  "system": {
+    "description": "<p>Permanent. Choose a Skill and gain 3 Ranks in it.</p><p><em>Each crawler may only consume two Skill potions during the entirety of their short life.</em></p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "consumable": {
+      "kind": "potion",
+      "heal": {
+        "slots": null,
+        "full": false,
+        "mend": ""
+      },
+      "mana": {
+        "amount": null,
+        "full": false
+      },
+      "cures": [],
+      "permanent": {
+        "kind": "skill",
+        "target": "",
+        "value": 3
+      },
+      "buff": {
+        "label": "",
+        "duration": 0,
+        "unit": "minutes",
+        "changes": []
+      },
+      "spell": {
+        "name": "",
+        "uuid": "",
+        "rank": null
+      }
+    }
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!iXIJQ3sJWrl3VCiQ"
+}

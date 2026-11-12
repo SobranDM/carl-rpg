@@ -24,6 +24,11 @@
       <div class="item-prop">{{item.system.quantity}}</div>
       <div class="item-prop">{{item.system.weight}}</div>
       <div class="item-controls">
+        {{#if item.system.consumable.kind}}
+        <a class="item-control carl-use-item" data-action="useItem" title="{{localize 'CARLRPG.Consumable.Use'}}">
+          <i class="fas fa-flask"></i>
+        </a>
+        {{/if}}
         <a class="item-control" data-action="toggleEquipped" title="{{localize 'CARLRPG.Item.Equipped'}}">
           <i class="fas {{#if item.system.equipped}}fa-check-square{{else}}fa-square{{/if}}"></i>
         </a>
@@ -52,6 +57,9 @@
           <span class="carl-hotlist-index">{{slot.number}}</span>
           {{#if slot.img}}<img src="{{slot.img}}" alt="" width="20" height="20" />{{/if}}
           <span class="carl-equip-slot-name">{{slot.name}}</span>
+          {{#if slot.usable}}
+          <a class="item-control carl-slot-use" data-action="useItem" data-item-id="{{slot.itemId}}" title="{{localize 'CARLRPG.Consumable.Use'}}"><i class="fas fa-flask"></i></a>
+          {{/if}}
           {{#if slot.name}}
           <a class="item-control carl-slot-clear" data-action="clearSlot" title="{{localize 'CARLRPG.Actor.ClearSlot'}}"><i class="fas fa-times"></i></a>
           {{/if}}

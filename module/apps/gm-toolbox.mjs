@@ -11,7 +11,7 @@
  *    It only notifies/shines once 2 hours have passed - it never rolls
  *    Advancement Checks or grants Levels on its own.
  *  - Rest buttons advance Foundry's own in-world clock (game.time.
- *    advanceTime), which is unrelated to wall-clock time and only moves
+ *    advance), which is unrelated to wall-clock time and only moves
  *    when a GM clicks a button.
  */
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
@@ -22,11 +22,25 @@ import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import { rollMagicItem } from "../helpers/loot.mjs";
 import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
+import { queueForActor } from "../helpers/actor-queue.mjs";
+import { dropExpiredConditions } from "../helpers/expiry.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
 
 const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+
+/**
+ * Move Foundry's in-world clock forward (v14: game.time.advance; older
+ * cores called it advanceTime). Timed effects expire on it (module/helpers/
+ * expiry.mjs).
+ * @param {number} seconds
+ */
+async function advanceWorldTime(seconds) {
+  if (!seconds) return;
+  if (game.time?.advance) await game.time.advance(seconds);
+  else if (game.time?.advanceTime) await game.time.advanceTime(seconds);
+}
 
 
 const REST_CONFIG = {
@@ -412,8 +426,19 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     });
     if (!actors) return;
 
-    if (game.time?.advanceTime) await game.time.advanceTime(hours * 3600);
-    for (const actor of actors) await actor.update(mendingUpdates(actor, hours));
+    // Per crawler, in its queue (shared with the expiry sweep, so neither
+    // write overwrites the other): first end every timed effect that runs
+    // out before the mending does - so a temporary +HB Buff can't leave
+    // them healed past their real maximum - then recover. The clock moves
+    // last.
+    const endsAt = game.time.worldTime + hours * 3600;
+    for (const actor of actors) {
+      await queueForActor(actor.uuid, async () => {
+        await dropExpiredConditions(actor, endsAt);
+        await actor.update(mendingUpdates(actor, hours));
+      });
+    }
+    await advanceWorldTime(hours * 3600);
 
     await createCardMessage({
       title: game.i18n.localize("CARLRPG.Toolbox.MendTitle"),
@@ -443,22 +468,26 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     });
     if (!selectedActors) return; // Cancelled: no time advance, no updates.
 
-    if (game.time?.advanceTime) await game.time.advanceTime(config.seconds);
-
+    // Expired effects, then recovery, then the clock - see #onMend.
+    const endsAt = game.time.worldTime + config.seconds;
     for (const actor of selectedActors) {
-      const sys = actor.system;
-      const effectiveMax = sys.hb?.effectiveMax ?? sys.hb?.max ?? 0;
+      await queueForActor(actor.uuid, async () => {
+        await dropExpiredConditions(actor, endsAt);
+        const sys = actor.system;
+        const effectiveMax = sys.hb?.effectiveMax ?? sys.hb?.max ?? 0;
 
-      const updates = kind === "short"
-        ? shortRestUpdates(actor)
-        : { "system.hb.value": effectiveMax, "system.mana.value": sys.mana?.max ?? 0 };
+        const updates = kind === "short"
+          ? shortRestUpdates(actor)
+          : { "system.hb.value": effectiveMax, "system.mana.value": sys.mana?.max ?? 0 };
 
-      // Injuries and Fatigued end by rest length (rest.mjs's conditionsAfterRest).
-      const conditions = conditionsAfterRest(sys.conditions, kind);
-      if (conditions.length !== (sys.conditions ?? []).length) updates["system.conditions"] = conditions;
+        // Injuries and Fatigued end by rest length (rest.mjs's conditionsAfterRest).
+        const conditions = conditionsAfterRest(sys.conditions, kind);
+        if (conditions.length !== (sys.conditions ?? []).length) updates["system.conditions"] = conditions;
 
-      await actor.update(updates);
+        await actor.update(updates);
+      });
     }
+    await advanceWorldTime(config.seconds);
 
     await createCardMessage({
       title: game.i18n.localize(config.titleKey),

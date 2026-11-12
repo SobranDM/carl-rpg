@@ -353,6 +353,40 @@ CARLRPG.bossSeverity = {
 };
 
 /**
+ * The highest Rank a Skill/Spell reaches by Advancement, grinding or potions
+ * unless a Race/Class raises it ("X Skill can be raised to Rank 20" -
+ * the actor's rankCaps). See modifiers.mjs's skillRankCap.
+ */
+CARLRPG.skillRankCap = 15;
+
+/**
+ * Consumables (Item Rules, p.99 - module/helpers/consumables.mjs): the item
+ * sheet's choices for a gear item's system.consumable.
+ */
+CARLRPG.consumableKinds = {
+  "": "CARLRPG.Consumable.Kind.none",
+  potion: "CARLRPG.Consumable.Kind.potion",
+  scroll: "CARLRPG.Consumable.Kind.scroll",
+  spellbook: "CARLRPG.Consumable.Kind.spellbook",
+  other: "CARLRPG.Consumable.Kind.other",
+};
+CARLRPG.consumableMend = {
+  "": "CARLRPG.Consumable.Mend.none",
+  minor: "CARLRPG.Consumable.Mend.minor",
+  any: "CARLRPG.Consumable.Mend.any",
+};
+CARLRPG.consumablePermanent = {
+  "": "CARLRPG.Consumable.Permanent.none",
+  stat: "CARLRPG.Consumable.Permanent.stat",
+  skill: "CARLRPG.Consumable.Permanent.skill",
+};
+CARLRPG.consumableUnits = {
+  rounds: "CARLRPG.Consumable.Unit.rounds",
+  minutes: "CARLRPG.Consumable.Unit.minutes",
+  hours: "CARLRPG.Consumable.Unit.hours",
+};
+
+/**
  * Randomized Magic Items (Skills, Spells & Gear, p.219-220): a loot box's
  * tier sets how many times to roll on the Item Type sub-table it lands on
  * to build up one item's properties (0 for Bronze - the item stays

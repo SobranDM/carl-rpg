@@ -38,6 +38,7 @@ import { markChoiceActionEntries } from "./mark-choice-card.mjs";
 import { grindSurplusActionEntries } from "./grind-surplus-card.mjs";
 import { attackTargetsActionEntries, decorateTargetRows } from "./attack-targets-card.mjs";
 import { aiRerollActionEntries, decorateAiReroll } from "./ai-favor-reroll.mjs";
+import { consumableActionEntries } from "./consumable-card.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
@@ -49,6 +50,7 @@ const REGISTRY = [
   ...grindSurplusActionEntries,
   ...attackTargetsActionEntries,
   ...aiRerollActionEntries,
+  ...consumableActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 

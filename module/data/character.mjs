@@ -1,6 +1,7 @@
 import CarlRPGActorBase from "./actor-base.mjs";
 import { getStatMod } from "../helpers/rules.mjs";
 import { aggregateActorBonuses, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
+import { defineConditionsField } from "./shared/condition-entry.mjs";
 
 export default class CarlRPGCharacter extends CarlRPGActorBase {
   static defineSchema() {
@@ -54,29 +55,16 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     }
     schema.stats = new fields.SchemaField(statsSchema);
 
-    // Active Debuffs/Buffs (Table 11). Their effects come from each entry's
-    // CONFIG.CARLRPG.debuffs mechanics (module/helpers/debuff-effects.mjs,
-    // round-end.mjs), not the item ChangeEntry engine.
-    schema.conditions = new fields.ArrayField(
-      new fields.SchemaField({
-        id: new fields.StringField({
-          required: true,
-          blank: false,
-          initial: () => foundry.utils.randomID(),
-        }),
-        key: new fields.StringField({ required: true, blank: false }), // key into CONFIG.CARLRPG.debuffs, or "custom"
-        label: new fields.StringField({ required: false, blank: true, initial: "" }),
-        stacks: new fields.NumberField({ ...requiredInteger, initial: 1, min: 1 }),
-        remaining: new fields.NumberField({
-          required: false,
-          nullable: true,
-          integer: true,
-          initial: null,
-        }),
-        source: new fields.StringField({ required: false, blank: true, initial: "" }),
-      }),
-      { required: false, initial: [] },
-    );
+    // Active Debuffs/Buffs (Table 11) - shape in data/shared/condition-entry.mjs.
+    schema.conditions = defineConditionsField();
+
+    // "Each crawler may only consume two Stat potions and two Skill potions
+    // during the entirety of their short life" (p.218) - counted by
+    // module/helpers/consumables.mjs.
+    schema.permanentPotions = new fields.SchemaField({
+      stat: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
+      skill: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
+    });
 
     // Roll20 / printed character sheet parity: free-text bookkeeping with no
     // mechanical hook. Fixed-length lists render a set number of inputs (see
