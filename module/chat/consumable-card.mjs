@@ -10,7 +10,7 @@ import { CARLRPG } from "../helpers/config.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { appendCardSection, createCardMessage, createRollMessage, esc } from "./chat-card.mjs";
 import { canActOnUuidFlag, resolveTargetActor } from "./evade-link-card.mjs";
-import { applyConsumableEffects } from "../helpers/consumables.mjs";
+import { applyConsumableEffects, hasBuff } from "../helpers/consumables.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -43,11 +43,17 @@ export function describeConsumable(effects, itemName = "") {
     out.push(t("Skill", { value: permanent.value, skill: esc(permanent.target || game.i18n.localize("CARLRPG.Consumable.AnySkill")) }));
   }
   const buff = effects.buff ?? {};
-  if (buff.label || buff.changes?.length) {
+  const perRound = buff.perRound ?? {};
+  if (hasBuff(buff)) {
     const label = esc(buff.label || itemName);
-    out.push(buff.duration
+    const duration = buff.duration
       ? t("BuffFor", { buff: label, duration: buff.duration, unit: game.i18n.localize(`CARLRPG.Consumable.Unit.${buff.unit}`) })
-      : t("Buff", { buff: label }));
+      : t("Buff", { buff: label });
+    const restores = [
+      perRound.hb ? t("PerRoundHb", { amount: perRound.hb }) : null,
+      perRound.mana ? t("PerRoundMana", { amount: perRound.mana }) : null,
+    ].filter(Boolean);
+    out.push(restores.length ? `${duration} (${restores.join(", ")})` : duration);
   }
   return out;
 }
@@ -62,7 +68,8 @@ const list = (lines) => (lines?.length ? `<ul class="carl-consumable-list">${lin
  * @param {{name: string, img: string}} args.item
  * @param {object|null} args.effects  Snapshot of system.consumable (null: nothing left to apply).
  * @param {boolean} [args.isPotion]
- * @param {{combatId: string, round: number}|null} [args.drankAt]  When it was drunk (Potion Sickness).
+ * @param {{combatId: string, round: number}|null} [args.drankAt]  The fight and round it was used in
+ *   (Potion Sickness; whether a round-measured Buff counts rounds).
  * @param {string[]|null} [args.lines]  Results, when already applied; null = not yet.
  * @param {Roll[]} [args.rolls]
  * @param {object[]} [args.rollMeta]

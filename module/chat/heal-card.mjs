@@ -15,7 +15,7 @@
  */
 import { removeConditionFromActor } from "../helpers/conditions.mjs";
 import { findConditionWithMechanic, conditionLabel } from "../helpers/debuff-effects.mjs";
-import { shortRestUpdates, conditionsAfterRest } from "../helpers/rest.mjs";
+import { shortRestUpdates, conditionsAfterRest, hbCeiling, restoreUpTo } from "../helpers/rest.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 
@@ -91,15 +91,15 @@ export async function onApplyHeal(event, message) {
   const full = message.getFlag("carl-rpg", "healFull") ?? false;
   const amount = message.getFlag("carl-rpg", "healAmount") ?? 0;
   const sys = actor.system;
-  const effectiveMax = sys.hb?.effectiveMax ?? sys.hb?.max ?? 0;
+  const effectiveMax = hbCeiling(sys);
 
   // "Heal to full" (Rank 15) reuses the Short Rest formula for the Mana
   // half-restore it also grants, but overrides hb.value straight to
   // effectiveMax rather than the Short Rest's flat "+5" - see
   // docs/known-gaps.md 1.2 and module/helpers/rest.mjs.
   const updates = full
-    ? { ...shortRestUpdates(actor), "system.hb.value": effectiveMax }
-    : { "system.hb.value": Math.min((sys.hb?.value ?? 0) + amount, effectiveMax) };
+    ? { ...shortRestUpdates(actor), "system.hb.value": Math.max(sys.hb?.value ?? 0, effectiveMax) }
+    : { "system.hb.value": restoreUpTo(sys.hb?.value ?? 0, amount, effectiveMax) };
 
   // Rank 15's "benefits of a short rest" also ends whatever a short rest
   // ends (Minor Injury - rest.mjs's conditionsAfterRest), on top of the

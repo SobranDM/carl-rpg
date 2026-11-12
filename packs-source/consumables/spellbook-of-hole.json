@@ -31,7 +31,11 @@
         "label": "",
         "duration": 0,
         "unit": "minutes",
-        "changes": []
+        "changes": [],
+        "perRound": {
+          "hb": null,
+          "mana": null
+        }
       },
       "spell": {
         "name": "Hole",

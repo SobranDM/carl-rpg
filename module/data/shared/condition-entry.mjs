@@ -12,6 +12,8 @@ import { defineChangesField } from "./change-entry.mjs";
  *    time 10 seconds each (CONFIG.time.roundTime).
  *  - `durationType`: overrides the preset's, e.g. Potion Sickness's Poisoned
  *    counts down rounds although Poisoned itself lasts until cured.
+ *  - `perRound`: HB slots / Mana restored at each round end while it lasts
+ *    (a Mana Refill potion - module/helpers/round-end.mjs).
  * @returns {foundry.data.fields.ArrayField}
  */
 export function defineConditionsField() {
@@ -30,6 +32,10 @@ export function defineConditionsField() {
       }),
       expiresAt: new fields.NumberField({ required: false, nullable: true, initial: null }),
       changes: defineChangesField(),
+      perRound: new fields.SchemaField({
+        hb: new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 0 }),
+        mana: new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 0 }),
+      }),
     }),
     { required: false, initial: [] },
   );

@@ -16,7 +16,7 @@
  */
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "./carl-dialog.mjs";
-import { shortRestUpdates, conditionsAfterRest, mendingUpdates } from "../helpers/rest.mjs";
+import { shortRestUpdates, fullRestoreUpdates, conditionsAfterRest, mendingUpdates } from "../helpers/rest.mjs";
 import { BOSS_TIERS, collapseDays, endOfFloorPopularityDelta } from "../helpers/floor.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import { rollMagicItem } from "../helpers/loot.mjs";
@@ -474,11 +474,10 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       await queueForActor(actor.uuid, async () => {
         await dropExpiredConditions(actor, endsAt);
         const sys = actor.system;
-        const effectiveMax = sys.hb?.effectiveMax ?? sys.hb?.max ?? 0;
 
         const updates = kind === "short"
           ? shortRestUpdates(actor)
-          : { "system.hb.value": effectiveMax, "system.mana.value": sys.mana?.max ?? 0 };
+          : fullRestoreUpdates(actor);
 
         // Injuries and Fatigued end by rest length (rest.mjs's conditionsAfterRest).
         const conditions = conditionsAfterRest(sys.conditions, kind);

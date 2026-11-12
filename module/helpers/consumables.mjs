@@ -32,6 +32,7 @@ import { buildConditionEntry } from "./conditions.mjs";
 import { durationSeconds } from "./expiry.mjs";
 import { buildScrollCast } from "./scroll-cast.mjs";
 import { queueForActor } from "./actor-queue.mjs";
+import { hbCeiling, restoreUpTo, restoresPerRound } from "./rest.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { postConsumableCard } from "../chat/consumable-card.mjs";
@@ -94,6 +95,11 @@ async function postScrollEffect(actor, spell, rank) {
     body: `${spell.system.description ?? ""}${upgrades}`,
     actor,
   });
+}
+
+/** Whether a consumable's Buff section does anything. */
+export function hasBuff(buff) {
+  return !!(buff?.label || buff?.changes?.length || restoresPerRound(buff?.perRound));
 }
 
 /** Use up one: quantity - 1, or delete the item when it was the last. */
@@ -194,15 +200,21 @@ async function drinkOrUse(actor, item, { skipDialog }) {
     if (!recipient) return null;
   }
 
-  // A healing-only potion can't help someone who can't be healed (The
-  // Taint) - keep it for later instead.
+  // A healing-only potion - including HB restored each round - can't help
+  // someone who can't be healed (The Taint): keep it for later instead.
   const heal = effects.heal ?? {};
-  const onlyHeals = (heal.full || heal.slots || heal.mend)
-    && !effects.mana?.full && !effects.mana?.amount && !effects.cures?.length
-    && !effects.permanent?.kind && !effects.buff?.label && !effects.buff?.changes?.length;
-  const taint = onlyHeals ? findConditionWithMechanic(recipient.system, "noHealing") : null;
+  const buff = effects.buff ?? {};
+  const heals = heal.full || heal.slots || heal.mend || buff.perRound?.hb;
+  const doesMore = effects.mana?.full || effects.mana?.amount || effects.cures?.length
+    || effects.permanent?.kind || buff.label || buff.changes?.length || buff.perRound?.mana;
+  const taint = heals && !doesMore ? findConditionWithMechanic(recipient.system, "noHealing") : null;
   if (taint) {
     ui.notifications.warn(game.i18n.format("CARLRPG.Heal.BlockedByDebuff", { name: recipient.name, debuff: conditionLabel(taint) }));
+    return null;
+  }
+  // A restore "each round" with no length would never stop.
+  if (restoresPerRound(buff.perRound) && !buff.duration) {
+    ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.NoDuration", { item: item.name }));
     return null;
   }
 
@@ -234,9 +246,9 @@ async function drinkOrUse(actor, item, { skipDialog }) {
   }
 
   const isPotion = effects.kind === "potion";
-  // When it was drunk, for Potion Sickness - even if someone else clicks
-  // Apply a round later.
-  const drankAt = isPotion ? potionMoment(recipient) : null;
+  // When it was used - for Potion Sickness and for whether a round-measured
+  // Buff counts rounds - even if someone else clicks Apply later.
+  const drankAt = potionMoment(recipient);
   const applyNow = recipient.isOwner;
   let lines = null;
   if (applyNow) lines = await applyConsumableEffects(recipient, effects, { itemName: item.name, isPotion, drankAt });
@@ -270,6 +282,8 @@ export function applyConsumableEffects(recipient, effects, { itemName = "", isPo
 }
 
 async function runConsumableEffects(recipient, effects, { itemName, isPotion, drankAt }) {
+  // The fight and round it was used in (null outside one), worked out once.
+  const moment = drankAt === undefined ? potionMoment(recipient) : drankAt;
   const sys = recipient.system;
   const name = esc(recipient.name);
   const lines = [];
@@ -278,23 +292,38 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
   let conditions = foundry.utils.deepClone(original);
   const fmt = (key, data = {}) => game.i18n.format(`CARLRPG.Consumable.Result.${key}`, { name, ...data });
 
+  // Restores: each adds to whatever this use has already restored, up to
+  // max (never lowering). A heal The Taint blocks is reported once.
+  let taint;
+  let taintNoted = false;
+  const healBlocked = () => {
+    taint ??= findConditionWithMechanic(sys, "noHealing") ?? false;
+    if (taint && !taintNoted) {
+      lines.push(fmt("HealBlocked", { debuff: esc(conditionLabel(taint)) }));
+      taintNoted = true;
+    }
+    return !!taint;
+  };
+  const addHb = (amount, { full = false } = {}) => {
+    const current = updates["system.hb.value"] ?? sys.hb?.value ?? 0;
+    const max = hbCeiling(sys);
+    const next = full ? Math.max(current, max) : restoreUpTo(current, amount, max);
+    if (next > current) updates["system.hb.value"] = next;
+    return next - current;
+  };
+  const addMana = (amount, { full = false } = {}) => {
+    const current = updates["system.mana.value"] ?? sys.mana?.value ?? 0;
+    const max = sys.mana?.max ?? 0;
+    const next = full ? Math.max(current, max) : restoreUpTo(current, amount, max);
+    if (next > current) updates["system.mana.value"] = next;
+    return next - current;
+  };
+
   // Heal: N Health Bar slots, or full.
   const heal = effects.heal ?? {};
-  if (heal.full || heal.slots) {
-    const taint = findConditionWithMechanic(sys, "noHealing");
-    if (taint) {
-      lines.push(fmt("HealBlocked", { debuff: esc(conditionLabel(taint)) }));
-    } else {
-      const max = sys.hb?.effectiveMax ?? sys.hb?.max ?? 0;
-      const current = sys.hb?.value ?? 0;
-      const next = Math.max(current, heal.full ? max : Math.min(current + Number(heal.slots), max));
-      if (next > current) {
-        updates["system.hb.value"] = next;
-        lines.push(fmt("Healed", { slots: next - current }));
-      } else {
-        lines.push(fmt("AlreadyHealthy"));
-      }
-    }
+  if ((heal.full || heal.slots) && !healBlocked()) {
+    const gained = addHb(heal.slots, { full: heal.full });
+    lines.push(gained ? fmt("Healed", { slots: gained }) : fmt("AlreadyHealthy"));
   }
 
   // Mend one Minor Injury - or, for "any", the worse of a Major or Minor.
@@ -310,13 +339,8 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
   // Mana: +N, or full.
   const mana = effects.mana ?? {};
   if (mana.full || mana.amount) {
-    const max = sys.mana?.max ?? 0;
-    const current = sys.mana?.value ?? 0;
-    const next = Math.max(current, mana.full ? max : Math.min(current + Number(mana.amount), max));
-    if (next > current) {
-      updates["system.mana.value"] = next;
-      lines.push(fmt("Mana", { amount: next - current }));
-    }
+    const gained = addMana(mana.amount, { full: mana.full });
+    if (gained) lines.push(fmt("Mana", { amount: gained }));
   }
 
   // Cures: remove every entry of each listed Debuff.
@@ -351,31 +375,66 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
     }
   }
 
-  // Timed Buff: a condition entry carrying its changes until it expires.
-  // The same Buff again refreshes it rather than stacking.
+  // Timed Buff: a condition entry carrying its changes (and any per-round
+  // restore) until it ends. The same Buff again refreshes it rather than
+  // stacking.
+  //  - In a fight that's still running, a per-round restore always counts
+  //    round ends (whatever unit it's measured in), as does any Buff measured
+  //    in rounds; when the fight ends, round-end.mjs's processCombatEnd pays
+  //    out what's owed and lets bonuses carry on on the clock.
+  //  - Outside a fight no round ends come, and nothing interrupts it - so a
+  //    per-round restore lands all at once ("15 Mana per round for 10 rounds"
+  //    = 150, capped at max), and bonuses run on the clock.
   const buff = effects.buff ?? {};
-  if (buff.label || buff.changes?.length) {
+  if (hasBuff(buff)) {
     const label = buff.label || itemName;
-    const seconds = durationSeconds(buff.duration, buff.unit);
-    const expiresAt = seconds ? game.time.worldTime + seconds : null;
-    const existing = conditions.find((c) => c.key === "custom" && c.label === label && c.source === itemName);
-    if (existing) {
-      existing.expiresAt = expiresAt;
-      existing.changes = foundry.utils.deepClone(buff.changes ?? []);
-      lines.push(fmt("BuffRefreshed", { buff: esc(label) }));
-    } else {
-      conditions.push({
-        id: foundry.utils.randomID(), key: "custom", label, stacks: 1, remaining: null, source: itemName,
-        durationType: null, expiresAt, changes: foundry.utils.deepClone(buff.changes ?? []),
-      });
-      lines.push(fmt("Buff", { buff: esc(label) }));
+    // The fight it was used in, if that fight is still on - a card applied
+    // after the combat ended times it as out of combat.
+    const inFight = !!(moment && game.combats.get(moment.combatId)?.started);
+    const rounds = Math.max(1, Math.round(durationSeconds(buff.duration, buff.unit) / (CONFIG.time.roundTime || 10)));
+    let perRound = { hb: buff.perRound?.hb ?? null, mana: buff.perRound?.mana ?? null };
+
+    let restoredAtOnce = false;
+    if (!inFight && restoresPerRound(perRound)) {
+      if (perRound.mana) {
+        const gained = addMana(perRound.mana * rounds);
+        if (gained) lines.push(fmt("ManaAtOnce", { amount: gained, buff: esc(label) }));
+      }
+      if (perRound.hb && !healBlocked()) {
+        const gained = addHb(perRound.hb * rounds);
+        if (gained) lines.push(fmt("HealedAtOnce", { slots: gained, buff: esc(label) }));
+      }
+      perRound = { hb: null, mana: null };
+      restoredAtOnce = true;
+    }
+
+    // Anything left to last - bonuses, a restore still to come, or just a
+    // named effect - becomes a condition entry. A Buff that was only a
+    // restore, already applied in full, leaves nothing behind.
+    const onlyRestore = !buff.changes?.length && restoresPerRound(buff.perRound);
+    if (!(restoredAtOnce && onlyRestore)) {
+      let timing;
+      if (inFight && buff.duration && (buff.unit === "rounds" || restoresPerRound(perRound))) {
+        timing = { durationType: "rounds", remaining: rounds, expiresAt: null };
+      } else {
+        const seconds = durationSeconds(buff.duration, buff.unit);
+        timing = { durationType: null, remaining: null, expiresAt: seconds ? game.time.worldTime + seconds : null };
+      }
+      const carried = { changes: foundry.utils.deepClone(buff.changes ?? []), perRound };
+      const existing = conditions.find((c) => c.key === "custom" && c.label === label && c.source === itemName);
+      if (existing) {
+        Object.assign(existing, timing, carried);
+        lines.push(fmt("BuffRefreshed", { buff: esc(label) }));
+      } else {
+        conditions.push({ id: foundry.utils.randomID(), key: "custom", label, stacks: 1, source: itemName, ...timing, ...carried });
+        lines.push(fmt("Buff", { buff: esc(label) }));
+      }
     }
   }
 
   // Potion Sickness: a second potion within two rounds of the last, in the
   // same fight.
   if (isPotion) {
-    const moment = drankAt === undefined ? potionMoment(recipient) : drankAt;
     if (moment) {
       const last = recipient.getFlag("carl-rpg", "lastPotion");
       if (last?.combatId === moment.combatId && moment.round - last.round < 2) {

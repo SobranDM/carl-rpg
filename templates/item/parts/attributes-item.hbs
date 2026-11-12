@@ -105,7 +105,16 @@
             {{selectOptions @root.config.consumableUnits selected=c.buff.unit localize=true}}
           </select>
         </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Consumable.PerRoundHb"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.consumable.buff.perRound.hb" value="{{c.buff.perRound.hb}}" data-dtype="Number" />
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Consumable.PerRoundMana"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.consumable.buff.perRound.mana" value="{{c.buff.perRound.mana}}" data-dtype="Number" />
+        </div>
       </div>
+      <p class="carl-dialog-hint">{{localize "CARLRPG.Consumable.PerRoundHint"}}</p>
       {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
         changes=c.buff.changes path="system.consumable.buff.changes" config=@root.config item=@root.item actorSkillNames=@root.actorSkillNames}}
     </fieldset>

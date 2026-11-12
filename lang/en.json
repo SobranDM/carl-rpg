@@ -517,6 +517,9 @@
       "BuffTitle": "Timed Buff",
       "BuffLabel": "Buff name",
       "BuffDuration": "Lasts",
+      "PerRoundHb": "HB slots each round",
+      "PerRoundMana": "Mana each round",
+      "PerRoundHint": "Restored at the end of each combat round while the Buff lasts. A Buff measured in rounds ends after that many round ends, and with the combat.",
       "Unit": {
         "rounds": "rounds",
         "minutes": "minutes",
@@ -547,6 +550,7 @@
       "NoneLeft": "There's no {item} left.",
       "CrawlersOnly": "{item} only works on a crawler.",
       "NoStat": "{item} doesn't say which Stat it raises - set it on the item.",
+      "NoDuration": "{item} restores something each round but doesn't say for how long - set its Buff's duration.",
       "SkillAtCap": "{name}'s {skill} is already as high as it can go - the potion is kept.",
       "LimitReached": {
         "stat": "{name} has already drunk two Stat potions - the most a crawler ever can.",
@@ -576,10 +580,14 @@
         "Stat": "+{value} {stat} (permanent)",
         "Skill": "+{value} Ranks in {skill} (permanent)",
         "Buff": "Buff: {buff}",
-        "BuffFor": "Buff: {buff} for {duration} {unit}"
+        "BuffFor": "Buff: {buff} for {duration} {unit}",
+        "PerRoundHb": "+{amount} HB slots each round",
+        "PerRoundMana": "+{amount} Mana each round"
       },
       "Result": {
         "Healed": "{name} heals {slots} Health Bar slots.",
+        "HealedAtOnce": "{name} heals {slots} Health Bar slots from {buff} - all at once, outside a fight.",
+        "ManaAtOnce": "{name} regains {amount} Mana from {buff} - all at once, outside a fight.",
         "AlreadyHealthy": "{name} is already at full health.",
         "HealBlocked": "{name} can't be healed ({debuff}).",
         "Mended": "{name}'s {debuff} is mended.",
@@ -879,6 +887,11 @@
       "DyingCountdown": "{name} is Dying: {rounds} round(s) left.",
       "DyingDead": "{name}'s Dying countdown has reached 0.",
       "Expired": "{name}: {debuff} has ended.",
+      "RestoreMana": "{name} regains {amount} Mana ({source}).",
+      "RestoreHb": "{name} heals {amount} Health Bar slots ({source}).",
+      "RestoreHbBlocked": "{name} can't be healed ({debuff}) - {source} restores no Health Bar slots.",
+      "DyingHealed": "{name} is healed and no longer Dying.",
+      "EndedByHealing": "{name}: {debuff} ends - healed.",
       "CombatEndTitle": "Combat Over",
       "CombatEnded": "{name}: {debuffs} ended with the combat."
     },

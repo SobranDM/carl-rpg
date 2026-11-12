@@ -49,6 +49,12 @@ export default class CarlRPGItem extends CarlRPGItemBase {
         duration: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 0, min: 0 }),
         unit: new fields.StringField({ required: true, blank: false, initial: "minutes", choices: ["rounds", "minutes", "hours"] }),
         changes: defineChangesField(),
+        // Restored at the end of each round while it lasts ("Restores 15
+        // Mana per round for 10 rounds" - Good Mana Refill Potion).
+        perRound: new fields.SchemaField({
+          hb: optionalInt({ min: 0 }),
+          mana: optionalInt({ min: 0 }),
+        }),
       }),
       // The Spell a Scroll casts or a Spellbook teaches. Blank name/rank are
       // read from the item name ("Scroll of Bang Bro (Rank 3)").

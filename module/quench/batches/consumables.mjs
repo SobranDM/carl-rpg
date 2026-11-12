@@ -1,5 +1,6 @@
 import { useConsumable, parseSpellItemName, PERMANENT_POTION_LIMIT } from "../../helpers/consumables.mjs";
 import { expiredConditionIds, expireConditions, dropExpiredConditions } from "../../helpers/expiry.mjs";
+import { applyConsumableEffects } from "../../helpers/consumables.mjs";
 import { buildScrollCast } from "../../helpers/scroll-cast.mjs";
 import { processActorRoundEnd, processCombatEnd } from "../../helpers/round-end.mjs";
 import { resolveCastContext } from "../../dice/dice.mjs";
@@ -8,7 +9,7 @@ import { addConditionToActor } from "../../helpers/conditions.mjs";
 import { rerollMessage } from "../../chat/ai-favor-reroll.mjs";
 import {
   createTestCharacter, createTestMob, createTestItem, createTestCombat, deleteTestActor, deleteTestCombat,
-  waitFor, withFakeTargets, withPinnedDice, PIN_D20_MID, useQuenchTimeout,
+  waitFor, withFakeTargets, withPinnedDice, withSetting, PIN_D20_MID, useQuenchTimeout,
 } from "../helpers.mjs";
 
 const MAGIC_MISSILE = "Compendium.carl-rpg.skills-and-spells.Item.mK52l4gB8AAiWOCw";
@@ -236,6 +237,216 @@ export default function register(quench) {
             await expireConditions(actor, later);
             assert.lengthOf(actor.system.conditions, 0);
             assert.equal(actor.system.drEffective, 2);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a Mana Refill in a fight restores Mana at each round end for its rounds, then ends", async function () {
+          const actor = await createTestCharacter("refill", { system: { mana: { value: 0 }, stats: { int: { value: 20 } } } });
+          const { combat } = await createTestCombat(actor);
+          try {
+            await combat.startCombat();
+            const max = actor.system.mana.max;
+            assert.isAtLeast(max, 16, "room for a first restore that isn't clamped");
+            const potion = await consumableItem(actor, "refill", {
+              kind: "potion",
+              buff: { label: "Mana Refill", duration: 2, unit: "rounds", perRound: { mana: 15 } },
+            });
+            await quietly(() => useConsumable(actor, potion, { skipDialog: true }));
+            const entry = actor.system.conditions.find((c) => c.label === "Mana Refill");
+            assert.exists(entry);
+            assert.equal(entry.durationType, "rounds", "counts round ends in a fight");
+            assert.equal(entry.remaining, 2);
+            assert.isNull(entry.expiresAt);
+            assert.equal(actor.system.mana.value, 0, "nothing until a round ends");
+
+            await quietly(() => processActorRoundEnd(actor));
+            assert.equal(actor.system.mana.value, 15);
+            await quietly(() => processActorRoundEnd(actor));
+            assert.equal(actor.system.mana.value, Math.min(30, max), "clamped at max");
+            assert.notExists(actor.system.conditions.find((c) => c.label === "Mana Refill"), "gone after its rounds");
+          } finally {
+            await deleteTestCombat(combat);
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("outside a fight, a per-round restore lands all at once and leaves nothing behind", async function () {
+          const actor = await createTestCharacter("calm", { system: { mana: { value: 0 }, stats: { int: { value: 20 } } } });
+          try {
+            const potion = await consumableItem(actor, "refill", {
+              kind: "potion",
+              buff: { label: "Mana Refill", duration: 10, unit: "rounds", perRound: { mana: 15 } },
+            });
+            await quietly(() => useConsumable(actor, potion, { skipDialog: true }));
+            assert.equal(actor.system.mana.value, Math.min(150, actor.system.mana.max));
+            assert.isAbove(actor.system.mana.value, 0);
+            assert.notExists(actor.system.conditions.find((c) => c.label === "Mana Refill"));
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("outside a fight, a round-measured Buff with bonuses runs on the clock", async function () {
+          const actor = await createTestCharacter("calm", { system: { dr: 2 } });
+          try {
+            const potion = await consumableItem(actor, "brief", {
+              kind: "potion",
+              buff: { label: "Brief Skin", duration: 10, unit: "rounds", changes: [{ targetType: "resource", target: "dr", mode: "multiply", value: "2" }] },
+            });
+            const before = game.time.worldTime;
+            await quietly(() => useConsumable(actor, potion, { skipDialog: true }));
+            const entry = actor.system.conditions.find((c) => c.label === "Brief Skin");
+            assert.isNull(entry.durationType);
+            assert.equal(entry.expiresAt, before + 100, "10 rounds of 10 seconds");
+            assert.equal(actor.system.drEffective, 4);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a round-end heal ends every 'until healed' Debuff; damage it offsets still ends Terrified", async function () {
+          const actor = await createTestCharacter("mixed", { system: { hb: { value: 5 } } });
+          try {
+            await actor.update({ "system.conditions": [
+              { key: "sepsis", label: "", stacks: 1, source: "Quench" },
+              { key: "terrified", label: "", stacks: 1, source: "Quench", remaining: 2 },
+              { key: "poisoned", label: "", stacks: 1, source: "Quench" },
+              { key: "custom", label: "Regeneration", stacks: 1, source: "Quench", durationType: "rounds", remaining: 3, perRound: { hb: 2 } },
+            ] });
+            await quietly(() => withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () => processActorRoundEnd(actor))));
+            assert.notInclude(keys(actor), "sepsis", "healed - Sepsis ends");
+            assert.notInclude(keys(actor), "terrified", "the Poison still took slots");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("when the fight ends, a round-counted restore pays out what it still owes; bonuses carry on on the clock", async function () {
+          const actor = await createTestCharacter("payout", { system: { mana: { value: 0 }, dr: 2, stats: { int: { value: 30 } } } });
+          const { combat } = await createTestCombat(actor);
+          try {
+            await combat.startCombat();
+            const refill = await consumableItem(actor, "refill", {
+              kind: "potion", buff: { label: "Mana Refill", duration: 10, unit: "rounds", perRound: { mana: 2 } },
+            });
+            const skin = await consumableItem(actor, "skin", {
+              kind: "other", buff: { label: "Brief Skin", duration: 5, unit: "rounds", changes: [{ targetType: "resource", target: "dr", mode: "multiply", value: "2" }] },
+            });
+            await quietly(() => useConsumable(actor, refill, { skipDialog: true }));
+            await quietly(() => useConsumable(actor, skin, { skipDialog: true }));
+            await quietly(() => processActorRoundEnd(actor));
+            assert.equal(actor.system.mana.value, 2, "one round's restore");
+
+            const now = game.time.worldTime;
+            await quietly(() => processCombatEnd(combat));
+            assert.equal(actor.system.mana.value, 20, "the other 9 rounds paid at once");
+            assert.notExists(actor.system.conditions.find((c) => c.label === "Mana Refill"));
+            const skinEntry = actor.system.conditions.find((c) => c.label === "Brief Skin");
+            assert.exists(skinEntry, "bonuses carry on");
+            assert.isNull(skinEntry.durationType);
+            assert.equal(skinEntry.expiresAt, now + 40, "its 4 remaining rounds, on the clock");
+            assert.equal(actor.system.drEffective, 4);
+          } finally {
+            await deleteTestCombat(combat);
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("in a fight, a per-round restore measured in minutes counts rounds too", async function () {
+          const actor = await createTestCharacter("minutes");
+          const { combat } = await createTestCombat(actor);
+          try {
+            await combat.startCombat();
+            const potion = await consumableItem(actor, "trickle", {
+              kind: "potion", buff: { label: "Trickle", duration: 1, unit: "minutes", perRound: { mana: 1 } },
+            });
+            await quietly(() => useConsumable(actor, potion, { skipDialog: true }));
+            const entry = actor.system.conditions.find((c) => c.label === "Trickle");
+            assert.equal(entry.durationType, "rounds");
+            assert.equal(entry.remaining, 6, "one minute is six rounds");
+          } finally {
+            await deleteTestCombat(combat);
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("an Apply clicked after its fight ended treats the potion as drunk outside one", async function () {
+          const actor = await createTestCharacter("late", { system: { mana: { value: 0 }, stats: { int: { value: 30 } } } });
+          try {
+            const effects = { kind: "potion", buff: { label: "Mana Refill", duration: 10, unit: "rounds", perRound: { mana: 2 } } };
+            await applyConsumableEffects(actor, effects, {
+              itemName: "Late Refill", isPotion: true, drankAt: { combatId: "a-finished-fight", round: 3 },
+            });
+            assert.equal(actor.system.mana.value, 20, "all at once");
+            assert.notExists(actor.system.conditions.find((c) => c.label === "Mana Refill"));
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a per-round heal doesn't revive the dead", async function () {
+          const crawler = await createTestCharacter("dead");
+          const mob = await createTestMob("dead mob");
+          try {
+            const regen = { key: "custom", label: "Regeneration", stacks: 1, source: "Quench", durationType: "rounds", remaining: 3, perRound: { hb: 2 } };
+            await crawler.update({ "system.hb.value": 0 });
+            const dying = crawler.system.conditions.find((c) => c.key === "dying");
+            await crawler.setFlag("carl-rpg", "dyingAnnounced", dying.id);
+            await crawler.update({ "system.conditions": [...crawler.system.toObject().conditions, regen] });
+            await mob.update({ "system.hb.value": 0, "system.conditions": [regen] });
+            await quietly(() => processActorRoundEnd(crawler));
+            await quietly(() => processActorRoundEnd(mob));
+            assert.equal(crawler.system.hb.value, 0, "a crawler whose countdown ran out stays down");
+            assert.equal(mob.system.hb.value, 0, "a Mob at 0 stays down");
+          } finally {
+            await deleteTestActor(crawler);
+            await deleteTestActor(mob);
+          }
+        });
+
+        it("healed out of Dying but knocked back to 0 by damage the same round end: Dying again", async function () {
+          const actor = await createTestCharacter("unlucky");
+          try {
+            await actor.update({ "system.hb.value": 0 });
+            await actor.update({ "system.conditions": [...actor.system.toObject().conditions,
+              { key: "poisoned", label: "", stacks: 1, source: "Quench" },
+              { key: "custom", label: "Regeneration", stacks: 1, source: "Quench", durationType: "rounds", remaining: 3, perRound: { hb: 1 } },
+            ] });
+            // A high Floor makes the Poison hit hard and the CON save fail.
+            await quietly(() => withSetting("currentFloor", 20, () => withPinnedDice(PIN_D20_MID, () => processActorRoundEnd(actor))));
+            assert.equal(actor.system.hb.value, 0);
+            assert.include(keys(actor), "dying", "Dying again");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a restore each round with no duration is refused and kept", async function () {
+          const actor = await createTestCharacter();
+          try {
+            const potion = await consumableItem(actor, "forever", { kind: "potion", buff: { perRound: { mana: 5 } } });
+            assert.isNull(await quietly(() => useConsumable(actor, potion, { skipDialog: true })));
+            assert.exists(actor.items.get(potion.id));
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a per-round heal that lifts a Dying crawler ends Dying before the countdown ticks", async function () {
+          const actor = await createTestCharacter("saved");
+          try {
+            await actor.update({ "system.hb.value": 0 });
+            assert.include(keys(actor), "dying");
+            await actor.update({ "system.conditions": [...actor.system.toObject().conditions, {
+              key: "custom", label: "Regeneration", stacks: 1, source: "Quench", durationType: "rounds", remaining: 3,
+              perRound: { hb: 2 },
+            }] });
+            const result = await quietly(() => processActorRoundEnd(actor));
+            assert.equal(actor.system.hb.value, 2);
+            assert.notInclude(keys(actor), "dying");
+            assert.isFalse(result.lines.some((l) => l.includes(game.i18n.format("CARLRPG.RoundEnd.DyingDead", { name: "" }).trim())), "never declared dead");
           } finally {
             await deleteTestActor(actor);
           }

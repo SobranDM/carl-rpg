@@ -31,6 +31,10 @@
         "label": "Iron Skin",
         "duration": 30,
         "unit": "minutes",
+        "perRound": {
+          "hb": null,
+          "mana": null
+        },
         "changes": [
           {
             "id": "3PBLNiCyAns0DAXw",
