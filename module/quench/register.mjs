@@ -25,6 +25,7 @@ import registerConditionsIntegration from "./batches/conditions-integration.mjs"
 import registerActorDocument from "./batches/actor-document.mjs";
 import registerActorSheet from "./batches/actor-sheet.mjs";
 import registerItemDocument from "./batches/item-document.mjs";
+import registerItemSheet from "./batches/item-sheet.mjs";
 import registerDerivedData from "./batches/derived-data.mjs";
 import registerRest from "./batches/rest.mjs";
 import registerChatCards from "./batches/chat-cards.mjs";
@@ -52,6 +53,7 @@ const BATCH_REGISTRARS = [
   registerActorDocument,
   registerActorSheet,
   registerItemDocument,
+  registerItemSheet,
   registerDerivedData,
   registerRest,
   registerChatCards,

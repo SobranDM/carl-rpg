@@ -219,6 +219,52 @@ export async function withPinnedDice(unit, fn) {
   }
 }
 
+/**
+ * A DragEvent carrying a real DataTransfer, as a browser delivers one.
+ * @param {string} type  "dragstart", "drop", ...
+ * @param {DataTransfer} [dataTransfer]
+ * @returns {DragEvent}
+ */
+export function makeDragEvent(type, dataTransfer = new DataTransfer()) {
+  return new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer });
+}
+
+/**
+ * Drop `data` on `element` (inside a rendered sheet) with a real DOM drop
+ * event and report how many times the sheet dispatched it, by spying on its
+ * `_onDropDocument`. More than one dispatch means two drop handlers are
+ * bound. With `expectDispatch: false` it waits a while and expects none
+ * (e.g. a hook blocked the drop).
+ * @param {foundry.applications.api.DocumentSheetV2} sheet
+ * @param {HTMLElement} element
+ * @param {object} data  Drag data, e.g. `doc.toDragData()`.
+ * @param {{expectDispatch?: boolean}} [options]
+ * @returns {Promise<{dispatches: number, result: any}>}
+ */
+export async function dropOnSheet(sheet, element, data, { expectDispatch = true } = {}) {
+  const proto = Object.getPrototypeOf(sheet);
+  const calls = [];
+  sheet._onDropDocument = (event, document) => {
+    const pending = proto._onDropDocument.call(sheet, event, document);
+    calls.push(pending);
+    return pending;
+  };
+  try {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.setData("text/plain", JSON.stringify(data));
+    element.dispatchEvent(makeDragEvent("drop", dataTransfer));
+    if (expectDispatch) {
+      await waitFor(() => calls.length > 0, { message: "the sheet never handled the drop" });
+    }
+    const results = await Promise.all(calls);
+    await settle(150);
+    await Promise.all(calls);
+    return { dispatches: calls.length, result: results[0] ?? null };
+  } finally {
+    delete sheet._onDropDocument;
+  }
+}
+
 /** Pins a d20 to face 10, regardless of which direction randomUniform maps to a face - see withPinnedDice. */
 export const PIN_D20_MID = 0.5;
 

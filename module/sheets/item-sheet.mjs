@@ -1,5 +1,5 @@
 const { HandlebarsApplicationMixin } = foundry.applications.api;
-const { DocumentSheetV2 } = foundry.applications.api;
+const { ItemSheetV2 } = foundry.applications.sheets;
 import { onAddArrayItem, onDeleteArrayItem } from '../helpers/array-editor.mjs';
 import CarlDice from '../dice/dice.mjs';
 import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
@@ -18,10 +18,10 @@ const RANKED_TYPES = ['skill', 'spell', 'damageEffect'];
 
 /**
  * Extend the basic ItemSheet with some very simple modifications
- * @extends {DocumentSheetV2}
+ * @extends {ItemSheetV2}
  * @mixes {HandlebarsApplication}
  */
-export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2) {
+export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   /** @override */
   static DEFAULT_OPTIONS = {
     classes: ['carl-rpg', 'sheet', 'item'],
@@ -68,11 +68,13 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(DocumentSheetV2
   };
 
   /**
-   * The Item document managed by this sheet.
-   * @type {Item}
+   * This system doesn't use ActiveEffect documents (modifiers are Item
+   * ChangeEntries - see module/helpers/modifiers.mjs), so a dropped one is
+   * ignored rather than copied onto the Item as core would.
+   * @override
    */
-  get item() {
-    return this.document;
+  async _onDropActiveEffect(event, effect) {
+    return null;
   }
 
   /**

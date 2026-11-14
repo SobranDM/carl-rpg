@@ -1,5 +1,5 @@
 const { HandlebarsApplicationMixin } = foundry.applications.api;
-const { DocumentSheetV2 } = foundry.applications.api;
+const { ActorSheetV2 } = foundry.applications.sheets;
 import { onAddArrayItem, onDeleteArrayItem } from "../helpers/array-editor.mjs";
 import { onToggleDrawer } from "../helpers/drawer-toggle.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
@@ -26,11 +26,11 @@ const skillCategoryRank = (category) =>
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
- * @extends {DocumentSheetV2}
+ * @extends {ActorSheetV2}
  * @mixes {HandlebarsApplication}
  * @mixes {DragDropMixin}
  */
-export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(DocumentSheetV2)) {
+export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(ActorSheetV2)) {
   /** @override */
   static DEFAULT_OPTIONS = {
     classes: ["carl-rpg", "sheet", "actor"],
@@ -195,16 +195,6 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       tabs: config.tabs.filter((t) => !CarlRPGActorSheet.CHARACTER_ONLY_TABS.includes(t.id)),
     };
   }
-
-  /**
-   * The Actor document managed by this sheet.
-   * @type {Actor}
-   */
-  get actor() {
-    return this.document;
-  }
-
-  /* -------------------------------------------- */
 
   /** @override */
   async _preparePartContext(partId, context, options) {
