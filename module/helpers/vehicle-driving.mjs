@@ -16,7 +16,7 @@
  * "Stop" mode is the other Check (p.72): stopping in time, at 10 + Move ÷ 5
  * - on a success you stop where you want, on a fail the GM decides.
  */
-import CarlDice, { extractNaturalD20 } from "../dice/dice.mjs";
+import CarlDice, { checkSubtitle, extractNaturalD20 } from "../dice/dice.mjs";
 import { CARLRPG } from "./config.mjs";
 import { degreeBadge, getDegreeOfSuccess, isHitDegree } from "./rules.mjs";
 import { rollsLikeCrawler } from "./actor-kinds.mjs";
@@ -153,7 +153,7 @@ export async function postDrivingCard(vehicle, driver, {
     rolls: [roll],
     rollMeta: [{ label, detail: vehicle.name, breakdown }],
     title,
-    subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
+    subtitle: checkSubtitle(degree, difficulty),
     img: vehicle.img,
     badge: degreeBadge(degree),
     body,

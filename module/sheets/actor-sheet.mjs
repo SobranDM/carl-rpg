@@ -22,11 +22,14 @@ import {
   activateNitrous, applyVehiclePreset, boardVehicle, exitVehicle, setDriver, toggleParked, updateVehicle,
 } from "../helpers/vehicles.mjs";
 import { canDrive, rollDrivingCheck } from "../helpers/vehicle-driving.mjs";
-import { hotlistRows, isInHotlist, toggleHotlist, useHotlistSlot } from "../helpers/hotlist.mjs";
+import {
+  canHotlist, hotlistRows, isInHotlist, promptHotlistPick, refuseWhileSwapping, toggleHotlist, useHotlistSlot,
+} from "../helpers/hotlist.mjs";
 import { rollRam } from "../helpers/vehicle-ram.mjs";
 import { fireVehicleWeapon } from "../helpers/vehicle-weapons.mjs";
 import { petOwner } from "../helpers/pets.mjs";
 import { commandPet, describePetCommand, petFight } from "../helpers/pet-command.mjs";
+import { withoutOutclassedUnarmed } from "../helpers/hand-to-hand.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -84,6 +87,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       activateNitrous: CarlRPGActorSheet.#onActivateNitrous,
       fireVehicleWeapon: CarlRPGActorSheet.#onFireVehicleWeapon,
       useHotlist: CarlRPGActorSheet.#onUseHotlist,
+      pickHotlist: CarlRPGActorSheet.#onPickHotlist,
       toggleHotlist: CarlRPGActorSheet.#onToggleHotlist,
       applyVehiclePreset: CarlRPGActorSheet.#onApplyVehiclePreset,
       resetUpgradeUse: CarlRPGActorSheet.#onResetUpgradeUse,
@@ -415,7 +419,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       // The Combat tab (abilities.hbs): the Hotlist and the Attack Skills.
       const rows = hotlistRows(actor);
       context.hotlist = { rows, used: rows.filter((r) => !r.empty).length, size: rows.length };
-      context.attackSkills = context.skills.filter((s) => s.system.category === "attack");
+      // Unarmed Combat drops out once another hand-to-hand Skill outranks it
+      // (it can't take Damage Effects, p.179) - still on Skills & Spells.
+      context.attackSkills = withoutOutclassedUnarmed(actor, context.skills.filter((s) => s.system.category === "attack"));
     }
 
     // Add roll data for TinyMCE editors.
@@ -632,8 +638,13 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       for (const item of gear) {
         item.slotValue = this.#slotValueOf(item);
         item.inHotlist = isInHotlist(this.actor, item.id);
+        // Worn gear can't be in the Hotlist (p.98: no benefits there).
+        item.showHotlistPin = item.inHotlist || canHotlist(this.actor, item);
       }
-      for (const spell of spells) spell.inHotlist = isInHotlist(this.actor, spell.id);
+      for (const spell of spells) {
+        spell.inHotlist = isInHotlist(this.actor, spell.id);
+        spell.showHotlistPin = spell.inHotlist || canHotlist(this.actor, spell);
+      }
       // Worn gear lists first (a stable sort keeps the name order within).
       gear.sort((a, b) => (a.slotValue ? 0 : 1) - (b.slotValue ? 0 : 1));
     }
@@ -797,11 +808,16 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   async #onSlotSelect(select) {
     const item = this.actor.items.get(select.dataset.slotFor);
     if (!item) return;
+    if (refuseWhileSwapping(this.actor)) {
+      this.render({ parts: ["items"] });
+      return;
+    }
     const value = select.value;
     const current = this.#slotValueOf(item);
     if (value === current) return;
     if (value === "" || value === "worn") {
       await unwearItem(this.actor, item);
+      // Equipping takes it out of the Hotlist (CarlRPGItem#_preUpdate).
       if (value === "worn") await item.update({ "system.equipped": true });
       return;
     }
@@ -970,6 +986,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     if (this.actor.type === "character" && isItemWorn(this.actor, item.id)) {
       return unwearItem(this.actor, item);
     }
+    // Equipping takes it out of the Hotlist (CarlRPGItem#_preUpdate).
     return item.update({ "system.equipped": !item.system.equipped });
   }
 
@@ -995,6 +1012,17 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const index = Number(target.closest("[data-slot-key]")?.dataset.slotKey);
     if (Number.isNaN(index)) return;
     return useHotlistSlot(this.actor, index);
+  }
+
+  /**
+   * An empty Hotlist slot: pick something to put in it.
+   * @private
+   */
+  static #onPickHotlist(event, target) {
+    event.preventDefault();
+    const index = Number(target.closest("[data-slot-key]")?.dataset.slotKey);
+    if (Number.isNaN(index)) return;
+    return promptHotlistPick(this.actor, index);
   }
 
   /**
@@ -1241,9 +1269,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /**
    * Handle a dropped Item: create an embedded copy. Dropping an item back
    * onto its own Actor does nothing - every list has a fixed order
-   * (_prepareItems), so manual reordering is gone - unless it lands on an
-   * Inventory-tab Hotlist/Equipped slot, which puts it in that slot. A
-   * newly created item dropped on a slot also goes into that slot.
+   * (_prepareItems), so manual reordering is gone - unless it lands on a
+   * gear or accessory slot, which puts it in that slot. A newly created item
+   * dropped on a slot also goes into that slot. Hotlist slots don't take
+   * drops (click one to fill it).
    * @override
    */
   async _onDropItem(event, item) {
@@ -1258,8 +1287,13 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       ui.notifications.warn(game.i18n.localize("CARLRPG.Pet.NoClassOrRace"));
       return null;
     }
-    const slot =
-      this.actor.type === "character" ? event.target.closest("[data-slot-type]")?.dataset : null;
+    // The Hotlist is filled by clicking a slot (or the star), not by
+    // dropping on it: a drop there is an ordinary drop on the sheet.
+    const slotData = this.actor.type === "character" ? event.target.closest("[data-slot-type]")?.dataset : null;
+    const slot = slotData?.slotType === "hotlist" ? null : slotData;
+    // A drop on a gear or accessory slot during a Hotlist swap is refused
+    // whole, rather than creating the item and skipping the slot.
+    if (slot && refuseWhileSwapping(this.actor)) return null;
     if (this.actor.uuid === item.parent?.uuid) {
       if (!slot) return null;
       await assignItemToSlot(this.actor, slot, item);

@@ -1,8 +1,9 @@
 {{!-- The Hotlist (p.98, module/helpers/hotlist.mjs): ten slots of items,
-      Spells or anything else at the ready. One row per slot with its one
-      action - Cast a Spell, Roll a Skill, Use a consumable, Ready gear (swap
-      it into the Main Hand). Spells must be here to be cast in a fight.
-      Drop or pin an item into a slot; empty slots stay drop targets. --}}
+      Spells or anything else at the ready. Click an empty slot to pick what
+      goes in (or use the star on an Inventory/Spell row); click a filled one
+      to use it - Cast a Spell, Use a consumable (after a confirmation),
+      Ready gear (swap it into the Main Hand). In a fight, Spells and
+      consumables only work from here. --}}
 <fieldset class="carl-hotlist">
   <legend>
     {{localize "CARLRPG.Hotlist.Title"}} <span class="carl-hotlist-count">{{hotlist.used}}/{{hotlist.size}}</span>
@@ -14,20 +15,34 @@
       {{#if slot.itemId}}data-item-id="{{slot.itemId}}"{{/if}}>
       <span class="carl-hotlist-number">{{slot.number}}</span>
       {{#if slot.empty}}
-      <span class="carl-hotlist-name carl-hint">{{localize "CARLRPG.Hotlist.Empty"}}</span>
-      {{else}}
-      {{#if slot.img}}<img src="{{slot.img}}" alt="" width="22" height="22" />{{/if}}
-      <span class="carl-hotlist-name" title="{{slot.name}}">{{slot.name}}</span>
-      <span class="carl-hotlist-detail">
-        {{#if (eq slot.kind "spell")}}R{{slot.rank}} · {{slot.manaCost}} MP{{#if slot.active}} <i class="fas fa-bolt" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}{{/if}}
-        {{#if (eq slot.kind "skill")}}R{{slot.rank}}{{/if}}
-        {{#if (eq slot.kind "consumable")}}×{{slot.quantity}}{{/if}}
-        {{#if slot.inHand}}<span class="carl-hotlist-inhand">{{localize "CARLRPG.Hotlist.InHand"}}</span>{{/if}}
-      </span>
-      {{#if slot.action}}
-      <button type="button" class="carl-hotlist-action" data-action="useHotlist" title="{{localize (concat 'CARLRPG.Hotlist.Hint.' slot.action)}}">
-        {{localize (concat "CARLRPG.Hotlist.Action." slot.action)}}
+      <button type="button" class="carl-hotlist-pick" data-action="pickHotlist">
+        <span class="carl-hotlist-name carl-hint">{{localize "CARLRPG.Hotlist.Empty"}}</span>
       </button>
+      {{else}}
+      {{#if slot.action}}
+      <button type="button" class="carl-hotlist-use" data-action="useHotlist"
+        data-tooltip="{{localize (concat 'CARLRPG.Hotlist.Hint.' slot.action)}}">
+      {{else}}
+      <div class="carl-hotlist-use carl-hotlist-idle">
+      {{/if}}
+        {{#if slot.img}}<img src="{{slot.img}}" alt="" width="22" height="22" />{{/if}}
+        <span class="carl-hotlist-name">{{slot.name}}</span>
+        <span class="carl-hotlist-detail">
+          {{#if (eq slot.kind "spell")}}R{{slot.rank}} · {{slot.manaCost}} MP{{#if slot.active}} <i class="fas fa-bolt" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}{{/if}}
+          {{#if (eq slot.kind "skill")}}R{{slot.rank}}{{/if}}
+          {{#if (eq slot.kind "consumable")}}×{{slot.quantity}}{{/if}}
+        </span>
+        {{#if slot.action}}
+        <span class="carl-hotlist-badge">{{localize (concat "CARLRPG.Hotlist.Action." slot.action)}}</span>
+        {{else if slot.inHand}}
+        <span class="carl-hotlist-badge carl-hotlist-inhand">{{localize "CARLRPG.Hotlist.InHand"}}</span>
+        {{else if slot.worn}}
+        <span class="carl-hotlist-badge carl-hotlist-inhand">{{localize "CARLRPG.Hotlist.Worn"}}</span>
+        {{/if}}
+      {{#if slot.action}}
+      </button>
+      {{else}}
+      </div>
       {{/if}}
       <a class="item-control carl-slot-clear" data-action="clearSlot" title="{{localize 'CARLRPG.Actor.ClearSlot'}}"><i class="fas fa-times"></i></a>
       {{/if}}

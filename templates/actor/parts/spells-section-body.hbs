@@ -29,9 +29,11 @@
     <div class="item-prop">{{item.system.rank}}</div>
     <div class="item-controls">
       {{#if @root.isCharacter}}
+      {{#if item.showHotlistPin}}
       <a class="item-control carl-hotlist-pin" data-action="toggleHotlist" title="{{localize 'CARLRPG.Hotlist.PinSpellHint'}}">
         <i class="{{#if item.inHotlist}}fas{{else}}far{{/if}} fa-star"></i>
       </a>
+      {{/if}}
       {{/if}}
       {{#if ../locked}}
       {{#unless @root.isPet}}

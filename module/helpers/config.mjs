@@ -112,6 +112,9 @@ CARLRPG.sizes = {
   8: "CARLRPG.Size.Gargantuan",
 };
 
+/** Attack Skills that "Cannot choose a Damage Effect" (Unarmed Combat, p.179). */
+CARLRPG.noDamageEffectSkills = ["Unarmed Combat"];
+
 /**
  * Worn gear slots - the Inventory's Slot column (items-list.hbs), in the
  * order it lists them. Each holds an owned Item's id

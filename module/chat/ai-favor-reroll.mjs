@@ -6,7 +6,7 @@
  * the crawler's owner (or the GM), while they have AI Favor, on a Check
  * that wasn't a Natural 1 and hasn't been rerolled or acted on yet.
  */
-import CarlDice, { extractNaturalD20, withManaCostSubtitle } from "../dice/dice.mjs";
+import CarlDice, { checkSubtitle, extractNaturalD20, withManaCostSubtitle } from "../dice/dice.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree } from "../helpers/rules.mjs";
 import { rerollFormula, rerollOpen } from "../helpers/ai-favor.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
@@ -124,7 +124,7 @@ async function rerollCheck(spec, actor) {
     rolls: [roll],
     rollMeta: [{ label: spec.label, detail: game.i18n.localize("CARLRPG.Reroll.Detail"), breakdown: spec.breakdown }],
     title: spec.title,
-    subtitle: withManaCostSubtitle(game.i18n.localize(CONFIG.CARLRPG.degreesOfSuccess[degree]), spec.chosenManaCost),
+    subtitle: withManaCostSubtitle(checkSubtitle(degree, spec.difficulty), spec.chosenManaCost),
     img: spec.img,
     badge: degreeBadge(degree),
     body: body + rerollNote(),

@@ -4,7 +4,9 @@ import { bakeItemGrants } from "../helpers/race-class-grants.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
 import { isPet } from "../helpers/actor-kinds.mjs";
 import { describePetCommand, petFight } from "../helpers/pet-command.mjs";
-import { refuseSpellOutsideHotlist } from "../helpers/hotlist.mjs";
+import { refuseOutsideHotlist } from "../helpers/hotlist.mjs";
+import { hotlistWithout } from "../helpers/equip-slots.mjs";
+import { refuseWhileSwapping } from "../helpers/swap-lock.mjs";
 
 /**
  * Extend the basic Item document.
@@ -60,6 +62,32 @@ export class CarlRPGItem extends Item {
     }
   }
 
+  /**
+   * Equipping, however it's done (the Slot column, the Item sheet's box, a
+   * macro):
+   *  - refused while a Hotlist swap is under way on this client
+   *    (swap-lock.mjs), unless it's the swap's own write;
+   *  - takes the item out of the Hotlist - worn gear and the Hotlist are
+   *    exclusive ("Items in Hotlists do not grant you any added benefits",
+   *    p.98). Done here, before the update, so the Hotlist is already clean
+   *    when `await item.update(...)` returns (_onUpdate isn't awaited).
+   * @override
+   */
+  async _preUpdate(changed, options, user) {
+    if ((await super._preUpdate(changed, options, user)) === false) return false;
+    const equipped = foundry.utils.getProperty(changed, "system.equipped");
+    if (this.type !== "item" || !this.actor || equipped === undefined || equipped === this.system.equipped) return;
+    if (!options.carlSwap && refuseWhileSwapping(this.actor)) {
+      // The box was ticked in the form but nothing was saved: redraw it.
+      if (this.sheet?.rendered) this.sheet.render();
+      return false;
+    }
+    if (equipped) {
+      const hotlist = hotlistWithout(this.actor, this.id);
+      if (hotlist) await this.actor.update({ "system.hotlist": hotlist });
+    }
+  }
+
   /** @override */
   getRollData() {
     const rollData = { ...super.getRollData() };
@@ -80,7 +108,7 @@ export class CarlRPGItem extends Item {
 
     // "If a Spell ain't in your Hotlist, you can't cast it until you Retrieve
     // it" (p.86) - in a fight. A Spell already switched on can be switched off.
-    if (this.type === "spell" && !this.system.active && refuseSpellOutsideHotlist(this.actor, this)) return null;
+    if (this.type === "spell" && !this.system.active && refuseOutsideHotlist(this.actor, this)) return null;
 
     if (this.type === "skill" || this.type === "spell") warnPetCommand(this);
 
@@ -145,7 +173,7 @@ export class CarlRPGItem extends Item {
     });
   }
 }
-
+
 /**
  * A reminder, not a block (the system has no Action economy): a Pet in a
  * running fight only acts once Command Pet says so, and a "restricted" one

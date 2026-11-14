@@ -25,6 +25,12 @@ export default class CarlRPGSkill extends CarlRPGRankedItemBase {
     });
     schema.range = new fields.StringField({ required: false, blank: true, initial: "" });
 
+    // A hand-to-hand Combat Skill (p.179: Foot Soldier, Noggin Nocker,
+    // Pugilism, Unarmed Combat, Wrasslin' - or a homebrew one). Unarmed
+    // Combat leaves the Combat tab's Attacks once one of these outranks it
+    // (module/helpers/hand-to-hand.mjs).
+    schema.isHandToHand = new fields.BooleanField({ required: true, initial: false });
+
     // Only relevant to low-damage weapons that grant AI Favor when not maximized.
     schema.aiFavor = new fields.NumberField({ ...requiredInteger, required: false, initial: 0, min: 0 });
 

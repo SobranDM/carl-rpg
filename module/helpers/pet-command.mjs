@@ -20,7 +20,7 @@
  * (resetPetCommands). The code has no Action economy, so "restricted" is
  * shown, not enforced.
  */
-import CarlDice from "../dice/dice.mjs";
+import CarlDice, { checkSubtitle } from "../dice/dice.mjs";
 import { CARLRPG } from "./config.mjs";
 import { degreeBadge } from "./rules.mjs";
 import { isPet } from "./actor-kinds.mjs";
@@ -152,7 +152,7 @@ export async function commandPet(pet, { skipDialog = false } = {}) {
     rolls: [result.roll],
     rollMeta: [{ label: skill.name, detail: `vs. ${pet.name}`, breakdown: result.breakdown }],
     title: game.i18n.format("CARLRPG.Pet.Command.Title", { name: pet.name }),
-    subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[result.degree]),
+    subtitle: checkSubtitle(result.degree, result.difficulty),
     img: pet.img,
     badge: degreeBadge(result.degree),
     body,

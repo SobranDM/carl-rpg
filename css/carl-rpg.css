@@ -664,6 +664,29 @@
   opacity: 0.7;
   font-size: 11px;
 }
+.carl-dialog .carl-dialog-roll-mode .form-fields {
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+.carl-dialog .carl-dialog-roll-mode .form-fields label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.carl-dialog .carl-dialog-preset {
+  align-items: center;
+}
+.carl-dialog .carl-dialog-preset .carl-dialog-help {
+  flex: 0 0 auto;
+  cursor: help;
+  opacity: 0.75;
+}
+.carl-dialog .carl-dialog-warning {
+  margin: 2px 0 0;
+  font-weight: bold;
+  color: var(--color-level-error, #b00);
+}
 .carl-dialog .carl-dialog-hint {
   margin: 2px 0 0;
   font-size: 11px;
@@ -2161,18 +2184,94 @@
   border: 1px solid var(--carl-accent);
   border-radius: 3px;
 }
-.carl-rpg .carl-hotlist-row .carl-hotlist-action {
-  flex: 0 0 auto;
+.carl-rpg .carl-hotlist-row .carl-hotlist-pick,
+.carl-rpg .carl-hotlist-row .carl-hotlist-use {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   width: auto;
-  min-width: 4.5em;
-  line-height: 20px;
+  height: auto;
+  min-height: 26px;
+  margin: 0;
+  padding: 1px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  line-height: inherit;
+}
+.carl-rpg .carl-hotlist-row button.carl-hotlist-pick,
+.carl-rpg .carl-hotlist-row button.carl-hotlist-use {
+  cursor: pointer;
+}
+.carl-rpg .carl-hotlist-row button.carl-hotlist-pick:hover, .carl-rpg .carl-hotlist-row button.carl-hotlist-pick:focus-visible,
+.carl-rpg .carl-hotlist-row button.carl-hotlist-use:hover,
+.carl-rpg .carl-hotlist-row button.carl-hotlist-use:focus-visible {
+  border-color: var(--carl-accent);
+  background: rgba(0, 0, 0, 0.05);
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-badge {
+  flex: 0 0 auto;
+  min-width: 4em;
   padding: 0 6px;
+  border: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.25));
+  border-radius: 3px;
+  font-size: var(--font-size-12);
+  text-align: center;
 }
 .carl-rpg .carl-hotlist-row .carl-slot-clear {
   flex: 0 0 auto;
 }
-.carl-rpg .carl-hotlist-row.kind-spell .carl-hotlist-action {
+.carl-rpg .carl-hotlist-row.kind-spell .carl-hotlist-badge {
   border-color: var(--carl-accent);
+}
+.carl-rpg .carl-hotlist-pick-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-filter {
+  width: 100%;
+  box-sizing: border-box;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-group[hidden] {
+  display: none;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry[hidden] {
+  display: none;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:hover, .carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:focus-within {
+  background: rgba(0, 0, 0, 0.08);
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry img {
+  flex: 0 0 24px;
+  border: none;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry .carl-hotlist-pick-name {
+  flex: 1 1 auto;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry .carl-hotlist-pick-detail {
+  flex: 0 0 auto;
+  font-size: var(--font-size-12);
+  opacity: 0.8;
 }
 .carl-rpg .carl-combat-attacks {
   margin-bottom: 6px;

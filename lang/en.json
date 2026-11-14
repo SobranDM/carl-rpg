@@ -1,10 +1,17 @@
 {
   "CARLRPG": {
+    "Migration": {
+      "Begin": "Updating this world's Carl RPG data for {version}. Please don't close the world until it says it's done.",
+      "Done": "This world's Carl RPG data is up to date for {version} ({count} change(s)).",
+      "Failed": "This world's Carl RPG data was updated for {version} ({count} change(s)), but {errors} item(s) couldn't be - see the console (F12) for which."
+    },
     "Hotlist": {
       "Title": "Hotlist",
-      "Empty": "drop or pin here",
+      "Empty": "Click to Select",
       "InHand": "in hand",
+      "Worn": "worn",
       "Attack": "Attack",
+      "SpellDetail": "R{rank} · {mana} MP",
       "Action": {
         "Cast": "Cast",
         "Roll": "Roll",
@@ -12,20 +19,54 @@
         "Ready": "Ready"
       },
       "Hint": {
-        "Cast": "Cast a Spell (an Action).",
+        "Cast": "Cast this Spell (the Cast a Spell Action).",
         "Roll": "Roll this Skill.",
-        "Use": "Use a Hotlist Item (an Action).",
-        "Ready": "Swap it into your hand - the Use a Hotlist Item Action, or free when you swap weapons as part of an Attack."
+        "Use": "Use it (the Use a Hotlist Item Action) - asks first.",
+        "Ready": "Swap it into your Main Hand. In a fight: the Use a Hotlist Item Action, or free when you swap weapons as part of an Attack."
       },
-      "PinHint": "Pin to the Hotlist, or unpin (in a fight, adding one is the Retrieve Action).",
-      "PinSpellHint": "Pin to the Hotlist - in a fight, a Spell can only be cast from there (p.86).",
+      "PinHint": "Put it in the Hotlist, or take it out (in a fight, adding one is the Retrieve Action).",
+      "PinSpellHint": "Put it in the Hotlist - in a fight, a Spell can only be cast from there (p.86).",
       "Full": "Your Hotlist is full: clear or swap an entry first.",
-      "RetrieveReminder": "{name} goes into your Hotlist - in a fight, that's the Retrieve Action.",
       "NotInHotlist": "{name} isn't in your Hotlist: in a fight, Retrieve it first (an Action, p.86).",
+      "SlotTaken": "Hotlist slot {number} filled up meanwhile: pick an empty one.",
+      "Refuse": {
+        "Worn": "{name} is worn: take it off first - Hotlist items give no benefits (p.98).",
+        "Untrained": "{name} has no Ranks: an untrained Spell can't be cast.",
+        "NoneLeft": "There's no {name} left.",
+        "Other": "{name} can't go in the Hotlist."
+      },
+      "Pick": {
+        "Title": "Hotlist slot {number}",
+        "Filter": "Filter",
+        "Add": "Add",
+        "NothingToAdd": "Nothing to add: worn gear and anything already in the Hotlist aren't listed.",
+        "Group": {
+          "spells": "Spells",
+          "consumables": "Consumables",
+          "gear": "Gear"
+        }
+      },
+      "Retrieve": {
+        "Title": "Retrieve",
+        "Body": "{name} Retrieves {item} into their Hotlist.",
+        "Rule": "Retrieve is an Action, and the item can't be used during that same Action (p.86)."
+      },
+      "Swap": {
+        "Title": "Ready {item}",
+        "Body": "{item} goes into your Main Hand.",
+        "BodySwap": "{item} goes into your Main Hand, and {previous} takes its Hotlist slot.",
+        "Rule": "Swapping is the Use a Hotlist Item Action - or free when you swap weapons as part of an Attack (p.98).",
+        "Action": "Swap (an Action)",
+        "AttackWith": "Swap weapon and Attack with {skill} (free)",
+        "InProgress": "Finish the swap that's under way first.",
+        "UndoSkipped": "The Attack didn't happen, but your hands or Hotlist changed meanwhile, so the swap stands (an Action).",
+      "Failed": "{item} couldn't go into your Main Hand: nothing was swapped."
+      },
       "ReadyTitle": "Hotlist",
       "Readied": "{name} readies {item}.",
       "ReadiedSwap": "{name} swaps {previous} for {item}.",
-      "ReadyRule": "Use a Hotlist Item (an Action) - or free when swapping weapons as part of an Attack (p.98)."
+      "ReadyRule": "Use a Hotlist Item (an Action, p.98).",
+      "ReadyFreeRule": "Free: a weapon swapped as part of the Attack (p.98)."
     },
     "Vehicle": {
       "Model": "Model",
@@ -573,6 +614,8 @@
     "Skill": {
       "Category": "Category",
       "AttackType": "Attack Type",
+      "HandToHand": "Hand-to-Hand",
+      "HandToHandHint": "A hand-to-hand Combat Skill (p.179). Unarmed Combat drops off the Combat tab's Attacks once one of these outranks it.",
       "Range": "Range",
       "AiFavor": "AI Favor",
       "Cooldown": "Cooldown",
@@ -791,6 +834,14 @@
     },
     "Consumable": {
       "Title": "Consumable",
+      "Confirm": {
+        "Title": "Use {item}?",
+        "Body": "Use {item}? {left} left after this.",
+        "UseAction": "In a fight, this is the Use a Hotlist Item Action.",
+        "CastAction": "In a fight, this is the Cast a Spell Action.",
+        "Sickness": "{name} had a potion within the last two rounds: this one brings on Potion Sickness (Poisoned).",
+        "Use": "Use"
+      },
       "KindLabel": "Kind",
       "Kind": {
         "none": "Not consumable",
@@ -957,24 +1008,27 @@
       "AdvancementTitle": "Skill Advancement: {name}",
       "AdvancementSuccess": "Success! Rank {rank}",
       "AdvancementFail": "No advancement",
-      "AdvancementAtCap": "Already at its Rank cap ({rank}) - no Check rolled."
+      "AdvancementAtCap": "Already at its Rank cap ({rank}) - no Check rolled.",
+      "VsDifficulty": "vs. Difficulty {difficulty}"
     },
     "Dialog": {
       "Debuffs": "Debuffs",
       "BaseDifficulty": "Base Difficulty",
       "Roll": "Roll",
       "Cancel": "Cancel",
-      "RollMode": "Roll",
       "Normal": "Normal",
       "Advantage": "Advantage",
       "Disadvantage": "Disadvantage",
       "Difficulty": "Difficulty",
       "DifficultyPlaceholder": "none",
       "DifficultyPreset": "Difficulty type",
+      "DifficultyPresetHelpLabel": "What these mean",
+      "DifficultyPresetHelp": "<p><strong>Unopposed</strong> (p.59): nobody stands in the way - Climbing, Dumpster-Diving, Endurance and most Skills for surviving the dungeon. 10 + 2 x Floor.</p><p><strong>Stat Check</strong> (p.59): a Stat alone, with no Skill Ranks - resisting the environment or a Mob. 10 + Floor.</p><p><strong>Opposed</strong> (p.59): against a Mob, Boss or crawler. 10 + their Stat Mod (or Spell Rank, size class) + Floor.</p><p><strong>Custom</strong> (p.59): the GM may set any Difficulty that makes more sense than the formulas.</p>",
+      "NoDamageEffect": "None",
       "Preset": {
-        "Unopposed": "Unopposed (10 + 2xFloor): {value}",
-        "Stat": "Stat Check (10 + Floor): {value}",
-        "Opposed": "Opposed vs. {name}'s {stat} (10 + Mod + Floor): {value}",
+        "Unopposed": "Unopposed: {value}",
+        "Stat": "Stat Check: {value}",
+        "Opposed": "Opposed vs. {name}'s {stat}: {value}",
         "Custom": "Custom",
         "TargetEvade": "Target's Evade",
         "Given": "Set Difficulty"
@@ -1018,7 +1072,8 @@
       "CannotCastUntrained": "{name} can't be cast untrained (Rank 0).",
       "RollNeedsOwner": "This item has no owning Actor to roll for.",
       "DamageEffectUntrained": "{name} is untrained (Rank 0) and can't be applied as a Damage Effect.",
-      "DamageEffectNoParentSkill": "You don't know any Skill or Spell that can use {name}."
+      "DamageEffectNoParentSkill": "You don't know any Skill or Spell that can use {name}.",
+      "NoDamageEffects": "{skill} can't use a Damage Effect, so {name} can't be used with it (p.179)."
     },
     "MarkChoice": {
       "Prompt": "Mark for Skill Advancement:",

@@ -1,5 +1,6 @@
 // A Character's Combat tab (abilities.hbs): the Hotlist (hotlist.hbs) and
-// the Attacks list; and the Inventory's Slot column (items-list.hbs).
+// the Attacks list; the Hotlist slot picker; and the Inventory's Slot
+// column (items-list.hbs).
 @mixin styles {
   .carl-hotlist {
     margin-bottom: 6px;
@@ -66,12 +67,49 @@
       border-radius: 3px;
     }
 
-    .carl-hotlist-action {
-      flex: 0 0 auto;
+    // The slot itself is the control: click an empty one to pick, a filled
+    // one to use it. Styled as a row, not a button.
+    .carl-hotlist-pick,
+    .carl-hotlist-use {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
       width: auto;
-      min-width: 4.5em;
-      line-height: 20px;
+      height: auto;
+      min-height: 26px;
+      margin: 0;
+      padding: 1px 4px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: none;
+      box-shadow: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      line-height: inherit;
+    }
+
+    button.carl-hotlist-pick,
+    button.carl-hotlist-use {
+      cursor: pointer;
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--carl-accent);
+        background: rgba(0, 0, 0, 0.05);
+      }
+    }
+
+    .carl-hotlist-badge {
+      flex: 0 0 auto;
+      min-width: 4em;
       padding: 0 6px;
+      border: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.25));
+      border-radius: 3px;
+      font-size: var(--font-size-12);
+      text-align: center;
     }
 
     .carl-slot-clear {
@@ -79,8 +117,63 @@
     }
 
     // A Spell in the Hotlist is what's castable in a fight.
-    &.kind-spell .carl-hotlist-action {
+    &.kind-spell .carl-hotlist-badge {
       border-color: var(--carl-accent);
+    }
+  }
+
+  // The slot picker (templates/dialog/hotlist-pick.hbs).
+  .carl-hotlist-pick-body {
+    max-height: 60vh;
+    overflow-y: auto;
+
+    .carl-hotlist-pick-filter {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .carl-hotlist-pick-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin: 0;
+
+      &[hidden] {
+        display: none;
+      }
+    }
+
+    .carl-hotlist-pick-entry {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: pointer;
+
+      &[hidden] {
+        display: none;
+      }
+
+      &:hover,
+      &:focus-within {
+        background: rgba(0, 0, 0, 0.08);
+      }
+
+      img {
+        flex: 0 0 24px;
+        border: none;
+      }
+
+      .carl-hotlist-pick-name {
+        flex: 1 1 auto;
+      }
+
+      .carl-hotlist-pick-detail {
+        flex: 0 0 auto;
+        font-size: var(--font-size-12);
+        opacity: 0.8;
+      }
     }
   }
 

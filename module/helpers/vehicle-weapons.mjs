@@ -111,5 +111,5 @@ async function pickGunner(gunners) {
       cancelButton(),
     ],
   });
-  return result === null || result === undefined ? null : gunners[result] ?? null;
+  return Number.isInteger(result) ? gunners[result] ?? null : null;
 }

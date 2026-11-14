@@ -17,7 +17,7 @@
  * the occupants, where X is the vehicle's size ... The vehicle's DR does not
  * protect." The book gives no Evade against it.
  */
-import CarlDice from "../dice/dice.mjs";
+import CarlDice, { checkSubtitle } from "../dice/dice.mjs";
 import { CARLRPG } from "./config.mjs";
 import { degreeBadge } from "./rules.mjs";
 import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
@@ -142,7 +142,8 @@ export async function rollRam(vehicle, { skipDialog = false } = {}) {
       { label: game.i18n.localize("CARLRPG.Vehicle.Ram.Damage"), detail: ramFormula(vehicle) },
     ],
     title: loc("Ram.Title", { name: driver.name }),
-    subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[check.degree]),
+    // Several targets: each row was rolled against its own Difficulty.
+    subtitle: checkSubtitle(check.degree, targets.length > 1 ? null : check.difficulty),
     img: vehicle.img,
     badge: degreeBadge(check.degree),
     body,

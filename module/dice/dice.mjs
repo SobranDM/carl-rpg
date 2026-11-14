@@ -17,7 +17,7 @@ import { buildScrollCast } from "../helpers/scroll-cast.mjs";
 import { isAreaItem, isAreaMobAttack } from "../helpers/area.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree, staticEvade, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
-import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
+import { ownedRank, slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -30,6 +30,8 @@ import { removeConditionsById } from "../helpers/conditions.mjs";
 import { isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { collectVehicleRows } from "../helpers/vehicle-rows.mjs";
 import { attackDifficultyParts, mobVsVehicleRows } from "../helpers/attack-targets.mjs";
+import { outsideHotlist, refuseOutsideHotlist } from "../helpers/hotlist.mjs";
+import { takesDamageEffects } from "../helpers/hand-to-hand.mjs";
 
 /**
  * Net Advantage/Disadvantage don't stack (Playing the Game, p. 60): an
@@ -338,6 +340,20 @@ async function applyManaCost(actor, manaCost) {
   await actor.update({ "system.mana.value": Math.max(0, current - manaCost) });
 }
 
+/**
+ * A Check card's subtitle: the Degree of Success and the Difficulty it was
+ * rolled against, so the GM can check it. No Difficulty (or a bad one from
+ * an old card's flags) shows the Degree alone.
+ * @param {string} degree
+ * @param {number|null} difficulty
+ * @returns {string}
+ */
+export function checkSubtitle(degree, difficulty) {
+  const label = game.i18n.localize(CONFIG.CARLRPG.degreesOfSuccess[degree]);
+  if (typeof difficulty !== "number" || !Number.isFinite(difficulty)) return label;
+  return `${label} · ${game.i18n.format("CARLRPG.Roll.VsDifficulty", { difficulty })}`;
+}
+
 /** Append the spent Mana (and, for a non-base variant, its descriptive delta) to a subtitle. */
 export function withManaCostSubtitle(subtitle, chosen) {
   if (!chosen?.manaCost) return subtitle;
@@ -561,7 +577,7 @@ export default class CarlDice {
       rolls: [roll],
       rollMeta: [{ label: statLabel, breakdown }],
       title: title ?? statLabel,
-      subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
+      subtitle: checkSubtitle(degree, options.difficulty),
       img: actor.img,
       badge: degreeBadge(degree),
       body,
@@ -649,7 +665,7 @@ export default class CarlDice {
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
       title: skillItem.name,
-      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
+      subtitle: withManaCostSubtitle(checkSubtitle(degree, options.difficulty), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
       body,
@@ -676,6 +692,9 @@ export default class CarlDice {
     // castAs: a Scroll's cast - see resolveCastContext. It never adds a
     // Damage Effect.
     if (castAs) damageEffectItem = null;
+    // Unarmed Combat "Cannot choose a Damage Effect" (p.179) - not even one
+    // passed in (a macro).
+    if (!takesDamageEffects(skillItem)) damageEffectItem = null;
     const skillEntry = castAs ? castAs.skillEntry : sys.skills?.[slugifySkillName(skillItem.name)];
     const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
@@ -738,9 +757,10 @@ export default class CarlDice {
     // parentSkills can list Spells too. Rank-0 (untrained) ones are excluded
     // - Damage Effects are Passive Skills, and Passive Skills can't be used
     // untrained.
-    const rankedDamageEffectCandidates = castAs ? [] : (damageEffectItem ? [damageEffectItem] : actor.items
+    // Unarmed Combat "Cannot choose a Damage Effect" (p.179).
+    const rankedDamageEffectCandidates = castAs || !takesDamageEffects(skillItem) ? [] : (damageEffectItem ? [damageEffectItem] : actor.items
       .filter((i) => i.type === "damageEffect" && (i.system.parentSkills ?? []).includes(skillItem.name)))
-      .filter((de) => (sys.skills?.[slugifySkillName(de.name)]?.rank ?? de.system.rank ?? 0) > 0);
+      .filter((de) => ownedRank(actor, de) > 0);
 
     // Omitted entirely (dropdown-wise) when a Damage Effect was already
     // supplied by the caller (CarlDice.rollDamageEffect, rolling FROM the
@@ -748,7 +768,7 @@ export default class CarlDice {
     // that row, so re-offering the dropdown (and possibly having them pick a
     // DIFFERENT one, or blank it back out) would be confusing.
     const damageEffectChoices = damageEffectItem ? [] : rankedDamageEffectCandidates
-      .map((de) => ({ id: de.id, name: de.name, rank: sys.skills?.[slugifySkillName(de.name)]?.rank ?? de.system.rank ?? 0 }));
+      .map((de) => ({ id: de.id, name: de.name, rank: ownedRank(actor, de) }));
 
     // Surfaces every CANDIDATE Damage Effect's own conditions (e.g. Choke
     // Out/Smush/Skullcracker's grapple-check bonuses target THEMSELVES, not
@@ -803,7 +823,7 @@ export default class CarlDice {
     // pass one directly via the damageEffectItem option (skipDialog: true) -
     // Damage Effects are Passive Skills, unusable untrained.
     if (damageEffectItem) {
-      const deRank = sys.skills?.[slugifySkillName(damageEffectItem.name)]?.rank ?? damageEffectItem.system.rank ?? 0;
+      const deRank = ownedRank(actor, damageEffectItem);
       if (deRank === 0) {
         ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectUntrained", { name: damageEffectItem.name }));
         damageEffectItem = null;
@@ -1038,7 +1058,8 @@ export default class CarlDice {
     return createRollMessage({
       rolls, rollMeta,
       title: skillItem.name,
-      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
+      // Several targets: each row was rolled against its own Difficulty.
+      subtitle: withManaCostSubtitle(checkSubtitle(degree, targetRowList.length > 1 ? null : difficulty), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
       body,
@@ -1212,7 +1233,7 @@ export default class CarlDice {
     return createRollMessage({
       rolls, rollMeta,
       title: skillItem.name,
-      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), spec.chosenManaCost),
+      subtitle: withManaCostSubtitle(checkSubtitle(degree, targetRowList.length > 1 ? null : difficulty), spec.chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
       body: `${spec.body ?? ""}<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>`,
@@ -1400,14 +1421,13 @@ export default class CarlDice {
    *   Skill/Spell, the untrained-DE check fails, or a dialog was cancelled.
    */
   static async rollDamageEffect(actor, damageEffectItem) {
-    const sys = actor.system;
     // Same untrained gate rollAttack applies defensively when a
     // damageEffectItem is passed in directly - checked here too so a
     // DE-initiated roll fails fast with a clear reason instead of silently
     // rolling the parent Skill/Spell alone (rollAttack's own fallback,
     // appropriate for the Skill-initiated dropdown, would be confusing here
     // since the whole point of this button IS the Damage Effect).
-    const deRank = sys.skills?.[slugifySkillName(damageEffectItem.name)]?.rank ?? damageEffectItem.system.rank ?? 0;
+    const deRank = ownedRank(actor, damageEffectItem);
     if (deRank === 0) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectUntrained", { name: damageEffectItem.name }));
       return null;
@@ -1419,12 +1439,26 @@ export default class CarlDice {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectNoParentSkill", { name: damageEffectItem.name }));
       return null;
     }
+    // Unarmed Combat "Cannot choose a Damage Effect" (p.179).
+    const allowed = candidates.filter((c) => takesDamageEffects(c));
+    if (!allowed.length) {
+      ui.notifications.warn(game.i18n.format("CARLRPG.Warning.NoDamageEffects", { skill: candidates[0].name, name: damageEffectItem.name }));
+      return null;
+    }
 
-    let skillItem = candidates[0];
-    if (candidates.length > 1) {
-      const chosenId = await promptParentSkillChoice(damageEffectItem, candidates);
+    // A Spell parent is a Spell cast: in a fight, only from the Hotlist
+    // (p.86) - one that isn't there isn't offered.
+    const usable = allowed.filter((c) => !outsideHotlist(actor, c));
+    if (!usable.length) {
+      refuseOutsideHotlist(actor, allowed[0]);
+      return null;
+    }
+
+    let skillItem = usable[0];
+    if (usable.length > 1) {
+      const chosenId = await promptParentSkillChoice(damageEffectItem, usable);
       if (!chosenId) return null;
-      skillItem = candidates.find((c) => c.id === chosenId) ?? skillItem;
+      skillItem = usable.find((c) => c.id === chosenId) ?? skillItem;
     }
 
     return CarlDice.rollAttack(actor, skillItem, { damageEffectItem });
@@ -1645,7 +1679,7 @@ export default class CarlDice {
       rolls: [roll],
       rollMeta: [{ label: game.i18n.localize("CARLRPG.Roll.Evade"), breakdown }],
       title: game.i18n.localize("CARLRPG.Roll.Evade"),
-      subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
+      subtitle: checkSubtitle(degree, options.difficulty),
       img: actor.img,
       badge: degreeBadge(degree),
       body,
@@ -1771,7 +1805,7 @@ export default class CarlDice {
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
       title: skillItem.name,
-      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
+      subtitle: withManaCostSubtitle(checkSubtitle(degree, finalDifficulty), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
       body: debuffNote,

@@ -1,7 +1,7 @@
 <div class="carl-dialog-body">
   {{#if showRollMode}}
-  <div class="form-group">
-    <label>{{localize "CARLRPG.Dialog.RollMode"}}</label>
+  {{!-- No label: the three radios take the whole row. --}}
+  <div class="form-group carl-dialog-roll-mode">
     <div class="form-fields">
       <label><input type="radio" name="advantage" value="normal" {{#unless defaultAdvantage}}checked{{/unless}} /> {{localize "CARLRPG.Dialog.Normal"}}</label>
       <label><input type="radio" name="advantage" value="advantage" {{#if (eq defaultAdvantage "advantage")}}checked{{/if}} /> {{localize "CARLRPG.Dialog.Advantage"}}</label>
@@ -18,12 +18,15 @@
         number below (module/dice/roll-prompt.mjs wires the change). --}}
   <div class="form-group">
     <label>{{localize "CARLRPG.Dialog.DifficultyPreset"}}</label>
-    <div class="form-fields">
+    <div class="form-fields carl-dialog-preset">
       <select name="difficultyPreset" data-carl-difficulty-preset>
         {{#each difficultyPresets as |preset|}}
         <option value="{{preset.key}}" data-value="{{preset.value}}" {{#if preset.selected}}selected{{/if}}>{{preset.label}}</option>
         {{/each}}
       </select>
+      <i class="fa-solid fa-circle-question carl-dialog-help" tabindex="0" role="img"
+        data-tooltip-html="{{localize 'CARLRPG.Dialog.DifficultyPresetHelp'}}" data-tooltip-direction="UP"
+        aria-label="{{localize 'CARLRPG.Dialog.DifficultyPresetHelpLabel'}}: {{difficultyHelpText}}"></i>
     </div>
   </div>
   {{/if}}
@@ -54,15 +57,14 @@
   </div>
   {{/if}}
   {{#if damageEffectChoices.length}}
-  <div class="form-group">
+  {{!-- One click per choice: a radio list, "None" by default. --}}
+  <div class="form-group carl-dialog-damage-effect">
     <label>{{localize "CARLRPG.Dialog.DamageEffect"}}</label>
-    <div class="form-fields">
-      <select name="damageEffectId">
-        <option value=""></option>
-        {{#each damageEffectChoices as |de|}}
-        <option value="{{de.id}}">{{de.name}} ({{localize "CARLRPG.Roll.Rank"}} {{de.rank}})</option>
-        {{/each}}
-      </select>
+    <div class="form-fields carl-dialog-conditions-list">
+      <label class="carl-dialog-condition"><input type="radio" name="damageEffectId" value="" checked /> {{localize "CARLRPG.Dialog.NoDamageEffect"}}</label>
+      {{#each damageEffectChoices as |de|}}
+      <label class="carl-dialog-condition"><input type="radio" name="damageEffectId" value="{{de.id}}" /> {{de.name}} ({{localize "CARLRPG.Roll.Rank"}} {{de.rank}})</label>
+      {{/each}}
     </div>
   </div>
   {{/if}}

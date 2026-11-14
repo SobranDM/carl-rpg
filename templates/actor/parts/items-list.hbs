@@ -46,9 +46,11 @@
         </a>
         {{/if}}
         {{#if @root.isCharacter}}
+        {{#if item.showHotlistPin}}
         <a class="item-control carl-hotlist-pin" data-action="toggleHotlist" title="{{localize 'CARLRPG.Hotlist.PinHint'}}">
           <i class="{{#if item.inHotlist}}fas{{else}}far{{/if}} fa-star"></i>
         </a>
+        {{/if}}
         {{else}}
         <a class="item-control" data-action="toggleEquipped" title="{{localize 'CARLRPG.Item.Equipped'}}">
           <i class="fas {{#if item.system.equipped}}fa-check-square{{else}}fa-square{{/if}}"></i>

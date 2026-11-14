@@ -21,7 +21,10 @@
  *   the book doesn't say), then disappears. A Spell already known is only
  *   raised, never lowered.
  *
- * Every refusal happens before anything is used up.
+ * Every refusal happens before anything is used up. In a fight, a
+ * consumable must be in the crawler's Hotlist (Use a Hotlist Item, p.86).
+ * A one-click use asks first (confirmUse) unless another dialog already
+ * did - choosing who gets it, a Skill potion's Skill, a scroll's roll.
  */
 import CarlDice, { isBlockedByDebuff } from "../dice/dice.mjs";
 import { CARLRPG } from "./config.mjs";
@@ -37,7 +40,7 @@ import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { postConsumableCard } from "../chat/consumable-card.mjs";
 import { isVehicle } from "./actor-kinds.mjs";
-import { refuseSpellOutsideHotlist } from "./hotlist.mjs";
+import { inRunningFight, refuseOutsideHotlist } from "./hotlist.mjs";
 
 // "Each crawler may only consume two Stat potions and two Skill potions
 // during the entirety of their short life" (p.218).
@@ -124,9 +127,14 @@ function targetedRecipient(actor) {
  * @returns {Promise<Actor|null>} null when cancelled.
  */
 async function chooseRecipient(item, actor, target) {
+  const parts = [
+    `<p>${game.i18n.format("CARLRPG.Consumable.ChooseRecipient", { item: esc(item.name), name: esc(target.name) })}</p>`,
+    ...useNotes(actor, item, [actor, target]),
+  ];
   const choice = await showCarlDialog({
     title: item.name,
-    content: `<p>${game.i18n.format("CARLRPG.Consumable.ChooseRecipient", { item: esc(item.name), name: esc(target.name) })}</p>`,
+    content: `<div class="carl-dialog-body">${parts.join("")}</div>`,
+    classes: ["carl-consumable-recipient"],
     buttons: [
       { action: "self", icon: "fa-solid fa-flask", label: game.i18n.localize("CARLRPG.Consumable.UseYourself"), default: true, callback: () => "self" },
       { action: "give", icon: "fa-solid fa-hand-holding-medical", label: game.i18n.format("CARLRPG.Consumable.GiveTo", { name: target.name }), callback: () => "give" },
@@ -181,12 +189,13 @@ export async function useConsumable(actor, item, { skipDialog = false } = {}) {
   }
   // "They must be conscious and not impaired, Dying, or the like."
   if (isBlockedByDebuff(actor)) return null;
-  // Cast a Spell: "Choose a Spell or scroll in your Hotlist" (Table 3).
-  if (kind === "scroll" && refuseSpellOutsideHotlist(actor, item)) return null;
+  // Cast a Spell: "Choose a Spell or scroll in your Hotlist" (Table 3);
+  // Use a Hotlist Item: "Use a prepared consumable item" (p.86).
+  if (refuseOutsideHotlist(actor, item)) return null;
   inUse.add(item.uuid);
   try {
     if (kind === "scroll") return await useScroll(actor, item, { skipDialog });
-    if (kind === "spellbook") return await readSpellbook(actor, item);
+    if (kind === "spellbook") return await readSpellbook(actor, item, { skipDialog });
     return await drinkOrUse(actor, item, { skipDialog });
   } finally {
     inUse.delete(item.uuid);
@@ -199,9 +208,12 @@ const inUse = new Set();
 async function drinkOrUse(actor, item, { skipDialog }) {
   const effects = item.toObject().system.consumable;
   let recipient = targetedRecipient(actor);
+  // Whether a dialog already gave the user the chance to back out.
+  let asked = skipDialog;
   if (recipient.uuid !== actor.uuid && !skipDialog) {
     recipient = await chooseRecipient(item, actor, recipient);
     if (!recipient) return null;
+    asked = true;
   }
 
   // A healing-only potion - including HB restored each round - can't help
@@ -240,6 +252,7 @@ async function drinkOrUse(actor, item, { skipDialog }) {
       const chosen = skipDialog ? null : await chooseSkill(recipient, item);
       if (!chosen) return null;
       permanent.target = chosen;
+      asked = true;
     }
     // A Skill already at its ceiling would gain nothing, and the potion
     // would still count toward the two-ever limit - keep it instead.
@@ -250,6 +263,7 @@ async function drinkOrUse(actor, item, { skipDialog }) {
   }
 
   const isPotion = effects.kind === "potion";
+  if (!asked && !(await confirmUse(actor, item, { recipient, isPotion }))) return null;
   // When it was used - for Potion Sickness and for whether a round-measured
   // Buff counts rounds - even if someone else clicks Apply later.
   const drankAt = potionMoment(recipient);
@@ -269,6 +283,74 @@ async function drinkOrUse(actor, item, { skipDialog }) {
 export function potionMoment(recipient) {
   const combat = game.combats.find((c) => c.started && c.combatants.some((cb) => cb.actor?.uuid === recipient.uuid));
   return combat ? { combatId: combat.id, round: combat.round } : null;
+}
+
+/**
+ * Would a potion at this moment bring on Potion Sickness? "Crawlers cannot
+ * consume more than one potion every other round in combat."
+ * @param {Actor} recipient
+ * @param {{combatId: string, round: number}|null} [moment]  Defaults to now.
+ * @returns {boolean}
+ */
+export function wouldCauseSickness(recipient, moment = potionMoment(recipient)) {
+  if (!moment) return false;
+  const last = recipient.getFlag("carl-rpg", "lastPotion");
+  return last?.combatId === moment.combatId && moment.round - last.round < 2;
+}
+
+/**
+ * The lines a use's dialog adds: in a fight, which Action it is; for a
+ * potion, a Potion Sickness warning for whoever would get it.
+ * @param {Actor} actor  The user.
+ * @param {Item} item
+ * @param {Actor[]} drinkers  Who might drink it (a potion's possible recipients).
+ * @returns {string[]}  HTML paragraphs.
+ */
+function useNotes(actor, item, drinkers) {
+  const lines = [];
+  if (inRunningFight(actor)) {
+    const key = item.system.consumable?.kind === "scroll" ? "CastAction" : "UseAction";
+    lines.push(`<p class="carl-dialog-hint">${esc(game.i18n.localize(`CARLRPG.Consumable.Confirm.${key}`))}</p>`);
+  }
+  if (item.system.consumable?.kind === "potion") {
+    for (const who of new Set(drinkers.filter((a) => a && wouldCauseSickness(a)))) {
+      lines.push(`<p class="carl-dialog-warning">${esc(game.i18n.format("CARLRPG.Consumable.Confirm.Sickness", { name: who.name }))}</p>`);
+    }
+  }
+  return lines;
+}
+
+/**
+ * Ask before using one up - the Hotlist and Inventory are one click. Says
+ * what it costs in a fight and warns of Potion Sickness. Re-checks that
+ * there's still one to use once answered.
+ * @param {Actor} actor
+ * @param {Item} item
+ * @param {{recipient?: Actor, isPotion?: boolean}} [options]
+ * @returns {Promise<boolean>}
+ */
+async function confirmUse(actor, item, { recipient = actor, isPotion = false } = {}) {
+  const left = Math.max(0, Number(item.system.quantity ?? 1) - 1);
+  const parts = [
+    `<p>${esc(game.i18n.format("CARLRPG.Consumable.Confirm.Body", { item: item.name, left }))}</p>`,
+    ...useNotes(actor, item, isPotion ? [recipient] : []),
+  ];
+  const ok = await showCarlDialog({
+    title: game.i18n.format("CARLRPG.Consumable.Confirm.Title", { item: item.name }),
+    content: `<div class="carl-dialog-body">${parts.join("")}</div>`,
+    classes: ["carl-consumable-confirm"],
+    buttons: [
+      { action: "use", icon: "fa-solid fa-flask", label: "CARLRPG.Consumable.Confirm.Use", default: true, callback: () => true },
+      cancelButton(),
+    ],
+  });
+  if (!ok) return false;
+  const current = item.parent?.items.get(item.id);
+  if (!current || Number(current.system.quantity ?? 1) < 1) {
+    ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.NoneLeft", { item: item.name }));
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -440,8 +522,7 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
   // same fight.
   if (isPotion) {
     if (moment) {
-      const last = recipient.getFlag("carl-rpg", "lastPotion");
-      if (last?.combatId === moment.combatId && moment.round - last.round < 2) {
+      if (wouldCauseSickness(recipient, moment)) {
         const sick = buildConditionEntry("poisoned", { source: game.i18n.localize("CARLRPG.Consumable.PotionSickness") });
         Object.assign(sick, { id: foundry.utils.randomID(), durationType: "rounds", remaining: SICKNESS_ROUND_ENDS });
         conditions.push(sick);
@@ -508,7 +589,7 @@ export async function learnSpell(actor, source, rank) {
   return { line: game.i18n.format("CARLRPG.Consumable.Result.SpellLearned", data), changed: true };
 }
 
-async function readSpellbook(actor, item) {
+async function readSpellbook(actor, item, { skipDialog }) {
   const { source, name, rank: bookRank } = await resolveConsumableSpell(item);
   if (!source) {
     ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.NoSpell", { item: item.name, spell: name || "?" }));
@@ -521,6 +602,7 @@ async function readSpellbook(actor, item) {
     ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.SpellbookKnown", { name: actor.name, spell: source.name, rank: known.system.rank }));
     return null;
   }
+  if (!skipDialog && !(await confirmUse(actor, item))) return null;
   // "To randomly generate the Skill Rank, roll 1d6-1 with a minimum Rank of 1."
   let roll = null;
   let rank = bookRank;
@@ -550,6 +632,9 @@ async function useScroll(actor, item, { skipDialog }) {
   }
   const { item: spell, castAs } = buildScrollCast(actor, source.toObject(), rank);
   const keywords = spell.system.castingKeywords ?? [];
+  const noRollDialog = !keywords.includes("attack")
+    && (keywords.includes("heal") || spell.system.isPassive || spell.system.isToggled);
+  if (noRollDialog && !skipDialog && !(await confirmUse(actor, item))) return null;
   let message;
   if (keywords.includes("attack")) message = await CarlDice.rollAttack(actor, spell, { castAs, skipDialog });
   else if (keywords.includes("heal")) message = await CarlDice.rollHeal(actor, spell, { castAs });

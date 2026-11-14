@@ -104,10 +104,15 @@ export async function promptRollOptions({
     title,
     template: "systems/carl-rpg/templates/dialog/roll-options.hbs",
     context: {
+      // The help icon's tooltip as plain text, for screen readers.
+      difficultyHelpText: game.i18n.localize("CARLRPG.Dialog.DifficultyPresetHelp").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
       difficulty, showDifficulty, defaultAdvantage, conditions: conditionalModifiers, damageEffectChoices, manaCostChoices,
       debuffRows, showRollMode, difficultyLabel, difficultyPresets, areaTargets, isArea,
     },
     buttons: [rollButton(), cancelButton()],
+    // Wide enough for "Situational Modifier" on one line.
+    position: { width: 480 },
+    classes: ["carl-roll-dialog"],
     onRender: (event, dialog) => wireRollOptions(dialog.element ?? dialog),
   });
   if (!result) return null;
@@ -126,7 +131,8 @@ export async function promptRollOptions({
   return {
     checkedDebuffs,
     advantage: result.advantage ?? "normal",
-    difficulty: result.difficulty !== undefined && result.difficulty !== "" ? Number(result.difficulty) : null,
+    // An emptied number box comes back null (FormDataExtended): no Difficulty.
+    difficulty: Number.isFinite(Number(result.difficulty ?? NaN)) && result.difficulty !== "" ? Number(result.difficulty) : null,
     modifier: Number(result.modifier) || 0,
     checked,
     damageEffectId: result.damageEffectId || null,

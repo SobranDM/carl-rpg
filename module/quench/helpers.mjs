@@ -306,3 +306,47 @@ export const PIN_D20_MID = 0.5;
 export function mockD20Roll(d20Results) {
   return { dice: [{ faces: 20, results: d20Results }] };
 }
+
+/**
+ * The open system dialog (module/apps/carl-dialog.mjs) with this class.
+ * @param {string} cssClass
+ * @returns {Promise<foundry.applications.api.DialogV2>}
+ */
+export async function openDialog(cssClass) {
+  let dialog;
+  await waitFor(() => {
+    dialog = [...foundry.applications.instances.values()].find(
+      (app) => app instanceof foundry.applications.api.DialogV2 && app.rendered && app.element.classList.contains(cssClass),
+    );
+    return !!dialog;
+  }, { message: `no .${cssClass} dialog opened` });
+  return dialog;
+}
+
+/** Click one of a dialog's footer buttons. */
+export function pressDialog(dialog, action) {
+  dialog.element.querySelector(`button[data-action="${action}"]`).click();
+}
+
+/**
+ * Start something that opens a dialog, run `fn` on the dialog (it must
+ * press a button), and return what the start resolved with. If `fn` throws,
+ * the dialog is closed, so a failed assertion can't leave it behind for the
+ * next test. (Closing it after a press would race the button's callback.)
+ * @param {() => Promise<*>} start
+ * @param {(dialog: foundry.applications.api.DialogV2) => void|Promise<void>} fn
+ * @param {string} cssClass  The dialog's class.
+ * @returns {Promise<*>}
+ */
+export async function withDialog(start, fn, cssClass) {
+  const pending = start();
+  let dialog = null;
+  try {
+    dialog = await openDialog(cssClass);
+    await fn(dialog);
+  } catch (err) {
+    if (dialog?.rendered) await dialog.close();
+    throw err;
+  }
+  return pending;
+}

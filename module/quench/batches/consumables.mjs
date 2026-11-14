@@ -9,7 +9,7 @@ import { addConditionToActor } from "../../helpers/conditions.mjs";
 import { rerollMessage } from "../../chat/ai-favor-reroll.mjs";
 import {
   createTestCharacter, createTestMob, createTestItem, createTestCombat, deleteTestActor, deleteTestCombat,
-  waitFor, withFakeTargets, withPinnedDice, withSetting, PIN_D20_MID, useQuenchTimeout,
+  pressDialog, waitFor, withDialog, withFakeTargets, withPinnedDice, withSetting, PIN_D20_MID, useQuenchTimeout,
 } from "../helpers.mjs";
 
 const MAGIC_MISSILE = "Compendium.carl-rpg.skills-and-spells.Item.mK52l4gB8AAiWOCw";
@@ -29,6 +29,11 @@ async function quietly(fn) {
     const extra = game.messages.filter((m) => !before.has(m.id)).map((m) => m.id);
     if (extra.length) await ChatMessage.deleteDocuments(extra);
   }
+}
+
+/** In a fight, a consumable is only used from the Hotlist (p.86). */
+async function hotlist(actor, ...items) {
+  await actor.update({ "system.hotlist": items.map((i) => i.id) });
 }
 
 /** A gear item with consumable data. */
@@ -253,6 +258,7 @@ export default function register(quench) {
               kind: "potion",
               buff: { label: "Mana Refill", duration: 2, unit: "rounds", perRound: { mana: 15 } },
             });
+            await hotlist(actor, potion);
             await quietly(() => useConsumable(actor, potion, { skipDialog: true }));
             const entry = actor.system.conditions.find((c) => c.label === "Mana Refill");
             assert.exists(entry);
@@ -334,6 +340,7 @@ export default function register(quench) {
             const skin = await consumableItem(actor, "skin", {
               kind: "other", buff: { label: "Brief Skin", duration: 5, unit: "rounds", changes: [{ targetType: "resource", target: "dr", mode: "multiply", value: "2" }] },
             });
+            await hotlist(actor, refill, skin);
             await quietly(() => useConsumable(actor, refill, { skipDialog: true }));
             await quietly(() => useConsumable(actor, skin, { skipDialog: true }));
             await quietly(() => processActorRoundEnd(actor));
@@ -362,6 +369,7 @@ export default function register(quench) {
             const potion = await consumableItem(actor, "trickle", {
               kind: "potion", buff: { label: "Trickle", duration: 1, unit: "minutes", perRound: { mana: 1 } },
             });
+            await hotlist(actor, potion);
             await quietly(() => useConsumable(actor, potion, { skipDialog: true }));
             const entry = actor.system.conditions.find((c) => c.label === "Trickle");
             assert.equal(entry.durationType, "rounds");
@@ -458,6 +466,7 @@ export default function register(quench) {
           try {
             await combat.startCombat();
             const potion = await consumableItem(actor, "sip", { kind: "potion", heal: { slots: 1 } }, { quantity: 3 });
+            await hotlist(actor, potion);
             await quietly(() => useConsumable(actor, potion, { skipDialog: true }));
             assert.notInclude(keys(actor), "poisoned", "the first is fine");
             await quietly(() => useConsumable(actor, potion, { skipDialog: true }));
@@ -731,13 +740,53 @@ export default function register(quench) {
           }
         });
 
+        it("a one-click use asks first: Cancel keeps it, and the question says what it costs", async function () {
+          const actor = await createTestCharacter("asker", { system: { hb: { value: 3 } } });
+          try {
+            const potion = await consumableItem(actor, "heal", { kind: "potion", heal: { slots: 2 } }, { quantity: 2 });
+            const kept = await withDialog(() => useConsumable(actor, potion), (dialog) => {
+              assert.include(dialog.element.textContent, game.i18n.format("CARLRPG.Consumable.Confirm.Body", { item: potion.name, left: 1 }));
+              pressDialog(dialog, "cancel");
+            }, "carl-consumable-confirm");
+            assert.isNull(kept);
+            assert.equal(actor.items.get(potion.id).system.quantity, 2, "nothing used");
+            assert.equal(actor.system.hb.value, 3);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("in a fight, a consumable outside the Hotlist is refused; one in it asks, warning of Potion Sickness", async function () {
+          const actor = await createTestCharacter("fighter", { system: { hb: { value: 3 } } });
+          const { combat } = await createTestCombat(actor);
+          try {
+            await combat.startCombat();
+            const potion = await consumableItem(actor, "heal", { kind: "potion", heal: { slots: 1 } }, { quantity: 3 });
+            assert.isNull(await quietly(() => useConsumable(actor, potion, { skipDialog: true })), "Retrieve it first");
+            assert.equal(actor.items.get(potion.id).system.quantity, 3);
+
+            await hotlist(actor, potion);
+            await actor.setFlag("carl-rpg", "lastPotion", { combatId: combat.id, round: combat.round });
+            await quietly(() => withDialog(() => useConsumable(actor, potion), (dialog) => {
+              const text = dialog.element.textContent;
+              assert.include(text, game.i18n.localize("CARLRPG.Consumable.Confirm.UseAction"));
+              assert.include(text, game.i18n.format("CARLRPG.Consumable.Confirm.Sickness", { name: actor.name }));
+              pressDialog(dialog, "use");
+            }, "carl-consumable-confirm"));
+            assert.equal(actor.items.get(potion.id).system.quantity, 2, "used once confirmed");
+          } finally {
+            await deleteTestCombat(combat);
+            await deleteTestActor(actor);
+          }
+        });
+
         it("clicking a consumable's icon uses it; plain gear still just posts its description", async function () {
           const actor = await createTestCharacter("clicker", { system: { hb: { value: 3 } } });
           try {
             const potion = await consumableItem(actor, "heal", { kind: "potion", heal: { slots: 2 } });
             const rope = await createTestItem(actor, "item", "Rope");
             await quietly(async () => {
-              await potion.roll();
+              await withDialog(() => potion.roll(), (dialog) => pressDialog(dialog, "use"), "carl-consumable-confirm");
               assert.equal(actor.system.hb.value, 5);
               assert.notExists(actor.items.get(potion.id));
               const card = await rope.roll();

@@ -21,6 +21,7 @@ import { commandPet } from './helpers/pet-command.mjs';
 import { bakeItemGrants } from './helpers/race-class-grants.mjs';
 import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
 import { openRulebookImporter, RulebookImportMenu } from './pdf-import/import-dialog.mjs';
+import { migrateWorld, registerMigrationSetting } from './helpers/migration.mjs';
 
 Hooks.once('init', function () {
   game.carlrpg = {
@@ -36,6 +37,9 @@ Hooks.once('init', function () {
     rollDrivingCheck,
     rollRam,
   };
+
+  // Which one-time data migrations this world has had (helpers/migration.mjs).
+  registerMigrationSetting();
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
   // gameTimer tracks REAL wall-clock time (Date.now()), unrelated to
@@ -360,6 +364,10 @@ Hooks.once('ready', function () {
     // same actor's same Stat would otherwise race (each reading the same
     // stale base before either write lands, so one delta silently loses).
     (async () => {
+      // One-time data fixes for a world from an older version - the active
+      // GM only, once per world, before anything else writes
+      // (helpers/migration.mjs).
+      await migrateWorld().catch((err) => console.error('carl-rpg | World migration failed', err));
       for (const actor of game.actors) {
         if (actor.type !== 'character') continue;
         for (const item of actor.items) {

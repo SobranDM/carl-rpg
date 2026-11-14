@@ -7,7 +7,13 @@
  *
  * "Worn" means sitting in a gear slot or an accessory slot: a worn item is
  * marked equipped, and unticking its Equipped box takes it back out.
+ *
+ * Worn gear and the Hotlist are exclusive - "Items in Hotlists do not grant
+ * you any added benefits" (p.98) - so wearing a Hotlist item takes it out of
+ * the Hotlist (hotlistWithout).
  */
+
+import { refuseWhileSwapping } from "./swap-lock.mjs";
 
 /** A stored value that looks like a Foundry document id, not free text. */
 const ID_PATTERN = /^[a-zA-Z0-9]{16}$/;
@@ -38,25 +44,34 @@ export function isItemWorn(actor, itemId) {
 }
 
 /**
- * Put an owned Item into a Hotlist, gear or accessory slot. Gear and
- * accessory slots also mark it equipped, move it out of any other worn slot
- * (an item is only worn once), and unequip whatever it replaced.
+ * The Hotlist with this item taken out, or null if it isn't there.
  * @param {Actor} actor
- * @param {{slotType: "hotlist"|"gear"|"accessory", slotKey: string}} slot
- *   `slotKey` is the gear slot key, or the list index for hotlist/accessory
- *   (an index past the end of accessories appends).
+ * @param {string} itemId
+ * @returns {string[]|null}
+ */
+export function hotlistWithout(actor, itemId) {
+  const list = actor.system.hotlist ?? [];
+  if (!itemId || !list.includes(itemId)) return null;
+  return list.map((id) => (id === itemId ? "" : id));
+}
+
+/**
+ * Put an owned Item into a gear or accessory slot (the Hotlist has its own
+ * rules: hotlist.mjs's placeInHotlist). It's marked equipped, move it out of any other worn slot
+ * (an item is only worn once) and out of the Hotlist, and unequip whatever
+ * it replaced.
+ * @param {Actor} actor
+ * @param {{slotType: "gear"|"accessory", slotKey: string}} slot
+ *   `slotKey` is the gear slot key, or the list index for an accessory
+ *   (an index past the end appends).
  * @param {Item} item  Must already be embedded on `actor`.
+ * @param {{duringSwap?: boolean}} [options]  duringSwap: a Hotlist swap's own
+ *   write (hotlist.mjs), allowed through the swap lock.
  * @returns {Promise<void>}
  */
-export async function assignItemToSlot(actor, { slotType, slotKey }, item) {
+export async function assignItemToSlot(actor, { slotType, slotKey }, item, { duringSwap = false } = {}) {
+  if (!duringSwap && refuseWhileSwapping(actor)) return;
   const system = actor.system;
-
-  if (slotType === "hotlist") {
-    const hotlist = padList(system.hotlist, CONFIG.CARLRPG.characterListSlots.hotlist);
-    hotlist[Number(slotKey)] = item.id;
-    await actor.update({ "system.hotlist": hotlist });
-    return;
-  }
 
   // Only gear is worn - a Skill or Spell has no Equipped state to set.
   if (item.type !== "item") {
@@ -89,7 +104,12 @@ export async function assignItemToSlot(actor, { slotType, slotKey }, item) {
   const max = CONFIG.CARLRPG.characterListSlots.accessories;
   if (accessories.length > max && accessories.length > wornAccessories) return;
 
-  await actor.update({ "system.gearSlots": gearSlots, "system.accessories": accessories });
+  const hotlist = hotlistWithout(actor, item.id);
+  await actor.update({
+    "system.gearSlots": gearSlots,
+    "system.accessories": accessories,
+    ...(hotlist ? { "system.hotlist": hotlist } : {}),
+  });
 
   const updates = [];
   if (!item.system.equipped) updates.push({ _id: item.id, "system.equipped": true });
@@ -97,22 +117,24 @@ export async function assignItemToSlot(actor, { slotType, slotKey }, item) {
   if (old?.system.equipped && !isItemWorn(actor, old.id)) {
     updates.push({ _id: old.id, "system.equipped": false });
   }
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates);
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { carlSwap: duringSwap });
 }
 
 /**
  * Take an owned Item out of every gear and accessory slot and unequip it.
  * @param {Actor} actor
  * @param {Item} item
+ * @param {{duringSwap?: boolean}} [options]  As assignItemToSlot.
  * @returns {Promise<void>}
  */
-export async function unwearItem(actor, item) {
+export async function unwearItem(actor, item, { duringSwap = false } = {}) {
+  if (!duringSwap && refuseWhileSwapping(actor)) return;
   const gearSlots = Object.fromEntries(
     Object.entries(actor.system.gearSlots).map(([key, id]) => [key, id === item.id ? "" : id]),
   );
   const accessories = actor.system.accessories.filter((id) => id !== item.id);
   await actor.update({ "system.gearSlots": gearSlots, "system.accessories": accessories });
-  if (item.system.equipped) await item.update({ "system.equipped": false });
+  if (item.system.equipped) await item.update({ "system.equipped": false }, { carlSwap: duringSwap });
 }
 
 /**
@@ -123,6 +145,7 @@ export async function unwearItem(actor, item) {
  * @returns {Promise<void>}
  */
 export async function clearSlot(actor, { slotType, slotKey }) {
+  if (refuseWhileSwapping(actor)) return;
   const system = actor.system;
   let removed;
   if (slotType === "hotlist") {
@@ -146,7 +169,7 @@ export async function clearSlot(actor, { slotType, slotKey }) {
 }
 
 /** Copy a string list, padded with "" out to at least `length` entries. */
-function padList(list, length) {
+export function padList(list, length) {
   const copy = [...(list ?? [])];
   while (copy.length < length) copy.push("");
   return copy;

@@ -41,6 +41,9 @@ import registerLootBox from "./batches/loot-box.mjs";
 import registerPets from "./batches/pets.mjs";
 import registerVehicles from "./batches/vehicles.mjs";
 import registerHotlist from "./batches/hotlist.mjs";
+import registerRollDialog from "./batches/roll-dialog.mjs";
+import registerHandToHand from "./batches/hand-to-hand.mjs";
+import registerMigration from "./batches/migration.mjs";
 
 const BATCH_REGISTRARS = [
   registerRules,
@@ -72,6 +75,9 @@ const BATCH_REGISTRARS = [
   registerPets,
   registerVehicles,
   registerHotlist,
+  registerRollDialog,
+  registerHandToHand,
+  registerMigration,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

@@ -98,6 +98,11 @@ export default function register(quench) {
             const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
             assert.exists(combat.querySelector(".carl-stats-column"));
             assert.equal(combat.querySelectorAll(".carl-hotlist-row").length, 10);
+            const empties = combat.querySelectorAll('.carl-hotlist-row [data-action="pickHotlist"]');
+            assert.lengthOf(empties, 10, "every empty slot is clickable");
+            assert.include(empties[0].textContent, game.i18n.localize("CARLRPG.Hotlist.Empty"));
+            const header = [...sheet.element.querySelectorAll(".carl-name-row .resource-label")].map((el) => el.textContent.trim());
+            assert.deepEqual(header, [game.i18n.localize("CARLRPG.Actor.Race"), game.i18n.localize("CARLRPG.Actor.Class")], "Race before Class");
             assert.exists(combat.querySelector(`.carl-combat-attacks [data-item-id="${sword.id}"]`), "Attack Skills are listed");
             assert.lengthOf(combat.querySelectorAll(".carl-combat-attacks li.item"), 1, "only Attack Skills");
             const skillsTab = sheet.element.querySelector('section.tab[data-tab="skills"]');
@@ -296,7 +301,7 @@ export default function register(quench) {
           }
         });
 
-        it("dropping a sidebar Item on a Hotlist slot creates it and fills the slot", async function () {
+        it("a sidebar Item dropped on a Hotlist slot lands in the Inventory, not the slot (click a slot to fill it)", async function () {
           const actor = await createTestCharacter("hotlist");
           const source = await worldItem("potion");
           try {
@@ -304,7 +309,7 @@ export default function register(quench) {
             const { dispatches, result } = await dropOn(sheet, hotlistSlot(sheet, 0), source.toDragData());
             assert.equal(dispatches, 1);
             assert.equal(actor.items.filter((i) => i.name === source.name).length, 1);
-            assert.equal(actor.system.hotlist[0], result.id);
+            assert.notInclude(actor.system.hotlist, result.id);
             await sheet.close();
           } finally {
             await deleteTestActor(actor);
@@ -312,7 +317,7 @@ export default function register(quench) {
           }
         });
 
-        it("dropping an owned Item on a Hotlist slot fills it without copying", async function () {
+        it("dropping an owned Item on a Hotlist slot does nothing", async function () {
           const actor = await createTestCharacter("own slot");
           try {
             const item = await createTestItem(actor, "item", "owned");
@@ -320,7 +325,7 @@ export default function register(quench) {
             const { dispatches } = await dropOn(sheet, hotlistSlot(sheet, 1), item.toDragData());
             assert.equal(dispatches, 1);
             assert.equal(actor.items.size, 1, "no copy");
-            assert.equal(actor.system.hotlist[1], item.id);
+            assert.notInclude(actor.system.hotlist, item.id);
             await sheet.close();
           } finally {
             await deleteTestActor(actor);

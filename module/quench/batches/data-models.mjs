@@ -11,6 +11,7 @@ import {
   resolveSlotValue,
   unwearItem,
 } from "../../helpers/equip-slots.mjs";
+import { placeInHotlist } from "../../helpers/hotlist.mjs";
 
 export default function register(quench) {
   quench.registerBatch(
@@ -545,7 +546,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const potion = await createTestItem(actor, "item", "potion");
-            await assignItemToSlot(actor, { slotType: "hotlist", slotKey: "3" }, potion);
+            await placeInHotlist(actor, 3, potion);
             assert.equal(actor.system.hotlist[3], potion.id);
             assert.lengthOf(actor.system.hotlist, 10);
             assert.isFalse(potion.system.equipped);

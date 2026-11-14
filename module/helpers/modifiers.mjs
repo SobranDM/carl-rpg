@@ -46,6 +46,17 @@ export function slugifySkillName(name) {
   return slug || "unknown";
 }
 
+/**
+ * An owned Skill, Spell or Damage Effect's Rank as rolls read it: the
+ * actor's prepared skills entry (bonuses included), else the item's own.
+ * @param {Actor} actor
+ * @param {Item} item
+ * @returns {number}
+ */
+export function ownedRank(actor, item) {
+  return actor.system.skills?.[slugifySkillName(item.name)]?.rank ?? item.system.rank ?? 0;
+}
+
 function emptySkillEntry(name) {
   return {
     key: slugifySkillName(name),

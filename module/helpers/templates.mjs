@@ -31,6 +31,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/carl-rpg/templates/chat/taunt-footer.hbs",
     "systems/carl-rpg/templates/chat/mark-choice-footer.hbs",
     "systems/carl-rpg/templates/dialog/roll-options.hbs",
+    "systems/carl-rpg/templates/dialog/hotlist-pick.hbs",
     // GM Toolbox.
     "systems/carl-rpg/templates/apps/gm-toolbox.hbs",
     "systems/carl-rpg/templates/apps/spend-stat-points.hbs",
