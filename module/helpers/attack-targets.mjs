@@ -21,6 +21,7 @@
 import { collectDebuffRows, collectAdvantageAgainstRows, resolveDifficultyRows } from "./debuff-effects.mjs";
 import { getDegreeOfSuccess, isHitDegree, staticEvade } from "./rules.mjs";
 import { scaleDamageByType } from "./damage-pipeline.mjs";
+import { rollsLikeCrawler } from "./actor-kinds.mjs";
 
 /**
  * @typedef {object} TargetRow
@@ -74,7 +75,7 @@ export function nextRowId(targetRows) {
 export function crawlerAttackDifficulty(actor, floor) {
   const sys = actor.system;
   const rows = collectDebuffRows(sys, "evade", { ownerName: actor.name, idPrefix: "target", ownAction: false });
-  const used = actor.type === "character" ? rows.filter((r) => r.kind === "noDex") : rows;
+  const used = rollsLikeCrawler(actor) ? rows.filter((r) => r.kind === "noDex") : rows;
   const resolved = resolveDifficultyRows(staticEvade(sys) + floor, used);
   return { difficulty: resolved.difficulty, applied: resolved.applied };
 }
@@ -131,7 +132,9 @@ function baseRow({ id, target, zone, difficulty, hit, amazing }) {
     id,
     uuid: target.uuid,
     name: target.actor?.name ?? "?",
-    isCharacter: target.actor?.type === "character",
+    // "Defends like a crawler": the owner rolls its Evade (crawlers and
+    // their Pets). Kept under this name so older cards still read.
+    isCharacter: rollsLikeCrawler(target.actor),
     zone,
     difficulty,
     hit,
@@ -178,5 +181,5 @@ export function rowOutcome(row, { damageByType, isArea, floor }) {
  * @returns {number|null}
  */
 export function rowEvadeDifficulty(row, { attackerType, attackTotal }) {
-  return attackerType === "character" && row.isCharacter ? attackTotal : row.difficulty;
+  return rollsLikeCrawler(attackerType) && row.isCharacter ? attackTotal : row.difficulty;
 }

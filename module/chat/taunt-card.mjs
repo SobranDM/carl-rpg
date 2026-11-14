@@ -25,6 +25,7 @@ import { resolveActingActor } from "../helpers/token-resolution.mjs";
 import { createRollMessage } from "./chat-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow, nextRowId } from "../helpers/attack-targets.mjs";
+import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/taunt-footer.hbs";
 
@@ -62,7 +63,7 @@ function taunterRow(message, taunter) {
   const flags = message.flags["carl-rpg"];
   const id = nextRowId(flags.targetRows);
   const target = { uuid: taunter.token?.uuid ?? taunter.actor.uuid, actor: taunter.actor };
-  if (flags.attackerType !== "character") {
+  if (!rollsLikeCrawler(flags.attackerType)) {
     return mobAttackRow({ id, target, base: flags.mobBase ?? flags.targetDifficulty, ownRows: flags.mobOwnRows ?? [] }).row;
   }
   const floor = flags.floor ?? game.settings.get("carl-rpg", "currentFloor");

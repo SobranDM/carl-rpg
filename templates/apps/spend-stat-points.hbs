@@ -26,7 +26,7 @@
           <i class="fas fa-minus"></i>
         </button>
         <button type="button" data-action="incrementStat" data-key="{{stat.key}}"
-          {{#if (lte remainingPoints 0)}}disabled{{/if}} title="{{localize 'CARLRPG.SpendStatPoints.Increment'}}">
+          {{#unless stat.canIncrement}}disabled{{/unless}} title="{{#if stat.locked}}{{localize 'CARLRPG.Pet.IntLocked'}}{{else}}{{localize 'CARLRPG.SpendStatPoints.Increment'}}{{/if}}">
           <i class="fas fa-plus"></i>
         </button>
       </div>

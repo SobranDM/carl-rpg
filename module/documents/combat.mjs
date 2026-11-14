@@ -1,4 +1,6 @@
 import { processRoundEnd, processCombatEnd } from "../helpers/round-end.mjs";
+import { resetPetCommands } from "../helpers/pet-command.mjs";
+import { isCrawler, isPet, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 
 /**
  * Initiative stand-ins for a PvE fight, where the book has no initiative at
@@ -11,7 +13,8 @@ export const PVE_INITIATIVE = { mob: 20, character: 10 };
 
 /** @param {Actor|null|undefined} actor */
 function pveInitiativeFor(actor) {
-  return actor?.type === "character" ? PVE_INITIATIVE.character : PVE_INITIATIVE.mob;
+  // Pets act in the Crawler phase alongside their crawler (p.232).
+  return rollsLikeCrawler(actor) ? PVE_INITIATIVE.character : PVE_INITIATIVE.mob;
 }
 
 /**
@@ -26,10 +29,14 @@ function pveInitiativeFor(actor) {
  *    d20 + DEX" (CONFIG.Combat.initiative), re-rolled every round.
  */
 export class CarlRPGCombat extends Combat {
-  /** Whether every combatant is a crawler (PvP) - an empty combat isn't. */
+  /**
+   * Whether every combatant is a crawler (PvP) - an empty combat isn't.
+   * Crawlers' Pets don't decide it either way: crawlers + their Pets is
+   * still PvP, and a Pet rolls d20 + DEX like everyone else.
+   */
   get isPvP() {
-    const combatants = this.combatants.contents;
-    return combatants.length > 0 && combatants.every((c) => c.actor?.type === "character");
+    const combatants = this.combatants.contents.filter((c) => !isPet(c.actor));
+    return combatants.length > 0 && combatants.every((c) => isCrawler(c.actor));
   }
 
   /**
@@ -79,6 +86,8 @@ export class CarlRPGCombat extends Combat {
     // for a combat that actually started.
     if (!game.user.isActiveGM || !this.started) return;
     void processCombatEnd(this);
+    // Command Pet results last "for the entire combat" (p.232).
+    resetPetCommands(this).catch((err) => console.error("CarlRPG | pet command reset failed", err));
   }
 }
 
@@ -94,8 +103,8 @@ export class CarlRPGCombatant extends Combatant {
     if (allowed === false) return false;
     if (this.initiative !== null && this.initiative !== undefined) return;
     const combat = this.parent;
-    const pve = this.actor?.type !== "character"
-      || combat?.combatants.some((c) => c.actor?.type !== "character");
+    const pve = !rollsLikeCrawler(this.actor)
+      || combat?.combatants.some((c) => !rollsLikeCrawler(c.actor));
     if (pve) this.updateSource({ initiative: pveInitiativeFor(this.actor) });
   }
 

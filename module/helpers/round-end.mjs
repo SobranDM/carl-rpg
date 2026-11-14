@@ -47,6 +47,7 @@ import { resolveD20Formula } from "../dice/dice.mjs";
 import { createRollMessage, createCardMessage, esc } from "../chat/chat-card.mjs";
 import { queueForActor } from "./actor-queue.mjs";
 import { hbCeiling, restoreUpTo, restoresPerRound } from "./rest.mjs";
+import { diesAtZeroHb, isCrawler } from "./actor-kinds.mjs";
 
 /** An entry's own duration type (Potion Sickness's Poisoned) wins over its preset's. */
 function durationTypeOf(condition) {
@@ -93,7 +94,7 @@ export function processActorRoundEnd(actor) {
  */
 function isDead(actor) {
   const sys = actor.system;
-  if (actor.type !== "character") return (sys.hb?.value ?? 0) <= 0;
+  if (diesAtZeroHb(actor)) return (sys.hb?.value ?? 0) <= 0;
   const dying = (sys.conditions ?? []).find((c) => mechanicsOf(c)?.countdown);
   return !!dying && actor.getFlag("carl-rpg", "dyingAnnounced") === dying.id;
 }
@@ -215,7 +216,7 @@ async function runActorRoundEnd(actor) {
 
     const result = computeDamageApplication({ [dot.damageType ?? ""]: roll.total }, actor, true, { ignoreDr: true });
 
-    if (actor.type === "character" && hb > 0 && hb - result.slotsLost <= 0) {
+    if (isCrawler(actor) && hb > 0 && hb - result.slotsLost <= 0) {
       // An automatic CON Stat Check - the crawler's own Debuffs (Minor
       // Injury's -2, Shit-Faced's Disadvantage, Stunned...) still apply. It
       // isn't an Action, so Queasy/Staggered neither apply nor end.

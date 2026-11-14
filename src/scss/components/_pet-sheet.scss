@@ -1,0 +1,129 @@
+// Pet sheet (header-pet.hbs, abilities-pet.hbs, pet-details.hbs - module/
+// data/pet.mjs). The stat-block row reuses _mob-statblock.scss; this adds
+// the header's summary line and Command Pet strip, the Abilities tab's
+// traits list, and the Details tab's setup fieldsets.
+@mixin styles {
+  // Crawler link, Attitude, Role / Mount - one read-only line.
+  .carl-pet-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 4px;
+
+    .carl-pet-owner-link {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .carl-pet-no-owner {
+      opacity: 0.7;
+      font-style: italic;
+    }
+  }
+
+  .carl-pet-chip {
+    padding: 0 6px;
+    border: 1px solid var(--color-border-dark-secondary);
+    border-radius: 8px;
+    font-size: var(--font-size-12);
+
+    // Not Bonded yet: it may not do as it's told (p.230-232).
+    &.warn {
+      border-color: var(--carl-hazard);
+      color: var(--carl-hazard);
+    }
+  }
+
+  .carl-pet-command {
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+    flex-wrap: wrap;
+
+    > * {
+      flex: 0 0 auto;
+    }
+  }
+
+  .carl-pet-command-state {
+    padding: 1px 8px;
+    border: 1px solid var(--color-border-dark-secondary);
+    border-radius: 3px;
+    font-weight: bold;
+    opacity: 0.7;
+
+    &.active {
+      opacity: 1;
+      border-color: var(--carl-accent);
+    }
+
+    &.state-free,
+    &.state-restricted {
+      background: var(--carl-panel-bg);
+    }
+
+    &.state-stayingOut,
+    &.state-hiding {
+      border-color: var(--carl-hazard);
+    }
+  }
+
+  .carl-pet-command-button {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  // Sized to its longest option ("Not commanded", "Staying out"), not a
+  // fixed width.
+  .carl-pet-command-override {
+    width: auto;
+    min-width: 9em;
+  }
+
+  // Abilities tab: what its Role and Special Abilities do.
+  .carl-pet-traits {
+    margin: 0 0 6px;
+    padding-left: 1.2em;
+
+    li {
+      margin: 1px 0;
+    }
+  }
+
+  // Details tab.
+  .carl-pet-setup {
+    margin-bottom: 6px;
+
+    .carl-checkbox-field {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+
+  .carl-pet-abilities {
+    .carl-pet-ability-count {
+      font-weight: normal;
+
+      &.over {
+        color: var(--carl-hazard);
+      }
+    }
+
+    .carl-pet-mature {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 4px 0;
+
+      input {
+        flex: 1;
+      }
+    }
+  }
+
+  .carl-pet-int-warning {
+    color: var(--carl-hazard);
+  }
+}

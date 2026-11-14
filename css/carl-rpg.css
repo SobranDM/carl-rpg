@@ -2021,3 +2021,95 @@
   text-align: center;
   color: var(--carl-text-muted);
 }
+.carl-rpg .carl-pet-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 4px;
+}
+.carl-rpg .carl-pet-summary .carl-pet-owner-link {
+  cursor: pointer;
+  font-weight: bold;
+}
+.carl-rpg .carl-pet-summary .carl-pet-no-owner {
+  opacity: 0.7;
+  font-style: italic;
+}
+.carl-rpg .carl-pet-chip {
+  padding: 0 6px;
+  border: 1px solid var(--color-border-dark-secondary);
+  border-radius: 8px;
+  font-size: var(--font-size-12);
+}
+.carl-rpg .carl-pet-chip.warn {
+  border-color: var(--carl-hazard);
+  color: var(--carl-hazard);
+}
+.carl-rpg .carl-pet-command {
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  flex-wrap: wrap;
+}
+.carl-rpg .carl-pet-command > * {
+  flex: 0 0 auto;
+}
+.carl-rpg .carl-pet-command-state {
+  padding: 1px 8px;
+  border: 1px solid var(--color-border-dark-secondary);
+  border-radius: 3px;
+  font-weight: bold;
+  opacity: 0.7;
+}
+.carl-rpg .carl-pet-command-state.active {
+  opacity: 1;
+  border-color: var(--carl-accent);
+}
+.carl-rpg .carl-pet-command-state.state-free, .carl-rpg .carl-pet-command-state.state-restricted {
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-pet-command-state.state-stayingOut, .carl-rpg .carl-pet-command-state.state-hiding {
+  border-color: var(--carl-hazard);
+}
+.carl-rpg .carl-pet-command-button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-pet-command-override {
+  width: auto;
+  min-width: 9em;
+}
+.carl-rpg .carl-pet-traits {
+  margin: 0 0 6px;
+  padding-left: 1.2em;
+}
+.carl-rpg .carl-pet-traits li {
+  margin: 1px 0;
+}
+.carl-rpg .carl-pet-setup {
+  margin-bottom: 6px;
+}
+.carl-rpg .carl-pet-setup .carl-checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-pet-abilities .carl-pet-ability-count {
+  font-weight: normal;
+}
+.carl-rpg .carl-pet-abilities .carl-pet-ability-count.over {
+  color: var(--carl-hazard);
+}
+.carl-rpg .carl-pet-abilities .carl-pet-mature {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+.carl-rpg .carl-pet-abilities .carl-pet-mature input {
+  flex: 1;
+}
+.carl-rpg .carl-pet-int-warning {
+  color: var(--carl-hazard);
+}

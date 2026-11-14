@@ -33,11 +33,11 @@
       {{else}}
       <input type="text" class="carl-w-tiny" name="system.bankedStatPoints" value="{{system.bankedStatPoints}}" data-dtype="Number" />
       {{/if}}
-      <button type="button" data-action="spendStatPoints">{{localize "CARLRPG.Actor.Spend"}}</button>
+      {{#if canSpendStatPoints}}<button type="button" data-action="spendStatPoints">{{localize "CARLRPG.Actor.Spend"}}</button>{{/if}}
     </div>
   </fieldset>
 
-  {{#unless (eq actor.type "mob")}}
+  {{#if isCharacter}}
   {{!-- "You gain a Level when you grind a number of hours equal to your
         current Level" (p.171) - the GM Toolbox's Grind adds to this, and any
         Level gain resets it (CarlRPGActor#_preUpdate). --}}
@@ -49,5 +49,5 @@
     </div>
   </fieldset>
 
-  {{/unless}}
+  {{/if}}
 </div>

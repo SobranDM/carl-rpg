@@ -337,6 +337,51 @@ CARLRPG.mobBaseStat = 1;
 CARLRPG.mobStatPointsPerLevel = 3;
 
 /**
+ * Pets (p.228-232) - see module/data/pet.mjs and docs/companions-and-vehicles.md.
+ *  - petBaseStats: "Pet, Level 1" (p.231); every Mod is +1.
+ *  - petAttitudes: the taming ladder (p.230).
+ *  - petRoles / petSpecialAbilityAllowance: chosen once Bonded (p.231) -
+ *    Tank picks one Special Ability, Utility two, Aggressive none.
+ *  - petAltMoves / petAltMoveFeet: the "swim or burrow with Move of 30ft, or
+ *    flight or jump with Move 50ft" Special Ability.
+ *  - petStartingSkills: every Pet's Slice Attack; petRoleSkills: Aggressive's
+ *    "Gain the Back Claw and Bite Skills (Rank = Floor)".
+ *  - petCommandStates: the Command Pet results (p.232, module/helpers/
+ *    pet-command.mjs), each with the token status that shows it.
+ *  - petLevelStepCap: Pets "level up twice as fast as crawlers do until they
+ *    reach level 15".
+ */
+CARLRPG.petBaseStats = { str: 2, dex: 2, con: 2, int: 1, cha: 1 };
+CARLRPG.petAttitudes = {
+  hostile: "CARLRPG.Pet.Attitudes.hostile",
+  calm: "CARLRPG.Pet.Attitudes.calm",
+  friendly: "CARLRPG.Pet.Attitudes.friendly",
+  bonded: "CARLRPG.Pet.Attitudes.bonded",
+};
+CARLRPG.petRoles = {
+  tank: "CARLRPG.Pet.Roles.tank",
+  aggressive: "CARLRPG.Pet.Roles.aggressive",
+  utility: "CARLRPG.Pet.Roles.utility",
+};
+CARLRPG.petSpecialAbilityAllowance = { tank: 1, aggressive: 0, utility: 2 };
+CARLRPG.petAltMoves = {
+  swim: "CARLRPG.Pet.AltMoves.swim",
+  burrow: "CARLRPG.Pet.AltMoves.burrow",
+  flight: "CARLRPG.Pet.AltMoves.flight",
+  jump: "CARLRPG.Pet.AltMoves.jump",
+};
+CARLRPG.petAltMoveFeet = { swim: 30, burrow: 30, flight: 50, jump: 50 };
+CARLRPG.petStartingSkills = ["Slice Attack"];
+CARLRPG.petRoleSkills = { aggressive: ["Back Claw", "Bite"] };
+CARLRPG.petCommandStates = {
+  free: { label: "CARLRPG.Pet.Command.States.free", status: "carlPetFree", img: "icons/svg/upgrade.svg" },
+  restricted: { label: "CARLRPG.Pet.Command.States.restricted", status: "carlPetRestricted", img: "icons/svg/target.svg" },
+  stayingOut: { label: "CARLRPG.Pet.Command.States.stayingOut", status: "carlPetStayingOut", img: "icons/svg/downgrade.svg" },
+  hiding: { label: "CARLRPG.Pet.Command.States.hiding", status: "carlPetHiding", img: "icons/svg/invisible.svg" },
+};
+CARLRPG.petLevelStepCap = 15;
+
+/**
  * Table 50: Boss Severity (p.270). Every Boss tier shares the same base of 5
  * in each Stat (statBase, vs. a plain Mob's 1 above) - keyed per-tier here
  * anyway so a lookup never has to special-case it separately. hbSlotsBase is

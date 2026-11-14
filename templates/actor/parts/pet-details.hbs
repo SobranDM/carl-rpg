@@ -1,0 +1,123 @@
+{{!-- Pet's Details tab (module/data/pet.mjs) - everything set up once and
+      rarely touched in play: its bond, its body, its Role and Special
+      Abilities. The header and Abilities tab show the results read-only.
+      Rendered in the "pet" tab slot (a Character's Pet page, pet.hbs). --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="pet">
+  <fieldset class="carl-pet-setup">
+    <legend>{{localize "CARLRPG.Pet.Sections.Bond"}}</legend>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Pet.Owner"}}</label>
+        <select class="carl-w-medium" name="system.ownerId">
+          <option value="">{{localize "CARLRPG.Pet.NoOwner"}}</option>
+          {{selectOptions pet.ownerChoices selected=system.ownerId}}
+        </select>
+      </div>
+      <div>
+        <label class="resource-label" title="{{localize 'CARLRPG.Pet.AttitudeHint'}}">{{localize "CARLRPG.Pet.Attitude"}}</label>
+        <select class="carl-w-short" name="system.attitude">
+          {{selectOptions config.petAttitudes selected=system.attitude localize=true}}
+        </select>
+      </div>
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.IsMountHint'}}">
+        <input type="checkbox" name="system.isMount" {{checked system.isMount}} />
+        {{localize "CARLRPG.Pet.IsMount"}}
+      </label>
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.EarthBornHint'}}">
+        <input type="checkbox" name="system.earthBorn" {{checked system.earthBorn}} />
+        {{localize "CARLRPG.Pet.EarthBorn"}}
+      </label>
+    </div>
+    {{#if system.intWarning}}<p class="carl-hint carl-pet-int-warning"><i class="fas fa-exclamation-triangle"></i> {{localize "CARLRPG.Pet.IntWarning"}}</p>{{/if}}
+  </fieldset>
+
+  <fieldset class="carl-pet-setup">
+    <legend>{{localize "CARLRPG.Pet.Sections.Body"}}</legend>
+    <div class="carl-field-grid">
+      {{#unless system.isMount}}
+      <div>
+        <label class="resource-label" title="{{localize 'CARLRPG.Pet.LevelHint'}}">{{localize "CARLRPG.Actor.Level"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.attributes.level.value" value="{{system.attributes.level.value}}" data-dtype="Number" />
+      </div>
+      {{/unless}}
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Size"}}</label>
+        <select class="carl-w-medium" name="system.size" data-dtype="Number">
+          {{selectOptions config.sizes selected=system.size localize=true}}
+        </select>
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.CreatureType"}}</label>
+        <input type="text" class="carl-w-medium" name="system.creatureType" value="{{system.creatureType}}" placeholder="e.g. Mongoliensis" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Move"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.move" value="{{system.move}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Step"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.step" value="{{system.step}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label" title="{{localize 'CARLRPG.Pet.HbSlotsHint'}}">{{localize "CARLRPG.Actor.HbSlotsOverride"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.hbSlotsOverride" value="{{system.hbSlotsOverride}}"
+          placeholder="{{system.hbSlotsRule}}" data-dtype="Number" />
+      </div>
+    </div>
+  </fieldset>
+
+  {{#unless system.isMount}}
+  <fieldset class="carl-pet-setup carl-pet-abilities">
+    <legend>
+      {{localize "CARLRPG.Pet.Sections.Role"}}
+      <span class="carl-pet-ability-count {{#if (gt system.specialAbilityCount system.specialAbilityAllowed)}}over{{/if}}"
+        title="{{localize 'CARLRPG.Pet.SpecialAbilityCountHint'}}">
+        ({{localize "CARLRPG.Pet.SpecialAbilities"}} {{system.specialAbilityCount}} / {{system.specialAbilityAllowed}})
+      </span>
+    </legend>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label" title="{{localize 'CARLRPG.Pet.RoleHint'}}">{{localize "CARLRPG.Pet.Role"}}</label>
+        <select class="carl-w-short" name="system.role">
+          <option value="">{{localize "CARLRPG.Pet.Roles.none"}}</option>
+          {{selectOptions config.petRoles selected=system.role localize=true}}
+        </select>
+      </div>
+      <label class="carl-checkbox-field">
+        <input type="checkbox" name="system.specialAbilities.move60" {{checked system.specialAbilities.move60}} />
+        {{localize "CARLRPG.Pet.Move60"}}
+      </label>
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.HeightenedSensesHint'}}">
+        <input type="checkbox" name="system.specialAbilities.heightenedSenses" {{checked system.specialAbilities.heightenedSenses}} />
+        {{localize "CARLRPG.Pet.HeightenedSenses"}}
+      </label>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Pet.TauntOrCatcher"}}</label>
+        <select class="carl-w-short" name="system.specialAbilities.tauntOrCatcher">
+          <option value=""></option>
+          {{selectOptions pet.tauntOrCatcherChoices selected=system.specialAbilities.tauntOrCatcher}}
+        </select>
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Pet.AltMove"}}</label>
+        <select class="carl-w-short" name="system.specialAbilities.altMove">
+          <option value=""></option>
+          {{selectOptions config.petAltMoves selected=system.specialAbilities.altMove localize=true}}
+        </select>
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Pet.Resistance"}}</label>
+        <select class="carl-w-short" name="system.specialAbilities.resistance">
+          <option value=""></option>
+          {{selectOptions config.damageTypes selected=system.specialAbilities.resistance localize=true}}
+        </select>
+      </div>
+    </div>
+    {{#if system.role}}<p class="carl-hint">{{localize (concat "CARLRPG.Pet.RoleRules." system.role)}}</p>{{/if}}
+    <div class="carl-pet-mature">
+      <label class="resource-label" title="{{localize 'CARLRPG.Pet.MatureBenefitHint'}}">{{localize "CARLRPG.Pet.MatureBenefit"}}</label>
+      <input type="text" name="system.matureBenefit" value="{{system.matureBenefit}}" placeholder="{{localize 'CARLRPG.Pet.MatureBenefitPlaceholder'}}" />
+    </div>
+  </fieldset>
+  {{/unless}}
+</section>

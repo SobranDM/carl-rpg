@@ -10,6 +10,7 @@
  */
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
+import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 
 const CONSEQUENCE_FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/evade-consequence-footer.hbs";
 
@@ -79,7 +80,7 @@ export function canActOnUuidFlag(message, flagKey) {
  * @returns {number|null}
  */
 export function resolveEvadeDifficulty({ attackerType, defenderType, attackTotal, targetDifficulty }) {
-  return (attackerType === "character" && defenderType === "character") ? attackTotal : targetDifficulty;
+  return (rollsLikeCrawler(attackerType) && rollsLikeCrawler(defenderType)) ? attackTotal : targetDifficulty;
 }
 
 /**

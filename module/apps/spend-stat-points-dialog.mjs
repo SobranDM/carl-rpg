@@ -27,6 +27,11 @@ export default class CarlSpendStatPointsDialog extends HandlebarsApplicationMixi
     super({ id: `carl-spend-stat-points-${actor.id}`, ...options });
     this.actor = actor;
     this.isMob = actor.type === "mob";
+    // "Pets get Stat increases just like crawlers do: 3 Stat Points per
+    // level gained. You may place them as you please, except for
+    // Intelligence" (p.231) - only an Enhanced Pet Biscuit raises it (a GM
+    // edit on the sheet).
+    this.isPet = actor.type === "pet";
     // Snapshot each Stat's value as it stood when the dialog opened - the
     // decrement button only undoes points spent THIS session, it's never a
     // general way to lower a Stat below where it already was.
@@ -47,6 +52,15 @@ export default class CarlSpendStatPointsDialog extends HandlebarsApplicationMixi
       return Math.max(0, (sys.statPointsAvailable ?? 0) - (sys.statPointsSpent ?? 0));
     }
     return this.actor.system.bankedStatPoints ?? 0;
+  }
+
+  /**
+   * A Stat this dialog won't raise: a Pet's Intelligence.
+   * @param {string} key
+   * @returns {boolean}
+   */
+  #isLocked(key) {
+    return this.isPet && key === "int";
   }
 
   /** @override */
@@ -81,10 +95,13 @@ export default class CarlSpendStatPointsDialog extends HandlebarsApplicationMixi
       value: stat.value,
       effective: stat.effective,
       atInitial: stat.value <= (this.initialStats[key] ?? stat.value),
+      locked: this.#isLocked(key),
+      canIncrement: this.#remainingPoints() > 0 && !this.#isLocked(key),
     }));
     const sys = this.actor.system;
     return {
       isMob: this.isMob,
+      isPet: this.isPet,
       remainingPoints: this.#remainingPoints(),
       // Mob-only reference line so the GM can see the math behind the
       // number, not just trust it - see mob.mjs's statPointsBase/
@@ -99,7 +116,7 @@ export default class CarlSpendStatPointsDialog extends HandlebarsApplicationMixi
 
   static async #onIncrementStat(event, target) {
     const key = target.dataset.key;
-    if (this.#remainingPoints() <= 0) return;
+    if (this.#remainingPoints() <= 0 || this.#isLocked(key)) return;
     const current = this.actor.system.stats[key]?.value ?? 0;
     const updates = { [`system.stats.${key}.value`]: current + 1 };
     // A Character's "remaining" is a stored pool that must be decremented

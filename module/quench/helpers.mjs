@@ -91,6 +91,20 @@ export async function createTestMob(label = "mob", data = {}) {
 }
 
 /**
+ * A Pet (module/data/pet.mjs). Pass `system.ownerId` to bond it to a crawler.
+ * @param {string} [label]
+ * @param {object} [data]
+ * @returns {Promise<Actor>}
+ */
+export async function createTestPet(label = "pet", data = {}) {
+  return Actor.create({
+    name: `Quench ${label} ${foundry.utils.randomID()}`,
+    type: "pet",
+    ...data,
+  });
+}
+
+/**
  * @param {Actor} actor
  * @param {string} type  One of item|feature|skill|damageEffect|spell|class|race.
  * @param {string} [label]

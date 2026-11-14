@@ -14,6 +14,7 @@ import { registerChatListener } from './chat/chat-listener.mjs';
 import { registerChatSocket } from './helpers/chat-socket.mjs';
 import { registerLootBoxSocket } from './helpers/loot-box.mjs';
 import { registerExpirySweep } from './helpers/expiry.mjs';
+import { commandPet } from './helpers/pet-command.mjs';
 import { bakeItemGrants } from './helpers/race-class-grants.mjs';
 import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
 import { openRulebookImporter, RulebookImportMenu } from './pdf-import/import-dialog.mjs';
@@ -28,6 +29,7 @@ Hooks.once('init', function () {
     rollItemMacro,
     importCrawlerForgeCrawler,
     openRulebookImporter,
+    commandPet,
   };
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
@@ -124,6 +126,13 @@ Hooks.once('init', function () {
   CONFIG.time.roundTime = 10;
   registerExpirySweep();
 
+  // Command Pet results (module/helpers/pet-command.mjs) as token status
+  // icons - shown on the token and in the combat tracker, offered on a
+  // Pet's token HUD only. Set by the Pet's command state, not by hand.
+  for (const def of Object.values(CONFIG.CARLRPG.petCommandStates)) {
+    CONFIG.statusEffects.push({ id: def.status, name: def.label, img: def.img, hud: { actorTypes: ["pet"] } });
+  }
+
   // End-of-round/end-of-combat Debuff automation (module/helpers/round-end.mjs).
   CONFIG.Combat.documentClass = CarlRPGCombat;
   CONFIG.Combatant.documentClass = CarlRPGCombatant;
@@ -133,6 +142,7 @@ Hooks.once('init', function () {
     character: models.CarlRPGCharacter,
     mob: models.CarlRPGMob,
     lootBox: models.CarlRPGLootBox,
+    pet: models.CarlRPGPet,
   });
 
   CONFIG.Item.documentClass = CarlRPGItem;
@@ -147,7 +157,7 @@ Hooks.once('init', function () {
   });
 
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Actor, 'carl-rpg', CarlRPGActorSheet, {
-    types: ['character', 'mob'],
+    types: ['character', 'mob', 'pet'],
     makeDefault: true,
     label: 'CARLRPG.SheetLabels.Actor',
   });

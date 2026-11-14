@@ -41,7 +41,8 @@
     "Actor": {
       "character": {},
       "mob": {},
-      "lootBox": {}
+      "lootBox": {},
+      "pet": {}
     },
     "Item": {
       "item": {},

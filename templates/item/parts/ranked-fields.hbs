@@ -20,7 +20,12 @@
   </div>
   <div>
     <label class="resource-label">{{localize "CARLRPG.Ranked.Rank"}}</label>
+    {{#if petRank}}
+    <input type="text" class="carl-w-tiny" value="{{petRank}}" disabled title="{{localize 'CARLRPG.Pet.RankIsFloorHint'}}" />
+    <span class="carl-hint">{{localize "CARLRPG.Pet.RankIsFloor"}}</span>
+    {{else}}
     <input type="text" class="carl-w-tiny" name="system.rank" value="{{system.rank}}" data-dtype="Number" />
+    {{/if}}
   </div>
   <div>
     <label class="resource-label">{{localize "CARLRPG.Ranked.AdvancementGate"}}</label>

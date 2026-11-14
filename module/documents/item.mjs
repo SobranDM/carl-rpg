@@ -2,6 +2,8 @@ import CarlDice from "../dice/dice.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { bakeItemGrants } from "../helpers/race-class-grants.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
+import { isPet } from "../helpers/actor-kinds.mjs";
+import { describePetCommand, petFight } from "../helpers/pet-command.mjs";
 
 /**
  * Extend the basic Item document.
@@ -75,6 +77,8 @@ export class CarlRPGItem extends Item {
       return ui.notifications.warn(game.i18n.localize("CARLRPG.Warning.RollNeedsOwner"));
     }
 
+    if (this.type === "skill" || this.type === "spell") warnPetCommand(this);
+
     if (this.type === "skill" || this.type === "spell") {
       // Skills flag themselves directly via category "attack" (isAttack
       // used to exist as a separate boolean, but an audit found every
@@ -134,5 +138,26 @@ export class CarlRPGItem extends Item {
       body: this.system.description ?? "",
       actor: this.actor,
     });
+  }
+}
+
+/**
+ * A reminder, not a block (the system has no Action economy): a Pet in a
+ * running fight only acts once Command Pet says so, and a "restricted" one
+ * only Evades, Moves or Attacks (p.232, module/helpers/pet-command.mjs).
+ * @param {Item} item  A Skill or Spell about to be used.
+ */
+function warnPetCommand(item) {
+  const pet = item.actor;
+  if (!isPet(pet) || pet.system.isMount) return;
+  const fight = petFight(pet);
+  if (!fight) return;
+  const command = describePetCommand(pet);
+  const isAttack = (item.type === "skill" && item.system.category === "attack")
+    || (item.type === "spell" && item.system.castingKeywords?.includes("attack"));
+  if (!command.active || pet.system.command.combatId !== fight.id || ["stayingOut", "hiding"].includes(command.state)) {
+    ui.notifications.warn(game.i18n.format("CARLRPG.Pet.Command.WarnNotFighting", { name: pet.name }));
+  } else if (command.state === "restricted" && !isAttack) {
+    ui.notifications.warn(game.i18n.format("CARLRPG.Pet.Command.WarnRestricted", { name: pet.name }));
   }
 }

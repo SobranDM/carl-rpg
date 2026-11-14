@@ -1,5 +1,98 @@
 {
   "CARLRPG": {
+    "Pet": {
+      "NoAdvancement": "A Pet's Ranks equal the Floor and can't be raised (p.231).",
+      "IntLocked": "A Pet's Intelligence only rises with an Enhanced Pet Biscuit (GM).",
+      "RankIsFloor": "Rank = Floor (Pet)",
+      "RankIsFloorHint": "Pets have no Skill Ranks of their own: every Rank equals the current Floor (p.231).",
+      "NoClassOrRace": "Pets don't have a Class or Race.",
+      "Owner": "Crawler",
+      "NoOwner": "None",
+      "OpenOwner": "Open the crawler's sheet",
+      "NoOwnerSet": "No crawler",
+      "SetInDetails": "Set its crawler on the Details tab.",
+      "LevelHint": "Levels with its crawler: 2 Levels per crawler Level until 15, then 1 (p.231). Edit it on the Details tab.",
+      "HbSlotsHint": "Size + Level - 1, up to 10 (a mount: its Size). Leave blank to use the rule.",
+      "Sections": {
+        "Bond": "Bond",
+        "Body": "Body",
+        "Role": "Role"
+      },
+      "IsMount": "Mount",
+      "IsMountHint": "A dedicated mount: its Health Bar slots equal its Size and it never levels (p.232). Leave unticked for a Pet you ride with a saddle.",
+      "Attitude": "Attitude",
+      "AttitudeHint": "Hostile, Calm, Friendly or Bonded (p.230). Changing it takes 20 minutes and an Animal Handling Check.",
+      "Attitudes": {
+        "hostile": "Hostile",
+        "calm": "Calm",
+        "friendly": "Friendly",
+        "bonded": "Bonded"
+      },
+      "Role": "Role",
+      "RoleHint": "Chosen once Bonded (p.231).",
+      "Roles": {
+        "none": "None",
+        "tank": "Tank",
+        "aggressive": "Aggressive",
+        "utility": "Utility"
+      },
+      "RoleRules": {
+        "tank": "Tank: DR + Floor, and one Special Ability.",
+        "aggressive": "Aggressive: Back Claw and Bite, + Floor damage on its Attacks, and no Special Abilities.",
+        "utility": "Utility: two Special Abilities."
+      },
+      "EvadeHint": "10 + DEX Mod + Floor: what an attacker sees. Its crawler rolls its Evade when it's attacked.",
+      "SpecialAbilities": "Special Abilities",
+      "SpecialAbilityCountHint": "Chosen / allowed by its Role: Tank 1, Utility 2, Aggressive 0 (p.231).",
+      "Move60": "Move 60ft",
+      "HeightenedSenses": "Heightened Senses",
+      "HeightenedSensesHint": "Where crawlers make such Skill Checks, make a Stat Check for the Pet vs. the same Difficulty (p.231).",
+      "TauntOrCatcher": "Taunt or Catcher",
+      "Taunt": "Taunt",
+      "Catcher": "Catcher",
+      "AltMove": "Swim / Burrow / Fly / Jump",
+      "AltMoves": {
+        "swim": "Swim",
+        "burrow": "Burrow",
+        "flight": "Fly",
+        "jump": "Jump"
+      },
+      "Resistance": "Resistance",
+      "MatureBenefit": "Level 15 Benefit",
+      "MatureBenefitHint": "At Level 15 the Pet is mature and gains a new benefit, e.g. Earthquake, Wrecking Ball, Spells, Regeneration (p.231).",
+      "MatureBenefitPlaceholder": "e.g. Earthquake",
+      "EarthBorn": "Brought from Earth",
+      "EarthBornHint": "An Earth-born Pet with Intelligence 2 or higher becomes a full-fledged crawler (p.228).",
+      "IntWarning": "Intelligence 2+: this Earth-born Pet becomes a crawler and is no longer a Pet (p.228).",
+      "Command": {
+        "Button": "Command Pet",
+        "Title": "Command {name}",
+        "None": "Not commanded",
+        "Dc": "DC {dc}",
+        "DcHint": "Its crawler's INT-Opposed Animal Handling Check: 10 + the Pet's INT Mod + Floor (p.230).",
+        "OverrideHint": "GM: set this fight's command result by hand.",
+        "States": {
+          "free": "Frenzied",
+          "restricted": "Fighting",
+          "stayingOut": "Staying out",
+          "hiding": "Hiding"
+        },
+        "Rules": {
+          "free": "It fights for the whole combat with its two Actions, used as it, or you, please.",
+          "restricted": "It fights for the whole combat with two Actions, only to Evade, Move or Attack, and attacks once per round.",
+          "stayingOut": "It stays out of the fight. You may try again with future Actions.",
+          "hiding": "It runs out of sight and hides. Find it after the fight and coax it out."
+        },
+        "NoOwner": "{name} has no crawler to command it.",
+        "NotAllowed": "Only the GM, or whoever plays {name}'s crawler, can command it.",
+        "NeedsCombat": "Command Pet needs a combat that has started.",
+        "AlreadyResolved": "{name} is already {state} for this fight.",
+        "Untrained": "Untrained in Animal Handling: rolled with Disadvantage.",
+        "HidingAfterFight": "{name} is still hiding. Find it and coax it out.",
+        "WarnNotFighting": "{name} isn't fighting: Command Pet first (p.232).",
+        "WarnRestricted": "{name} may only Evade, Move or Attack this fight."
+      }
+    },
     "Stat": {
       "Str": { "long": "Strength", "abbr": "STR" },
       "Dex": { "long": "Dexterity", "abbr": "DEX" },
@@ -21,6 +114,8 @@
       "Attacks": "Attacks",
       "DamageEffects": "Damage Effects",
       "Inventory": "Inventory",
+      "PetGear": "Pet Gear",
+      "PetDetails": "Details",
       "Boons": "Boons",
       "Conditions": "Conditions",
       "Defenses": "Defenses",
@@ -141,6 +236,7 @@
         "SelectedCount": "{count}/{total} selected",
         "FilterPlaceholder": "Filter by name...",
         "OtherCharacters": "Other Characters ({count})",
+        "Pets": "Pets ({count})",
         "Confirm": "Confirm"
       },
       "Other": "Other",
@@ -1011,7 +1107,8 @@
     "Actor": {
       "character": "Character",
       "mob": "Mob",
-      "lootBox": "Loot Box"
+      "lootBox": "Loot Box",
+      "pet": "Pet"
     },
     "Item": {
       "item": "Item",

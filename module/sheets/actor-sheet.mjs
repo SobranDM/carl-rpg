@@ -16,6 +16,9 @@ import {
 import CarlDice from "../dice/dice.mjs";
 import { isLootBoxItem, takeLootItem } from "../helpers/loot-box.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
+import { isCrawler, isPet } from "../helpers/actor-kinds.mjs";
+import { petOwner } from "../helpers/pets.mjs";
+import { commandPet, describePetCommand, petFight } from "../helpers/pet-command.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -58,6 +61,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       spendStatPoints: CarlRPGActorSheet.#onSpendStatPoints,
       clearSlot: CarlRPGActorSheet.#onClearSlot,
       sortList: CarlRPGActorSheet.#onSortList,
+      commandPet: CarlRPGActorSheet.#onCommandPet,
+      openPetOwner: CarlRPGActorSheet.#onOpenPetOwner,
     },
   };
 
@@ -116,11 +121,48 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   };
 
   /**
-   * Tabs that only make sense for a Character (the printed sheet's Pet
-   * page) - a Mob is a static stat block with no such bookkeeping.
-   * @type {string[]}
+   * Which primary tabs each actor type shows. A Character's "pet" slot is
+   * the printed sheet's Pet page; a Pet's is its Details tab - the setup
+   * it rarely needs in play (pet-details.hbs).
+   * @type {Object<string, string[]>}
    */
-  static CHARACTER_ONLY_TABS = ["pet"];
+  static TABS_BY_TYPE = {
+    character: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
+    mob: ["abilities", "items", "features", "conditions", "defenses", "description"],
+    pet: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
+  };
+
+  /**
+   * Per-type templates for the parts whose layout differs by type. A Mob's
+   * and a Pet's stat block (Level/Evade/Move/DR row, Attacks or Role
+   * extras) is different enough from the PC-shaped Abilities tab (banked
+   * stat points, class/race-driven bonuses) that branching inside one
+   * template would fight the grid rather than reuse it.
+   * @type {Object<string, Object<string, string>>}
+   */
+  static PART_TEMPLATES = {
+    header: { character: "systems/carl-rpg/templates/actor/parts/header.hbs", mob: "systems/carl-rpg/templates/actor/parts/header-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/header-pet.hbs" },
+    abilities: { character: "systems/carl-rpg/templates/actor/parts/abilities.hbs", mob: "systems/carl-rpg/templates/actor/parts/abilities-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/abilities-pet.hbs" },
+    pet: { character: "systems/carl-rpg/templates/actor/parts/pet.hbs", pet: "systems/carl-rpg/templates/actor/parts/pet-details.hbs" },
+  };
+
+  /**
+   * Per-type tab label overrides: a Pet has no Inventory of its own ("You
+   * have to hold on to all their stuff", p.232) - only the gear it wears;
+   * and its "pet" slot is its Details tab.
+   * @type {Object<string, Object<string, string>>}
+   */
+  static TAB_LABELS_BY_TYPE = {
+    pet: { items: "CARLRPG.Tab.PetGear", pet: "CARLRPG.Tab.PetDetails" },
+  };
+
+  /**
+   * The primary tabs this sheet's actor shows.
+   * @returns {string[]}
+   */
+  get #tabIds() {
+    return CarlRPGActorSheet.TABS_BY_TYPE[this.actor.type] ?? CarlRPGActorSheet.TABS_BY_TYPE.mob;
+  }
 
   /**
    * Sortable columns per list: header `data-sort-key` -> item property path.
@@ -154,6 +196,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const submitted = data.system;
     if (!submitted || typeof submitted !== "object") return data;
     const source = this.actor.system.toObject();
+    if (isPet(this.actor) && submitted.command) this.#processCommandOverride(submitted);
     for (const [key, value] of Object.entries(submitted)) {
       const current = source[key];
       if (!Array.isArray(current) || !value || typeof value !== "object" || Array.isArray(value)) continue;
@@ -165,23 +208,34 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     return data;
   }
 
+  /**
+   * The Pet header's GM override select (header-pet.hbs) submits with every
+   * form change. Only an actual change counts: it's recorded for the
+   * running fight, like a rolled result, and picking "none" clears it.
+   * @param {object} submitted  The submitted system data.
+   */
+  #processCommandOverride(submitted) {
+    const picked = submitted.command.state ?? "";
+    if (picked === describePetCommand(this.actor).selected) {
+      delete submitted.command;
+      return;
+    }
+    const fight = picked ? petFight(this.actor) : null;
+    submitted.command = fight
+      ? { state: picked, combatId: fight.id, round: fight.round }
+      : { state: "", combatId: "", round: null };
+  }
+
   /** @override */
   _configureRenderParts(options) {
     const parts = super._configureRenderParts(options);
-    const isMob = this.actor.type === "mob";
-    parts.header.template = isMob
-      ? `systems/carl-rpg/templates/actor/parts/header-mob.hbs`
-      : `systems/carl-rpg/templates/actor/parts/header.hbs`;
-    // Mob's stat-block layout (Level/Surprise/Evade/Move/DR, an Attacks
-    // list) is different enough content from the PC-shaped Abilities tab
-    // (banked stat points, class/race-driven bonuses) that branching inside
-    // one template would fight the grid rather than reuse it - same
-    // reasoning as the header swap above, just for a different part.
-    parts.abilities.template = isMob
-      ? `systems/carl-rpg/templates/actor/parts/abilities-mob.hbs`
-      : `systems/carl-rpg/templates/actor/parts/abilities.hbs`;
-    if (this.actor.type !== "character") {
-      for (const id of CarlRPGActorSheet.CHARACTER_ONLY_TABS) delete parts[id];
+    const type = this.actor.type;
+    for (const [partId, byType] of Object.entries(CarlRPGActorSheet.PART_TEMPLATES)) {
+      if (parts[partId] && byType[type]) parts[partId].template = byType[type];
+    }
+    const tabIds = this.#tabIds;
+    for (const id of CarlRPGActorSheet.TABS.primary.tabs.map((t) => t.id)) {
+      if (!tabIds.includes(id)) delete parts[id];
     }
     return parts;
   }
@@ -189,10 +243,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /** @override */
   _getTabsConfig(group) {
     const config = super._getTabsConfig(group);
-    if (!config || group !== "primary" || this.actor.type === "character") return config;
+    if (!config || group !== "primary") return config;
+    const tabIds = this.#tabIds;
+    const labels = CarlRPGActorSheet.TAB_LABELS_BY_TYPE[this.actor.type] ?? {};
     return {
       ...config,
-      tabs: config.tabs.filter((t) => !CarlRPGActorSheet.CHARACTER_ONLY_TABS.includes(t.id)),
+      tabs: config.tabs
+        .filter((t) => tabIds.includes(t.id))
+        .map((t) => (labels[t.id] ? { ...t, label: labels[t.id] } : t)),
     };
   }
 
@@ -229,6 +287,15 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.system = actorData;
     context.flags = actor.flags;
     context.config = CONFIG.CARLRPG;
+    context.isCharacter = isCrawler(actor);
+    context.isMob = actor.type === "mob";
+    context.isPet = isPet(actor);
+    context.isGM = game.user.isGM;
+    // An HB slot count the GM can hand-set over the rule (hb-bar.hbs). A
+    // Pet's is set up once, on its Details tab.
+    context.hbOverridable = context.isMob;
+    // A dedicated mount never levels, so it has no Stat Points to spend.
+    context.canSpendStatPoints = !(context.isPet && actorData.isMount);
 
     // Floor is a single world-wide value owned by the GM Toolbox, shown
     // read-only here for player visibility - never per-actor. See
@@ -253,6 +320,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
         (actorData.statPointsAvailable ?? 0) - (actorData.statPointsSpent ?? 0),
       );
     }
+
+    if (context.isPet) context.pet = this.#preparePetContext(actor, context.currentFloor);
 
     // Template convenience variables
     context.cssClass = [...this.options.classes, actor.type].join(" ");
@@ -285,6 +354,68 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     );
 
     return context;
+  }
+
+  /**
+   * The Pet header's owner link and Command Pet block (header-pet.hbs).
+   * @param {Actor} pet
+   * @param {number} floor
+   * @returns {object}
+   */
+  #preparePetContext(pet, floor) {
+    const owner = petOwner(pet);
+    const ownerChoices = Object.fromEntries(game.actors
+      .filter((a) => isCrawler(a) && a.testUserPermission(game.user, "LIMITED"))
+      .map((a) => [a.id, a.name]));
+    // Keep a set owner selectable even if this user can't see it.
+    if (pet.system.ownerId && !ownerChoices[pet.system.ownerId]) {
+      ownerChoices[pet.system.ownerId] = owner?.name ?? pet.system.ownerId;
+    }
+    const command = describePetCommand(pet);
+    return {
+      owner,
+      ownerChoices,
+      isBonded: pet.system.attitude === "bonded",
+      traits: this.#petTraits(pet),
+      command,
+      commandDifficulty: pet.system.commandBase + floor,
+      canCommand: command.canCommand,
+      tauntOrCatcherChoices: {
+        taunt: game.i18n.localize("CARLRPG.Pet.Taunt"),
+        catcher: game.i18n.localize("CARLRPG.Pet.Catcher"),
+      },
+    };
+  }
+
+  /**
+   * What a Pet's Role, Special Abilities and Level 15 benefit do, for the
+   * Abilities tab's reference list (chosen on the Details tab).
+   * @param {Actor} pet
+   * @returns {{label: string, text?: string}[]}
+   */
+  #petTraits(pet) {
+    const sys = pet.system;
+    const loc = (key) => game.i18n.localize(key);
+    const abilities = sys.specialAbilities;
+    const traits = [];
+    if (sys.role && !sys.isMount) {
+      traits.push({ label: loc(CONFIG.CARLRPG.petRoles[sys.role]), text: loc(`CARLRPG.Pet.RoleRules.${sys.role}`) });
+    }
+    if (abilities.move60) traits.push({ label: loc("CARLRPG.Pet.Move60") });
+    if (abilities.altMove) {
+      traits.push({ label: `${loc(CONFIG.CARLRPG.petAltMoves[abilities.altMove])} ${sys.altMoveValue}ft` });
+    }
+    if (abilities.tauntOrCatcher) {
+      traits.push({ label: loc(`CARLRPG.Pet.${abilities.tauntOrCatcher === "taunt" ? "Taunt" : "Catcher"}`), text: loc("CARLRPG.Pet.RankIsFloor") });
+    }
+    if (abilities.heightenedSenses) {
+      traits.push({ label: loc("CARLRPG.Pet.HeightenedSenses"), text: loc("CARLRPG.Pet.HeightenedSensesHint") });
+    }
+    if (abilities.resistance) {
+      traits.push({ label: loc("CARLRPG.Pet.Resistance"), text: loc(CONFIG.CARLRPG.damageTypes[abilities.resistance]) });
+    }
+    if (sys.matureBenefit) traits.push({ label: loc("CARLRPG.Pet.MatureBenefit"), text: sys.matureBenefit });
+    return traits;
   }
 
   /**
@@ -599,6 +730,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onToggleMark(event, target) {
     event.preventDefault();
+    // A Pet's Ranks are the Floor and never advance (p.231).
+    if (isPet(this.actor)) return;
     const li = target.closest(".item");
     const item = this.actor.items.get(li.dataset.itemId);
     if (!item) return;
@@ -731,8 +864,28 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * Open the Spend Stat Points dialog (see module/apps/spend-stat-points-dialog.mjs).
    * @private
    */
+  /**
+   * Command Pet (p.232) - the owner's Animal Handling Check
+   * (module/helpers/pet-command.mjs).
+   * @private
+   */
+  static #onCommandPet(event, target) {
+    event.preventDefault();
+    return commandPet(this.actor);
+  }
+
+  /**
+   * Open the bonded crawler's sheet from the Pet header.
+   * @private
+   */
+  static #onOpenPetOwner(event, target) {
+    event.preventDefault();
+    return petOwner(this.actor)?.sheet.render({ force: true });
+  }
+
   static #onSpendStatPoints(event, target) {
     event.preventDefault();
+    if (isPet(this.actor) && this.actor.system.isMount) return;
     new CarlSpendStatPointsDialog(this.actor).render({ force: true });
   }
 
@@ -750,6 +903,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   async _onDropItem(event, item) {
     if (!this.actor.isOwner) return null;
+    // A Pet has no Class or Race ("Pets don't have a Class", p.232).
+    if (isPet(this.actor) && ["class", "race"].includes(item.type)) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Pet.NoClassOrRace"));
+      return null;
+    }
     const slot =
       this.actor.type === "character" ? event.target.closest("[data-slot-type]")?.dataset : null;
     if (this.actor.uuid === item.parent?.uuid) {

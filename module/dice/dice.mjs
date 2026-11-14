@@ -27,6 +27,7 @@ import {
   buildDebuffNote, consumedConditionIds, endedConditionIds, getActionBlockReason,
 } from "../helpers/debuff-effects.mjs";
 import { removeConditionsById } from "../helpers/conditions.mjs";
+import { isPet, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 
 /**
  * Net Advantage/Disadvantage don't stack (Playing the Game, p. 60): an
@@ -701,7 +702,7 @@ export default class CarlDice {
       // Evade roll if they actively defend (module/chat/evade-link-card.mjs).
       const evadeRows = collectDebuffRows(targetSys, "evade", { ownerName, idPrefix: "target", ownAction: false });
       targetRows = decorateRows(
-        target.actor.type === "character" ? evadeRows.filter((r) => r.kind === "noDex") : evadeRows,
+        rollsLikeCrawler(target.actor) ? evadeRows.filter((r) => r.kind === "noDex") : evadeRows,
         "difficulty",
       );
       advantageRows = decorateRows(collectAdvantageAgainstRows(targetSys, { ownerName, idPrefix: "target" }), "roll");
@@ -1658,7 +1659,9 @@ export default class CarlDice {
    * @returns {Promise<ChatMessage|{roll: Roll, total: number, breakdown: string, naturalRoll: number|null, degree: string}|null>}
    *   null if the roll-options dialog was cancelled, regardless of `post`.
    */
-  static async rollOpposedSkillCheck(actor, skillItem, { difficulty = null, opponent = null, skipDialog = false, post = true } = {}) {
+  static async rollOpposedSkillCheck(actor, skillItem, {
+    difficulty = null, opponent = null, skipDialog = false, post = true, markUse = true,
+  } = {}) {
     const sys = actor.system;
     const skillSys = skillItem.system;
     const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
@@ -1722,7 +1725,9 @@ export default class CarlDice {
 
     await removeConditionsById(actor, endedConditionIds(sys, rollerEffect.applied));
     if (opponent) await removeConditionsById(opponent, consumedConditionIds(opponentEffect.applied));
-    await CarlDice.markForAdvancement(skillItem);
+    // markUse: false for a stand-in Skill that isn't saved on the actor (an
+    // untrained Command Pet roll - module/helpers/pet-command.mjs).
+    if (markUse) await CarlDice.markForAdvancement(skillItem);
 
     // Spent before the post: false return, so a caller folding this roll
     // into its own card (Taunt) pays too.
@@ -1766,6 +1771,10 @@ export default class CarlDice {
     apply = true, silent = false, debuffs = false, floorBonus = true, clearMark = true,
   } = {}) {
     const currentRank = skillItem.system.rank ?? 0;
+    if (isPet(actor)) {
+      if (!silent) ui.notifications.warn(game.i18n.localize("CARLRPG.Pet.NoAdvancement"));
+      return { success: false, roll: null, newRank: currentRank };
+    }
     const slug = slugifySkillName(skillItem.name);
     // "At the end of each floor, add 1 to your Skill Advancement Checks for
     // X" (a Race/Class grant, targetType "advancementBonus") and "X Skill can
@@ -1858,6 +1867,9 @@ export default class CarlDice {
    */
   static isAdvancedByUse(item) {
     if (!item) return false;
+    // A Pet's Ranks are the Floor; they "don't improve via the normal ways:
+    // grinding, training, potions, or the like" (p.231).
+    if (isPet(item.actor)) return false;
     if (item.system.advancementGate === "magic-only") return false;
     if (item.system.advancementGate === "passive-until-5" && (item.system.rank ?? 0) >= 5) return false;
     if (item.type === "spell" && item.system.castingKeywords?.includes("passive")) return false;

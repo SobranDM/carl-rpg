@@ -1,0 +1,67 @@
+{{!-- Sheet Header (Pet / Mount, module/data/pet.mjs) - only what's used in
+      play: who it belongs to, Command Pet, and its Health Bar. Everything
+      set once (crawler, Attitude, Role, Size, Mount...) is edited on the
+      Details tab (pet-details.hbs). A dedicated mount never levels and isn't
+      commanded into a fight (its rider controls it, p.232). --}}
+<header class="sheet-header carl-pet-header">
+  <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+  <div class="header-fields">
+    <div class="carl-name-row flexrow">
+      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name" /></h1>
+      {{#unless system.isMount}}
+      <div class="resource flex-group-center carl-name-row-field">
+        <label class="resource-label">{{localize "CARLRPG.Actor.Level"}}</label>
+        <span class="carl-stat-value" title="{{localize 'CARLRPG.Pet.LevelHint'}}">{{system.attributes.level.value}}</span>
+      </div>
+      {{/unless}}
+      <div class="resource flex-group-center carl-name-row-field">
+        <label class="resource-label">{{localize "CARLRPG.Actor.Floor"}}</label>
+        <span class="carl-stat-value">{{currentFloor}}</span>
+      </div>
+    </div>
+
+    {{!-- One read-only summary line: crawler (link), Attitude, Role / Mount. --}}
+    <div class="carl-pet-summary">
+      {{#if pet.owner}}
+      <a class="carl-pet-owner-link" data-action="openPetOwner" title="{{localize 'CARLRPG.Pet.OpenOwner'}}">
+        <i class="fas fa-user"></i> {{pet.owner.name}}
+      </a>
+      {{else}}
+      <span class="carl-pet-no-owner" title="{{localize 'CARLRPG.Pet.SetInDetails'}}"><i class="fas fa-user-slash"></i> {{localize "CARLRPG.Pet.NoOwnerSet"}}</span>
+      {{/if}}
+      <span class="carl-pet-chip {{#unless pet.isBonded}}warn{{/unless}}" title="{{localize 'CARLRPG.Pet.AttitudeHint'}}">{{localize (lookup config.petAttitudes system.attitude)}}</span>
+      {{#if system.isMount}}
+      <span class="carl-pet-chip" title="{{localize 'CARLRPG.Pet.IsMountHint'}}">{{localize "CARLRPG.Pet.IsMount"}}</span>
+      {{else if system.role}}
+      <span class="carl-pet-chip" title="{{localize (concat 'CARLRPG.Pet.RoleRules.' system.role)}}">{{localize (lookup config.petRoles system.role)}}</span>
+      {{/if}}
+    </div>
+
+    {{#unless system.isMount}}
+    {{!-- Command Pet (p.232, module/helpers/pet-command.mjs) - every fight. --}}
+    <div class="carl-pet-command flexrow">
+      <span class="carl-pet-command-state {{#if pet.command.active}}active state-{{pet.command.state}}{{/if}}"
+        title="{{pet.command.rule}}">
+        {{#if pet.command.active}}{{pet.command.label}}{{else}}{{localize "CARLRPG.Pet.Command.None"}}{{/if}}
+      </span>
+      <span class="carl-pet-command-dc" title="{{localize 'CARLRPG.Pet.Command.DcHint'}}">
+        {{localize "CARLRPG.Pet.Command.Dc" dc=pet.commandDifficulty}}
+      </span>
+      {{#if pet.canCommand}}
+      <button type="button" class="carl-pet-command-button" data-action="commandPet">
+        <i class="fas fa-paw"></i> {{localize "CARLRPG.Pet.Command.Button"}}
+      </button>
+      {{/if}}
+      {{#if @root.isGM}}
+      <select class="carl-pet-command-override" name="system.command.state" title="{{localize 'CARLRPG.Pet.Command.OverrideHint'}}">
+        <option value="">{{localize "CARLRPG.Pet.Command.None"}}</option>
+        {{selectOptions pet.command.stateChoices selected=pet.command.selected localize=true}}
+      </select>
+      {{/if}}
+    </div>
+    {{/unless}}
+
+    {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
+    {{> "systems/carl-rpg/templates/actor/parts/shield-bar.hbs"}}
+  </div>
+</header>

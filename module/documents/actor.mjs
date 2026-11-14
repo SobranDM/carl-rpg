@@ -2,6 +2,8 @@ import CarlDice from "../dice/dice.mjs";
 import { recheckLevelGatedGrants } from "../helpers/race-class-grants.mjs";
 import { buildConditionEntry } from "../helpers/conditions.mjs";
 import { syncDefeated } from "../helpers/defeat.mjs";
+import { isCrawler, isPet } from "../helpers/actor-kinds.mjs";
+import { grantPetSkills, levelBondedPets, syncPetCommandStatus, syncPetOwnership } from "../helpers/pets.mjs";
 
 /**
  * Extend the base Actor document.
@@ -50,6 +52,10 @@ export class CarlRPGActor extends Actor {
         // "Keep a running total of all your grinding hours and erase it only
         // when you level up" (p.171) - any Level gain, whatever its source.
         if (this.type === "character") foundry.utils.setProperty(changed, "system.grindLevelHours", 0);
+        // A crawler's bonded Pets level with it (_onUpdate, module/helpers/
+        // pets.mjs) - _onUpdate can't see the old Level, so carry the gain,
+        // keyed by actor (one options object serves a whole batched update).
+        if (isCrawler(this)) options.carlLevelDelta = { ...(options.carlLevelDelta ?? {}), [this.id]: delta };
       }
     }
 
@@ -61,7 +67,7 @@ export class CarlRPGActor extends Actor {
     if (foundry.utils.hasProperty(changed, "system.hb.value")) options.carlPreviousHb = this.system.hb?.value ?? 0;
 
     const droppedHb = foundry.utils.getProperty(changed, "system.hb.value");
-    if (this.type === "character" && droppedHb !== undefined && Number(droppedHb) <= 0 && (this.system.hb?.value ?? 0) > 0) {
+    if (isCrawler(this) && droppedHb !== undefined && Number(droppedHb) <= 0 && (this.system.hb?.value ?? 0) > 0) {
       const conditions = foundry.utils.getProperty(changed, "system.conditions") ?? this.system.toObject().conditions ?? [];
       if (!conditions.some((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown)) {
         const dying = buildConditionEntry("dying", { source: game.i18n.localize("CARLRPG.Actor.HealthBar") });
@@ -100,9 +106,48 @@ export class CarlRPGActor extends Actor {
       syncDefeated(this, { previousHb: options.carlPreviousHb ?? null })
         .catch((err) => console.error("CarlRPG | defeat sync failed", err));
     }
+    if (game.users.activeGM?.isSelf) {
+      const levelDelta = options.carlLevelDelta?.[this.id];
+      if (levelDelta > 0) {
+        levelBondedPets(this, levelDelta)
+          .catch((err) => console.error("CarlRPG | pet levelling failed", err));
+      }
+      if (isPet(this)) this.#onPetUpdate(changed);
+    }
     if (game.user.id !== userId) return;
     if (foundry.utils.hasProperty(changed, "system.attributes.level.value")) {
       await recheckLevelGatedGrants(this);
+    }
+  }
+
+  /**
+   * A new Pet learns its Slice Attack (module/helpers/pets.mjs). The active GM
+   * does it, so it works whoever created the Pet.
+   * @override
+   */
+  _onCreate(data, options, userId) {
+    super._onCreate(data, options, userId);
+    if (isPet(this) && game.users.activeGM?.isSelf) {
+      grantPetSkills(this).catch((err) => console.error("CarlRPG | pet skill grant failed", err));
+    }
+  }
+
+  /**
+   * Active GM only: a changed Role or Taunt/Catcher pick grants its Skills,
+   * a newly picked crawler's players can run the Pet, and a changed Command
+   * Pet result updates the token's status icon.
+   * @param {object} changed
+   */
+  #onPetUpdate(changed) {
+    const sys = changed.system ?? {};
+    if (sys.role !== undefined || sys.specialAbilities?.tauntOrCatcher !== undefined) {
+      grantPetSkills(this).catch((err) => console.error("CarlRPG | pet skill grant failed", err));
+    }
+    if (sys.ownerId) {
+      syncPetOwnership(this).catch((err) => console.error("CarlRPG | pet ownership sync failed", err));
+    }
+    if (sys.command !== undefined) {
+      syncPetCommandStatus(this).catch((err) => console.error("CarlRPG | pet command status failed", err));
     }
   }
 

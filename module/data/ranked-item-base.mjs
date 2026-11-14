@@ -76,6 +76,18 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
 
   prepareDerivedData() {
     super.prepareDerivedData();
+    // "Pets don't have trackable Skill Ranks. Instead, their Ranks in their
+    // Attacks, Spells, and abilities ... are equal to the Floor Number (even
+    // at Level 1!)" (p.231). Set here, at prepare time, so every reader of
+    // system.rank agrees (upgrade gating, damage and heal tiers, the sheet)
+    // and nothing is written: the stored Rank stays the item's own when it's
+    // dragged to a crawler. Floor 0 counts as Rank 1, so Spells still cast.
+    // A Floor change re-prepares every actor and its items (carl-rpg.mjs).
+    this.rankIsFloor = this.parent?.actor?.type === "pet";
+    if (this.rankIsFloor) {
+      const floor = game.settings.get("carl-rpg", "currentFloor");
+      this.rank = Math.min(Math.max(1, floor), 20);
+    }
   }
 
   /**

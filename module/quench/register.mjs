@@ -38,6 +38,7 @@ import registerConsumables from "./batches/consumables.mjs";
 import registerCrawlerForgeImport from "./batches/crawlerforge-import.mjs";
 import registerPdfImport from "./batches/pdf-import.mjs";
 import registerLootBox from "./batches/loot-box.mjs";
+import registerPets from "./batches/pets.mjs";
 
 const BATCH_REGISTRARS = [
   registerRules,
@@ -66,6 +67,7 @@ const BATCH_REGISTRARS = [
   registerCrawlerForgeImport,
   registerPdfImport,
   registerLootBox,
+  registerPets,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

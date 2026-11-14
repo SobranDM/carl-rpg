@@ -170,7 +170,10 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     context.config = CONFIG.CARLRPG;
     context.itemTypeLabel = `TYPES.Item.${item.type}`;
     context.isRanked = RANKED_TYPES.includes(item.type);
-    context.canRollAdvancement = context.isRanked && !!item.actor;
+    // A Pet's Ranks are the current Floor (data/ranked-item-base.mjs) and
+    // never advance - show that Rank read-only instead of the stored one.
+    context.petRank = item.system.rankIsFloor ? item.system.rank : null;
+    context.canRollAdvancement = context.isRanked && !!item.actor && context.petRank === null;
     // Gates ranked-fields.hbs's Base Damage/Heal fieldsets (and
     // attributes-skill.hbs's AttackType) - one shared flag computed per
     // type so that shared partial doesn't need to know each type's own

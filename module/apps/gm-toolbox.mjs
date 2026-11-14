@@ -24,6 +24,8 @@ import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helper
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 import { queueForActor } from "../helpers/actor-queue.mjs";
 import { dropExpiredConditions } from "../helpers/expiry.mjs";
+import { isPet } from "../helpers/actor-kinds.mjs";
+import { petOwner } from "../helpers/pets.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -423,6 +425,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const actors = await CarlToolbox.#promptActorPicker({
       titleKey: "CARLRPG.Toolbox.MendTitle",
       promptKey: "CARLRPG.Toolbox.MendPickerPrompt",
+      includePets: true,
     });
     if (!actors) return;
 
@@ -465,6 +468,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       titleKey: config.titleKey,
       promptKey: "CARLRPG.Toolbox.Rest.PickerPrompt",
       confirmLabelKey: "CARLRPG.Toolbox.Rest.Confirm",
+      includePets: true,
     });
     if (!selectedActors) return; // Cancelled: no time advance, no updates.
 
@@ -521,10 +525,16 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
    * @param {string} [options.confirmLabelKey]  i18n key for the confirm button.
    * @returns {Promise<Actor[]|null>} Selected actors, or null if cancelled/none exist.
    */
-  static async #promptActorPicker({ titleKey, promptKey, confirmLabelKey = "CARLRPG.Toolbox.ActorPicker.Confirm" }) {
-    const actors = game.actors
-      .filter((a) => a.type === "character")
-      .sort((a, b) => a.name.localeCompare(b.name));
+  static async #promptActorPicker({
+    titleKey, promptKey, confirmLabelKey = "CARLRPG.Toolbox.ActorPicker.Confirm", includePets = false,
+  }) {
+    const byName = (a, b) => a.name.localeCompare(b.name);
+    const characters = game.actors.filter((a) => a.type === "character").sort(byName);
+    // Pets rest and mend with their crawlers (Rest, Mend), listed in their
+    // own section; they level only through their crawler (module/helpers/
+    // pets.mjs), so the Level/Grind pickers leave them out.
+    const pets = includePets ? game.actors.filter((a) => isPet(a)).sort(byName) : [];
+    const actors = [...characters, ...pets];
     if (!actors.length) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoCharacters"));
       return null;
@@ -533,8 +543,8 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const isOwnedByActivePlayer = (actor) => game.users.some(
       (u) => u.active && !u.isGM && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
     );
-    const active = actors.filter(isOwnedByActivePlayer);
-    const other = actors.filter((a) => !isOwnedByActivePlayer(a));
+    const active = characters.filter(isOwnedByActivePlayer);
+    const other = characters.filter((a) => !isOwnedByActivePlayer(a));
 
     // data-actor-id (read directly off the DOM by the confirm button below),
     // not just a `name="actors.<id>"` for FormDataExtended to expand - see
@@ -553,6 +563,18 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         </details>`
       : "";
 
+    // A Pet starts checked when its crawler does.
+    const petRows = pets.map((p) => {
+      const owner = petOwner(p);
+      return row(p, !!owner && isOwnedByActivePlayer(owner));
+    }).join("");
+    const petSection = pets.length
+      ? `<details class="carl-actor-picker-pets" open>
+          <summary>${game.i18n.format("CARLRPG.Toolbox.ActorPicker.Pets", { count: pets.length })}</summary>
+          ${petRows}
+        </details>`
+      : "";
+
     const content = `<div class="carl-dialog-body carl-actor-picker">
       <p>${game.i18n.localize(promptKey)}</p>
       <input type="search" class="carl-actor-picker-filter" placeholder="${game.i18n.localize("CARLRPG.Toolbox.ActorPicker.FilterPlaceholder")}" />
@@ -562,7 +584,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
           <strong>${game.i18n.localize("CARLRPG.Toolbox.ActorPicker.SelectAll")}</strong>
           <span class="carl-actor-picker-count" data-picker-count></span>
         </label>
-        <div class="form-fields carl-dialog-conditions-list carl-actor-picker-list">${activeRows}${otherSection}</div>
+        <div class="form-fields carl-dialog-conditions-list carl-actor-picker-list">${activeRows}${otherSection}${petSection}</div>
       </div>
     </div>`;
 
