@@ -1907,7 +1907,15 @@
   min-height: 140px;
 }
 .carl-rpg .carl-details-grid .carl-personal-space-fields {
+  gap: 10px;
   margin-bottom: 4px;
+}
+.carl-rpg .carl-details-grid .carl-personal-space-fields .carl-sheet-line {
+  flex: 1;
+  min-width: 0;
+}
+.carl-rpg .carl-details-grid .carl-personal-space-fields .carl-sheet-line > span {
+  flex: 0 0 auto;
 }
 .carl-rpg .carl-sheet-box {
   display: flex;

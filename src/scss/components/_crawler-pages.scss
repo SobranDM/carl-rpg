@@ -233,8 +233,19 @@
       }
     }
 
+    // Tier and Size side by side.
     .carl-personal-space-fields {
+      gap: $padding-md;
       margin-bottom: 4px;
+
+      .carl-sheet-line {
+        flex: 1;
+        min-width: 0;
+
+        > span {
+          flex: 0 0 auto;
+        }
+      }
     }
   }
 
