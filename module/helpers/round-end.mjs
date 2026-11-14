@@ -10,6 +10,12 @@
  * GM-only digest, same convention as module/chat/damage-card.mjs).
  *
  * Per round end, for each creature in the Combat:
+ *  0. Per-round restores from a timed Buff (`perRound` - a Mana Refill
+ *     potion, module/helpers/consumables.mjs) come first, as their own
+ *     update, so the actor's own rules run on them: a heal ends Dying and
+ *     every other "until healed" Debuff before the countdown could tick, and
+ *     a crawler knocked back to 0 by this round's damage gains Dying again.
+ *     The dead get nothing; HB blocked by The Taint is reported.
  *  1. Damage-dealing Debuffs (`mechanics.dot`) roll their damage, once per
  *     stack ("Stackable... they all apply their effect cumulatively").
  *     "Damage from Debuffs bypasses DR, but other Resistances and
@@ -24,17 +30,28 @@
  *  3. Dying's countdown ticks down by 1; at 0 the card says so, once (the
  *     actor is left in place - what death means at the table is the GM's
  *     call). Healing ends Dying (module/documents/actor.mjs's _preUpdate).
- *  4. "rounds"-duration Debuffs tick down by 1 and are removed at 0.
+ *  4. "rounds"-duration Debuffs - and Buffs measured in rounds - tick down
+ *     by 1 and are removed at 0.
  *
  * When a started Combat is deleted, "until the end of combat" Debuffs
- * (`mechanics.endsWithCombat`) and any leftover "rounds"-duration ones are
- * removed.
+ * (`mechanics.endsWithCombat`) and any leftover "rounds"-duration Debuffs
+ * are removed. A consumable's Buff counting rounds instead pays out what its
+ * per-round restore still owes, all at once (as it would have outside a
+ * fight), and if it carries bonuses it carries on, on the clock, for its
+ * remaining rounds (10 seconds each).
  */
 import { CARLRPG } from "./config.mjs";
 import { computeDamageApplication } from "./damage-pipeline.mjs";
-import { collectDebuffRows, resolveRollerRows, consumedConditionIds, conditionLabel } from "./debuff-effects.mjs";
+import { collectDebuffRows, resolveRollerRows, consumedConditionIds, conditionLabel, findConditionWithMechanic } from "./debuff-effects.mjs";
 import { resolveD20Formula } from "../dice/dice.mjs";
 import { createRollMessage, createCardMessage, esc } from "../chat/chat-card.mjs";
+import { queueForActor } from "./actor-queue.mjs";
+import { hbCeiling, restoreUpTo, restoresPerRound } from "./rest.mjs";
+
+/** An entry's own duration type (Potion Sickness's Poisoned) wins over its preset's. */
+function durationTypeOf(condition) {
+  return condition.durationType ?? CARLRPG.debuffs[condition.key]?.durationType ?? null;
+}
 
 
 function mechanicsOf(condition) {
@@ -62,10 +79,84 @@ export function combatActors(combat) {
  * @returns {Promise<{lines: string[], gmLines: string[], rolls: Roll[], rollMeta: object[]}|null>}
  *   null when the actor has no conditions at all. `lines` are trusted HTML.
  */
-export async function processActorRoundEnd(actor) {
+export function processActorRoundEnd(actor) {
+  // One writer at a time: the timed-effect expiry sweep (module/helpers/
+  // expiry.mjs) also rewrites conditions, on the same round advance.
+  return queueForActor(actor.uuid, () => runActorRoundEnd(actor));
+}
+
+/**
+ * Whether this creature is dead by the rules: a Mob at 0 HB ("Mobs die
+ * instantly at 0% HB"), or a crawler whose Dying countdown has run out (its
+ * end was announced). Nothing restores them on its own - that's the GM's
+ * call.
+ */
+function isDead(actor) {
   const sys = actor.system;
-  const conditions = foundry.utils.deepClone(sys.conditions ?? []);
-  if (!conditions.length) return null;
+  if (actor.type !== "character") return (sys.hb?.value ?? 0) <= 0;
+  const dying = (sys.conditions ?? []).find((c) => mechanicsOf(c)?.countdown);
+  return !!dying && actor.getFlag("carl-rpg", "dyingAnnounced") === dying.id;
+}
+
+/**
+ * Step 0: every per-round restore on the actor ("Restores 15 Mana per round
+ * for 10 rounds"), as one update of its own. Healing that way ends Dying,
+ * Sepsis... through CarlRPGActor#_preUpdate, exactly like any other heal;
+ * those endings are listed here. The dead are left alone, and a heal
+ * blocked by The Taint is reported.
+ * @param {Actor} actor
+ * @param {string[]} lines  The round-end card's lines (appended to).
+ */
+async function applyPerRoundRestores(actor, lines) {
+  const sys = actor.system;
+  const restoring = (sys.conditions ?? []).filter((c) => restoresPerRound(c.perRound));
+  if (!restoring.length || isDead(actor)) return;
+
+  const name = esc(actor.name);
+  const startHb = sys.hb?.value ?? 0;
+  let hb = startHb;
+  const startMana = sys.mana?.value ?? 0;
+  let mana = startMana;
+  let taint;
+  for (const condition of restoring) {
+    const per = condition.perRound;
+    const source = esc(conditionLabel(condition));
+    if (per.mana) {
+      const next = restoreUpTo(mana, per.mana, sys.mana?.max ?? 0);
+      if (next > mana) {
+        lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreMana", { name, amount: next - mana, source }));
+        mana = next;
+      }
+    }
+    if (!per.hb) continue;
+    taint ??= findConditionWithMechanic(sys, "noHealing") ?? false;
+    if (taint) {
+      lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHbBlocked", { name, source, debuff: esc(conditionLabel(taint)) }));
+      continue;
+    }
+    const next = restoreUpTo(hb, per.hb, hbCeiling(sys));
+    if (next > hb) {
+      lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHb", { name, amount: next - hb, source }));
+      hb = next;
+    }
+  }
+
+  const updates = {};
+  if (hb !== startHb) {
+    updates["system.hb.value"] = hb;
+    for (const condition of sys.conditions ?? []) {
+      if (!mechanicsOf(condition)?.endsOnHealing) continue;
+      lines.push(mechanicsOf(condition).countdown
+        ? game.i18n.format("CARLRPG.RoundEnd.DyingHealed", { name })
+        : game.i18n.format("CARLRPG.RoundEnd.EndedByHealing", { name, debuff: esc(conditionLabel(condition)) }));
+    }
+  }
+  if (mana !== startMana) updates["system.mana.value"] = mana;
+  if (Object.keys(updates).length) await actor.update(updates);
+}
+
+async function runActorRoundEnd(actor) {
+  if (!(actor.system.conditions ?? []).length) return null;
 
   const floor = game.settings.get("carl-rpg", "currentFloor");
   const rollData = actor.getRollData();
@@ -75,6 +166,16 @@ export async function processActorRoundEnd(actor) {
   const rolls = [];
   const rollMeta = [];
   const removeIds = new Set();
+
+  // 0. Per-round restores, written as their own update before anything
+  // else - so the actor's own rules run on them: healing ends every "until
+  // healed" Debuff, Dying included (CarlRPGActor#_preUpdate), before its
+  // countdown could tick.
+  await applyPerRoundRestores(actor, lines);
+
+  const sys = actor.system;
+  const conditions = foundry.utils.deepClone(sys.conditions ?? []);
+  if (!conditions.length) return { lines, gmLines, rolls, rollMeta };
   const startHb = sys.hb?.value ?? 0;
   let hb = startHb;
 
@@ -88,11 +189,12 @@ export async function processActorRoundEnd(actor) {
   // still live until the first round end announces it.
   const dyingActive = !!dying && actor.getFlag("carl-rpg", "dyingAnnounced") !== dying.id;
   let announceDeath = false;
+  let slotsLostTotal = 0;
 
   // 1. Damage-dealing Debuffs.
   for (const condition of conditions) {
     const dot = mechanicsOf(condition)?.dot;
-    if (!dot) continue;
+    if (!dot || removeIds.has(condition.id)) continue;
     const label = esc(conditionLabel(condition));
 
     // "Each time a Dying Crawler would take damage from any source, they
@@ -139,14 +241,16 @@ export async function processActorRoundEnd(actor) {
 
     const slotsLost = Math.min(result.slotsLost, hb);
     hb -= slotsLost;
+    slotsLostTotal += slotsLost;
     lines.push(game.i18n.format("CARLRPG.RoundEnd.DotDamage", { name, debuff: label, amount: result.totalFinalDamage }));
     gmLines.push(game.i18n.format("CARLRPG.RoundEnd.DotDigest", {
       name, debuff: label, raw: roll.total, final: result.totalFinalDamage, slots: slotsLost,
     }));
   }
 
-  // 2. "...or you take at least 1 HB slot damage" (Terrified).
-  if (hb < startHb) {
+  // 2. "...or you take at least 1 HB slot damage" (Terrified) - slots
+  // actually lost to damage, even if a restore made up for them.
+  if (slotsLostTotal > 0) {
     for (const condition of conditions) {
       if (mechanicsOf(condition)?.endsOnHbLoss && !removeIds.has(condition.id)) {
         removeIds.add(condition.id);
@@ -164,11 +268,10 @@ export async function processActorRoundEnd(actor) {
       : game.i18n.format("CARLRPG.RoundEnd.DyingCountdown", { name, rounds: dying.remaining }));
   }
 
-  // 4. "rounds"-duration ticks.
+  // 4. "rounds"-duration ticks (Debuffs, and Buffs measured in rounds).
   for (const condition of conditions) {
     if (removeIds.has(condition.id) || condition === dying) continue;
-    const preset = CARLRPG.debuffs[condition.key];
-    if (preset?.durationType !== "rounds") continue;
+    if (durationTypeOf(condition) !== "rounds") continue;
     if (condition.remaining === null || condition.remaining === undefined) continue;
     condition.remaining -= 1;
     if (condition.remaining <= 0) {
@@ -177,6 +280,9 @@ export async function processActorRoundEnd(actor) {
     }
   }
 
+  // A crawler knocked from above 0 to 0 here gains Dying in this same
+  // update (CarlRPGActor#_preUpdate) - including one just healed out of it
+  // by step 0.
   const kept = conditions.filter((c) => !removeIds.has(c.id));
   const updates = {};
   if (JSON.stringify(kept) !== JSON.stringify(sys.conditions ?? [])) updates["system.conditions"] = kept;
@@ -235,24 +341,75 @@ export async function processRoundEnd(combat, round) {
  * @param {Combat} combat
  * @returns {Promise<ChatMessage|null>}
  */
+/** A consumable's timed Buff (module/helpers/consumables.mjs), not a Debuff. */
+function isConsumableBuff(condition) {
+  return condition.key === "custom" && (restoresPerRound(condition.perRound) || (condition.changes ?? []).length > 0);
+}
+
 export async function processCombatEnd(combat) {
   const lines = [];
   for (const actor of combatActors(combat)) {
-    const current = actor.system.conditions ?? [];
-    const ending = current.filter((c) => {
-      const preset = CARLRPG.debuffs[c.key];
-      return preset?.mechanics?.endsWithCombat || preset?.durationType === "rounds";
+    await queueForActor(actor.uuid, async () => {
+      const sys = actor.system;
+      const current = foundry.utils.deepClone(sys.conditions ?? []);
+      const name = esc(actor.name);
+      const ending = [];
+      const kept = [];
+      const updates = {};
+      let hb = sys.hb?.value ?? 0;
+      let mana = sys.mana?.value ?? 0;
+      const dead = isDead(actor);
+      for (const c of current) {
+        const rounds = durationTypeOf(c) === "rounds";
+        if (rounds && isConsumableBuff(c)) {
+          // What the restore still owes lands now.
+          const left = Math.max(0, Number(c.remaining) || 0);
+          if (left && restoresPerRound(c.perRound) && !dead) {
+            if (c.perRound.mana) {
+              const next = restoreUpTo(mana, c.perRound.mana * left, sys.mana?.max ?? 0);
+              if (next > mana) {
+                lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreMana", { name, amount: next - mana, source: esc(conditionLabel(c)) }));
+                mana = next;
+              }
+            }
+            if (c.perRound.hb && !findConditionWithMechanic(sys, "noHealing")) {
+              const next = restoreUpTo(hb, c.perRound.hb * left, hbCeiling(sys));
+              if (next > hb) {
+                lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHb", { name, amount: next - hb, source: esc(conditionLabel(c)) }));
+                hb = next;
+              }
+            }
+          }
+          // Bonuses carry on, on the clock, for the rounds they had left.
+          if ((c.changes ?? []).length && left) {
+            kept.push({
+              ...c, durationType: null, remaining: null, perRound: { hb: null, mana: null },
+              expiresAt: game.time.worldTime + left * (CONFIG.time.roundTime || 10),
+            });
+          } else {
+            ending.push(c);
+          }
+          continue;
+        }
+        if (CARLRPG.debuffs[c.key]?.mechanics?.endsWithCombat || rounds) ending.push(c);
+        else kept.push(c);
+      }
+      if (hb !== (sys.hb?.value ?? 0)) updates["system.hb.value"] = hb;
+      if (mana !== (sys.mana?.value ?? 0)) updates["system.mana.value"] = mana;
+      if (JSON.stringify(kept) !== JSON.stringify(sys.conditions ?? [])) updates["system.conditions"] = kept;
+      if (!Object.keys(updates).length) return;
+      try {
+        await actor.update(updates);
+        if (ending.length) {
+          lines.push(game.i18n.format("CARLRPG.RoundEnd.CombatEnded", {
+            name,
+            debuffs: ending.map((c) => esc(conditionLabel(c))).join(", "),
+          }));
+        }
+      } catch (err) {
+        console.error(`CarlRPG | End-of-combat cleanup failed for ${actor.name}`, err);
+      }
     });
-    if (!ending.length) continue;
-    try {
-      await actor.update({ "system.conditions": current.filter((c) => !ending.includes(c)) });
-      lines.push(game.i18n.format("CARLRPG.RoundEnd.CombatEnded", {
-        name: esc(actor.name),
-        debuffs: ending.map((c) => esc(conditionLabel(c))).join(", "),
-      }));
-    } catch (err) {
-      console.error(`CarlRPG | End-of-combat Debuff cleanup failed for ${actor.name}`, err);
-    }
   }
   if (!lines.length) return null;
   return createCardMessage({

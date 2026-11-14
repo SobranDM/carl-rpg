@@ -13,10 +13,11 @@ import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
 import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow } from "../helpers/attack-targets.mjs";
 import { aiRerollFlags, keptD20, rerollFormula } from "../helpers/ai-favor.mjs";
+import { buildScrollCast } from "../helpers/scroll-cast.mjs";
 import { isAreaItem, isAreaMobAttack } from "../helpers/area.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree, staticEvade, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
-import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
+import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -350,7 +351,7 @@ export function withManaCostSubtitle(subtitle, chosen) {
  * @param {{isSpell?: boolean}} [options]
  * @returns {boolean} true if blocked.
  */
-function isBlockedByDebuff(actor, { isSpell = false } = {}) {
+export function isBlockedByDebuff(actor, { isSpell = false } = {}) {
   const reason = getActionBlockReason(actor, { isSpell });
   if (!reason) return false;
   ui.notifications.warn(reason);
@@ -460,6 +461,42 @@ function narrowConditionalModifiers(conditionalModifiers, skillItem, damageEffec
   });
 }
 
+/**
+ * What a cast reads, in one place. Normally the caster's own: their skill
+ * bag entry for the Skill/Spell, its conditional bonuses, Mana and the
+ * Advancement use-mark. For a Scroll's cast (castAs - module/helpers/
+ * scroll-cast.mjs) the Spell's own entry and bonuses at the scroll's fixed
+ * Rank, no Mana, no use-mark and no Damage Effect - but the caster's general
+ * conditional bonuses (gear's "+2 while flanking") still apply, since a
+ * scroll "casts the Spell as though the crawler cast it themselves" (p.99).
+ * @param {Actor} actor
+ * @param {Item} skillItem
+ * @param {object|null} castAs
+ * @param {string[]} [damageEffectIds]  Candidate Damage Effects whose own conditions to offer.
+ * @returns {{skillEntry: object|undefined, conditionalModifiers: object[], scroll: boolean, payMana: boolean, markUse: boolean}}
+ */
+export function resolveCastContext(actor, skillItem, castAs, damageEffectIds = []) {
+  const sys = actor.system;
+  const own = collectApplicableConditionalModifiers(sys, skillItem.name, damageEffectIds);
+  if (!castAs) {
+    return {
+      skillEntry: sys.skills?.[slugifySkillName(skillItem.name)],
+      conditionalModifiers: own,
+      scroll: false,
+      payMana: skillItem.type === "spell",
+      markUse: true,
+    };
+  }
+  const general = own.filter((cm) => cm.targetType !== "skillRank" && cm.targetType !== "skillDamage");
+  return {
+    skillEntry: castAs.skillEntry,
+    conditionalModifiers: [...general, ...(castAs.conditionalModifiers ?? [])],
+    scroll: true,
+    payMana: false,
+    markUse: false,
+  };
+}
+
 /** The d20 expression a RollParts check rolled ("1d20", "2d20kh", ...). */
 function d20Formula(roll) {
   const term = roll.dice?.find((d) => d.faces === 20);
@@ -539,12 +576,15 @@ export default class CarlDice {
    * untrained (Skills, Spells & Gear, p. 173).
    * @param {Actor} actor
    * @param {Item} skillItem  A skill|spell|damageEffect item owned by actor.
-   * @param {{skipDialog?: boolean}} [options]
+   * @param {{skipDialog?: boolean, castAs?: object|null}} [options]
+   *   castAs: a Scroll's cast (module/helpers/scroll-cast.mjs) - its own
+   *   skill entry and fixed Rank, no Mana, no use-mark.
    */
-  static async rollSkillCheck(actor, skillItem, { skipDialog = false } = {}) {
+  static async rollSkillCheck(actor, skillItem, { skipDialog = false, castAs = null } = {}) {
     const sys = actor.system;
     const skillSys = skillItem.system;
-    const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
+    const cast = resolveCastContext(actor, skillItem, castAs);
+    const { skillEntry } = cast;
     const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
 
     if (skillSys.isPassive) {
@@ -555,8 +595,8 @@ export default class CarlDice {
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
 
     const rollData = actor.getRollData();
-    const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
-    const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
+    const { conditionalModifiers } = cast;
+    const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
     const debuffRows = decorateRows(collectDebuffRows(sys, "check"), "roll");
 
     let options = { advantage: "normal", difficulty: null, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null };
@@ -593,9 +633,9 @@ export default class CarlDice {
     const degree = getDegreeOfSuccess(naturalRoll, total, options.difficulty);
 
     await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied));
-    await CarlDice.markForAdvancement(skillItem);
+    if (cast.markUse) await CarlDice.markForAdvancement(skillItem);
 
-    const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
+    const chosenManaCost = cast.payMana ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
     const body = buildDebuffNote(debuffEffect.applied);
@@ -624,10 +664,13 @@ export default class CarlDice {
    * @param {Item} skillItem
    * @param {{skipDialog?: boolean, damageEffectItem?: Item|null}} [options]
    */
-  static async rollAttack(actor, skillItem, { skipDialog = false, damageEffectItem = null } = {}) {
+  static async rollAttack(actor, skillItem, { skipDialog = false, damageEffectItem = null, castAs = null } = {}) {
     const sys = actor.system;
     const skillSys = skillItem.system;
-    const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
+    // castAs: a Scroll's cast - see resolveCastContext. It never adds a
+    // Damage Effect.
+    if (castAs) damageEffectItem = null;
+    const skillEntry = castAs ? castAs.skillEntry : sys.skills?.[slugifySkillName(skillItem.name)];
     const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
@@ -691,7 +734,7 @@ export default class CarlDice {
     // parentSkills can list Spells too. Rank-0 (untrained) ones are excluded
     // - Damage Effects are Passive Skills, and Passive Skills can't be used
     // untrained.
-    const rankedDamageEffectCandidates = (damageEffectItem ? [damageEffectItem] : actor.items
+    const rankedDamageEffectCandidates = castAs ? [] : (damageEffectItem ? [damageEffectItem] : actor.items
       .filter((i) => i.type === "damageEffect" && (i.system.parentSkills ?? []).includes(skillItem.name)))
       .filter((de) => (sys.skills?.[slugifySkillName(de.name)]?.rank ?? de.system.rank ?? 0) > 0);
 
@@ -707,11 +750,10 @@ export default class CarlDice {
     // Out/Smush/Skullcracker's grapple-check bonuses target THEMSELVES, not
     // the parent Skill, so they'd never otherwise appear here) - narrowed to
     // only the actually-chosen one below, once damageEffectItem is final.
-    const conditionalModifiers = collectApplicableConditionalModifiers(
-      sys, skillItem.name, rankedDamageEffectCandidates.map((de) => de.id)
-    );
+    const cast = resolveCastContext(actor, skillItem, castAs, rankedDamageEffectCandidates.map((de) => de.id));
+    const { conditionalModifiers } = cast;
 
-    const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
+    const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
     const rollerRows = decorateRows(collectDebuffRows(sys, "attack", { usesDex: skillSys.governingStat === "dex" }), "roll");
 
     // Area Attack (p.83) - pre-ticked in the dialog when the Skill/Spell (or
@@ -865,7 +907,9 @@ export default class CarlDice {
     // defer to the chat card's mark-choice buttons below instead (see
     // markChoicePending, resolved once flags/footerParts exist).
     let markChoicePending = null;
-    if (damageEffectItem) {
+    if (!cast.markUse) {
+      // A Scroll's Spell isn't the caster's own - nothing to mark.
+    } else if (damageEffectItem) {
       const skillMarkable = CarlDice.isAdvancedByUse(skillItem) && !skillItem.system.marked;
       const deMarkable = CarlDice.isAdvancedByUse(damageEffectItem) && !damageEffectItem.system.marked;
       if (skillMarkable && deMarkable) {
@@ -881,7 +925,7 @@ export default class CarlDice {
 
     // Mana is spent for casting, not the outcome - deduct/surface regardless
     // of hit/miss (docs/known-gaps.md 1.6).
-    const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
+    const chosenManaCost = cast.payMana ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
     const rolls = [attackRoll, ...extraD20Rolls];
@@ -910,6 +954,7 @@ export default class CarlDice {
       const damage = await CarlDice.rollAttackDamage(actor, skillItem, {
         damageEffectItem, isCrit: naturalRoll === 20, isAmazingSuccess,
         conditionalModifiers: activeConditionalModifiers, checked: options.checked,
+        skillEntry: cast.scroll ? skillEntry : null,
       });
       rolls.push(...damage.rolls);
       rollMeta.push(...damage.rollMeta);
@@ -979,6 +1024,8 @@ export default class CarlDice {
       skillItemId: skillItem.id, damageEffectItemId: damageEffectItem?.id ?? null,
       checked: [...(options.checked ?? [])],
       rowFormulas: Object.fromEntries(targetRowList.map((row, i) => [row.id, rowFormulas[i]])),
+      // A Scroll's Spell isn't owned - the reroll rebuilds it from this.
+      castAs: castAs ? { spellData: castAs.spellData, rank: castAs.rank } : null,
     }));
 
     return createRollMessage({
@@ -1001,14 +1048,16 @@ export default class CarlDice {
    * target is hit - module/chat/attack-targets-card.mjs).
    * @param {Actor} actor
    * @param {Item} skillItem
-   * @param {{damageEffectItem?: Item|null, isCrit?: boolean, isAmazingSuccess?: boolean, conditionalModifiers?: object[], checked?: Set<string>}} [options]
+   * @param {{damageEffectItem?: Item|null, isCrit?: boolean, isAmazingSuccess?: boolean, conditionalModifiers?: object[], checked?: Set<string>, skillEntry?: object|null}} [options]
+   *   skillEntry: use this instead of the actor's own (a Scroll's cast).
    * @returns {Promise<{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>, targetEffects: object[]}>}
    */
   static async rollAttackDamage(actor, skillItem, {
     damageEffectItem = null, isCrit = false, isAmazingSuccess = false, conditionalModifiers = [], checked = new Set(),
+    skillEntry: givenEntry = null,
   } = {}) {
     const sys = actor.system;
-    const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
+    const skillEntry = givenEntry ?? sys.skills?.[slugifySkillName(skillItem.name)];
     const damageEffectEntry = damageEffectItem ? sys.skills?.[slugifySkillName(damageEffectItem.name)] : null;
     const built = buildDamageRollParts({
       skillItem, skillEntry, damageEffectItem, damageEffectEntry, isCrit,
@@ -1042,12 +1091,15 @@ export default class CarlDice {
     const flags = message.flags["carl-rpg"] ?? {};
     const spec = flags.aiReroll;
     const actor = spec ? await fromUuid(spec.actorUuid) : null;
-    const skillItem = actor?.items.get(spec.skillItemId);
+    // A Scroll's cast: its Spell was never owned, so rebuild it - before any
+    // owned-item lookup, which could hit an unrelated owned copy.
+    const scroll = actor && spec.castAs?.spellData ? buildScrollCast(actor, spec.castAs.spellData, spec.castAs.rank) : null;
+    const skillItem = scroll ? scroll.item : actor?.items.get(spec.skillItemId);
     if (!skillItem) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
       return null;
     }
-    const damageEffectItem = spec.damageEffectItemId ? (actor.items.get(spec.damageEffectItemId) ?? null) : null;
+    const damageEffectItem = !scroll && spec.damageEffectItemId ? (actor.items.get(spec.damageEffectItemId) ?? null) : null;
 
     const roll = await new Roll(rerollFormula(spec)).evaluate();
     const naturalRoll = extractNaturalD20(roll);
@@ -1090,14 +1142,13 @@ export default class CarlDice {
     let damageByType = {};
     let targetEffects = [];
     if (anyHit || (targetRowList.length && !isArea)) {
-      const conditionalModifiers = narrowConditionalModifiers(
-        collectApplicableConditionalModifiers(actor.system, skillItem.name, damageEffectItem ? [damageEffectItem.id] : []),
-        skillItem, damageEffectItem,
-      );
+      const cast = resolveCastContext(actor, skillItem, scroll?.castAs ?? null, damageEffectItem ? [damageEffectItem.id] : []);
+      const conditionalModifiers = narrowConditionalModifiers(cast.conditionalModifiers, skillItem, damageEffectItem);
       const isAmazingSuccess = degree === "amazingSuccess";
       const damage = await CarlDice.rollAttackDamage(actor, skillItem, {
         damageEffectItem, isCrit: naturalRoll === 20, isAmazingSuccess,
         conditionalModifiers, checked: new Set(spec.checked ?? []),
+        skillEntry: scroll?.castAs.skillEntry ?? null,
       });
       rolls.push(...damage.rolls);
       rollMeta.push(...damage.rollMeta);
@@ -1383,7 +1434,9 @@ export default class CarlDice {
    * @param {Actor} actor
    * @param {Item} skillItem
    */
-  static async rollHeal(actor, skillItem) {
+  static async rollHeal(actor, skillItem, { castAs = null } = {}) {
+    // castAs: a Scroll's cast (module/helpers/scroll-cast.mjs) - its Rank is
+    // the scroll's (already on the item), no Mana, no use-mark.
     const skillSys = skillItem.system;
     const rank = skillSys.rank ?? 0;
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
@@ -1397,14 +1450,15 @@ export default class CarlDice {
     const canMend = unlocked.some((u) => u.healMend);
     const formula = diceTier?.healDice || skillSys.healDice || "1d4";
 
+    const cast = resolveCastContext(actor, skillItem, castAs);
     await removeConditionsById(actor, endedConditionIds(actor.system, []));
-    await CarlDice.markForAdvancement(skillItem);
+    if (cast.markUse) await CarlDice.markForAdvancement(skillItem);
 
     // Casting always spends Mana, whether or not the tier rolls dice
     // (docs/known-gaps.md 1.6) - no picker here, per this function's own
     // "not built ahead of a real use case" precedent above: no heal spell
-    // currently has manaCostVariants.
-    const chosenManaCost = skillItem.type === "spell"
+    // currently has manaCostVariants. A Scroll pays none.
+    const chosenManaCost = cast.payMana
       ? { manaCost: applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost), isBase: true }
       : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
@@ -1719,7 +1773,7 @@ export default class CarlDice {
     // the actor's per-skill bags rather than the Skill item itself, since
     // both are granted by a separate owned Race/Class item, not the Skill.
     const bonus = floorBonus ? (actor.system.advancementBonuses?.[slug] ?? 0) : 0;
-    const rankCap = actor.system.rankCaps?.[slug] ?? 15;
+    const rankCap = skillRankCap(actor.system, skillItem.name);
 
     // Already at the ceiling - don't roll at all, and don't report a
     // cosmetic "success" that can't actually raise the Rank any further

@@ -37,7 +37,11 @@
         <input type="text" class="carl-w-tiny" name="{{concat 'system.conditions.' index '.stacks'}}" value="{{condition.stacks}}" data-dtype="Number" />
       </div>
       <div class="item-prop">
+        {{#if condition.expiresAt}}
+        <span class="carl-condition-expiry">{{conditionExpiry condition.expiresAt}}</span>
+        {{else}}
         <input type="text" class="carl-w-tiny" name="{{concat 'system.conditions.' index '.remaining'}}" value="{{condition.remaining}}" data-dtype="Number" />
+        {{/if}}
       </div>
       <div class="item-prop">
         <input type="text" class="carl-w-medium" name="{{concat 'system.conditions.' index '.source'}}" value="{{condition.source}}" />

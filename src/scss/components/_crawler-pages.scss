@@ -118,6 +118,12 @@
     .carl-equip-slot-name {
       flex: 1;
     }
+
+    // Use a potion/scroll straight from the Hotlist (module/helpers/consumables.mjs).
+    .carl-slot-use {
+      flex: 0 0 auto;
+      color: var(--carl-accent);
+    }
   }
 
   // Head / Arms Torso Gloves / Main Hand Legs Off Hand / Feet.

@@ -33,6 +33,7 @@ import registerDebuffAutomation from "./batches/debuff-automation.mjs";
 import registerRulesFixes from "./batches/rules-fixes.mjs";
 import registerTableBatch from "./batches/table-batch.mjs";
 import registerFavorImmunity from "./batches/favor-immunity.mjs";
+import registerConsumables from "./batches/consumables.mjs";
 import registerCrawlerForgeImport from "./batches/crawlerforge-import.mjs";
 import registerPdfImport from "./batches/pdf-import.mjs";
 import registerLootBox from "./batches/loot-box.mjs";
@@ -59,6 +60,7 @@ const BATCH_REGISTRARS = [
   registerRulesFixes,
   registerTableBatch,
   registerFavorImmunity,
+  registerConsumables,
   registerCrawlerForgeImport,
   registerPdfImport,
   registerLootBox,

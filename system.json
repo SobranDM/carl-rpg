@@ -87,6 +87,13 @@
       "path": "packs/roll-tables",
       "type": "RollTable",
       "system": "carl-rpg"
+    },
+    {
+      "name": "consumables",
+      "label": "Consumables",
+      "path": "packs/consumables",
+      "type": "Item",
+      "system": "carl-rpg"
     }
   ],
   "packFolders": [],

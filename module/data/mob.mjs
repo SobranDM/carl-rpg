@@ -1,6 +1,7 @@
 import CarlRPGActorBase from "./actor-base.mjs";
 import { getStatMod, staticEvade } from "../helpers/rules.mjs";
 import { aggregateActorBonuses, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
+import { defineConditionsField } from "./shared/condition-entry.mjs";
 import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effects.mjs";
 
 /**
@@ -93,17 +94,7 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // here too since Mobs are the far more common target of an Attack's
     // "Apply to Target(s)" button (module/chat/target-effects-card.mjs) than
     // other player characters.
-    schema.conditions = new fields.ArrayField(
-      new fields.SchemaField({
-        id: new fields.StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() }),
-        key: new fields.StringField({ required: true, blank: false }), // key into CONFIG.CARLRPG.debuffs, or "custom"
-        label: new fields.StringField({ required: false, blank: true, initial: "" }),
-        stacks: new fields.NumberField({ ...requiredInteger, initial: 1, min: 1 }),
-        remaining: new fields.NumberField({ required: false, nullable: true, integer: true, initial: null }),
-        source: new fields.StringField({ required: false, blank: true, initial: "" }),
-      }),
-      { required: false, initial: [] }
-    );
+    schema.conditions = defineConditionsField();
 
     return schema;
   }

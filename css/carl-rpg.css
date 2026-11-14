@@ -636,9 +636,13 @@
   font-weight: 700;
   color: var(--carl-text);
 }
-.carl-chat-card .carl-round-end-list {
+.carl-chat-card .carl-round-end-list,
+.carl-chat-card .carl-consumable-list {
   margin: 4px 0;
   padding-left: 1.25em;
+}
+.carl-chat-card .carl-consumable-apply button {
+  width: 100%;
 }
 
 .carl-dialog .carl-dialog-body {
@@ -1056,6 +1060,20 @@
 .carl-rpg .item-formula {
   flex: 0 0 200px;
   padding: 0 8px;
+}
+.carl-rpg .carl-consumable {
+  margin-top: 6px;
+}
+.carl-rpg .carl-consumable select[multiple] {
+  min-width: 12em;
+}
+.carl-rpg .carl-consumable .carl-consumable-buff {
+  margin-top: 6px;
+}
+.carl-rpg .carl-condition-expiry {
+  font-size: 11px;
+  color: var(--carl-text-muted);
+  white-space: nowrap;
 }
 .carl-rpg .carl-hint {
   font-size: 11px;
@@ -1801,6 +1819,10 @@
 }
 .carl-rpg .carl-hotlist-slot .carl-equip-slot-name {
   flex: 1;
+}
+.carl-rpg .carl-hotlist-slot .carl-slot-use {
+  flex: 0 0 auto;
+  color: var(--carl-accent);
 }
 .carl-rpg .carl-gear-grid {
   display: grid;

@@ -1,0 +1,65 @@
+{
+  "_id": "ZGP8Gh17itzYF1r3",
+  "name": "Gold Standard Healing Potion",
+  "type": "item",
+  "folder": "vCFDxrAT5809BESA",
+  "img": "icons/consumables/potions/bottle-round-corked-orante-red.webp",
+  "system": {
+    "description": "<p>Heals 7 Health Bar slots and mends one Minor Injury.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "consumable": {
+      "kind": "potion",
+      "heal": {
+        "slots": 7,
+        "full": false,
+        "mend": "minor"
+      },
+      "mana": {
+        "amount": null,
+        "full": false
+      },
+      "cures": [],
+      "permanent": {
+        "kind": "",
+        "target": "",
+        "value": 1
+      },
+      "buff": {
+        "label": "",
+        "duration": 0,
+        "unit": "minutes",
+        "changes": [],
+        "perRound": {
+          "hb": null,
+          "mana": null
+        }
+      },
+      "spell": {
+        "name": "",
+        "uuid": "",
+        "rank": null
+      }
+    }
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!ZGP8Gh17itzYF1r3"
+}

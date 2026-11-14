@@ -17,7 +17,7 @@
  * may accumulate from one day or even one floor to the next").
  */
 import CarlDice from "../dice/dice.mjs";
-import { slugifySkillName } from "./modifiers.mjs";
+import { skillRankCap } from "./modifiers.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 
 const SCOPE = "carl-rpg";
@@ -36,7 +36,7 @@ export function isGrindTarget(actor, item) {
   if (!item || !GRINDABLE_TYPES.has(item.type)) return false;
   const rank = item.system.rank ?? 0;
   if (rank < 1) return false;
-  const cap = actor.system.rankCaps?.[slugifySkillName(item.name)] ?? 15;
+  const cap = skillRankCap(actor.system, item.name);
   if (rank >= cap) return false;
   return CarlDice.isAdvancedByUse(item);
 }
