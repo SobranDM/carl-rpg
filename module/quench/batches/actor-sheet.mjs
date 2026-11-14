@@ -1,4 +1,5 @@
 import { CarlRPGActorSheet } from "../../sheets/actor-sheet.mjs";
+import { BOON_HOURS, boonAvailable, deityTithe, describeDeity, receiveBoon } from "../../helpers/worship.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -84,11 +85,10 @@ export default function register(quench) {
       describe("Combat tab", function () {
         useQuenchTimeout(this);
 
-        it("a Character opens on Combat: Stats, the ten-slot Hotlist and its Attacks; Skills (and Spells) have their own tab", async function () {
+        it("a Character opens on Combat: the Attack! button, Stats and the ten-slot Hotlist; Skills (and Spells) have their own tab", async function () {
           const actor = await createTestCharacter("combat tab");
           const sheet = actor.sheet;
           try {
-            const sword = await createTestItem(actor, "skill", "sword", { system: { category: "attack" } });
             await createTestItem(actor, "skill", "sneak", { system: { category: "utility" } });
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
@@ -103,8 +103,8 @@ export default function register(quench) {
             assert.include(empties[0].textContent, game.i18n.localize("CARLRPG.Hotlist.Empty"));
             const header = [...sheet.element.querySelectorAll(".carl-name-row .resource-label")].map((el) => el.textContent.trim());
             assert.deepEqual(header, [game.i18n.localize("CARLRPG.Actor.Race"), game.i18n.localize("CARLRPG.Actor.Class")], "Race before Class");
-            assert.exists(combat.querySelector(`.carl-combat-attacks [data-item-id="${sword.id}"]`), "Attack Skills are listed");
-            assert.lengthOf(combat.querySelectorAll(".carl-combat-attacks li.item"), 1, "only Attack Skills");
+            assert.exists(combat.querySelector('.carl-stats-column [data-action="chooseAttack"]'), "the Attack! button");
+            assert.notExists(combat.querySelector(".carl-combat-attacks"), "no Attacks list");
             const skillsTab = sheet.element.querySelector('section.tab[data-tab="skills"]');
             assert.exists(skillsTab.querySelector(".carl-skills-list"));
             assert.notExists(sheet.element.querySelector(".carl-gear-grid"), "the equipment doll is gone");
@@ -118,8 +118,8 @@ export default function register(quench) {
       describe("Details tab", function () {
         useQuenchTimeout(this);
 
-        it("a Character's Description slot is its Details tab: Tier, Size and rich text boxes", async function () {
-          const actor = await createTestCharacter("details");
+        it("a Character's Description slot is its Details tab: the Crawler section, Tier, Size and rich text boxes", async function () {
+          const actor = await createTestCharacter("details", { system: { permanentPotions: { stat: 1, skill: 2 } } });
           const sheet = actor.sheet;
           try {
             await sheet.render({ force: true });
@@ -127,13 +127,269 @@ export default function register(quench) {
             const nav = sheet.element.querySelector('nav [data-tab="description"]');
             assert.include(nav.textContent, game.i18n.localize("CARLRPG.Tab.Details"));
             const tab = sheet.element.querySelector('section.tab[data-tab="description"]');
+            // Pronouns and Crawler# moved here from the header - one input each.
+            // Pronouns, Crawler#, Size and Popularity moved here from the header - one input each.
+            for (const name of ["system.details.pronouns", "system.details.crawlerNumber", "system.details.size", "system.details.popularity"]) {
+              assert.exists(tab.querySelector(`.carl-crawler-box [name="${name}"]`), name);
+              assert.lengthOf(sheet.element.querySelectorAll(`[name="${name}"]`), 1, `${name} only once on the sheet`);
+            }
+            const potions = tab.querySelector(".carl-potions-used");
+            assert.exists(potions, "Potions used");
+            if (game.user.isGM) {
+              assert.equal(potions.querySelector('input[name="system.permanentPotions.stat"]').value, "1");
+              assert.equal(potions.querySelector('input[name="system.permanentPotions.skill"]').value, "2");
+            }
+            assert.include(potions.textContent, "/2");
             assert.exists(tab.querySelector('input[name="system.personalSpace.tier"]'));
             assert.exists(tab.querySelector('input[name="system.personalSpace.size"]'));
-            for (const name of ["personalSpace.notes", "deity", "sponsors", "clubs", "importantKills", "story", "biography"]) {
+            for (const name of ["personalSpace.notes", "sponsors", "clubs", "importantKills", "story", "biography"]) {
               assert.exists(tab.querySelector(`prose-mirror[name="system.${name}"]`), name);
             }
+            assert.notExists(tab.querySelector('[name^="system.deity"]'), "the Deity is on the Benefits tab");
           } finally {
             await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("Character tabs, header and Defenses", function () {
+        useQuenchTimeout(this);
+
+        const openSheet = async (actor) => {
+          const sheet = actor.sheet;
+          await sheet.render({ force: true });
+          await waitFor(() => sheet.rendered);
+          return sheet;
+        };
+
+        it("a Character has no Defenses tab and its Boons tab is labelled Benefits; a Mob keeps both", async function () {
+          const actor = await createTestCharacter("tabs");
+          const mob = await createTestMob("tabs");
+          try {
+            const sheet = await openSheet(actor);
+            const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
+            assert.notInclude(tabs, "defenses");
+            assert.notExists(sheet.element.querySelector('section.tab[data-tab="defenses"]'));
+            assert.include(sheet.element.querySelector('nav [data-tab="features"]').textContent, game.i18n.localize("CARLRPG.Tab.Benefits"));
+            await sheet.close();
+
+            const mobSheet = await openSheet(mob);
+            const mobTabs = [...mobSheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
+            assert.include(mobTabs, "defenses");
+            assert.include(mobSheet.element.querySelector('nav [data-tab="features"]').textContent, game.i18n.localize("CARLRPG.Tab.Boons"));
+            assert.notExists(mobSheet.element.querySelector(".carl-combat-defenses"), "the Combat-tab Defenses row is Character-only");
+            assert.exists(mobSheet.element.querySelector('.carl-stats-column [data-action="rollEvade"]'), "a Mob keeps its Evade link");
+            await mobSheet.close();
+          } finally {
+            await deleteTestActor(actor);
+            await deleteTestActor(mob);
+          }
+        });
+
+        it("Evade +N, DR, Move, Step and Resistances are a row above the Hotlist, not in the Stats column", async function () {
+          const actor = await createTestCharacter("defenses", {
+            system: { stats: { dex: { value: 14 } }, dr: 2, details: { move: 25, step: 5 } },
+          });
+          try {
+            const sheet = await openSheet(actor);
+            const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
+            const column = combat.querySelector(".carl-stats-column");
+            const expected = actor.system.stats.dex.mod + (actor.system.bonuses?.evadeBonus ?? 0);
+            assert.notExists(column.querySelector('[data-action="rollEvade"]'), "Evade left the Stats column");
+            assert.notExists(column.querySelector('[name="system.dr"]'), "no longer in the Stats column");
+
+            const row = combat.querySelector(".carl-abilities-main .carl-combat-defenses");
+            assert.exists(row);
+            const evade = row.querySelector('.carl-defenses-row > [data-action="rollEvade"]');
+            assert.exists(evade);
+            assert.strictEqual(row.querySelector(".carl-defenses-row").firstElementChild, evade, "Evade comes first");
+            assert.equal(Number(evade.querySelector(".carl-evade-total").textContent.trim()), expected);
+            assert.strictEqual(combat.querySelector(".carl-abilities-main").firstElementChild, row, "first in the main column");
+            assert.isTrue(!!(row.compareDocumentPosition(combat.querySelector(".carl-hotlist")) & Node.DOCUMENT_POSITION_FOLLOWING), "above the Hotlist");
+            assert.equal(row.querySelector('input[name="system.dr"]').value, "2");
+            assert.equal(row.querySelector('input[name="system.details.move"]').value, "25");
+            assert.equal(row.querySelector('input[name="system.details.step"]').value, "5");
+            assert.exists(row.querySelector('[data-action="showResistances"]'));
+            await sheet.close();
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("the Resistances dialog lists each granted state and its source, read-only", async function () {
+          const actor = await createTestCharacter("resist dialog");
+          try {
+            const charm = await createTestItem(actor, "feature", "fire charm", {
+              system: { changes: [{ targetType: "resistance", target: "fire", mode: "add", value: "immune" }] },
+            });
+            const sheet = await openSheet(actor);
+            assert.include(
+              sheet.element.querySelector(".carl-resistances-summary").textContent,
+              game.i18n.format("CARLRPG.Actor.ResistSummary.immune", { n: 1 }),
+            );
+            sheet.element.querySelector('[data-action="showResistances"]').click();
+            let dialog;
+            await waitFor(() => (dialog = document.querySelector(".carl-resistances-dialog")), { message: "dialog never opened" });
+            assert.notExists(dialog.querySelector("select, input"), "nothing to edit");
+            const rows = [...dialog.querySelectorAll(".carl-resistance-table tbody tr")];
+            assert.lengthOf(rows, 1, "only the states that aren't None");
+            assert.include(rows[0].textContent, game.i18n.localize(CONFIG.CARLRPG.damageTypes.fire));
+            assert.include(rows[0].textContent, game.i18n.localize(CONFIG.CARLRPG.resistanceStates.immune));
+            assert.include(rows[0].textContent, charm.name, "its source");
+            assert.notExists(dialog.querySelector('button[data-action="save"]'));
+            dialog.querySelector('button[data-action="close"]').click();
+            await waitFor(() => !document.querySelector(".carl-resistances-dialog"), { message: "dialog never closed" });
+            assert.equal(actor.system.resistances.fire, "none", "the base is untouched");
+            await sheet.close();
+          } finally {
+            document.querySelector(".carl-resistances-dialog")?.remove();
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("the header: Level then AI Favor under the portrait, Race, Class, HB and an editable Mana bar - no Floor", async function () {
+          const actor = await createTestCharacter("header", { system: { attributes: { level: { value: 7 } }, details: { aiFavor: 2, gold: 40 } } });
+          try {
+            const sheet = await openSheet(actor);
+            const header = sheet.element.querySelector(".sheet-header");
+            const portrait = header.querySelector(".carl-portrait-column .carl-portrait-stats");
+            const names = [...portrait.querySelectorAll("input")].map((el) => el.name);
+            assert.deepEqual(names, ["system.attributes.level.value", "system.details.aiFavor"], "Level, then AI Favor");
+            assert.equal(portrait.querySelector('[name="system.attributes.level.value"]').value, "7");
+
+            const mana = header.querySelector(".carl-mana-resource");
+            assert.exists(mana);
+            assert.exists(mana.querySelector('input[name="system.mana.value"]'));
+            assert.include(mana.textContent, `/ ${actor.system.mana.max}`);
+            assert.lengthOf(sheet.element.querySelectorAll('[name="system.mana.value"]'), 1, "one Mana input on the form");
+
+            for (const name of ["system.details.size", "system.details.popularity", "system.details.gold",
+              "system.details.pronouns", "system.details.crawlerNumber"]) {
+              assert.notExists(header.querySelector(`[name="${name}"]`), `${name} left the header`);
+            }
+            assert.notExists(header.querySelector("#carl-floor-display"), "no Floor");
+            assert.notInclude(header.textContent, game.i18n.localize("CARLRPG.Actor.Floor"));
+            assert.notExists(header.querySelector(".carl-details-row"), "the second header row is gone");
+            for (const name of ["system.attributes.level.value", "system.details.aiFavor", "system.details.gold"]) {
+              assert.lengthOf(sheet.element.querySelectorAll(`[name="${name}"]`), 1, `${name} only once on the sheet`);
+            }
+
+            const gold = sheet.element.querySelector('section.tab[data-tab="items"] .carl-inventory-bar input[name="system.details.gold"]');
+            assert.exists(gold, "Gold is on the Inventory tab");
+            assert.equal(gold.value, "40");
+            await sheet.close();
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("the Spells section shows only when the crawler has a Spell", async function () {
+          const actor = await createTestCharacter("no spells");
+          try {
+            const sheet = await openSheet(actor);
+            const skillsTab = () => sheet.element.querySelector('section.tab[data-tab="skills"]');
+            assert.notExists(skillsTab().querySelector('[data-section-id="spells"]'));
+            assert.exists(skillsTab().querySelector('[data-section-id="skills"] .carl-drawer-add-spell[data-type="spell"]'), "+ Spell link");
+
+            await createTestItem(actor, "spell", "magic missile");
+            await waitFor(() => skillsTab()?.querySelector('[data-section-id="spells"]'), { message: "Spells section never appeared" });
+            assert.notExists(skillsTab().querySelector(".carl-drawer-add-spell"));
+            assert.notExists(skillsTab().querySelector('[data-section-id="spells"] input[name="system.mana.value"]'), "Mana is read-only there");
+            await sheet.close();
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("Benefits tab", function () {
+        useQuenchTimeout(this);
+
+        it("shows the Race's benefits text, the Deity block and tiered benefits (unreached ones dimmed)", async function () {
+          const actor = await createTestCharacter("benefits", {
+            system: { deity: { name: "Apito", tier: "acolyte", worshipDays: 3, penitence: 1 } },
+          });
+          try {
+            const race = await createTestItem(actor, "race", "elf", { system: { description: "<ul><li>Pointy ears</li></ul>" } });
+            await actor.update({ "system.race": race.id });
+            const acolyte = await createTestItem(actor, "feature", "acolyte perk", { system: { tier: "acolyte" } });
+            const zealot = await createTestItem(actor, "feature", "zealot perk", { system: { tier: "zealot" } });
+            const title = await createTestItem(actor, "feature", "title");
+            const sheet = actor.sheet;
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            const tab = sheet.element.querySelector('section.tab[data-tab="features"]');
+            const panel = tab.querySelector(`.carl-benefit-panel[data-item-id="${race.id}"]`);
+            assert.exists(panel);
+            assert.include(panel.textContent, "Pointy ears");
+            assert.exists(panel.querySelector(".carl-benefit-active"));
+
+            const deity = tab.querySelector(".carl-deity");
+            assert.equal(deity.querySelector('input[name="system.deity.name"]').value, "Apito");
+            assert.equal(deityTithe(actor.system.deity), 10, "5% doubled by penance");
+            assert.include(deity.querySelector(".carl-deity-tithe").textContent, "10%");
+            assert.include(deity.querySelector(".carl-deity-next").textContent, "2");
+            assert.exists(deity.querySelector(`.carl-deity-benefits [data-item-id="${acolyte.id}"]:not(.carl-benefit-unreached)`));
+            assert.exists(deity.querySelector(`.carl-deity-benefits [data-item-id="${zealot.id}"].carl-benefit-unreached`));
+            assert.exists(tab.querySelector(`.carl-perks [data-item-id="${title.id}"]`), "untiered features list below");
+            assert.notExists(deity.querySelector(`[data-item-id="${title.id}"]`));
+            await sheet.close();
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a Boon is due from the fifth day until received, and only with a Tier and worship not suspended", function () {
+          const deity = (data) => ({ tier: "acolyte", worshipDays: 5, missedOfferings: 0, penitence: 0, shunned: false, fallen: false, ...data });
+          assert.isTrue(describeDeity(deity({ worshipDays: 5 })).boonDue);
+          assert.isTrue(describeDeity(deity({ worshipDays: 7 })).boonDue, "still due past five");
+          assert.isFalse(describeDeity(deity({ worshipDays: 4 })).boonDue);
+          assert.equal(describeDeity(deity({ worshipDays: 3 })).daysToNextBoon, 2);
+          assert.isTrue(boonAvailable(deity()));
+          assert.isFalse(boonAvailable(deity({ worshipDays: 4 })));
+          assert.isFalse(boonAvailable(deity({ tier: "" })), "not worshipping");
+          assert.isFalse(boonAvailable(deity({ fallen: true })));
+          assert.isFalse(boonAvailable(deity({ missedOfferings: 1 })));
+        });
+
+        it("recording a missed offering breaks the streak; taking it back doesn't", async function () {
+          const actor = await createTestCharacter("missed", { system: { deity: { name: "Apito", tier: "acolyte", worshipDays: 4 } } });
+          const sheet = actor.sheet;
+          try {
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            sheet.changeTab("features", "primary");
+            sheet.element.querySelector('.carl-missed-pip[data-value="1"]').click();
+            await waitFor(() => actor.system.deity.missedOfferings === 1, { message: "miss never recorded" });
+            assert.equal(actor.system.deity.worshipDays, 0);
+            await actor.update({ "system.deity.worshipDays": 2 });
+            await waitFor(() => sheet.element.querySelector('.carl-missed-pip[data-value="1"].filled'));
+            sheet.element.querySelector('.carl-missed-pip[data-value="1"]').click();
+            await waitFor(() => actor.system.deity.missedOfferings === 0, { message: "miss never taken back" });
+            assert.equal(actor.system.deity.worshipDays, 2);
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("Receive a Boon adds a 30-hour Buff from the deity and takes five days off the count", async function () {
+          const pack = game.packs.get(`${game.system.id}.roll-tables`);
+          const index = await pack?.getIndex();
+          if (!index?.find((e) => e.name === "Boons")) this.skip();
+          const actor = await createTestCharacter("boon", { system: { deity: { name: "Apito", tier: "acolyte", worshipDays: 7 } } });
+          const before = new Set(game.messages.map((m) => m.id));
+          try {
+            const result = await receiveBoon(actor);
+            assert.exists(result);
+            const buff = actor.system.conditions.find((c) => c.key === "custom" && c.source === "Apito");
+            assert.exists(buff);
+            assert.equal(buff.label, result.name);
+            assert.approximately(buff.expiresAt, game.time.worldTime + BOON_HOURS * 3600, 1);
+            assert.equal(actor.system.deity.worshipDays, 2, "days past five carry over");
+          } finally {
+            for (const message of game.messages.filter((m) => !before.has(m.id))) await message.delete();
             await deleteTestActor(actor);
           }
         });

@@ -3,6 +3,15 @@
       slot; helpers/equip-slots.mjs) and pin it to the Hotlist (the star,
       helpers/hotlist.mjs). Worn items list first. --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="items">
+  {{#if isCharacter}}
+  {{!-- Gold takes one Inventory slot however much there is (p.23). --}}
+  <div class="carl-inventory-bar">
+    <label class="carl-gold">
+      <span class="resource-label">{{localize "CARLRPG.Actor.Gold"}}</span>
+      <input type="text" class="carl-w-short" name="system.details.gold" value="{{system.details.gold}}" data-dtype="Number" />
+    </label>
+  </div>
+  {{/if}}
   <ol class="items-list">
     <li class="item flexrow items-header">
       <div class="item-name carl-sort-header" data-action="sortList" data-list="gear" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.gear.name}}"></i></div>

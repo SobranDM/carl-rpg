@@ -4,20 +4,23 @@
 @mixin styles {
   .carl-hotlist {
     margin-bottom: 6px;
+    border-width: 2px;
 
+    // Pinned (the core defaults) so --carl-legend-border-offset
+    // (_abilities.scss) holds; the height so the icon can't stretch it.
     legend {
       display: flex;
       align-items: center;
       gap: 8px;
-      width: 100%;
-
-      .carl-hotlist-mana {
-        margin-left: auto;
-        font-weight: normal;
-      }
+      height: calc(var(--font-size-14) * 1.25);
+      padding-block: 0;
+      font-size: var(--font-size-14);
+      line-height: 1.25;
     }
   }
 
+  // Rows are at least 31px (below); on the Combat tab they grow to fill the
+  // Hotlist down to the Level Grind box's bottom (_abilities.scss).
   .carl-hotlist-rows {
     list-style: none;
     margin: 0;
@@ -28,12 +31,25 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    min-height: 28px;
+    // A 28px slot + 2px padding + 1px border (border-box).
+    min-height: 31px;
     padding: 1px 4px;
+    font-size: 16px;
     border-bottom: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.1));
 
-    &.empty {
-      border-bottom-style: dashed;
+    // An unfilled slot: a dashed outline round its pick button, solid on
+    // hover like a filled slot's.
+    &.empty .carl-hotlist-pick {
+      border: 1px dashed var(--carl-border-soft);
+
+      .carl-hint {
+        font-size: 13px;
+      }
+
+      &:hover,
+      &:focus-visible {
+        border-style: solid;
+      }
     }
 
     img {
@@ -57,7 +73,7 @@
 
     .carl-hotlist-detail {
       flex: 0 0 auto;
-      font-size: var(--font-size-12);
+      font-size: 13px;
       opacity: 0.8;
     }
 
@@ -78,7 +94,7 @@
       gap: 6px;
       width: auto;
       height: auto;
-      min-height: 26px;
+      min-height: 28px;
       margin: 0;
       padding: 1px 4px;
       border: 1px solid transparent;
@@ -88,7 +104,16 @@
       font: inherit;
       color: inherit;
       text-align: left;
-      line-height: inherit;
+      // A fixed line-height and no margins on the contents, so the text sits
+      // centered in the slot - the empty slot's .carl-hint would otherwise
+      // bring its 2px/6px margins and push the text up. In px, so a slot is
+      // 24px + 2px padding + 2px border = 28px whatever it holds.
+      line-height: 24px;
+
+      > * {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
     }
 
     button.carl-hotlist-pick,
@@ -111,7 +136,8 @@
       padding: 0 6px;
       border: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.25));
       border-radius: 3px;
-      font-size: var(--font-size-12);
+      font-size: 13px;
+      line-height: 1.2;
       text-align: center;
     }
 
@@ -203,10 +229,6 @@
         opacity: 0.8;
       }
     }
-  }
-
-  .carl-combat-attacks {
-    margin-bottom: 6px;
   }
 
   // Inventory: where each gear item is worn.

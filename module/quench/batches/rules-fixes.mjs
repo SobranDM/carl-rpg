@@ -128,7 +128,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const skill = await createTestItem(actor, "skill", "Attack Skill", {
-              name: "Attack Skill", system: { category: "attack", rank: 5, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Attack Skill", system: { category: "attack", isHandToHand: true, rank: 5, governingStat: "", baseDamage: { dice: "1d6" } },
             });
             const unit = await unitForNatOne();
             const message = await withPinnedDice(unit, () => CarlDice.rollAttack(actor, skill, { skipDialog: true }));

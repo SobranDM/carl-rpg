@@ -185,7 +185,7 @@ export default function register(quench) {
           const target = await createTestMob("target", { system: { stats: { dex: { value: 3 } } } }); // Evade 13 at Floor 1
           try {
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Punch", system: { category: "attack", rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
             });
             await capturingMessages(async (created) => {
               const roll = () => withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>

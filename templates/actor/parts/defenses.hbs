@@ -12,22 +12,6 @@
         <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EffectiveValue'}}">= {{system.drEffective}}</span>
         {{/if}}
       </div>
-      {{#if (eq actor.type "character")}}
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Actor.Move"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.details.move" value="{{system.details.move}}" data-dtype="Number" />
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Actor.Step"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.details.step" value="{{system.details.step}}" data-dtype="Number" />
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Actor.Size"}}</label>
-        <select class="carl-w-medium" name="system.details.size" data-dtype="Number">
-          {{selectOptions config.sizes selected=system.details.size localize=true}}
-        </select>
-      </div>
-      {{/if}}
     </div>
     {{> "systems/carl-rpg/templates/actor/parts/resistances-grid.hbs"}}
   </fieldset>

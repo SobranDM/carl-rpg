@@ -2,9 +2,51 @@
       actor-sheet.mjs PART_TEMPLATES / TAB_LABELS_BY_TYPE). The printed
       sheet's free-form notes, each a rich text box like Biography (they were
       fixed slot lists - CarlRPGCharacter.migrateData folded them in).
-      Personal Space keeps Tier and Size as their own inputs. --}}
+      The Crawler section (Pronouns, Crawler#, Size, Popularity, Potions
+      used) comes first;
+      Personal Space keeps Tier and Size as their own inputs. The Deity is
+      on the Benefits tab (benefits.hbs). --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="description">
   <div class="carl-details-grid">
+    {{!-- Who the crawler is - Pronouns, Crawler#, Size, Popularity - and
+          the lifetime potion limit: "two Stat
+          potions and two Skill potions during the entirety of their short
+          life" (p.218), counted by module/helpers/consumables.mjs. Players
+          see the counts; the GM can correct them. --}}
+    <fieldset class="carl-details-box carl-crawler-box">
+      <legend>{{localize "CARLRPG.Actor.Crawler"}}</legend>
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Actor.Pronouns"}}</span>
+        <input type="text" name="system.details.pronouns" value="{{system.details.pronouns}}" />
+      </label>
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Actor.CrawlerNumber"}}</span>
+        <input type="text" name="system.details.crawlerNumber" value="{{system.details.crawlerNumber}}" />
+      </label>
+      {{!-- Set by the Race and rarely needed in play. --}}
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Actor.Size"}}</span>
+        <select name="system.details.size" data-dtype="Number">
+          {{selectOptions config.sizes selected=system.details.size localize=true}}
+        </select>
+      </label>
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Actor.Popularity"}}</span>
+        <input type="text" name="system.details.popularity" value="{{system.details.popularity}}" data-dtype="Number" />
+      </label>
+      <div class="carl-sheet-line carl-potions-used" title="{{localize 'CARLRPG.Actor.PotionsUsedHint'}}">
+        <span>{{localize "CARLRPG.Actor.PotionsUsed"}}</span>
+        <span class="carl-potion-count">
+          {{localize "CARLRPG.Actor.PotionsStat"}}
+          {{#if isGM}}<input type="text" class="carl-w-tiny" name="system.permanentPotions.stat" value="{{potions.stat}}" data-dtype="Number" />{{else}}<strong>{{potions.stat}}</strong>{{/if}}/{{potions.limit}}
+        </span>
+        <span class="carl-potion-count">
+          {{localize "CARLRPG.Actor.PotionsSkill"}}
+          {{#if isGM}}<input type="text" class="carl-w-tiny" name="system.permanentPotions.skill" value="{{potions.skill}}" data-dtype="Number" />{{else}}<strong>{{potions.skill}}</strong>{{/if}}/{{potions.limit}}
+        </span>
+      </div>
+    </fieldset>
+
     <fieldset class="carl-details-box carl-personal-space">
       <legend>{{localize "CARLRPG.Actor.PersonalSpace"}}</legend>
       <div class="carl-personal-space-fields flexrow">

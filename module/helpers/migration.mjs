@@ -32,6 +32,9 @@ import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions 
 const SCOPE = "carl-rpg";
 export const MIGRATION_SETTING = "completedMigrations";
 
+/** The 0.6.0 Deity block migration's id (migrateDeityBlocks). */
+export const DEITY_MIGRATION_ID = "0.6.0-deity-block";
+
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
  * is the release whose data it brings a world up to (for messages). A run
@@ -42,6 +45,7 @@ export const MIGRATION_SETTING = "completedMigrations";
 export const MIGRATIONS = [
   { id: "0.6.0-hand-to-hand-box", version: "0.6.0", run: migrateHandToHandSkills },
   { id: COMPANIONS_MIGRATION_ID, version: "0.6.0", run: migrateCompanionActors },
+  { id: DEITY_MIGRATION_ID, version: "0.6.0", run: migrateDeityBlocks },
 ];
 
 /** Register the setting listing the migrations this world has had (init). */
@@ -205,11 +209,73 @@ function shouldMigratePack(pack) {
   return ["Actor", "Item"].includes(pack.documentName) && pack.metadata.packageType === "world";
 }
 
-/** One compendium: unlocked for the run, locked again after. */
-async function migratePack(pack) {
+/* -------------------------------------------------- */
+/*  0.6.0: the structured Deity block                 */
+/* -------------------------------------------------- */
+
+/**
+ * 0.6.0 turned a Character's Deity rich text box into a structured block
+ * (module/data/character.mjs); CarlRPGCharacter.migrateData keeps the old
+ * text as its notes, but only in memory. Until the block is saved whole,
+ * the database still holds the old string, and an ordinary Deity edit -
+ * sent as a diff such as {deity: {name}} - would be merged over that string
+ * by the server, losing the notes. This writes each Character's block
+ * whole, once. The client can't tell which Characters still hold a string
+ * (it only sees the migrated data), so every Character is written - the same
+ * value, so a second run changes nothing.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+async function migrateDeityBlocks() {
+  let changed = 0;
+  let errors = 0;
+  const attempt = async (label, fn) => {
+    try {
+      changed += await fn();
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't save the Deity of ${label}`, err);
+      errors += 1;
+    }
+  };
+  for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => persistDeityBlock(actor));
+  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
+    await attempt(`compendium ${pack.collection}`, () => withUnlockedPack(pack, async () => {
+      let count = 0;
+      for (const actor of await pack.getDocuments()) count += await persistDeityBlock(actor);
+      return count;
+    }));
+  }
+  return { changed, errors };
+}
+
+/**
+ * Save one Character's Deity block whole. A ForcedReplacement survives the
+ * client's diff (a plain value equal to the migrated source would be
+ * dropped as unchanged) and replaces whatever the database holds.
+ * @param {Actor} actor
+ * @returns {Promise<number>}  1 if it was a Character, else 0.
+ */
+export async function persistDeityBlock(actor) {
+  if (actor.type !== "character") return 0;
+  const { ForcedReplacement } = foundry.data.operators;
+  const deity = foundry.utils.deepClone(actor.system.toObject().deity);
+  await actor.update({ system: { deity: ForcedReplacement.create(deity) } }, { render: false, carlMigration: true });
+  return 1;
+}
+
+/** Run fn with a compendium unlocked, locked again after. */
+async function withUnlockedPack(pack, fn) {
   const wasLocked = pack.locked;
   if (wasLocked) await pack.configure({ locked: false });
   try {
+    return await fn();
+  } finally {
+    if (wasLocked) await pack.configure({ locked: true });
+  }
+}
+
+/** One compendium: unlocked for the run, locked again after. */
+function migratePack(pack) {
+  return withUnlockedPack(pack, async () => {
     let changed = 0;
     const documents = await pack.getDocuments();
     if (pack.documentName === "Actor") {
@@ -220,7 +286,5 @@ async function migratePack(pack) {
       changed += updates.length;
     }
     return changed;
-  } finally {
-    if (wasLocked) await pack.configure({ locked: true });
-  }
+  });
 }

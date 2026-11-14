@@ -12,6 +12,15 @@
       <label class="resource-label">{{localize "CARLRPG.Item.Equipped"}}</label>
       <input type="checkbox" name="system.equipped" {{checked system.equipped}} />
     </div>
+    {{!-- A weapon: the Attack Skill it's wielded with (module/helpers/weapons.mjs). --}}
+    <div>
+      <label class="resource-label" title="{{localize 'CARLRPG.Weapon.SkillHint'}}">{{localize "CARLRPG.Weapon.Skill"}}</label>
+      <input type="text" class="carl-w-medium" name="system.weaponSkill" value="{{system.weaponSkill}}"
+        list="carl-weapon-skills-{{item.id}}" placeholder="{{localize 'CARLRPG.Weapon.NotAWeapon'}}" />
+      <datalist id="carl-weapon-skills-{{item.id}}">
+        {{#each weaponSkillNames as |name|}}<option value="{{name}}"></option>{{/each}}
+      </datalist>
+    </div>
   </div>
 
   <fieldset class="carl-changes">

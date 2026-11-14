@@ -65,9 +65,19 @@ export async function showCarlDialog({
  * caller (promptRollOptions's `result.conditions?.[cm.id]`) expects.
  */
 export function rollButton({ label = "CARLRPG.Dialog.Roll" } = {}) {
+  return formButton({ action: "roll", icon: "fa-solid fa-dice-d20", label });
+}
+
+/**
+ * A default button that resolves with the dialog's form data, expanded
+ * (see rollButton) - e.g. the sheet's Resistances dialog's Save.
+ * @param {{action: string, icon: string, label: string}} options
+ * @returns {object}
+ */
+export function formButton({ action, icon, label }) {
   return {
-    action: "roll",
-    icon: "fa-solid fa-dice-d20",
+    action,
+    icon,
     label,
     default: true,
     callback: (event, button) => foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(button.form).object),

@@ -1,10 +1,13 @@
-import { MIGRATIONS, migrationPlan, needsHandToHand, tickHandToHandOn } from "../../helpers/migration.mjs";
+import {
+  DEITY_MIGRATION_ID, MIGRATIONS, migrationPlan, needsHandToHand, persistDeityBlock, tickHandToHandOn,
+} from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
 } from "../../helpers/companion-migration.mjs";
 import {
   createTestCharacter,
   createTestItem,
+  createTestMob,
   deleteTestActor,
   useQuenchTimeout,
 } from "../helpers.mjs";
@@ -85,6 +88,46 @@ export default function register(quench) {
             assert.equal(await tickHandToHandOn(actor), 0, "idempotent");
           } finally {
             await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("0.6.0: the structured Deity block", function () {
+        useQuenchTimeout(this);
+
+        it("is one of the 0.6.0 migrations", function () {
+          const step = MIGRATIONS.find((m) => m.id === DEITY_MIGRATION_ID);
+          assert.exists(step);
+          assert.equal(step.version, "0.6.0");
+        });
+
+        it("saves a Character's whole Deity block (old notes included) as a forced replacement; skips other actors", async function () {
+          const actor = await createTestCharacter("deity block", { system: { deity: "<p>Apito - a single tear</p>" } });
+          const mob = await createTestMob("deity block");
+          let sent;
+          const hookId = Hooks.on("preUpdateActor", (doc, changes) => {
+            if (doc === actor) sent = changes.system?.deity;
+          });
+          try {
+            assert.equal(await persistDeityBlock(actor), 1);
+            const { DataFieldOperator, ForcedReplacement } = foundry.data.operators;
+            assert.instanceOf(sent, ForcedReplacement, "survives the client's diff whole");
+            const whole = DataFieldOperator.get(sent);
+            assert.equal(whole.notes, "<p>Apito - a single tear</p>");
+            assert.equal(whole.tier, "");
+            assert.equal(actor.system.deity.notes, "<p>Apito - a single tear</p>");
+
+            // A later partial edit keeps the notes.
+            await actor.update({ "system.deity.name": "Apito" });
+            assert.equal(actor.system.deity.notes, "<p>Apito - a single tear</p>");
+
+            assert.equal(await persistDeityBlock(actor), 1, "a second run writes the same value");
+            assert.equal(actor.system.deity.name, "Apito");
+            assert.equal(await persistDeityBlock(mob), 0);
+          } finally {
+            Hooks.off("preUpdateActor", hookId);
+            await deleteTestActor(actor);
+            await deleteTestActor(mob);
           }
         });
       });

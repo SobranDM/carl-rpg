@@ -1,5 +1,6 @@
 import CarlDice from "../../dice/dice.mjs";
 import { isHandToHand, takesDamageEffects, withoutOutclassedUnarmed } from "../../helpers/hand-to-hand.mjs";
+import { attackChoices } from "../../helpers/weapons.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -79,7 +80,7 @@ export default function register(quench) {
           }
         });
 
-        it("on the sheet: gone from the Combat tab's Attacks, still on the Skills tab", async function () {
+        it("gone from the Attack! choices, still on the Skills tab", async function () {
           const actor = await createTestCharacter("h2h sheet");
           const sheet = actor.sheet;
           try {
@@ -87,9 +88,9 @@ export default function register(quench) {
             const pugilism = await handToHand(actor, "Pugilism", 5);
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            const attacks = sheet.element.querySelector(".carl-combat-attacks");
-            assert.exists(attacks.querySelector(`[data-item-id="${pugilism.id}"]`));
-            assert.notExists(attacks.querySelector(`[data-item-id="${unarmed.id}"]`));
+            const offered = attackChoices(actor).map((c) => c.skill.id);
+            assert.include(offered, pugilism.id);
+            assert.notInclude(offered, unarmed.id);
             assert.exists(sheet.element.querySelector(`section.tab[data-tab="skills"] [data-item-id="${unarmed.id}"]`));
           } finally {
             await sheet.close();

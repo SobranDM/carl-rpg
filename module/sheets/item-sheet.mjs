@@ -3,6 +3,7 @@ const { ItemSheetV2 } = foundry.applications.sheets;
 import { onAddArrayItem, onDeleteArrayItem } from '../helpers/array-editor.mjs';
 import CarlDice from '../dice/dice.mjs';
 import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
+import { needsWeapon } from '../helpers/weapons.mjs';
 
 const ATTRIBUTES_TEMPLATES = {
   item: 'systems/carl-rpg/templates/item/parts/attributes-item.hbs',
@@ -201,6 +202,16 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
             .map(i => i.name)
         )].sort()
       : [];
+
+    // Suggestions for a gear item's Weapon Skill: the rulebook's Weapon
+    // Skills plus the owner's other Attack Skills that need a weapon
+    // (homebrew). Free text either way.
+    if (item.type === "item") {
+      const owned = item.actor
+        ? item.actor.items.filter((i) => i.type === "skill" && needsWeapon(item.actor, i)).map((i) => i.name)
+        : [];
+      context.weaponSkillNames = [...new Set([...CONFIG.CARLRPG.weaponSkills, ...owned])].sort();
+    }
 
     // Template convenience variables
     context.cssClass = this.options.classes.join(' ');

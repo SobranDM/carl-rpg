@@ -17,7 +17,7 @@ export default function register(quench) {
           try {
             const skill = await createTestItem(actor, "skill", "Attack Skill", {
               name: "Attack Skill",
-              system: { category: "attack", rank: 15, governingStat: "" },
+              system: { category: "attack", isHandToHand: true, rank: 15, governingStat: "" },
             });
             await settle();
             // Pinned to floor 1 regardless of the GM's real world state, so the

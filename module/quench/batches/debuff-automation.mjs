@@ -35,7 +35,7 @@ export default function register(quench) {
           const mob = await createTestMob("target", { system: { stats: { dex: { value: 3 } } } });
           try {
             const skill = await createTestItem(actor, "skill", "Attack Skill", {
-              name: "Attack Skill", system: { category: "attack", rank: 1, governingStat: "" },
+              name: "Attack Skill", system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "" },
             });
             await addConditionToActor(mob, "shitFaced");
             await settle();
@@ -55,7 +55,7 @@ export default function register(quench) {
           const mob = await createTestMob("target");
           try {
             const skill = await createTestItem(actor, "skill", "Attack Skill", {
-              name: "Attack Skill", system: { category: "attack", rank: 1, governingStat: "" },
+              name: "Attack Skill", system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "" },
             });
             await addConditionToActor(mob, "stunned");
             await settle();

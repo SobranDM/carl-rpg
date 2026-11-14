@@ -1,6 +1,23 @@
-{{!-- Sheet Header --}}
+{{!-- A Character's header: the portrait with Level and AI Favor under it;
+      name, Race and Class; then the Health Bar and Mana. Size, Popularity,
+      Pronouns and Crawler# are on the Details tab, Gold on the Inventory
+      tab. The Floor isn't shown - it rarely changes, and it's still in the
+      roll data (@floor, the GM Toolbox's world setting). --}}
 <header class="sheet-header">
-  <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+  <div class="carl-portrait-column">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+    <div class="carl-portrait-stats">
+      <label class="carl-portrait-stat">
+        <span class="resource-label">{{localize "CARLRPG.Actor.Level"}}</span>
+        <input type="text" name="system.attributes.level.value" value="{{system.attributes.level.value}}" data-dtype="Number" />
+      </label>
+      <label class="carl-portrait-stat">
+        <span class="resource-label" title="{{localize 'CARLRPG.Actor.AiFavorHint'}}">{{localize "CARLRPG.Actor.AiFavor"}}</span>
+        <input type="text" name="system.details.aiFavor" value="{{system.details.aiFavor}}" data-dtype="Number"
+          title="{{localize 'CARLRPG.Actor.AiFavorHint'}}" />
+      </label>
+    </div>
+  </div>
   <div class="header-fields">
     <div class="carl-name-row flexrow">
       <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name" /></h1>
@@ -21,38 +38,8 @@
         {{/if}}
       </div>
     </div>
-    <div class="carl-details-row flexrow">
-      <div class="resource flex-group-center carl-name-row-field">
-        <label class="resource-label">{{localize "CARLRPG.Actor.Pronouns"}}</label>
-        <input type="text" class="carl-w-short" name="system.details.pronouns" value="{{system.details.pronouns}}" />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label class="resource-label">{{localize "CARLRPG.Actor.CrawlerNumber"}}</label>
-        <input type="text" class="carl-w-short" name="system.details.crawlerNumber" value="{{system.details.crawlerNumber}}" />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label class="resource-label">{{localize "CARLRPG.Actor.Popularity"}}</label>
-        <input type="text" class="carl-w-short" name="system.details.popularity" value="{{system.details.popularity}}" data-dtype="Number" />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label class="resource-label" title="{{localize 'CARLRPG.Actor.AiFavorHint'}}">{{localize "CARLRPG.Actor.AiFavor"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.details.aiFavor" value="{{system.details.aiFavor}}" data-dtype="Number" />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label class="resource-label">{{localize "CARLRPG.Actor.Gold"}}</label>
-        <input type="text" class="carl-w-short" name="system.details.gold" value="{{system.details.gold}}" data-dtype="Number" />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.attributes.level.value" class="resource-label">{{localize "CARLRPG.Actor.Level"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.attributes.level.value" value="{{system.attributes.level.value}}"
-          data-dtype="Number" />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label for="carl-floor-display" class="resource-label">{{localize "CARLRPG.Actor.Floor"}}</label>
-        <input id="carl-floor-display" type="text" class="carl-w-tiny carl-floor-readonly" value="{{currentFloor}}" disabled />
-      </div>
-    </div>
     {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
+    {{> "systems/carl-rpg/templates/actor/parts/mana-bar.hbs"}}
     {{> "systems/carl-rpg/templates/actor/parts/shield-bar.hbs"}}
   </div>
 </header>

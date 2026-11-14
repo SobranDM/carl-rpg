@@ -561,6 +561,13 @@
     opacity: 0.75;
   }
 
+  // The Attack dialog's "swapped in from the Hotlist" line (roll-options.hbs).
+  .carl-dialog-weapon-note {
+    margin: 0 0 6px;
+    font-size: 12px;
+    opacity: 1;
+  }
+
   // Character-actor picker (module/apps/gm-toolbox.mjs's #promptActorPicker)
   // shared by Rest/2-Hour Tick/Party Level Up - a live filter + running
   // counter + scroll-capped, collapsible "Other Characters" section so a

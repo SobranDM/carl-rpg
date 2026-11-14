@@ -82,9 +82,18 @@ export default function register(quench) {
               assert.deepEqual(s[key], [], key);
             }
             // The Details tab's notes are rich text boxes.
-            for (const key of ["importantKills", "clubs", "deity", "sponsors", "story"]) {
+            for (const key of ["importantKills", "clubs", "sponsors", "story"]) {
               assert.equal(s[key], "", key);
             }
+            // The Deity is a structured block (the Benefits tab).
+            assert.equal(s.deity.name, "");
+            assert.equal(s.deity.tier, "");
+            assert.equal(s.deity.worshipDays, 0);
+            assert.equal(s.deity.missedOfferings, 0);
+            assert.equal(s.deity.penitence, 0);
+            assert.isFalse(s.deity.shunned);
+            assert.isFalse(s.deity.fallen);
+            assert.equal(s.deity.notes, "");
             assert.equal(s.personalSpace.notes, "");
             assert.equal(s.personalSpace.tier, "");
             assert.equal(s.gearSlots.mainHand, "");
@@ -582,7 +591,7 @@ export default function register(quench) {
             const s = actor.system;
             assert.equal(s.importantKills, "<p>A goblin</p><p>The &lt;Hoarder&gt;</p>", "one paragraph per non-empty slot, escaped");
             assert.equal(s.clubs, "<p>Desperado Club</p>");
-            assert.equal(s.deity, "");
+            assert.equal(s.deity.notes, "", "an empty old Deity list becomes empty notes");
             assert.equal(s.sponsors, "<p>Valtay</p><p>Borant</p>");
             assert.equal(s.personalSpace.tier, "2");
             assert.equal(s.personalSpace.size, "Medium");
@@ -604,6 +613,22 @@ export default function register(quench) {
             await actor.update({ "system.clubs": "" });
             assert.equal(actor.system.clubs, "");
             assert.equal(actor.system.sponsors, "<p>Valtay</p><p>Borant</p>");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("keeps the old Deity rich text as the Deity block's notes", async function () {
+          const actor = await createTestCharacter("legacy deity", {
+            system: { deity: "<p>Apito - a single tear</p>" },
+          });
+          try {
+            assert.equal(actor.system.deity.notes, "<p>Apito - a single tear</p>");
+            assert.equal(actor.system.deity.tier, "");
+            // The shim only touches the old string shape.
+            const migrated = actor.system.constructor.migrateData({ deity: { name: "Apito", notes: "<p>x</p>" } });
+            assert.deepEqual(migrated.deity, { name: "Apito", notes: "<p>x</p>" });
+            assert.deepEqual(actor.system.constructor.migrateData({ deity: "<p>y</p>" }).deity, { notes: "<p>y</p>" });
           } finally {
             await deleteTestActor(actor);
           }

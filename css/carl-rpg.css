@@ -693,6 +693,11 @@
   font-style: italic;
   opacity: 0.75;
 }
+.carl-dialog .carl-dialog-weapon-note {
+  margin: 0 0 6px;
+  font-size: 12px;
+  opacity: 1;
+}
 .carl-dialog .carl-actor-picker-filter {
   width: 100%;
   box-sizing: border-box;
@@ -796,6 +801,39 @@
 }
 .carl-rpg .sheet-header .header-fields {
   flex: 1;
+}
+.carl-rpg .sheet-header .carl-portrait-column {
+  flex: 0 0 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-right: 10px;
+}
+.carl-rpg .sheet-header .carl-portrait-column .profile-img {
+  margin-right: 0;
+}
+.carl-rpg .sheet-header .carl-portrait-stats {
+  display: flex;
+  gap: 4px;
+}
+.carl-rpg .sheet-header .carl-portrait-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.carl-rpg .sheet-header .carl-portrait-stat .resource-label {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.carl-rpg .sheet-header .carl-portrait-stat input {
+  width: 100%;
+  height: 22px;
+  text-align: center;
+  font-weight: 700;
 }
 .carl-rpg .sheet-header h1.charname {
   height: 50px;
@@ -937,6 +975,39 @@
 .carl-rpg .carl-class-race-empty {
   font-weight: 700;
   color: var(--carl-accent-dim);
+}
+.carl-rpg .carl-mana-resource {
+  margin-top: 2px;
+}
+.carl-rpg .carl-mana-resource .resource-label {
+  margin-bottom: 1px;
+}
+.carl-rpg .carl-mana-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-mana-row input {
+  height: 22px;
+}
+.carl-rpg .carl-mana-bar {
+  flex: 1;
+  height: 10px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 5px;
+  background: var(--carl-input-bg, rgba(0, 0, 0, 0.08));
+  overflow: hidden;
+}
+.carl-rpg .carl-mana-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2c5fd6, #5c9bff);
+  transition: width 0.2s ease;
+}
+.carl-rpg .carl-mana-max {
+  flex: 0 0 auto;
+  font-weight: 700;
+  white-space: nowrap;
 }
 .carl-rpg .items-header {
   height: 28px;
@@ -1340,10 +1411,67 @@
   gap: 20px;
   align-items: flex-start;
   height: 100%;
+  --carl-legend-border-offset: calc((var(--font-size-14) * 1.25 - 2px) / 2);
 }
 @media (max-width: 640px) {
   .carl-rpg .carl-abilities-layout {
     flex-direction: column;
+  }
+}
+.carl-rpg .carl-stats-rest {
+  display: contents;
+}
+@media (min-width: 641px) {
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    grid-template-areas: "attack defenses" "stats hotlist";
+    align-content: start;
+    align-items: start;
+    gap: 6px 20px;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) > .carl-stats-column,
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) > .carl-abilities-main {
+    display: contents;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-attack-button {
+    grid-area: attack;
+    align-self: stretch;
+    height: auto;
+    margin: var(--carl-legend-border-offset) 0 0;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-combat-defenses {
+    grid-area: defenses;
+    margin-bottom: 0;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-stats-rest {
+    grid-area: stats;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: var(--carl-legend-border-offset);
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-stats-rest > :last-child {
+    margin-bottom: 0;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist {
+    grid-area: hotlist;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist .carl-hotlist-rows {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist .carl-hotlist-row {
+    flex: 1 1 auto;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist .carl-hotlist-pick,
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist .carl-hotlist-use {
+    align-self: stretch;
   }
 }
 .carl-rpg .carl-stats-column {
@@ -1397,6 +1525,7 @@
   padding: 4px 6px 6px;
 }
 .carl-rpg .carl-banked-stat-points legend {
+  margin-inline: auto;
   font-weight: 700;
   font-size: 10px;
   text-transform: uppercase;
@@ -1419,6 +1548,120 @@
   margin-bottom: 2px;
   font-weight: 700;
   color: var(--carl-text);
+}
+.carl-rpg .carl-attack-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  margin: 0 0 3px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--carl-header-text);
+  background: var(--carl-danger);
+  border: 1px solid color-mix(in srgb, var(--carl-danger) 60%, var(--carl-accent));
+  border-radius: 4px;
+}
+.carl-rpg .carl-attack-button:hover, .carl-rpg .carl-attack-button:focus-visible {
+  background: color-mix(in srgb, var(--carl-danger) 80%, var(--carl-accent));
+  border-color: color-mix(in srgb, var(--carl-danger) 35%, var(--carl-accent));
+  box-shadow: 0 0 4px color-mix(in srgb, var(--carl-danger) 60%, transparent);
+}
+.carl-rpg .carl-grind-level-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--carl-accent-dim);
+}
+.carl-rpg .carl-evade-button {
+  flex: 0 0 auto;
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  line-height: 1;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.carl-rpg .carl-evade-total {
+  color: var(--carl-accent);
+  font-size: 14px;
+}
+.carl-rpg .carl-combat-defenses {
+  margin-top: 0;
+  margin-bottom: 6px;
+  border-width: 2px;
+}
+.carl-rpg .carl-combat-defenses legend {
+  font-size: var(--font-size-14);
+  line-height: 1.25;
+  padding-block: 0;
+}
+.carl-rpg .carl-defenses-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.carl-rpg .carl-defense-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-defense-field .resource-label {
+  margin: 0;
+}
+.carl-rpg .carl-defense-field input {
+  height: 24px;
+  text-align: center;
+}
+.carl-rpg .carl-defense-field .carl-stat-value {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-resistances-button {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  line-height: 1;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.carl-rpg .carl-resistances-summary {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-resistance-table {
+  width: 100%;
+  margin: 0 0 6px;
+  border-collapse: collapse;
+}
+.carl-rpg .carl-resistance-table th,
+.carl-rpg .carl-resistance-table td {
+  padding: 3px 6px;
+  text-align: left;
+}
+.carl-rpg .carl-resistance-table .carl-resistance-state {
+  font-weight: 700;
+}
+.carl-rpg .carl-resistance-table .carl-resistance-immune .carl-resistance-state {
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-resistance-table .carl-resistance-vulnerable .carl-resistance-state {
+  color: var(--carl-hazard);
 }
 .carl-rpg .carl-abilities-main {
   flex: 1;
@@ -1501,6 +1744,19 @@
 }
 .carl-rpg .carl-drawer .carl-drawer-lock-toggle:hover {
   color: var(--carl-accent);
+}
+.carl-rpg .carl-drawer .carl-drawer-add-spell {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--carl-header-text);
+  text-transform: none;
+  letter-spacing: normal;
+}
+.carl-rpg .carl-drawer .carl-drawer-add-spell:hover {
+  color: var(--carl-accent);
+}
+.carl-rpg .carl-drawer .carl-drawer-add-spell + .carl-drawer-lock-toggle {
+  margin-left: 10px;
 }
 .carl-rpg .carl-drawer .carl-drawer-body {
   display: grid;
@@ -1750,11 +2006,6 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.carl-rpg .carl-details-row {
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
-}
 .carl-rpg .carl-sheet-columns {
   display: flex;
   flex-wrap: wrap;
@@ -1820,6 +2071,25 @@
 .carl-rpg .carl-details-grid .carl-details-box.wide prose-mirror {
   min-height: 140px;
 }
+.carl-rpg .carl-details-grid .carl-crawler-box {
+  gap: 2px;
+}
+.carl-rpg .carl-details-grid .carl-crawler-box .carl-sheet-line > span:first-child {
+  flex: 0 0 6.5em;
+}
+.carl-rpg .carl-details-grid .carl-crawler-box select {
+  flex: 1;
+  min-width: 0;
+}
+.carl-rpg .carl-details-grid .carl-potions-used {
+  flex-wrap: wrap;
+}
+.carl-rpg .carl-details-grid .carl-potion-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
 .carl-rpg .carl-details-grid .carl-personal-space-fields {
   gap: 10px;
   margin-bottom: 4px;
@@ -1838,6 +2108,166 @@
 }
 .carl-rpg .carl-sheet-box textarea {
   width: 100%;
+}
+.carl-rpg .carl-inventory-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-gold {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-gold .resource-label {
+  margin: 0;
+}
+.carl-rpg .carl-gold input {
+  text-align: right;
+  font-weight: 700;
+}
+.carl-rpg .carl-benefit-panel .carl-drawer-header {
+  gap: 6px;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-img {
+  flex: 0 0 20px;
+  border: none;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-type,
+.carl-rpg .carl-benefit-panel .carl-benefit-active {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-active {
+  font-weight: 700;
+  opacity: 1;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-controls a {
+  color: var(--carl-header-text);
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-controls a:hover {
+  color: var(--carl-accent);
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-text {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-text ul,
+.carl-rpg .carl-benefit-panel .carl-benefit-text ol {
+  margin: 2px 0;
+  padding-left: 18px;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-text p {
+  margin: 3px 0;
+}
+.carl-rpg .carl-benefits-empty {
+  margin: 4px 0 8px;
+}
+.carl-rpg .carl-deity {
+  margin: 0 0 10px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-deity legend {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+}
+.carl-rpg .carl-deity prose-mirror {
+  min-height: 70px;
+  margin-top: 4px;
+}
+.carl-rpg .carl-deity-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-deity-line .resource-label {
+  margin: 0;
+}
+.carl-rpg .carl-deity-line input[type=text] {
+  height: 24px;
+}
+.carl-rpg .carl-deity-name {
+  flex: 1 1 10em;
+  min-width: 8em;
+  font-weight: 700;
+}
+.carl-rpg .carl-deity-tithe {
+  font-weight: 700;
+  color: var(--carl-accent);
+  white-space: nowrap;
+}
+.carl-rpg .carl-deity-add-day {
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.carl-rpg .carl-deity-next {
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-deity-next.due {
+  font-weight: 700;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-deity-boon {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+  line-height: 20px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+.carl-rpg .carl-missed-pips {
+  display: inline-flex;
+  gap: 3px;
+}
+.carl-rpg .carl-missed-pip {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.carl-rpg .carl-missed-pip.filled {
+  background: var(--carl-accent);
+}
+.carl-rpg .carl-deity-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-deity-flag input {
+  margin: 0;
+}
+.carl-rpg .carl-deity-warning {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--carl-hazard);
+}
+.carl-rpg .carl-deity-benefits .carl-benefit-unreached,
+.carl-rpg .carl-perks .carl-benefit-unreached {
+  opacity: 0.5;
+}
+.carl-rpg .carl-deity-benefits .carl-benefits-none,
+.carl-rpg .carl-perks .carl-benefits-none {
+  list-style: none;
+  padding: 2px 4px;
 }
 .carl-rpg .carl-pdf-import fieldset {
   display: flex;
@@ -2113,16 +2543,16 @@
 }
 .carl-rpg .carl-hotlist {
   margin-bottom: 6px;
+  border-width: 2px;
 }
 .carl-rpg .carl-hotlist legend {
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-}
-.carl-rpg .carl-hotlist legend .carl-hotlist-mana {
-  margin-left: auto;
-  font-weight: normal;
+  height: calc(var(--font-size-14) * 1.25);
+  padding-block: 0;
+  font-size: var(--font-size-14);
+  line-height: 1.25;
 }
 .carl-rpg .carl-hotlist-rows {
   list-style: none;
@@ -2133,12 +2563,19 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 28px;
+  min-height: 31px;
   padding: 1px 4px;
+  font-size: 16px;
   border-bottom: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.1));
 }
-.carl-rpg .carl-hotlist-row.empty {
-  border-bottom-style: dashed;
+.carl-rpg .carl-hotlist-row.empty .carl-hotlist-pick {
+  border: 1px dashed var(--carl-border-soft);
+}
+.carl-rpg .carl-hotlist-row.empty .carl-hotlist-pick .carl-hint {
+  font-size: 13px;
+}
+.carl-rpg .carl-hotlist-row.empty .carl-hotlist-pick:hover, .carl-rpg .carl-hotlist-row.empty .carl-hotlist-pick:focus-visible {
+  border-style: solid;
 }
 .carl-rpg .carl-hotlist-row img {
   flex: 0 0 22px;
@@ -2158,7 +2595,7 @@
 }
 .carl-rpg .carl-hotlist-row .carl-hotlist-detail {
   flex: 0 0 auto;
-  font-size: var(--font-size-12);
+  font-size: 13px;
   opacity: 0.8;
 }
 .carl-rpg .carl-hotlist-row .carl-hotlist-inhand {
@@ -2175,7 +2612,7 @@
   gap: 6px;
   width: auto;
   height: auto;
-  min-height: 26px;
+  min-height: 28px;
   margin: 0;
   padding: 1px 4px;
   border: 1px solid transparent;
@@ -2185,7 +2622,12 @@
   font: inherit;
   color: inherit;
   text-align: left;
-  line-height: inherit;
+  line-height: 24px;
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-pick > *,
+.carl-rpg .carl-hotlist-row .carl-hotlist-use > * {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 .carl-rpg .carl-hotlist-row button.carl-hotlist-pick,
 .carl-rpg .carl-hotlist-row button.carl-hotlist-use {
@@ -2204,7 +2646,8 @@
   padding: 0 6px;
   border: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.25));
   border-radius: 3px;
-  font-size: var(--font-size-12);
+  font-size: 13px;
+  line-height: 1.2;
   text-align: center;
 }
 .carl-rpg .carl-hotlist-row .carl-slot-clear {
@@ -2276,9 +2719,6 @@
   flex: 0 0 auto;
   font-size: var(--font-size-12);
   opacity: 0.8;
-}
-.carl-rpg .carl-combat-attacks {
-  margin-bottom: 6px;
 }
 .carl-rpg .carl-slot-column {
   flex: 0 0 9em;

@@ -1,4 +1,25 @@
 <div class="carl-dialog-body">
+  {{#if skillPicker}}
+  {{!-- The Attack! button (CarlDice.chooseAttack): the Attack Skills the
+        crawler can use now. Picking one redraws the rest of the dialog for
+        it (module/dice/roll-prompt.mjs). --}}
+  <div class="form-group carl-dialog-attack-skill">
+    <label>{{localize "CARLRPG.Weapon.AttackSkill"}}</label>
+    <div class="form-fields">
+      <select name="attackSkillId" data-carl-attack-skill>
+        {{#unless skillPicker.selected}}<option value="" selected>{{localize "CARLRPG.Weapon.ChooseAttack"}}</option>{{/unless}}
+        {{#each skillPicker.choices as |choice|}}
+        <option value="{{choice.id}}" {{#if (eq choice.id ../skillPicker.selected)}}selected{{/if}}>{{choice.label}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+  {{/if}}
+  {{#if weaponNote}}
+  {{!-- The weapon comes out of the Hotlist, free with the Attack (p.64). --}}
+  <p class="carl-dialog-hint carl-dialog-weapon-note"><i class="fa-solid fa-right-left"></i> {{weaponNote}}</p>
+  {{/if}}
+  {{#unless hideOptions}}
   {{#if showRollMode}}
   {{!-- No label: the three radios take the whole row. --}}
   <div class="form-group carl-dialog-roll-mode">
@@ -118,4 +139,5 @@
       <input type="number" name="modifier" value="0" autofocus />
     </div>
   </div>
+  {{/unless}}
 </div>

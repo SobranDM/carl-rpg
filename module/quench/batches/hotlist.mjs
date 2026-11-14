@@ -320,7 +320,7 @@ export default function register(quench) {
             const de = await createTestItem(actor, "damageEffect", "zap", { system: { rank: 1, parentSkills: [spell.name] } });
             assert.isNull(await CarlDice.rollDamageEffect(actor, de), "nor through its Damage Effect");
             // With a Skill parent too, the Spell isn't offered: the Skill's Attack opens straight away.
-            const punch = await createTestItem(actor, "skill", "punch", { system: { category: "attack", rank: 1 } });
+            const punch = await createTestItem(actor, "skill", "punch", { system: { category: "attack", rank: 1, isHandToHand: true } });
             const both = await createTestItem(actor, "damageEffect", "jolt", { system: { rank: 1, parentSkills: [spell.name, punch.name] } });
             await withDialog(() => CarlDice.rollDamageEffect(actor, both), (d) => pressDialog(d, "cancel"), "carl-roll-dialog");
             await postedBy(() => placeInHotlist(actor, 0, spell));
@@ -357,8 +357,8 @@ export default function register(quench) {
           let combat;
           try {
             const skill = await createTestItem(actor, "skill", "clubbing", { system: { category: "attack", rank: 2 } });
-            const club = await createTestItem(actor, "item", "club");
-            const pipe = await createTestItem(actor, "item", "pipe");
+            const club = await createTestItem(actor, "item", "club", { system: { weaponSkill: skill.name } });
+            const pipe = await createTestItem(actor, "item", "pipe", { system: { weaponSkill: skill.name } });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, club);
             await placeInHotlist(actor, 0, pipe);
             combat = await startedCombat(actor);
@@ -400,8 +400,8 @@ export default function register(quench) {
           let combat;
           try {
             const skill = await createTestItem(actor, "skill", "staffing", { system: { category: "attack", rank: 2 } });
-            const staff = await createTestItem(actor, "item", "staff");
-            const pipe = await createTestItem(actor, "item", "pipe");
+            const staff = await createTestItem(actor, "item", "staff", { system: { weaponSkill: skill.name } });
+            const pipe = await createTestItem(actor, "item", "pipe", { system: { weaponSkill: skill.name } });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, staff);
             await actor.update({ "system.gearSlots.offHand": staff.id });
             await placeInHotlist(actor, 0, pipe);
@@ -452,8 +452,8 @@ export default function register(quench) {
           let combat;
           try {
             const skill = await createTestItem(actor, "skill", "clubbing", { system: { category: "attack", rank: 2 } });
-            const club = await createTestItem(actor, "item", "club");
-            const pipe = await createTestItem(actor, "item", "pipe");
+            const club = await createTestItem(actor, "item", "club", { system: { weaponSkill: skill.name } });
+            const pipe = await createTestItem(actor, "item", "pipe", { system: { weaponSkill: skill.name } });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, club);
             await placeInHotlist(actor, 0, pipe);
             combat = await startedCombat(actor);

@@ -68,6 +68,23 @@
       }
     }
 
+    // A Character's Skills header with no Spells yet (skills-tab.hbs).
+    .carl-drawer-add-spell {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--carl-header-text);
+      text-transform: none;
+      letter-spacing: normal;
+
+      &:hover {
+        color: var(--carl-accent);
+      }
+
+      + .carl-drawer-lock-toggle {
+        margin-left: 10px;
+      }
+    }
+
     .carl-drawer-body {
       display: grid;
       grid-template-rows: 1fr;

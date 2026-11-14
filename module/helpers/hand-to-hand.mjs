@@ -5,8 +5,8 @@
  *
  * Unarmed Combat: "Limitations: Cannot choose a Damage Effect." - so once a
  * crawler has another hand-to-hand Skill at a higher Rank, Unarmed Combat is
- * worse in every way, and the Combat tab's Attacks list leaves it out
- * (it's still on the Skills tab).
+ * worse in every way, and the Attack! button's choices and the Hotlist's
+ * Swap and Attack leave it out (it's still on the Skills tab).
  */
 import { ownedRank, slugifySkillName } from "./modifiers.mjs";
 
@@ -37,7 +37,7 @@ export function takesDamageEffects(skill) {
 
 
 /**
- * The Combat tab's Attacks list, without Unarmed Combat when another
+ * The Attack Skills to offer, without Unarmed Combat when another
  * hand-to-hand Skill the crawler has outranks it.
  * @param {Actor} actor
  * @param {Item[]} attackSkills

@@ -116,6 +116,24 @@ CARLRPG.sizes = {
 CARLRPG.noDamageEffectSkills = ["Unarmed Combat"];
 
 /**
+ * The rulebook's Weapon Skills (pp.177-179): an Attack with one needs a
+ * matching weapon in hand or in the Hotlist (module/helpers/weapons.mjs).
+ * The suggestions for a gear item's Weapon Skill field; homebrew names
+ * work too.
+ */
+CARLRPG.weaponSkills = [
+  "Axe", "Bow", "Club", "Crossbow", "Dagger", "Handgun", "Javelin", "Lance", "Longsword",
+  "Polearm", "Quarterstaff", "Rapier", "Shotgun", "Shuriken", "Slingshot", "Warhammer",
+];
+
+/**
+ * Attack Skills that need no weapon, besides hand-to-hand ones (the
+ * Skill's Hand-to-Hand box): Improvised Weapons ("pick up something" - any
+ * object to hand, p.178) and natural attacks (the Animals and Pets Skills).
+ */
+CARLRPG.weaponlessAttackSkills = ["Improvised Weapons", "Bite", "Back Claw", "Slice Attack"];
+
+/**
  * Worn gear slots - the Inventory's Slot column (items-list.hbs), in the
  * order it lists them. Each holds an owned Item's id
  * (system.gearSlots.<key>, helpers/equip-slots.mjs).
@@ -497,11 +515,26 @@ CARLRPG.lootBoxTiers = {
   },
 };
 
-/** Boon tiers (Crawler Advancement, p. 168's Acolyte/Devotee/Zealot pattern). */
+/**
+ * Church tiers (Acolyte/Devotee/Zealot, pp.163-164): a crawler's worship
+ * Tier (system.deity.tier) and the Tier a deity's benefit `feature` needs.
+ */
 CARLRPG.featureTiers = {
   acolyte: "CARLRPG.FeatureTier.Acolyte",
   devotee: "CARLRPG.FeatureTier.Devotee",
   zealot: "CARLRPG.FeatureTier.Zealot",
+};
+
+/**
+ * Required tithe (percent of looted gold) by worship Tier: 5% as an
+ * Acolyte (p.163), 10% as a Devotee and 20% as a Zealot (p.164). Penance
+ * doubles it, a second offense quadruples it (p.312) - see
+ * module/helpers/worship.mjs.
+ */
+CARLRPG.titheByTier = {
+  acolyte: 5,
+  devotee: 10,
+  zealot: 20,
 };
 
 /**

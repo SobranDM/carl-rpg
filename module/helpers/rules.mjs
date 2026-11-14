@@ -90,7 +90,18 @@ export function isHitDegree(degree) {
  * @returns {number}
  */
 export function staticEvade(sys) {
-  return 10 + (sys?.stats?.dex?.mod ?? 0) + (sys?.bonuses?.evadeBonus ?? 0);
+  return 10 + evadeModifier(sys);
+}
+
+/**
+ * What an Evade adds to its d20 (or to 10, for staticEvade): DEX Mod + any
+ * Evade bonus - the terms CarlDice.rollEvadeCheck rolls, and a Character's
+ * "Evade +N" on the Combat tab.
+ * @param {object} sys  An actor's system data.
+ * @returns {number}
+ */
+export function evadeModifier(sys) {
+  return (sys?.stats?.dex?.mod ?? 0) + (sys?.bonuses?.evadeBonus ?? 0);
 }
 
 /**

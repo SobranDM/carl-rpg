@@ -2,15 +2,8 @@
 
 // Character-only Pet tab (pet.hbs), the Description
 // tab's rich text notes (details.hbs), and the shared
-// fixed-length free-text list partial (text-slots.hbs), plus the header's
-// second details row (header.hbs).
+// fixed-length free-text list partial (text-slots.hbs).
 @mixin styles {
-  .carl-details-row {
-    align-items: center;
-    gap: $padding-md;
-    margin-bottom: 4px;
-  }
-
   .carl-sheet-columns {
     display: flex;
     flex-wrap: wrap;
@@ -91,6 +84,31 @@
       }
     }
 
+    // Pronouns, Crawler# and Potions used.
+    .carl-crawler-box {
+      gap: 2px;
+
+      .carl-sheet-line > span:first-child {
+        flex: 0 0 6.5em;
+      }
+
+      select {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    .carl-potions-used {
+      flex-wrap: wrap;
+    }
+
+    .carl-potion-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      white-space: nowrap;
+    }
+
     // Tier and Size side by side.
     .carl-personal-space-fields {
       gap: $padding-md;
@@ -114,6 +132,207 @@
 
     textarea {
       width: 100%;
+    }
+  }
+
+  // A Character's Inventory tab: Gold above the list (items-list.hbs).
+  .carl-inventory-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+  }
+
+  .carl-gold {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .resource-label {
+      margin: 0;
+    }
+
+    input {
+      text-align: right;
+      font-weight: 700;
+    }
+  }
+
+  // A Character's Benefits tab (benefits.hbs): Race/Class panels (drawers
+  // whose body is the item's benefits text), the Deity block, other perks.
+  .carl-benefit-panel {
+    .carl-drawer-header {
+      gap: 6px;
+    }
+
+    .carl-benefit-img {
+      flex: 0 0 20px;
+      border: none;
+    }
+
+    .carl-benefit-type,
+    .carl-benefit-active {
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    .carl-benefit-active {
+      font-weight: 700;
+      opacity: 1;
+      color: var(--carl-gold);
+    }
+
+    .carl-benefit-controls {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+
+      a {
+        color: var(--carl-header-text);
+
+        &:hover {
+          color: var(--carl-accent);
+        }
+      }
+    }
+
+    .carl-benefit-text {
+      padding: 4px $padding-md;
+      font-size: 12px;
+
+      ul,
+      ol {
+        margin: 2px 0;
+        padding-left: 18px;
+      }
+
+      p {
+        margin: 3px 0;
+      }
+    }
+  }
+
+  .carl-benefits-empty {
+    margin: 4px 0 8px;
+  }
+
+  .carl-deity {
+    margin: 0 0 $padding-md;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
+
+    legend {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 12px;
+    }
+
+    prose-mirror {
+      min-height: 70px;
+      margin-top: 4px;
+    }
+  }
+
+  .carl-deity-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+
+    .resource-label {
+      margin: 0;
+    }
+
+    input[type="text"] {
+      height: 24px;
+    }
+  }
+
+  .carl-deity-name {
+    flex: 1 1 10em;
+    min-width: 8em;
+    font-weight: 700;
+  }
+
+  .carl-deity-tithe {
+    font-weight: 700;
+    color: var(--carl-accent);
+    white-space: nowrap;
+  }
+
+  .carl-deity-add-day {
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .carl-deity-next {
+    font-size: 11px;
+    color: var(--carl-text-muted);
+
+    &.due {
+      font-weight: 700;
+      color: var(--carl-gold);
+    }
+  }
+
+  .carl-deity-boon {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: auto;
+    line-height: 20px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .carl-missed-pips {
+    display: inline-flex;
+    gap: 3px;
+  }
+
+  .carl-missed-pip {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 50%;
+    cursor: pointer;
+
+    &.filled {
+      background: var(--carl-accent);
+    }
+  }
+
+  .carl-deity-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    white-space: nowrap;
+
+    input {
+      margin: 0;
+    }
+  }
+
+  .carl-deity-warning {
+    margin: 0 0 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--carl-hazard);
+  }
+
+  .carl-deity-benefits,
+  .carl-perks {
+    .carl-benefit-unreached {
+      opacity: 0.5;
+    }
+
+    .carl-benefits-none {
+      list-style: none;
+      padding: 2px 4px;
     }
   }
 }

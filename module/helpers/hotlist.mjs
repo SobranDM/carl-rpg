@@ -34,6 +34,7 @@ import { withoutOutclassedUnarmed } from "./hand-to-hand.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { beginSwap, endSwap, refuseWhileSwapping } from "./swap-lock.mjs";
+import { attackReadiness } from "./weapons.mjs";
 
 export { refuseWhileSwapping };
 
@@ -413,17 +414,60 @@ async function combatSwap(actor, index, item, { skipDialog }) {
 }
 
 /**
+ * A weapon in the Hotlist swapped into the Main Hand for free as part of an
+ * Attack (p.64, p.98 - module/helpers/weapons.mjs), then the Attack. The
+ * swap comes first, so the weapon's worn bonuses apply to the roll; if the
+ * Attack is cancelled (or fails), the swap is undone. In a fight the swap
+ * gets its Ready card ("free with the Attack"); outside one it's silent.
+ * @param {Actor} actor
+ * @param {{index: number, item: Item}} swap  The Hotlist slot and weapon.
+ * @param {() => Promise<*>} attack  Makes the Attack; a falsy result means
+ *   it didn't happen.
+ * @returns {Promise<*>}  The Attack's result, or null.
+ */
+export async function swapForAttack(actor, { index, item }, attack) {
+  if (refuseWhileSwapping(actor)) return null;
+  beginSwap(actor);
+  try {
+    const swap = await readyHotlistItem(actor, index, item);
+    if (swap.failed) return null;
+    let result = null;
+    try {
+      result = await attack();
+    } catch (err) {
+      await undoOrRecord(actor, index, item, swap);
+      throw err;
+    }
+    if (!result) {
+      await undoOrRecord(actor, index, item, swap);
+      return null;
+    }
+    if (inRunningFight(actor)) await postReadyCard(actor, item, swap, { free: true });
+    return result;
+  } finally {
+    endSwap(actor);
+  }
+}
+
+/**
  * Ask how a fight's swap happens: "Swap" (an Action), or one "Swap and
- * Attack" per Attack Skill (free).
+ * Attack" per Attack Skill (free) that can be made once the item is in the
+ * Main Hand - it's the weapon for it, or the Attack needs none or has one
+ * in the Off Hand (module/helpers/weapons.mjs).
  * @returns {Promise<string|null>}  "swap", an Attack Skill's id, or null.
  */
 async function promptCombatSwap(actor, index, item) {
   const previousId = actor.system.gearSlots?.mainHand || "";
   const previous = previousId ? actor.items.get(previousId) : null;
-  // The same Attacks the Combat tab lists (an outranked Unarmed Combat isn't).
+  // The same Attacks the Attack! button offers (an outranked Unarmed Combat
+  // isn't), with this item in the Main Hand.
   const attacks = withoutOutclassedUnarmed(actor, actor.items
     .filter((i) => i.type === "skill" && i.system.category === "attack")
-    .sort((a, b) => a.name.localeCompare(b.name)));
+    .sort((a, b) => a.name.localeCompare(b.name)))
+    .filter((skill) => {
+      const readiness = attackReadiness(actor, skill, { mainHand: item });
+      return readiness.ready && !readiness.swap;
+    });
   const body = previous
     ? game.i18n.format("CARLRPG.Hotlist.Swap.BodySwap", { item: item.name, previous: previous.name })
     : game.i18n.format("CARLRPG.Hotlist.Swap.Body", { item: item.name });

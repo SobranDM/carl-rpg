@@ -1,0 +1,14 @@
+{{!-- A Character's Mana under the Health Bar (header.hbs): a plain fill bar
+      and the editable current value - Mana is a number, not slots. Max is
+      the effective INT plus any Mana bonus (deriveResourceCaps), so it isn't
+      editable. The Skills tab's Spells header shows it read-only. --}}
+<div class="resource flex-group-center carl-mana-resource">
+  <label class="resource-label">{{localize "CARLRPG.Actor.Mana"}}</label>
+  <div class="carl-mana-row">
+    <div class="carl-mana-bar" title="{{system.mana.value}} / {{system.mana.max}}">
+      <span class="carl-mana-fill" style="width: {{manaPercent}}%"></span>
+    </div>
+    <input type="text" class="carl-w-tiny" name="system.mana.value" value="{{system.mana.value}}" data-dtype="Number" />
+    <span class="carl-mana-max">/ {{system.mana.max}}</span>
+  </div>
+</div>

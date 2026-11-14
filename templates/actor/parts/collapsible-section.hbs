@@ -15,10 +15,20 @@
     {{#if showMana}}
     <div class="carl-drawer-header-mana">
       <span class="resource-label">{{localize "CARLRPG.Actor.Mana"}}</span>
+      {{#if manaReadonly}}
+      <span class="carl-floor-readonly">{{manaValue}}</span>
+      {{else}}
       <input type="text" class="carl-w-tiny" name="system.mana.value" value="{{manaValue}}" data-dtype="Number" />
+      {{/if}}
       <span>/</span>
       <span class="carl-floor-readonly">{{manaMax}}</span>
     </div>
+    {{/if}}
+    {{#if showAddSpell}}
+    {{!-- A Character's Skills header with no Spells yet (skills-tab.hbs). --}}
+    <a class="carl-drawer-add-spell" data-action="createItem" data-type="spell" title="{{localize 'DOCUMENT.New' type=(localize 'TYPES.Item.spell')}}">
+      <i class="fas fa-plus"></i> {{localize "TYPES.Item.spell"}}
+    </a>
     {{/if}}
     {{#if showLockToggle}}
     <a class="carl-drawer-lock-toggle" data-action="toggleDrawer" data-scope="actor" data-path="system.uiState.itemsLocked"

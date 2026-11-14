@@ -33,6 +33,7 @@
 
 import { getRankDamageDie } from "./rules.mjs";
 import { CARLRPG } from "./config.mjs";
+import { deityBenefitApplies } from "./worship.mjs";
 
 const RANKED_TYPES = new Set(["skill", "spell", "damageEffect"]);
 
@@ -465,7 +466,11 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       // multiple sources granting the same damage type (no adjudicated
       // priority order - a rare enough conflict that this project's usual
       // "surface state, don't over-engineer" default applies).
-      if (change.target) resistances[change.target] = change.value;
+      if (change.target) {
+        resistances[change.target] = change.value;
+        // Who granted it, for the sheet's Resistances dialog.
+        if (ctx.resistanceSources) ctx.resistanceSources[change.target] = sourceLabel ?? "";
+      }
       break;
     }
     case "advancementBonus": {
@@ -563,6 +568,7 @@ function makeAggregationContext(actorSystem) {
     conditionalModifiers: [],
     caps: {},
     resistances: {},
+    resistanceSources: {},
     advancementBonuses: {},
     rankCaps: {},
     actorSystem,
@@ -605,7 +611,12 @@ export function aggregateActorBonuses(actorSystem) {
     if (RANKED_TYPES.has(item.type)) seedSkillFromItem(skills, item);
   }
 
+  // A Character's church benefits (Boons with a Tier) apply only at or
+  // below its worship Tier and not while worship is suspended (pp.163,
+  // 312) - module/helpers/worship.mjs. Only a Character has a deity.
+  const deity = actorSystem.deity;
   for (const item of items) {
+    if (deity && !deityBenefitApplies(item, deity)) continue;
     for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }
@@ -624,6 +635,7 @@ export function aggregateActorBonuses(actorSystem) {
   actorSystem.conditionalModifiers = conditionalModifiers;
   actorSystem.caps = caps;
   actorSystem.grantedResistances = resistances;
+  actorSystem.grantedResistanceSources = ctx.resistanceSources;
   actorSystem.advancementBonuses = advancementBonuses;
   actorSystem.rankCaps = rankCaps;
 }

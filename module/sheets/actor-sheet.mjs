@@ -29,7 +29,12 @@ import { rollRam } from "../helpers/vehicle-ram.mjs";
 import { fireVehicleWeapon } from "../helpers/vehicle-weapons.mjs";
 import { petOwner } from "../helpers/pets.mjs";
 import { commandPet, describePetCommand, petFight } from "../helpers/pet-command.mjs";
-import { withoutOutclassedUnarmed } from "../helpers/hand-to-hand.mjs";
+import { showCarlDialog } from "../apps/carl-dialog.mjs";
+import { PERMANENT_POTION_LIMIT } from "../helpers/consumables.mjs";
+import {
+  boonAvailable, deityBenefitApplies, describeDeity, receiveBoon, tierRank, worshipSuspended,
+} from "../helpers/worship.mjs";
+import { evadeModifier } from "../helpers/rules.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -58,6 +63,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       deleteItem: CarlRPGActorSheet.#deleteItem,
       roll: CarlRPGActorSheet.#onRoll,
       rollEvade: CarlRPGActorSheet.#onRollEvade,
+      chooseAttack: CarlRPGActorSheet.#onChooseAttack,
       rollMobAttack: CarlRPGActorSheet.#onRollMobAttack,
       rollStat: CarlRPGActorSheet.#onRollStat,
       toggleMark: CarlRPGActorSheet.#onToggleMark,
@@ -91,6 +97,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       toggleHotlist: CarlRPGActorSheet.#onToggleHotlist,
       applyVehiclePreset: CarlRPGActorSheet.#onApplyVehiclePreset,
       resetUpgradeUse: CarlRPGActorSheet.#onResetUpgradeUse,
+      showResistances: CarlRPGActorSheet.#onShowResistances,
+      receiveBoon: CarlRPGActorSheet.#onReceiveBoon,
+      addWorshipDay: CarlRPGActorSheet.#onAddWorshipDay,
+      setMissedOfferings: CarlRPGActorSheet.#onSetMissedOfferings,
     },
   };
 
@@ -162,9 +172,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @type {Object<string, string[]>}
    */
   static TABS_BY_TYPE = {
-    // A Character's first tab is Combat (Stats, Hotlist, Attacks); Skills
-    // and Spells have their own.
-    character: ["abilities", "skills", "items", "features", "conditions", "defenses", "description"],
+    // A Character's first tab is Combat (Stats, Defenses, Hotlist,
+    // Attacks); Skills and Spells have their own. Its Defenses are on the
+    // Combat tab's Stats column and Size is in the header, so it has no
+    // Defenses tab.
+    character: ["abilities", "skills", "items", "features", "conditions", "description"],
     mob: ["abilities", "items", "features", "conditions", "defenses", "description"],
     pet: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
     // An object: no Boons, Debuffs or Defenses tab (Resistances are on its
@@ -188,6 +200,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       character: "systems/carl-rpg/templates/actor/parts/abilities.hbs", mob: "systems/carl-rpg/templates/actor/parts/abilities-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/abilities-pet.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle.hbs",
     },
     pet: { pet: "systems/carl-rpg/templates/actor/parts/pet-details.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle-details.hbs" },
+    // A Character's "features" slot is its Benefits tab: Race and Class
+    // benefits, the Deity block and other perks.
+    features: { character: "systems/carl-rpg/templates/actor/parts/benefits.hbs" },
     description: { character: "systems/carl-rpg/templates/actor/parts/details.hbs" },
   };
 
@@ -199,7 +214,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @type {Object<string, Object<string, string>>}
    */
   static TAB_LABELS_BY_TYPE = {
-    character: { abilities: "CARLRPG.Tab.Combat", description: "CARLRPG.Tab.Details" },
+    character: { abilities: "CARLRPG.Tab.Combat", features: "CARLRPG.Tab.Benefits", description: "CARLRPG.Tab.Details" },
     pet: { items: "CARLRPG.Tab.PetGear", pet: "CARLRPG.Tab.Details" },
     vehicle: { abilities: "CARLRPG.Tab.Vehicle", items: "CARLRPG.Tab.Cargo", pet: "CARLRPG.Tab.Details" },
   };
@@ -413,17 +428,16 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Shield-style pool (docs/known-gaps.md 1.4) - same pip shape as HB.
     context.shieldPips = this._buildHbPips(actorData.shield);
 
-    // Fixed-length free-text lists (Hotlist, Accessories, Deity...) - see
+    // Fixed-length free-text lists (Hotlist, Accessories...) - see
     // CONFIG.CARLRPG.characterListSlots. Mobs have none of these fields.
     if (actor.type === "character") {
       context.textSlots = this._buildTextSlots(actorData);
       context.equipSlots = this._buildEquipSlots(actorData);
-      // The Combat tab (abilities.hbs): the Hotlist and the Attack Skills.
+      // The Combat tab (abilities.hbs): the Hotlist. Attacks are made from
+      // the Attack! button (CarlDice.chooseAttack).
       const rows = hotlistRows(actor);
       context.hotlist = { rows, used: rows.filter((r) => !r.empty).length, size: rows.length };
-      // Unarmed Combat drops out once another hand-to-hand Skill outranks it
-      // (it can't take Damage Effects, p.179) - still on the Skills tab.
-      context.attackSkills = withoutOutclassedUnarmed(actor, context.skills.filter((s) => s.system.category === "attack"));
+      this.#prepareCrawlerContext(context);
     }
 
     // Add roll data for TinyMCE editors.
@@ -434,7 +448,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       { relativeTo: actor, secrets: actor.isOwner, rollData: context.rollData },
     );
     context.biographyHTML = await enrich(actor.system.biography);
-    if (context.isCharacter) await this.#prepareDetailsBoxes(context, enrich);
+    if (context.isCharacter) {
+      await this.#prepareDetailsBoxes(context, enrich);
+      await this.#prepareBenefits(context, enrich);
+    }
 
     return context;
   }
@@ -449,7 +466,6 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const sys = context.system;
     context.detailsHTML = { personalSpace: await enrich(sys.personalSpace.notes) };
     const boxes = [
-      { field: "deity", label: "CARLRPG.Actor.Deity" },
       { field: "sponsors", label: "CARLRPG.Actor.Sponsors", hint: "CARLRPG.Actor.SponsorsHint" },
       { field: "clubs", label: "CARLRPG.Actor.Clubs" },
       { field: "importantKills", label: "CARLRPG.Actor.ImportantKills", wide: true },
@@ -461,6 +477,81 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       value: sys[box.field] ?? "",
       html: await enrich(sys[box.field]),
     })));
+  }
+
+  /**
+   * A Character's header Mana bar (mana-bar.hbs), the Combat tab's
+   * Defenses block (stats-column.hbs), the Details tab's Potions used and
+   * whether the Skills tab shows its Spells section.
+   * @param {object} context
+   */
+  #prepareCrawlerContext(context) {
+    const sys = context.system;
+    const mana = sys.mana;
+    context.manaPercent = mana.max > 0 ? Math.round(Math.min(1, Math.max(0, mana.value / mana.max)) * 100) : 0;
+    // The same terms CarlDice.rollEvadeCheck adds to the d20.
+    context.evadeTotal = evadeModifier(sys);
+    const counts = { resist: 0, immune: 0, vulnerable: 0 };
+    for (const state of Object.values(sys.resistancesEffective ?? {})) {
+      if (state in counts) counts[state] += 1;
+    }
+    context.resistanceSummary = Object.entries(counts)
+      .filter(([, n]) => n)
+      .map(([state, n]) => game.i18n.format(`CARLRPG.Actor.ResistSummary.${state}`, { n }))
+      .join(" · ");
+    context.potions = {
+      limit: PERMANENT_POTION_LIMIT,
+      stat: sys.permanentPotions.stat,
+      skill: sys.permanentPotions.skill,
+    };
+    context.hasSpells = context.spells.length > 0;
+  }
+
+  /**
+   * The Benefits tab (benefits.hbs): a panel per Race and Class showing its
+   * description - its benefits list, the play reference - active ones
+   * first; the Deity block with the deity's tiered benefit features; and
+   * every other (untiered) feature.
+   * @param {object} context
+   * @param {(html: string) => Promise<string>} enrich
+   */
+  async #prepareBenefits(context, enrich) {
+    const sys = context.system;
+    const activeIds = new Set([context.raceId, context.classId].filter(Boolean));
+    const ordered = [...context.raceAndClass].sort((a, b) =>
+      (activeIds.has(a.id) ? 0 : 1) - (activeIds.has(b.id) ? 0 : 1));
+    context.benefitPanels = await Promise.all(ordered.map(async (item) => ({
+      id: item.id,
+      name: item.name,
+      img: item.img,
+      typeLabel: item.typeLabel,
+      active: activeIds.has(item.id),
+      expanded: sys.uiState[`${item.type}Expanded`] ?? true,
+      togglePath: `system.uiState.${item.type}Expanded`,
+      html: await enrich(item.system.description),
+    })));
+
+    // A tiered feature is one of the deity's church benefits. One that
+    // doesn't apply - above the crawler's Tier, or while worship is
+    // suspended - still lists, dimmed, so it can be opened or deleted; the
+    // modifier engine skips it (aggregateActorBonuses).
+    const inactiveHint = worshipSuspended(sys.deity) ? "CARLRPG.Deity.BenefitSuspended" : "CARLRPG.Deity.TierNotReached";
+    const row = (item) => ({
+      _id: item.id,
+      name: item.name,
+      img: item.img,
+      tierLabel: item.system.tier ? CONFIG.CARLRPG.featureTiers[item.system.tier] : "",
+      applies: deityBenefitApplies(item, sys.deity),
+      inactiveHint,
+    });
+    const tiered = context.features.filter((f) => f.system.tier);
+    tiered.sort((a, b) => tierRank(a.system.tier) - tierRank(b.system.tier));
+    context.deity = {
+      ...describeDeity(sys.deity),
+      benefits: tiered.map(row),
+      notesHTML: await enrich(sys.deity.notes),
+    };
+    context.perks = context.features.filter((f) => !f.system.tier).map(row);
   }
 
   /**
@@ -881,6 +972,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       name: name,
       type: type,
     };
+    // The Benefits tab's Church Benefits list makes a Boon at a Tier.
+    if (target.dataset.tier) itemData.system = { tier: target.dataset.tier };
     return await Item.create(itemData, { parent: this.actor });
   }
 
@@ -939,6 +1032,16 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static #onRollEvade(event, target) {
     event.preventDefault();
     return this.actor.rollEvadeCheck();
+  }
+
+  /**
+   * The Combat tab's Attack! button: pick an Attack Skill the crawler can
+   * use now, then the Attack dialog (CarlDice.chooseAttack).
+   * @private
+   */
+  static #onChooseAttack(event, target) {
+    event.preventDefault();
+    return CarlDice.chooseAttack(this.actor);
   }
 
   /**
@@ -1245,6 +1348,91 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static #onResetUpgradeUse(event, target) {
     event.preventDefault();
     return this.actor.update({ [`system.upgrades.${target.dataset.upgrade}.usedFloor`]: null });
+  }
+
+  /**
+   * The Combat tab's Resistances button: a read-only list of each damage
+   * type the crawler resists, is immune or vulnerable to, and where it comes
+   * from (dialog/resistances.hbs). Resistances come from the Race, Class,
+   * worn gear and Buffs, so they aren't edited here.
+   * @private
+   */
+  static async #onShowResistances(event, target) {
+    event.preventDefault();
+    await showCarlDialog({
+      title: game.i18n.format("CARLRPG.Actor.ResistancesTitle", { name: this.actor.name }),
+      template: "systems/carl-rpg/templates/dialog/resistances.hbs",
+      context: { rows: CarlRPGActorSheet.#resistanceRows(this.actor.system) },
+      classes: ["carl-resistances-dialog"],
+      buttons: [{ action: "close", icon: "fa-solid fa-check", label: "CARLRPG.Dialog.Close", default: true }],
+    });
+  }
+
+  /**
+   * One row per damage type with a Resistance, Immunity or Vulnerability:
+   * its state and what grants it - an item or Buff's name, or the actor's
+   * own base value (set before Resistances were display-only, or by import).
+   * @param {object} sys  A Character's system data.
+   * @returns {{label: string, state: string, stateLabel: string, source: string}[]}
+   */
+  static #resistanceRows(sys) {
+    const { damageTypes, resistanceStates } = CONFIG.CARLRPG;
+    return Object.entries(damageTypes)
+      .map(([type, label]) => {
+        const state = sys.resistancesEffective?.[type] ?? "none";
+        const granted = type in (sys.grantedResistances ?? {});
+        return {
+          label,
+          state,
+          stateLabel: resistanceStates[state] ?? state,
+          source: granted ? (sys.grantedResistanceSources?.[type] ?? "") : game.i18n.localize("CARLRPG.Actor.ResistanceBase"),
+        };
+      })
+      .filter((row) => row.state !== "none");
+  }
+
+  /**
+   * The Deity block's "Receive a Boon": roll Table 63 into a 30-hour Buff
+   * and take five days off the count (module/helpers/worship.mjs). Only
+   * once one is due, with a Tier and worship not suspended - the GM can
+   * grant one at any time.
+   * @private
+   */
+  static #onReceiveBoon(event, target) {
+    event.preventDefault();
+    if (!this.actor.isOwner) return;
+    if (!game.user.isGM && !boonAvailable(this.actor.system.deity)) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Deity.BoonNotAvailable"));
+      return;
+    }
+    return receiveBoon(this.actor);
+  }
+
+  /**
+   * One more consecutive day of worship (the Deity block's +1).
+   * @private
+   */
+  static #onAddWorshipDay(event, target) {
+    event.preventDefault();
+    if (!this.actor.isOwner) return;
+    return this.actor.update({ "system.deity.worshipDays": this.actor.system.deity.worshipDays + 1 });
+  }
+
+  /**
+   * A missed-offering pip: set the count, or clicking the last filled pip
+   * takes one off (the HB pips' convention, #onSetHbValue). Recording a
+   * miss breaks the streak of consecutive days toward a Boon (p.164).
+   * @private
+   */
+  static #onSetMissedOfferings(event, target) {
+    event.preventDefault();
+    if (!this.actor.isOwner) return;
+    const clicked = Number(target.dataset.value);
+    const current = this.actor.system.deity.missedOfferings;
+    const next = Math.max(0, clicked === current ? clicked - 1 : clicked);
+    const update = { "system.deity.missedOfferings": next };
+    if (next > current) update["system.deity.worshipDays"] = 0;
+    return this.actor.update(update);
   }
 
   static #onSpendStatPoints(event, target) {

@@ -107,7 +107,28 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
       size: text(),
       notes: richText(),
     });
-    schema.deity = richText();
+    // Worship (pp.163-164): the god, the church Tier (Acolyte/Devotee/
+    // Zealot - CONFIG.CARLRPG.featureTiers), consecutive days toward the
+    // next Boon ("every five consecutive days of worship", p.164) and the
+    // offering/penance bookkeeping. The tithe is derived from the Tier and
+    // penitence (module/helpers/worship.mjs), never stored. `notes` holds
+    // the old free-text Deity box (migrateData below).
+    schema.deity = new fields.SchemaField({
+      name: text(),
+      tier: new fields.StringField({
+        required: true, blank: true, initial: "",
+        choices: ["", ...Object.keys(CONFIG.CARLRPG.featureTiers)],
+      }),
+      worshipDays: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
+      // Consecutive missed daily offerings (p.163): 1 - no worship benefits
+      // that day, 2 - a Divine Debuff, 3 - Fallen from Grace.
+      missedOfferings: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0, max: 3 }),
+      // Offenses under penance (p.312): 1 doubles the tithe, 2 quadruples it.
+      penitence: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0, max: 2 }),
+      shunned: new fields.BooleanField({ required: true, initial: false }),
+      fallen: new fields.BooleanField({ required: true, initial: false }),
+      notes: richText(),
+    });
     // "Crawlers are limited to three Sponsors each" (p.284).
     schema.sponsors = richText();
 
@@ -117,6 +138,12 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
   /** @override */
   static migrateData(source) {
     CarlRPGCharacter.#migrateNotesToRichText(source);
+    // The Deity rich text box became a structured block; its text is kept
+    // as the block's notes. Runs after the slot-list fold above, so an old
+    // array becomes HTML first. This only reshapes it in memory; the 0.6.0
+    // Deity migration (module/helpers/migration.mjs) saves it, so a later
+    // partial Deity edit can't be merged over the old string.
+    if (typeof source.deity === "string") source.deity = { notes: source.deity };
     // The old free-text "Hands/Holding" gear slot became Main Hand.
     const gear = source.gearSlots;
     if (gear && "hands" in gear) {

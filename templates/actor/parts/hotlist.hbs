@@ -7,7 +7,6 @@
 <fieldset class="carl-hotlist">
   <legend>
     {{localize "CARLRPG.Hotlist.Title"}} <span class="carl-hotlist-count">{{hotlist.used}}/{{hotlist.size}}</span>
-    <span class="carl-hotlist-mana" title="{{localize 'CARLRPG.Actor.Mana'}}"><i class="fas fa-hat-wizard"></i> {{system.mana.value}}/{{system.mana.max}}</span>
   </legend>
   <ol class="carl-hotlist-rows">
     {{#each hotlist.rows as |slot|}}

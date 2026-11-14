@@ -30,7 +30,8 @@ import { removeConditionsById } from "../helpers/conditions.mjs";
 import { isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { collectVehicleRows } from "../helpers/vehicle-rows.mjs";
 import { attackDifficultyParts, mobVsVehicleRows } from "../helpers/attack-targets.mjs";
-import { outsideHotlist, refuseOutsideHotlist } from "../helpers/hotlist.mjs";
+import { outsideHotlist, refuseOutsideHotlist, swapForAttack } from "../helpers/hotlist.mjs";
+import { attackChoices, attackReadiness, warnNoWeapon } from "../helpers/weapons.mjs";
 import { takesDamageEffects } from "../helpers/hand-to-hand.mjs";
 
 /**
@@ -522,6 +523,45 @@ function d20Formula(roll) {
   return term ? `${term.number}d20${(term.modifiers ?? []).join("")}` : null;
 }
 
+/**
+ * A note for the Attack dialog that the weapon comes out of the Hotlist.
+ * @param {Item} weapon
+ * @returns {string}
+ */
+function swapNote(weapon) {
+  return game.i18n.format("CARLRPG.Weapon.SwapNote", { weapon: weapon.name });
+}
+
+/**
+ * An Attack whose weapon is in the Hotlist (CarlDice.rollAttack): the dialog
+ * first (it says the weapon will be swapped in), then the free swap into
+ * the Main Hand and the roll with the dialog's choices - undone if the roll
+ * doesn't happen (module/helpers/hotlist.mjs swapForAttack).
+ * @param {Actor} actor
+ * @param {Item} skillItem
+ * @param {{swap: {index: number, item: Item}}} readiness  attackReadiness's result.
+ * @param {{skipDialog?: boolean, damageEffectItem?: Item|null}} options
+ * @returns {Promise<ChatMessage|null>}
+ */
+async function attackWithSwap(actor, skillItem, { swap }, { skipDialog = false, damageEffectItem = null } = {}) {
+  let presetOptions = null;
+  if (!skipDialog) {
+    const args = await CarlDice.rollAttack(actor, skillItem, { damageEffectItem, promptArgsOnly: true });
+    if (!args) return null;
+    presetOptions = await promptRollOptions({ ...args, weaponNote: swapNote(swap.item) });
+    if (!presetOptions) return null;
+  }
+  // Things may have moved while the dialog was open: swap from where the
+  // weapon is now (or not at all, if one's in hand by now).
+  const now = attackReadiness(actor, skillItem);
+  if (!now.ready) {
+    warnNoWeapon(skillItem);
+    return null;
+  }
+  const attack = () => CarlDice.rollAttack(actor, skillItem, { damageEffectItem, skipDialog, presetOptions });
+  return now.swap ? swapForAttack(actor, now.swap, attack) : attack();
+}
+
 export default class CarlDice {
   /**
    * Stat Check: 1d20 + Stat Mod (the sheet's Stats column). Goes through the
@@ -678,15 +718,90 @@ export default class CarlDice {
   }
 
   /**
+   * The Combat tab's Attack! button: the Attack dialog with a choice of
+   * Attack Skill first - only the ones the crawler can use now, with a
+   * weapon in hand or in the Hotlist, or needing none (module/helpers/
+   * weapons.mjs). Picking one fills in the rest of the dialog for it (its
+   * Damage Effects, conditions...); confirming makes that Attack, swapping
+   * a Hotlist weapon into the Main Hand first if that's where it is.
+   * @param {Actor} actor
+   * @returns {Promise<ChatMessage|null>}
+   */
+  static async chooseAttack(actor) {
+    if (isBlockedByDebuff(actor)) return null;
+    const choices = attackChoices(actor);
+    if (!choices.length) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Weapon.NoAttacks"));
+      return null;
+    }
+    const rank = (skill) => ownedRank(actor, skill);
+    const load = async (id) => {
+      const choice = choices.find((c) => c.skill.id === id);
+      if (!choice) return null;
+      const args = await CarlDice.rollAttack(actor, choice.skill, { promptArgsOnly: true });
+      return args ? { ...args, weaponNote: choice.swap ? swapNote(choice.swap.item) : "" } : null;
+    };
+    // One choice: it's already picked.
+    const selected = choices.length === 1 ? choices[0].skill.id : null;
+    const initial = selected ? await load(selected) : null;
+    if (selected && !initial) return null;
+    const prompted = await promptRollOptions({
+      ...(initial ?? {}),
+      title: game.i18n.localize("CARLRPG.Weapon.AttackTitle"),
+      skillPicker: {
+        selected,
+        load,
+        choices: choices.map(({ skill, weapon, swap }) => ({
+          id: skill.id,
+          label: [
+            `${skill.name} (${game.i18n.localize("CARLRPG.Roll.Rank")} ${rank(skill)})`,
+            weapon ? game.i18n.format(swap ? "CARLRPG.Weapon.FromHotlist" : "CARLRPG.Weapon.InHand", { weapon: weapon.name }) : "",
+          ].filter(Boolean).join(" - "),
+        })),
+      },
+    });
+    const skill = prompted?.skillId ? actor.items.get(prompted.skillId) : null;
+    if (!skill) return null;
+    // Things may have moved while the dialog was open.
+    const readiness = attackReadiness(actor, skill);
+    if (!readiness.ready) {
+      warnNoWeapon(skill);
+      return null;
+    }
+    const attack = () => CarlDice.rollAttack(actor, skill, { presetOptions: prompted });
+    return readiness.swap ? swapForAttack(actor, readiness.swap, attack) : attack();
+  }
+
+  /**
    * Attack roll vs. the targeted token's Evade (10 + DEX Mod + Floor) if one
    * is selected, else a manually-entered Difficulty. On a hit, rolls damage
    * in the same card (base dice doubled on a Critical Hit; Rank Damage Dice
    * and flat/multiplier terms are not).
+   *
+   * A crawler's Attack with a Weapon Skill needs its weapon in hand or in
+   * the Hotlist (module/helpers/weapons.mjs): with neither it warns and
+   * stops; from the Hotlist, the weapon is swapped into the Main Hand once
+   * the dialog is confirmed, as part of the Attack (attackWithSwap).
    * @param {Actor} actor
    * @param {Item} skillItem
-   * @param {{skipDialog?: boolean, damageEffectItem?: Item|null}} [options]
+   * @param {{skipDialog?: boolean, damageEffectItem?: Item|null, castAs?: object|null,
+   *   promptArgsOnly?: boolean, presetOptions?: object|null}} [options]
+   *   promptArgsOnly: return what the dialog would show (promptRollOptions'
+   *   arguments) without showing it or rolling - the Attack! picker's.
+   *   presetOptions: roll with these dialog choices (promptRollOptions'
+   *   result) instead of asking - no weapon check, it was made before.
    */
-  static async rollAttack(actor, skillItem, { skipDialog = false, damageEffectItem = null, castAs = null } = {}) {
+  static async rollAttack(actor, skillItem, {
+    skipDialog = false, damageEffectItem = null, castAs = null, promptArgsOnly = false, presetOptions = null,
+  } = {}) {
+    if (!promptArgsOnly && !presetOptions && !castAs) {
+      const readiness = attackReadiness(actor, skillItem);
+      if (!readiness.ready) {
+        warnNoWeapon(skillItem);
+        return null;
+      }
+      if (readiness.swap) return attackWithSwap(actor, skillItem, readiness, { skipDialog, damageEffectItem });
+    }
     const sys = actor.system;
     const skillSys = skillItem.system;
     // castAs: a Scroll's cast - see resolveCastContext. It never adds a
@@ -790,8 +905,10 @@ export default class CarlDice {
       advantage: advantageEntitled ? "advantage" : "normal",
       difficulty: targetDifficulty, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null,
     };
-    if (!skipDialog) {
-      const prompted = await promptRollOptions({
+    if (presetOptions) {
+      options = presetOptions;
+    } else if (!skipDialog || promptArgsOnly) {
+      const promptArgs = {
         title: game.i18n.format("CARLRPG.Dialog.AttackTitle", { name: skillItem.name }),
         difficulty: targetDifficulty,
         difficultyLabel: targetRows.length ? game.i18n.localize("CARLRPG.Dialog.BaseDifficulty") : null,
@@ -802,12 +919,14 @@ export default class CarlDice {
         debuffRows: [...rollerRows, ...advantageRows, ...targetRows],
         areaTargets: targets.map((t) => ({ name: t.actor?.name ?? t.name ?? "?" })),
         isArea: detectedArea,
-      });
+      };
+      if (promptArgsOnly) return promptArgs;
+      const prompted = await promptRollOptions(promptArgs);
       if (!prompted) return null;
       options = prompted;
-      if (prompted.damageEffectId) {
-        damageEffectItem = actor.items.get(prompted.damageEffectId) ?? damageEffectItem;
-      }
+    }
+    if (options.damageEffectId) {
+      damageEffectItem = actor.items.get(options.damageEffectId) ?? damageEffectItem;
     }
     const isArea = targets.length ? (skipDialog ? detectedArea : !!options.isArea) : false;
     const splash = options.splash ?? new Set();
