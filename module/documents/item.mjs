@@ -4,6 +4,7 @@ import { bakeItemGrants } from "../helpers/race-class-grants.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
 import { isPet } from "../helpers/actor-kinds.mjs";
 import { describePetCommand, petFight } from "../helpers/pet-command.mjs";
+import { refuseSpellOutsideHotlist } from "../helpers/hotlist.mjs";
 
 /**
  * Extend the basic Item document.
@@ -76,6 +77,10 @@ export class CarlRPGItem extends Item {
     if (!this.actor) {
       return ui.notifications.warn(game.i18n.localize("CARLRPG.Warning.RollNeedsOwner"));
     }
+
+    // "If a Spell ain't in your Hotlist, you can't cast it until you Retrieve
+    // it" (p.86) - in a fight. A Spell already switched on can be switched off.
+    if (this.type === "spell" && !this.system.active && refuseSpellOutsideHotlist(this.actor, this)) return null;
 
     if (this.type === "skill" || this.type === "spell") warnPetCommand(this);
 

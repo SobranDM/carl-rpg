@@ -1,0 +1,112 @@
+// A Character's Combat tab (abilities.hbs): the Hotlist (hotlist.hbs) and
+// the Attacks list; and the Inventory's Slot column (items-list.hbs).
+@mixin styles {
+  .carl-hotlist {
+    margin-bottom: 6px;
+
+    legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+
+      .carl-hotlist-mana {
+        margin-left: auto;
+        font-weight: normal;
+      }
+    }
+  }
+
+  .carl-hotlist-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .carl-hotlist-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    padding: 1px 4px;
+    border-bottom: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.1));
+
+    &.empty {
+      border-bottom-style: dashed;
+    }
+
+    img {
+      flex: 0 0 22px;
+      border: none;
+    }
+
+    .carl-hotlist-number {
+      flex: 0 0 1.5em;
+      text-align: right;
+      opacity: 0.6;
+    }
+
+    .carl-hotlist-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .carl-hotlist-detail {
+      flex: 0 0 auto;
+      font-size: var(--font-size-12);
+      opacity: 0.8;
+    }
+
+    .carl-hotlist-inhand {
+      padding: 0 4px;
+      border: 1px solid var(--carl-accent);
+      border-radius: 3px;
+    }
+
+    .carl-hotlist-action {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 4.5em;
+      line-height: 20px;
+      padding: 0 6px;
+    }
+
+    .carl-slot-clear {
+      flex: 0 0 auto;
+    }
+
+    // A Spell in the Hotlist is what's castable in a fight.
+    &.kind-spell .carl-hotlist-action {
+      border-color: var(--carl-accent);
+    }
+  }
+
+  .carl-combat-attacks {
+    margin-bottom: 6px;
+  }
+
+  // Inventory: where each gear item is worn.
+  .carl-slot-column {
+    flex: 0 0 9em;
+
+    select {
+      width: 100%;
+    }
+
+    .carl-hint {
+      display: block;
+      font-size: var(--font-size-10, 10px);
+    }
+  }
+
+  .items-list .item.carl-worn h4 {
+    font-weight: bold;
+  }
+
+  .carl-hotlist-pin .fa-star.fas {
+    color: var(--carl-gold);
+  }
+}

@@ -81,6 +81,35 @@ export default function register(quench) {
         });
       });
 
+      describe("Combat tab", function () {
+        useQuenchTimeout(this);
+
+        it("a Character opens on Combat: Stats, the ten-slot Hotlist and its Attacks; Skills & Spells has its own tab", async function () {
+          const actor = await createTestCharacter("combat tab");
+          const sheet = actor.sheet;
+          try {
+            const sword = await createTestItem(actor, "skill", "sword", { system: { category: "attack" } });
+            await createTestItem(actor, "skill", "sneak", { system: { category: "utility" } });
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
+            assert.deepEqual(tabs.slice(0, 3), ["abilities", "skills", "items"]);
+            assert.include(sheet.element.querySelector('nav [data-tab="abilities"]').textContent, game.i18n.localize("CARLRPG.Tab.Combat"));
+            const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
+            assert.exists(combat.querySelector(".carl-stats-column"));
+            assert.equal(combat.querySelectorAll(".carl-hotlist-row").length, 10);
+            assert.exists(combat.querySelector(`.carl-combat-attacks [data-item-id="${sword.id}"]`), "Attack Skills are listed");
+            assert.lengthOf(combat.querySelectorAll(".carl-combat-attacks li.item"), 1, "only Attack Skills");
+            const skillsTab = sheet.element.querySelector('section.tab[data-tab="skills"]');
+            assert.exists(skillsTab.querySelector(".carl-skills-list"));
+            assert.notExists(sheet.element.querySelector(".carl-gear-grid"), "the equipment doll is gone");
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
       describe("Details tab", function () {
         useQuenchTimeout(this);
 

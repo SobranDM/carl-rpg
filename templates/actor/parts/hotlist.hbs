@@ -1,0 +1,37 @@
+{{!-- The Hotlist (p.98, module/helpers/hotlist.mjs): ten slots of items,
+      Spells or anything else at the ready. One row per slot with its one
+      action - Cast a Spell, Roll a Skill, Use a consumable, Ready gear (swap
+      it into the Main Hand). Spells must be here to be cast in a fight.
+      Drop or pin an item into a slot; empty slots stay drop targets. --}}
+<fieldset class="carl-hotlist">
+  <legend>
+    {{localize "CARLRPG.Hotlist.Title"}} <span class="carl-hotlist-count">{{hotlist.used}}/{{hotlist.size}}</span>
+    <span class="carl-hotlist-mana" title="{{localize 'CARLRPG.Actor.Mana'}}"><i class="fas fa-hat-wizard"></i> {{system.mana.value}}/{{system.mana.max}}</span>
+  </legend>
+  <ol class="carl-hotlist-rows">
+    {{#each hotlist.rows as |slot|}}
+    <li class="carl-hotlist-row {{#if slot.empty}}empty{{/if}} kind-{{slot.kind}}" data-slot-type="hotlist" data-slot-key="{{slot.index}}"
+      {{#if slot.itemId}}data-item-id="{{slot.itemId}}"{{/if}}>
+      <span class="carl-hotlist-number">{{slot.number}}</span>
+      {{#if slot.empty}}
+      <span class="carl-hotlist-name carl-hint">{{localize "CARLRPG.Hotlist.Empty"}}</span>
+      {{else}}
+      {{#if slot.img}}<img src="{{slot.img}}" alt="" width="22" height="22" />{{/if}}
+      <span class="carl-hotlist-name" title="{{slot.name}}">{{slot.name}}</span>
+      <span class="carl-hotlist-detail">
+        {{#if (eq slot.kind "spell")}}R{{slot.rank}} · {{slot.manaCost}} MP{{#if slot.active}} <i class="fas fa-bolt" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}{{/if}}
+        {{#if (eq slot.kind "skill")}}R{{slot.rank}}{{/if}}
+        {{#if (eq slot.kind "consumable")}}×{{slot.quantity}}{{/if}}
+        {{#if slot.inHand}}<span class="carl-hotlist-inhand">{{localize "CARLRPG.Hotlist.InHand"}}</span>{{/if}}
+      </span>
+      {{#if slot.action}}
+      <button type="button" class="carl-hotlist-action" data-action="useHotlist" title="{{localize (concat 'CARLRPG.Hotlist.Hint.' slot.action)}}">
+        {{localize (concat "CARLRPG.Hotlist.Action." slot.action)}}
+      </button>
+      {{/if}}
+      <a class="item-control carl-slot-clear" data-action="clearSlot" title="{{localize 'CARLRPG.Actor.ClearSlot'}}"><i class="fas fa-times"></i></a>
+      {{/if}}
+    </li>
+    {{/each}}
+  </ol>
+</fieldset>

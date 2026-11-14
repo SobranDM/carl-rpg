@@ -1,5 +1,6 @@
-{{!-- Spells list body - the content of the Spells drawer on the merged
-      Abilities tab (see abilities.hbs / collapsible-section.hbs). --}}
+{{!-- Spells list body - the content of the Spells drawer: a Character's
+      Skills & Spells tab (skills-tab.hbs), a Mob's or Pet's Abilities tab.
+      A Character pins a Spell to the Hotlist with the star. --}}
 <ol class="items-list">
   <li class="item flexrow items-header">
     <div class="item-name carl-sort-header" data-action="sortList" data-list="spells" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.spells.name}}"></i></div>
@@ -27,6 +28,11 @@
     <div class="item-prop">{{item.system.manaCost}}</div>
     <div class="item-prop">{{item.system.rank}}</div>
     <div class="item-controls">
+      {{#if @root.isCharacter}}
+      <a class="item-control carl-hotlist-pin" data-action="toggleHotlist" title="{{localize 'CARLRPG.Hotlist.PinSpellHint'}}">
+        <i class="{{#if item.inHotlist}}fas{{else}}far{{/if}} fa-star"></i>
+      </a>
+      {{/if}}
       {{#if ../locked}}
       {{#unless @root.isPet}}
       <a class="item-control" data-action="toggleMark" title="{{localize 'CARLRPG.Ranked.ToggleMark'}}">

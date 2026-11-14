@@ -40,6 +40,7 @@ import registerPdfImport from "./batches/pdf-import.mjs";
 import registerLootBox from "./batches/loot-box.mjs";
 import registerPets from "./batches/pets.mjs";
 import registerVehicles from "./batches/vehicles.mjs";
+import registerHotlist from "./batches/hotlist.mjs";
 
 const BATCH_REGISTRARS = [
   registerRules,
@@ -70,6 +71,7 @@ const BATCH_REGISTRARS = [
   registerLootBox,
   registerPets,
   registerVehicles,
+  registerHotlist,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

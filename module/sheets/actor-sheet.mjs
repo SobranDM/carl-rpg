@@ -22,6 +22,7 @@ import {
   activateNitrous, applyVehiclePreset, boardVehicle, exitVehicle, setDriver, toggleParked, updateVehicle,
 } from "../helpers/vehicles.mjs";
 import { canDrive, rollDrivingCheck } from "../helpers/vehicle-driving.mjs";
+import { hotlistRows, isInHotlist, toggleHotlist, useHotlistSlot } from "../helpers/hotlist.mjs";
 import { rollRam } from "../helpers/vehicle-ram.mjs";
 import { fireVehicleWeapon } from "../helpers/vehicle-weapons.mjs";
 import { petOwner } from "../helpers/pets.mjs";
@@ -82,6 +83,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       resetVehicleRound: CarlRPGActorSheet.#onResetVehicleRound,
       activateNitrous: CarlRPGActorSheet.#onActivateNitrous,
       fireVehicleWeapon: CarlRPGActorSheet.#onFireVehicleWeapon,
+      useHotlist: CarlRPGActorSheet.#onUseHotlist,
+      toggleHotlist: CarlRPGActorSheet.#onToggleHotlist,
       applyVehiclePreset: CarlRPGActorSheet.#onApplyVehiclePreset,
       resetUpgradeUse: CarlRPGActorSheet.#onResetUpgradeUse,
     },
@@ -92,6 +95,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     primary: {
       tabs: [
         { id: "abilities", label: "CARLRPG.Tab.Abilities" },
+        { id: "skills", label: "CARLRPG.Tab.SkillsSpells" },
         { id: "items", label: "CARLRPG.Tab.Inventory" },
         { id: "features", label: "CARLRPG.Tab.Boons" },
         { id: "conditions", label: "CARLRPG.Tab.Conditions" },
@@ -113,6 +117,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     },
     abilities: {
       template: "systems/carl-rpg/templates/actor/parts/abilities.hbs",
+      scrollable: [""],
+    },
+    skills: {
+      template: "systems/carl-rpg/templates/actor/parts/skills-tab.hbs",
       scrollable: [""],
     },
     items: {
@@ -148,7 +156,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @type {Object<string, string[]>}
    */
   static TABS_BY_TYPE = {
-    character: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
+    // A Character's first tab is Combat (Stats, Hotlist, Attacks); Skills
+    // and Spells have their own.
+    character: ["abilities", "skills", "items", "features", "conditions", "defenses", "pet", "description"],
     mob: ["abilities", "items", "features", "conditions", "defenses", "description"],
     pet: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
     // An object: no Boons, Debuffs or Defenses tab (Resistances are on its
@@ -183,7 +193,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @type {Object<string, Object<string, string>>}
    */
   static TAB_LABELS_BY_TYPE = {
-    character: { description: "CARLRPG.Tab.Details" },
+    character: { abilities: "CARLRPG.Tab.Combat", description: "CARLRPG.Tab.Details" },
     pet: { items: "CARLRPG.Tab.PetGear", pet: "CARLRPG.Tab.Details" },
     vehicle: { abilities: "CARLRPG.Tab.Vehicle", items: "CARLRPG.Tab.Cargo", pet: "CARLRPG.Tab.Details" },
   };
@@ -402,6 +412,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     if (actor.type === "character") {
       context.textSlots = this._buildTextSlots(actorData);
       context.equipSlots = this._buildEquipSlots(actorData);
+      // The Combat tab (abilities.hbs): the Hotlist and the Attack Skills.
+      const rows = hotlistRows(actor);
+      context.hotlist = { rows, used: rows.filter((r) => !r.empty).length, size: rows.length };
+      context.attackSkills = context.skills.filter((s) => s.system.category === "attack");
     }
 
     // Add roll data for TinyMCE editors.
@@ -614,6 +628,15 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const byName = (a, b) => a.name.localeCompare(b.name, game.i18n.lang, { sensitivity: "base" });
     skills.sort((a, b) => (skillCategoryRank(a.system.category) - skillCategoryRank(b.system.category)) || byName(a, b));
     for (const list of [gear, features, spells, damageEffects]) list.sort(byName);
+    if (this.actor.type === "character") {
+      for (const item of gear) {
+        item.slotValue = this.#slotValueOf(item);
+        item.inHotlist = isInHotlist(this.actor, item.id);
+      }
+      for (const spell of spells) spell.inHotlist = isInHotlist(this.actor, spell.id);
+      // Worn gear lists first (a stable sort keeps the name order within).
+      gear.sort((a, b) => (a.slotValue ? 0 : 1) - (b.slotValue ? 0 : 1));
+    }
     raceAndClass.sort((a, b) => (a.type === b.type ? 0 : a.type === "race" ? -1 : 1) || byName(a, b));
 
     context.gear = gear;
@@ -737,31 +760,71 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @returns {{hotlist: object[], gear: object[], accessories: object[], accessoryCount: number, accessoryMax: number, canAddAccessory: boolean, nextAccessoryIndex: number}}
    */
   _buildEquipSlots(system) {
-    const { hotlist: hotlistMax, accessories: accessoryMax } = CONFIG.CARLRPG.characterListSlots;
-    const hotlist = Array.from({ length: Math.max(hotlistMax, system.hotlist.length) }, (_, i) => {
-      const slot = { index: i, number: i + 1, ...resolveSlotValue(this.actor, system.hotlist[i]) };
-      // "Use a Hotlist Item" (p.64): a potion, scroll... gets a Use button.
-      slot.usable = !!this.actor.items.get(slot.itemId)?.system.consumable?.kind;
-      return slot;
-    });
-    const gear = Object.entries(CONFIG.CARLRPG.gearSlots).map(([key, { label, icon }]) => ({
-      key,
-      label,
-      icon,
-      ...resolveSlotValue(this.actor, system.gearSlots[key]),
-    }));
-    const accessories = system.accessories
-      .map((value, i) => ({ index: i, ...resolveSlotValue(this.actor, value) }))
-      .filter((slot) => slot.name);
-    return {
-      hotlist,
-      gear,
-      accessories,
-      accessoryCount: accessories.length,
-      accessoryMax,
-      canAddAccessory: accessories.length < accessoryMax,
-      nextAccessoryIndex: system.accessories.length,
+    const accessoryMax = CONFIG.CARLRPG.characterListSlots.accessories;
+    const accessoryCount = system.accessories.filter((value) => resolveSlotValue(this.actor, value).name).length;
+    // The Inventory's Slot column (items-list.hbs): not worn, a gear slot,
+    // an Accessory, or worn without a slot.
+    const slotChoices = {
+      "": "CARLRPG.Actor.NotWorn",
+      ...Object.fromEntries(Object.entries(CONFIG.CARLRPG.gearSlots).map(([key, { label }]) => [key, label])),
+      accessory: "CARLRPG.Actor.Accessory",
+      worn: "CARLRPG.Actor.WornNoSlot",
     };
+    return { slotChoices, accessoryCount, accessoryMax };
+  }
+
+  /**
+   * Where a gear item is worn, as the Slot column's value: its gear slot
+   * key, "accessory", "worn" (equipped with no slot), or "" (not worn).
+   * @param {object} item  An Item (or its context copy).
+   * @returns {string}
+   */
+  #slotValueOf(item) {
+    const { gearSlots, accessories } = this.actor.system;
+    const key = Object.keys(gearSlots ?? {}).find((k) => gearSlots[k] === item.id);
+    if (key) return key;
+    if ((accessories ?? []).includes(item.id)) return "accessory";
+    return item.system.equipped ? "worn" : "";
+  }
+
+  /**
+   * A Slot select in the Inventory changed: wear the item there (moving it
+   * out of any other slot), or take it off. The select has no name, so the
+   * sheet form never submits it.
+   * @param {HTMLSelectElement} select
+   * @returns {Promise<void>}
+   */
+  async #onSlotSelect(select) {
+    const item = this.actor.items.get(select.dataset.slotFor);
+    if (!item) return;
+    const value = select.value;
+    const current = this.#slotValueOf(item);
+    if (value === current) return;
+    if (value === "" || value === "worn") {
+      await unwearItem(this.actor, item);
+      if (value === "worn") await item.update({ "system.equipped": true });
+      return;
+    }
+    if (value === "accessory") {
+      const { accessoryCount, accessoryMax } = this._buildEquipSlots(this.actor.system);
+      if (accessoryCount >= accessoryMax) {
+        ui.notifications.warn(game.i18n.format("CARLRPG.Actor.AccessoriesFull", { max: accessoryMax }));
+        this.render({ parts: ["items"] });
+        return;
+      }
+      await assignItemToSlot(this.actor, { slotType: "accessory", slotKey: String(this.actor.system.accessories.length) }, item);
+      return;
+    }
+    await assignItemToSlot(this.actor, { slotType: "gear", slotKey: value }, item);
+  }
+
+  /** @override */
+  _onChangeForm(formConfig, event) {
+    if (event.target?.matches?.("select.carl-slot-select")) {
+      this.#onSlotSelect(event.target);
+      return;
+    }
+    return super._onChangeForm(formConfig, event);
   }
 
   /* -------------------------------------------- */
@@ -924,7 +987,28 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   }
 
   /**
-   * Empty one Inventory-tab Hotlist/Equipped slot (its (x) button).
+   * A Hotlist row's button: Cast, Roll, Use or Ready (module/helpers/hotlist.mjs).
+   * @private
+   */
+  static #onUseHotlist(event, target) {
+    event.preventDefault();
+    const index = Number(target.closest("[data-slot-key]")?.dataset.slotKey);
+    if (Number.isNaN(index)) return;
+    return useHotlistSlot(this.actor, index);
+  }
+
+  /**
+   * The star on an Inventory or Spell row: pin it to the Hotlist, or unpin.
+   * @private
+   */
+  static #onToggleHotlist(event, target) {
+    event.preventDefault();
+    const item = this.actor.items.get(target.closest("[data-item-id]")?.dataset.itemId);
+    if (item) return toggleHotlist(this.actor, item);
+  }
+
+  /**
+   * Empty one Hotlist slot (its (x) button).
    * @private
    */
   static #onClearSlot(event, target) {

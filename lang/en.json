@@ -1,5 +1,32 @@
 {
   "CARLRPG": {
+    "Hotlist": {
+      "Title": "Hotlist",
+      "Empty": "drop or pin here",
+      "InHand": "in hand",
+      "Attack": "Attack",
+      "Action": {
+        "Cast": "Cast",
+        "Roll": "Roll",
+        "Use": "Use",
+        "Ready": "Ready"
+      },
+      "Hint": {
+        "Cast": "Cast a Spell (an Action).",
+        "Roll": "Roll this Skill.",
+        "Use": "Use a Hotlist Item (an Action).",
+        "Ready": "Swap it into your hand - the Use a Hotlist Item Action, or free when you swap weapons as part of an Attack."
+      },
+      "PinHint": "Pin to the Hotlist, or unpin (in a fight, adding one is the Retrieve Action).",
+      "PinSpellHint": "Pin to the Hotlist - in a fight, a Spell can only be cast from there (p.86).",
+      "Full": "Your Hotlist is full: clear or swap an entry first.",
+      "RetrieveReminder": "{name} goes into your Hotlist - in a fight, that's the Retrieve Action.",
+      "NotInHotlist": "{name} isn't in your Hotlist: in a fight, Retrieve it first (an Action, p.86).",
+      "ReadyTitle": "Hotlist",
+      "Readied": "{name} readies {item}.",
+      "ReadiedSwap": "{name} swaps {previous} for {item}.",
+      "ReadyRule": "Use a Hotlist Item (an Action) - or free when swapping weapons as part of an Attack (p.98)."
+    },
     "Vehicle": {
       "Model": "Model",
       "Occupancy": "Occupancy",
@@ -289,6 +316,8 @@
       "Inventory": "Inventory",
       "PetGear": "Pet Gear",
       "Details": "Details",
+      "Combat": "Combat",
+      "SkillsSpells": "Skills & Spells",
       "Vehicle": "Vehicle",
       "Cargo": "Cargo",
       "Boons": "Boons",
@@ -484,6 +513,12 @@
       "AccessoriesCount": "Accessories · {count} of {max}",
       "AddAccessory": "Add",
       "ClearSlot": "Clear slot",
+      "Slot": "Slot",
+      "SlotHint": "Where it's worn: a gear slot, an Accessory, or worn with no slot. Only worn gear grants its bonuses.",
+      "NotWorn": "-",
+      "Accessory": "Accessory",
+      "WornNoSlot": "Worn (no slot)",
+      "AccessoriesFull": "You can wear up to {max} Accessories.",
       "DropItemHere": "Drop an item here",
       "SlotGearOnly": "Only gear can go in a gear or accessory slot.",
       "Accessories": "Accessories",

@@ -37,6 +37,7 @@ import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { postConsumableCard } from "../chat/consumable-card.mjs";
 import { isVehicle } from "./actor-kinds.mjs";
+import { refuseSpellOutsideHotlist } from "./hotlist.mjs";
 
 // "Each crawler may only consume two Stat potions and two Skill potions
 // during the entirety of their short life" (p.218).
@@ -180,6 +181,8 @@ export async function useConsumable(actor, item, { skipDialog = false } = {}) {
   }
   // "They must be conscious and not impaired, Dying, or the like."
   if (isBlockedByDebuff(actor)) return null;
+  // Cast a Spell: "Choose a Spell or scroll in your Hotlist" (Table 3).
+  if (kind === "scroll" && refuseSpellOutsideHotlist(actor, item)) return null;
   inUse.add(item.uuid);
   try {
     if (kind === "scroll") return await useScroll(actor, item, { skipDialog });
