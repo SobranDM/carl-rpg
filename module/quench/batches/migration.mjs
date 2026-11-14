@@ -1,5 +1,8 @@
 import { MIGRATIONS, migrationPlan, needsHandToHand, tickHandToHandOn } from "../../helpers/migration.mjs";
 import {
+  blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
+} from "../../helpers/companion-migration.mjs";
+import {
   createTestCharacter,
   createTestItem,
   deleteTestActor,
@@ -82,6 +85,160 @@ export default function register(quench) {
             assert.equal(await tickHandToHandOn(actor), 0, "idempotent");
           } finally {
             await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("0.6.0: the old Pet tab becomes Pet and Vehicle actors", function () {
+        useQuenchTimeout(this);
+
+        // The old blocks as a pre-0.6.0 Character stored them.
+        const oldPet = () => ({
+          name: "Rex", level: 300, str: 3, int: null, con: null, dex: 0, cha: null, dr: 2, evade: 14, move: 30,
+          size: "Large (5)", attacks: ["Bite 1d6", ""], special: "Fetches", hb: { value: 6, max: 8 },
+        });
+        const oldMount = () => ({
+          name: "Truck", size: "Huge", move: 60, occupants: 0, dr: 3, accessories: "Roof rack", hb: { value: 12, max: 12 },
+        });
+        const labels = (notes) => notes.map((n) => n.label);
+
+        it("the safety net keeps the old blocks before Foundry drops them", function () {
+          // Unsaved: built from raw data, as a world load builds each Actor.
+          const doc = new Actor.implementation({
+            name: "Quench legacy", type: "character",
+            system: { pet: { name: "Rex", dex: 4 }, mount: { name: "Car" } },
+          });
+          assert.notProperty(doc._source.system, "pet", "pruned from the system");
+          assert.notProperty(doc._source.system, "mount");
+          const legacy = legacyCompanionsOf(doc);
+          assert.equal(legacy?.pet?.name, "Rex", "but kept in the flag");
+          assert.equal(legacy.pet.dex, 4);
+          assert.equal(legacy.mount.name, "Car");
+
+          // A Character already converted doesn't get it back.
+          const done = new Actor.implementation({
+            name: "Quench converted", type: "character",
+            flags: { "carl-rpg": { companionsMigrated: true } },
+            system: { pet: { name: "Rex" } },
+          });
+          assert.isNull(legacyCompanionsOf(done));
+        });
+
+        it("reads Size from a number, a size name, or both", function () {
+          assert.equal(parseSize("Large"), 5);
+          assert.equal(parseSize("5"), 5);
+          assert.equal(parseSize("Large (5)"), 5);
+          assert.equal(parseSize("huge-ish"), 6);
+          assert.equal(parseSize("very large"), 5, "any word, not just the first");
+          assert.equal(parseSize("A Huge truck"), 6);
+          assert.isNull(parseSize("big"));
+          assert.isNull(parseSize(""));
+        });
+
+        it("a block counts as entered for any value - but not the untouched 10/10 Health Bar", function () {
+          assert.isFalse(blockEntered({ name: "", attacks: ["", ""], level: null, hb: { value: 10, max: 10 } }));
+          assert.isTrue(blockEntered({ hb: { value: 6, max: 10 } }));
+          assert.isTrue(blockEntered({ attacks: ["", "Bite"] }));
+          assert.isTrue(blockEntered({ special: "Fetches" }));
+        });
+
+        it("maps a Pet block, and puts what has no field in its Biography", async function () {
+          const character = await createTestCharacter("pet map");
+          try {
+            const { data, notes } = petDataFrom(character, oldPet());
+            const s = data.system;
+            assert.equal(data.type, "pet");
+            assert.equal(data.name, "Rex");
+            assert.equal(s.ownerId, character.id);
+            assert.equal(s.attributes.level.value, 250, "clamped");
+            assert.equal(s.stats.str.value, 3);
+            assert.equal(s.stats.dex.value, 1, "clamped");
+            assert.notProperty(s.stats, "int", "blank keeps the Pet's default");
+            assert.equal(s.dr, 2);
+            assert.equal(s.move, 30);
+            assert.equal(s.size, 5);
+            assert.equal(s.hbSlotsOverride, 8, "differs from the rule");
+            assert.equal(s.hb.value, 6);
+            assert.includeMembers(labels(notes), [
+              game.i18n.localize("CARLRPG.Migration.Companions.Evade"),
+              game.i18n.format("CARLRPG.Migration.Companions.Attack", { n: 1 }),
+              game.i18n.localize("CARLRPG.Migration.Companions.Special"),
+              game.i18n.localize("CARLRPG.Actor.HealthBar"),
+            ]);
+            assert.notInclude(labels(notes), game.i18n.format("CARLRPG.Migration.Companions.Attack", { n: 2 }), "a blank Attack isn't noted");
+            assert.include(s.biography, game.i18n.localize("CARLRPG.Migration.Companions.Heading"));
+            assert.include(s.biography, "Bite 1d6");
+
+            // In a compendium: not bonded by id (bonds are to world actors) -
+            // its crawler is named in its Biography instead.
+            const packed = petDataFrom(character, oldPet(), { inPack: true });
+            assert.notProperty(packed.data.system, "ownerId");
+            assert.include(packed.data.system.biography, character.name);
+
+            // An untouched 10/10: the rule's HB, no override.
+            const plain = petDataFrom(character, { name: "Pip", hb: { value: 10, max: 10 } }).data.system;
+            assert.notProperty(plain, "hbSlotsOverride");
+            assert.notProperty(plain, "hb");
+          } finally {
+            await deleteTestActor(character);
+          }
+        });
+
+        it("maps a Mount / Vehicle block to a Vehicle", async function () {
+          const character = await createTestCharacter("vehicle map");
+          try {
+            const { data, notes } = vehicleDataFrom(character, oldMount());
+            const s = data.system;
+            assert.equal(data.type, "vehicle");
+            assert.equal(data.name, "Truck");
+            assert.equal(s.size, 6);
+            assert.equal(s.move, 60);
+            assert.equal(s.occupancy, 1, "clamped");
+            assert.equal(s.dr, 3);
+            assert.equal(s.hb.value, 10, "clamped to 10 slots");
+            assert.includeMembers(labels(notes), [game.i18n.localize("CARLRPG.Migration.Companions.Accessories")]);
+            assert.lengthOf(labels(notes).filter((l) => l === game.i18n.localize("CARLRPG.Actor.HealthBar")), 1, "one Health Bar note");
+            assert.include(s.biography, "Roof rack");
+          } finally {
+            await deleteTestActor(character);
+          }
+        });
+
+        it("creates the actors, checks them, clears the old data - and a second run makes nothing new", async function () {
+          const legacy = { pet: oldPet(), mount: oldMount() };
+          const character = await createTestCharacter("pet tab", { flags: { "carl-rpg": { legacyCompanions: legacy } } });
+          const made = () => game.actors.filter((a) => a.flags?.["carl-rpg"]?.migratedFrom?.uuid === character.uuid);
+          try {
+            const result = await migrateCompanionsOf(character);
+            assert.isTrue(result.ok, result.error);
+            const pet = made().find((a) => a.type === "pet");
+            const vehicle = made().find((a) => a.type === "vehicle");
+            assert.exists(pet);
+            assert.exists(vehicle);
+            assert.equal(pet.system.ownerId, character.id);
+            assert.equal(pet._source.system.hbSlotsOverride, 8);
+            assert.equal(vehicle._source.system.move, 60);
+            assert.include(pet.system.biography, "Fetches");
+            assert.equal(pet.flags["carl-rpg"].migratedFrom.original.evade, 14, "the old block is kept verbatim");
+            assert.isNull(legacyCompanionsOf(character), "the old data is cleared");
+            assert.isTrue(character.flags["carl-rpg"].companionsMigrated);
+            // Only the Character's own players (none here) own the Vehicle.
+            const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
+            for (const [id, level] of Object.entries(vehicle.ownership)) {
+              if (id === "default" || id === game.user.id || level < OWNER) continue;
+              assert.isAtLeast(character.ownership[id] ?? 0, OWNER, `${id} doesn't own the Character`);
+            }
+
+            // Run again (the flag back, as if interrupted before the clear),
+            // after the Pet has changed - it's reused, not re-checked.
+            await pet.update({ "system.dr": 9 });
+            await character.setFlag("carl-rpg", "legacyCompanions", legacy);
+            const again = await migrateCompanionsOf(character);
+            assert.isTrue(again.ok, again.error);
+            assert.lengthOf(made(), 2, "reused, not made twice");
+          } finally {
+            for (const actor of made()) await actor.delete();
+            await deleteTestActor(character);
           }
         });
       });

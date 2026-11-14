@@ -58,7 +58,6 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     // CONFIG.CARLRPG.characterListSlots); storage is a plain string array.
     const text = () => new fields.StringField({ required: true, blank: true, initial: "" });
     const textList = () => new fields.ArrayField(text(), { required: true, initial: [] });
-    const optionalInteger = { required: true, nullable: true, integer: true, initial: null };
 
     schema.details = new fields.SchemaField({
       pronouns: text(),
@@ -95,38 +94,11 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     const richText = () => new fields.HTMLField({ required: true, blank: true, initial: "" });
     schema.story = richText();
 
-    // Pet / Mount-Vehicle: kept as an inline stat block (as on the printed
-    // sheet) rather than a linked Actor. hb is slots remaining / total slots.
-    const companionHb = () =>
-      new fields.SchemaField({
-        value: new fields.NumberField({ ...requiredInteger, initial: 10, min: 0 }),
-        max: new fields.NumberField({ ...requiredInteger, initial: 10, min: 0 }),
-      });
-    schema.pet = new fields.SchemaField({
-      name: text(),
-      level: new fields.NumberField(optionalInteger),
-      str: new fields.NumberField(optionalInteger),
-      int: new fields.NumberField(optionalInteger),
-      con: new fields.NumberField(optionalInteger),
-      dex: new fields.NumberField(optionalInteger),
-      cha: new fields.NumberField(optionalInteger),
-      dr: new fields.NumberField(optionalInteger),
-      evade: new fields.NumberField(optionalInteger),
-      move: new fields.NumberField(optionalInteger),
-      size: text(),
-      attacks: textList(),
-      special: text(),
-      hb: companionHb(),
-    });
-    schema.mount = new fields.SchemaField({
-      name: text(),
-      size: text(),
-      move: new fields.NumberField(optionalInteger),
-      occupants: new fields.NumberField(optionalInteger),
-      dr: new fields.NumberField(optionalInteger),
-      accessories: text(),
-      hb: companionHb(),
-    });
+    // The old Pet tab's Pet and Mount/Vehicle blocks (system.pet,
+    // system.mount) are gone: they became Pet and Vehicle actors (the 0.6.0
+    // migration, module/helpers/migration.mjs). Until it has run, CarlRPGActor.
+    // migrateData keeps their values in a flag, as Foundry drops keys the
+    // schema doesn't know.
 
     schema.importantKills = richText();
     schema.clubs = richText();

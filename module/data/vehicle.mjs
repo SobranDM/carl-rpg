@@ -116,7 +116,9 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
     if (!data.img) updates.img = "icons/environment/vehicles/car-automobile-classic.webp";
     if (sys.hb?.value === undefined) updates.system.hb = { value: 10, max: 10 };
     if (sys.resistances?.psychic === undefined) updates.system.resistances = { psychic: "immune" };
-    const crawler = user?.character?.type === "character" ? user.character : null;
+    // Not for one the 0.6.0 migration makes: it sets the Character's owners
+    // itself, and the migrating GM's own crawler has nothing to do with it.
+    const crawler = !options?.carlMigration && user?.character?.type === "character" ? user.character : null;
     if (crawler) {
       const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
       const owners = Object.entries(crawler.ownership ?? {})

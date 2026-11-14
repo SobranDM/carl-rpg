@@ -88,11 +88,9 @@ export default function register(quench) {
             assert.equal(s.personalSpace.notes, "");
             assert.equal(s.personalSpace.tier, "");
             assert.equal(s.gearSlots.mainHand, "");
-            assert.equal(s.pet.hb.max, 10);
-            assert.isNull(s.pet.str);
-            assert.deepEqual(s.pet.attacks, []);
-            assert.equal(s.mount.hb.value, 10);
-            assert.isNull(s.mount.occupants);
+            // The old Pet tab's blocks are gone (now Pet and Vehicle actors).
+            assert.notProperty(s, "pet");
+            assert.notProperty(s, "mount");
           } finally {
             await deleteTestActor(actor);
           }
@@ -105,11 +103,11 @@ export default function register(quench) {
           try {
             await actor.update({
               "system.hotlist": { 0: "Healing Potion", 1: "", 2: "Goblin Dynamite" },
-              "system.pet.attacks": { 0: "Bite 1d6" },
+              "system.externalBuffs": { 0: "Blessed" },
               "system.details.size": "5",
             });
             assert.deepEqual(actor.system.hotlist, ["Healing Potion", "", "Goblin Dynamite"]);
-            assert.deepEqual(actor.system.pet.attacks, ["Bite 1d6"]);
+            assert.deepEqual(actor.system.externalBuffs, ["Blessed"]);
             assert.equal(actor.system.details.size, 5);
           } finally {
             await deleteTestActor(actor);

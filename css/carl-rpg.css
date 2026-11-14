@@ -1839,24 +1839,6 @@
 .carl-rpg .carl-sheet-box textarea {
   width: 100%;
 }
-.carl-rpg .carl-companion-hb {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 4px 0;
-}
-.carl-rpg .carl-companion-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px 10px;
-  margin-bottom: 4px;
-}
-.carl-rpg .carl-companion-grid label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-}
 .carl-rpg .carl-pdf-import fieldset {
   display: flex;
   flex-wrap: wrap;
@@ -2208,6 +2190,7 @@
 .carl-rpg .carl-hotlist-row button.carl-hotlist-pick,
 .carl-rpg .carl-hotlist-row button.carl-hotlist-use {
   cursor: pointer;
+  transition: none;
 }
 .carl-rpg .carl-hotlist-row button.carl-hotlist-pick:hover, .carl-rpg .carl-hotlist-row button.carl-hotlist-pick:focus-visible,
 .carl-rpg .carl-hotlist-row button.carl-hotlist-use:hover,

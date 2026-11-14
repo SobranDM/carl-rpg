@@ -94,6 +94,9 @@
     button.carl-hotlist-pick,
     button.carl-hotlist-use {
       cursor: pointer;
+      // Core gives every button "transition: 0.5s", which made the hover
+      // outline fade in noticeably late.
+      transition: none;
 
       &:hover,
       &:focus-visible {

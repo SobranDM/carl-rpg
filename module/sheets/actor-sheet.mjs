@@ -143,8 +143,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       template: "systems/carl-rpg/templates/actor/parts/defenses.hbs",
       scrollable: [""],
     },
+    // A Pet's or Vehicle's Details tab (PART_TEMPLATES picks per type).
     pet: {
-      template: "systems/carl-rpg/templates/actor/parts/pet.hbs",
+      template: "systems/carl-rpg/templates/actor/parts/pet-details.hbs",
       scrollable: [""],
     },
     description: {
@@ -154,15 +155,16 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   };
 
   /**
-   * Which primary tabs each actor type shows. A Character's "pet" slot is
-   * the printed sheet's Pet page; a Pet's is its Details tab - the setup
-   * it rarely needs in play (pet-details.hbs).
+   * Which primary tabs each actor type shows. A Pet's and a Vehicle's "pet"
+   * slot is its Details tab - the setup it rarely needs in play
+   * (pet-details.hbs, vehicle-details.hbs). A Character has none: its old
+   * Pet page became Pet and Vehicle actors (helpers/companion-migration.mjs).
    * @type {Object<string, string[]>}
    */
   static TABS_BY_TYPE = {
     // A Character's first tab is Combat (Stats, Hotlist, Attacks); Skills
     // and Spells have their own.
-    character: ["abilities", "skills", "items", "features", "conditions", "defenses", "pet", "description"],
+    character: ["abilities", "skills", "items", "features", "conditions", "defenses", "description"],
     mob: ["abilities", "items", "features", "conditions", "defenses", "description"],
     pet: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
     // An object: no Boons, Debuffs or Defenses tab (Resistances are on its
@@ -185,7 +187,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     abilities: {
       character: "systems/carl-rpg/templates/actor/parts/abilities.hbs", mob: "systems/carl-rpg/templates/actor/parts/abilities-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/abilities-pet.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle.hbs",
     },
-    pet: { character: "systems/carl-rpg/templates/actor/parts/pet.hbs", pet: "systems/carl-rpg/templates/actor/parts/pet-details.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle-details.hbs" },
+    pet: { pet: "systems/carl-rpg/templates/actor/parts/pet-details.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle-details.hbs" },
     description: { character: "systems/carl-rpg/templates/actor/parts/details.hbs" },
   };
 
@@ -745,7 +747,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /**
    * Pad each fixed-length free-text list out to its sheet slot count, so the
    * sheet always renders the full set of inputs. Keys are camelCased from
-   * the field path ("pet.attacks" -> "petAttacks").
+   * the field path ("external.buffs" -> "externalBuffs").
    * @param {object} system The Character's system data.
    * @returns {Object<string, {index: number, number: number, value: string, name: string}[]>}
    */

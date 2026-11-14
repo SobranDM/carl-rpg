@@ -142,7 +142,6 @@ CARLRPG.characterListSlots = {
   externalBuffs: 3,
   hotlist: 10,
   accessories: 10,
-  "pet.attacks": 2,
 };
 
 /** Modifier application modes, mirroring Foundry core's ActiveEffect/DataField#applyChange type enum. */

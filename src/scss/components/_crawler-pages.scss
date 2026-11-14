@@ -116,25 +116,4 @@
       width: 100%;
     }
   }
-
-  .carl-companion-hb {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin: 4px 0;
-  }
-
-  .carl-companion-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2px $padding-md;
-    margin-bottom: 4px;
-
-    label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 4px;
-    }
-  }
 }

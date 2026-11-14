@@ -12,9 +12,13 @@
  *   Actors, Items, Scenes or world compendium content) has nothing to fix:
  *   it's marked as having had them all (migrationPlan).
  * - Every migration is idempotent (it only changes what still needs it). Its
- *   id is recorded once a full pass completes - a document that fails is
- *   reported, not retried forever (as dnd5e does); only a run cut short (the
- *   tab closed mid-way) runs again on the next load.
+ *   id is recorded once a pass completes, even if it threw or some documents
+ *   failed - they're reported, not retried forever (as dnd5e does). Only a
+ *   run cut short (the tab closed mid-way), or one that reports itself
+ *   incomplete (the Pet tab's: a Character must never be stranded), runs
+ *   again on the next load.
+ * - After that, the old Pet tab sweep (companion-migration.mjs) converts any
+ *   world Character that still has old Pet tab data.
  * - Updates pass `render: false` and change only the one field involved, so
  *   no sheets redraw mid-run and no other data is rewritten.
  * - World compendiums are migrated too, unlocked for the run and locked
@@ -23,17 +27,21 @@
  *   overrides aren't visited (as in dnd5e and Draw Steel).
  */
 import { slugifySkillName } from "./modifiers.mjs";
+import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions } from "./companion-migration.mjs";
 
 const SCOPE = "carl-rpg";
 export const MIGRATION_SETTING = "completedMigrations";
 
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
- * is the release whose data it brings a world up to (for messages).
- * @type {{id: string, version: string, run: () => Promise<{changed: number, errors: number}>}[]}
+ * is the release whose data it brings a world up to (for messages). A run
+ * that returns `incomplete: true` isn't recorded, so it runs again on the
+ * next load (one whose leftovers must not be stranded - the Pet tab's).
+ * @type {{id: string, version: string, run: () => Promise<{changed: number, errors: number, incomplete?: boolean}>}[]}
  */
 export const MIGRATIONS = [
   { id: "0.6.0-hand-to-hand-box", version: "0.6.0", run: migrateHandToHandSkills },
+  { id: COMPANIONS_MIGRATION_ID, version: "0.6.0", run: migrateCompanionActors },
 ];
 
 /** Register the setting listing the migrations this world has had (init). */
@@ -78,20 +86,29 @@ function worldHasContent() {
  */
 export async function migrateWorld() {
   if (!game.user.isActiveGM) return;
-  const { run, record } = migrationPlan({
-    done: game.settings.get(SCOPE, MIGRATION_SETTING),
-    hasContent: worldHasContent(),
-  });
-  if (!record) return;
-  if (!run.length) {
-    await game.settings.set(SCOPE, MIGRATION_SETTING, record);
-    return;
+  const done = game.settings.get(SCOPE, MIGRATION_SETTING) ?? [];
+  const { run, record } = migrationPlan({ done, hasContent: worldHasContent() });
+  if (record && !run.length) await game.settings.set(SCOPE, MIGRATION_SETTING, record);
+  if (run.length) await runMigrations(run, done);
+  // A pre-0.6.0 Character imported after the Pet tab migration ran still
+  // has its old Pet tab turned into actors.
+  if ((game.settings.get(SCOPE, MIGRATION_SETTING) ?? []).includes(COMPANIONS_MIGRATION_ID)) {
+    await sweepLegacyCompanions();
   }
+}
+
+/**
+ * Run these migrations in order, with a banner, recording each that finishes.
+ * @param {typeof MIGRATIONS} run
+ * @param {string[]} done  The ids recorded before.
+ */
+async function runMigrations(run, done) {
 
   const version = run.at(-1).version;
   const banner = ui.notifications.info(game.i18n.format("CARLRPG.Migration.Begin", { version }), { permanent: true });
   let errors = 0;
   let changed = 0;
+  const finished = [];
   try {
     for (const migration of run) {
       console.log(`carl-rpg | Running migration ${migration.id}`);
@@ -99,14 +116,18 @@ export async function migrateWorld() {
         const result = await migration.run();
         errors += result.errors;
         changed += result.changed;
+        // A full pass is recorded even if some documents failed - they're
+        // reported rather than retried on every load - unless the migration
+        // says it must run again (incomplete).
+        if (!result.incomplete) finished.push(migration.id);
       } catch (err) {
+        // Recorded too: reported once, not retried on every load.
         console.error(`carl-rpg | Migration ${migration.id} failed`, err);
         errors += 1;
+        finished.push(migration.id);
       }
     }
-    // A full pass happened: record it, even if some documents failed - they
-    // are reported rather than retried on every load.
-    await game.settings.set(SCOPE, MIGRATION_SETTING, record);
+    await game.settings.set(SCOPE, MIGRATION_SETTING, [...new Set([...done, ...finished])]);
   } finally {
     ui.notifications.remove(banner);
   }

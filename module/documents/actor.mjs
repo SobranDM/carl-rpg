@@ -11,6 +11,35 @@ import { grantPetSkills, levelBondedPets, syncPetCommandStatus, syncPetOwnership
  * @extends {Actor}
  */
 export class CarlRPGActor extends Actor {
+  /**
+   * The old Pet tab's blocks (system.pet / system.mount) are no longer in
+   * the Character schema, and Foundry drops keys a schema doesn't know when
+   * it cleans source data. This runs first, on the whole raw source (the
+   * root DataModelSchemaField migrates before any field is cleaned), and
+   * keeps a copy in a flag for the 0.6.0 migration (helpers/companion-
+   * migration.mjs) to turn into Pet and Vehicle actors. Flags aren't pruned.
+   * In place: the root ignores the return value. A Character already
+   * converted (marked companionsMigrated) is left alone.
+   * @override
+   */
+  static migrateData(source) {
+    const system = source?.system;
+    const hasOld = source?.type === "character" && system && typeof system === "object" && ("pet" in system || "mount" in system);
+    if (hasOld && source.flags?.["carl-rpg"]?.companionsMigrated) {
+      // Already converted (helpers/companion-migration.mjs), yet the database
+      // still has the old keys: they're not brought back, only reported.
+      console.warn(`carl-rpg | ${source.name}: old Pet tab data is still stored after its migration; ignored.`);
+    } else if (hasOld) {
+      source.flags ??= {};
+      source.flags["carl-rpg"] ??= {};
+      source.flags["carl-rpg"].legacyCompanions ??= foundry.utils.deepClone({
+        pet: system.pet ?? null,
+        mount: system.mount ?? null,
+      });
+    }
+    return super.migrateData(source);
+  }
+
   /** @override */
   prepareData() {
     super.prepareData();
@@ -43,6 +72,9 @@ export class CarlRPGActor extends Actor {
   async _preUpdate(changed, options, user) {
     const allowed = await super._preUpdate(changed, options, user);
     if (allowed === false) return false;
+    // The 0.6.0 migration rewrites the whole system to drop old keys: nothing
+    // really changed, so none of the reactions below apply.
+    if (options.carlMigration) return;
 
     const newLevel = foundry.utils.getProperty(changed, "system.attributes.level.value");
     if (newLevel !== undefined) {
@@ -99,6 +131,7 @@ export class CarlRPGActor extends Actor {
    */
   async _onUpdate(changed, options, userId) {
     super._onUpdate(changed, options, userId);
+    if (options.carlMigration) return;
     // Defeat/death marking (module/helpers/defeat.mjs): a Mob at 0 HB, or a
     // crawler whose Dying countdown has run out. The active GM does it, so it
     // works whoever applied the damage.
@@ -133,7 +166,9 @@ export class CarlRPGActor extends Actor {
    */
   _onCreate(data, options, userId) {
     super._onCreate(data, options, userId);
-    if (isPet(this) && game.users.activeGM?.isSelf) {
+    // The 0.6.0 migration grants a Pet it makes its Skills itself, awaited
+    // (helpers/companion-migration.mjs).
+    if (isPet(this) && game.users.activeGM?.isSelf && !options.carlMigration) {
       grantPetSkills(this).catch((err) => console.error("CarlRPG | pet skill grant failed", err));
     }
   }
