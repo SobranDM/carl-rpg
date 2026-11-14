@@ -1,6 +1,6 @@
 import { processRoundEnd, processCombatEnd } from "../helpers/round-end.mjs";
 import { resetPetCommands } from "../helpers/pet-command.mjs";
-import { isCrawler, isPet, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { isCrawler, isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 
 /**
  * Initiative stand-ins for a PvE fight, where the book has no initiative at
@@ -32,10 +32,11 @@ export class CarlRPGCombat extends Combat {
   /**
    * Whether every combatant is a crawler (PvP) - an empty combat isn't.
    * Crawlers' Pets don't decide it either way: crawlers + their Pets is
-   * still PvP, and a Pet rolls d20 + DEX like everyone else.
+   * still PvP, and a Pet rolls d20 + DEX like everyone else. Nor do vehicles
+   * (which are never combatants anyway - see CarlRPGCombatant).
    */
   get isPvP() {
-    const combatants = this.combatants.contents.filter((c) => !isPet(c.actor));
+    const combatants = this.combatants.contents.filter((c) => !isPet(c.actor) && !isVehicle(c.actor));
     return combatants.length > 0 && combatants.every((c) => isCrawler(c.actor));
   }
 
@@ -101,10 +102,16 @@ export class CarlRPGCombatant extends Combatant {
   async _preCreate(data, options, user) {
     const allowed = await super._preCreate(data, options, user);
     if (allowed === false) return false;
+    // "They do not have Actions" (Vehicles, p.72): the people in it fight,
+    // the vehicle doesn't take turns.
+    if (isVehicle(this.actor)) {
+      ui.notifications.warn(game.i18n.format("CARLRPG.Vehicle.NotACombatant", { name: this.actor.name }));
+      return false;
+    }
     if (this.initiative !== null && this.initiative !== undefined) return;
     const combat = this.parent;
     const pve = !rollsLikeCrawler(this.actor)
-      || combat?.combatants.some((c) => !rollsLikeCrawler(c.actor));
+      || combat?.combatants.some((c) => !rollsLikeCrawler(c.actor) && !isVehicle(c.actor));
     if (pve) this.updateSource({ initiative: pveInitiativeFor(this.actor) });
   }
 

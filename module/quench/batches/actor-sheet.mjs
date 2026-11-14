@@ -81,6 +81,30 @@ export default function register(quench) {
         });
       });
 
+      describe("Details tab", function () {
+        useQuenchTimeout(this);
+
+        it("a Character's Description slot is its Details tab: Tier, Size and rich text boxes", async function () {
+          const actor = await createTestCharacter("details");
+          const sheet = actor.sheet;
+          try {
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            const nav = sheet.element.querySelector('nav [data-tab="description"]');
+            assert.include(nav.textContent, game.i18n.localize("CARLRPG.Tab.Details"));
+            const tab = sheet.element.querySelector('section.tab[data-tab="description"]');
+            assert.exists(tab.querySelector('input[name="system.personalSpace.tier"]'));
+            assert.exists(tab.querySelector('input[name="system.personalSpace.size"]'));
+            for (const name of ["personalSpace.notes", "deity", "sponsors", "clubs", "importantKills", "story", "biography"]) {
+              assert.exists(tab.querySelector(`prose-mirror[name="system.${name}"]`), name);
+            }
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
       describe("column header sort", function () {
         useQuenchTimeout(this);
 

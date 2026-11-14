@@ -29,23 +29,6 @@
       </div>
       {{/if}}
     </div>
-    <label class="resource-label">{{localize "CARLRPG.Actor.Resistances"}}</label>
-    <div class="carl-resistances-grid">
-      {{#each config.damageTypes as |label type|}}
-      <div class="carl-resistance-row">
-        <span class="carl-resistance-type">{{localize label}}</span>
-        <select class="carl-w-short" name="{{concat 'system.resistances.' type}}">
-          {{selectOptions ../config.resistanceStates selected=(lookup ../system.resistances type) localize=true}}
-        </select>
-        {{#with (lookup ../system.resistancesEffective type) as |effectiveState|}}
-        {{#unless (eq effectiveState (lookup ../../system.resistances type))}}
-        <span class="carl-resistance-granted" title="{{localize 'CARLRPG.Actor.ResistanceGrantedHint'}}">
-          ({{localize (lookup ../../config.resistanceStates effectiveState)}})
-        </span>
-        {{/unless}}
-        {{/with}}
-      </div>
-      {{/each}}
-    </div>
+    {{> "systems/carl-rpg/templates/actor/parts/resistances-grid.hbs"}}
   </fieldset>
 </section>

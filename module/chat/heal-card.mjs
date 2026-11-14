@@ -18,6 +18,7 @@ import { findConditionWithMechanic, conditionLabel } from "../helpers/debuff-eff
 import { shortRestUpdates, conditionsAfterRest, hbCeiling, restoreUpTo } from "../helpers/rest.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
+import { isVehicle } from "../helpers/actor-kinds.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/heal-footer.hbs";
 
@@ -77,6 +78,12 @@ export async function onApplyHeal(event, message) {
   const actor = await resolveHealActor(uuid);
   if (!actor) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Heal.NoActor"));
+    return;
+  }
+
+  // Vehicles are repaired (a GM edit of their Health Bar), not healed.
+  if (isVehicle(actor)) {
+    ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.NotHealed"));
     return;
   }
 

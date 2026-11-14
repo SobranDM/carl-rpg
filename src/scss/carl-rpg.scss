@@ -19,6 +19,7 @@
 @use "components/pdf-import";
 @use "components/loot-box";
 @use "components/pet-sheet";
+@use "components/vehicle-sheet";
 
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
@@ -39,4 +40,5 @@
   @include pdf-import.styles;
   @include loot-box.styles;
   @include pet-sheet.styles;
+  @include vehicle-sheet.styles;
 }

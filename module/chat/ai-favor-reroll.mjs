@@ -13,6 +13,7 @@ import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { createRollMessage } from "./chat-card.mjs";
 import { isCardLocked } from "./taunt-card.mjs";
 import { recordRowEvade, resolveRowTarget } from "./attack-targets-card.mjs";
+import { drivingResultSettled, rerollDrivingCheck } from "../helpers/vehicle-driving.mjs";
 
 const SCOPE = "carl-rpg";
 const inFlight = new Set();
@@ -49,6 +50,9 @@ export function canReroll(message) {
   // "Before the GM announces the result": not once the Attack has been
   // acted on (a row Evaded or applied, a Taunt, damage applied).
   if (spec.kind === "attack" && isCardLocked(message)) return false;
+  // A Driving Check whose result has been used (a Critical Hit pick, its
+  // damage applied, Shock Absorbers) is settled.
+  if (spec.kind === "driving" && drivingResultSettled(flags.driving)) return false;
   if (spec.kind === "rowEvade") {
     const { row } = rowEvadeTarget(spec);
     if (!row || row.applied || row.replaced) return false;
@@ -184,6 +188,7 @@ export async function rerollMessage(message) {
     await updateCardMessage(message, { flags: { [SCOPE]: { aiRerolled: true, aiReroll: { used: true } } } });
     if (spec.kind === "attack") await CarlDice.rerollAttack(message);
     else if (spec.kind === "rowEvade") await rerollRowEvade(spec, target);
+    else if (spec.kind === "driving") await rerollDrivingCheck(message);
     else await rerollCheck(spec, actor);
     return true;
   } finally {

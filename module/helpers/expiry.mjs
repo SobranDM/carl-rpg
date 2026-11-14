@@ -47,7 +47,7 @@ export function durationSeconds(duration, unit) {
  * next time the clock moves while its scene is in play (expiry compares
  * against the time then, so nothing is lost).
  */
-function sweepableActors() {
+export function sweepableActors() {
   const actors = new Map();
   for (const actor of game.actors) actors.set(actor.uuid, actor);
   const scenes = new Set([canvas?.scene, ...game.combats.filter((c) => c.started).map((c) => c.scene)].filter(Boolean));

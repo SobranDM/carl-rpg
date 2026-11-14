@@ -105,6 +105,20 @@ export async function createTestPet(label = "pet", data = {}) {
 }
 
 /**
+ * A Vehicle (module/data/vehicle.mjs).
+ * @param {string} [label]
+ * @param {object} [data]
+ * @returns {Promise<Actor>}
+ */
+export async function createTestVehicle(label = "vehicle", data = {}) {
+  return Actor.create({
+    name: `Quench ${label} ${foundry.utils.randomID()}`,
+    type: "vehicle",
+    ...data,
+  });
+}
+
+/**
  * @param {Actor} actor
  * @param {string} type  One of item|feature|skill|damageEffect|spell|class|race.
  * @param {string} [label]

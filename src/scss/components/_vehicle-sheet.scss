@@ -1,0 +1,90 @@
+// Vehicle sheet (header-vehicle.hbs, vehicle.hbs, vehicle-details.hbs -
+// module/data/vehicle.mjs). Reuses the Pet sheet's chips and setup
+// fieldsets (_pet-sheet.scss) and the Mob stat-block row.
+@mixin styles {
+  .carl-vehicle-model {
+    font-style: italic;
+  }
+
+  // The chip that says it's moving.
+  .carl-pet-chip.moving {
+    border-color: var(--carl-accent);
+    font-weight: bold;
+  }
+
+  .carl-vehicle-statblock {
+    .carl-vehicle-move {
+      font-size: 1.4em;
+      font-weight: bold;
+    }
+
+    .carl-vehicle-round a {
+      cursor: pointer;
+    }
+  }
+
+  .carl-vehicle-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0;
+
+    button,
+    .carl-vehicle-round-override {
+      flex: 0 0 auto;
+      width: auto;
+    }
+
+    // Sized to its longest option ("No Check (full Move)").
+    .carl-vehicle-round-override {
+      min-width: 11em;
+    }
+  }
+
+  .carl-vehicle-occupants,
+  .carl-vehicle-weapons,
+  .carl-vehicle-upgrades {
+    margin-bottom: 6px;
+
+    .item-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      img {
+        border: none;
+      }
+    }
+
+    .carl-vehicle-role {
+      flex: 0 0 7em;
+    }
+  }
+
+  .carl-vehicle-missing {
+    opacity: 0.6;
+  }
+
+  .carl-vehicle-board {
+    gap: 6px;
+    margin: 4px 0;
+
+    button {
+      flex: 0 0 auto;
+      width: auto;
+    }
+  }
+
+  .carl-vehicle-preset {
+    gap: 6px;
+    margin-bottom: 4px;
+
+    > * {
+      flex: 0 0 auto;
+    }
+  }
+
+  .carl-attack-skill,
+  .carl-attack-stat {
+    flex: 0 0 5em;
+  }
+}

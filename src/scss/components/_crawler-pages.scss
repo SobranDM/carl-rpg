@@ -2,7 +2,7 @@
 
 // Character-only Pet tab (pet.hbs), the Inventory
 // tab's Hotlist/Equipped drop slots (items-list.hbs), the Description
-// tab's character lists and story notes (description.hbs), and the shared
+// tab's rich text notes (details.hbs), and the shared
 // fixed-length free-text list partial (text-slots.hbs), plus the header's
 // second details row (header.hbs).
 @mixin styles {
@@ -204,6 +204,37 @@
     textarea {
       flex: 1;
       min-width: 0;
+    }
+  }
+
+  // Character Details tab (details.hbs): rich text boxes two to a row,
+  // the long-form ones (Important Kills, Story, Biography) full width.
+  .carl-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px $padding-md;
+
+    .carl-details-box {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      margin: 0;
+
+      &.wide {
+        grid-column: 1 / -1;
+      }
+
+      prose-mirror {
+        min-height: 90px;
+      }
+
+      &.wide prose-mirror {
+        min-height: 140px;
+      }
+    }
+
+    .carl-personal-space-fields {
+      margin-bottom: 4px;
     }
   }
 

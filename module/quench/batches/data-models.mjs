@@ -77,20 +77,16 @@ export default function register(quench) {
             assert.equal(s.details.move, 20);
             assert.equal(s.details.step, 10);
             assert.equal(s.details.size, 4);
-            for (const key of [
-              "externalBuffs",
-              "hotlist",
-              "accessories",
-              "importantKills",
-              "clubs",
-              "deity",
-              "sponsors",
-            ]) {
+            for (const key of ["externalBuffs", "hotlist", "accessories"]) {
               assert.deepEqual(s[key], [], key);
             }
-            assert.deepEqual(s.personalSpace.notes, []);
+            // The Details tab's notes are rich text boxes.
+            for (const key of ["importantKills", "clubs", "deity", "sponsors", "story"]) {
+              assert.equal(s[key], "", key);
+            }
+            assert.equal(s.personalSpace.notes, "");
+            assert.equal(s.personalSpace.tier, "");
             assert.equal(s.gearSlots.mainHand, "");
-            assert.equal(s.story.regrets, "");
             assert.equal(s.pet.hb.max, 10);
             assert.isNull(s.pet.str);
             assert.deepEqual(s.pet.attacks, []);
@@ -567,6 +563,48 @@ export default function register(quench) {
           try {
             assert.equal(resolveSlotValue(actor, "Goblin Dynamite").name, "Goblin Dynamite");
             assert.equal(resolveSlotValue(actor, foundry.utils.randomID()).name, "");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("folds the old Details slot lists and Story into rich text boxes", async function () {
+          const actor = await createTestCharacter("legacy notes", {
+            system: {
+              importantKills: ["A goblin", "", "The <Hoarder>"],
+              clubs: ["Desperado Club"],
+              deity: [],
+              sponsors: ["Valtay", "Borant"],
+              personalSpace: { tier: "2", size: "Medium", amenities: "Hot tub", notes: ["", "Mini fridge"] },
+              story: { pastTrauma: "Lost a cat\nTwice", looseEnds: "", regrets: "Everything", notes: "" },
+            },
+          });
+          try {
+            const s = actor.system;
+            assert.equal(s.importantKills, "<p>A goblin</p><p>The &lt;Hoarder&gt;</p>", "one paragraph per non-empty slot, escaped");
+            assert.equal(s.clubs, "<p>Desperado Club</p>");
+            assert.equal(s.deity, "");
+            assert.equal(s.sponsors, "<p>Valtay</p><p>Borant</p>");
+            assert.equal(s.personalSpace.tier, "2");
+            assert.equal(s.personalSpace.size, "Medium");
+            assert.include(s.personalSpace.notes, "Hot tub");
+            assert.include(s.personalSpace.notes, "<p>Mini fridge</p>");
+            assert.notProperty(s.personalSpace, "amenities");
+            assert.include(s.story, game.i18n.localize("CARLRPG.Actor.PastTrauma"));
+            assert.include(s.story, "<p>Lost a cat</p><p>Twice</p>");
+            assert.include(s.story, "<p>Everything</p>");
+            assert.notInclude(s.story, game.i18n.localize("CARLRPG.Actor.LooseEnds"), "empty parts are left out");
+
+            // An old "amenities" key left in the database isn't folded in again.
+            const reloaded = actor.system.constructor.migrateData({
+              personalSpace: { amenities: "Hot tub", notes: "<p>mine</p>" },
+            });
+            assert.equal(reloaded.personalSpace.notes, "<p>mine</p>");
+
+            // Saving the new shapes changes nothing; a cleared box stays cleared.
+            await actor.update({ "system.clubs": "" });
+            assert.equal(actor.system.clubs, "");
+            assert.equal(actor.system.sponsors, "<p>Valtay</p><p>Borant</p>");
           } finally {
             await deleteTestActor(actor);
           }

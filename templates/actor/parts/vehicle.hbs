@@ -1,0 +1,73 @@
+{{!-- Vehicle's main tab (module/data/vehicle.mjs), rendered in the
+      "abilities" slot - who is aboard, its weapons and the upgrades used in
+      play. Set-once fields are on the Details tab (vehicle-details.hbs). --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="abilities">
+  <fieldset class="carl-vehicle-occupants">
+    <legend>{{localize "CARLRPG.Vehicle.Occupants"}}</legend>
+    <ol class="items-list">
+      {{#each vehicle.occupants as |occupant|}}
+      <li class="item flexrow {{#if occupant.missing}}carl-vehicle-missing{{/if}}">
+        <div class="item-name">
+          {{#if occupant.img}}<img src="{{occupant.img}}" alt="" width="24" height="24" />{{/if}}
+          <a data-action="openOccupant" data-uuid="{{occupant.uuid}}">{{occupant.name}}</a>
+          {{#if occupant.missing}}<span class="carl-hint">({{localize "CARLRPG.Vehicle.Missing"}})</span>{{/if}}
+        </div>
+        <div class="item-prop carl-vehicle-role">{{localize occupant.roleLabel}}</div>
+        <div class="item-controls">
+          {{#if occupant.canDrive}}
+          <a class="item-control" data-action="setDriver" data-uuid="{{occupant.uuid}}" title="{{localize 'CARLRPG.Vehicle.MakeDriver'}}"><i class="fas fa-car-side"></i></a>
+          {{/if}}
+          {{#if occupant.canExit}}
+          <a class="item-control" data-action="exitVehicle" data-uuid="{{occupant.uuid}}" title="{{localize 'CARLRPG.Vehicle.Exit'}}"><i class="fas fa-sign-out-alt"></i></a>
+          {{/if}}
+        </div>
+      </li>
+      {{else}}
+      <li class="item carl-hint">{{localize "CARLRPG.Vehicle.Empty"}}</li>
+      {{/each}}
+    </ol>
+    <div class="flexrow carl-vehicle-board">
+      {{#if vehicle.canBoard}}
+      <button type="button" data-action="boardVehicle"><i class="fas fa-sign-in-alt"></i> {{localize "CARLRPG.Vehicle.BoardAs" name=vehicle.boarder.name}}</button>
+      {{/if}}
+      {{#if @root.isGM}}
+      <button type="button" data-action="boardSelected" title="{{localize 'CARLRPG.Vehicle.BoardSelectedHint'}}"><i class="fas fa-users"></i> {{localize "CARLRPG.Vehicle.BoardSelected"}}</button>
+      {{/if}}
+    </div>
+    <p class="carl-hint">{{localize "CARLRPG.Vehicle.RulesReminder" board=vehicle.status.boardDifficulty stop=vehicle.status.stopDifficulty buff=vehicle.status.evadeBuff}}</p>
+  </fieldset>
+
+  {{#if vehicle.weapons.length}}
+  <fieldset class="carl-vehicle-weapons">
+    <legend>{{localize "CARLRPG.Vehicle.Weapons"}}</legend>
+    <ol class="items-list">
+      {{#each vehicle.weapons as |weapon|}}
+      <li class="item flexrow">
+        <div class="item-name">{{weapon.name}}</div>
+        <div class="item-prop">{{weapon.damage}} {{weapon.damageTypeLabel}}</div>
+        <div class="item-prop">{{weapon.range}}</div>
+        <div class="item-controls">
+          {{#if weapon.canFire}}
+          <a class="item-control" data-action="fireVehicleWeapon" data-index="{{weapon.index}}" title="{{localize 'CARLRPG.Vehicle.FireHint'}}"><i class="fas fa-crosshairs"></i></a>
+          {{/if}}
+          {{#if @root.isGM}}
+          <a class="item-control" data-action="rollMobAttack" data-index="{{weapon.index}}" title="{{localize 'CARLRPG.Vehicle.FireAsCrewHint'}}"><i class="fas fa-dice-d20"></i></a>
+          {{/if}}
+        </div>
+      </li>
+      {{/each}}
+    </ol>
+  </fieldset>
+  {{/if}}
+
+  {{#if vehicle.perFloor.length}}
+  <fieldset class="carl-vehicle-upgrades">
+    <legend>{{localize "CARLRPG.Vehicle.UpgradesInPlay"}}</legend>
+    <ul>
+      {{#each vehicle.perFloor as |upgrade|}}
+      <li><strong>{{localize upgrade.label}}</strong>: {{#if upgrade.available}}{{localize "CARLRPG.Vehicle.PerFloor.Available"}}{{else}}{{localize "CARLRPG.Vehicle.PerFloor.Used"}}{{/if}}</li>
+      {{/each}}
+    </ul>
+  </fieldset>
+  {{/if}}
+</section>

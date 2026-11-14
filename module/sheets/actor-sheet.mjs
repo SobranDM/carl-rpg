@@ -16,7 +16,14 @@ import {
 import CarlDice from "../dice/dice.mjs";
 import { isLootBoxItem, takeLootItem } from "../helpers/loot-box.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
-import { isCrawler, isPet } from "../helpers/actor-kinds.mjs";
+import { isCrawler, isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { resolveOccupant, vehicleOccupants, vehicleStatus } from "../helpers/vehicle-state.mjs";
+import {
+  activateNitrous, applyVehiclePreset, boardVehicle, exitVehicle, setDriver, toggleParked, updateVehicle,
+} from "../helpers/vehicles.mjs";
+import { canDrive, rollDrivingCheck } from "../helpers/vehicle-driving.mjs";
+import { rollRam } from "../helpers/vehicle-ram.mjs";
+import { fireVehicleWeapon } from "../helpers/vehicle-weapons.mjs";
 import { petOwner } from "../helpers/pets.mjs";
 import { commandPet, describePetCommand, petFight } from "../helpers/pet-command.mjs";
 
@@ -63,6 +70,20 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       sortList: CarlRPGActorSheet.#onSortList,
       commandPet: CarlRPGActorSheet.#onCommandPet,
       openPetOwner: CarlRPGActorSheet.#onOpenPetOwner,
+      drivingCheck: CarlRPGActorSheet.#onDrivingCheck,
+      stopCheck: CarlRPGActorSheet.#onStopCheck,
+      ramVehicle: CarlRPGActorSheet.#onRamVehicle,
+      boardVehicle: CarlRPGActorSheet.#onBoardVehicle,
+      boardSelected: CarlRPGActorSheet.#onBoardSelected,
+      exitVehicle: CarlRPGActorSheet.#onExitVehicle,
+      setDriver: CarlRPGActorSheet.#onSetDriver,
+      openOccupant: CarlRPGActorSheet.#onOpenOccupant,
+      toggleParked: CarlRPGActorSheet.#onToggleParked,
+      resetVehicleRound: CarlRPGActorSheet.#onResetVehicleRound,
+      activateNitrous: CarlRPGActorSheet.#onActivateNitrous,
+      fireVehicleWeapon: CarlRPGActorSheet.#onFireVehicleWeapon,
+      applyVehiclePreset: CarlRPGActorSheet.#onApplyVehiclePreset,
+      resetUpgradeUse: CarlRPGActorSheet.#onResetUpgradeUse,
     },
   };
 
@@ -130,6 +151,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     character: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
     mob: ["abilities", "items", "features", "conditions", "defenses", "description"],
     pet: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
+    // An object: no Boons, Debuffs or Defenses tab (Resistances are on its
+    // Details tab). Its "abilities" slot is the Vehicle tab, "items" Cargo.
+    vehicle: ["abilities", "items", "pet", "description"],
   };
 
   /**
@@ -141,19 +165,27 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @type {Object<string, Object<string, string>>}
    */
   static PART_TEMPLATES = {
-    header: { character: "systems/carl-rpg/templates/actor/parts/header.hbs", mob: "systems/carl-rpg/templates/actor/parts/header-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/header-pet.hbs" },
-    abilities: { character: "systems/carl-rpg/templates/actor/parts/abilities.hbs", mob: "systems/carl-rpg/templates/actor/parts/abilities-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/abilities-pet.hbs" },
-    pet: { character: "systems/carl-rpg/templates/actor/parts/pet.hbs", pet: "systems/carl-rpg/templates/actor/parts/pet-details.hbs" },
+    header: {
+      character: "systems/carl-rpg/templates/actor/parts/header.hbs", mob: "systems/carl-rpg/templates/actor/parts/header-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/header-pet.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/header-vehicle.hbs",
+    },
+    abilities: {
+      character: "systems/carl-rpg/templates/actor/parts/abilities.hbs", mob: "systems/carl-rpg/templates/actor/parts/abilities-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/abilities-pet.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle.hbs",
+    },
+    pet: { character: "systems/carl-rpg/templates/actor/parts/pet.hbs", pet: "systems/carl-rpg/templates/actor/parts/pet-details.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle-details.hbs" },
+    description: { character: "systems/carl-rpg/templates/actor/parts/details.hbs" },
   };
 
   /**
-   * Per-type tab label overrides: a Pet has no Inventory of its own ("You
-   * have to hold on to all their stuff", p.232) - only the gear it wears;
-   * and its "pet" slot is its Details tab.
+   * Per-type tab label overrides: a Character's "description" slot is its
+   * Details tab (details.hbs, the printed sheet's notes); a Pet has no
+   * Inventory of its own ("You have to hold on to all their stuff", p.232) -
+   * only the gear it wears - and its "pet" slot is its Details tab.
    * @type {Object<string, Object<string, string>>}
    */
   static TAB_LABELS_BY_TYPE = {
-    pet: { items: "CARLRPG.Tab.PetGear", pet: "CARLRPG.Tab.PetDetails" },
+    character: { description: "CARLRPG.Tab.Details" },
+    pet: { items: "CARLRPG.Tab.PetGear", pet: "CARLRPG.Tab.Details" },
+    vehicle: { abilities: "CARLRPG.Tab.Vehicle", items: "CARLRPG.Tab.Cargo", pet: "CARLRPG.Tab.Details" },
   };
 
   /**
@@ -197,6 +229,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     if (!submitted || typeof submitted !== "object") return data;
     const source = this.actor.system.toObject();
     if (isPet(this.actor) && submitted.command) this.#processCommandOverride(submitted);
+    if (isVehicle(this.actor) && submitted.round) this.#processVehicleRoundOverride(submitted);
     for (const [key, value] of Object.entries(submitted)) {
       const current = source[key];
       if (!Array.isArray(current) || !value || typeof value !== "object" || Array.isArray(value)) continue;
@@ -224,6 +257,30 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     submitted.command = fight
       ? { state: picked, combatId: fight.id, round: fight.round }
       : { state: "", combatId: "", round: null };
+  }
+
+  /**
+   * A Vehicle's GM "This round" select (vehicle-details.hbs) submits with
+   * every change; only an actual change counts. It's the round result for
+   * the vehicle's current fight (or outside one) - how a Mob-driven vehicle,
+   * whose driver doesn't roll, gets a Table 6 result.
+   * @param {object} submitted
+   */
+  #processVehicleRoundOverride(submitted) {
+    const picked = submitted.round.degree ?? "";
+    const status = vehicleStatus(this.actor);
+    if (picked === status.roundDegree) {
+      delete submitted.round;
+      return;
+    }
+    const current = this.actor.system.round;
+    submitted.round = {
+      combatId: status.fight?.id ?? "",
+      round: status.fight?.round ?? null,
+      degree: picked,
+      critChoice: "",
+      ramFactor: status.roundActive ? current.ramFactor : 1,
+    };
   }
 
   /** @override */
@@ -290,6 +347,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.isCharacter = isCrawler(actor);
     context.isMob = actor.type === "mob";
     context.isPet = isPet(actor);
+    context.isVehicle = isVehicle(actor);
     context.isGM = game.user.isGM;
     // An HB slot count the GM can hand-set over the rule (hb-bar.hbs). A
     // Pet's is set up once, on its Details tab.
@@ -322,6 +380,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     }
 
     if (context.isPet) context.pet = this.#preparePetContext(actor, context.currentFloor);
+    if (context.isVehicle) context.vehicle = this.#prepareVehicleContext(actor, context.currentFloor);
 
     // Template convenience variables
     context.cssClass = [...this.options.classes, actor.type].join(" ");
@@ -348,12 +407,109 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Add roll data for TinyMCE editors.
     context.rollData = actor.getRollData();
 
-    context.biographyHTML = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-      actor.system.biography ?? "",
+    const enrich = (html) => foundry.applications.ux.TextEditor.implementation.enrichHTML(
+      html ?? "",
       { relativeTo: actor, secrets: actor.isOwner, rollData: context.rollData },
     );
+    context.biographyHTML = await enrich(actor.system.biography);
+    if (context.isCharacter) await this.#prepareDetailsBoxes(context, enrich);
 
     return context;
+  }
+
+  /**
+   * The Character Details tab's rich text boxes (details.hbs), in layout
+   * order: Personal Space's notes sit in its own fieldset with Tier/Size.
+   * @param {object} context
+   * @param {(html: string) => Promise<string>} enrich
+   */
+  async #prepareDetailsBoxes(context, enrich) {
+    const sys = context.system;
+    context.detailsHTML = { personalSpace: await enrich(sys.personalSpace.notes) };
+    const boxes = [
+      { field: "deity", label: "CARLRPG.Actor.Deity" },
+      { field: "sponsors", label: "CARLRPG.Actor.Sponsors", hint: "CARLRPG.Actor.SponsorsHint" },
+      { field: "clubs", label: "CARLRPG.Actor.Clubs" },
+      { field: "importantKills", label: "CARLRPG.Actor.ImportantKills", wide: true },
+      { field: "story", label: "CARLRPG.Actor.Story", wide: true },
+    ];
+    context.detailsBoxes = await Promise.all(boxes.map(async (box) => ({
+      ...box,
+      name: `system.${box.field}`,
+      value: sys[box.field] ?? "",
+      html: await enrich(sys[box.field]),
+    })));
+  }
+
+  /**
+   * A Vehicle sheet's context (header-vehicle.hbs, vehicle.hbs,
+   * vehicle-details.hbs): its motion this round, who is aboard and what
+   * this user may do with them.
+   * @param {Actor} vehicle
+   * @param {number} floor
+   * @returns {object}
+   */
+  #prepareVehicleContext(vehicle, floor) {
+    const sys = vehicle.system;
+    const cfg = CONFIG.CARLRPG;
+    const isGM = game.user.isGM;
+    const status = vehicleStatus(vehicle);
+    const owns = (actor) => isGM || !!actor?.isOwner;
+    const occupants = vehicleOccupants(vehicle).map((o) => ({
+      uuid: o.uuid,
+      role: o.role,
+      roleLabel: cfg.vehicleRoles[o.role],
+      name: o.actor?.name ?? o.name,
+      img: o.actor?.img ?? null,
+      missing: !o.actor,
+      canExit: owns(o.actor) || vehicle.isOwner,
+      canDrive: o.role !== "driver" && !!o.actor && owns(o.actor),
+    }));
+    const driver = status.driver;
+    // Who "Board" puts in: this player's selected token or their crawler,
+    // if it isn't aboard already. The GM boards selected tokens instead.
+    let boarder = null;
+    if (!isGM) {
+      const token = (canvas.tokens?.controlled ?? []).find((t) => t.actor?.isOwner && !isVehicle(t.actor));
+      boarder = token?.actor ?? game.user.character ?? null;
+      if (boarder && sys.occupants.some((o) => o.uuid === boarder.uuid)) boarder = null;
+    }
+    const loc = (key) => game.i18n.localize(key);
+    const degreeLabel = status.roundDegree ? loc(cfg.degreesOfSuccess[status.roundDegree]) : "";
+    let roundLabel = "";
+    if (!sys.parked && (status.roundDegree || (status.roundActive && sys.round.ramFactor < 1))) {
+      roundLabel = [
+        degreeLabel ? game.i18n.format("CARLRPG.Vehicle.RoundResult", { result: degreeLabel }) : "",
+        status.roundActive && sys.round.ramFactor < 1 ? loc("CARLRPG.Vehicle.Ram.MoveLost") : "",
+      ].filter(Boolean).join(" - ");
+    }
+    const full = status.occupantCount >= status.capacity;
+    return {
+      status,
+      driver,
+      full,
+      driveSkillLabel: cfg.vehicleDriveSkills[sys.driveSkill]?.label ?? "",
+      occupants,
+      boarder,
+      canBoard: !!boarder && !full,
+      canDrive: canDrive(vehicle),
+      canControl: isGM || vehicle.isOwner || owns(driver),
+      roundLabel,
+      moveHint: game.i18n.format("CARLRPG.Vehicle.MoveHint", { max: status.maxMove, base: sys.move, bonus: status.driveBonus }),
+      nitrousReady: sys.upgrades.nitrous.installed && !status.nitrousActive,
+      weapons: sys.attacks.map((w, index) => ({
+        ...w,
+        index,
+        damageTypeLabel: w.damageType ? loc(cfg.damageTypes[w.damageType]) : "",
+        canFire: occupants.some((o) => !o.missing && owns(resolveOccupant(o.uuid)) && rollsLikeCrawler(resolveOccupant(o.uuid))),
+      })),
+      perFloor: ["shockAbsorbers", "fuzzyDice"]
+        .filter((key) => sys.upgrades[key].installed)
+        .map((key) => ({ label: `CARLRPG.Vehicle.Upgrades.${key}`, available: sys.upgrades[key].usedFloor !== floor })),
+      presetChoices: Object.fromEntries(Object.entries(cfg.vehiclePresets).map(([k, p]) => [k, p.label])),
+      driveSkillChoices: Object.fromEntries(Object.entries(cfg.vehicleDriveSkills).map(([k, s]) => [k, s.label])),
+      degreeChoices: cfg.degreesOfSuccess,
+    };
   }
 
   /**
@@ -883,6 +1039,100 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     return petOwner(this.actor)?.sheet.render({ force: true });
   }
 
+  /* Vehicles (module/helpers/vehicles.mjs, vehicle-driving.mjs, vehicle-ram.mjs). */
+
+  /** The driver's Driving Check (Table 6). @private */
+  static #onDrivingCheck(event, target) {
+    event.preventDefault();
+    return rollDrivingCheck(this.actor);
+  }
+
+  /** Stopping in time: Driving vs 10 + Move ÷ 5 (p.72). @private */
+  static #onStopCheck(event, target) {
+    event.preventDefault();
+    return rollDrivingCheck(this.actor, { mode: "stop" });
+  }
+
+  /** Ram the targeted token(s) (p.73). @private */
+  static #onRamVehicle(event, target) {
+    event.preventDefault();
+    return rollRam(this.actor);
+  }
+
+  /** Board with this player's selected token or crawler. @private */
+  static #onBoardVehicle(event, target) {
+    event.preventDefault();
+    const token = (canvas.tokens?.controlled ?? []).find((t) => t.actor?.isOwner && !isVehicle(t.actor));
+    const actor = token?.actor ?? game.user.character;
+    if (!actor) return ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.NoBoarder"));
+    return boardVehicle(this.actor, actor);
+  }
+
+  /** GM: board every selected token (the way to put unlinked Mobs aboard). @private */
+  static async #onBoardSelected(event, target) {
+    event.preventDefault();
+    const actors = (canvas.tokens?.controlled ?? []).map((t) => t.actor).filter((a) => a && !isVehicle(a));
+    if (!actors.length) return ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.NoneSelected"));
+    for (const actor of actors) await boardVehicle(this.actor, actor);
+  }
+
+  /** @private */
+  static #onExitVehicle(event, target) {
+    event.preventDefault();
+    return exitVehicle(this.actor, target.dataset.uuid);
+  }
+
+  /** @private */
+  static #onSetDriver(event, target) {
+    event.preventDefault();
+    return setDriver(this.actor, target.dataset.uuid);
+  }
+
+  /** @private */
+  static #onOpenOccupant(event, target) {
+    event.preventDefault();
+    return resolveOccupant(target.dataset.uuid)?.sheet.render({ force: true });
+  }
+
+  /** @private */
+  static #onToggleParked(event, target) {
+    event.preventDefault();
+    return toggleParked(this.actor);
+  }
+
+  /** GM: back to full Move for this round. @private */
+  static #onResetVehicleRound(event, target) {
+    event.preventDefault();
+    return updateVehicle(this.actor, {
+      "system.round": { combatId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
+    });
+  }
+
+  /** @private */
+  static #onActivateNitrous(event, target) {
+    event.preventDefault();
+    return activateNitrous(this.actor);
+  }
+
+  /** A crawler occupant fires a built-in weapon. @private */
+  static #onFireVehicleWeapon(event, target) {
+    event.preventDefault();
+    return fireVehicleWeapon(this.actor, Number(target.dataset.index));
+  }
+
+  /** Fill in the picked Table 7 preset. @private */
+  static #onApplyVehiclePreset(event, target) {
+    event.preventDefault();
+    const key = this.element.querySelector("[data-vehicle-preset]")?.value;
+    if (key) return applyVehiclePreset(this.actor, key);
+  }
+
+  /** GM: make a once-per-Floor upgrade available again. @private */
+  static #onResetUpgradeUse(event, target) {
+    event.preventDefault();
+    return this.actor.update({ [`system.upgrades.${target.dataset.upgrade}.usedFloor`]: null });
+  }
+
   static #onSpendStatPoints(event, target) {
     event.preventDefault();
     if (isPet(this.actor) && this.actor.system.isMount) return;
@@ -894,6 +1144,17 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /* -------------------------------------------- */
 
   /**
+   * Dropping an Actor on a Vehicle's sheet boards it (p.72). Other sheets
+   * keep core's no-op.
+   * @override
+   */
+  async _onDropActor(event, actor) {
+    if (!isVehicle(this.actor)) return super._onDropActor(event, actor);
+    const boarded = await boardVehicle(this.actor, actor);
+    return boarded ? actor : null;
+  }
+
+  /**
    * Handle a dropped Item: create an embedded copy. Dropping an item back
    * onto its own Actor does nothing - every list has a fixed order
    * (_prepareItems), so manual reordering is gone - unless it lands on an
@@ -903,6 +1164,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   async _onDropItem(event, item) {
     if (!this.actor.isOwner) return null;
+    // A Vehicle carries gear as Cargo; it has no Skills, Boons or Class.
+    if (isVehicle(this.actor) && item.type !== "item") {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.OnlyCargo"));
+      return null;
+    }
     // A Pet has no Class or Race ("Pets don't have a Class", p.232).
     if (isPet(this.actor) && ["class", "race"].includes(item.type)) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Pet.NoClassOrRace"));

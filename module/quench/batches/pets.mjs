@@ -429,7 +429,7 @@ export default function register(quench) {
             assert.include(gearTab.textContent, game.i18n.localize("CARLRPG.Tab.PetGear"));
             // Set-once fields live on the Details tab, not in the header.
             const detailsTab = sheet.element.querySelector('nav [data-tab="pet"]');
-            assert.include(detailsTab.textContent, game.i18n.localize("CARLRPG.Tab.PetDetails"));
+            assert.include(detailsTab.textContent, game.i18n.localize("CARLRPG.Tab.Details"));
             const details = sheet.element.querySelector('section.tab[data-tab="pet"]');
             for (const name of ["system.ownerId", "system.attitude", "system.role", "system.size", "system.isMount", "system.move"]) {
               assert.exists(details.querySelector(`[name="${name}"]`), `${name} on Details`);

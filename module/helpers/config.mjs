@@ -137,29 +137,17 @@ function gearIcon(name) {
   return `systems/carl-rpg/assets/gear-slots/${name}.svg`;
 }
 
-/** The crawler's story notes on the Description tab. */
-CARLRPG.storyFields = {
-  pastTrauma: "CARLRPG.Actor.PastTrauma",
-  looseEnds: "CARLRPG.Actor.LooseEnds",
-  regrets: "CARLRPG.Actor.Regrets",
-  notes: "CARLRPG.Actor.Notes",
-};
-
 /**
  * Fixed slot counts for the Character's free-text list fields, matching the
  * printed/Roll20 sheet ("Accessories (Max 10)", "External Buffs (Max 3)"...).
- * The sheet always renders exactly this many inputs per list.
+ * The sheet always renders exactly this many inputs per list. (The Details
+ * tab's notes are rich text boxes instead - data/character.mjs.)
  * @type {Object<string, number>}
  */
 CARLRPG.characterListSlots = {
   externalBuffs: 3,
   hotlist: 10,
   accessories: 10,
-  importantKills: 10,
-  clubs: 5,
-  deity: 5,
-  sponsors: 3,
-  "personalSpace.notes": 7,
   "pet.attacks": 2,
 };
 
@@ -380,6 +368,55 @@ CARLRPG.petCommandStates = {
   hiding: { label: "CARLRPG.Pet.Command.States.hiding", status: "carlPetHiding", img: "icons/svg/invisible.svg" },
 };
 CARLRPG.petLevelStepCap = 15;
+
+/**
+ * Vehicles (p.72-73) - see module/data/vehicle.mjs and docs/companions-and-vehicles.md.
+ *  - vehiclePresets: Table 7 (Move, Size, DR, Occupancy, cargo), plus the
+ *    Skill that drives it: Chopper Pilot for two wheels, Driving for "three
+ *    or more wheels or tracks" (a skateboard has four).
+ *  - vehicleDriveSkills: each driving Skill's Ranks - which lifts the
+ *    driver's Disadvantage on Attacks (Driving 5, Chopper Pilot 10), which
+ *    add "+5ft Move", Driving 10's Advantage to Evade, and the Rank 15 stunt
+ *    Advantage.
+ *  - drivingOutcomes: Table 6, per Degree - this round's Move (a factor of
+ *    full Move, or feet lost), HB slots of damage (10% = 1 slot, 30% = 3,
+ *    ignoring DR), Advantage on the next operating Check, the Critical Hit
+ *    choice, and the stall.
+ *  - mountedOnlySkills: weapons the driver uses without the Driving
+ *    Disadvantage ("mounted-only weapons (like a lance)", p.72).
+ */
+CARLRPG.vehiclePresets = {
+  skateboard: { label: "CARLRPG.Vehicle.Presets.skateboard", move: 30, size: 2, dr: 0, occupancy: 1, cargo: 0, driveSkill: "driving" },
+  bicycle: { label: "CARLRPG.Vehicle.Presets.bicycle", move: 40, size: 3, dr: 0, occupancy: 2, cargo: 0, driveSkill: "chopperPilot" },
+  tank: { label: "CARLRPG.Vehicle.Presets.tank", move: 50, size: 6, dr: 10, occupancy: 4, cargo: 0, driveSkill: "driving" },
+  eighteenWheeler: { label: "CARLRPG.Vehicle.Presets.eighteenWheeler", move: 60, size: 7, dr: 4, occupancy: 4, cargo: 50, driveSkill: "driving" },
+  largeTruck: { label: "CARLRPG.Vehicle.Presets.largeTruck", move: 70, size: 6, dr: 4, occupancy: 3, cargo: 5, driveSkill: "driving" },
+  sedan: { label: "CARLRPG.Vehicle.Presets.sedan", move: 80, size: 5, dr: 3, occupancy: 6, cargo: 0, driveSkill: "driving" },
+  sportscar: { label: "CARLRPG.Vehicle.Presets.sportscar", move: 100, size: 5, dr: 2, occupancy: 2, cargo: 0, driveSkill: "driving" },
+  motorcycle: { label: "CARLRPG.Vehicle.Presets.motorcycle", move: 120, size: 4, dr: 1, occupancy: 2, cargo: 0, driveSkill: "chopperPilot" },
+};
+CARLRPG.vehicleDriveSkills = {
+  driving: { label: "CARLRPG.Vehicle.DriveSkills.driving", skillName: "Driving", attackRank: 5, moveRanks: [10, 15], evadeAdvantageRank: 10, stuntRank: 15 },
+  chopperPilot: { label: "CARLRPG.Vehicle.DriveSkills.chopperPilot", skillName: "Chopper Pilot", attackRank: 10, moveRanks: [5, 15], evadeAdvantageRank: null, stuntRank: 15 },
+};
+CARLRPG.vehicleRoles = {
+  driver: "CARLRPG.Vehicle.Roles.driver",
+  passenger: "CARLRPG.Vehicle.Roles.passenger",
+};
+CARLRPG.drivingOutcomes = {
+  criticalHit: { factor: 1, delta: 0, damageSlots: 0, advantageNext: false, critChoice: true, stall: false },
+  amazingSuccess: { factor: 1, delta: 0, damageSlots: 0, advantageNext: true, critChoice: false, stall: false },
+  standardSuccess: { factor: 1, delta: 0, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
+  nearMissFail: { factor: 1, delta: -5, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
+  standardFail: { factor: 0.5, delta: 0, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
+  majorFail: { factor: 0.5, delta: 0, damageSlots: 1, advantageNext: false, critChoice: false, stall: false },
+  criticalFail: { factor: 0, delta: 0, damageSlots: 3, advantageNext: false, critChoice: false, stall: true },
+};
+/** Degrees in order, worst to best - Shock Absorbers step a Fail up one. */
+CARLRPG.degreeOrder = ["criticalFail", "majorFail", "standardFail", "nearMissFail", "standardSuccess", "amazingSuccess", "criticalHit"];
+CARLRPG.mountedOnlySkills = ["Lance"];
+/** Nitrous Oxide: "Double Move for 3 rounds" (p.73). */
+CARLRPG.nitrousRounds = 3;
 
 /**
  * Table 50: Boss Severity (p.270). Every Boss tier shares the same base of 5

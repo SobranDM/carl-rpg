@@ -1886,6 +1886,29 @@
   flex: 1;
   min-width: 0;
 }
+.carl-rpg .carl-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+}
+.carl-rpg .carl-details-grid .carl-details-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+}
+.carl-rpg .carl-details-grid .carl-details-box.wide {
+  grid-column: 1/-1;
+}
+.carl-rpg .carl-details-grid .carl-details-box prose-mirror {
+  min-height: 90px;
+}
+.carl-rpg .carl-details-grid .carl-details-box.wide prose-mirror {
+  min-height: 140px;
+}
+.carl-rpg .carl-details-grid .carl-personal-space-fields {
+  margin-bottom: 4px;
+}
 .carl-rpg .carl-sheet-box {
   display: flex;
   flex-direction: column;
@@ -2112,4 +2135,75 @@
 }
 .carl-rpg .carl-pet-int-warning {
   color: var(--carl-hazard);
+}
+.carl-rpg .carl-vehicle-model {
+  font-style: italic;
+}
+.carl-rpg .carl-pet-chip.moving {
+  border-color: var(--carl-accent);
+  font-weight: bold;
+}
+.carl-rpg .carl-vehicle-statblock .carl-vehicle-move {
+  font-size: 1.4em;
+  font-weight: bold;
+}
+.carl-rpg .carl-vehicle-statblock .carl-vehicle-round a {
+  cursor: pointer;
+}
+.carl-rpg .carl-vehicle-actions {
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0;
+}
+.carl-rpg .carl-vehicle-actions button,
+.carl-rpg .carl-vehicle-actions .carl-vehicle-round-override {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-vehicle-actions .carl-vehicle-round-override {
+  min-width: 11em;
+}
+.carl-rpg .carl-vehicle-occupants,
+.carl-rpg .carl-vehicle-weapons,
+.carl-rpg .carl-vehicle-upgrades {
+  margin-bottom: 6px;
+}
+.carl-rpg .carl-vehicle-occupants .item-name,
+.carl-rpg .carl-vehicle-weapons .item-name,
+.carl-rpg .carl-vehicle-upgrades .item-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-vehicle-occupants .item-name img,
+.carl-rpg .carl-vehicle-weapons .item-name img,
+.carl-rpg .carl-vehicle-upgrades .item-name img {
+  border: none;
+}
+.carl-rpg .carl-vehicle-occupants .carl-vehicle-role,
+.carl-rpg .carl-vehicle-weapons .carl-vehicle-role,
+.carl-rpg .carl-vehicle-upgrades .carl-vehicle-role {
+  flex: 0 0 7em;
+}
+.carl-rpg .carl-vehicle-missing {
+  opacity: 0.6;
+}
+.carl-rpg .carl-vehicle-board {
+  gap: 6px;
+  margin: 4px 0;
+}
+.carl-rpg .carl-vehicle-board button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-vehicle-preset {
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-vehicle-preset > * {
+  flex: 0 0 auto;
+}
+.carl-rpg .carl-attack-skill,
+.carl-rpg .carl-attack-stat {
+  flex: 0 0 5em;
 }

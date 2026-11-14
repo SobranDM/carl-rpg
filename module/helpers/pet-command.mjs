@@ -25,7 +25,7 @@ import { CARLRPG } from "./config.mjs";
 import { degreeBadge } from "./rules.mjs";
 import { isPet } from "./actor-kinds.mjs";
 import { petOwner } from "./pets.mjs";
-import { cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem } from "./race-class-grants.mjs";
+import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { createCardMessage, createRollMessage, esc } from "../chat/chat-card.mjs";
 
 /** Results that settle the Pet for the rest of the fight - only "staying out" can be retried. */
@@ -103,22 +103,12 @@ export function describePetCommand(pet) {
 }
 
 /**
- * The crawler's Animal Handling Skill, or - untrained - an unsaved Rank 0
- * copy from the compendium, which rolls with Disadvantage and is never
- * marked for Advancement (nothing on the crawler to mark).
+ * The crawler's Animal Handling Skill, or an unsaved untrained copy.
  * @param {Actor} owner
  * @returns {Promise<{skill: Item, trained: boolean}>}
  */
-async function animalHandlingFor(owner) {
-  const owned = findOwnedSkillLike(owner, "Animal Handling", ["skill"]);
-  if (owned) return { skill: owned, trained: true };
-  const source = await findSkillLikeItem("Animal Handling");
-  const data = cleanSkillLikeCopy(
-    source ?? { name: "Animal Handling", type: "skill", img: "icons/svg/pawprint.svg", system: { governingStat: "cha", category: "utility" } },
-    0,
-  );
-  data._id = foundry.utils.randomID();
-  return { skill: new CONFIG.Item.documentClass(data, { parent: owner }), trained: false };
+function animalHandlingFor(owner) {
+  return skillOrUntrainedCopy(owner, "Animal Handling", { img: "icons/svg/pawprint.svg", system: { governingStat: "cha" } });
 }
 
 /**

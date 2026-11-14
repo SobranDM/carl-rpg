@@ -20,6 +20,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/carl-rpg/templates/actor/parts/hb-bar.hbs",
     "systems/carl-rpg/templates/actor/parts/shield-bar.hbs",
     "systems/carl-rpg/templates/actor/parts/attacks-list.hbs",
+    "systems/carl-rpg/templates/actor/parts/resistances-grid.hbs",
     // Chat / dialog templates.
     "systems/carl-rpg/templates/chat/card-shell.hbs",
     "systems/carl-rpg/templates/chat/target-effects-footer.hbs",

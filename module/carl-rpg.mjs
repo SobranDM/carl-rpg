@@ -13,6 +13,9 @@ import CarlSpendStatPointsDialog from './apps/spend-stat-points-dialog.mjs';
 import { registerChatListener } from './chat/chat-listener.mjs';
 import { registerChatSocket } from './helpers/chat-socket.mjs';
 import { registerLootBoxSocket } from './helpers/loot-box.mjs';
+import { registerVehicleHooks, registerVehicleSocket } from './helpers/vehicles.mjs';
+import { rollDrivingCheck } from './helpers/vehicle-driving.mjs';
+import { rollRam } from './helpers/vehicle-ram.mjs';
 import { registerExpirySweep } from './helpers/expiry.mjs';
 import { commandPet } from './helpers/pet-command.mjs';
 import { bakeItemGrants } from './helpers/race-class-grants.mjs';
@@ -30,6 +33,8 @@ Hooks.once('init', function () {
     importCrawlerForgeCrawler,
     openRulebookImporter,
     commandPet,
+    rollDrivingCheck,
+    rollRam,
   };
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
@@ -143,6 +148,7 @@ Hooks.once('init', function () {
     mob: models.CarlRPGMob,
     lootBox: models.CarlRPGLootBox,
     pet: models.CarlRPGPet,
+    vehicle: models.CarlRPGVehicle,
   });
 
   CONFIG.Item.documentClass = CarlRPGItem;
@@ -157,7 +163,7 @@ Hooks.once('init', function () {
   });
 
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Actor, 'carl-rpg', CarlRPGActorSheet, {
-    types: ['character', 'mob', 'pet'],
+    types: ['character', 'mob', 'pet', 'vehicle'],
     makeDefault: true,
     label: 'CARLRPG.SheetLabels.Actor',
   });
@@ -329,6 +335,8 @@ Hooks.once('ready', function () {
   // Players taking items out of a Loot Box they only observe (see
   // module/helpers/loot-box.mjs).
   registerLootBoxSocket();
+  registerVehicleSocket();
+  registerVehicleHooks();
 
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 

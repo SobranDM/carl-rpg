@@ -1,0 +1,44 @@
+{{!-- Character's Details tab (the "description" tab slot, relabelled - see
+      actor-sheet.mjs PART_TEMPLATES / TAB_LABELS_BY_TYPE). The printed
+      sheet's free-form notes, each a rich text box like Biography (they were
+      fixed slot lists - CarlRPGCharacter.migrateData folded them in).
+      Personal Space keeps Tier and Size as their own inputs. --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="description">
+  <div class="carl-details-grid">
+    <fieldset class="carl-details-box carl-personal-space">
+      <legend>{{localize "CARLRPG.Actor.PersonalSpace"}}</legend>
+      <div class="carl-personal-space-fields">
+        <label class="carl-sheet-line">
+          <span>{{localize "CARLRPG.Actor.Tier"}}</span>
+          <input type="text" name="system.personalSpace.tier" value="{{system.personalSpace.tier}}" />
+        </label>
+        <label class="carl-sheet-line">
+          <span>{{localize "CARLRPG.Actor.Size"}}</span>
+          <input type="text" name="system.personalSpace.size" value="{{system.personalSpace.size}}" />
+        </label>
+      </div>
+      <prose-mirror name="system.personalSpace.notes" toggled value="{{system.personalSpace.notes}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
+        {{{detailsHTML.personalSpace}}}
+      </prose-mirror>
+    </fieldset>
+
+    {{#each detailsBoxes as |box|}}
+    <fieldset class="carl-details-box {{#if box.wide}}wide{{/if}}">
+      <legend>{{localize box.label}}</legend>
+      {{#if box.hint}}<p class="carl-hint">{{localize box.hint}}</p>{{/if}}
+      <prose-mirror name="{{box.name}}" toggled value="{{box.value}}" data-document-uuid="{{@root.actor.uuid}}" {{#unless @root.editable}}disabled{{/unless}}>
+        {{{box.html}}}
+      </prose-mirror>
+    </fieldset>
+    {{/each}}
+
+    {{!-- The editor shows no chrome until hovered - the legend is the only
+          sign the section exists while it's empty. --}}
+    <fieldset class="carl-details-box wide">
+      <legend>{{localize "CARLRPG.Actor.Biography"}}</legend>
+      <prose-mirror name="system.biography" toggled value="{{actor.system.biography}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
+        {{{biographyHTML}}}
+      </prose-mirror>
+    </fieldset>
+  </div>
+</section>

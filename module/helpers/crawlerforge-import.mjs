@@ -23,6 +23,7 @@ import { CARLRPG } from "./config.mjs";
 import { cleanSkillLikeCopy, findSkillLikeItem } from "./race-class-grants.mjs";
 import { changeEntry } from "../pdf-import/shared.mjs";
 import { escapeHtml } from "../pdf-import/page-text.mjs";
+import { storyToHtml } from "./rich-text.mjs";
 
 const SUPPORTED_SCHEMA_VERSION = 1;
 const GEAR_SLOT_MAP = {
@@ -301,11 +302,7 @@ export function buildCrawlerForgeActorData(state) {
     hotlist: (state.hotlist ?? []).map((e) => (e && e.trim() ? e : "")),
     gearSlots,
     accessories,
-    story: {
-      pastTrauma: c.pastTrauma ?? "",
-      looseEnds: c.looseEnds ?? "",
-      regrets: c.regrets ?? "",
-    },
+    story: storyToHtml({ pastTrauma: c.pastTrauma, looseEnds: c.looseEnds, regrets: c.regrets }),
   };
   if (c.floor)
     warnings.push(

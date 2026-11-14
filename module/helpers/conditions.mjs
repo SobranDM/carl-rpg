@@ -8,6 +8,7 @@
  */
 import { relayRemoveConditions } from "./chat-socket.mjs";
 import { conditionLabel } from "./debuff-effects.mjs";
+import { takesConditions } from "./actor-kinds.mjs";
 
 /**
  * Build one `system.conditions` entry from a debuff key, the same shape
@@ -51,6 +52,9 @@ const INJURY_UPGRADES = {
  * @returns {Promise<Actor>}
  */
 export async function addConditionToActor(actor, key, options = {}) {
+  // Vehicles take no Debuffs (Object Immunities, p.584) - and have nowhere
+  // to put them.
+  if (!takesConditions(actor)) return actor;
   const result = await writeConditionToActor(actor, key, options);
 
   // "You're Staggered (see below) and take 1d10+F Poison damage" (Sepsis,

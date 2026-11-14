@@ -63,7 +63,7 @@ export default function register(quench) {
           assert.equal(system.gearSlots.mainHand, "Rebar Club");
           assert.equal(system.gearSlots.legs, "Duct Tape Greaves");
           assert.deepEqual(system.accessories, ["Gutter Ring"]);
-          assert.include(system.story.looseEnds, "brass floor lamp");
+          assert.include(system.story, "brass floor lamp");
         });
 
         it("pre-marks every Race/Class grant as baked", async function () {

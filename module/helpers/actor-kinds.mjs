@@ -32,6 +32,21 @@ export const isPet = (a) => typeOf(a) === "pet";
 export const rollsLikeCrawler = (a) => ["character", "pet"].includes(typeOf(a));
 
 /**
+ * A Vehicle (p.72-73): an object - no Stats, Actions or Evade, never a
+ * combatant (its occupants are), destroyed (exploding) at 0% HB.
+ * @param {Actor|{type?: string}|string|null|undefined} a
+ */
+export const isVehicle = (a) => typeOf(a) === "vehicle";
+
+/**
+ * Can carry Debuffs and Buffs (system.conditions). Vehicles can't: "Ships
+ * are objects. They are Immune to ... all Debuffs that have biological
+ * effects" (p.584), simplified to every Debuff.
+ * @param {Actor|{type?: string}|string|null|undefined} a
+ */
+export const takesConditions = (a) => !isVehicle(a) && typeOf(a) !== "lootBox";
+
+/**
  * Dead at 0% HB, with no Dying countdown: everything but a crawler ("Mobs
  * die instantly at 0% HB", p.94; Pets p.231).
  * @param {Actor|{type?: string}|string|null|undefined} a

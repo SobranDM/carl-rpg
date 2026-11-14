@@ -130,6 +130,28 @@ export function cleanSkillLikeCopy(source, rank) {
 }
 
 /**
+ * The actor's own Skill by name, or - untrained - an unsaved Rank 0 copy
+ * from the compendium (a bare Utility Skill if there's none), which rolls
+ * with Disadvantage and must not be marked for Advancement (it isn't on the
+ * actor). Command Pet's Animal Handling, a Driving Check's Driving.
+ * @param {Actor} actor
+ * @param {string} name
+ * @param {{img?: string, system?: object}} [fallback]  For a Skill missing from every compendium.
+ * @returns {Promise<{skill: Item, trained: boolean}>}  trained: owned by the actor.
+ */
+export async function skillOrUntrainedCopy(actor, name, fallback = {}) {
+  const owned = findOwnedSkillLike(actor, name, ["skill"]);
+  if (owned) return { skill: owned, trained: true };
+  const source = await findSkillLikeItem(name);
+  const data = cleanSkillLikeCopy(source ?? {
+    name, type: "skill", img: fallback.img ?? "icons/svg/d20.svg",
+    system: { category: "utility", ...(fallback.system ?? {}) },
+  }, 0);
+  data._id = foundry.utils.randomID();
+  return { skill: new CONFIG.Item.documentClass(data, { parent: actor }), trained: false };
+}
+
+/**
  * Give the actor a Skill-like item it doesn't own yet, at a Rank: a clean
  * copy of the compendium/world one with that name, or a bare Utility Skill.
  * @param {Actor} actor

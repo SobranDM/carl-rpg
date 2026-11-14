@@ -3,7 +3,9 @@
       formula + type, range, on-hit effect prose) directly, rather than
       forcing every Mob attack to be an owned Skill item. Add/delete reuse
       the generic array-editor mechanism (module/helpers/array-editor.mjs),
-      same convention as conditions.hbs/changes-editor.hbs. --}}
+      same convention as conditions.hbs/changes-editor.hbs. A Vehicle's
+      built-in weapons use it too (vehicle-details.hbs), with two more
+      columns: the Attack Skill and Stat a crawler occupant fires it with. --}}
 <ol class="items-list carl-attacks-list">
   <li class="item flexrow items-header">
     <div class="item-name">{{localize "CARLRPG.Attack.Name"}}</div>
@@ -12,6 +14,10 @@
     <div class="item-prop carl-attack-damage-type">{{localize "CARLRPG.Attack.DamageType"}}</div>
     <div class="item-prop carl-attack-range">{{localize "CARLRPG.Attack.Range"}}</div>
     <div class="item-prop carl-attack-effect">{{localize "CARLRPG.Attack.Effect"}}</div>
+    {{#if @root.isVehicle}}
+    <div class="item-prop carl-attack-skill">{{localize "CARLRPG.Vehicle.WeaponSkill"}}</div>
+    <div class="item-prop carl-attack-stat">{{localize "CARLRPG.Vehicle.WeaponStat"}}</div>
+    {{/if}}
     <div class="item-controls"></div>
   </li>
   {{#each system.attacks as |attack index|}}
@@ -37,6 +43,16 @@
     <div class="item-prop carl-attack-effect">
       <input type="text" class="carl-w-full" name="{{concat 'system.attacks.' index '.effect'}}" value="{{attack.effect}}" />
     </div>
+    {{#if @root.isVehicle}}
+    <div class="item-prop carl-attack-skill">
+      <input type="text" class="carl-w-tiny" name="{{concat 'system.attacks.' index '.skill'}}" value="{{attack.skill}}" placeholder="Aiming" />
+    </div>
+    <div class="item-prop carl-attack-stat">
+      <select name="{{concat 'system.attacks.' index '.stat'}}">
+        {{selectOptions ../config.statAbbreviations selected=attack.stat localize=true}}
+      </select>
+    </div>
+    {{/if}}
     <div class="item-controls">
       {{!-- CarlDice.rollMobAttack: posts this Attack against the user's
             targeted tokens, its to-hit adjusted for Debuffs (p.96). --}}
@@ -51,6 +67,6 @@
   {{/each}}
 </ol>
 <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.attacks"
-  data-template='{"name":"","toHit":"","damage":"","damageType":"","range":"","effect":""}'>
+  data-template='{{#if @root.isVehicle}}{"name":"","toHit":"","damage":"","damageType":"","range":"","effect":"","skill":"","stat":"dex"}{{else}}{"name":"","toHit":"","damage":"","damageType":"","range":"","effect":""}{{/if}}'>
   <i class="fas fa-plus"></i> {{localize "CARLRPG.Attack.Add"}}
 </a>

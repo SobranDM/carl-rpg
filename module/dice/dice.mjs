@@ -27,7 +27,9 @@ import {
   buildDebuffNote, consumedConditionIds, endedConditionIds, getActionBlockReason,
 } from "../helpers/debuff-effects.mjs";
 import { removeConditionsById } from "../helpers/conditions.mjs";
-import { isPet, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { collectVehicleRows } from "../helpers/vehicle-rows.mjs";
+import { attackDifficultyParts, mobVsVehicleRows } from "../helpers/attack-targets.mjs";
 
 /**
  * Net Advantage/Disadvantage don't stack (Playing the Game, p. 60): an
@@ -514,14 +516,14 @@ export default class CarlDice {
    * @param {{difficulty?: number|null, skipDialog?: boolean}} [options]
    * @returns {Promise<ChatMessage|null>}
    */
-  static async rollStatCheck(actor, statKey, { difficulty = null, skipDialog = false } = {}) {
+  static async rollStatCheck(actor, statKey, { difficulty = null, skipDialog = false, title = null, returnResult = false } = {}) {
     const sys = actor.system;
     const stat = sys.stats?.[statKey];
     if (!stat) return null;
     if (isBlockedByDebuff(actor)) return null;
 
     const statLabel = stat.label || game.i18n.localize(CARLRPG.stats[statKey] ?? statKey);
-    const debuffRows = decorateRows(collectDebuffRows(sys, "check"), "roll");
+    const debuffRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check")], "roll");
 
     let options = { advantage: "normal", difficulty, modifier: 0, checkedDebuffs: null };
     if (!skipDialog) {
@@ -555,10 +557,10 @@ export default class CarlDice {
     await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied));
 
     const body = buildDebuffNote(debuffEffect.applied);
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: statLabel, breakdown }],
-      title: statLabel,
+      title: title ?? statLabel,
       subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
       img: actor.img,
       badge: degreeBadge(degree),
@@ -566,9 +568,12 @@ export default class CarlDice {
       actor,
       flags: aiRerollFlags(actor, {
         kind: "check", formula: d20Formula(roll), natural: naturalRoll, total, difficulty: options.difficulty,
-        title: statLabel, img: actor.img, label: statLabel, breakdown, body,
+        title: title ?? statLabel, img: actor.img, label: statLabel, breakdown, body,
       }),
     });
+    // returnResult: a caller that acts on the outcome (boarding a moving
+    // vehicle, module/helpers/vehicles.mjs) gets the Degree too.
+    return returnResult ? { message, degree, total } : message;
   }
 
   /**
@@ -598,7 +603,7 @@ export default class CarlDice {
     const rollData = actor.getRollData();
     const { conditionalModifiers } = cast;
     const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
-    const debuffRows = decorateRows(collectDebuffRows(sys, "check"), "roll");
+    const debuffRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })], "roll");
 
     let options = { advantage: "normal", difficulty: null, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null };
     if (!skipDialog) {
@@ -693,18 +698,16 @@ export default class CarlDice {
     if (target?.actor) {
       const targetSys = target.actor.system;
       const floor = game.settings.get("carl-rpg", "currentFloor");
-      targetDifficulty = staticEvade(targetSys) + floor;
       const ownerName = target.actor.name;
       // A Mob's Evade is a static Difficulty, so every one of its Debuffs
       // that would touch a d20 Evade lowers it instead (p.96 - Disadvantage
       // -5, "-X" -X). A Character target's static Evade only loses its DEX
       // Mod to Woozy; the rest of a crawler's Debuffs apply to their own
       // Evade roll if they actively defend (module/chat/evade-link-card.mjs).
-      const evadeRows = collectDebuffRows(targetSys, "evade", { ownerName, idPrefix: "target", ownAction: false });
-      targetRows = decorateRows(
-        rollsLikeCrawler(target.actor) ? evadeRows.filter((r) => r.kind === "noDex") : evadeRows,
-        "difficulty",
-      );
+      // A vehicle's is 10 + Move ÷ 5 (module/helpers/attack-targets.mjs).
+      const parts = attackDifficultyParts(target.actor, floor);
+      targetDifficulty = parts.base;
+      targetRows = decorateRows(parts.rows, "difficulty");
       advantageRows = decorateRows(collectAdvantageAgainstRows(targetSys, { ownerName, idPrefix: "target" }), "roll");
     }
 
@@ -755,7 +758,10 @@ export default class CarlDice {
     const { conditionalModifiers } = cast;
 
     const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
-    const rollerRows = decorateRows(collectDebuffRows(sys, "attack", { usesDex: skillSys.governingStat === "dex" }), "roll");
+    const rollerRows = decorateRows([
+      ...collectDebuffRows(sys, "attack", { usesDex: skillSys.governingStat === "dex" }),
+      ...collectVehicleRows(actor, "attack", { skillItem, builtIn: !!castAs?.builtIn }),
+    ], "roll");
 
     // Area Attack (p.83) - pre-ticked in the dialog when the Skill/Spell (or
     // the Damage Effect passed in) reads as one (module/helpers/area.mjs).
@@ -1127,10 +1133,16 @@ export default class CarlDice {
       const rowNat = (i === 0 || isArea || formula === spec.formula) ? naturalRoll : keptD20(formula, firstDie, secondDie);
       return crawlerAttackRow({
         id: row.id,
-        target: { uuid: row.uuid, actor: { name: row.name, type: row.isCharacter ? "character" : "mob" } },
+        target: {
+          uuid: row.uuid,
+          actor: { name: row.name, type: row.isVehicle ? "vehicle" : row.isCharacter ? "character" : "mob" },
+        },
         difficulty: row.difficulty,
         attackTotal: attackTotal - (naturalRoll ?? 0) + (rowNat ?? 0), naturalRoll: rowNat,
         zone: row.zone, shared,
+        // The vehicle the target was riding when first rolled (a Near Miss
+        // still hits it).
+        vehicle: row.vehicleUuid ? { uuid: row.vehicleUuid, name: row.vehicleName } : null,
       });
     });
     const anyHit = targetRowList.length ? targetRowList.some((row) => row.hit) : hit;
@@ -1240,10 +1252,19 @@ export default class CarlDice {
 
     // The stat block doesn't say whether a to-hit includes the DEX Mod, so
     // Woozy is offered but left unticked here.
-    const ownRows = collectDebuffRows(actor.system, "attack", { usesDex: true, ownerName: actor.name, idPrefix: "self" })
-      .map((r) => (r.kind === "noDex" ? { ...r, defaultOn: false } : r));
+    const ownRows = [
+      ...collectDebuffRows(actor.system, "attack", { usesDex: true, ownerName: actor.name, idPrefix: "self" })
+        .map((r) => (r.kind === "noDex" ? { ...r, defaultOn: false } : r)),
+      // A Mob driving a vehicle: the driver's Disadvantage (p.72).
+      ...collectVehicleRows(actor, "attack"),
+    ];
+    // Against a vehicle: the "head-on" row that raises the to-hit (it's
+    // compared with the vehicle's Difficulty - module/helpers/attack-targets.mjs).
     const defenderRows = target?.actor
-      ? collectAdvantageAgainstRows(target.actor.system, { ownerName: target.actor.name, idPrefix: "target" })
+      ? [
+        ...collectAdvantageAgainstRows(target.actor.system, { ownerName: target.actor.name, idPrefix: "target" }),
+        ...mobVsVehicleRows(target.actor),
+      ]
       : [];
     const debuffRows = decorateRows([...ownRows, ...defenderRows], "difficulty");
 
@@ -1571,7 +1592,10 @@ export default class CarlDice {
     if (isBlockedByDebuff(actor)) return null;
     const rollData = actor.getRollData();
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, "evade");
-    const debuffRows = decorateRows(collectDebuffRows(sys, "evade", { ownAction: isAction }), "roll");
+    const debuffRows = decorateRows([
+      ...collectDebuffRows(sys, "evade", { ownAction: isAction }),
+      ...collectVehicleRows(actor, "evade"),
+    ], "roll");
 
     let options = { advantage: "normal", difficulty, modifier: 0, checked: new Set(), checkedDebuffs: null };
     if (!skipDialog) {
@@ -1678,7 +1702,7 @@ export default class CarlDice {
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
     // An opposed Spell is still cast - it costs Mana like any other (p.173).
     const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
-    const rollerRows = decorateRows(collectDebuffRows(sys, "check"), "roll");
+    const rollerRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })], "roll");
     const opponentRows = opponent && opponent.type !== "character"
       ? decorateRows(collectDebuffRows(opponent.system, "check", { ownerName: opponent.name, idPrefix: "opp", ownAction: false }), "difficulty")
       : [];
@@ -1734,7 +1758,14 @@ export default class CarlDice {
     const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
-    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote, chosenManaCost };
+    // A caller folding this roll into its own card (Taunt, Command Pet, a
+    // Driving Check) gets what a reroll needs, and which rows applied.
+    if (!post) {
+      return {
+        roll, total, breakdown, naturalRoll, degree, debuffNote, chosenManaCost,
+        formula: d20Formula(roll), difficulty: finalDifficulty, applied: rollerEffect.applied,
+      };
+    }
 
     return createRollMessage({
       rolls: [roll],

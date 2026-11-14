@@ -1,5 +1,6 @@
 import CarlRPGActorBase from "./actor-base.mjs";
 import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
+import { linesToHtml, storyToHtml } from "../helpers/rich-text.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
 import {
   defineStatsField, deriveStats, deriveDefenses, deriveResourceCaps, creatureRollData,
@@ -87,12 +88,12 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
       Object.fromEntries(Object.keys(CONFIG.CARLRPG.gearSlots).map((key) => [key, text()])),
     );
     schema.accessories = textList();
-    schema.story = new fields.SchemaField({
-      pastTrauma: text(),
-      looseEnds: text(),
-      regrets: text(),
-      notes: text(),
-    });
+
+    // The Details tab's free-form notes (details.hbs): rich text boxes like
+    // Biography. They were once fixed slot lists and a four-part Story -
+    // folded in by migrateData below.
+    const richText = () => new fields.HTMLField({ required: true, blank: true, initial: "" });
+    schema.story = richText();
 
     // Pet / Mount-Vehicle: kept as an inline stat block (as on the printed
     // sheet) rather than a linked Actor. hb is slots remaining / total slots.
@@ -127,24 +128,23 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
       hb: companionHb(),
     });
 
-    schema.importantKills = textList();
-    schema.clubs = textList();
+    schema.importantKills = richText();
+    schema.clubs = richText();
     schema.personalSpace = new fields.SchemaField({
       tier: text(),
       size: text(),
-      amenities: text(),
-      notes: textList(),
+      notes: richText(),
     });
-    schema.deity = textList();
-    // "Crawlers are limited to three Sponsors each" (p.284) - three slots
-    // (CONFIG.CARLRPG.characterListSlots.sponsors).
-    schema.sponsors = textList();
+    schema.deity = richText();
+    // "Crawlers are limited to three Sponsors each" (p.284).
+    schema.sponsors = richText();
 
     return schema;
   }
 
   /** @override */
   static migrateData(source) {
+    CarlRPGCharacter.#migrateNotesToRichText(source);
     // The old free-text "Hands/Holding" gear slot became Main Hand.
     const gear = source.gearSlots;
     if (gear && "hands" in gear) {
@@ -152,6 +152,34 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
       delete gear.hands;
     }
     return super.migrateData(source);
+  }
+
+  /**
+   * The Details tab's slot lists became rich text boxes: each non-empty
+   * slot becomes its own paragraph (module/helpers/rich-text.mjs). Only the
+   * old shapes are converted (an array, the four-part Story object, a
+   * Personal Space with Amenities), so this runs once per document and a
+   * box someone has since cleared stays cleared.
+   * @param {object} source
+   */
+  static #migrateNotesToRichText(source) {
+    for (const key of ["importantKills", "clubs", "deity", "sponsors"]) {
+      if (Array.isArray(source[key])) source[key] = linesToHtml(source[key]);
+    }
+    // Amenities joins the notes only while they're still the old list - the
+    // database keeps an old "amenities" key after the box is saved, and it
+    // must not be added again on every load.
+    const space = source.personalSpace;
+    if (space && Array.isArray(space.notes)) {
+      const amenities = String(space.amenities ?? "").trim();
+      const amenitiesLabel = game.i18n?.localize?.("CARLRPG.Actor.Amenities");
+      const head = amenities
+        ? `<p><strong>${foundry.utils.escapeHTML(amenitiesLabel && amenitiesLabel !== "CARLRPG.Actor.Amenities" ? amenitiesLabel : "Amenities")}:</strong> ${foundry.utils.escapeHTML(amenities)}</p>`
+        : "";
+      space.notes = head + linesToHtml(space.notes);
+    }
+    if (space && "amenities" in space) delete space.amenities;
+    if (source.story && typeof source.story === "object") source.story = storyToHtml(source.story);
   }
 
   prepareDerivedData() {

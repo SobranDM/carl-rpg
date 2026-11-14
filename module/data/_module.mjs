@@ -3,6 +3,7 @@ export {default as CarlRPGCharacter} from "./character.mjs";
 export {default as CarlRPGMob} from "./mob.mjs";
 export {default as CarlRPGLootBox} from "./loot-box.mjs";
 export {default as CarlRPGPet} from "./pet.mjs";
+export {default as CarlRPGVehicle} from "./vehicle.mjs";
 
 export {default as CarlRPGItemBase} from "./item-base.mjs";
 export {default as CarlRPGRankedItemBase} from "./ranked-item-base.mjs";

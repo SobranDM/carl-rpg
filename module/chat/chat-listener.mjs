@@ -39,6 +39,7 @@ import { grindSurplusActionEntries } from "./grind-surplus-card.mjs";
 import { attackTargetsActionEntries, decorateTargetRows } from "./attack-targets-card.mjs";
 import { aiRerollActionEntries, decorateAiReroll } from "./ai-favor-reroll.mjs";
 import { consumableActionEntries } from "./consumable-card.mjs";
+import { decorateDrivingCard, drivingActionEntries } from "./vehicle-card.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
@@ -51,6 +52,7 @@ const REGISTRY = [
   ...attackTargetsActionEntries,
   ...aiRerollActionEntries,
   ...consumableActionEntries,
+  ...drivingActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 
@@ -76,8 +78,10 @@ export function registerChatListener() {
       html.querySelectorAll(".carl-gm-only").forEach((el) => el.remove());
     }
 
-    // Per-viewer content drawn from flags (an Attack card's target rows).
+    // Per-viewer content drawn from flags (an Attack card's target rows, a
+    // Driving Check card's buttons).
     decorateTargetRows(message, html);
+    decorateDrivingCard(message, html);
     // The AI Favor reroll button, or a replaced card's "rerolled" state -
     // after the rows, so it can switch their buttons off too.
     decorateAiReroll(message, html);

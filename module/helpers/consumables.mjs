@@ -36,6 +36,7 @@ import { hbCeiling, restoreUpTo, restoresPerRound } from "./rest.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { postConsumableCard } from "../chat/consumable-card.mjs";
+import { isVehicle } from "./actor-kinds.mjs";
 
 // "Each crawler may only consume two Stat potions and two Skill potions
 // during the entirety of their short life" (p.218).
@@ -109,9 +110,9 @@ export async function consumeOne(item) {
   else await item.delete();
 }
 
-/** The one targeted token's actor, else the user's own crawler. */
+/** The one targeted token's actor, else the user's own crawler. A vehicle can't drink. */
 function targetedRecipient(actor) {
-  const targets = [...(game.user.targets ?? [])].filter((t) => t.actor);
+  const targets = [...(game.user.targets ?? [])].filter((t) => t.actor && !isVehicle(t.actor));
   return targets.length === 1 ? targets[0].actor : actor;
 }
 

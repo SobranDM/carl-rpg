@@ -39,10 +39,13 @@
   "esmodules": ["module/carl-rpg.mjs"],
   "documentTypes": {
     "Actor": {
-      "character": {},
+      "character": {
+        "htmlFields": ["story", "importantKills", "clubs", "deity", "sponsors", "personalSpace.notes"]
+      },
       "mob": {},
       "lootBox": {},
-      "pet": {}
+      "pet": {},
+      "vehicle": {}
     },
     "Item": {
       "item": {},

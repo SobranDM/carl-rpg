@@ -2,7 +2,8 @@ import CarlDice from "../dice/dice.mjs";
 import { recheckLevelGatedGrants } from "../helpers/race-class-grants.mjs";
 import { buildConditionEntry } from "../helpers/conditions.mjs";
 import { syncDefeated } from "../helpers/defeat.mjs";
-import { isCrawler, isPet } from "../helpers/actor-kinds.mjs";
+import { isCrawler, isPet, isVehicle } from "../helpers/actor-kinds.mjs";
+import { explodeVehicle } from "../helpers/vehicle-ram.mjs";
 import { grantPetSkills, levelBondedPets, syncPetCommandStatus, syncPetOwnership } from "../helpers/pets.mjs";
 
 /**
@@ -113,6 +114,11 @@ export class CarlRPGActor extends Actor {
           .catch((err) => console.error("CarlRPG | pet levelling failed", err));
       }
       if (isPet(this)) this.#onPetUpdate(changed);
+      // A vehicle brought to 0% HB explodes (p.73) - once, as it gets there.
+      if (isVehicle(this) && foundry.utils.hasProperty(changed, "system.hb.value")
+        && (options.carlPreviousHb ?? 0) > 0 && this.system.hb.value <= 0) {
+        explodeVehicle(this).catch((err) => console.error("CarlRPG | vehicle explosion failed", err));
+      }
     }
     if (game.user.id !== userId) return;
     if (foundry.utils.hasProperty(changed, "system.attributes.level.value")) {

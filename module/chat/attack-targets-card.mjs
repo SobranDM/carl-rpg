@@ -25,6 +25,9 @@ import { applyDamageToActor } from "./damage-card.mjs";
 import { isImmuneToAllDamage } from "../helpers/damage-pipeline.mjs";
 import { buildEvadeConsequenceFooter, userOwnsUuid } from "./evade-link-card.mjs";
 import { aiRerollFlags } from "../helpers/ai-favor.mjs";
+import { takesConditions } from "../helpers/actor-kinds.mjs";
+import { vehicleSeatOf } from "../helpers/vehicle-state.mjs";
+import { afterRamRowApplied } from "../helpers/vehicle-ram.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -89,12 +92,29 @@ export function buildAttackTargetsFooter({ damageByType = {}, targetEffects = []
   </div>`;
 }
 
+/**
+ * A ram's recoil (module/helpers/vehicle-ram.mjs) waits on the target it was
+ * aimed at: until that target has Evaded (or been hit and applied), whether
+ * the ram connected isn't settled.
+ * @param {object} row
+ * @param {object} flags  The card's flags.
+ * @returns {boolean}
+ */
+function recoilWaiting(row, flags) {
+  if (row.role !== "recoil" || !flags.ram) return false;
+  const primary = flags.targetRows?.[flags.ram.primaryRowId];
+  return !!primary && primary.hit && primary.isCharacter && !primary.evade && !primary.applied && !primary.redirectUuid;
+}
+
 /** A short status for one row, as the viewer sees it. */
 function rowStatus(row, flags) {
   const i18n = game.i18n;
   if (row.applied) return i18n.localize("CARLRPG.Targets.Applied");
   if (row.evade?.pending) return i18n.localize("CARLRPG.Targets.EvadePending");
   if (!row.hit) return i18n.format("CARLRPG.Targets.Missed", { difficulty: row.difficulty ?? "-" });
+  // "A Near Miss targeting an occupant hits the vehicle" (p.72).
+  if (row.redirectUuid) return i18n.format("CARLRPG.Vehicle.NearMissHitsVehicle", { vehicle: row.redirectName ?? "?" });
+  if (recoilWaiting(row, flags)) return i18n.localize("CARLRPG.Vehicle.Ram.RecoilWaiting");
   if (row.evade) {
     if (row.evade.success) return i18n.localize(flags.isArea ? "CARLRPG.Targets.EvadedHalf" : "CARLRPG.Targets.Evaded");
     if (row.evade.degree === "criticalFail") return i18n.localize("CARLRPG.Targets.EvadeCriticalFail");
@@ -129,13 +149,16 @@ export function decorateTargetRows(message, html) {
   }
   container.innerHTML = rows.map((row) => {
     const mine = userOwnsUuid(row.uuid);
+    // Whoever owns what actually takes the hit applies it - the vehicle,
+    // when a Near Miss on its occupant hits it instead.
+    const applier = userOwnsUuid(row.redirectUuid ?? row.uuid);
     const buttons = [];
-    if (mine && !row.applied && row.hit && row.isCharacter && !row.evade) {
+    if (mine && !row.applied && row.hit && row.isCharacter && !row.evade && !row.redirectUuid) {
       const free = row.freeEvade && !row.freeUsed;
       buttons.push(`<button type="button" class="carl-row-evade" data-action="rowEvade">
         <i class="fas fa-person-running"></i> ${game.i18n.localize(free ? "CARLRPG.Evade.RollFreeButton" : "CARLRPG.Evade.RollButton")}</button>`);
     }
-    if (mine && !rowResolved(row, flags.isArea) && !row.evade?.pending) {
+    if (applier && !rowResolved(row, flags.isArea) && !row.evade?.pending && !recoilWaiting(row, flags)) {
       buttons.push(`<button type="button" class="carl-row-apply" data-action="rowApply">
         <i class="fas fa-heart-crack"></i> ${game.i18n.localize("CARLRPG.Targets.Apply")}</button>`);
     }
@@ -200,7 +223,8 @@ async function guarded(message, rowId, fn) {
 async function onRowEvade(event, message, button) {
   event.preventDefault();
   const row = clickedRow(message, button);
-  if (!row || row.applied || row.evade || !row.hit) return;
+  // A Near Miss that hit the occupant's vehicle instead has nothing to Evade.
+  if (!row || row.applied || row.evade || !row.hit || row.redirectUuid) return;
   await guarded(message, row.id, async () => {
     if (withLocal(message, row).evade) return;
     const target = await resolveRowTarget(row);
@@ -281,8 +305,24 @@ export async function recordRowEvade(message, row, target, {
   }
 
   markLocal(message, row.id, { evaded: true });
+  // An occupant whose Evade misses by 1-2 (a Near Miss) isn't hit - the
+  // vehicle is ("A Near Miss targeting an occupant hits the vehicle", p.72).
+  // A reroll that changes the result takes the redirect back.
+  // Not for an Area Attack: the vehicle is caught in it on its own row.
+  const seat = !success && degree === "nearMissFail" && !flags.isArea ? vehicleSeatOf(target.actor) : null;
   await updateCardMessage(message, {
-    flags: { [SCOPE]: { targetRows: { [row.id]: { evade: { degree, success }, freeUsed: row.freeUsed || free } } } },
+    flags: {
+      [SCOPE]: {
+        targetRows: {
+          [row.id]: {
+            evade: { degree, success },
+            freeUsed: row.freeUsed || free,
+            redirectUuid: seat?.vehicle.uuid ?? null,
+            redirectName: seat?.vehicle.name ?? null,
+          },
+        },
+      },
+    },
   });
 
   const subtitleKey = success
@@ -324,10 +364,20 @@ export async function recordRowEvade(message, row, target, {
 export async function applyRow(message, row) {
   const flags = message.flags[SCOPE];
   if (withLocal(message, row).applied) return [];
-  const target = await resolveRowTarget(row);
+  // A ram's recoil isn't applied before its target has had its Evade.
+  if (recoilWaiting(row, flags)) return [];
+  // A Near Miss on a vehicle's occupant lands on the vehicle (p.72).
+  const target = await resolveRowTarget(row.redirectUuid ? { uuid: row.redirectUuid } : row);
   if (!target) return [];
   markLocal(message, row.id, { applied: true });
   await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: { [row.id]: { applied: true } } } } });
+
+  // A ram's recoil only happens if the ram connected: not when the target
+  // it was aimed at Evaded it (module/helpers/vehicle-ram.mjs).
+  if (row.role === "recoil" && flags.ram) {
+    const primary = flags.targetRows?.[flags.ram.primaryRowId];
+    if (primary?.evade?.success) return [game.i18n.format("CARLRPG.Vehicle.Ram.NoRecoil", { vehicle: esc(target.actor.name) })];
+  }
 
   const outcome = rowOutcome(row, {
     damageByType: flags.damageByType ?? {},
@@ -338,11 +388,16 @@ export async function applyRow(message, row) {
   if (Object.values(outcome.damage).some((v) => v)) {
     lines.push(...await applyDamageToActor(target.actor, outcome.damage, flags.damageIsMagic ?? true));
   }
+  // A rammed (or ramming) vehicle passes half its damage to its occupants,
+  // and the rammer loses Move - even when the recoil rounds down to nothing.
+  if (flags.ram && row.hit) lines.push(...await afterRamRowApplied(message, row, target.actor, outcome.damage));
   // An Immunity to the whole hit also ignores its Debuffs (p.93).
   const immune = outcome.effects && (flags.targetEffects ?? []).length
     && isImmuneToAllDamage(flags.damageByType, target.actor);
   if (immune) {
     lines.push(game.i18n.format("CARLRPG.Targets.ImmuneNoEffects", { name: esc(target.actor.name) }));
+  } else if (outcome.effects && (flags.targetEffects ?? []).length && !takesConditions(target.actor)) {
+    lines.push(game.i18n.format("CARLRPG.Vehicle.ImmuneToDebuffs", { name: esc(target.actor.name) }));
   } else if (outcome.effects) {
     for (const te of flags.targetEffects ?? []) {
       await addConditionToActor(target.actor, te.debuffKey, { stacks: te.stacks, source: te.sourceLabel, label: te.label });
@@ -365,7 +420,7 @@ async function onRowApply(event, message, button) {
   event.preventDefault();
   const row = clickedRow(message, button);
   if (!row || row.evade?.pending || rowResolved(row, message.getFlag(SCOPE, "isArea"))) return;
-  if (!userOwnsUuid(row.uuid)) return;
+  if (!userOwnsUuid(row.redirectUuid ?? row.uuid)) return;
   await guarded(message, row.id, async () => {
     const lines = await applyRow(message, row);
     await appendDigest(message, lines);
