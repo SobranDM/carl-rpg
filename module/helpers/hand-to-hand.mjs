@@ -6,7 +6,7 @@
  * Unarmed Combat: "Limitations: Cannot choose a Damage Effect." - so once a
  * crawler has another hand-to-hand Skill at a higher Rank, Unarmed Combat is
  * worse in every way, and the Combat tab's Attacks list leaves it out
- * (it's still on the Skills & Spells tab).
+ * (it's still on the Skills tab).
  */
 import { ownedRank, slugifySkillName } from "./modifiers.mjs";
 

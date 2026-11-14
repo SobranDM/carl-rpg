@@ -12,7 +12,7 @@
     <label class="carl-hotlist-pick-entry" data-name="{{entry.name}}">
       <input type="radio" name="pick" value="{{entry.id}}" />
       <img src="{{entry.img}}" alt="" width="24" height="24" />
-      <span class="carl-hotlist-pick-name">{{entry.name}}</span>
+      <span class="carl-hotlist-pick-name" title="{{entry.name}}">{{entry.name}}</span>
       {{#if entry.detail}}<span class="carl-hotlist-pick-detail">{{entry.detail}}</span>{{/if}}
     </label>
     {{/each}}

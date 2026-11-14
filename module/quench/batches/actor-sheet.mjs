@@ -48,7 +48,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           const sheet = actor.sheet;
           try {
-            // Enough rows that the Inventory tab overflows the 680px window.
+            // Enough rows (~31px each) that the Inventory tab overflows the 750px window.
             for (let i = 0; i < 25; i++) await createTestItem(actor, "item", `scroll ${i}`);
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
@@ -84,7 +84,7 @@ export default function register(quench) {
       describe("Combat tab", function () {
         useQuenchTimeout(this);
 
-        it("a Character opens on Combat: Stats, the ten-slot Hotlist and its Attacks; Skills & Spells has its own tab", async function () {
+        it("a Character opens on Combat: Stats, the ten-slot Hotlist and its Attacks; Skills (and Spells) have their own tab", async function () {
           const actor = await createTestCharacter("combat tab");
           const sheet = actor.sheet;
           try {

@@ -2248,18 +2248,35 @@
   display: none;
 }
 .carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 2px 4px;
+  border: 1px solid transparent;
   border-radius: 3px;
   cursor: pointer;
 }
 .carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry[hidden] {
   display: none;
 }
-.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:hover, .carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:focus-within {
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry input[type=radio] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:hover {
   background: rgba(0, 0, 0, 0.08);
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:has(input:focus-visible) {
+  border-color: var(--carl-accent);
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:has(input:checked) {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: var(--carl-accent);
 }
 .carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry img {
   flex: 0 0 24px;
@@ -2267,6 +2284,10 @@
 }
 .carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry .carl-hotlist-pick-name {
   flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry .carl-hotlist-pick-detail {
   flex: 0 0 auto;

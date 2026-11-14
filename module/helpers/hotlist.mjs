@@ -249,6 +249,9 @@ export async function promptHotlistPick(actor, index) {
     template: "systems/carl-rpg/templates/dialog/hotlist-pick.hbs",
     context: { groups },
     classes: ["carl-hotlist-pick-dialog"],
+    // A fixed width, so filtering doesn't resize the window to each new
+    // longest name (long names are cut off with an ellipsis instead).
+    position: { width: 480 },
     buttons: [
       {
         action: "add",

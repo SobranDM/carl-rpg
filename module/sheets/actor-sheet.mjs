@@ -48,7 +48,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /** @override */
   static DEFAULT_OPTIONS = {
     classes: ["carl-rpg", "sheet", "actor"],
-    position: { width: 700, height: 680 },
+    position: { width: 700, height: 750 },
     form: {
       submitOnChange: true,
     },
@@ -99,7 +99,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     primary: {
       tabs: [
         { id: "abilities", label: "CARLRPG.Tab.Abilities" },
-        { id: "skills", label: "CARLRPG.Tab.SkillsSpells" },
+        { id: "skills", label: "CARLRPG.Tab.Skills" },
         { id: "items", label: "CARLRPG.Tab.Inventory" },
         { id: "features", label: "CARLRPG.Tab.Boons" },
         { id: "conditions", label: "CARLRPG.Tab.Conditions" },
@@ -420,7 +420,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       const rows = hotlistRows(actor);
       context.hotlist = { rows, used: rows.filter((r) => !r.empty).length, size: rows.length };
       // Unarmed Combat drops out once another hand-to-hand Skill outranks it
-      // (it can't take Damage Effects, p.179) - still on Skills & Spells.
+      // (it can't take Damage Effects, p.179) - still on the Skills tab.
       context.attackSkills = withoutOutclassedUnarmed(actor, context.skills.filter((s) => s.system.category === "attack"));
     }
 

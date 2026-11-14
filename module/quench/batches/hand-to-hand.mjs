@@ -79,7 +79,7 @@ export default function register(quench) {
           }
         });
 
-        it("on the sheet: gone from the Combat tab's Attacks, still on Skills & Spells", async function () {
+        it("on the sheet: gone from the Combat tab's Attacks, still on the Skills tab", async function () {
           const actor = await createTestCharacter("h2h sheet");
           const sheet = actor.sheet;
           try {
