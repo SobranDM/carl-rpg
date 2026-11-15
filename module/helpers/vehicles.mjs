@@ -14,12 +14,29 @@
 import CarlDice from "../dice/dice.mjs";
 import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
 import {
-  occupantKey, resolveOccupant, vehicleSeatOf, vehicleStatus,
+  invalidateSeatIndex, occupantKey, resolveOccupant, vehicleSeatOf, vehicleStatus,
 } from "./vehicle-state.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { isHitDegree } from "./rules.mjs";
 
 const SOCKET = "system.carl-rpg";
+const FLAG_SCOPE = "carl-rpg";
+
+/**
+ * Redraw the Driving Check cards on screen (the chat log, its pop-out, a
+ * notification) - for one vehicle, or every vehicle. Only cards already
+ * drawn: core's updateMessage would insert one that isn't, out of order.
+ * @param {string} [vehicleUuid]
+ */
+function redrawDrivingCards(vehicleUuid) {
+  if (!ui.chat) return;
+  const ids = new Set([...document.querySelectorAll("[data-message-id]")].map((li) => li.dataset.messageId));
+  for (const id of ids) {
+    const message = game.messages.get(id);
+    const driving = message?.flags?.[FLAG_SCOPE]?.driving;
+    if (driving && (!vehicleUuid || driving.vehicleUuid === vehicleUuid)) ui.chat.updateMessage(message);
+  }
+}
 const UPDATE_ACTION = "vehicleUpdate";
 
 /** System paths a player may change on a vehicle they don't own (via the GM). */
@@ -158,6 +175,34 @@ export function registerVehicleHooks() {
   Hooks.on("updateActor", (actor) => {
     if (aboardOpenVehicle(actor)) rerender();
   });
+
+  // A Driving Check card's round buttons show only while the vehicle's
+  // round is that card's (vehicle-driving.mjs drivingCardCurrent). Redraw
+  // the cards when that can change: the vehicle's round (a player's Check
+  // reaches the vehicle through the GM after its card is posted, and a
+  // later Check takes the buttons off the older card), or the fight's round
+  // moving on, starting or ending.
+  Hooks.on("updateActor", (actor, changes) => {
+    if (!isVehicle(actor) || !foundry.utils.hasProperty(changes, "system.round")) return;
+    redrawDrivingCards(actor.uuid);
+  });
+  Hooks.on("updateCombat", (combat, changes) => {
+    if ("round" in changes || "started" in changes) redrawDrivingCards();
+  });
+  for (const hook of ["createCombat", "deleteCombat"]) Hooks.on(hook, () => redrawDrivingCards());
+
+  // vehicleSeatOf's index: who sits where changes with a vehicle (its
+  // occupants, or it coming or going), a token (an unlinked vehicle's), the
+  // fights in progress or the viewed scene (vehiclesInPlay).
+  for (const hook of ["createActor", "updateActor", "deleteActor"]) {
+    Hooks.on(hook, (actor) => {
+      if (isVehicle(actor)) invalidateSeatIndex();
+    });
+  }
+  for (const hook of ["createToken", "updateToken", "deleteToken", "deleteScene", "canvasReady",
+    "createCombat", "updateCombat", "deleteCombat"]) {
+    Hooks.on(hook, invalidateSeatIndex);
+  }
 }
 
 /**
@@ -252,7 +297,7 @@ export async function setDriver(vehicle, uuid) {
 export async function toggleParked(vehicle) {
   return updateVehicle(vehicle, {
     "system.parked": !vehicle.system.parked,
-    "system.round": { combatId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
+    "system.round": { combatId: "", checkId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
   });
 }
 

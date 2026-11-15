@@ -1,9 +1,11 @@
 import {
-  DEITY_MIGRATION_ID, MIGRATIONS, migrationPlan, needsHandToHand, persistDeityBlock, tickHandToHandOn,
+  announceWeaponSkill, backfillDeityTier, DEITY_MIGRATION_ID, DEITY_TIER_MIGRATION_ID, inferDeityTier, MIGRATIONS,
+  migrationPlan, needsHandToHand, persistDeityBlock, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID,
 } from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
 } from "../../helpers/companion-migration.mjs";
+import { deityBenefitApplies } from "../../helpers/worship.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -128,6 +130,119 @@ export default function register(quench) {
             Hooks.off("preUpdateActor", hookId);
             await deleteTestActor(actor);
             await deleteTestActor(mob);
+          }
+        });
+      });
+
+      describe("0.6.0: a Character imported after the Deity migration", function () {
+        useQuenchTimeout(this);
+
+        // The /code-review worry: an old Character imported once the 0.6.0
+        // migration has run would be stored with its old Deity text, and a
+        // later partial Deity edit would wipe it on the server. Import
+        // builds the (migrated) document first and saves it whole, so what
+        // the server gets is already the block.
+        it("is saved with the block, not the old text, and keeps its notes through a partial edit", async function () {
+          const actor = await createTestCharacter("deity import");
+          let sent;
+          const update = actor.update;
+          actor.update = function (data, options) {
+            sent = data?.system?.deity;
+            return update.call(this, data, options);
+          };
+          try {
+            for (const legacy of ["<p>Apito - a single tear</p>", ["Apito - a single tear"]]) {
+              const json = actor.toObject();
+              json.system.deity = legacy;
+              sent = undefined;
+              await actor.importFromJSON(JSON.stringify(json));
+              assert.isObject(sent, `the import sends a block (${Array.isArray(legacy) ? "array" : "string"})`);
+              assert.notInstanceOf(sent, Array);
+              assert.include(sent.notes, "a single tear", "with the old text as its notes");
+
+              await actor.update({ "system.deity.name": "Apito" });
+              assert.include(actor.system.deity.notes, "a single tear", "a partial edit keeps the notes");
+            }
+          } finally {
+            delete actor.update;
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("0.6.0: the Deity Tier, from the Boons owned", function () {
+        useQuenchTimeout(this);
+
+        it("is a 0.6.0 migration of its own, after the Deity block's", function () {
+          const index = MIGRATIONS.findIndex((m) => m.id === DEITY_TIER_MIGRATION_ID);
+          assert.isAtLeast(index, 0);
+          assert.equal(MIGRATIONS[index].version, "0.6.0");
+          assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID));
+          const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
+          assert.include(p.run.map((m) => m.id), DEITY_TIER_MIGRATION_ID, "a world that had the earlier ones still gets it");
+        });
+
+        it("sets a Character's blank Tier to its highest Boon's, so its Boons keep applying; once", async function () {
+          const actor = await createTestCharacter("deity tier", { system: { deity: { name: "Apito", notes: "<p>kept</p>" } } });
+          const set = await createTestCharacter("deity tier set", { system: { deity: { tier: "acolyte" } } });
+          const none = await createTestCharacter("deity tier none");
+          const mob = await createTestMob("deity tier");
+          try {
+            await createTestItem(actor, "feature", "acolyte boon", { system: { tier: "acolyte" } });
+            const devotee = await createTestItem(actor, "feature", "devotee boon", { system: { tier: "devotee" } });
+            await createTestItem(actor, "feature", "untiered");
+            await createTestItem(set, "feature", "zealot boon", { system: { tier: "zealot" } });
+            await createTestItem(none, "feature", "untiered");
+            assert.isFalse(deityBenefitApplies(devotee, actor.system.deity), "off before the backfill");
+
+            assert.equal(inferDeityTier(actor), "devotee");
+            assert.equal(await backfillDeityTier(actor), "devotee");
+            assert.equal(actor.system.deity.tier, "devotee");
+            assert.equal(actor.system.deity.name, "Apito", "the rest of the block is kept");
+            assert.equal(actor.system.deity.notes, "<p>kept</p>");
+            assert.isTrue(deityBenefitApplies(devotee, actor.system.deity), "on after it");
+            assert.equal(await backfillDeityTier(actor), "", "a second run does nothing");
+
+            assert.equal(await backfillDeityTier(set), "", "a Tier the GM set is left alone");
+            assert.equal(set.system.deity.tier, "acolyte");
+            assert.equal(await backfillDeityTier(none), "", "no tiered Boons, no Tier");
+            assert.equal(none.system.deity.tier, "");
+            assert.equal(inferDeityTier(mob), "");
+          } finally {
+            for (const x of [actor, set, none, mob]) await deleteTestActor(x);
+          }
+        });
+      });
+
+      describe("0.6.0: the Weapon Skill notice", function () {
+        useQuenchTimeout(this);
+
+        it("is a 0.6.0 migration of its own, after the Deity block's", function () {
+          const index = MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID);
+          assert.isAtLeast(index, 0);
+          assert.equal(MIGRATIONS[index].version, "0.6.0");
+          assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID));
+          // A world that already had the earlier ones still gets it.
+          const earlier = MIGRATIONS.slice(0, index).map((m) => m.id);
+          const p = migrationPlan({ done: earlier, hasContent: true });
+          assert.deepEqual(p.run.map((m) => m.id), [WEAPON_SKILL_NOTICE_ID]);
+        });
+
+        it("posts one chat notice everyone sees, changing no documents", async function () {
+          let posted = null;
+          const hookId = Hooks.on("createChatMessage", (message) => {
+            if (message.isAuthor) posted = message;
+          });
+          try {
+            const result = await announceWeaponSkill();
+            assert.deepEqual(result, { changed: 0, errors: 0 });
+            assert.exists(posted, "a chat message was posted");
+            assert.lengthOf(posted.whisper, 0, "not whispered");
+            assert.include(posted.content, game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"));
+            assert.include(posted.content, "Weapon Skill");
+          } finally {
+            Hooks.off("createChatMessage", hookId);
+            await posted?.delete();
           }
         });
       });

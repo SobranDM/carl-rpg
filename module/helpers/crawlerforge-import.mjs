@@ -353,12 +353,14 @@ export async function importCrawlerForgeCrawler(exportJson) {
 
   const actor = await Actor.create(data.actor);
   const [race, cls] = [data.race, data.class];
+  // An export with its own Size keeps it: the Race mustn't reset it
+  // (helpers/size.mjs). Without one, the Race's Size applies.
   const created = await actor.createEmbeddedDocuments("Item", [
     ...skills,
     ...(race ? [race] : []),
     ...(cls ? [cls] : []),
     ...data.items,
-  ]);
+  ], { carlKeepSize: data.actor.system.details?.size !== undefined });
   const raceItem = race ? created.find((i) => i.type === "race") : null;
   const classItem = cls ? created.find((i) => i.type === "class") : null;
 

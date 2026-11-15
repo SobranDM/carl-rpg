@@ -5,8 +5,20 @@
   "folder": "YSITmHr3sIPtMPDx",
   "img": "icons/svg/shield.svg",
   "system": {
-    "description": "<p>Your skin toughens like bark, granting you a flat +2 Damage Resistance buff for the duration.</p><p><em>Note: DR has no temporary/conditional-bonus mechanism in this system - apply this bonus by hand while the buff is active.</em></p>",
-    "changes": [],
+    "description": "<p>Your skin toughens like bark, granting you a flat +2 Damage Resistance buff for the duration.</p><p><em>Casting it switches it on (paying its Mana) and its DR is added automatically; cast it again when the buff ends to switch it off.</em></p>",
+    "changes": [
+      {
+        "id": "IAq25YAyE6XUwpOG",
+        "label": "",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
     "governingStat": "int",
     "rank": 0,
     "marked": false,
@@ -21,17 +33,53 @@
       {
         "rankThreshold": 5,
         "description": "Grants an additional +2 DR, and the duration increases to 3 minutes.",
-        "changes": []
+        "changes": [
+          {
+            "id": "qURySLTYeRBCV35p",
+            "label": "",
+            "targetType": "resource",
+            "target": "dr",
+            "mode": "add",
+            "value": "2",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ]
       },
       {
         "rankThreshold": 10,
         "description": "Grants an additional +2 DR, and the buff can now extend to party members/NPCs within 10ft.",
-        "changes": []
+        "changes": [
+          {
+            "id": "OXn7oW7TeMdQ3rpO",
+            "label": "",
+            "targetType": "resource",
+            "target": "dr",
+            "mode": "add",
+            "value": "2",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ]
       },
       {
         "rankThreshold": 15,
         "description": "Grants an additional +2 DR, and the duration increases to 4 minutes.",
-        "changes": []
+        "changes": [
+          {
+            "id": "5iblHLWLl5MedzqB",
+            "label": "",
+            "targetType": "resource",
+            "target": "dr",
+            "mode": "add",
+            "value": "2",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ]
       }
     ],
     "manaCost": 5,
@@ -44,7 +92,9 @@
     "favoredClasses": [
       "Druid"
     ],
-    "manaCostVariants": []
+    "manaCostVariants": [],
+    "isToggled": true,
+    "active": false
   },
   "effects": [],
   "_stats": {

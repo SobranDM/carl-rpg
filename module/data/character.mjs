@@ -3,7 +3,7 @@ import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
 import { linesToHtml, storyToHtml } from "../helpers/rich-text.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
 import {
-  defineStatsField, deriveStats, deriveDefenses, deriveResourceCaps, creatureRollData,
+  defineStatsField, deriveStats, deriveDefenses, deriveMovement, deriveResourceCaps, creatureRollData,
 } from "./shared/derive-creature.mjs";
 
 export default class CarlRPGCharacter extends CarlRPGActorBase {
@@ -205,6 +205,7 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
 
     deriveStats(this);
     deriveDefenses(this);
+    deriveMovement(this);
     deriveResourceCaps(this);
   }
 

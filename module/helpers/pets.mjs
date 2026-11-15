@@ -12,6 +12,7 @@
 import { isCrawler, isPet } from "./actor-kinds.mjs";
 import { findOwnedSkillLike, learnSkillLike } from "./race-class-grants.mjs";
 import { queueForActor } from "./actor-queue.mjs";
+import { ownerIds, withOwners } from "./ownership.mjs";
 
 /**
  * The crawler a Pet is bonded to, if it still exists.
@@ -98,11 +99,9 @@ export async function syncPetOwnership(pet) {
   const owner = petOwner(pet);
   if (!owner) return;
   const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-  const missing = Object.entries(owner.ownership ?? {})
-    .filter(([id, level]) => id !== "default" && level >= OWNER && (pet.ownership?.[id] ?? 0) < OWNER)
-    .map(([id]) => id);
+  const missing = ownerIds(owner).filter((id) => (pet.ownership?.[id] ?? 0) < OWNER);
   if (!missing.length) return;
-  await pet.update({ ownership: { ...pet.ownership, ...Object.fromEntries(missing.map((id) => [id, OWNER])) } });
+  await pet.update({ ownership: withOwners(pet.ownership, missing) });
 }
 
 /**

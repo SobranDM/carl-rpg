@@ -1,5 +1,6 @@
 import { getStatMod } from "../../helpers/rules.mjs";
 import { computeActiveShieldSlots } from "../../helpers/modifiers.mjs";
+import { conditionLabel, findConditionWithMechanic } from "../../helpers/debuff-effects.mjs";
 
 /**
  * The stat block and derived values every creature Actor shares - Characters
@@ -56,20 +57,46 @@ export function deriveStats(sys) {
 }
 
 /**
- * DR and Resistances. `dr` and `resistances` stay the flat editable bases;
- * drBonus/drEffective come from "resource" ChangeEntries targeting "dr"
- * (with an optional capMax), and a "resistance" ChangeEntry (e.g. a Race's
- * "Immunity to Poison") overrides the base for its own type only, in
- * resistancesEffective - read by module/helpers/damage-pipeline.mjs. Removing
- * the granting item reverts to the base.
+ * DR and Resistances. `dr` and `resistances` stay the flat editable bases.
+ *  - DR: (base + every "dr" add) x the DR multiplier (an Iron Skin Potion's
+ *    x2 doubles the whole DR - modifiers.mjs keeps it apart as
+ *    drMultiplier), rounded down, then any capMax. drBonus is how far that
+ *    is from the base (what the sheet shows as "= N").
+ *  - A "resistance" ChangeEntry (e.g. a Race's "Immunity to Poison")
+ *    overrides the base for its own type only, in resistancesEffective -
+ *    read by module/helpers/damage-pipeline.mjs. Removing the granting item
+ *    reverts to the base.
  * @param {object} sys
  */
 export function deriveDefenses(sys) {
-  sys.drBonus = sys.bonuses?.dr ?? 0;
-  sys.drEffective = sys.caps?.dr !== undefined
-    ? Math.min(sys.dr + sys.drBonus, sys.caps.dr)
-    : sys.dr + sys.drBonus;
+  const total = Math.floor((sys.dr + (sys.bonuses?.dr ?? 0)) * (sys.drMultiplier ?? 1));
+  sys.drEffective = sys.caps?.dr !== undefined ? Math.min(total, sys.caps.dr) : total;
+  sys.drBonus = sys.drEffective - sys.dr;
   sys.resistancesEffective = { ...sys.resistances, ...sys.grantedResistances };
+}
+
+/**
+ * A Character's Move and Step (in feet): the editable base (details.move/
+ * step) plus "move"/"step" resource bonuses (Tigran's +10ft, Running).
+ *  - Fatigued halves Move, rounded down to 5 ft - once, however many stacks.
+ *  - Held and Terrified block Move and Step; Stiff Legs and Staggered block
+ *    the Step. moveBlockedBy/stepBlockedBy name the first Debuff doing it
+ *    ("" when free) - the sheet strikes the value through. The value itself
+ *    is kept, for when the Debuff ends.
+ * @param {object} sys
+ */
+export function deriveMovement(sys) {
+  const details = sys.details ?? {};
+  let move = Math.max(0, (details.move ?? 0) + (sys.bonuses?.move ?? 0));
+  const halved = findConditionWithMechanic(sys, "halveMove");
+  if (halved) move = Math.floor(move / 2 / 5) * 5;
+  sys.moveEffective = move;
+  sys.moveHalvedBy = halved ? conditionLabel(halved) : "";
+  sys.stepEffective = Math.max(0, (details.step ?? 0) + (sys.bonuses?.step ?? 0));
+  const noMove = findConditionWithMechanic(sys, "noMove");
+  const noStep = findConditionWithMechanic(sys, "noStep");
+  sys.moveBlockedBy = noMove ? conditionLabel(noMove) : "";
+  sys.stepBlockedBy = noStep ? conditionLabel(noStep) : "";
 }
 
 /**

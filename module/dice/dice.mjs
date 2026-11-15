@@ -1776,6 +1776,8 @@ export default class CarlDice {
     parts.add(resolveD20Formula(false, options.advantage, debuffEffect), game.i18n.localize("CARLRPG.Roll.Die"));
     parts.add(dexMod, game.i18n.localize(CARLRPG.statAbbreviations.dex));
     parts.add(evadeBonus, game.i18n.localize("CARLRPG.Roll.EvadeBonus"));
+    // Dice "added to Evade Checks" (Elf (High)'s 1d4) - modifiers.mjs.
+    for (const { formula, label } of sys.evadeDice ?? []) parts.add(formula, label || game.i18n.localize("CARLRPG.Roll.EvadeBonus"));
     addDebuffPenalties(parts, debuffEffect.penalties);
     parts.add(options.modifier, game.i18n.localize("CARLRPG.Roll.Situational"));
     applyCheckedConditionalModifiers(parts, conditionalModifiers, options.checked, ["stat", "rollMode", "custom"]);
@@ -1828,7 +1830,8 @@ export default class CarlDice {
    * @param {Item} skillItem  An Opposed-Check Skill (e.g. Taunt).
    * @param {{difficulty?: number|null, opponent?: Actor|null, skipDialog?: boolean, post?: boolean}} [options]
    *   opponent: the creature whose static number `difficulty` is. When it's
-   *   a Mob, its Debuffs adjust that Difficulty (p.96 - module/helpers/
+   *   a Mob (not a crawler or Pet, who roll their own side - actor-kinds.mjs
+   *   rollsLikeCrawler), its Debuffs adjust that Difficulty (p.96 - module/helpers/
    *   debuff-effects.mjs), offered as dialog rows like rollAttack's target.
    *   post (default true): when false, return the raw roll data instead of
    *   posting a ChatMessage, so a caller can fold this roll into its own
@@ -1856,7 +1859,9 @@ export default class CarlDice {
     // An opposed Spell is still cast - it costs Mana like any other (p.173).
     const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
     const rollerRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })], "roll");
-    const opponentRows = opponent && opponent.type !== "character"
+    // A Mob's Debuffs lower its static Difficulty; a crawler or Pet rolls
+    // its own side, with its own Debuffs.
+    const opponentRows = opponent && !rollsLikeCrawler(opponent)
       ? decorateRows(collectDebuffRows(opponent.system, "check", { ownerName: opponent.name, idPrefix: "opp", ownAction: false }), "difficulty")
       : [];
 

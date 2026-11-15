@@ -67,6 +67,22 @@ export function nextRowId(targetRows) {
 }
 
 /**
+ * The id of the `index`th row added because row `parentId` was applied (a
+ * ram's occupant rows, module/helpers/vehicle-ram.mjs): t0's are t100,
+ * t101..., t1's are t200... Fixed by the parent rather than "the next free
+ * id", so two rows applied at once - by two users, or by one player whose
+ * writes go through the GM - can't both pick the same ids and overwrite
+ * each other's rows. Still a number, so activeRows sorts them after the
+ * rows they came from.
+ * @param {string} parentId  "t0", "t1"...
+ * @param {number} index
+ * @returns {string}
+ */
+export function childRowId(parentId, index) {
+  return `t${(Number(parentId.slice(1)) + 1) * 100 + index}`;
+}
+
+/**
  * The Difficulty a crawler's Attack rolls against for one target, with that
  * target's default Debuff rows (a Mob's Debuffs all lower its static Evade;
  * a crawler's only through Woozy - see CarlDice.rollAttack).

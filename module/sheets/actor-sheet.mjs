@@ -35,6 +35,7 @@ import {
   boonAvailable, deityBenefitApplies, describeDeity, receiveBoon, tierRank, worshipSuspended,
 } from "../helpers/worship.mjs";
 import { evadeModifier } from "../helpers/rules.mjs";
+import { describeDefenses } from "../helpers/bonus-sources.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -307,6 +308,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const current = this.actor.system.round;
     submitted.round = {
       combatId: status.fight?.id ?? "",
+      // Set by hand: no Driving Check card's buttons may change it now.
+      checkId: "",
       round: status.fight?.round ?? null,
       degree: picked,
       critChoice: "",
@@ -491,6 +494,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.manaPercent = mana.max > 0 ? Math.round(Math.min(1, Math.max(0, mana.value / mana.max)) * 100) : 0;
     // The same terms CarlDice.rollEvadeCheck adds to the d20.
     context.evadeTotal = evadeModifier(sys);
+    // Evade, DR, Move and Step with their source tooltips (bonus-sources.mjs).
+    context.defenses = describeDefenses(sys);
     const counts = { resist: 0, immune: 0, vulnerable: 0 };
     for (const state of Object.values(sys.resistancesEffective ?? {})) {
       if (state in counts) counts[state] += 1;
@@ -1321,7 +1326,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static #onResetVehicleRound(event, target) {
     event.preventDefault();
     return updateVehicle(this.actor, {
-      "system.round": { combatId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
+      "system.round": { combatId: "", checkId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
     });
   }
 

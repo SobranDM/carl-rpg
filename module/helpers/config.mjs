@@ -260,27 +260,32 @@ CARLRPG.changeTargetTypes = {
 
 /**
  * The fixed, known set of ChangeEntry.target values for targetType
- * "resource" - the only two resource-bonus keys actually consumed anywhere
- * (see character.mjs/mob.mjs#prepareDerivedData). Unlike Skill Rank/Skill
- * Damage targets (arbitrary homebrew skill names with no master list), this
- * is a genuinely closed, enumerable set, so it gets a real dropdown.
+ * "resource" - the resource-bonus keys consumed by prepareDerivedData
+ * (data/shared/derive-creature.mjs). Unlike Skill Rank/Skill Damage targets
+ * (arbitrary homebrew skill names with no master list), this is a genuinely
+ * closed, enumerable set, so it gets a real dropdown. Move and Step are a
+ * Character's (system.details.move/step, in feet).
  */
 CARLRPG.resourceTargets = {
   "hb.max": "CARLRPG.ResourceTarget.HbMax",
   "mana.max": "CARLRPG.ResourceTarget.ManaMax",
   dr: "CARLRPG.ResourceTarget.Dr",
+  move: "CARLRPG.ResourceTarget.Move",
+  step: "CARLRPG.ResourceTarget.Step",
 };
 
 /**
  * The fixed, known set of ChangeEntry.target values for targetType
- * "rollMode" - "evadeBonus" is the only roll-time convention key actually
- * consumed anywhere (CarlDice.rollEvadeCheck reads sys.bonuses.evadeBonus
- * directly), so this is also a genuinely closed set, unlike "custom" (kept
- * free text - it's deliberately the escape hatch for anything not covered
- * by the other five categories).
+ * "rollMode", read by CarlDice.rollEvadeCheck - a genuinely closed set,
+ * unlike "custom" (kept free text - it's deliberately the escape hatch for
+ * anything not covered by the other categories):
+ *  - evadeBonus: a number added to Evade (sys.bonuses.evadeBonus);
+ *  - evadeDice: a dice formula added to Evade Checks ("Add 1d4 to Evade
+ *    Checks", Elf (High)) - collected as a list (sys.evadeDice), not summed.
  */
 CARLRPG.rollModeTargets = {
   evadeBonus: "CARLRPG.RollModeTarget.EvadeBonus",
+  evadeDice: "CARLRPG.RollModeTarget.EvadeDice",
 };
 
 CARLRPG.skillCategories = {
@@ -576,6 +581,11 @@ CARLRPG.titheByTier = {
  *      noHealing: true      Healing can't be applied.
  *      noSpells: true       Can't cast Spells.
  *      noActions: true      Can't take any Actions (rolls are blocked).
+ *      halveMove: true      Move halved (once, however many stacks).
+ *      noMove: true         Can't take Move Actions.
+ *      noStep: true         Can't take a 10ft Step.
+ *                           (These three only change what the Combat tab
+ *                           shows - data/shared/derive-creature.mjs.)
  *      alsoApplies: [key]   Applying this debuff also applies these.
  *
  * On a Mob, every d20-shaped penalty becomes a change to the Mob's static
@@ -640,14 +650,14 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.Fatigued.MobEffect",
     durationType: "until-condition",
     stackable: true,
-    mechanics: { penalty: 1, endsOnRest: 'long' },
+    mechanics: { penalty: 1, endsOnRest: 'long', halveMove: true },
   },
   held: {
     label: "CARLRPG.Debuff.Held.Label",
     effect: "CARLRPG.Debuff.Held.Effect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { attackersGainAdvantage: true },
+    mechanics: { attackersGainAdvantage: true, noMove: true, noStep: true },
   },
   longTermMajorInjury: {
     label: "CARLRPG.Debuff.LongTermMajorInjury.Label",
@@ -755,7 +765,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.Staggered.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { disadvantage: "nextAttack", endsAfterAction: true },
+    mechanics: { disadvantage: "nextAttack", endsAfterAction: true, noStep: true },
   },
   stiffLegs: {
     label: "CARLRPG.Debuff.StiffLegs.Label",
@@ -763,7 +773,7 @@ CARLRPG.debuffs = {
     durationType: "real-minutes",
     durationValue: 5,
     stackable: false,
-    mechanics: { endsWithCombat: true },
+    mechanics: { endsWithCombat: true, noStep: true },
   },
   stunned: {
     label: "CARLRPG.Debuff.Stunned.Label",
@@ -787,7 +797,7 @@ CARLRPG.debuffs = {
     durationType: "rounds",
     durationValue: 2,
     stackable: false,
-    mechanics: { disadvantage: "attack", endsOnHbLoss: true },
+    mechanics: { disadvantage: "attack", endsOnHbLoss: true, noMove: true, noStep: true },
   },
   theTaint: {
     label: "CARLRPG.Debuff.TheTaint.Label",

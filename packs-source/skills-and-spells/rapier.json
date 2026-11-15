@@ -59,6 +59,17 @@
             "label": "",
             "id": "R8O2QnYnF11ZPinw",
             "conditions": []
+          },
+          {
+            "id": "CqHpR90ye4j444Jl",
+            "label": "",
+            "targetType": "rollMode",
+            "target": "evadeBonus",
+            "mode": "add",
+            "value": "1",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
           }
         ],
         "damageTypes": [
@@ -85,6 +96,17 @@
             "damageType": "",
             "label": "",
             "id": "sN0ffNghckxZeDbz",
+            "conditions": []
+          },
+          {
+            "id": "2SpxYLWRxxYMtpPd",
+            "label": "",
+            "targetType": "rollMode",
+            "target": "evadeBonus",
+            "mode": "add",
+            "value": "1",
+            "damageDiceKind": "",
+            "damageType": "",
             "conditions": []
           }
         ],

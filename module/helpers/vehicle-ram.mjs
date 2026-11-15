@@ -22,7 +22,7 @@ import { CARLRPG } from "./config.mjs";
 import { degreeBadge } from "./rules.mjs";
 import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
-import { baseRow, crawlerAttackDifficulty, crawlerAttackRow, nextRowId } from "./attack-targets.mjs";
+import { baseRow, childRowId, crawlerAttackDifficulty, crawlerAttackRow } from "./attack-targets.mjs";
 import { updateCardMessage } from "./chat-socket.mjs";
 import { actorSizeValue, vehicleDriver, vehicleFight, vehicleOccupants, vehicleStatus } from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
@@ -175,6 +175,8 @@ export async function afterRamRowApplied(message, row, recipient, damage) {
     await updateVehicle(recipient, {
       "system.round": {
         combatId: fight?.id ?? "",
+        // This round's Driving Check card still owns its result.
+        checkId: status.roundActive ? current.checkId : "",
         round: fight?.round ?? null,
         degree: status.roundActive ? current.degree : "",
         critChoice: status.roundActive ? current.critChoice : "",
@@ -188,11 +190,10 @@ export async function afterRamRowApplied(message, row, recipient, damage) {
   const share = Math.max(0, Math.floor(taken / 2) - (recipient.system.drEffective ?? recipient.system.dr ?? 0));
   const occupants = vehicleOccupants(recipient).filter((o) => o.actor);
   if (!share || !occupants.length) return lines;
-  const rows = { ...flags.targetRows };
   const added = {};
-  for (const o of occupants) {
-    const id = nextRowId(rows);
-    rows[id] = baseRow({
+  for (const [index, o] of occupants.entries()) {
+    const id = childRowId(row.id, index);
+    added[id] = baseRow({
       id,
       target: { uuid: o.uuid, actor: o.actor },
       difficulty: null,
@@ -202,7 +203,6 @@ export async function afterRamRowApplied(message, row, recipient, damage) {
       role: "occupant",
       damageOverride: { bludgeoning: share },
     });
-    added[id] = rows[id];
   }
   await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: added } } });
   lines.push(game.i18n.format("CARLRPG.Vehicle.Ram.OccupantsAdded", { vehicle: esc(recipient.name), damage: share }));

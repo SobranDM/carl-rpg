@@ -61,6 +61,17 @@
         "damageDiceKind": "",
         "damageType": "",
         "conditions": []
+      },
+      {
+        "id": "QO5dhnr31vTc4wea",
+        "label": "",
+        "targetType": "rollMode",
+        "target": "evadeDice",
+        "mode": "add",
+        "value": "1d4",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
       }
     ],
     "isEarthBased": true,

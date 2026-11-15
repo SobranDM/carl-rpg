@@ -61,6 +61,17 @@
         "damageDiceKind": "",
         "damageType": "",
         "conditions": []
+      },
+      {
+        "id": "DgdjFc2WfrvKxBky",
+        "label": "",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
       }
     ],
     "isEarthBased": true,

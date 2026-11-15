@@ -28,10 +28,11 @@
 import CarlRPGPet from "../data/pet.mjs";
 import { grantPetSkills } from "./pets.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { parseSize } from "./size.mjs";
+import { ownerIds, withOwners } from "./ownership.mjs";
 
 export const COMPANIONS_MIGRATION_ID = "0.6.0-companion-actors";
 const SCOPE = "carl-rpg";
-const OWNER = () => CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
 
 /** The old blocks the safety net kept for this actor, or null. */
 export function legacyCompanionsOf(actor) {
@@ -72,29 +73,8 @@ export function blockEntered(block) {
   return false;
 }
 
-/**
- * The old free-text Size as a size value (1-8): a number ("5"), a size name
- * ("Large", "huge"), or both ("Large (5)"). null if it's neither.
- * @param {string} text
- * @returns {number|null}
- */
-export function parseSize(text) {
-  if (isBlank(text)) return null;
-  const s = String(text).trim();
-  const number = s.match(/\d+/);
-  if (number) {
-    const n = Number(number[0]);
-    if (CONFIG.CARLRPG.sizes[n]) return n;
-  }
-  const words = s.toLowerCase().match(/[a-z]+/g) ?? [];
-  for (const word of words) {
-    for (const [value, key] of Object.entries(CONFIG.CARLRPG.sizes)) {
-      const names = [String(key).split(".").pop().toLowerCase(), game.i18n.localize(key).toLowerCase()];
-      if (names.includes(word)) return Number(value);
-    }
-  }
-  return null;
-}
+// The old free-text Size is read by helpers/size.mjs (shared with a Race's Size).
+export { parseSize };
 
 const loc = (key, data) => game.i18n.format(`CARLRPG.Migration.Companions.${key}`, data ?? {});
 
@@ -221,10 +201,7 @@ export function vehicleDataFrom(character, mount) {
 
   // The Character's players can drive it - set here, not by Vehicle
   // _preCreate (which would add the migrating GM's own crawler's players).
-  const ownership = { default: character.ownership?.default ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE };
-  for (const [id, level] of Object.entries(character.ownership ?? {})) {
-    if (id !== "default" && level >= OWNER()) ownership[id] = OWNER();
-  }
+  const ownership = withOwners({ default: character.ownership?.default ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE }, ownerIds(character));
 
   const name = isBlank(mount.name) ? loc("VehicleName", { name: character.name }) : String(mount.name).trim();
   const biography = biographyFor(character, b.notes);

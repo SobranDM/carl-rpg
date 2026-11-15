@@ -86,15 +86,24 @@ export function expireConditions(actor, worldTime) {
   return queueForActor(actor.uuid, () => dropExpiredConditions(actor, worldTime));
 }
 
+/** The sheet part that shows a timed entry's "ends in ..." (conditions.hbs). */
+const TIMED_PART = "conditions";
+
 /**
- * Redraw open actor sheets showing a timed entry, so the Conditions tab's
- * "ends in ..." keeps up with the clock (every client).
+ * Redraw the Conditions tab of open actor sheets showing a timed entry, so
+ * its "ends in ..." keeps up with the clock (every client). Only that part:
+ * the clock moves every combat round, and a full render would throw away
+ * whatever is being typed elsewhere on the sheet (an open notes editor).
+ * Sheets without that part (core's, a module's) are left alone - core warns
+ * about a part it doesn't have.
  */
-function refreshTimedSheets() {
+export function refreshTimedSheets() {
   for (const app of foundry.applications.instances?.values?.() ?? []) {
     const doc = app.document;
-    if (!app.rendered || !(doc instanceof Actor)) continue;
-    if (doc.system?.conditions?.some?.((c) => c.expiresAt !== null && c.expiresAt !== undefined)) app.render();
+    if (!app.rendered || !(doc instanceof Actor) || !app.parts?.[TIMED_PART]) continue;
+    if (doc.system?.conditions?.some?.((c) => c.expiresAt !== null && c.expiresAt !== undefined)) {
+      app.render({ parts: [TIMED_PART] });
+    }
   }
 }
 

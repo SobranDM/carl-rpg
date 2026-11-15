@@ -15,6 +15,10 @@ export default class CarlRPGItem extends CarlRPGItemBase {
     // Attack with that Skill needs it in hand or in the Hotlist
     // (module/helpers/weapons.mjs). Blank for anything that isn't a weapon.
     schema.weaponSkill = new fields.StringField({ required: true, blank: true, initial: "" });
+    // Worn armor: "your entire ensemble only grants you a single DR bonus"
+    // (p.225) - of the equipped pieces with this ticked, only the one adding
+    // the most DR counts (modifiers.mjs supersededArmorIds).
+    schema.isArmor = new fields.BooleanField({ required: true, initial: false });
 
     // A usable, single-use item (Item Rules, p.99): Potions, Scrolls,
     // Spellbooks and other consumables like Bandages. Blank kind = ordinary

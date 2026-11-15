@@ -1,4 +1,5 @@
 import { CarlRPGActorSheet } from "../../sheets/actor-sheet.mjs";
+import { refreshTimedSheets } from "../../helpers/expiry.mjs";
 import { BOON_HOURS, boonAvailable, deityTithe, describeDeity, receiveBoon } from "../../helpers/worship.mjs";
 import {
   createTestCharacter,
@@ -25,6 +26,38 @@ export default function register(quench) {
     "carl-rpg.actor-sheet",
     (context) => {
       const { describe, it, assert } = context;
+
+      describe("the clock redraws only the Conditions tab", function () {
+        useQuenchTimeout(this);
+
+        // The clock moves every combat round; a full render would throw away
+        // text being typed elsewhere on the sheet.
+        it("a sheet showing a timed entry redraws just its conditions part", async function () {
+          const actor = await createTestCharacter();
+          const sheet = actor.sheet;
+          const calls = [];
+          try {
+            await actor.update({ "system.conditions": [{
+              key: "custom", label: "Iron Skin", stacks: 1, remaining: null, source: "Iron Skin Potion",
+              expiresAt: game.time.worldTime + 3600,
+            }] });
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            const render = sheet.render;
+            sheet.render = function (options) {
+              calls.push(options);
+              return render.call(this, options);
+            };
+            refreshTimedSheets();
+            assert.lengthOf(calls, 1);
+            assert.deepEqual(calls[0]?.parts, ["conditions"]);
+          } finally {
+            delete sheet.render;
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+      });
 
       describe("re-render keeps the active tab's scroll position", function () {
         useQuenchTimeout(this);

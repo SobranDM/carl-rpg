@@ -1,6 +1,7 @@
 import CarlDice from "../../dice/dice.mjs";
 import { rowOutcome } from "../../helpers/attack-targets.mjs";
-import { createTestCharacter, createTestMob, createTestItem, deleteTestActor, settle, withFakeTargets, withPinnedDice, PIN_D20_MID, withSetting, useQuenchTimeout } from "../helpers.mjs";
+import { addConditionToActor } from "../../helpers/conditions.mjs";
+import { createTestCharacter, createTestMob, createTestPet, createTestItem, deleteTestActor, settle, withFakeTargets, withPinnedDice, PIN_D20_MID, withSetting, useQuenchTimeout } from "../helpers.mjs";
 
 export default function register(quench) {
   quench.registerBatch(
@@ -201,6 +202,26 @@ export default function register(quench) {
             assert.containsAllKeys(result, ["roll", "total", "breakdown", "naturalRoll", "degree"]);
           } finally {
             await deleteTestActor(actor);
+          }
+        });
+
+        it("an opponent Mob's Debuffs lower the Difficulty; a Pet's don't (it rolls its own side)", async function () {
+          const actor = await createTestCharacter();
+          const mob = await createTestMob("fatigued");
+          const pet = await createTestPet("fatigued");
+          try {
+            const skill = await createTestItem(actor, "skill", "Taunt", { system: { rank: 5 } });
+            await addConditionToActor(mob, "fatigued");
+            await addConditionToActor(pet, "fatigued");
+            const vs = async (opponent) => (await CarlDice.rollOpposedSkillCheck(actor, skill, {
+              difficulty: 10, opponent, skipDialog: true, post: false,
+            })).difficulty;
+            assert.equal(await vs(mob), 9, "Fatigued (-1) lowers a Mob's static Difficulty");
+            assert.equal(await vs(pet), 10, "a Pet's Debuffs stay on its own rolls");
+          } finally {
+            await deleteTestActor(actor);
+            await deleteTestActor(mob);
+            await deleteTestActor(pet);
           }
         });
       });

@@ -5,9 +5,10 @@ import {
 } from "../../helpers/vehicle-state.mjs";
 import { boardVehicle, exitVehicle, setDriver, applyVehiclePreset, activateNitrous } from "../../helpers/vehicles.mjs";
 import { collectVehicleRows } from "../../helpers/vehicle-rows.mjs";
-import { rollDrivingCheck, commitDrivingRound } from "../../helpers/vehicle-driving.mjs";
+import { rollDrivingCheck, commitDrivingRound, drivingCardCurrent } from "../../helpers/vehicle-driving.mjs";
 import { ramFormula, rollRam } from "../../helpers/vehicle-ram.mjs";
 import { applyRow } from "../../chat/attack-targets-card.mjs";
+import { activeRows, childRowId } from "../../helpers/attack-targets.mjs";
 import { buildWeaponFire } from "../../helpers/vehicle-weapons.mjs";
 import { attackDifficultyParts, crawlerAttackRow, mobAttackRow } from "../../helpers/attack-targets.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
@@ -124,6 +125,9 @@ export default function register(quench) {
             await setDriver(v, a.uuid);
             assert.equal(v.system.occupants.find((o) => o.uuid === a.uuid).role, "driver");
             assert.equal(v.system.occupants.find((o) => o.uuid === b.uuid).role, "passenger", "the old driver takes a seat");
+            // Seats are looked up from an index, kept until a vehicle changes.
+            assert.equal(vehicleSeatOf(a)?.role, "driver", "the index follows a change of seat");
+            assert.strictEqual(vehicleSeatOf(a), vehicleSeatOf(a), "and isn't rebuilt between changes");
 
             await exitVehicle(v, b);
             assert.equal(v.system.occupants.length, 1);
@@ -255,6 +259,74 @@ export default function register(quench) {
           });
         });
 
+        it("only the card whose result the vehicle has this round can change it", async function () {
+          await withSetting("currentFloor", 1, async () => {
+            const driver = await crawlerWithSkill("stale", "Driving", 10);
+            const v = await drivenVehicle(driver, { system: { move: 80 } });
+            const cards = [];
+            const hookId = Hooks.on("createChatMessage", (m) => {
+              if (m.flags?.["carl-rpg"]?.driving?.vehicleUuid === v.uuid) cards.push(m);
+            });
+            try {
+              const driving = (m) => m.flags["carl-rpg"].driving;
+              await withPinnedDice(PIN_D20_MID, () => rollDrivingCheck(v, { skipDialog: true }));
+              await waitFor(() => cards.length === 1);
+              assert.isTrue(drivingCardCurrent(driving(cards[0])), "the latest Check's card");
+              assert.equal(v.system.round.checkId, driving(cards[0]).checkId);
+
+              await withPinnedDice(PIN_D20_MID, () => rollDrivingCheck(v, { skipDialog: true }));
+              await waitFor(() => cards.length === 2);
+              assert.isFalse(drivingCardCurrent(driving(cards[0])), "replaced by a later Check");
+              assert.isTrue(drivingCardCurrent(driving(cards[1])));
+
+              await commitDrivingRound(v, "standardFail");
+              assert.isFalse(drivingCardCurrent(driving(cards[1])), "a result set by hand replaces it too");
+              assert.isFalse(drivingCardCurrent({ mode: "table6", vehicleUuid: v.uuid }), "an old card with no Check id");
+              assert.isTrue(drivingCardCurrent({ mode: "stop", vehicleUuid: v.uuid }), "a stopping card never sets the round");
+            } finally {
+              Hooks.off("createChatMessage", hookId);
+              for (const m of cards) await m.delete();
+              await deleteTestActor(v);
+              await deleteTestActor(driver);
+            }
+          });
+        });
+
+        it("a new fight round redraws the Driving cards on screen, and only those", async function () {
+          await withSetting("currentFloor", 1, async () => {
+            const driver = await crawlerWithSkill("redraw", "Driving", 10);
+            const v = await drivenVehicle(driver, { system: { move: 80 } });
+            const cards = [];
+            const hookId = Hooks.on("createChatMessage", (m) => {
+              if (m.flags?.["carl-rpg"]?.driving?.vehicleUuid === v.uuid) cards.push(m);
+            });
+            const updateMessage = ui.chat.updateMessage;
+            const redrawn = [];
+            try {
+              for (let i = 0; i < 2; i++) await withPinnedDice(PIN_D20_MID, () => rollDrivingCheck(v, { skipDialog: true }));
+              await waitFor(() => cards.length === 2);
+              const drawn = (m) => document.querySelectorAll(`[data-message-id="${m.id}"]`);
+              await waitFor(() => drawn(cards[0]).length && drawn(cards[1]).length, { message: "the cards were never drawn" });
+              // The first card as if scrolled out of the log.
+              for (const li of drawn(cards[0])) li.remove();
+
+              ui.chat.updateMessage = function (message, ...rest) {
+                redrawn.push(message.id);
+                return updateMessage.call(this, message, ...rest);
+              };
+              Hooks.callAll("updateCombat", { id: "fake" }, { round: 2 }, {}, game.user.id);
+              assert.include(redrawn, cards[1].id, "the card on screen is redrawn");
+              assert.notInclude(redrawn, cards[0].id, "a card not on screen isn't added back");
+            } finally {
+              delete ui.chat.updateMessage;
+              Hooks.off("createChatMessage", hookId);
+              for (const m of cards) await m.delete();
+              await deleteTestActor(v);
+              await deleteTestActor(driver);
+            }
+          });
+        });
+
         it("the driver's Disadvantage: not on driving, built-in weapons or (from Rank 5) Attacks; not for passengers", async function () {
           const driver = await crawlerWithSkill("rows", "Driving", 0);
           const passenger = await createTestCharacter("rows passenger");
@@ -376,6 +448,7 @@ export default function register(quench) {
               const occupantRows = Object.values(flags().targetRows).filter((r) => r.role === "occupant");
               if (share > 0) {
                 assert.equal(occupantRows.length, 2, "one row per occupant");
+                assert.sameMembers(occupantRows.map((r) => r.id), [childRowId(recoil.id, 0), childRowId(recoil.id, 1)]);
                 assert.isTrue(occupantRows.every((r) => r.damageOverride.bludgeoning === share));
               } else {
                 assert.equal(occupantRows.length, 0);
@@ -384,6 +457,19 @@ export default function register(quench) {
               for (const x of [v, driver, passenger, target]) await deleteTestActor(x);
             }
           });
+        });
+
+        it("rows added by an applied row get ids fixed by it: distinct per parent, numeric, after their parents", function () {
+          assert.equal(childRowId("t0", 0), "t100");
+          assert.equal(childRowId("t0", 1), "t101");
+          assert.equal(childRowId("t1", 0), "t200");
+          // Two vehicle rows applied at once (two users, or a player through
+          // the GM) add rows that can't collide.
+          const fromTarget = [0, 1, 2].map((i) => childRowId("t0", i));
+          const fromRecoil = [0, 1, 2].map((i) => childRowId("t1", i));
+          assert.lengthOf(new Set([...fromTarget, ...fromRecoil]), 6);
+          const rows = Object.fromEntries(["t1", "t0", ...fromRecoil, ...fromTarget].map((id) => [id, { id }]));
+          assert.deepEqual(activeRows(rows).map((r) => r.id), ["t0", "t1", ...fromTarget, ...fromRecoil]);
         });
 
         it("at 0 HB it explodes once: one row per occupant, no Evade, and everyone is out", async function () {

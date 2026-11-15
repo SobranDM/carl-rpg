@@ -71,18 +71,43 @@ export function vehiclesInPlay() {
 }
 
 /**
+ * Who sits where, by occupant uuid, across every vehicle in play - built on
+ * the first lookup and kept until something it reads changes. One roll
+ * looks seats up many times (each target's Difficulty and rows); without it
+ * each lookup walked every actor and token. Dropped (invalidateSeatIndex)
+ * by module/helpers/vehicles.mjs's registerVehicleHooks on any change to a
+ * vehicle, a token, a fight or the viewed scene - coarse on purpose: a
+ * stale seat is worse than a rebuild.
+ * @type {Map<string, {vehicle: Actor, role: string, index: number}>|null}
+ */
+let seatIndex = null;
+
+/** Forget the seat index; the next lookup rebuilds it. */
+export function invalidateSeatIndex() {
+  seatIndex = null;
+}
+
+/** @returns {Map<string, {vehicle: Actor, role: string, index: number}>} */
+function buildSeatIndex() {
+  const index = new Map();
+  for (const vehicle of vehiclesInPlay()) {
+    vehicle.system.occupants.forEach((o, i) => {
+      // The first vehicle listing someone wins, as a straight search would.
+      if (o.uuid && !index.has(o.uuid)) index.set(o.uuid, { vehicle, role: o.role, index: i });
+    });
+  }
+  return index;
+}
+
+/**
  * The vehicle an actor is riding, and its seat.
  * @param {Actor} actor
  * @returns {{vehicle: Actor, role: string, index: number}|null}
  */
 export function vehicleSeatOf(actor) {
   if (!actor || isVehicle(actor)) return null;
-  const key = occupantKey(actor);
-  for (const vehicle of vehiclesInPlay()) {
-    const index = vehicle.system.occupants.findIndex((o) => o.uuid === key);
-    if (index >= 0) return { vehicle, role: vehicle.system.occupants[index].role, index };
-  }
-  return null;
+  seatIndex ??= buildSeatIndex();
+  return seatIndex.get(occupantKey(actor)) ?? null;
 }
 
 /**

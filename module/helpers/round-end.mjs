@@ -42,11 +42,11 @@
  */
 import { CARLRPG } from "./config.mjs";
 import { computeDamageApplication } from "./damage-pipeline.mjs";
-import { collectDebuffRows, resolveRollerRows, consumedConditionIds, conditionLabel, findConditionWithMechanic } from "./debuff-effects.mjs";
+import { collectDebuffRows, resolveRollerRows, consumedConditionIds, conditionLabel } from "./debuff-effects.mjs";
 import { resolveD20Formula } from "../dice/dice.mjs";
 import { createRollMessage, createCardMessage, esc } from "../chat/chat-card.mjs";
 import { queueForActor } from "./actor-queue.mjs";
-import { hbCeiling, restoreUpTo, restoresPerRound } from "./rest.mjs";
+import { restorePerRound, restoresPerRound } from "./rest.mjs";
 import { diesAtZeroHb, isCrawler } from "./actor-kinds.mjs";
 
 /** An entry's own duration type (Potion Sickness's Poisoned) wins over its preset's. */
@@ -118,28 +118,8 @@ async function applyPerRoundRestores(actor, lines) {
   let hb = startHb;
   const startMana = sys.mana?.value ?? 0;
   let mana = startMana;
-  let taint;
   for (const condition of restoring) {
-    const per = condition.perRound;
-    const source = esc(conditionLabel(condition));
-    if (per.mana) {
-      const next = restoreUpTo(mana, per.mana, sys.mana?.max ?? 0);
-      if (next > mana) {
-        lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreMana", { name, amount: next - mana, source }));
-        mana = next;
-      }
-    }
-    if (!per.hb) continue;
-    taint ??= findConditionWithMechanic(sys, "noHealing") ?? false;
-    if (taint) {
-      lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHbBlocked", { name, source, debuff: esc(conditionLabel(taint)) }));
-      continue;
-    }
-    const next = restoreUpTo(hb, per.hb, hbCeiling(sys));
-    if (next > hb) {
-      lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHb", { name, amount: next - hb, source }));
-      hb = next;
-    }
+    ({ hb, mana } = restoreLines(sys, name, { hb, mana }, condition, 1, lines));
   }
 
   const updates = {};
@@ -336,17 +316,43 @@ export async function processRoundEnd(combat, round) {
 }
 
 /**
+ * One condition's per-round restore, `rounds` times over (rest.mjs
+ * restorePerRound), with a chat line for what it restored - or for the
+ * Health Bar part The Taint blocked.
+ * @param {object} sys
+ * @param {string} name  The actor's name, already escaped.
+ * @param {{hb: number, mana: number}} current
+ * @param {object} condition  A system.conditions entry with a perRound.
+ * @param {number} rounds
+ * @param {string[]} lines  Pushed to.
+ * @returns {{hb: number, mana: number}}
+ */
+function restoreLines(sys, name, current, condition, rounds, lines) {
+  const source = esc(conditionLabel(condition));
+  const next = restorePerRound(sys, current, condition.perRound, rounds);
+  if (next.mana > current.mana) {
+    lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreMana", { name, amount: next.mana - current.mana, source }));
+  }
+  if (next.taint) {
+    lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHbBlocked", { name, source, debuff: esc(conditionLabel(next.taint)) }));
+  } else if (next.hb > current.hb) {
+    lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHb", { name, amount: next.hb - current.hb, source }));
+  }
+  return { hb: next.hb, mana: next.mana };
+}
+
+/** A consumable's timed Buff (module/helpers/consumables.mjs), not a Debuff. */
+function isConsumableBuff(condition) {
+  return condition.key === "custom" && (restoresPerRound(condition.perRound) || (condition.changes ?? []).length > 0);
+}
+
+/**
  * "Until the end of the combat" (Burned, Muted, Stiff Legs, The Taint) -
  * plus any "rounds"-duration Debuff still ticking, since rounds stop when
  * the combat does.
  * @param {Combat} combat
  * @returns {Promise<ChatMessage|null>}
  */
-/** A consumable's timed Buff (module/helpers/consumables.mjs), not a Debuff. */
-function isConsumableBuff(condition) {
-  return condition.key === "custom" && (restoresPerRound(condition.perRound) || (condition.changes ?? []).length > 0);
-}
-
 export async function processCombatEnd(combat) {
   const lines = [];
   for (const actor of combatActors(combat)) {
@@ -366,20 +372,7 @@ export async function processCombatEnd(combat) {
           // What the restore still owes lands now.
           const left = Math.max(0, Number(c.remaining) || 0);
           if (left && restoresPerRound(c.perRound) && !dead) {
-            if (c.perRound.mana) {
-              const next = restoreUpTo(mana, c.perRound.mana * left, sys.mana?.max ?? 0);
-              if (next > mana) {
-                lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreMana", { name, amount: next - mana, source: esc(conditionLabel(c)) }));
-                mana = next;
-              }
-            }
-            if (c.perRound.hb && !findConditionWithMechanic(sys, "noHealing")) {
-              const next = restoreUpTo(hb, c.perRound.hb * left, hbCeiling(sys));
-              if (next > hb) {
-                lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHb", { name, amount: next - hb, source: esc(conditionLabel(c)) }));
-                hb = next;
-              }
-            }
+            ({ hb, mana } = restoreLines(sys, name, { hb, mana }, c, left, lines));
           }
           // Bonuses carry on, on the clock, for the rounds they had left.
           if ((c.changes ?? []).length && left) {

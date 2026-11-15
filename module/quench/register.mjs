@@ -45,6 +45,7 @@ import registerRollDialog from "./batches/roll-dialog.mjs";
 import registerHandToHand from "./batches/hand-to-hand.mjs";
 import registerMigration from "./batches/migration.mjs";
 import registerWeapons from "./batches/weapons.mjs";
+import registerDefenses from "./batches/defenses.mjs";
 
 const BATCH_REGISTRARS = [
   registerRules,
@@ -80,6 +81,7 @@ const BATCH_REGISTRARS = [
   registerHandToHand,
   registerMigration,
   registerWeapons,
+  registerDefenses,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

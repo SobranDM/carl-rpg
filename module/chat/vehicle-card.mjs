@@ -8,7 +8,11 @@
  *    Driving Check Fail by 1" - before the damage is applied.
  *  - Fuzzy Dice, once per Floor: "One Driving Skill Check reroll".
  *  - Stopping in time, on a success: park.
- * A rerolled card (AI Favor or Fuzzy Dice) keeps none of its buttons.
+ * A rerolled card (AI Favor or Fuzzy Dice) keeps none of its buttons. The
+ * ones that change the round's result (Critical Hit, Shock Absorbers, Fuzzy
+ * Dice) are only on the card whose result the vehicle has this round
+ * (drivingCardCurrent) - not one from an earlier round, or one a later
+ * Check has replaced.
  */
 import { CARLRPG } from "../helpers/config.mjs";
 import { isHitDegree } from "../helpers/rules.mjs";
@@ -17,7 +21,8 @@ import { appendCardSection, esc } from "./chat-card.mjs";
 import { resolveOccupant, stepUpDegree } from "../helpers/vehicle-state.mjs";
 import { updateVehicle } from "../helpers/vehicles.mjs";
 import {
-  canDrive, cardOutcome, commitDrivingRound, drivingOutcomeText, drivingResultSettled, rerollDrivingCheck,
+  canDrive, cardOutcome, commitDrivingRound, drivingCardCurrent, drivingOutcomeText, drivingResultSettled,
+  rerollDrivingCheck,
 } from "../helpers/vehicle-driving.mjs";
 
 const SCOPE = "carl-rpg";
@@ -49,17 +54,18 @@ function drivingButtons(message) {
   const loc = (key, data) => game.i18n.format(`CARLRPG.Vehicle.Card.${key}`, data ?? {});
   const outcome = cardOutcome(driving);
   const driverSide = canDrive(vehicle);
+  const current = drivingCardCurrent(driving);
   const buttons = [];
-  if (outcome?.critChoice && !driving.critChoice && driverSide) {
+  if (outcome?.critChoice && !driving.critChoice && driverSide && current) {
     buttons.push({ action: "drivingCritMove", icon: "fa-gauge-high", label: loc("CritMove") });
     if (driver.type === "character") buttons.push({ action: "drivingCritFavor", icon: "fa-star", label: loc("CritFavor") });
   }
   const failed = !isHitDegree(driving.degree);
-  if (driving.mode === "table6" && failed && !driving.absorbed && !driving.damageApplied && driverSide
+  if (driving.mode === "table6" && failed && !driving.absorbed && !driving.damageApplied && driverSide && current
     && upgradeReady(vehicle, "shockAbsorbers")) {
     buttons.push({ action: "drivingAbsorb", icon: "fa-water", label: loc("Absorb") });
   }
-  if (!drivingResultSettled(driving) && driverSide && upgradeReady(vehicle, "fuzzyDice")) {
+  if (!drivingResultSettled(driving) && driverSide && current && upgradeReady(vehicle, "fuzzyDice")) {
     buttons.push({ action: "drivingFuzzy", icon: "fa-dice", label: loc("Fuzzy") });
   }
   if (outcome?.damageSlots && !driving.damageApplied && (game.user.isGM || vehicle.isOwner)) {
@@ -111,16 +117,16 @@ function noteOnCard(message, text) {
 
 const handlers = {
   async drivingCritMove(message) {
-    await run(message, "drivingCritMove", async ({ vehicle }) => {
-      await commitDrivingRound(vehicle, "criticalHit", { critChoice: "move" });
+    await run(message, "drivingCritMove", async ({ driving, vehicle }) => {
+      await commitDrivingRound(vehicle, "criticalHit", { critChoice: "move", checkId: driving.checkId });
       await updateCardMessage(message, { flags: { [SCOPE]: { driving: { critChoice: "move" } } } });
       await noteOnCard(message, game.i18n.localize("CARLRPG.Vehicle.Card.CritMoveDone"));
     });
   },
   async drivingCritFavor(message) {
-    await run(message, "drivingCritFavor", async ({ vehicle, driver }) => {
+    await run(message, "drivingCritFavor", async ({ driving, vehicle, driver }) => {
       await driver.update({ "system.details.aiFavor": (driver.system.details?.aiFavor ?? 0) + 1 });
-      await commitDrivingRound(vehicle, "criticalHit", { critChoice: "favor" });
+      await commitDrivingRound(vehicle, "criticalHit", { critChoice: "favor", checkId: driving.checkId });
       await updateCardMessage(message, { flags: { [SCOPE]: { driving: { critChoice: "favor" } } } });
       await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.CritFavorDone", { name: driver.name }));
     });
@@ -137,7 +143,7 @@ const handlers = {
     await run(message, "drivingAbsorb", async ({ driving, vehicle }) => {
       const degree = stepUpDegree(driving.degree);
       if (!await updateVehicle(vehicle, { "system.upgrades.shockAbsorbers.usedFloor": game.settings.get(SCOPE, "currentFloor") })) return;
-      await commitDrivingRound(vehicle, degree);
+      await commitDrivingRound(vehicle, degree, { checkId: driving.checkId });
       await updateCardMessage(message, { flags: { [SCOPE]: { driving: { degree, absorbed: true } } } });
       await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.AbsorbDone", {
         result: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), outcome: drivingOutcomeText("table6", degree),

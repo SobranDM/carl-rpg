@@ -291,6 +291,16 @@
       font-size: 13px;
       white-space: nowrap;
     }
+
+    // A Move or Step a Debuff blocks (Held, Terrified...): kept, but struck
+    // through - the tooltip names the Debuff.
+    &.carl-defense-blocked {
+      input,
+      .carl-stat-value {
+        text-decoration: line-through;
+        opacity: 0.6;
+      }
+    }
   }
 
   .carl-resistances-button {

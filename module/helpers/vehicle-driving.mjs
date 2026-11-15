@@ -24,7 +24,7 @@ import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { aiRerollFlags, rerollFormula } from "./ai-favor.mjs";
 import { updateCardMessage } from "./chat-socket.mjs";
 import { createRollMessage, esc } from "../chat/chat-card.mjs";
-import { drivingOutcome, vehicleDriver, vehicleFight, vehicleStatus } from "./vehicle-state.mjs";
+import { drivingOutcome, resolveOccupant, vehicleDriver, vehicleFight, vehicleStatus } from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
 
 const SCOPE = "carl-rpg";
@@ -48,15 +48,17 @@ export function canDrive(vehicle, user = game.user) {
  * operating Check on an Amazing Success, and it's moving.
  * @param {Actor} vehicle
  * @param {string} degree
- * @param {{critChoice?: string}} [options]
+ * @param {{critChoice?: string, checkId?: string}} [options]  checkId: the
+ *   Check (its card's flags.carl-rpg.driving.checkId) this result is from.
  * @returns {Promise<void>}
  */
-export async function commitDrivingRound(vehicle, degree, { critChoice = "" } = {}) {
+export async function commitDrivingRound(vehicle, degree, { critChoice = "", checkId = "" } = {}) {
   const fight = vehicleFight(vehicle);
   const status = vehicleStatus(vehicle);
   await updateVehicle(vehicle, {
     "system.round": {
       combatId: fight?.id ?? "",
+      checkId,
       round: fight?.round ?? null,
       degree,
       critChoice,
@@ -101,11 +103,12 @@ export async function rollDrivingCheck(vehicle, { mode = "table6", skipDialog = 
 
   // An Amazing Success's Advantage is spent on this Check.
   const usedAdvantage = (result.applied ?? []).some((r) => r.id === "vehicle-amazing");
-  if (mode === "table6") await commitDrivingRound(vehicle, result.degree);
+  const checkId = foundry.utils.randomID();
+  if (mode === "table6") await commitDrivingRound(vehicle, result.degree, { checkId });
   else if (usedAdvantage) await updateVehicle(vehicle, { "system.nextCheckAdvantage": false });
 
   await postDrivingCard(vehicle, driver, {
-    mode, degree: result.degree, roll: result.roll, natural: result.naturalRoll, total: result.total,
+    mode, checkId, degree: result.degree, roll: result.roll, natural: result.naturalRoll, total: result.total,
     difficulty: result.difficulty, formula: result.formula, breakdown: result.breakdown,
     label: skill.name, debuffNote: result.debuffNote, trained,
   });
@@ -136,7 +139,7 @@ export function drivingOutcomeText(mode, degree) {
  * @returns {Promise<ChatMessage>}
  */
 export async function postDrivingCard(vehicle, driver, {
-  mode, degree, roll, natural, total, difficulty, formula, breakdown, label, debuffNote = "", trained = true,
+  mode, checkId = "", degree, roll, natural, total, difficulty, formula, breakdown, label, debuffNote = "", trained = true,
   rerolledBy = null, favorUsed = false,
 }) {
   const title = game.i18n.format(mode === "stop" ? "CARLRPG.Vehicle.StopTitle" : "CARLRPG.Vehicle.DrivingTitle", {
@@ -161,13 +164,30 @@ export async function postDrivingCard(vehicle, driver, {
     actor: driver,
     flags: {
       driving: {
-        vehicleUuid: vehicle.uuid, driverUuid: driver.uuid, mode, degree, trained,
+        vehicleUuid: vehicle.uuid, driverUuid: driver.uuid, mode, checkId, degree, trained,
         critChoice: "", damageApplied: false, absorbed: false, roll: rollSpec, favorUsed,
       },
       // One AI Favor reroll per Check: none once one has been spent on it.
       ...(favorUsed ? {} : aiRerollFlags(driver, { kind: "driving", ...rollSpec, body: debuffNote })),
     },
   });
+}
+
+/**
+ * Whether this card's result is still the vehicle's for this round, so its
+ * buttons may change it (a Critical Hit pick, Shock Absorbers, a reroll).
+ * A card from an earlier round, or one a later Check (or a hand-set result
+ * on the sheet) has replaced, is not: its buttons would stamp an old result
+ * onto the current round. Only a Table 6 card sets the round; a stopping
+ * card is always current.
+ * @param {object} driving  flags.carl-rpg.driving
+ * @returns {boolean}
+ */
+export function drivingCardCurrent(driving) {
+  if (driving?.mode !== "table6") return true;
+  const vehicle = resolveOccupant(driving.vehicleUuid);
+  if (!vehicle || !driving.checkId) return false;
+  return vehicleStatus(vehicle).roundActive && vehicle.system.round.checkId === driving.checkId;
 }
 
 /**
@@ -199,9 +219,12 @@ export async function rerollDrivingCheck(message, { by = "favor" } = {}) {
   const natural = extractNaturalD20(roll);
   const degree = getDegreeOfSuccess(natural, roll.total, spec.difficulty);
   await updateCardMessage(message, { flags: { [SCOPE]: { aiRerolled: true } } });
-  if (driving.mode === "table6") await commitDrivingRound(vehicle, degree);
+  // The new card is a new Check: its buttons, not the old card's, now own
+  // the round.
+  const checkId = foundry.utils.randomID();
+  if (driving.mode === "table6") await commitDrivingRound(vehicle, degree, { checkId });
   return postDrivingCard(vehicle, driver, {
-    mode: driving.mode, degree, roll, natural, total: roll.total, difficulty: spec.difficulty,
+    mode: driving.mode, checkId, degree, roll, natural, total: roll.total, difficulty: spec.difficulty,
     formula: spec.formula, breakdown: spec.breakdown, label: spec.label, trained: driving.trained,
     rerolledBy: by, favorUsed: by === "favor" || !!driving.favorUsed,
   });

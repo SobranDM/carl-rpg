@@ -36,8 +36,11 @@ export function needsWeapon(actor, skill) {
  */
 export function isWeaponFor(item, skill) {
   if (item?.type !== "item") return false;
-  const weaponSkill = slugifySkillName(item.system?.weaponSkill ?? "");
-  return !!weaponSkill && weaponSkill === slugifySkillName(skill?.name ?? "");
+  // Blank means "not a weapon". Checked before slugifying, which turns a
+  // blank name into "unknown" - the slug of any name with no Latin letters
+  // or digits, too.
+  const weaponSkill = String(item.system?.weaponSkill ?? "").trim();
+  return !!weaponSkill && slugifySkillName(weaponSkill) === slugifySkillName(skill?.name ?? "");
 }
 
 /**

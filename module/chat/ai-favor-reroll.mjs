@@ -13,7 +13,7 @@ import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { createRollMessage } from "./chat-card.mjs";
 import { isCardLocked } from "./taunt-card.mjs";
 import { recordRowEvade, resolveRowTarget } from "./attack-targets-card.mjs";
-import { drivingResultSettled, rerollDrivingCheck } from "../helpers/vehicle-driving.mjs";
+import { drivingCardCurrent, drivingResultSettled, rerollDrivingCheck } from "../helpers/vehicle-driving.mjs";
 
 const SCOPE = "carl-rpg";
 const inFlight = new Set();
@@ -51,8 +51,9 @@ export function canReroll(message) {
   // acted on (a row Evaded or applied, a Taunt, damage applied).
   if (spec.kind === "attack" && isCardLocked(message)) return false;
   // A Driving Check whose result has been used (a Critical Hit pick, its
-  // damage applied, Shock Absorbers) is settled.
-  if (spec.kind === "driving" && drivingResultSettled(flags.driving)) return false;
+  // damage applied, Shock Absorbers) is settled; one from an earlier round,
+  // or replaced by a later Check, no longer sets the round's result.
+  if (spec.kind === "driving" && (drivingResultSettled(flags.driving) || !drivingCardCurrent(flags.driving))) return false;
   if (spec.kind === "rowEvade") {
     const { row } = rowEvadeTarget(spec);
     if (!row || row.applied || row.replaced) return false;

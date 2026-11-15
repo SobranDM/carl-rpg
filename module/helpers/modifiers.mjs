@@ -439,23 +439,36 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
     }
     case "resource": {
       // Same reasoning as "stat" - e.g. target "hb.max" must never be
-      // written directly, since that's the editable base field too. Only
-      // "dr" gets a real "multiply" base here: it's the one resourceTargets
-      // key with a genuinely stable, always-persisted base on BOTH actor
-      // types (actor-base.mjs's schema.dr, never touched by prepareDerivedData
-      // beyond the derived drBonus/drEffective). "hb.max" is a real editable
-      // base for Character but is fully recomputed from level/tier EVERY
-      // pass for Mob (see mob.mjs's hbSlotsRule, documented there as "the
-      // same pattern actor-base.mjs's own mana.max already uses for a
-      // fully-derived resource") - and "mana.max" is fully derived from
-      // stats.int.effective + bonus for BOTH actor types (never a real base
-      // at all, computed AFTER this aggregation pass even runs). Neither is
-      // safe to read here as "the base", so multiply on those two falls back
-      // to the old (documented, pre-existing) no-op-for-a-single-item
-      // behavior rather than silently reading a stale/wrong number.
-      const resourceBase = change.target === "dr" ? actorSystem?.dr : undefined;
-      accumulateBonus(bonuses, change.target, change, scopedRollData,
+      // written directly, since that's the editable base field too.
+      //
+      // DR "multiply" (an Iron Skin Potion's "DR x2") scales the whole DR -
+      // base plus every add - so it's kept apart as a multiplier and applied
+      // by deriveDefenses (data/shared/derive-creature.mjs). Several combine
+      // as 1 + the sum of (factor - 1), the same no-compounding rule
+      // accumulateBonus documents: two x2s make x3.
+      if (change.target === "dr" && change.mode === "multiply") {
+        const factor = resolveValue(change.value, scopedRollData);
+        if (typeof factor === "number") {
+          ctx.multipliers ??= {};
+          ctx.multipliers.dr = (ctx.multipliers.dr ?? 0) + (factor - 1);
+          recordSource(ctx, change.target, label, factor, change.mode);
+        }
+        accumulateCap(caps, change.target, change, scopedRollData);
+        break;
+      }
+      // Move and Step "multiply" scale the Character's editable base
+      // (details.move/step). "hb.max" is a real editable base for Character
+      // but is fully recomputed from level/tier EVERY pass for Mob (see
+      // mob.mjs's hbSlotsRule) - and "mana.max" is fully derived from
+      // stats.int.effective + bonus (never a real base at all, computed AFTER
+      // this aggregation pass even runs). Neither is safe to read here as
+      // "the base", so multiply on those two falls back to the old
+      // (documented) no-op-for-a-single-item behavior rather than silently
+      // reading a stale/wrong number.
+      const resourceBase = RESOURCE_BASES[change.target]?.(actorSystem);
+      const value = accumulateBonus(bonuses, change.target, change, scopedRollData,
         typeof resourceBase === "number" ? resourceBase : undefined);
+      if (value !== null) recordSource(ctx, change.target, label, value, change.mode);
       accumulateCap(caps, change.target, change, scopedRollData);
       break;
     }
@@ -484,10 +497,22 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       break;
     }
     default: {
+      // Dice added to Evade Checks ("Add 1d4 to Evade Checks") are a list,
+      // not a sum: CarlDice.rollEvadeCheck adds each as its own term.
+      if (change.targetType === "rollMode" && change.target === "evadeDice") {
+        const formula = String(change.value ?? "").trim();
+        if (formula && change.mode !== "multiply") {
+          const signed = change.mode === "subtract" ? `-(${formula})` : formula;
+          (ctx.evadeDice ??= []).push({ formula: signed, label });
+          recordSource(ctx, change.target, label, signed, change.mode);
+        }
+        break;
+      }
       // rollMode / custom: a generic dotted-key accumulator for roll-time
       // lookups by convention (e.g. "evadeBonus", "aiFavor"). These target
       // keys are never schema fields, so direct accumulation is always safe.
-      accumulateBonus(bonuses, change.target, change, scopedRollData);
+      const value = accumulateBonus(bonuses, change.target, change, scopedRollData);
+      if (value !== null) recordSource(ctx, change.target, label, value, change.mode);
       break;
     }
   }
@@ -529,16 +554,106 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
  * multiply falls back to the old current*value behavior - a known no-op for
  * a single contributor, unchanged from before this fix, since there is no
  * real base to scale.
+ *
+ * @returns {number|null}  The change's resolved value, or null if it wasn't
+ *   a number (and so added nothing).
  */
 export function accumulateBonus(bonuses, key, change, rollData, baseValue) {
   const value = resolveValue(change.value, rollData);
-  if (typeof value !== "number") return;
+  if (typeof value !== "number") return null;
   const current = bonuses[key] ?? 0;
   if (change.mode === "multiply" && typeof baseValue === "number") {
     bonuses[key] = current + baseValue * (value - 1);
-    return;
+    return value;
   }
   bonuses[key] = applyScalarChange(current, change.mode, value);
+  return value;
+}
+
+/**
+ * The editable base a "resource" multiply scales, per target (see
+ * applyOneChange). DR isn't here: its multiplier scales the whole total.
+ */
+const RESOURCE_BASES = {
+  move: (sys) => sys?.details?.move,
+  step: (sys) => sys?.details?.step,
+};
+
+/** The targets whose sources the sheet lists in a tooltip (actorSystem.bonusSources). */
+const SOURCED_TARGETS = new Set(["dr", "move", "step", "evadeBonus", "evadeDice"]);
+
+/**
+ * Note who changed one of the SOURCED_TARGETS, for the sheet's tooltips
+ * ("Base 20 · Tigran +10 · Running (Rank 5) +5").
+ * @param {object} ctx
+ * @param {string} target
+ * @param {string} label
+ * @param {number|string} value  The number, factor or dice formula.
+ * @param {string} mode
+ */
+function recordSource(ctx, target, label, value, mode) {
+  if (!SOURCED_TARGETS.has(target)) return;
+  ctx.bonusSources ??= {};
+  (ctx.bonusSources[target] ??= []).push({ label: label ?? "", value, mode });
+}
+
+/**
+ * An armor piece's own DR bonus: an unconditional "dr" add or subtract.
+ * Only these compete between pieces (supersededArmorIds); a conditional
+ * DR row, or a multiply/override, always applies as it would on any item.
+ * @param {object} change
+ * @returns {boolean}
+ */
+function isArmorDrBonus(change) {
+  return change.targetType === "resource" && change.target === "dr"
+    && (change.mode === "add" || change.mode === "subtract") && !change.conditions?.length;
+}
+
+/**
+ * The DR an armor piece adds right now: its armor DR bonuses
+ * (isArmorDrBonus) that apply at the crawler's Level (levelGate), resolved
+ * as applyOneChange resolves them (@rank is the piece's own).
+ * @param {Item} item
+ * @param {object} rollData
+ * @returns {number}
+ */
+function armorDr(item, rollData) {
+  let dr = 0;
+  for (const { change, sourceItemRank } of collectItemChanges(item)) {
+    if (!isArmorDrBonus(change)) continue;
+    if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
+    const value = resolveValue(change.value, { ...rollData, rank: sourceItemRank });
+    if (typeof value !== "number") continue;
+    dr += change.mode === "add" ? value : -value;
+  }
+  return dr;
+}
+
+/**
+ * Worn armor doesn't stack: "your entire ensemble only grants you a single
+ * DR bonus" (p.225). Of the equipped gear marked as armor (system.isArmor),
+ * only the piece adding the most DR counts (the first, on a tie); the ids of
+ * the rest, whose armor DR bonuses (isArmorDrBonus) are skipped. Their other
+ * changes still apply, and so does DR from a Race, Class, Skill, Spell or
+ * Buff.
+ * @param {Item[]} items
+ * @param {object} rollData
+ * @returns {Set<string>}
+ */
+export function supersededArmorIds(items, rollData) {
+  let best = null;
+  let bestDr = -Infinity;
+  const worn = [];
+  for (const item of items) {
+    if (item.type !== "item" || !item.system.isArmor || !item.system.equipped) continue;
+    worn.push(item.id);
+    const dr = armorDr(item, rollData);
+    if (dr > bestDr) {
+      best = item.id;
+      bestDr = dr;
+    }
+  }
+  return new Set(worn.filter((id) => id !== best));
 }
 
 /** Records a ChangeEntry's optional `capMax` (an effective-value ceiling) into the caps bag, keeping the most restrictive (lowest) value per key. */
@@ -571,6 +686,12 @@ function makeAggregationContext(actorSystem) {
     resistanceSources: {},
     advancementBonuses: {},
     rankCaps: {},
+    // DR multipliers, kept apart from the adds (applyOneChange's "resource").
+    multipliers: {},
+    // Who changed DR, Move, Step and Evade (recordSource).
+    bonusSources: {},
+    // Dice added to Evade Checks.
+    evadeDice: [],
     actorSystem,
   };
 }
@@ -615,9 +736,12 @@ export function aggregateActorBonuses(actorSystem) {
   // below its worship Tier and not while worship is suspended (pp.163,
   // 312) - module/helpers/worship.mjs. Only a Character has a deity.
   const deity = actorSystem.deity;
+  // Only the best piece of worn armor adds its DR (p.225).
+  const superseded = supersededArmorIds(items, ctx.rollData);
   for (const item of items) {
     if (deity && !deityBenefitApplies(item, deity)) continue;
     for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
+      if (superseded.has(item.id) && isArmorDrBonus(change)) continue;
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }
   }
@@ -638,4 +762,7 @@ export function aggregateActorBonuses(actorSystem) {
   actorSystem.grantedResistanceSources = ctx.resistanceSources;
   actorSystem.advancementBonuses = advancementBonuses;
   actorSystem.rankCaps = rankCaps;
+  actorSystem.drMultiplier = 1 + (ctx.multipliers.dr ?? 0);
+  actorSystem.bonusSources = ctx.bonusSources;
+  actorSystem.evadeDice = ctx.evadeDice;
 }

@@ -1,6 +1,7 @@
 import CarlDice from "../dice/dice.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { bakeItemGrants } from "../helpers/race-class-grants.mjs";
+import { applyRaceSize } from "../helpers/size.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
 import { isPet } from "../helpers/actor-kinds.mjs";
 import { describePetCommand, petFight } from "../helpers/pet-command.mjs";
@@ -36,14 +37,17 @@ export class CarlRPGItem extends Item {
   /**
    * Bake a newly-owned class/race item's eligible stat/skillRank grants
    * into the actor's base values (see module/helpers/race-class-grants.mjs)
-   * - a one-time permanent bump, not a live bonus. No-ops for every other
-   * item type/ownership state.
+   * - a one-time permanent bump, not a live bonus - and a new Race's Size
+   * becomes the Character's (helpers/size.mjs) - unless the creator passes
+   * `carlKeepSize` (an import that brings its own Size). No-ops for every
+   * other item type/ownership state.
    * @override
    */
   async _onCreate(data, options, userId) {
     super._onCreate(data, options, userId);
     if (game.user.id !== userId) return;
     if (this.type === "class" || this.type === "race") await bakeItemGrants(this);
+    if (this.type === "race" && !options.carlKeepSize) await applyRaceSize(this);
   }
 
   /**

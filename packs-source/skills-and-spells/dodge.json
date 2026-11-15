@@ -28,19 +28,7 @@
       {
         "rankThreshold": 5,
         "description": "Gain a +1 Evade Buff, and you may Step an additional 5 feet when you perform the Evade Action.",
-        "changes": [
-          {
-            "targetType": "rollMode",
-            "target": "evadeBonus",
-            "mode": "override",
-            "value": "1",
-            "label": "",
-            "id": "TO6axM1zA6DIuUhI",
-            "damageDiceKind": "",
-            "damageType": "",
-            "conditions": []
-          }
-        ],
+        "changes": [],
         "damageTypes": [
           "",
           ""
@@ -59,8 +47,8 @@
           {
             "targetType": "rollMode",
             "target": "evadeBonus",
-            "mode": "override",
-            "value": "2",
+            "mode": "add",
+            "value": "1",
             "label": "",
             "id": "wYfoVquWZ9I6wymW",
             "damageDiceKind": "",
@@ -82,19 +70,7 @@
       {
         "rankThreshold": 15,
         "description": "Gain a +2 Evade Buff, and you may perform the Evade Action without spending an Action in combat.",
-        "changes": [
-          {
-            "targetType": "rollMode",
-            "target": "evadeBonus",
-            "mode": "override",
-            "value": "2",
-            "label": "",
-            "id": "HhRraN1AgciEOxaG",
-            "damageDiceKind": "",
-            "damageType": "",
-            "conditions": []
-          }
-        ],
+        "changes": [],
         "damageTypes": [
           "",
           ""

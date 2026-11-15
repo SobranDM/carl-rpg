@@ -12,6 +12,11 @@
       <label class="resource-label">{{localize "CARLRPG.Item.Equipped"}}</label>
       <input type="checkbox" name="system.equipped" {{checked system.equipped}} />
     </div>
+    {{!-- Worn armor: only the best equipped piece adds its DR (p.225). --}}
+    <div>
+      <label class="resource-label" title="{{localize 'CARLRPG.Item.ArmorHint'}}">{{localize "CARLRPG.Item.Armor"}}</label>
+      <input type="checkbox" name="system.isArmor" {{checked system.isArmor}} title="{{localize 'CARLRPG.Item.ArmorHint'}}" />
+    </div>
     {{!-- A weapon: the Attack Skill it's wielded with (module/helpers/weapons.mjs). --}}
     <div>
       <label class="resource-label" title="{{localize 'CARLRPG.Weapon.SkillHint'}}">{{localize "CARLRPG.Weapon.Skill"}}</label>

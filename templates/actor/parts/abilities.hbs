@@ -8,33 +8,41 @@
     {{> "systems/carl-rpg/templates/actor/parts/stats-column.hbs"}}
 
     <div class="carl-abilities-main">
-      {{!-- Defenses used every round: the Evade roll
-            (DEX Mod + Evade bonuses, shown as +N), then DR, which shows its
-            effective value when items or Buffs add to the editable base;
-            Move and Step are plain values. Resistances come from the Race,
-            Class, gear and Buffs - the button lists them, read-only. --}}
+      {{!-- Defenses used every round: the Evade roll (DEX Mod + Evade
+            bonuses, shown as +N, then any dice such as +1d4), then DR, Move
+            and Step, each an editable base that shows "= N" when items or
+            Buffs change it. Hovering names the sources (bonus-sources.mjs).
+            A Move or Step a Debuff blocks (Held...) is struck through.
+            Resistances come from the Race, Class, gear and Buffs - the button
+            lists them, read-only. --}}
       <fieldset class="carl-combat-defenses">
         <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
         <div class="carl-defenses-row">
-          <button type="button" class="carl-evade-button" data-action="rollEvade" title="{{localize 'CARLRPG.Actor.EvadeTotalHint'}}">
+          <button type="button" class="carl-evade-button" data-action="rollEvade"
+            title="{{localize 'CARLRPG.Actor.EvadeTotalHint'}}&#10;{{defenses.evade.tooltip}}">
             <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
-            <span class="carl-evade-total">{{numberFormat evadeTotal sign=true}}</span>
+            <span class="carl-evade-total">{{numberFormat evadeTotal sign=true}}{{defenses.evade.dice}}</span>
           </button>
-          <label class="carl-defense-field">
-            <span class="resource-label" title="{{localize 'CARLRPG.Actor.Dr'}}">{{localize "CARLRPG.Actor.DrShort"}}</span>
-            <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number"
-              title="{{localize 'CARLRPG.Actor.BaseValue'}}" />
-            {{#if system.drBonus}}
-            <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EffectiveValue'}}">= {{system.drEffective}}</span>
+          <label class="carl-defense-field" title="{{defenses.dr.tooltip}}">
+            <span class="resource-label">{{localize "CARLRPG.Actor.DrShort"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
+            {{#if defenses.dr.shown}}
+            <span class="carl-stat-value">= {{system.drEffective}}</span>
             {{/if}}
           </label>
-          <label class="carl-defense-field">
+          <label class="carl-defense-field{{#if defenses.move.blocked}} carl-defense-blocked{{/if}}" title="{{defenses.move.tooltip}}">
             <span class="resource-label">{{localize "CARLRPG.Actor.Move"}}</span>
             <input type="text" class="carl-w-tiny" name="system.details.move" value="{{system.details.move}}" data-dtype="Number" />
+            {{#if defenses.move.shown}}
+            <span class="carl-stat-value">= {{system.moveEffective}} ft</span>
+            {{/if}}
           </label>
-          <label class="carl-defense-field">
+          <label class="carl-defense-field{{#if defenses.step.blocked}} carl-defense-blocked{{/if}}" title="{{defenses.step.tooltip}}">
             <span class="resource-label">{{localize "CARLRPG.Actor.Step"}}</span>
             <input type="text" class="carl-w-tiny" name="system.details.step" value="{{system.details.step}}" data-dtype="Number" />
+            {{#if defenses.step.shown}}
+            <span class="carl-stat-value">= {{system.stepEffective}} ft</span>
+            {{/if}}
           </label>
           <button type="button" class="carl-resistances-button" data-action="showResistances">
             {{localize "CARLRPG.Actor.Resistances"}}

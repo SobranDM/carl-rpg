@@ -21,17 +21,53 @@
       {
         "rankThreshold": 5,
         "description": "You have a permanent +5ft Move Buff. Make a Check every 2 minutes.",
-        "changes": []
+        "changes": [
+          {
+            "id": "eYesoyorok1GvfoD",
+            "label": "",
+            "targetType": "resource",
+            "target": "move",
+            "mode": "add",
+            "value": "5",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ]
       },
       {
         "rankThreshold": 10,
         "description": "You have an additional permanent +10ft Move Buff. Make a Check every 4 minutes.",
-        "changes": []
+        "changes": [
+          {
+            "id": "uPbJYNsS2xHtZfud",
+            "label": "",
+            "targetType": "resource",
+            "target": "move",
+            "mode": "add",
+            "value": "10",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ]
       },
       {
         "rankThreshold": 15,
         "description": "You have an additional permanent +15ft Move Buff. Make a Check every 6 minutes.",
-        "changes": []
+        "changes": [
+          {
+            "id": "yLu844HulgFjLmMp",
+            "label": "",
+            "targetType": "resource",
+            "target": "move",
+            "mode": "add",
+            "value": "15",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ]
       }
     ],
     "category": "utility",

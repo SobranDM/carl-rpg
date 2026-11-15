@@ -20,7 +20,16 @@
       },
       "Begin": "Updating this world's Carl RPG data for {version}. Please don't close the world until it says it's done.",
       "Done": "This world's Carl RPG data is up to date for {version} ({count} change(s)).",
-      "Failed": "This world's Carl RPG data was updated for {version} ({count} change(s)), but {errors} item(s) couldn't be - see the console (F12) for which."
+      "Failed": "This world's Carl RPG data was updated for {version} ({count} change(s)), but {errors} item(s) couldn't be - see the console (F12) for which.",
+      "DeityTier": {
+        "Title": "Deity Tiers filled in",
+        "Body": "Characters now have a church Tier in their Deity block, and a Boon tagged with a Tier only applies at or below it. These Characters had no Tier yet, so each was given the highest Tier among its Boons, to keep them working. Check them on the Benefits tab:",
+        "Line": "{name}: {tier}"
+      },
+      "WeaponSkill": {
+        "Title": "New: Weapon Skill",
+        "Body": "Gear items now have a Weapon Skill field: the Attack Skill the item is wielded with (e.g. Longsword). An Attack with a Weapon Skill now needs a weapon in hand or in the Hotlist whose Weapon Skill names it. Weapons made before this update have it blank, so GM and players: open each of your weapons and set its Weapon Skill. Hand-to-hand Skills, Improvised Weapons and natural attacks need no weapon."
+      }
     },
     "Hotlist": {
       "Title": "Hotlist",
@@ -596,7 +605,12 @@
       "PotionsUsedHint": "A crawler may only consume two Stat potions and two Skill potions in their life (p.218).",
       "PotionsStat": "Stat",
       "PotionsSkill": "Skill",
-      "EvadeTotalHint": "DEX Mod + Evade bonuses, added to the d20 on an Evade Check",
+      "EvadeTotalHint": "DEX Mod + Evade bonuses (and any dice), added to the d20 on an Evade Check",
+      "SourceBase": "Base {value}",
+      "SourceDexMod": "DEX Mod {value}",
+      "SourceUnnamed": "Other",
+      "BlockedBy": "Blocked by {name}",
+      "MoveHalvedBy": "{name}: halved",
       "DrShort": "DR",
       "ResistNone": "None",
       "ResistSummary": {
@@ -674,6 +688,8 @@
       "Quantity": "Quantity",
       "Weight": "Weight",
       "Equipped": "Equipped",
+      "Armor": "Armor",
+      "ArmorHint": "Worn armor: \"your entire ensemble only grants you a single DR bonus\" (p.225). Of the equipped pieces with this ticked, only the one adding the most DR counts. DR from a Race, Class, Skill, Spell or Buff still adds on top.",
       "Changes": "Changes"
     },
     "Feature": {
@@ -1084,8 +1100,8 @@
       "Skill": "Weapon Skill",
       "SkillHint": "The Attack Skill this weapon is wielded with (e.g. Longsword). An Attack with that Skill needs this weapon in hand or in the Hotlist. Leave blank if it isn't a weapon.",
       "NotAWeapon": "Not a weapon",
-      "NoWeapon": "You need a weapon for {skill} in hand or in your Hotlist to make that Attack.",
-      "NoAttacks": "You have no Attack you can make: equip a weapon or put one in your Hotlist.",
+      "NoWeapon": "You need a weapon for {skill} in hand or in your Hotlist to make that Attack: gear whose Weapon Skill is set to {skill}.",
+      "NoAttacks": "You have no Attack you can make: equip a weapon or put one in your Hotlist, and set its Weapon Skill on the item.",
       "AttackButton": "Attack!",
       "AttackButtonHint": "Make an Attack with any Attack Skill you have a weapon for, in hand or in your Hotlist (it's swapped in for free).",
       "AttackTitle": "Attack!",
@@ -1213,10 +1229,13 @@
     "ResourceTarget": {
       "HbMax": "Max Health Bar Slots",
       "ManaMax": "Max Mana",
-      "Dr": "DR"
+      "Dr": "DR",
+      "Move": "Move (ft)",
+      "Step": "Step (ft)"
     },
     "RollModeTarget": {
-      "EvadeBonus": "Evade Bonus"
+      "EvadeBonus": "Evade Bonus",
+      "EvadeDice": "Evade Dice (e.g. 1d4)"
     },
     "DamageDiceKind": {
       "Base": "Base (doubles on Crit)",

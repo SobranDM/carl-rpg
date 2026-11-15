@@ -1626,6 +1626,11 @@
   font-size: 13px;
   white-space: nowrap;
 }
+.carl-rpg .carl-defense-field.carl-defense-blocked input,
+.carl-rpg .carl-defense-field.carl-defense-blocked .carl-stat-value {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
 .carl-rpg .carl-resistances-button {
   flex: 0 0 auto;
   width: auto;

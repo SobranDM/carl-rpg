@@ -27,6 +27,8 @@
  *   overrides aren't visited (as in dnd5e and Draw Steel).
  */
 import { slugifySkillName } from "./modifiers.mjs";
+import { createNoticeMessage, esc } from "../chat/chat-card.mjs";
+import { tierRank } from "./worship.mjs";
 import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions } from "./companion-migration.mjs";
 
 const SCOPE = "carl-rpg";
@@ -34,6 +36,12 @@ export const MIGRATION_SETTING = "completedMigrations";
 
 /** The 0.6.0 Deity block migration's id (migrateDeityBlocks). */
 export const DEITY_MIGRATION_ID = "0.6.0-deity-block";
+
+/** The 0.6.0 Deity Tier backfill's id (migrateDeityTiers). */
+export const DEITY_TIER_MIGRATION_ID = "0.6.0-deity-tier";
+
+/** The 0.6.0 Weapon Skill notice's id (announceWeaponSkill). */
+export const WEAPON_SKILL_NOTICE_ID = "0.6.0-weapon-skill-notice";
 
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
@@ -46,6 +54,10 @@ export const MIGRATIONS = [
   { id: "0.6.0-hand-to-hand-box", version: "0.6.0", run: migrateHandToHandSkills },
   { id: COMPANIONS_MIGRATION_ID, version: "0.6.0", run: migrateCompanionActors },
   { id: DEITY_MIGRATION_ID, version: "0.6.0", run: migrateDeityBlocks },
+  // These two have their own ids, so a world that already had the three
+  // above still gets them.
+  { id: DEITY_TIER_MIGRATION_ID, version: "0.6.0", run: migrateDeityTiers },
+  { id: WEAPON_SKILL_NOTICE_ID, version: "0.6.0", run: announceWeaponSkill },
 ];
 
 /** Register the setting listing the migrations this world has had (init). */
@@ -260,6 +272,112 @@ export async function persistDeityBlock(actor) {
   const deity = foundry.utils.deepClone(actor.system.toObject().deity);
   await actor.update({ system: { deity: ForcedReplacement.create(deity) } }, { render: false, carlMigration: true });
   return 1;
+}
+
+/* -------------------------------------------------- */
+/*  0.6.0: the Deity Tier, from the Boons owned       */
+/* -------------------------------------------------- */
+
+/**
+ * The church Tier a Character's Boons imply: the highest Tier among its
+ * tiered Boons (features), for a Character whose Deity block has no Tier
+ * yet. "" when there's nothing to fill in.
+ * @param {Actor} actor
+ * @returns {string}
+ */
+export function inferDeityTier(actor) {
+  if (actor?.type !== "character" || actor.system.deity?.tier) return "";
+  let best = "";
+  for (const item of actor.items) {
+    const tier = item.type === "feature" ? item.system?.tier : "";
+    if (tier && tierRank(tier) > tierRank(best)) best = tier;
+  }
+  return best;
+}
+
+/**
+ * Fill in one Character's Deity Tier from its Boons (inferDeityTier), saving
+ * the block whole as persistDeityBlock does.
+ * @param {Actor} actor
+ * @returns {Promise<string>}  The Tier set, or "" if none was.
+ */
+export async function backfillDeityTier(actor) {
+  const tier = inferDeityTier(actor);
+  if (!tier) return "";
+  const { ForcedReplacement } = foundry.data.operators;
+  const deity = { ...foundry.utils.deepClone(actor.system.toObject().deity), tier };
+  await actor.update({ system: { deity: ForcedReplacement.create(deity) } }, { render: false, carlMigration: true });
+  return tier;
+}
+
+/**
+ * 0.6.0 gave the Deity block a Tier, and a tiered Boon now applies only at or
+ * below it (worship.mjs deityBenefitApplies, pp.163-164). Before, a Boon's
+ * Tier was only a label and every Boon applied. So a Character keeps its
+ * Boons, its Tier is set to the highest Tier among them - only where no Tier
+ * is set yet. The GM gets a whispered list of who was given which Tier, to
+ * check.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+async function migrateDeityTiers() {
+  let changed = 0;
+  let errors = 0;
+  const lines = [];
+  const attempt = async (actor, where) => {
+    try {
+      const tier = await backfillDeityTier(actor);
+      if (!tier) return;
+      changed += 1;
+      lines.push(game.i18n.format("CARLRPG.Migration.DeityTier.Line", {
+        name: esc(actor.name) + (where ? ` (${esc(where)})` : ""),
+        tier: esc(game.i18n.localize(CONFIG.CARLRPG.featureTiers[tier])),
+      }));
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't set the Deity Tier of ${actor.name}`, err);
+      errors += 1;
+    }
+  };
+  for (const actor of game.actors) await attempt(actor);
+  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        for (const actor of await pack.getDocuments()) await attempt(actor, pack.title);
+      });
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't set Deity Tiers in compendium ${pack.collection}`, err);
+      errors += 1;
+    }
+  }
+  if (lines.length) {
+    await createNoticeMessage({
+      title: game.i18n.localize("CARLRPG.Migration.DeityTier.Title"),
+      bodyHtml: `<p>${esc(game.i18n.localize("CARLRPG.Migration.DeityTier.Body"))}</p>`
+        + `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
+      whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+    });
+  }
+  return { changed, errors };
+}
+
+/* -------------------------------------------------- */
+/*  0.6.0: the Weapon Skill notice                    */
+/* -------------------------------------------------- */
+
+/**
+ * 0.6.0 added a Weapon Skill field to gear, and an Attack with a Weapon
+ * Skill now needs a weapon whose Weapon Skill names it (module/helpers/
+ * weapons.mjs). Gear isn't its own "weapon" type, so there's no telling
+ * which existing items are weapons, or for which Skill - the players set it.
+ * This posts a chat notice, to everyone, saying so. A new world (nothing
+ * in it) never gets it: migrationPlan marks every migration had.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+export async function announceWeaponSkill() {
+  await createNoticeMessage({
+    title: game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"),
+    body: game.i18n.localize("CARLRPG.Migration.WeaponSkill.Body"),
+  });
+  return { changed: 0, errors: 0 };
 }
 
 /** Run fn with a compendium unlocked, locked again after. */

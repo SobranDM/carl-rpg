@@ -41,6 +41,17 @@
             "mode": "add",
             "value": "1d6",
             "damageDiceKind": "base"
+          },
+          {
+            "id": "97Ynkwm8sKu4UJYx",
+            "label": "",
+            "targetType": "rollMode",
+            "target": "evadeBonus",
+            "mode": "add",
+            "value": "1",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
           }
         ]
       },
@@ -54,6 +65,17 @@
             "mode": "add",
             "value": "1d6",
             "damageDiceKind": "base"
+          },
+          {
+            "id": "TyfEUGRQDe0hD0mo",
+            "label": "",
+            "targetType": "rollMode",
+            "target": "evadeBonus",
+            "mode": "add",
+            "value": "1",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
           }
         ]
       }

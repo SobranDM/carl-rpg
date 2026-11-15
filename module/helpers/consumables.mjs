@@ -35,7 +35,7 @@ import { buildConditionEntry } from "./conditions.mjs";
 import { durationSeconds } from "./expiry.mjs";
 import { buildScrollCast } from "./scroll-cast.mjs";
 import { queueForActor } from "./actor-queue.mjs";
-import { hbCeiling, restoreUpTo, restoresPerRound } from "./rest.mjs";
+import { hbCeiling, restorePerRound, restoreUpTo, restoresPerRound } from "./rest.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { postConsumableCard } from "../chat/consumable-card.mjs";
@@ -482,13 +482,20 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
 
     let restoredAtOnce = false;
     if (!inFight && restoresPerRound(perRound)) {
-      if (perRound.mana) {
-        const gained = addMana(perRound.mana * rounds);
-        if (gained) lines.push(fmt("ManaAtOnce", { amount: gained, buff: esc(label) }));
+      const before = {
+        hb: updates["system.hb.value"] ?? sys.hb?.value ?? 0,
+        mana: updates["system.mana.value"] ?? sys.mana?.value ?? 0,
+      };
+      const after = restorePerRound(sys, before, perRound, rounds);
+      if (after.mana > before.mana) {
+        updates["system.mana.value"] = after.mana;
+        lines.push(fmt("ManaAtOnce", { amount: after.mana - before.mana, buff: esc(label) }));
       }
-      if (perRound.hb && !healBlocked()) {
-        const gained = addHb(perRound.hb * rounds);
-        if (gained) lines.push(fmt("HealedAtOnce", { slots: gained, buff: esc(label) }));
+      // Reported once per use, with any other heal The Taint blocked.
+      if (after.taint) healBlocked();
+      else if (after.hb > before.hb) {
+        updates["system.hb.value"] = after.hb;
+        lines.push(fmt("HealedAtOnce", { slots: after.hb - before.hb, buff: esc(label) }));
       }
       perRound = { hb: null, mana: null };
       restoredAtOnce = true;

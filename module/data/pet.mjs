@@ -1,4 +1,5 @@
 import CarlRPGActorBase from "./actor-base.mjs";
+import { ownerIds, withOwners } from "../helpers/ownership.mjs";
 import { staticEvade } from "../helpers/rules.mjs";
 import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
@@ -126,14 +127,8 @@ export default class CarlRPGPet extends CarlRPGActorBase {
       updates.system.ownerId = ownerId;
     }
     const owner = ownerId ? game.actors?.get(ownerId) : null;
-    if (owner) {
-      const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-      const owners = Object.entries(owner.ownership ?? {})
-        .filter(([id, level]) => id !== "default" && level >= OWNER);
-      if (owners.length) {
-        updates.ownership = { ...(data.ownership ?? {}), ...Object.fromEntries(owners.map(([id]) => [id, OWNER])) };
-      }
-    }
+    const owners = ownerIds(owner);
+    if (owners.length) updates.ownership = withOwners(data.ownership, owners);
     this.parent.updateSource(updates);
   }
 

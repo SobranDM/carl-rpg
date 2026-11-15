@@ -1,4 +1,5 @@
 import CarlRPGActorBase from "./actor-base.mjs";
+import { ownerIds, withOwners } from "../helpers/ownership.mjs";
 import { deriveDefenses } from "./shared/derive-creature.mjs";
 
 /**
@@ -52,9 +53,13 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
 
     // This round's Driving Check (Table 6), stamped with the fight and round
     // it was rolled in - a new round means full Move again. ramFactor:
-    // ramming halves Move (0 if it hit something larger), p.73.
+    // ramming halves Move (0 if it hit something larger), p.73. checkId:
+    // the Check whose card set it (flags.carl-rpg.driving.checkId) - only
+    // that card's buttons may change it (module/chat/vehicle-card.mjs);
+    // blank when set by hand on the sheet.
     schema.round = new fields.SchemaField({
       combatId: new fields.StringField({ required: true, blank: true, initial: "" }),
+      checkId: new fields.StringField({ required: true, blank: true, initial: "" }),
       round: new fields.NumberField(nullableInteger),
       degree: choice(["", ...CONFIG.CARLRPG.degreeOrder], ""),
       critChoice: choice(["", "move", "favor"], ""),
@@ -119,14 +124,8 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
     // Not for one the 0.6.0 migration makes: it sets the Character's owners
     // itself, and the migrating GM's own crawler has nothing to do with it.
     const crawler = !options?.carlMigration && user?.character?.type === "character" ? user.character : null;
-    if (crawler) {
-      const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
-      const owners = Object.entries(crawler.ownership ?? {})
-        .filter(([id, level]) => id !== "default" && level >= OWNER);
-      if (owners.length) {
-        updates.ownership = { ...(data.ownership ?? {}), ...Object.fromEntries(owners.map(([id]) => [id, OWNER])) };
-      }
-    }
+    const owners = ownerIds(crawler);
+    if (owners.length) updates.ownership = withOwners(data.ownership, owners);
     this.parent.updateSource(updates);
   }
 

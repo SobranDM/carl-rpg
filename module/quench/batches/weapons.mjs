@@ -79,6 +79,11 @@ export default function register(quench) {
             assert.isTrue(isWeaponFor(await weapon(actor, "blade", "longsword"), sword));
             assert.isFalse(isWeaponFor(await weapon(actor, "axe", "Axe"), sword));
             assert.isFalse(isWeaponFor(await createTestItem(actor, "item", "rock"), sword), "not a weapon");
+            // A blank Weapon Skill slugifies to "unknown", as does a Skill
+            // named with no Latin letters or digits - still not a weapon.
+            const symbols = await attack(actor, "???");
+            assert.isFalse(isWeaponFor(await weapon(actor, "shield", ""), symbols), "blank never matches");
+            assert.isFalse(isWeaponFor(await weapon(actor, "potion", "   "), symbols), "whitespace is blank");
           } finally {
             await deleteTestActor(actor);
           }

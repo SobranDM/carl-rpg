@@ -6,7 +6,19 @@
   "img": "icons/skills/movement/feet-winged-boots-brown.webp",
   "system": {
     "description": "<p>You gain a +10ft Move. Use this Skill Check when you would make a Dexterity Stat Check (vs. the typically lesser Stat Check Difficulty).</p>",
-    "changes": [],
+    "changes": [
+      {
+        "id": "riedkzJpN5VQD3jA",
+        "label": "",
+        "targetType": "resource",
+        "target": "move",
+        "mode": "add",
+        "value": "10",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
     "governingStat": "dex",
     "rank": 0,
     "marked": false,
@@ -59,7 +71,30 @@
         "healToFull": false,
         "healMend": false,
         "id": "IBWPPNLXFyn96GGU",
-        "changes": [],
+        "changes": [
+          {
+            "id": "j4ta9dmWFVjEMDVv",
+            "label": "",
+            "targetType": "resource",
+            "target": "move",
+            "mode": "add",
+            "value": "10",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          },
+          {
+            "id": "Dyxuq0C8uPqjnatd",
+            "label": "",
+            "targetType": "rollMode",
+            "target": "evadeBonus",
+            "mode": "add",
+            "value": "1",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ],
         "targetEffects": [],
         "shieldSlots": 0
       }

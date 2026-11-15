@@ -138,6 +138,17 @@
         "damageDiceKind": "",
         "damageType": "",
         "conditions": []
+      },
+      {
+        "id": "7MlPQBqEJ1brkIvI",
+        "label": "",
+        "targetType": "resource",
+        "target": "move",
+        "mode": "add",
+        "value": "10",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
       }
     ],
     "isEarthBased": true,
