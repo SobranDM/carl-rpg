@@ -157,6 +157,11 @@
 
   .carl-banked-stat-points {
     margin-top: 4px;
+    // A fieldset's default side margins (and min-width: min-content) made
+    // these boxes narrower than the Stat boxes above; same width now. Only
+    // the sides - the height is untouched.
+    margin-inline: 0;
+    min-width: 0;
     border: 1px solid var(--carl-border-soft);
     border-radius: 3px;
     background: var(--carl-panel-bg);

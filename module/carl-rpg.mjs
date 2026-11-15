@@ -10,6 +10,8 @@ import * as models from './data/_module.mjs';
 import CarlDice from './dice/dice.mjs';
 import CarlToolbox from './apps/gm-toolbox.mjs';
 import CarlSpendStatPointsDialog from './apps/spend-stat-points-dialog.mjs';
+import CrawlerCreation from './apps/crawler-creation.mjs';
+import { registerChargenSettings } from './helpers/chargen.mjs';
 import { registerChatListener } from './chat/chat-listener.mjs';
 import { registerChatSocket } from './helpers/chat-socket.mjs';
 import { registerLootBoxSocket } from './helpers/loot-box.mjs';
@@ -30,6 +32,7 @@ Hooks.once('init', function () {
     CarlDice,
     CarlToolbox,
     CarlSpendStatPointsDialog,
+    CrawlerCreation,
     rollItemMacro,
     importCrawlerForgeCrawler,
     openRulebookImporter,
@@ -40,6 +43,8 @@ Hooks.once('init', function () {
 
   // Which one-time data migrations this world has had (helpers/migration.mjs).
   registerMigrationSetting();
+  // Character creation: which Stat and background methods, animal crawlers.
+  registerChargenSettings();
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
   // gameTimer tracks REAL wall-clock time (Date.now()), unrelated to

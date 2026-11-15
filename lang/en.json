@@ -1,5 +1,124 @@
 {
   "CARLRPG": {
+    "Chargen": {
+      "Background": "Background",
+      "Title": "Create Crawler",
+      "TitleFor": "Create Crawler: {name}",
+      "Open": "Create Crawler",
+      "OpenHint": "Walk through character creation: backgrounds, combat Skill, Stats, past and starting stuff.",
+      "Created": "{name} has entered the World Dungeon.",
+      "Failed": "Character creation failed: {error}",
+      "StepOf": "Step {number} of {count}",
+      "Step": {
+        "crawler": "Who You Were",
+        "backgrounds": "Establish Your Background",
+        "combat": "Choose Your Weapon",
+        "stats": "Choose Stats",
+        "past": "Past Traumas, Loose Ends, and Regrets",
+        "stuff": "Starting Stuff",
+        "review": "Review"
+      },
+      "Hint": {
+        "crawler": "Your name, pronouns and crawler number. Leave the number blank, type one (500,000 to 12,900,000 avoids the books' crawlers), or roll one.",
+        "animal": "An animal crawler gives up its starting AI Favor, uses the animal backgrounds and starts with Slice Attack instead of Unarmed Combat.",
+        "backgrounds": "For each stage of life, pick a background (or roll for it), then two of its three Skills. No double-dipping: a Skill can only come from one background.",
+        "combat": "You start with {skill} at Rank 3. Pick your second combat Skill, also at Rank 3: the weapon you brought in, an attack Spell, or a hand-to-hand Skill (an animal can also take another strike). It can't be a Skill a background already gave you.",
+        "spell": "An attack Spell needs Intelligence {min} or higher. You also get 5 Mana Potions, in one Hotlist slot.",
+        "handToHand": "You also get the Damage Effect at Rank 3, and the GM owes you a Bronze Weapon Box (with a shitty drawback).",
+        "stats": "Standard Array: place 2, 3, 4, 5 and 6, each once. Leaving it to Chance: roll 1d6 for each Stat in order, rerolling 1s - no swapping.",
+        "past": "Pick from the table, roll, or write your own. These tell your GM what stories you want to tell.",
+        "stuff": "Whatever was on you when the collapse happened: clothes, your weapon, one useful item and something weird. Pick an example set or write your own.",
+        "review": "Check everything, then create the crawler. Heal (Rank 1) comes with every crawler."
+      },
+      "Random": "Random",
+      "Kind": "Crawler",
+      "Human": "Human",
+      "Animal": "Animal (GM's permission)",
+      "AtRank": "Skills at Rank {rank}",
+      "Roll": "Roll",
+      "TakenElsewhere": "Already taken from another background or as a combat Skill",
+      "Stage": {
+        "childhood": "Childhood",
+        "adolescence": "Adolescence",
+        "career": "Career",
+        "hobby": "Hobby",
+        "youth": "Youth",
+        "training": "Training",
+        "adult": "Adult",
+        "quirk": "Quirk"
+      },
+      "Combat": {
+        "Type": "Second combat Skill",
+        "Weapon": "Weapon",
+        "WeaponName": "Your weapon (optional)",
+        "WeaponNameHint": "e.g. Tire Iron, if it works like the one picked",
+        "Spell": "Attack Spell",
+        "HandToHand": "Hand-to-hand",
+        "Strike": "Animal strike"
+      },
+      "WeaponGroup": {
+        "bashing": "Bashing",
+        "edged": "Edged",
+        "ranged": "Ranged",
+        "reach": "Reach"
+      },
+      "StatMethod": "Method",
+      "StatArray": "Standard Array",
+      "StatRoll": "Leave it to Chance (roll)",
+      "Mod": "Mod +{mod}",
+      "RollStats": "Roll Stats",
+      "RolledStats": "Leaving it to Chance (1d6, rerolling 1s):",
+      "Derived": "Health Bar slots of {hb} each, {mana} Mana, Evade d20 + {evade}.",
+      "OwnWords": "...or in your own words",
+      "Set": {
+        "athlete": "Athlete",
+        "gamingGeek": "Gaming Geek",
+        "militant": "Militant",
+        "outdoorsy": "Outdoorsy"
+      },
+      "Stuff": {
+        "clothing": "Clothing",
+        "weapon": "Weapon",
+        "item": "Interesting or useful item",
+        "weird": "Weird stuff"
+      },
+      "Back": "Back",
+      "Next": "Next",
+      "Create": "Create Crawler",
+      "Problem": {
+        "Name": "Give your crawler a name.",
+        "NoAnimals": "Animal crawlers aren't allowed in this world.",
+        "AnimalSize": "Pick a Size from 2 to 4.",
+        "NoBackground": "{stage}: pick a background.",
+        "PickTwo": "{stage}: pick two Skills.",
+        "MustRoll": "{stage}: backgrounds are rolled in this world.",
+        "Duplicate": "{skill} is taken twice: each Skill can only come from one place.",
+        "NoCombat": "Pick a second combat Skill.",
+        "SpellInt": "An attack Spell needs Intelligence {min} or higher: pick another combat Skill.",
+        "MethodOff": "That Stat method isn't allowed in this world.",
+        "NotRolled": "Roll your Stats.",
+        "ArrayIncomplete": "Place a score in every Stat.",
+        "ArrayOnce": "Use each of 2, 3, 4, 5 and 6 once.",
+      "AlreadyDone": "{name} has already been through character creation."
+      },
+      "Summary": {
+        "Title": "New crawler: {name}",
+        "Skills": "Skills: {skills}",
+        "WeaponBox": "Entered the dungeon unarmed: the GM owes a Bronze Weapon Box."
+      },
+      "Settings": {
+        "StatMethods": "Character creation: Stats",
+        "StatMethodsHint": "How players set their starting Stats: the Standard Array (2, 3, 4, 5, 6), rolling (1d6, rerolling 1s, in order), or either.",
+        "BackgroundMethods": "Character creation: backgrounds",
+        "BackgroundMethodsHint": "Whether players choose their backgrounds, roll for them, or either.",
+        "Both": "Either",
+        "ArrayOnly": "Standard Array only",
+        "RollOnly": "Rolling only",
+        "ChooseOnly": "Choosing only",
+        "AllowAnimals": "Character creation: animal crawlers",
+        "AllowAnimalsHint": "Let players make an animal crawler (one per group, giving up their starting AI Favor)."
+      }
+    },
     "Migration": {
       "Companions": {
         "PetName": "{name}'s Pet",
@@ -21,6 +140,18 @@
       "Begin": "Updating this world's Carl RPG data for {version}. Please don't close the world until it says it's done.",
       "Done": "This world's Carl RPG data is up to date for {version} ({count} change(s)).",
       "Failed": "This world's Carl RPG data was updated for {version} ({count} change(s)), but {errors} item(s) couldn't be - see the console (F12) for which.",
+      "Refresh": {
+        "Title": "Items updated from the compendium",
+        "Body": "These Races, Classes, Skills and Spells now apply their DR, Move, Step and Evade automatically. Each copy below had those bonuses brought up to the compendium's (nothing else on it changed):",
+        "Line": "{name}: {items}",
+        "CheckMove": "(base Move {move} ft, Step {step} ft were typed in by hand: check they don't already include what these now add)",
+        "ItemsDirectory": "Items directory"
+      },
+      "BaseDr": {
+        "Title": "Base DR is now 0",
+        "Body": "A crawler's DR now comes only from its Race, Class, gear, Skills, Spells and Buffs. These Characters had a base DR typed in, which is now 0. If it came from something not automated yet, add it back as a DR bonus on that item:",
+        "Line": "{name}: {dr}"
+      },
       "DeityTier": {
         "Title": "Deity Tiers filled in",
         "Body": "Characters now have a church Tier in their Deity block, and a Boon tagged with a Tier only applies at or below it. These Characters had no Tier yet, so each was given the highest Tier among its Boons, to keep them working. Check them on the Benefits tab:",
@@ -579,11 +710,6 @@
       "AccessoriesCount": "Accessories · {count} of {max}",
       "AddAccessory": "Add",
       "ClearSlot": "Clear slot",
-      "Slot": "Slot",
-      "SlotHint": "Where it's worn: a gear slot, an Accessory, or worn with no slot. Only worn gear grants its bonuses.",
-      "NotWorn": "-",
-      "Accessory": "Accessory",
-      "WornNoSlot": "Worn (no slot)",
       "AccessoriesFull": "You can wear up to {max} Accessories.",
       "DropItemHere": "Drop an item here",
       "SlotGearOnly": "Only gear can go in a gear or accessory slot.",
@@ -601,7 +727,8 @@
       "Sponsors": "Sponsors",
       "SponsorsHint": "Crawlers are limited to three Sponsors each (p.284).",
       "Crawler": "Crawler",
-      "PotionsUsed": "Potions used",
+      "PotionsUsed": "Potions Used",
+      "PotionsLimit": "The most a crawler can drink in their life",
       "PotionsUsedHint": "A crawler may only consume two Stat potions and two Skill potions in their life (p.218).",
       "PotionsStat": "Stat",
       "PotionsSkill": "Skill",
@@ -1105,8 +1232,7 @@
       "AttackButton": "Attack!",
       "AttackButtonHint": "Make an Attack with any Attack Skill you have a weapon for, in hand or in your Hotlist (it's swapped in for free).",
       "AttackTitle": "Attack!",
-      "AttackSkill": "Attack with",
-      "ChooseAttack": "Choose an Attack Skill...",
+      "AttackSkill": "Skill",
       "InHand": "{weapon}",
       "FromHotlist": "{weapon} from the Hotlist",
       "SwapNote": "{weapon} is swapped into your Main Hand from the Hotlist, free as part of the Attack."

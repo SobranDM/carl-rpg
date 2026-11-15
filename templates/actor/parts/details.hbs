@@ -34,16 +34,23 @@
         <span>{{localize "CARLRPG.Actor.Popularity"}}</span>
         <input type="text" name="system.details.popularity" value="{{system.details.popularity}}" data-dtype="Number" />
       </label>
-      <div class="carl-sheet-line carl-potions-used" title="{{localize 'CARLRPG.Actor.PotionsUsedHint'}}">
-        <span>{{localize "CARLRPG.Actor.PotionsUsed"}}</span>
-        <span class="carl-potion-count">
-          {{localize "CARLRPG.Actor.PotionsStat"}}
-          {{#if isGM}}<input type="text" class="carl-w-tiny" name="system.permanentPotions.stat" value="{{potions.stat}}" data-dtype="Number" />{{else}}<strong>{{potions.stat}}</strong>{{/if}}/{{potions.limit}}
-        </span>
-        <span class="carl-potion-count">
-          {{localize "CARLRPG.Actor.PotionsSkill"}}
-          {{#if isGM}}<input type="text" class="carl-w-tiny" name="system.permanentPotions.skill" value="{{potions.skill}}" data-dtype="Number" />{{else}}<strong>{{potions.skill}}</strong>{{/if}}/{{potions.limit}}
-        </span>
+      {{!-- The heading, then Stat and Skill indented under it: each count
+            (the GM can correct it) out of the limit, both inputs on the
+            right; the limit and a player's count can't be edited. --}}
+      <div class="carl-potions-used" title="{{localize 'CARLRPG.Actor.PotionsUsedHint'}}">
+        <span class="carl-potions-heading">{{localize "CARLRPG.Actor.PotionsUsed"}}</span>
+        {{#each (object stat="CARLRPG.Actor.PotionsStat" skill="CARLRPG.Actor.PotionsSkill") as |label kind|}}
+        <div class="carl-sheet-line carl-potion-count">
+          <span>{{localize label}}</span>
+          <span class="carl-potion-values">
+            <input type="text" class="carl-w-tiny" {{#if @root.isGM}}name="system.permanentPotions.{{kind}}" data-dtype="Number"{{else}}disabled{{/if}}
+              value="{{lookup @root.potions kind}}" />
+            /
+            <input type="text" class="carl-w-tiny carl-potion-limit" value="{{@root.potions.limit}}" disabled
+              aria-label="{{localize 'CARLRPG.Actor.PotionsLimit'}}" />
+          </span>
+        </div>
+        {{/each}}
       </div>
     </fieldset>
 

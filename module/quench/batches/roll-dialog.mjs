@@ -89,8 +89,11 @@ export default function register(quench) {
           });
           await withDialog(() => promptRollOptions({ title: "layout", difficultyPresets }), (dialog) => {
             const el = dialog.element;
-            assert.isNull(el.querySelector(".carl-dialog-roll-mode > label"), "no Roll label");
-            assert.lengthOf(el.querySelectorAll('.carl-dialog-roll-mode input[name="advantage"]'), 3);
+            assert.equal(el.querySelector(".carl-dialog-roll-mode > label")?.textContent.trim(),
+              game.i18n.localize("CARLRPG.Dialog.Advantage"), "labeled Advantage");
+            const advantage = el.querySelector('.carl-dialog-roll-mode select[name="advantage"]');
+            assert.deepEqual([...advantage.options].map((o) => o.value), ["normal", "advantage", "disadvantage"], "a dropdown");
+            assert.equal(advantage.value, "normal");
             const help = el.querySelector(".carl-dialog-help");
             assert.include(help?.dataset.tooltipHtml ?? "", "p.59");
             assert.equal(help?.getAttribute("tabindex"), "0", "reachable from the keyboard");

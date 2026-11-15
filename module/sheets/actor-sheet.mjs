@@ -5,6 +5,7 @@ import { onToggleDrawer } from "../helpers/drawer-toggle.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import DragDropMixin from "./mixins/drag-drop-mixin.mjs";
 import CarlSpendStatPointsDialog from "../apps/spend-stat-points-dialog.mjs";
+import CrawlerCreation from "../apps/crawler-creation.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import {
   assignItemToSlot,
@@ -77,6 +78,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       setHbValue: CarlRPGActorSheet.#onSetHbValue,
       setShieldValue: CarlRPGActorSheet.#onSetShieldValue,
       spendStatPoints: CarlRPGActorSheet.#onSpendStatPoints,
+      createCrawler: CarlRPGActorSheet.#onCreateCrawler,
       clearSlot: CarlRPGActorSheet.#onClearSlot,
       sortList: CarlRPGActorSheet.#onSortList,
       commandPet: CarlRPGActorSheet.#onCommandPet,
@@ -383,6 +385,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.isPet = isPet(actor);
     context.isVehicle = isVehicle(actor);
     context.isGM = game.user.isGM;
+    // The Create Crawler wizard (apps/crawler-creation.mjs): only until a
+    // Character has been through it, for everyone (the GM too).
+    context.canCreateCrawler = actor.type === "character" && actor.isOwner
+      && !actor.getFlag("carl-rpg", "chargen")?.done;
     // An HB slot count the GM can hand-set over the rule (hb-bar.hbs). A
     // Pet's is set up once, on its Details tab.
     context.hbOverridable = context.isMob;
@@ -734,7 +740,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     for (const list of [gear, features, spells, damageEffects]) list.sort(byName);
     if (this.actor.type === "character") {
       for (const item of gear) {
-        item.slotValue = this.#slotValueOf(item);
+        item.worn = item.system.equipped || isItemWorn(this.actor, item.id);
         item.inHotlist = isInHotlist(this.actor, item.id);
         // Worn gear can't be in the Hotlist (p.98: no benefits there).
         item.showHotlistPin = item.inHotlist || canHotlist(this.actor, item);
@@ -744,7 +750,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
         spell.showHotlistPin = spell.inHotlist || canHotlist(this.actor, spell);
       }
       // Worn gear lists first (a stable sort keeps the name order within).
-      gear.sort((a, b) => (a.slotValue ? 0 : 1) - (b.slotValue ? 0 : 1));
+      gear.sort((a, b) => (a.worn ? 0 : 1) - (b.worn ? 0 : 1));
     }
     raceAndClass.sort((a, b) => (a.type === b.type ? 0 : a.type === "race" ? -1 : 1) || byName(a, b));
 
@@ -863,82 +869,30 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   }
 
   /**
-   * Inventory tab's Hotlist and Equipped slots (items-list.hbs), each
-   * resolved to the owned Item it holds - see helpers/equip-slots.mjs.
+   * The Inventory's Equipment Doll (items-list.hbs): each gear slot and
+   * worn Accessory, resolved to the owned Item it holds - see
+   * helpers/equip-slots.mjs. A drop on a slot wears the item there
+   * (_onDropItem); its (x) takes it off (#onClearSlot).
    * @param {object} system The Character's system data.
-   * @returns {{hotlist: object[], gear: object[], accessories: object[], accessoryCount: number, accessoryMax: number, canAddAccessory: boolean, nextAccessoryIndex: number}}
+   * @returns {{gear: object[], accessories: object[], accessoryCount: number, accessoryMax: number, canAddAccessory: boolean, nextAccessoryIndex: number}}
    */
   _buildEquipSlots(system) {
     const accessoryMax = CONFIG.CARLRPG.characterListSlots.accessories;
-    const accessoryCount = system.accessories.filter((value) => resolveSlotValue(this.actor, value).name).length;
-    // The Inventory's Slot column (items-list.hbs): not worn, a gear slot,
-    // an Accessory, or worn without a slot.
-    const slotChoices = {
-      "": "CARLRPG.Actor.NotWorn",
-      ...Object.fromEntries(Object.entries(CONFIG.CARLRPG.gearSlots).map(([key, { label }]) => [key, label])),
-      accessory: "CARLRPG.Actor.Accessory",
-      worn: "CARLRPG.Actor.WornNoSlot",
+    const gear = Object.entries(CONFIG.CARLRPG.gearSlots).map(([key, { label, icon }]) => ({
+      key, label, icon, ...resolveSlotValue(this.actor, system.gearSlots[key]),
+    }));
+    // Keep each Accessory's index in the list (clearSlot removes by it).
+    const accessories = system.accessories
+      .map((value, i) => ({ index: i, ...resolveSlotValue(this.actor, value) }))
+      .filter((slot) => slot.name);
+    return {
+      gear,
+      accessories,
+      accessoryCount: accessories.length,
+      accessoryMax,
+      canAddAccessory: accessories.length < accessoryMax,
+      nextAccessoryIndex: system.accessories.length,
     };
-    return { slotChoices, accessoryCount, accessoryMax };
-  }
-
-  /**
-   * Where a gear item is worn, as the Slot column's value: its gear slot
-   * key, "accessory", "worn" (equipped with no slot), or "" (not worn).
-   * @param {object} item  An Item (or its context copy).
-   * @returns {string}
-   */
-  #slotValueOf(item) {
-    const { gearSlots, accessories } = this.actor.system;
-    const key = Object.keys(gearSlots ?? {}).find((k) => gearSlots[k] === item.id);
-    if (key) return key;
-    if ((accessories ?? []).includes(item.id)) return "accessory";
-    return item.system.equipped ? "worn" : "";
-  }
-
-  /**
-   * A Slot select in the Inventory changed: wear the item there (moving it
-   * out of any other slot), or take it off. The select has no name, so the
-   * sheet form never submits it.
-   * @param {HTMLSelectElement} select
-   * @returns {Promise<void>}
-   */
-  async #onSlotSelect(select) {
-    const item = this.actor.items.get(select.dataset.slotFor);
-    if (!item) return;
-    if (refuseWhileSwapping(this.actor)) {
-      this.render({ parts: ["items"] });
-      return;
-    }
-    const value = select.value;
-    const current = this.#slotValueOf(item);
-    if (value === current) return;
-    if (value === "" || value === "worn") {
-      await unwearItem(this.actor, item);
-      // Equipping takes it out of the Hotlist (CarlRPGItem#_preUpdate).
-      if (value === "worn") await item.update({ "system.equipped": true });
-      return;
-    }
-    if (value === "accessory") {
-      const { accessoryCount, accessoryMax } = this._buildEquipSlots(this.actor.system);
-      if (accessoryCount >= accessoryMax) {
-        ui.notifications.warn(game.i18n.format("CARLRPG.Actor.AccessoriesFull", { max: accessoryMax }));
-        this.render({ parts: ["items"] });
-        return;
-      }
-      await assignItemToSlot(this.actor, { slotType: "accessory", slotKey: String(this.actor.system.accessories.length) }, item);
-      return;
-    }
-    await assignItemToSlot(this.actor, { slotType: "gear", slotKey: value }, item);
-  }
-
-  /** @override */
-  _onChangeForm(formConfig, event) {
-    if (event.target?.matches?.("select.carl-slot-select")) {
-      this.#onSlotSelect(event.target);
-      return;
-    }
-    return super._onChangeForm(formConfig, event);
   }
 
   /* -------------------------------------------- */
@@ -947,6 +901,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
     injectBloodSplatter(this);
+    // A Character just made from the Actors sidebar (core renders its sheet
+    // with renderContext "createActor") opens the Create Crawler wizard.
+    if (options.renderContext === "createActor" && context.canCreateCrawler && !this.actor.items.size) {
+      CrawlerCreation.open(this.actor);
+    }
   }
 
   /**
@@ -1146,7 +1105,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   }
 
   /**
-   * Empty one Hotlist slot (its (x) button).
+   * Empty one Hotlist or Equipment Doll slot (its (x) button).
    * @private
    */
   static #onClearSlot(event, target) {
@@ -1444,6 +1403,17 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     event.preventDefault();
     if (isPet(this.actor) && this.actor.system.isMount) return;
     new CarlSpendStatPointsDialog(this.actor).render({ force: true });
+  }
+
+  /**
+   * Open the Create Crawler wizard (its button shows only until the
+   * Character has been through it).
+   * @private
+   */
+  static #onCreateCrawler(event) {
+    event.preventDefault();
+    if (this.actor.getFlag("carl-rpg", "chargen")?.done) return;
+    CrawlerCreation.open(this.actor);
   }
 
   /* -------------------------------------------- */

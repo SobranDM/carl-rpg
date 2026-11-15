@@ -223,8 +223,10 @@ export default function register(quench) {
         });
 
         it("Iron Skin doubles DR until it expires; a second drink refreshes it", async function () {
-          const actor = await createTestCharacter("iron", { system: { dr: 2 } });
+          const actor = await createTestCharacter("iron");
           try {
+            // DR 2 from a Race (a crawler's base DR is locked at 0).
+            await createTestItem(actor, "race", "thick hide", { system: { changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }] } });
             const buff = {
               kind: "potion",
               buff: { label: "Iron Skin", duration: 30, unit: "minutes", changes: [{ targetType: "resource", target: "dr", mode: "multiply", value: "2" }] },
@@ -295,8 +297,10 @@ export default function register(quench) {
         });
 
         it("outside a fight, a round-measured Buff with bonuses runs on the clock", async function () {
-          const actor = await createTestCharacter("calm", { system: { dr: 2 } });
+          const actor = await createTestCharacter("calm");
           try {
+            // DR 2 from a Race (a crawler's base DR is locked at 0).
+            await createTestItem(actor, "race", "thick hide", { system: { changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }] } });
             const potion = await consumableItem(actor, "brief", {
               kind: "potion",
               buff: { label: "Brief Skin", duration: 10, unit: "rounds", changes: [{ targetType: "resource", target: "dr", mode: "multiply", value: "2" }] },
@@ -330,9 +334,11 @@ export default function register(quench) {
         });
 
         it("when the fight ends, a round-counted restore pays out what it still owes; bonuses carry on on the clock", async function () {
-          const actor = await createTestCharacter("payout", { system: { mana: { value: 0 }, dr: 2, stats: { int: { value: 30 } } } });
+          const actor = await createTestCharacter("payout", { system: { mana: { value: 0 }, stats: { int: { value: 30 } } } });
           const { combat } = await createTestCombat(actor);
           try {
+            // DR 2 from a Race (a crawler's base DR is locked at 0).
+            await createTestItem(actor, "race", "thick hide", { system: { changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }] } });
             await combat.startCombat();
             const refill = await consumableItem(actor, "refill", {
               kind: "potion", buff: { label: "Mana Refill", duration: 10, unit: "rounds", perRound: { mana: 2 } },

@@ -67,7 +67,7 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  * @param {string} options.title
  * @param {number|null} [options.difficulty]  Pre-filled Difficulty, editable by the GM.
  * @param {"advantage"|null} [options.defaultAdvantage]  Pre-selects the
- *   Advantage radio and surfaces a hint explaining why (currently only the
+ *   Advantage dropdown and surfaces a hint explaining why (currently only the
  *   Nat-20/Amazing-Success Evade entitlement - module/dice/dice.mjs's
  *   rollAttack - sets this). Still fully overridable by the player/GM.
  * @param {boolean} [options.showDifficulty]
@@ -81,7 +81,7 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  *   debuff-effects.mjs's decorateRows) - one pre-ticked checkbox each, so the
  *   roller can untick a debuff the fiction says doesn't apply.
  * @param {boolean} [options.showRollMode]  false hides the Advantage/
- *   Disadvantage radios - a Mob Attack (CarlDice.rollMobAttack) has no d20.
+ *   Disadvantage dropdown - a Mob Attack (CarlDice.rollMobAttack) has no d20.
  * @param {string|null} [options.difficultyLabel]  Overrides the Difficulty
  *   field's label (e.g. "Base Difficulty" when debuff rows adjust it).
  * @param {{key: string, label: string, value: number|null, selected?: boolean}[]} [options.difficultyPresets]
@@ -96,10 +96,11 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  * @param {{choices: {id: string, label: string}[], selected: string|null,
  *   load: (id: string) => Promise<object|null>}} [options.skillPicker]
  *   The Attack! button's Attack Skill choice (CarlDice.chooseAttack), first
- *   in the dialog. Until one is picked only the choice shows; picking one
- *   calls load(id) for its options (these same arguments) and redraws the
- *   rest of the dialog for it, keeping the Advantage, Difficulty and
- *   situational modifier already entered.
+ *   in the dialog, as radios. `selected` is drawn picked, with its options
+ *   (these same arguments); picking another calls load(id) for its options
+ *   and redraws the rest of the dialog for it, keeping the Advantage,
+ *   Difficulty and situational modifier already entered. With nothing
+ *   selected only the choice shows.
  * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number, isArea: boolean, splash: Set<number>, skillId?: string|null}|null>}
  *   null if the dialog was cancelled/closed. skillId: the picked Attack
  *   Skill, with a skillPicker.
@@ -223,7 +224,7 @@ function htmlToElement(html) {
  */
 function readKeptFields(root) {
   const kept = {};
-  const advantage = root.querySelector('input[name="advantage"]:checked');
+  const advantage = root.querySelector('select[name="advantage"]');
   if (advantage) kept.advantage = advantage.value;
   for (const name of ["difficulty", "modifier"]) {
     const field = root.querySelector(`input[name="${name}"]`);
@@ -235,8 +236,8 @@ function readKeptFields(root) {
 /** Put readKeptFields' values back after a redraw. */
 function restoreKeptFields(root, kept) {
   if (kept.advantage) {
-    const radio = root.querySelector(`input[name="advantage"][value="${kept.advantage}"]`);
-    if (radio) radio.checked = true;
+    const advantage = root.querySelector('select[name="advantage"]');
+    if (advantage) advantage.value = kept.advantage;
   }
   for (const name of ["difficulty", "modifier"]) {
     const field = root.querySelector(`input[name="${name}"]`);

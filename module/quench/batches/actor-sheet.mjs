@@ -140,7 +140,8 @@ export default function register(quench) {
             assert.notExists(combat.querySelector(".carl-combat-attacks"), "no Attacks list");
             const skillsTab = sheet.element.querySelector('section.tab[data-tab="skills"]');
             assert.exists(skillsTab.querySelector(".carl-skills-list"));
-            assert.notExists(sheet.element.querySelector(".carl-gear-grid"), "the equipment doll is gone");
+            assert.notExists(combat.querySelector(".carl-gear-grid"), "the Equipment Doll isn't on the Combat tab");
+            assert.exists(sheet.element.querySelector('section.tab[data-tab="items"] .carl-gear-grid'), "it's on the Inventory tab");
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
@@ -172,7 +173,10 @@ export default function register(quench) {
               assert.equal(potions.querySelector('input[name="system.permanentPotions.stat"]').value, "1");
               assert.equal(potions.querySelector('input[name="system.permanentPotions.skill"]').value, "2");
             }
-            assert.include(potions.textContent, "/2");
+            assert.include(potions.querySelector(".carl-potions-heading").textContent, game.i18n.localize("CARLRPG.Actor.PotionsUsed"));
+            const limits = [...potions.querySelectorAll("input.carl-potion-limit")];
+            assert.lengthOf(limits, 2, "Stat and Skill, each out of its limit");
+            assert.isTrue(limits.every((i) => i.disabled && i.value === "2"), "the limit can't be edited");
             assert.exists(tab.querySelector('input[name="system.personalSpace.tier"]'));
             assert.exists(tab.querySelector('input[name="system.personalSpace.size"]'));
             for (const name of ["personalSpace.notes", "sponsors", "clubs", "importantKills", "story", "biography"]) {
@@ -222,9 +226,10 @@ export default function register(quench) {
 
         it("Evade +N, DR, Move, Step and Resistances are a row above the Hotlist, not in the Stats column", async function () {
           const actor = await createTestCharacter("defenses", {
-            system: { stats: { dex: { value: 14 } }, dr: 2, details: { move: 25, step: 5 } },
+            system: { stats: { dex: { value: 14 } }, details: { move: 25, step: 5 } },
           });
           try {
+            await createTestItem(actor, "race", "armored", { system: { changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }] } });
             const sheet = await openSheet(actor);
             const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
             const column = combat.querySelector(".carl-stats-column");
@@ -240,7 +245,8 @@ export default function register(quench) {
             assert.equal(Number(evade.querySelector(".carl-evade-total").textContent.trim()), expected);
             assert.strictEqual(combat.querySelector(".carl-abilities-main").firstElementChild, row, "first in the main column");
             assert.isTrue(!!(row.compareDocumentPosition(combat.querySelector(".carl-hotlist")) & Node.DOCUMENT_POSITION_FOLLOWING), "above the Hotlist");
-            assert.equal(row.querySelector('input[name="system.dr"]').value, "2");
+            assert.notExists(row.querySelector('input[name="system.dr"]'), "a crawler's base DR is locked at 0");
+            assert.equal(row.querySelector(".carl-dr-value").textContent.trim(), "2", "DR from the Race only");
             assert.equal(row.querySelector('input[name="system.details.move"]').value, "25");
             assert.equal(row.querySelector('input[name="system.details.step"]').value, "5");
             assert.exists(row.querySelector('[data-action="showResistances"]'));

@@ -21,6 +21,7 @@
 @use "components/pet-sheet";
 @use "components/vehicle-sheet";
 @use "components/hotlist";
+@use "components/chargen";
 
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
@@ -43,4 +44,5 @@
   @include pet-sheet.styles;
   @include vehicle-sheet.styles;
   @include hotlist.styles;
+  @include chargen.styles;
 }

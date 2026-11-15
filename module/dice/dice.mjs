@@ -735,18 +735,21 @@ export default class CarlDice {
       return null;
     }
     const rank = (skill) => ownedRank(actor, skill);
+    // Highest Rank first; a tie keeps attackChoices' alphabetical order (the
+    // sort is stable). The first is picked from the start, so the dialog
+    // opens ready to roll.
+    choices.sort((a, b) => rank(b.skill) - rank(a.skill));
     const load = async (id) => {
       const choice = choices.find((c) => c.skill.id === id);
       if (!choice) return null;
       const args = await CarlDice.rollAttack(actor, choice.skill, { promptArgsOnly: true });
       return args ? { ...args, weaponNote: choice.swap ? swapNote(choice.swap.item) : "" } : null;
     };
-    // One choice: it's already picked.
-    const selected = choices.length === 1 ? choices[0].skill.id : null;
-    const initial = selected ? await load(selected) : null;
-    if (selected && !initial) return null;
+    const selected = choices[0].skill.id;
+    const initial = await load(selected);
+    if (!initial) return null;
     const prompted = await promptRollOptions({
-      ...(initial ?? {}),
+      ...initial,
       title: game.i18n.localize("CARLRPG.Weapon.AttackTitle"),
       skillPicker: {
         selected,

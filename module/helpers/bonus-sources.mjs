@@ -55,10 +55,8 @@ export function describeDefenses(sys) {
     ),
   };
 
-  const dr = {
-    shown: (sys.drEffective ?? sys.dr) !== sys.dr,
-    tooltip: sourcesTooltip(base(sys.dr), src.dr),
-  };
+  // A crawler's DR is shown as its total (its base is 0, character.mjs).
+  const dr = { tooltip: sourcesTooltip(base(sys.dr), src.dr) };
 
   const move = {
     shown: sys.moveEffective !== undefined && sys.moveEffective !== details.move,

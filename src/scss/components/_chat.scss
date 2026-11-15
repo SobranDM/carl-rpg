@@ -518,26 +518,34 @@
     gap: 4px;
   }
 
+  // The Attack! dialog's Attack Skill and Damage Effect radios: one
+  // left-aligned column each (core's .form-fields would otherwise push them
+  // right).
+  .carl-dialog-attack-skill .carl-dialog-conditions-list,
+  .carl-dialog-damage-effect .carl-dialog-conditions-list {
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+
+    .carl-dialog-condition {
+      justify-content: flex-start;
+    }
+  }
+
+  // A line between the Skill radios and the Damage Effect radios under them.
+  .carl-dialog-attack-skill + .carl-dialog-damage-effect {
+    border-top: 1px solid var(--carl-border-soft);
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
   .carl-dialog-condition-source {
     opacity: 0.7;
     font-size: 11px;
   }
 
-  // Roll dialog (templates/dialog/roll-options.hbs): the Normal/Advantage/
-  // Disadvantage radios fill the row; the Difficulty preset's help icon.
-  // (The Damage Effect radios reuse .carl-dialog-conditions-list.)
-  .carl-dialog-roll-mode .form-fields {
-    justify-content: space-between;
-    flex-wrap: nowrap;
-
-    label {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-    }
-  }
-
+  // Roll dialog (templates/dialog/roll-options.hbs): the Difficulty preset's
+  // help icon. (The Damage Effect radios reuse .carl-dialog-conditions-list.)
   .carl-dialog-preset {
     align-items: center;
 

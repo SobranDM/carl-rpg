@@ -1,9 +1,121 @@
 @use "../utils/variables" as *;
 
-// Character-only Pet tab (pet.hbs), the Description
-// tab's rich text notes (details.hbs), and the shared
-// fixed-length free-text list partial (text-slots.hbs).
+// Character-only Pet tab (pet.hbs), the Inventory tab's Equipment Doll
+// (items-list.hbs), the Description tab's rich text notes (details.hbs),
+// and the shared fixed-length free-text list partial (text-slots.hbs).
 @mixin styles {
+  // Inventory tab: item list on the left, the Equipment Doll on the right.
+  .carl-inventory-layout {
+    display: flex;
+    gap: $padding-md;
+    align-items: flex-start;
+
+    > .items-list {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  .carl-equip-panel {
+    flex: 0 0 240px;
+    // Never wider than that: a long item name is cut off in its slot, not
+    // allowed to widen the doll.
+    min-width: 0;
+
+    fieldset {
+      margin: 0 0 $padding-md;
+    }
+  }
+
+  // A drop slot: dashed when empty, a solid panel when filled.
+  .carl-equip-slot {
+    border: 1px dashed var(--carl-border-soft);
+    border-radius: 3px;
+    color: var(--carl-text-muted);
+
+    &.filled {
+      border-style: solid;
+      background: var(--carl-panel-bg);
+      color: var(--color-text-primary);
+    }
+
+    .carl-equip-slot-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // Head / Arms Torso Gloves / Main Hand Legs Off Hand / Feet. minmax(0, 1fr):
+  // a plain 1fr column won't shrink below its widest content, and since the
+  // slots are square, one long item name would make every square bigger.
+  .carl-gear-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      ". head ."
+      "arms torso gloves"
+      "mainHand legs offHand"
+      ". feet .";
+    gap: 4px;
+  }
+
+  .carl-gear-slot {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    aspect-ratio: 1;
+    padding: 2px;
+    font-size: var(--font-size-11);
+    text-align: center;
+
+    // Monochrome slot art, tinted by the text color via a mask. The
+    // template sets mask-image inline: a url() in this stylesheet (or in a
+    // custom property used here) would resolve against css/, not the page.
+    .carl-gear-icon {
+      width: 60%;
+      aspect-ratio: 1;
+      background-color: currentColor;
+      opacity: 0.6;
+      mask-position: center;
+      mask-size: contain;
+      mask-repeat: no-repeat;
+    }
+
+    img {
+      width: 32px;
+      height: 32px;
+      border: none;
+    }
+
+    .carl-equip-slot-name {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .carl-slot-clear {
+      position: absolute;
+      top: 1px;
+      right: 3px;
+    }
+  }
+
+  .carl-accessories-label {
+    margin: $padding-md 0 4px;
+  }
+
+  .carl-accessory-slots {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
   .carl-sheet-columns {
     display: flex;
     flex-wrap: wrap;
@@ -98,15 +210,31 @@
       }
     }
 
+    // "Potions Used", then Stat and Skill indented under it, their counts
+    // and limits on the right.
     .carl-potions-used {
-      flex-wrap: wrap;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
     .carl-potion-count {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      white-space: nowrap;
+      > span:first-child {
+        padding-left: 1em;
+      }
+
+      .carl-potion-values {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: auto;
+        white-space: nowrap;
+
+        input {
+          flex: 0 0 auto;
+          text-align: right;
+        }
+      }
     }
 
     // Tier and Size side by side.

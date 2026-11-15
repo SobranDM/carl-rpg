@@ -1,32 +1,50 @@
 <div class="carl-dialog-body">
   {{#if skillPicker}}
   {{!-- The Attack! button (CarlDice.chooseAttack): the Attack Skills the
-        crawler can use now. Picking one redraws the rest of the dialog for
+        crawler can use now, as one-click radios - highest Rank first and
+        already picked. Picking another redraws the rest of the dialog for
         it (module/dice/roll-prompt.mjs). --}}
   <div class="form-group carl-dialog-attack-skill">
     <label>{{localize "CARLRPG.Weapon.AttackSkill"}}</label>
-    <div class="form-fields">
-      <select name="attackSkillId" data-carl-attack-skill>
-        {{#unless skillPicker.selected}}<option value="" selected>{{localize "CARLRPG.Weapon.ChooseAttack"}}</option>{{/unless}}
-        {{#each skillPicker.choices as |choice|}}
-        <option value="{{choice.id}}" {{#if (eq choice.id ../skillPicker.selected)}}selected{{/if}}>{{choice.label}}</option>
-        {{/each}}
-      </select>
+    <div class="form-fields carl-dialog-conditions-list">
+      {{#each skillPicker.choices as |choice|}}
+      <label class="carl-dialog-condition">
+        <input type="radio" name="attackSkillId" value="{{choice.id}}" data-carl-attack-skill {{checked (eq choice.id ../skillPicker.selected)}} />
+        {{choice.label}}
+      </label>
+      {{/each}}
     </div>
   </div>
   {{/if}}
+  {{!-- The Damage Effect goes with the Skill it's for, so it comes next. --}}
+  {{#unless hideOptions}}
+  {{#if damageEffectChoices.length}}
+  {{!-- One click per choice: a radio list, "None" by default. --}}
+  <div class="form-group carl-dialog-damage-effect">
+    <label>{{localize "CARLRPG.Dialog.DamageEffect"}}</label>
+    <div class="form-fields carl-dialog-conditions-list">
+      <label class="carl-dialog-condition"><input type="radio" name="damageEffectId" value="" checked /> {{localize "CARLRPG.Dialog.NoDamageEffect"}}</label>
+      {{#each damageEffectChoices as |de|}}
+      <label class="carl-dialog-condition"><input type="radio" name="damageEffectId" value="{{de.id}}" /> {{de.name}} ({{localize "CARLRPG.Roll.Rank"}} {{de.rank}})</label>
+      {{/each}}
+    </div>
+  </div>
+  {{/if}}
+  {{/unless}}
   {{#if weaponNote}}
   {{!-- The weapon comes out of the Hotlist, free with the Attack (p.64). --}}
   <p class="carl-dialog-hint carl-dialog-weapon-note"><i class="fa-solid fa-right-left"></i> {{weaponNote}}</p>
   {{/if}}
   {{#unless hideOptions}}
   {{#if showRollMode}}
-  {{!-- No label: the three radios take the whole row. --}}
   <div class="form-group carl-dialog-roll-mode">
+    <label>{{localize "CARLRPG.Dialog.Advantage"}}</label>
     <div class="form-fields">
-      <label><input type="radio" name="advantage" value="normal" {{#unless defaultAdvantage}}checked{{/unless}} /> {{localize "CARLRPG.Dialog.Normal"}}</label>
-      <label><input type="radio" name="advantage" value="advantage" {{#if (eq defaultAdvantage "advantage")}}checked{{/if}} /> {{localize "CARLRPG.Dialog.Advantage"}}</label>
-      <label><input type="radio" name="advantage" value="disadvantage" /> {{localize "CARLRPG.Dialog.Disadvantage"}}</label>
+      <select name="advantage">
+        <option value="normal" {{#unless defaultAdvantage}}selected{{/unless}}>{{localize "CARLRPG.Dialog.Normal"}}</option>
+        <option value="advantage" {{#if (eq defaultAdvantage "advantage")}}selected{{/if}}>{{localize "CARLRPG.Dialog.Advantage"}}</option>
+        <option value="disadvantage">{{localize "CARLRPG.Dialog.Disadvantage"}}</option>
+      </select>
     </div>
     {{#if defaultAdvantage}}
     <p class="carl-dialog-hint">{{localize "CARLRPG.Dialog.AdvantageAutoApplied"}}</p>
@@ -73,18 +91,6 @@
     <div class="form-fields carl-dialog-checklist">
       {{#each areaTargets as |t index|}}
       <label><input type="checkbox" name="{{concat 'splash.' index}}" /> {{t.name}}</label>
-      {{/each}}
-    </div>
-  </div>
-  {{/if}}
-  {{#if damageEffectChoices.length}}
-  {{!-- One click per choice: a radio list, "None" by default. --}}
-  <div class="form-group carl-dialog-damage-effect">
-    <label>{{localize "CARLRPG.Dialog.DamageEffect"}}</label>
-    <div class="form-fields carl-dialog-conditions-list">
-      <label class="carl-dialog-condition"><input type="radio" name="damageEffectId" value="" checked /> {{localize "CARLRPG.Dialog.NoDamageEffect"}}</label>
-      {{#each damageEffectChoices as |de|}}
-      <label class="carl-dialog-condition"><input type="radio" name="damageEffectId" value="{{de.id}}" /> {{de.name}} ({{localize "CARLRPG.Roll.Rank"}} {{de.rank}})</label>
       {{/each}}
     </div>
   </div>

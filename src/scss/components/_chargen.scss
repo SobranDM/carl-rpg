@@ -1,0 +1,171 @@
+// The Create Crawler wizard (apps/crawler-creation.mjs, templates/apps/
+// crawler-creation.hbs) and its button in a Character's header.
+@mixin styles {
+  .carl-create-crawler {
+    flex: 0 0 auto;
+    width: auto;
+    align-self: center;
+    white-space: nowrap;
+  }
+
+  .carl-chargen-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .carl-chargen-steps {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    border-bottom: 1px solid var(--carl-border-soft);
+
+    h2 {
+      margin: 0;
+      border: none;
+    }
+
+    .carl-chargen-step-count {
+      color: var(--carl-text-muted);
+      font-size: var(--font-size-12);
+    }
+  }
+
+  .carl-chargen-page {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  // Label / field pairs.
+  .carl-chargen-grid {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    align-items: center;
+    gap: 6px 10px;
+  }
+
+  .carl-chargen-inline {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    select,
+    input {
+      flex: 1 1 auto;
+    }
+
+    button {
+      flex: 0 0 auto;
+      width: auto;
+    }
+  }
+
+  .carl-chargen-stages {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .carl-chargen-stage,
+  .carl-chargen-past {
+    margin: 0;
+
+    legend .carl-hint {
+      font-weight: normal;
+    }
+  }
+
+  // Three rows of one fixed height, Skills or not, so picking a background
+  // swaps the boxes in without moving anything.
+  .carl-chargen-skills {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      height: 24px;
+      min-width: 0;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .carl-chargen-skill-placeholder {
+      color: var(--carl-text-muted);
+      opacity: 0.5;
+      padding-left: 4px;
+    }
+
+    .carl-chargen-taken {
+      opacity: 0.55;
+      text-decoration: line-through;
+    }
+  }
+
+  .carl-chargen-stats {
+    width: auto;
+    margin: 0;
+
+    th {
+      text-align: left;
+      padding-right: 12px;
+    }
+
+    td {
+      padding: 2px 8px;
+    }
+  }
+
+  .carl-chargen-past textarea {
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .carl-chargen-sets {
+    flex-wrap: wrap;
+  }
+
+  .carl-chargen-review {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .carl-chargen-problems {
+    &[hidden] {
+      display: none;
+    }
+
+    list-style: none;
+    margin: 0;
+    padding: 6px 8px;
+    border-radius: 3px;
+    background: var(--carl-panel-bg);
+    color: var(--carl-accent);
+  }
+
+  .carl-chargen-nav {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+
+    button {
+      flex: 0 0 auto;
+      width: auto;
+    }
+  }
+}

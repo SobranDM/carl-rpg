@@ -40,6 +40,15 @@ export const DEITY_MIGRATION_ID = "0.6.0-deity-block";
 /** The 0.6.0 Deity Tier backfill's id (migrateDeityTiers). */
 export const DEITY_TIER_MIGRATION_ID = "0.6.0-deity-tier";
 
+/** The 0.6.0 refresh of owned compendium items' id (migrateCompendiumCopies). */
+export const COMPENDIUM_REFRESH_ID = "0.6.0-compendium-refresh";
+
+/** The 0.6.0 Character base DR lock's id (migrateCharacterBaseDr). */
+export const BASE_DR_MIGRATION_ID = "0.6.0-character-base-dr";
+
+/** The 0.6.0 "character creation is done" mark's id (migrateChargenDone). */
+export const CHARGEN_DONE_MIGRATION_ID = "0.6.0-chargen-done";
+
 /** The 0.6.0 Weapon Skill notice's id (announceWeaponSkill). */
 export const WEAPON_SKILL_NOTICE_ID = "0.6.0-weapon-skill-notice";
 
@@ -54,9 +63,12 @@ export const MIGRATIONS = [
   { id: "0.6.0-hand-to-hand-box", version: "0.6.0", run: migrateHandToHandSkills },
   { id: COMPANIONS_MIGRATION_ID, version: "0.6.0", run: migrateCompanionActors },
   { id: DEITY_MIGRATION_ID, version: "0.6.0", run: migrateDeityBlocks },
-  // These two have their own ids, so a world that already had the three
-  // above still gets them.
+  // These have their own ids, so a world that already had the three above
+  // still gets them.
   { id: DEITY_TIER_MIGRATION_ID, version: "0.6.0", run: migrateDeityTiers },
+  { id: COMPENDIUM_REFRESH_ID, version: "0.6.0", run: migrateCompendiumCopies },
+  { id: BASE_DR_MIGRATION_ID, version: "0.6.0", run: migrateCharacterBaseDr },
+  { id: CHARGEN_DONE_MIGRATION_ID, version: "0.6.0", run: migrateChargenDone },
   { id: WEAPON_SKILL_NOTICE_ID, version: "0.6.0", run: announceWeaponSkill },
 ];
 
@@ -348,15 +360,393 @@ async function migrateDeityTiers() {
       errors += 1;
     }
   }
-  if (lines.length) {
-    await createNoticeMessage({
-      title: game.i18n.localize("CARLRPG.Migration.DeityTier.Title"),
-      bodyHtml: `<p>${esc(game.i18n.localize("CARLRPG.Migration.DeityTier.Body"))}</p>`
-        + `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
-      whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+  if (lines.length) await whisperGmList("DeityTier", lines);
+  return { changed, errors };
+}
+
+/* -------------------------------------------------- */
+/*  0.6.0: owned copies of the changed compendium items */
+/* -------------------------------------------------- */
+
+/**
+ * The compendium items whose DR, Move, Step or Evade 0.6.0 made automatic
+ * (Phase 2, docs/known-gaps.md 7.2c), by pack and name.
+ */
+export const REFRESHED_ITEMS = {
+  "classes-and-races": [
+    "Tigran", "Tigran (Primal)", "Amazonian", "Amazonian (Primal)", "Doppelgänger", "Doppelgänger (Primal)",
+    "Elf (High)", "Elf (High) (Primal)", "Obsidian Butterfly", "Obsidian Butterfly (Primal)",
+    "Straight-to-DVD Action Hero", "Zulu Warrior",
+  ],
+  "skills-and-spells": ["Dodge", "Running", "Catlike Reflexes", "Jumping", "Longsword", "Rapier", "Quarterstaff", "Oakhide"],
+};
+
+/** The change targets the refresh owns: everything else on a copy is kept. */
+const MANAGED_TARGETS = {
+  resource: new Set(["dr", "move", "step"]),
+  rollMode: new Set(["evadeBonus", "evadeDice"]),
+};
+
+/** Oakhide's description note before and after it became a toggled Spell. */
+const OAKHIDE_OLD_NOTE = "<p><em>Note: DR has no temporary/conditional-bonus mechanism in this system - apply this bonus by hand while the buff is active.</em></p>";
+const OAKHIDE_NEW_NOTE = "<p><em>Casting it switches it on (paying its Mana) and its DR is added automatically; cast it again when the buff ends to switch it off.</em></p>";
+
+/**
+ * Whether the refresh owns this change: a DR, Move or Step resource change,
+ * or an Evade bonus or Evade dice.
+ * @param {object} change
+ * @returns {boolean}
+ */
+export function isManagedChange(change) {
+  return !!MANAGED_TARGETS[change?.targetType]?.has(change.target);
+}
+
+/** The managed changes in a list, order-free, for comparing two lists. */
+function managedSignature(changes) {
+  return (changes ?? []).filter(isManagedChange)
+    .map((c) => [c.targetType, c.target, c.mode, String(c.value), Number(c.levelGate) || 0, (c.conditions ?? []).length].join("|"))
+    .sort()
+    .join(";");
+}
+
+/**
+ * A change list with its managed changes replaced by the source's (fresh
+ * ids), the rest kept as they are. null if they already match.
+ * @param {object[]} own
+ * @param {object[]} source
+ * @returns {object[]|null}
+ */
+function mergeManagedChanges(own, source) {
+  if (managedSignature(own) === managedSignature(source)) return null;
+  return [
+    ...(own ?? []).filter((c) => !isManagedChange(c)),
+    ...(source ?? []).filter(isManagedChange).map((c) => ({ ...foundry.utils.deepClone(c), id: foundry.utils.randomID() })),
+  ];
+}
+
+/**
+ * What an owned copy of a refreshed compendium item needs: its DR, Move,
+ * Step and Evade changes - base and per Upgrade tier (matched by Rank) -
+ * made the compendium's; a Spell the compendium made toggled, toggled;
+ * Oakhide's old "apply by hand" note replaced. Everything else - the Rank,
+ * marks, other changes (a Race's baked Stat and Skill grants keep their
+ * ids, so nothing bakes twice), descriptions - is kept.
+ * @param {Item|object} item  The owned copy.
+ * @param {Item|object} source  The compendium item.
+ * @returns {object|null}  Update data (system.* paths), or null if current.
+ */
+export function refreshedItemUpdate(item, source) {
+  const plain = (sys) => (typeof sys?.toObject === "function" ? sys.toObject() : sys ?? {});
+  const own = plain(item.system);
+  const src = plain(source.system);
+  const update = {};
+
+  const changes = mergeManagedChanges(own.changes, src.changes);
+  if (changes) update["system.changes"] = changes;
+
+  if (Array.isArray(own.upgrades) && Array.isArray(src.upgrades)) {
+    let touched = false;
+    // A tier the compendium doesn't have (a homebrew Rank 7) is left as it is.
+    const upgrades = own.upgrades.map((tier) => {
+      const sourceTier = src.upgrades.find((t) => t.rankThreshold === tier.rankThreshold);
+      if (!sourceTier) return tier;
+      const next = mergeManagedChanges(tier.changes, sourceTier.changes ?? []);
+      if (!next) return tier;
+      touched = true;
+      return { ...tier, changes: next };
     });
+    // A compendium tier the copy lacks is added, when it carries a managed
+    // change - whole, as the compendium has it.
+    for (const sourceTier of src.upgrades) {
+      if (upgrades.some((t) => t.rankThreshold === sourceTier.rankThreshold)) continue;
+      if (!(sourceTier.changes ?? []).some(isManagedChange)) continue;
+      upgrades.push({
+        ...foundry.utils.deepClone(sourceTier),
+        changes: (sourceTier.changes ?? []).map((c) => ({ ...foundry.utils.deepClone(c), id: foundry.utils.randomID() })),
+      });
+      touched = true;
+    }
+    upgrades.sort((a, b) => a.rankThreshold - b.rankThreshold);
+    if (touched) update["system.upgrades"] = upgrades;
+  }
+
+  if (item.type === "spell" && src.isToggled && !own.isToggled) update["system.isToggled"] = true;
+  if (typeof own.description === "string" && own.description.includes(OAKHIDE_OLD_NOTE)) {
+    update["system.description"] = own.description.replace(OAKHIDE_OLD_NOTE, OAKHIDE_NEW_NOTE);
+  }
+  return Object.keys(update).length ? update : null;
+}
+
+/** The refreshed items, read from the system's (rebuilt) packs. */
+async function loadRefreshSources() {
+  const sources = [];
+  for (const [packName, names] of Object.entries(REFRESHED_ITEMS)) {
+    const pack = game.packs.get(`${SCOPE}.${packName}`);
+    if (!pack) continue;
+    const index = await pack.getIndex();
+    for (const name of names) {
+      const entry = index.find((e) => e.name === name);
+      if (entry) sources.push(await pack.getDocument(entry._id));
+    }
+  }
+  return sources;
+}
+
+/**
+ * The compendium item an owned item is a copy of. One that says where it
+ * came from (its compendium source) is only matched to that item - a copy of
+ * a homebrew "Dodge" from a world compendium is not the system's Dodge. One
+ * that doesn't say is matched by type and name. Sources are compared by the
+ * item id at the end of the uuid, so an older "Compendium.carl-rpg.pack.id"
+ * source reads the same as "Compendium.carl-rpg.pack.Item.id".
+ * @param {Item|object} item
+ * @param {Item[]} sources
+ * @returns {Item|null}
+ */
+export function refreshSourceFor(item, sources) {
+  const origin = item._stats?.compendiumSource || item.flags?.core?.sourceId || "";
+  const sameType = sources.filter((s) => s.type === item.type);
+  if (origin) {
+    const fromSystem = origin.startsWith(`Compendium.${SCOPE}.`);
+    const id = origin.split(".").pop();
+    return fromSystem ? (sameType.find((s) => s.id === id) ?? null) : null;
+  }
+  return sameType.find((s) => s.name === item.name) ?? null;
+}
+
+/**
+ * The updates for these items' stale copies.
+ * @param {Iterable<Item>} items
+ * @param {Item[]} sources
+ * @returns {{updates: object[], names: string[], movement: boolean}}  movement:
+ *   whether any of them now changes Move or Step.
+ */
+function refreshUpdatesFor(items, sources) {
+  const updates = [];
+  const names = [];
+  let movement = false;
+  for (const item of items) {
+    const source = refreshSourceFor(item, sources);
+    const update = source ? refreshedItemUpdate(item, source) : null;
+    if (!update) continue;
+    updates.push({ _id: item.id, ...update });
+    names.push(item.name);
+    movement ||= changesMovement(source);
+  }
+  return { updates, names, movement };
+}
+
+/** Whether a compendium item changes Move or Step, at any Rank. */
+function changesMovement(source) {
+  const all = [...(source.system.changes ?? []), ...(source.system.upgrades ?? []).flatMap((t) => t.changes ?? [])];
+  return all.some((c) => c.targetType === "resource" && (c.target === "move" || c.target === "step"));
+}
+
+/**
+ * Move and Step were typed by hand before 0.6.0, so a crawler whose base
+ * isn't the starting 20/10 may already include what its Race or Skills now
+ * add - a note for the GM's list.
+ * @param {Actor} actor
+ * @returns {string}
+ */
+function typedMovementNote(actor) {
+  const details = actor?.type === "character" ? actor.system.details : null;
+  if (!details || (details.move === 20 && details.step === 10)) return "";
+  return ` ${game.i18n.format("CARLRPG.Migration.Refresh.CheckMove", { move: details.move, step: details.step })}`;
+}
+
+/**
+ * 0.6.0 made the DR, Move, Step and Evade of some Races, Classes, Skills
+ * and Spells automatic (REFRESHED_ITEMS), but every actor holds its own
+ * copy of an item, made before. This brings each copy's DR, Move, Step and
+ * Evade changes - and Oakhide's toggle - up to the compendium's, on world
+ * Actors, in the Items directory and in world compendiums. The GM gets a
+ * whispered list of what was updated.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+async function migrateCompendiumCopies() {
+  const sources = await loadRefreshSources();
+  let changed = 0;
+  let errors = 0;
+  const lines = [];
+  const options = { render: false, carlMigration: true };
+  const refresh = async (label, items, write, actor = null) => {
+    try {
+      const { updates, names, movement } = refreshUpdatesFor(items, sources);
+      if (!updates.length) return;
+      await write(updates);
+      changed += updates.length;
+      const note = movement ? esc(typedMovementNote(actor)) : "";
+      lines.push(game.i18n.format("CARLRPG.Migration.Refresh.Line", { name: esc(label), items: names.map(esc).join(", ") }) + note);
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't refresh the items of ${label}`, err);
+      errors += 1;
+    }
+  };
+  if (!sources.length) return { changed, errors };
+
+  for (const actor of game.actors) {
+    await refresh(actor.name, actor.items, (u) => actor.updateEmbeddedDocuments("Item", u, options), actor);
+  }
+  await refresh(game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"), game.items,
+    (u) => Item.implementation.updateDocuments(u, options));
+  for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        const documents = await pack.getDocuments();
+        if (pack.documentName === "Actor") {
+          for (const actor of documents) {
+            await refresh(`${actor.name} (${pack.title})`, actor.items, (u) => actor.updateEmbeddedDocuments("Item", u, options), actor);
+          }
+        } else {
+          await refresh(pack.title, documents, (u) => Item.implementation.updateDocuments(u, { ...options, pack: pack.collection }));
+        }
+      });
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't refresh items in compendium ${pack.collection}`, err);
+      errors += 1;
+    }
+  }
+  if (lines.length) await whisperGmList("Refresh", lines);
+  return { changed, errors };
+}
+
+/* -------------------------------------------------- */
+/*  0.6.0: a Character's base DR is 0                 */
+/* -------------------------------------------------- */
+
+/**
+ * Zero one Character's saved base DR (character.mjs already treats it as
+ * 0). Reads the saved value, which the prepared data hides.
+ * @param {Actor} actor
+ * @returns {Promise<number>}  The old base DR, or 0 if there was nothing to zero.
+ */
+export async function zeroCharacterBaseDr(actor) {
+  if (actor?.type !== "character") return 0;
+  const dr = Number(actor._source.system?.dr) || 0;
+  if (!dr) return 0;
+  await actor.update({ "system.dr": 0 }, { render: false, carlMigration: true });
+  return dr;
+}
+
+/**
+ * 0.6.0 locks a Character's base DR at 0: its DR is only what its Race,
+ * Class, gear, Skills, Spells and Buffs give. A base typed in before is
+ * zeroed, on world Characters and in world compendiums, and the GM gets a
+ * whispered list of who had what - DR from something not automated yet
+ * (or a home rule) can be put back as an item bonus.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+async function migrateCharacterBaseDr() {
+  let changed = 0;
+  let errors = 0;
+  const lines = [];
+  const attempt = async (actor, where) => {
+    try {
+      const dr = await zeroCharacterBaseDr(actor);
+      if (!dr) return;
+      changed += 1;
+      lines.push(game.i18n.format("CARLRPG.Migration.BaseDr.Line", {
+        name: esc(actor.name) + (where ? ` (${esc(where)})` : ""), dr,
+      }));
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't zero the base DR of ${actor.name}`, err);
+      errors += 1;
+    }
+  };
+  for (const actor of game.actors) await attempt(actor);
+  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        for (const actor of await pack.getDocuments()) await attempt(actor, pack.title);
+      });
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't zero base DR in compendium ${pack.collection}`, err);
+      errors += 1;
+    }
+  }
+  if (lines.length) await whisperGmList("BaseDr", lines);
+  return { changed, errors };
+}
+
+/* -------------------------------------------------- */
+/*  0.6.0: Characters made before the wizard          */
+/* -------------------------------------------------- */
+
+/** The item types that are a crawler's Skills. A new Character has none. */
+const SKILL_TYPES = ["skill", "spell", "damageEffect"];
+
+/**
+ * Whether a Character was made before the Create Crawler wizard (0.6.0):
+ * not marked as through it, but already holding Skills, Spells or Damage
+ * Effects. A new Character starts with none, so any means it was built.
+ * @param {Actor} actor
+ * @returns {boolean}
+ */
+export function madeBeforeChargen(actor) {
+  return actor?.type === "character"
+    && !actor.getFlag(SCOPE, "chargen")?.done
+    && actor.items.some((i) => SKILL_TYPES.includes(i.type));
+}
+
+/**
+ * Mark one Character made before the wizard as through character creation,
+ * so its sheet stops offering Create Crawler.
+ * @param {Actor} actor
+ * @returns {Promise<boolean>}  Whether it was marked.
+ */
+export async function markChargenDone(actor) {
+  if (!madeBeforeChargen(actor)) return false;
+  await actor.update({ [`flags.${SCOPE}.chargen`]: { done: true, migrated: true } }, { render: false, carlMigration: true });
+  return true;
+}
+
+/**
+ * 0.6.0 added the Create Crawler wizard, offered on a Character's sheet
+ * until it has been through it. Characters already built (with any Skill,
+ * Spell or Damage Effect) are marked as through it - on world Actors and
+ * in world compendiums - or the button would stay on them for good. A
+ * Character with no Skills yet keeps the button.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+async function migrateChargenDone() {
+  let changed = 0;
+  let errors = 0;
+  const attempt = async (actor) => {
+    try {
+      if (await markChargenDone(actor)) changed += 1;
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't mark ${actor.name} as created`, err);
+      errors += 1;
+    }
+  };
+  for (const actor of game.actors) await attempt(actor);
+  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        for (const actor of await pack.getDocuments()) await attempt(actor);
+      });
+    } catch (err) {
+      console.error(`carl-rpg | 0.6.0 migration: couldn't mark Characters in compendium ${pack.collection}`, err);
+      errors += 1;
+    }
   }
   return { changed, errors };
+}
+
+/**
+ * A GM-whispered notice: CARLRPG.Migration.<key>.Title, its Body, then a
+ * list of lines (already escaped).
+ * @param {string} key
+ * @param {string[]} lines
+ */
+function whisperGmList(key, lines) {
+  return createNoticeMessage({
+    title: game.i18n.localize(`CARLRPG.Migration.${key}.Title`),
+    bodyHtml: `<p>${esc(game.i18n.localize(`CARLRPG.Migration.${key}.Body`))}</p>`
+      + `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
+    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+  });
 }
 
 /* -------------------------------------------------- */

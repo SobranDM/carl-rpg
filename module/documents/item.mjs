@@ -60,14 +60,16 @@ export class CarlRPGItem extends Item {
    */
   async _onUpdate(changed, options, userId) {
     super._onUpdate(changed, options, userId);
-    if (game.user.id !== userId) return;
+    // A migration's write (helpers/migration.mjs) never bakes: it doesn't
+    // add grants, and a copy that was never baked mustn't start now.
+    if (game.user.id !== userId || options.carlMigration) return;
     if ((this.type === "class" || this.type === "race") && foundry.utils.hasProperty(changed, "system.changes")) {
       await bakeItemGrants(this);
     }
   }
 
   /**
-   * Equipping, however it's done (the Slot column, the Item sheet's box, a
+   * Equipping, however it's done (the Equipment Doll, the Equipped box, a
    * macro):
    *  - refused while a Hotlist swap is under way on this client
    *    (swap-lock.mjs), unless it's the swap's own write;

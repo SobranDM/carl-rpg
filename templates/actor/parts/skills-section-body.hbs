@@ -40,7 +40,7 @@
       {{#if ../locked}}
       {{#unless @root.isPet}}
       <a class="item-control" data-action="toggleMark" title="{{localize 'CARLRPG.Ranked.ToggleMark'}}">
-        <i class="fas {{#if skill.system.marked}}fa-check-square{{else}}fa-square{{/if}}"></i>
+        <i class="carl-mark-icon {{#if skill.system.marked}}fa-solid fa-square-check is-marked{{else}}fa-regular fa-square{{/if}}"></i>
       </a>
       {{/unless}}
       {{else}}

@@ -224,10 +224,12 @@ export default function register(quench) {
           }
         });
 
-        it("Attack!: pick an Attack Skill, its Damage Effects appear, then the Attack is made with it", async function () {
+        it("Attack!: radios, highest Rank picked first; pick another, its Damage Effects appear, then the Attack is made with it", async function () {
           const actor = await createTestCharacter("attack button");
           try {
-            const fists = await attack(actor, "Pugilism", { isHandToHand: true });
+            // Wrasslin' ties Pugilism's Rank: the tie goes alphabetically.
+            const grapple = await attack(actor, "Wrasslin'", { isHandToHand: true, rank: 4 });
+            const fists = await attack(actor, "Pugilism", { isHandToHand: true, rank: 4 });
             const sword = await attack(actor, "Longsword");
             await attack(actor, "Axe"); // no axe: not offered
             const blade = await weapon(actor, "blade", "Longsword");
@@ -237,17 +239,22 @@ export default function register(quench) {
             const { result, count } = await postedBy(async () => {
               const pending = CarlDice.chooseAttack(actor);
               const dialog = await openDialog("carl-roll-dialog");
-              const select = dialog.element.querySelector("select[data-carl-attack-skill]");
-              const offered = [...select.options].map((o) => o.value).filter(Boolean);
-              assert.sameMembers(offered, [fists.id, sword.id]);
-              assert.isTrue(dialog.element.querySelector('button[data-action="roll"]').disabled, "nothing picked yet");
-              assert.notExists(dialog.element.querySelector('input[name="modifier"]'), "only the choice shows");
+              const radios = [...dialog.element.querySelectorAll("input[data-carl-attack-skill]")];
+              assert.deepEqual(radios.map((r) => r.value), [fists.id, grapple.id, sword.id], "highest Rank first, a tie alphabetical");
+              assert.isTrue(radios[0].checked, "and picked from the start");
+              assert.isFalse(dialog.element.querySelector('button[data-action="roll"]').disabled, "ready to roll");
+              assert.exists(dialog.element.querySelector('input[name="modifier"]'), "its options already show");
 
-              select.value = sword.id;
-              select.dispatchEvent(new Event("change", { bubbles: true }));
+              const swordRadio = radios.find((r) => r.value === sword.id);
+              swordRadio.checked = true;
+              swordRadio.dispatchEvent(new Event("change", { bubbles: true }));
               await waitFor(() => dialog.element.querySelector(`input[name="damageEffectId"][value="${strike.id}"]`),
                 { message: "the Longsword's Damage Effect never appeared" });
               assert.exists(dialog.element.querySelector(".carl-dialog-weapon-note"), "it says the blade is swapped in");
+              const picker = dialog.element.querySelector(".carl-dialog-attack-skill");
+              assert.equal(picker.querySelector(":scope > label").textContent.trim(), game.i18n.localize("CARLRPG.Weapon.AttackSkill"));
+              assert.isTrue(picker.nextElementSibling?.classList.contains("carl-dialog-damage-effect"),
+                "the Damage Effects come right under the Skill");
               assert.isFalse(dialog.element.querySelector('button[data-action="roll"]').disabled);
               pressDialog(dialog, "roll");
               return pending;

@@ -1,6 +1,8 @@
 import {
-  announceWeaponSkill, backfillDeityTier, DEITY_MIGRATION_ID, DEITY_TIER_MIGRATION_ID, inferDeityTier, MIGRATIONS,
-  migrationPlan, needsHandToHand, persistDeityBlock, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID,
+  announceWeaponSkill, backfillDeityTier, BASE_DR_MIGRATION_ID, COMPENDIUM_REFRESH_ID, DEITY_MIGRATION_ID,
+  DEITY_TIER_MIGRATION_ID, inferDeityTier, MIGRATIONS, migrationPlan, needsHandToHand, persistDeityBlock,
+  refreshedItemUpdate, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID, zeroCharacterBaseDr,
+  CHARGEN_DONE_MIGRATION_ID, madeBeforeChargen, markChargenDone, refreshSourceFor,
 } from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
@@ -210,6 +212,186 @@ export default function register(quench) {
             assert.equal(inferDeityTier(mob), "");
           } finally {
             for (const x of [actor, set, none, mob]) await deleteTestActor(x);
+          }
+        });
+      });
+
+      describe("0.6.0: owned copies of the changed compendium items", function () {
+        useQuenchTimeout(this);
+
+        /** A change entry as content authors it. */
+        const change = (targetType, target, value, mode = "add", extra = {}) => ({
+          id: foundry.utils.randomID(), targetType, target, mode, value: String(value), conditions: [], ...extra,
+        });
+        /** An Upgrade tier. */
+        const tier = (rankThreshold, changes) => ({ rankThreshold, changes });
+
+        it("both new 0.6.0 steps run in a world that had the earlier ones", function () {
+          for (const id of [COMPENDIUM_REFRESH_ID, BASE_DR_MIGRATION_ID]) {
+            const index = MIGRATIONS.findIndex((m) => m.id === id);
+            assert.isAtLeast(index, 0, id);
+            assert.equal(MIGRATIONS[index].version, "0.6.0");
+            assert.isBelow(index, MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID));
+            const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
+            assert.include(p.run.map((m) => m.id), id);
+          }
+        });
+
+        it("an old Dodge copy's overriding tiers become the compendium's adds; its Rank and other changes stay", function () {
+          const copy = {
+            type: "skill", name: "Dodge",
+            system: {
+              rank: 12, marked: true,
+              changes: [change("rollMode", "evadeBonus", 1)],
+              upgrades: [
+                tier(5, [change("rollMode", "evadeBonus", 1, "override")]),
+                tier(10, [change("rollMode", "evadeBonus", 2, "override"), change("custom", "houseRule", 1)]),
+                tier(15, [change("rollMode", "evadeBonus", 2, "override")]),
+              ],
+            },
+          };
+          const source = {
+            type: "skill", name: "Dodge",
+            system: {
+              changes: [change("rollMode", "evadeBonus", 1)],
+              upgrades: [tier(5, []), tier(10, [change("rollMode", "evadeBonus", 1)]), tier(15, [])],
+            },
+          };
+          const update = refreshedItemUpdate(copy, source);
+          assert.notProperty(update, "system.changes", "the base already matched");
+          assert.notProperty(update, "system.rank");
+          const [r5, r10, r15] = update["system.upgrades"];
+          assert.deepEqual(r5.changes, []);
+          assert.deepEqual(r10.changes.map((c) => [c.target, c.mode, c.value]), [["houseRule", "add", "1"], ["evadeBonus", "add", "1"]],
+            "the house rule is kept, the override becomes the add");
+          assert.deepEqual(r15.changes, []);
+
+          const refreshed = { ...copy, system: { ...copy.system, upgrades: update["system.upgrades"] } };
+          assert.isNull(refreshedItemUpdate(refreshed, source), "a second run changes nothing");
+        });
+
+        it("a Race copy gains its Move without its Stat grants baking again", async function () {
+          const actor = await createTestCharacter("refresh race");
+          try {
+            const race = await createTestItem(actor, "race", "Tigran", {
+              name: "Tigran", system: { changes: [change("stat", "dex", 3), change("resource", "dr", 1, "add", { label: "DR Buff" })] },
+            });
+            await new Promise((r) => setTimeout(r, 200));
+            const dex = actor.system.stats.dex.value;
+            const source = {
+              type: "race", name: "Tigran",
+              system: { changes: [{ ...change("stat", "dex", 3), id: "" }, change("resource", "dr", 1, "add", { label: "DR Buff" }), change("resource", "move", 10)] },
+            };
+            const update = refreshedItemUpdate(race, source);
+            const statEntry = update["system.changes"].find((c) => c.targetType === "stat");
+            assert.equal(statEntry.id, race.system.changes.find((c) => c.targetType === "stat").id, "the Stat grant keeps its id");
+            await actor.updateEmbeddedDocuments("Item", [{ _id: race.id, ...update }], { carlMigration: true });
+            await new Promise((r) => setTimeout(r, 200));
+            assert.equal(actor.system.stats.dex.value, dex, "DEX isn't raised a second time");
+            assert.equal(actor.system.moveEffective, 30);
+            assert.equal(actor.system.drEffective, 1);
+            assert.isNull(refreshedItemUpdate(actor.items.get(race.id), source));
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a copy is matched to the compendium item it came from; a homebrew one isn't touched", function () {
+          const dodge = { type: "skill", name: "Dodge", id: "nce3YZYxqQKS22mU" };
+          const sources = [dodge];
+          assert.strictEqual(refreshSourceFor({ type: "skill", name: "Dodge" }, sources), dodge, "no source: by name");
+          assert.strictEqual(refreshSourceFor({ type: "skill", name: "Dodge", _stats: { compendiumSource: "Compendium.carl-rpg.skills-and-spells.Item.nce3YZYxqQKS22mU" } }, sources), dodge);
+          assert.strictEqual(refreshSourceFor({ type: "skill", name: "Dodge", flags: { core: { sourceId: "Compendium.carl-rpg.skills-and-spells.nce3YZYxqQKS22mU" } } }, sources), dodge, "an older source id");
+          assert.isNull(refreshSourceFor({ type: "skill", name: "Dodge", _stats: { compendiumSource: "Compendium.world.homebrew.Item.abcdefghijklmnop" } }, sources),
+            "a homebrew Dodge from a world compendium");
+          assert.isNull(refreshSourceFor({ type: "spell", name: "Dodge" }, sources), "same name, other type");
+        });
+
+        it("a tier the compendium lacks is kept; a compendium tier the copy lacks is added", function () {
+          const copy = {
+            type: "skill", name: "Running",
+            system: { changes: [], upgrades: [tier(7, [change("rollMode", "evadeBonus", 1)]), tier(10, [change("resource", "move", 10)])] },
+          };
+          const source = {
+            type: "skill", name: "Running",
+            system: { changes: [], upgrades: [tier(5, [change("resource", "move", 5)]), tier(10, [change("resource", "move", 10)])] },
+          };
+          const upgrades = refreshedItemUpdate(copy, source)["system.upgrades"];
+          assert.deepEqual(upgrades.map((t) => t.rankThreshold), [5, 7, 10], "Rank 5 added, in order");
+          assert.equal(upgrades.find((t) => t.rankThreshold === 7).changes[0].target, "evadeBonus", "the homebrew Rank 7 kept");
+          assert.equal(upgrades.find((t) => t.rankThreshold === 5).changes[0].value, "5");
+        });
+
+        it("an Oakhide copy becomes a toggled Spell, and loses its 'apply by hand' note", function () {
+          const note = "<p><em>Note: DR has no temporary/conditional-bonus mechanism in this system - apply this bonus by hand while the buff is active.</em></p>";
+          const copy = { type: "spell", name: "Oakhide", system: { isToggled: false, active: false, description: `<p>Bark.</p>${note}`, changes: [] } };
+          const source = { type: "spell", name: "Oakhide", system: { isToggled: true, changes: [change("resource", "dr", 2)] } };
+          const update = refreshedItemUpdate(copy, source);
+          assert.isTrue(update["system.isToggled"]);
+          assert.notProperty(update, "system.active");
+          assert.notInclude(update["system.description"], "apply this bonus by hand");
+          assert.include(update["system.description"], "<p>Bark.</p>");
+          assert.equal(update["system.changes"][0].target, "dr");
+        });
+      });
+
+      describe("0.6.0: a Character's base DR is 0", function () {
+        useQuenchTimeout(this);
+
+        it("zeroes a Character's saved base DR, once; leaves a Mob's", async function () {
+          const actor = await createTestCharacter("base dr", { system: { dr: 3 } });
+          const mob = await createTestMob("base dr", { system: { dr: 4 } });
+          try {
+            assert.equal(await zeroCharacterBaseDr(actor), 3, "reports the old value");
+            assert.equal(actor._source.system.dr, 0);
+            assert.equal(await zeroCharacterBaseDr(actor), 0, "nothing left to do");
+            assert.equal(await zeroCharacterBaseDr(mob), 0);
+            assert.equal(mob.system.dr, 4);
+          } finally {
+            await deleteTestActor(actor);
+            await deleteTestActor(mob);
+          }
+        });
+      });
+
+      describe("0.6.0: Characters made before the Create Crawler wizard", function () {
+        useQuenchTimeout(this);
+
+        it("is a 0.6.0 step that runs in a world that had the earlier ones", function () {
+          const index = MIGRATIONS.findIndex((m) => m.id === CHARGEN_DONE_MIGRATION_ID);
+          assert.isAtLeast(index, 0);
+          assert.equal(MIGRATIONS[index].version, "0.6.0");
+          assert.isBelow(index, MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID));
+          const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
+          assert.include(p.run.map((m) => m.id), CHARGEN_DONE_MIGRATION_ID);
+        });
+
+        it("marks a Character with Skills as created, once; leaves a blank one, a done one and a Mob", async function () {
+          const built = await createTestCharacter("old crawler");
+          const caster = await createTestCharacter("old caster");
+          const blank = await createTestCharacter("blank crawler");
+          const gearOnly = await createTestCharacter("gear only");
+          const done = await createTestCharacter("wizard crawler", { flags: { "carl-rpg": { chargen: { done: true, kind: "human" } } } });
+          const mob = await createTestMob("old mob");
+          try {
+            await attackSkill(built, "Longsword");
+            await createTestItem(caster, "spell", "Fireball", { name: "Fireball" });
+            await createTestItem(gearOnly, "item", "rope");
+            await createTestItem(done, "skill", "Running", { name: "Running" });
+            await createTestItem(mob, "skill", "Bite", { name: "Bite" });
+
+            assert.isTrue(await markChargenDone(built), "a Skill");
+            assert.isTrue(built.getFlag("carl-rpg", "chargen").done);
+            assert.isTrue(await markChargenDone(caster), "a Spell counts too");
+            assert.isFalse(await markChargenDone(built), "once");
+            assert.isFalse(await markChargenDone(blank), "no Skills: still to be made");
+            assert.isFalse(await markChargenDone(gearOnly), "gear alone isn't a built crawler");
+            assert.isUndefined(blank.getFlag("carl-rpg", "chargen"));
+            assert.isFalse(madeBeforeChargen(done), "already through the wizard");
+            assert.equal(done.getFlag("carl-rpg", "chargen").kind, "human", "its own record kept");
+            assert.isFalse(await markChargenDone(mob));
+          } finally {
+            for (const a of [built, caster, blank, gearOnly, done, mob]) await deleteTestActor(a);
           }
         });
       });

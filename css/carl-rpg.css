@@ -660,19 +660,24 @@
   align-items: center;
   gap: 4px;
 }
+.carl-dialog .carl-dialog-attack-skill .carl-dialog-conditions-list,
+.carl-dialog .carl-dialog-damage-effect .carl-dialog-conditions-list {
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+.carl-dialog .carl-dialog-attack-skill .carl-dialog-conditions-list .carl-dialog-condition,
+.carl-dialog .carl-dialog-damage-effect .carl-dialog-conditions-list .carl-dialog-condition {
+  justify-content: flex-start;
+}
+.carl-dialog .carl-dialog-attack-skill + .carl-dialog-damage-effect {
+  border-top: 1px solid var(--carl-border-soft);
+  margin-top: 6px;
+  padding-top: 6px;
+}
 .carl-dialog .carl-dialog-condition-source {
   opacity: 0.7;
   font-size: 11px;
-}
-.carl-dialog .carl-dialog-roll-mode .form-fields {
-  justify-content: space-between;
-  flex-wrap: nowrap;
-}
-.carl-dialog .carl-dialog-roll-mode .form-fields label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
 }
 .carl-dialog .carl-dialog-preset {
   align-items: center;
@@ -1047,6 +1052,13 @@
 }
 .carl-rpg .items-header .carl-sort-header:hover i.fa-sort {
   opacity: 0.8;
+}
+.carl-rpg .carl-mark-icon {
+  color: var(--carl-text-muted);
+  font-size: 14px;
+}
+.carl-rpg .carl-mark-icon.is-marked {
+  color: var(--carl-accent);
 }
 .carl-rpg .items-list {
   list-style: none;
@@ -1519,6 +1531,8 @@
 }
 .carl-rpg .carl-banked-stat-points {
   margin-top: 4px;
+  margin-inline: 0;
+  min-width: 0;
   border: 1px solid var(--carl-border-soft);
   border-radius: 3px;
   background: var(--carl-panel-bg);
@@ -2011,6 +2025,89 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+.carl-rpg .carl-inventory-layout {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.carl-rpg .carl-inventory-layout > .items-list {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.carl-rpg .carl-equip-panel {
+  flex: 0 0 240px;
+  min-width: 0;
+}
+.carl-rpg .carl-equip-panel fieldset {
+  margin: 0 0 10px;
+}
+.carl-rpg .carl-equip-slot {
+  border: 1px dashed var(--carl-border-soft);
+  border-radius: 3px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-equip-slot.filled {
+  border-style: solid;
+  background: var(--carl-panel-bg);
+  color: var(--color-text-primary);
+}
+.carl-rpg .carl-equip-slot .carl-equip-slot-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-rpg .carl-gear-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas: ". head ." "arms torso gloves" "mainHand legs offHand" ". feet .";
+  gap: 4px;
+}
+.carl-rpg .carl-gear-slot {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  aspect-ratio: 1;
+  padding: 2px;
+  font-size: var(--font-size-11);
+  text-align: center;
+}
+.carl-rpg .carl-gear-slot .carl-gear-icon {
+  width: 60%;
+  aspect-ratio: 1;
+  background-color: currentColor;
+  opacity: 0.6;
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+.carl-rpg .carl-gear-slot img {
+  width: 32px;
+  height: 32px;
+  border: none;
+}
+.carl-rpg .carl-gear-slot .carl-equip-slot-name {
+  width: 100%;
+  max-width: 100%;
+}
+.carl-rpg .carl-gear-slot .carl-slot-clear {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+}
+.carl-rpg .carl-accessories-label {
+  margin: 10px 0 4px;
+}
+.carl-rpg .carl-accessory-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
 .carl-rpg .carl-sheet-columns {
   display: flex;
   flex-wrap: wrap;
@@ -2087,13 +2184,23 @@
   min-width: 0;
 }
 .carl-rpg .carl-details-grid .carl-potions-used {
-  flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.carl-rpg .carl-details-grid .carl-potion-count {
-  display: inline-flex;
+.carl-rpg .carl-details-grid .carl-potion-count > span:first-child {
+  padding-left: 1em;
+}
+.carl-rpg .carl-details-grid .carl-potion-count .carl-potion-values {
+  display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
+  margin-left: auto;
   white-space: nowrap;
+}
+.carl-rpg .carl-details-grid .carl-potion-count .carl-potion-values input {
+  flex: 0 0 auto;
+  text-align: right;
 }
 .carl-rpg .carl-details-grid .carl-personal-space-fields {
   gap: 10px;
@@ -2725,19 +2832,147 @@
   font-size: var(--font-size-12);
   opacity: 0.8;
 }
-.carl-rpg .carl-slot-column {
-  flex: 0 0 9em;
-}
-.carl-rpg .carl-slot-column select {
-  width: 100%;
-}
-.carl-rpg .carl-slot-column .carl-hint {
-  display: block;
-  font-size: var(--font-size-10, 10px);
-}
 .carl-rpg .items-list .item.carl-worn h4 {
   font-weight: bold;
 }
 .carl-rpg .carl-hotlist-pin .fa-star.fas {
   color: var(--carl-gold);
+}
+.carl-rpg .carl-create-crawler {
+  flex: 0 0 auto;
+  width: auto;
+  align-self: center;
+  white-space: nowrap;
+}
+.carl-rpg .carl-chargen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-chargen-steps {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--carl-border-soft);
+}
+.carl-rpg .carl-chargen-steps h2 {
+  margin: 0;
+  border: none;
+}
+.carl-rpg .carl-chargen-steps .carl-chargen-step-count {
+  color: var(--carl-text-muted);
+  font-size: var(--font-size-12);
+}
+.carl-rpg .carl-chargen-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.carl-rpg .carl-chargen-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: center;
+  gap: 6px 10px;
+}
+.carl-rpg .carl-chargen-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-chargen-inline select,
+.carl-rpg .carl-chargen-inline input {
+  flex: 1 1 auto;
+}
+.carl-rpg .carl-chargen-inline button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-chargen-stages {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.carl-rpg .carl-chargen-stage,
+.carl-rpg .carl-chargen-past {
+  margin: 0;
+}
+.carl-rpg .carl-chargen-stage legend .carl-hint,
+.carl-rpg .carl-chargen-past legend .carl-hint {
+  font-weight: normal;
+}
+.carl-rpg .carl-chargen-skills {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+.carl-rpg .carl-chargen-skills li {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  min-width: 0;
+}
+.carl-rpg .carl-chargen-skills label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.carl-rpg .carl-chargen-skills .carl-chargen-skill-placeholder {
+  color: var(--carl-text-muted);
+  opacity: 0.5;
+  padding-left: 4px;
+}
+.carl-rpg .carl-chargen-skills .carl-chargen-taken {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.carl-rpg .carl-chargen-stats {
+  width: auto;
+  margin: 0;
+}
+.carl-rpg .carl-chargen-stats th {
+  text-align: left;
+  padding-right: 12px;
+}
+.carl-rpg .carl-chargen-stats td {
+  padding: 2px 8px;
+}
+.carl-rpg .carl-chargen-past textarea {
+  width: 100%;
+  margin-top: 4px;
+}
+.carl-rpg .carl-chargen-sets {
+  flex-wrap: wrap;
+}
+.carl-rpg .carl-chargen-review {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.carl-rpg .carl-chargen-problems[hidden] {
+  display: none;
+}
+.carl-rpg .carl-chargen-problems {
+  list-style: none;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 3px;
+  background: var(--carl-panel-bg);
+  color: var(--carl-accent);
+}
+.carl-rpg .carl-chargen-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.carl-rpg .carl-chargen-nav button {
+  flex: 0 0 auto;
+  width: auto;
 }

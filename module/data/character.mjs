@@ -181,6 +181,18 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     if (source.story && typeof source.story === "object") source.story = storyToHtml(source.story);
   }
 
+  /**
+   * A crawler has no DR of its own: all of it comes from its Race, Class,
+   * gear, Skills, Spells and Buffs (resource "dr" changes). The base is
+   * locked at 0 here, in memory - a value saved before 0.6.0 is zeroed in
+   * the database by the 0.6.0 base DR migration (helpers/migration.mjs).
+   * @override
+   */
+  prepareBaseData() {
+    super.prepareBaseData();
+    this.dr = 0;
+  }
+
   prepareDerivedData() {
     super.prepareDerivedData();
     if (!this.stats) return;

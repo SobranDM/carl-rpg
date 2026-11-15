@@ -9,6 +9,7 @@ import {
   createTestItem,
   deleteTestActor,
   deleteTestCombat,
+  dropOnSheet,
   openDialog,
   pressDialog,
   settle,
@@ -25,12 +26,15 @@ async function startedCombat(actor) {
   return combat;
 }
 
-/** Pick a value in a rendered sheet's Slot select for an item, as a user would. */
-async function pickSlot(sheet, item, value) {
-  const select = sheet.element.querySelector(`select.carl-slot-select[data-slot-for="${item.id}"]`);
-  select.value = value;
-  select.dispatchEvent(new Event("change", { bubbles: true }));
-  await settle(150);
+/** A rendered sheet's Equipment Doll slot ("gear"/"head", "accessory"/"0"). */
+function dollSlot(sheet, type, key) {
+  return sheet.element.querySelector(`.carl-equip-panel [data-slot-type="${type}"][data-slot-key="${key}"]`);
+}
+
+/** Drop an owned item onto a doll slot, as dragging its inventory row would. */
+async function dropOnDoll(sheet, type, key, item) {
+  await waitFor(() => dollSlot(sheet, type, key), { message: `no ${type} slot ${key}` });
+  await dropOnSheet(sheet, dollSlot(sheet, type, key), item.toDragData());
 }
 
 /** Run `fn`, returning the chat messages it posted (then deleting them). */
@@ -477,10 +481,32 @@ export default function register(quench) {
         });
       });
 
-      describe("Inventory Slot column", function () {
+      describe("Inventory Equipment Doll", function () {
         useQuenchTimeout(this);
 
-        it("wears an item in a gear slot, moves it, makes it an Accessory, and takes it off; worn gear lists first", async function () {
+        it("stays its own width: a long item name in a slot is cut off, not allowed to widen the doll", async function () {
+          const actor = await createTestCharacter("doll width");
+          const sheet = actor.sheet;
+          try {
+            const coat = await createTestItem(actor, "item", "coat", {
+              name: "Apparel appropriate for your location's climate and an orange safety jacket",
+            });
+            await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, coat);
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            sheet.changeTab("items", "primary");
+            await settle(100);
+            const panel = sheet.element.querySelector(".carl-equip-panel");
+            const slot = sheet.element.querySelector('.carl-equip-panel [data-slot-key="mainHand"]');
+            assert.isAtMost(panel.getBoundingClientRect().width, 241, "the doll keeps its 240px");
+            assert.isAtMost(slot.getBoundingClientRect().height, 90, "and its slots stay small squares");
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a drop wears gear in a slot, another moves it, the Accessories slot takes it, (x) takes it off; worn gear lists first", async function () {
           const actor = await createTestCharacter("slots");
           const sheet = actor.sheet;
           try {
@@ -488,22 +514,26 @@ export default function register(quench) {
             const helm = await createTestItem(actor, "item", "zzz helm");
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
+            assert.notExists(sheet.element.querySelector("select.carl-slot-select"), "the Slot column is gone");
 
-            await pickSlot(sheet, helm, "head");
+            await dropOnDoll(sheet, "gear", "head", helm);
             await waitFor(() => actor.system.gearSlots.head === helm.id, { message: "never worn" });
             assert.isTrue(actor.items.get(helm.id).system.equipped);
+            assert.equal(actor.items.size, 2, "worn, not copied");
             await waitFor(() => sheet.element.querySelector('section[data-tab="items"] li.item[data-item-id]')?.dataset.itemId === helm.id,
               { message: "worn gear should list first" });
+            await waitFor(() => dollSlot(sheet, "gear", "head")?.classList.contains("filled"), { message: "the doll never showed it" });
 
-            await pickSlot(sheet, helm, "torso");
+            await dropOnDoll(sheet, "gear", "torso", helm);
             await waitFor(() => actor.system.gearSlots.torso === helm.id);
             assert.equal(actor.system.gearSlots.head, "", "moved, not copied");
 
-            await pickSlot(sheet, helm, "accessory");
+            await dropOnDoll(sheet, "accessory", "0", helm);
             await waitFor(() => actor.system.accessories.includes(helm.id));
             assert.equal(actor.system.gearSlots.torso, "");
 
-            await pickSlot(sheet, helm, "");
+            await waitFor(() => dollSlot(sheet, "accessory", "0")?.querySelector(".carl-slot-clear"), { message: "no (x)" });
+            dollSlot(sheet, "accessory", "0").querySelector(".carl-slot-clear").click();
             await waitFor(() => !actor.items.get(helm.id).system.equipped, { message: "never taken off" });
             assert.notInclude(actor.system.accessories, helm.id);
           } finally {
@@ -512,7 +542,7 @@ export default function register(quench) {
           }
         });
 
-        it("'Worn (no slot)' takes a Hotlist item out of the Hotlist and hides its star", async function () {
+        it("the Equipped box wears gear with no slot: out of the Hotlist, star hidden", async function () {
           const actor = await createTestCharacter("worn");
           const sheet = actor.sheet;
           try {
@@ -520,7 +550,7 @@ export default function register(quench) {
             await placeInHotlist(actor, 0, cloak);
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            await pickSlot(sheet, cloak, "worn");
+            sheet.element.querySelector(`li.item[data-item-id="${cloak.id}"] .carl-equip-toggle`).click();
             await waitFor(() => !isInHotlist(actor, cloak), { message: "still in the Hotlist" });
             assert.isTrue(actor.items.get(cloak.id).system.equipped);
             await waitFor(() => !sheet.element.querySelector(`li.item[data-item-id="${cloak.id}"] .carl-hotlist-pin`),

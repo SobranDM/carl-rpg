@@ -134,20 +134,30 @@ CARLRPG.weaponSkills = [
 CARLRPG.weaponlessAttackSkills = ["Improvised Weapons", "Bite", "Back Claw", "Slice Attack"];
 
 /**
- * Worn gear slots - the Inventory's Slot column (items-list.hbs), in the
- * order it lists them. Each holds an owned Item's id
- * (system.gearSlots.<key>, helpers/equip-slots.mjs).
+ * Worn gear slots - the Inventory's Equipment Doll (items-list.hbs). Each
+ * holds an owned Item's id (system.gearSlots.<key>, helpers/equip-slots.mjs);
+ * `icon` is the empty-slot art (game-icons.net, assets/gear-slots/
+ * CREDITS.md). The doll places each slot by its key as a CSS grid-area
+ * (_crawler-pages.scss's .carl-gear-grid), so this order is only the
+ * order other lists use.
  */
 CARLRPG.gearSlots = {
-  mainHand: { label: "CARLRPG.GearSlot.MainHand" },
-  offHand: { label: "CARLRPG.GearSlot.OffHand" },
-  head: { label: "CARLRPG.GearSlot.Head" },
-  torso: { label: "CARLRPG.GearSlot.Torso" },
-  arms: { label: "CARLRPG.GearSlot.Arms" },
-  gloves: { label: "CARLRPG.GearSlot.Gloves" },
-  legs: { label: "CARLRPG.GearSlot.Legs" },
-  feet: { label: "CARLRPG.GearSlot.Feet" },
+  mainHand: { label: "CARLRPG.GearSlot.MainHand", icon: gearIcon("mainHand") },
+  offHand: { label: "CARLRPG.GearSlot.OffHand", icon: gearIcon("offHand") },
+  head: { label: "CARLRPG.GearSlot.Head", icon: gearIcon("head") },
+  torso: { label: "CARLRPG.GearSlot.Torso", icon: gearIcon("torso") },
+  arms: { label: "CARLRPG.GearSlot.Arms", icon: gearIcon("arms") },
+  gloves: { label: "CARLRPG.GearSlot.Gloves", icon: gearIcon("gloves") },
+  legs: { label: "CARLRPG.GearSlot.Legs", icon: gearIcon("legs") },
+  feet: { label: "CARLRPG.GearSlot.Feet", icon: gearIcon("feet") },
 };
+
+/** Empty accessory slot art, the same set as CARLRPG.gearSlots. */
+CARLRPG.accessoryIcon = gearIcon("accessory");
+
+function gearIcon(name) {
+  return `systems/carl-rpg/assets/gear-slots/${name}.svg`;
+}
 
 /**
  * Fixed slot counts for the Character's free-text list fields, matching the

@@ -351,7 +351,9 @@ export async function importCrawlerForgeCrawler(exportJson) {
     }
   }
 
-  const actor = await Actor.create(data.actor);
+  const actor = await Actor.create(foundry.utils.mergeObject(data.actor, {
+    flags: { "carl-rpg": { chargen: { done: true, imported: true } } },
+  }, { inplace: false }));
   const [race, cls] = [data.race, data.class];
   // An export with its own Size keeps it: the Race mustn't reset it
   // (helpers/size.mjs). Without one, the Race's Size applies.

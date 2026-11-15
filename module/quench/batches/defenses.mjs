@@ -119,20 +119,34 @@ export default function register(quench) {
       describe("DR", function () {
         useQuenchTimeout(this);
 
-        it("Iron Skin doubles the whole DR: base and Race DR", async function () {
-          const actor = await createTestCharacter("dr x2", { system: { dr: 2 } });
+        it("a crawler's base DR is 0, whatever is saved: its DR is only its bonuses", async function () {
+          const actor = await createTestCharacter("dr locked", { system: { dr: 5 } });
+          try {
+            assert.equal(actor.system.dr, 0);
+            assert.equal(actor.system.drEffective, 0);
+            assert.equal(actor._source.system.dr, 5, "the saved value is left for the 0.6.0 migration");
+            await race(actor, "Tigran", [change("resource", "dr", 1)]);
+            assert.equal(actor.system.drEffective, 1);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("Iron Skin doubles the whole DR: Race and gear DR", async function () {
+          const actor = await createTestCharacter("dr x2");
           try {
             await race(actor, "Tigran", [change("resource", "dr", 1)]);
+            await gear(actor, "Helm", [change("resource", "dr", 2)], { isArmor: true });
             assert.equal(actor.system.drEffective, 3);
             await actor.update({ "system.conditions": [{
               key: "custom", label: "Iron Skin", stacks: 1, source: "Iron Skin Potion",
               changes: [change("resource", "dr", 2, "multiply")],
             }] });
-            assert.equal(actor.system.drEffective, 6, "(2 + 1) x 2");
-            assert.equal(actor.system.drBonus, 4, "shown as '= 6' next to the base 2");
+            assert.equal(actor.system.drEffective, 6, "(1 + 2) x 2");
             const tip = describeDefenses(actor.system).dr.tooltip;
-            assert.include(tip, "Base 2");
+            assert.include(tip, "Base 0");
             assert.include(tip, "Tigran +1");
+            assert.include(tip, "Helm +2");
             assert.include(tip, "Iron Skin ×2");
           } finally {
             await deleteTestActor(actor);

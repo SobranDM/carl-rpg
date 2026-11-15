@@ -102,7 +102,10 @@ export async function assignItemToSlot(actor, { slotType, slotKey }, item, { dur
   // The cap only refuses a drop that adds an accessory past it - a list
   // already over (old data) must not block gear-slot drops or swaps.
   const max = CONFIG.CARLRPG.characterListSlots.accessories;
-  if (accessories.length > max && accessories.length > wornAccessories) return;
+  if (accessories.length > max && accessories.length > wornAccessories) {
+    ui.notifications?.warn(game.i18n.format("CARLRPG.Actor.AccessoriesFull", { max }));
+    return;
+  }
 
   const hotlist = hotlistWithout(actor, item.id);
   await actor.update({

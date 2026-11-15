@@ -231,20 +231,6 @@
     }
   }
 
-  // Inventory: where each gear item is worn.
-  .carl-slot-column {
-    flex: 0 0 9em;
-
-    select {
-      width: 100%;
-    }
-
-    .carl-hint {
-      display: block;
-      font-size: var(--font-size-10, 10px);
-    }
-  }
-
   .items-list .item.carl-worn h4 {
     font-weight: bold;
   }

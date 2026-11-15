@@ -9,9 +9,11 @@
 
     <div class="carl-abilities-main">
       {{!-- Defenses used every round: the Evade roll (DEX Mod + Evade
-            bonuses, shown as +N, then any dice such as +1d4), then DR, Move
-            and Step, each an editable base that shows "= N" when items or
-            Buffs change it. Hovering names the sources (bonus-sources.mjs).
+            bonuses, shown as +N, then any dice such as +1d4), then DR - only
+            what the Race, Class, gear and Buffs give (a crawler's base DR is
+            0, character.mjs) - and Move and Step, each an editable base that
+            shows "= N" when items or Buffs change it. Hovering names the
+            sources (bonus-sources.mjs).
             A Move or Step a Debuff blocks (Held...) is struck through.
             Resistances come from the Race, Class, gear and Buffs - the button
             lists them, read-only. --}}
@@ -25,10 +27,7 @@
           </button>
           <label class="carl-defense-field" title="{{defenses.dr.tooltip}}">
             <span class="resource-label">{{localize "CARLRPG.Actor.DrShort"}}</span>
-            <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
-            {{#if defenses.dr.shown}}
-            <span class="carl-stat-value">= {{system.drEffective}}</span>
-            {{/if}}
+            <span class="carl-stat-value carl-dr-value">{{system.drEffective}}</span>
           </label>
           <label class="carl-defense-field{{#if defenses.move.blocked}} carl-defense-blocked{{/if}}" title="{{defenses.move.tooltip}}">
             <span class="resource-label">{{localize "CARLRPG.Actor.Move"}}</span>

@@ -44,6 +44,19 @@
     }
   }
 
+  // A Skill, Spell or Damage Effect's Advancement mark (the Skills tab):
+  // marked is a solid accent box with the check cut out of it, unmarked an
+  // outline - told apart by shape and color, not a check drawn in a color
+  // close to the box's.
+  .carl-mark-icon {
+    color: var(--carl-text-muted);
+    font-size: 14px;
+
+    &.is-marked {
+      color: var(--carl-accent);
+    }
+  }
+
   .items-list {
     list-style: none;
     margin: 0;
