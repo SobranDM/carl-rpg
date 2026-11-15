@@ -1,0 +1,39 @@
+{{!-- The phased PvE round's progress (module/apps/combat-tracker.mjs). --}}
+<section class="carl-phase-bar{{#unless carl.showBar}} carl-phase-bar-empty{{/unless}}">
+    {{#if carl.showSurpriseToggle}}
+    <label class="carl-surprise-toggle">
+        <input type="checkbox" data-action="toggleSurprise" {{checked carl.surpriseChecked}}>
+        <span>{{localize "CARLRPG.Phase.SurpriseToggle"}}</span>
+    </label>
+    {{/if}}
+    {{#if carl.phased}}
+    {{#if carl.surprise}}
+    <div class="carl-phase-surprise">
+        <i class="fa-solid fa-bolt" inert></i> {{localize "CARLRPG.Phase.Step.surprise"}}
+    </div>
+    {{/if}}
+    <ol class="carl-phase-steps plain" aria-label="{{localize "CARLRPG.Phase.BarLabel"}}">
+        {{#each carl.steps}}
+        <li class="carl-phase-step{{#if active}} active{{/if}}{{#if done}} done{{/if}}" data-step="{{key}}"
+            {{#if active}}aria-current="step"{{/if}}>
+            <span class="carl-phase-num">{{number}}</span>
+            <span class="carl-phase-label">{{label}}</span>
+        </li>
+        {{/each}}
+    </ol>
+    {{#if carl.showDeclared}}
+    <div class="carl-declared-list">
+        <div class="carl-declared-title">{{localize "CARLRPG.Declare.ListTitle"}}</div>
+        {{#each carl.declared}}
+        <div class="carl-declared-item">
+            <strong>{{mob}}</strong>: <span>{{label}}</span>
+            <button type="button" class="inline-control icon fa-solid fa-xmark" data-action="removeDeclaration"
+                    data-id="{{id}}" data-tooltip aria-label="{{localize "CARLRPG.Declare.Remove"}}"></button>
+        </div>
+        {{else}}
+        <div class="carl-declared-empty">{{localize "CARLRPG.Declare.NoneYet"}}</div>
+        {{/each}}
+    </div>
+    {{/if}}
+    {{/if}}
+</section>

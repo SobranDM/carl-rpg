@@ -1466,6 +1466,134 @@
       "BadDamage": "Couldn't roll the damage formula \"{formula}\".",
       "FreeEvadeNote": "Disadvantaged Attack: the target gets a free Evade Check. If it fails, they may still spend an Action to Evade again."
     },
+    "Phase": {
+      "Setting": {
+        "Name": "Phased combat",
+        "Hint": "Run fights against Mobs in the rulebook's phases (Mob Declaration, Crawler Reaction, Resolution, Crawler Actions, Clean Up), advanced by the GM from the Combat Tracker. Off: combat uses Foundry's turns, and Mob Attacks resolve as soon as they're rolled. Fights between crawlers only always use initiative."
+      },
+      "BarLabel": "Combat phases",
+      "Bar": {
+        "declare": "Declare",
+        "react": "React",
+        "resolve": "Resolve",
+        "act": "Act",
+        "cleanup": "Clean Up"
+      },
+      "Step": {
+        "surprise": "Surprise Round",
+        "declare": "Mob Action Declaration",
+        "react": "Crawler Reaction Phase",
+        "resolve": "Mob Attack Resolution",
+        "act": "Crawler Action Phase"
+      },
+      "Next": {
+        "surprise": "Begin Declaration",
+        "declare": "Start Reaction",
+        "react": "Lock Results",
+        "resolve": "Crawler Actions",
+        "act": "End Round"
+      },
+      "Notice": {
+        "surprise": "The crawlers surprised their foes: each crawler gets one free Action before the Mobs act.",
+        "declare": "The GM declares what each Mob is doing: its movement, its Attacks and their targets.",
+        "react": "Use Interrupts against the declared Attacks: Evade, Taunt, Catcher, Heal, Intervene.",
+        "resolve": "The Mobs' Attacks land on everyone who didn't Evade them.",
+        "act": "Spend your remaining Actions, in any order."
+      },
+      "RoundTitle": "Round {round}",
+      "Speaker": "Combat",
+      "Previous": "Previous Phase",
+      "SurpriseToggle": "Crawlers surprise the Mobs",
+      "Group": {
+        "Mobs": "Mobs",
+        "Crawlers": "Crawlers"
+      },
+      "GMOnly": "Only a GM can change the combat phase.",
+      "CannotRewind": "Damage from this round has already been applied - the phase can't go back.",
+      "FinishRoundFirst": "Finish this round's phases first: the round ends from the Crawler Action Phase."
+    },
+    "Declare": {
+      "Title": "Declare Attacks",
+      "TargetFirst": "Target the crawlers this Mob attacks (T), then pick an Attack.",
+      "AttackHint": "Declare this Attack against your targets. Shift-click skips the dialog.",
+      "ToHit": "to hit {value}",
+      "NoAttacks": "This Mob has no Attacks on its sheet.",
+      "NoTargets": "Target the crawlers this Mob attacks first.",
+      "Remove": "Withdraw this declaration",
+      "Summary": "{attack} → {targets}",
+      "Recorded": "Declared - {mob}: {summary}",
+      "ListTitle": "Declared this round",
+      "NoneYet": "No Attacks declared yet.",
+      "GMOnly": "Only the GM can declare Mob Attacks."
+    },
+    "Reaction": {
+      "Title": "Mob Attacks - Round {round}",
+      "DamageTitle": "Mob Attack Damage - Round {round}",
+      "Stage": {
+        "taunt": "Taunts and Catches first - Evades open once the GM calls them.",
+        "evade": "Evades are open.",
+        "locked": "Results locked."
+      },
+      "Op": {
+        "taunt": "Taunt",
+        "catch": "Catch",
+        "evade": "Evade",
+        "intervene": "Intervene",
+        "reroll": "AI Reroll",
+        "openEvades": "Open Evades",
+        "lock": "Lock Results"
+      },
+      "Status": {
+        "Incoming": "Incoming",
+        "Miss": "Misses",
+        "FreeEvaded": "Missed (free Evade)",
+        "Caught": "Caught - can't be Evaded",
+        "Evaded": "Evaded",
+        "EvadedHalf": "Evaded - half damage",
+        "Hit": "Hits"
+      },
+      "FreeEvade": "Free Evade",
+      "EvadeUsed": "Evade used",
+      "EvadeDifficulty": "Evade {difficulty}",
+      "Vs": "vs. {difficulty}",
+      "Dice": "d20: {dice}",
+      "InterveneLine": "+{value} Intervene ({name})",
+      "RerolledFrom": "AI Reroll - was {total} (d20 {natural})",
+      "RerollBreakdown": "AI Reroll: {formula} = {total}",
+      "TauntOf": "Taunt vs. {mob}",
+      "TauntPulled": "Success - {count} Attack(s) of {mob} pulled",
+      "TauntFailed": "Failed - {mob}'s Attacks stay put",
+      "TauntedFrom": "Taunted from {name}",
+      "CaughtFor": "Caught for {name}",
+      "FreeEvadeOf": "free Evade vs. {attack}",
+      "EvadeOf": "Evade vs. {attack}",
+      "Choose": "Choose",
+      "Who": "Who acts",
+      "WhichMob": "Which Mob",
+      "WhichAttack": "Which Attack",
+      "WhichCheck": "Which Check",
+      "WhichAlly": "Help whom",
+      "Intervened": "{name} Intervenes: +{value} to {target}'s Check.",
+      "LockWarning": "{names} haven't Evaded the Attacks still landing on them - they'll take the hits. Lock the results anyway?"
+    },
+    "Resolve": {
+      "Attack": "Attack",
+      "Damage": "Damage",
+      "Slots": "Slots",
+      "Missed": "Missed",
+      "Evaded": "Evaded",
+      "NoDamage": "No damage",
+      "TargetGone": "Target no longer exists",
+      "Waiting": "Not rolled yet ({formula})",
+      "Dying": "Dying: -1 round",
+      "ShieldSlots": "+{count} Shield",
+      "RolledTip": "Rolled {rolled}; {raw} against this target, {final} after DR and Resistances",
+      "EvadedHalf": "Evaded - half",
+      "HitsVehicle": "Hits {vehicle}",
+      "MinorInjury": "{name} gains a Minor Injury after combat (Evade failed by 10 or more).",
+      "MajorInjury": "{name} gains a Major Injury after combat (Natural 1 on the Evade).",
+      "UnrolledWarning": "{count} Mob Attack(s) haven't had their damage rolled. Roll them now and move on to the Crawler Action Phase?"
+    },
     "RoundEnd": {
       "Title": "End of Round {round}",
       "Subtitle": "Debuffs",

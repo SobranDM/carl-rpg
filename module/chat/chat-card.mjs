@@ -48,7 +48,7 @@ async function renderShell({
  */
 export async function createRollMessage({
   rolls = [], rollMeta = [], extraRollRows = [], title, subtitle, img, badge, body = "", footer, description = "",
-  actor, token, flags = {}, whisper, messageMode,
+  actor, token, flags = {}, whisper, messageMode, speaker,
 } = {}) {
   // v14: ChatMessage#applyRollMode/CONST.DICE_ROLL_MODES are deprecated in
   // favor of ChatMessage.applyMode's "public"|"self"|"gm"|"blind" modes.
@@ -56,7 +56,7 @@ export async function createRollMessage({
   const isPrivate = mode === "blind";
   const content = await renderShell({ title, subtitle, img, badge, body, footer, rolls, rollMeta, extraRollRows, description, isPrivate });
   const messageData = {
-    speaker: getCarlSpeaker(actor, token),
+    speaker: speaker ?? getCarlSpeaker(actor, token),
     rolls,
     content,
     sound: CONFIG.sounds.dice,
@@ -71,11 +71,11 @@ export async function createRollMessage({
  * Create a non-roll card (item descriptions, GM notices, etc.).
  */
 export async function createCardMessage({
-  title, subtitle, img, badge, body = "", footer, actor, token, flags = {}, whisper,
+  title, subtitle, img, badge, body = "", footer, actor, token, flags = {}, whisper, speaker,
 } = {}) {
   const content = await renderShell({ title, subtitle, img, badge, body, footer });
   const messageData = {
-    speaker: getCarlSpeaker(actor, token),
+    speaker: speaker ?? getCarlSpeaker(actor, token),
     content,
     whisper,
     flags: { "carl-rpg": { chatCard: true, kind: "card", ...flags } },

@@ -1,0 +1,540 @@
+// The phased PvE round: the Combat Tracker's phase bar and grouped list
+// (module/apps/combat-tracker.mjs) and the phase notices in chat (module/
+// helpers/combat-phases.mjs). Neither lives inside a .carl-rpg element, so -
+// like _chat.scss - these selectors are top-level and re-declare the palette.
+@use '../utils/palette';
+
+.carl-phase-bar {
+  @include palette.variables;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid var(--carl-border-soft);
+
+  &.carl-phase-bar-empty {
+    display: none;
+  }
+
+  .carl-surprise-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-12);
+    cursor: pointer;
+
+    input {
+      margin: 0;
+    }
+  }
+
+  .carl-phase-surprise {
+    text-align: center;
+    font-weight: 700;
+    font-size: var(--font-size-12);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--carl-gold);
+  }
+
+  .carl-phase-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    margin: 0;
+  }
+
+  .carl-phase-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3px 2px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    font-size: var(--font-size-11);
+    line-height: 1.2;
+    text-align: center;
+    color: var(--carl-text-muted);
+    background: var(--carl-input-bg);
+
+    .carl-phase-num {
+      font-weight: 700;
+    }
+
+    &.done {
+      opacity: 0.55;
+    }
+
+    &.active {
+      color: var(--carl-header-text);
+      background: var(--carl-accent);
+      border-color: var(--carl-accent);
+      font-weight: 700;
+      opacity: 1;
+    }
+  }
+}
+
+.carl-phase-bar {
+  .carl-declared-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--font-size-12);
+  }
+
+  .carl-declared-title {
+    font-weight: 700;
+    font-size: var(--font-size-11);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-declared-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    span {
+      flex: 1;
+    }
+  }
+
+  .carl-declared-empty {
+    font-style: italic;
+    color: var(--carl-text-muted);
+  }
+}
+
+// The GM's Declare HUD (module/apps/declare-hud.mjs): bottom of the column
+// beside the sidebar, under the chat notifications.
+#carl-declare-hud {
+  @include palette.variables;
+  pointer-events: auto;
+  align-self: flex-end;
+  // Core gives every .application `position: absolute`, which takes it out of
+  // the column's flex flow (and leaves it at the top). Back in the flow, and
+  // ordered after the chat notifications (`order: 99; flex: 1` - they fill
+  // the column), it sits at the bottom, under them.
+  position: relative;
+  order: 100;
+  flex: 0 0 auto;
+  width: 260px;
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 6px;
+  background: var(--carl-bg-solid);
+  color: var(--carl-text);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+
+  .carl-declare-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 8px 8px;
+  }
+
+  .carl-declare-title {
+    font-weight: 700;
+    font-size: var(--font-size-12);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--carl-header-text);
+    background: var(--carl-header-bg);
+    border-radius: 3px;
+    padding: 2px 6px;
+  }
+
+  .carl-declare-targets {
+    font-size: var(--font-size-12);
+
+    &.none {
+      font-style: italic;
+      color: var(--carl-text-muted);
+    }
+  }
+
+  .carl-declare-mob {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--carl-border-soft);
+  }
+
+  .carl-declare-mob-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+
+    img {
+      width: 24px;
+      height: 24px;
+      border: none;
+      object-fit: contain;
+    }
+  }
+
+  .carl-declare-attacks {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    button {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      height: auto;
+      padding: 3px 6px;
+      line-height: 1.2;
+      text-align: left;
+    }
+  }
+
+  .carl-declare-attack-name {
+    font-weight: 700;
+  }
+
+  .carl-declare-attack-stats {
+    font-size: var(--font-size-11);
+    color: var(--carl-text-muted);
+  }
+
+  .carl-declare-empty {
+    margin: 0;
+    font-style: italic;
+    font-size: var(--font-size-12);
+    color: var(--carl-text-muted);
+  }
+
+  .carl-declare-done {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    font-size: var(--font-size-12);
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .fa-check {
+        color: #2ecc40;
+      }
+
+      span {
+        flex: 1;
+      }
+
+      button {
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+      }
+    }
+  }
+}
+
+.combat-tracker.carl-grouped {
+  .carl-combat-group {
+    @include palette.variables;
+    padding: 4px 8px 2px;
+    font-size: var(--font-size-11);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--carl-text-muted);
+    border-bottom: 1px solid var(--carl-border-soft);
+  }
+}
+
+.chat-message:has(.carl-phase-notice) {
+  @include palette.variables;
+  border-color: var(--carl-accent);
+}
+
+.carl-phase-notice {
+  text-align: center;
+
+  strong {
+    display: block;
+    font-size: var(--font-size-14);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .carl-phase-notice-step {
+    display: block;
+    font-weight: 700;
+    color: var(--carl-accent-dim);
+  }
+
+  p {
+    margin: 4px 0 0;
+    font-size: var(--font-size-12);
+  }
+}
+
+// The Reaction card and the Damage card (module/chat/reaction-card.mjs,
+// module/helpers/reaction-resolve.mjs). Inside a .carl-chat-card, so the
+// palette is already declared on the message (_chat.scss).
+.carl-reaction {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-12);
+
+  .carl-reaction-stage {
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-style: italic;
+    background: var(--carl-input-bg);
+    color: var(--carl-text-muted);
+
+    &[data-stage="evade"] {
+      color: var(--carl-header-text);
+      background: color-mix(in srgb, var(--carl-accent) 35%, transparent);
+    }
+
+    &[data-stage="locked"] {
+      font-weight: 700;
+    }
+  }
+
+  .carl-reaction-section {
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    overflow: hidden;
+
+    > header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 6px;
+      font-weight: 700;
+      color: var(--carl-header-text);
+      background: var(--carl-header-bg);
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+    }
+  }
+
+  .carl-evaded-tag {
+    margin-left: auto;
+    font-size: var(--font-size-11);
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  .carl-hit,
+  .carl-taunt,
+  .carl-damage-lines li {
+    padding: 3px 6px;
+    border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 40%, transparent);
+
+    &:first-child {
+      border-top: none;
+    }
+  }
+
+  .carl-hit-head {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+
+    > :first-child {
+      flex: 1;
+    }
+  }
+
+  .carl-hit-difficulty {
+    color: var(--carl-text-muted);
+  }
+
+  .carl-hit-status {
+    font-weight: 700;
+    text-align: right;
+  }
+
+  .carl-hit-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+
+    span {
+      padding: 0 4px;
+      border-radius: 3px;
+      font-size: var(--font-size-11);
+      background: var(--carl-input-bg);
+    }
+  }
+
+  // A Mob Attack's printed range and effect.
+  .carl-attack-details {
+    display: flex;
+    flex-direction: column;
+    margin-top: 1px;
+  }
+
+  .carl-attack-range {
+    font-size: var(--font-size-11);
+    color: var(--carl-text-muted);
+  }
+
+  .carl-attack-effect {
+    font-size: var(--font-size-11);
+    font-style: italic;
+  }
+
+  .carl-check {
+    margin-top: 2px;
+
+    summary {
+      cursor: pointer;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      list-style: none;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      &::before {
+        content: "\25B8";
+        color: var(--carl-text-muted);
+      }
+    }
+
+    &[open] summary::before {
+      content: "\25BE";
+    }
+
+    .carl-check-kind {
+      color: var(--carl-text-muted);
+    }
+
+    .carl-check-degree {
+      margin-left: auto;
+      padding: 0 4px;
+      border-radius: 3px;
+      font-size: var(--font-size-11);
+      font-weight: 700;
+
+      &.hit { background: rgba(46, 204, 64, 0.25); }
+      &.warn { background: rgba(232, 84, 44, 0.25); }
+      &.miss { background: rgba(122, 18, 32, 0.6); }
+    }
+
+    .carl-check-detail {
+      padding: 2px 0 2px 12px;
+      font-size: var(--font-size-11);
+      color: var(--carl-text-muted);
+    }
+  }
+
+  .carl-reaction-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+
+    button {
+      flex: 1 1 30%;
+      white-space: nowrap;
+      font-size: var(--font-size-12);
+      line-height: 1.6;
+    }
+
+    button[data-op="lock"] {
+      flex-basis: 100%;
+    }
+  }
+}
+
+// The Damage card's tables (module/helpers/reaction-resolve.mjs).
+.carl-reaction-damage {
+  .carl-damage-table {
+    width: 100%;
+    margin: 0;
+    border-collapse: collapse;
+    border: 1px solid var(--carl-border-soft);
+
+    caption {
+      padding: 2px 6px;
+      font-weight: 700;
+      text-align: left;
+      color: var(--carl-header-text);
+      background: var(--carl-header-bg);
+      border-radius: 4px 4px 0 0;
+    }
+
+    th {
+      padding: 2px 6px;
+      font-size: var(--font-size-11);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      text-align: left;
+      color: var(--carl-text-muted);
+      background: var(--carl-input-bg);
+    }
+
+    th:nth-child(n + 2),
+    td.carl-damage-amount,
+    td.carl-damage-slots {
+      width: 22%;
+      text-align: center;
+    }
+
+    td {
+      padding: 3px 6px;
+      vertical-align: middle;
+      border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 40%, transparent);
+    }
+
+    td.carl-damage-amount {
+      font-weight: 700;
+      font-size: var(--font-size-14);
+    }
+
+    td.carl-damage-status {
+      text-align: center;
+      font-style: italic;
+      color: var(--carl-text-muted);
+    }
+
+    .carl-damage-roll-button {
+      width: 100%;
+      font-style: normal;
+      line-height: 1.6;
+    }
+
+    .carl-damage-tag {
+      display: inline-block;
+      margin: 1px 3px 0 0;
+      padding: 0 4px;
+      border-radius: 3px;
+      font-size: var(--font-size-11);
+      background: var(--carl-input-bg);
+    }
+
+    .carl-damage-shield {
+      font-size: var(--font-size-11);
+      color: var(--carl-text-muted);
+    }
+  }
+
+  .carl-damage-notes {
+    margin: 2px 0 0;
+    padding: 0 6px;
+    font-size: var(--font-size-11);
+    color: var(--carl-text-muted);
+  }
+}

@@ -1,0 +1,47 @@
+{{!-- The Declare HUD (module/apps/declare-hud.mjs). --}}
+<div class="carl-declare-body">
+    <header class="carl-declare-title">
+        <i class="fa-solid fa-crosshairs" inert></i> {{localize "CARLRPG.Declare.Title"}}
+    </header>
+    <div class="carl-declare-targets{{#unless targets}} none{{/unless}}">
+        {{#if targets}}
+        <i class="fa-solid fa-arrow-right" inert></i> {{targets}}
+        {{else}}
+        {{localize "CARLRPG.Declare.TargetFirst"}}
+        {{/if}}
+    </div>
+    {{#each mobs}}
+    <section class="carl-declare-mob" data-token-id="{{tokenId}}">
+        <div class="carl-declare-mob-name">
+            <img src="{{img}}" alt="" loading="lazy"> <span>{{name}}</span>
+        </div>
+        <div class="carl-declare-attacks">
+            {{#each attacks}}
+            <button type="button" data-action="declare" data-index="{{index}}"
+                    data-tooltip="{{localize "CARLRPG.Declare.AttackHint"}}">
+                <span class="carl-declare-attack-name">{{name}}</span>
+                <span class="carl-declare-attack-stats">
+                    {{#if toHit includeZero=true}}{{localize "CARLRPG.Declare.ToHit" value=toHit}}{{/if}}
+                    {{#if damage}} · {{damage}}{{/if}}
+                    {{#if isArea}} · <i class="fa-solid fa-burst" inert></i>{{/if}}
+                </span>
+            </button>
+            {{else}}
+            <p class="carl-declare-empty">{{localize "CARLRPG.Declare.NoAttacks"}}</p>
+            {{/each}}
+        </div>
+        {{#if declared.length}}
+        <ul class="carl-declare-done plain">
+            {{#each declared}}
+            <li>
+                <i class="fa-solid fa-check" inert></i>
+                <span>{{label}}</span>
+                <button type="button" class="icon fa-solid fa-xmark" data-action="removeDeclaration" data-id="{{id}}"
+                        data-tooltip aria-label="{{localize "CARLRPG.Declare.Remove"}}"></button>
+            </li>
+            {{/each}}
+        </ul>
+        {{/if}}
+    </section>
+    {{/each}}
+</div>

@@ -1,6 +1,12 @@
 import { CarlRPGActor } from './documents/actor.mjs';
 import { CarlRPGItem } from './documents/item.mjs';
 import { CarlRPGCombat, CarlRPGCombatant } from './documents/combat.mjs';
+import { CarlRPGCombatTracker } from './apps/combat-tracker.mjs';
+import { reactionHandlers, registerPhaseSettings } from './helpers/combat-phases.mjs';
+import { registerReactionSocket, retireReaction, startReaction } from './chat/reaction-card.mjs';
+import { finishResolution, lockResults } from './helpers/reaction-resolve.mjs';
+import { registerDeclareHud } from './apps/declare-hud.mjs';
+import { registerDeclaredMarks } from './helpers/declared-marks.mjs';
 import { CarlRPGActorSheet } from './sheets/actor-sheet.mjs';
 import { CarlRPGItemSheet } from './sheets/item-sheet.mjs';
 import { CarlRPGLootBoxSheet } from './sheets/loot-box-sheet.mjs';
@@ -150,6 +156,12 @@ Hooks.once('init', function () {
   // End-of-round/end-of-combat Debuff automation (module/helpers/round-end.mjs).
   CONFIG.Combat.documentClass = CarlRPGCombat;
   CONFIG.Combatant.documentClass = CarlRPGCombatant;
+  // The phased PvE round (module/helpers/combat-phases.mjs): its world
+  // setting, and the tracker that shows and advances it.
+  registerPhaseSettings();
+  CONFIG.ui.combat = CarlRPGCombatTracker;
+  // The Reaction card, posted out of Declaration and resolved by Lock Results.
+  Object.assign(reactionHandlers, { startReaction, lockResults, finishResolution, retireReaction });
 
   CONFIG.Actor.documentClass = CarlRPGActor;
   Object.assign(CONFIG.Actor.dataModels, {
@@ -346,6 +358,12 @@ Hooks.once('ready', function () {
   registerLootBoxSocket();
   registerVehicleSocket();
   registerVehicleHooks();
+  // Mob Action Declaration (docs/combat-phases.md): the GM's Declare HUD and
+  // the check marks on Mob tokens that have declared.
+  registerDeclareHud();
+  registerDeclaredMarks();
+  // Players' Reaction-card actions, applied on the active GM's client.
+  registerReactionSocket();
 
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 

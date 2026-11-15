@@ -27,6 +27,8 @@ import {
   buildDebuffNote, consumedConditionIds, endedConditionIds, getActionBlockReason,
 } from "../helpers/debuff-effects.mjs";
 import { removeConditionsById } from "../helpers/conditions.mjs";
+import { currentPhase, phasedCombatFor } from "../helpers/combat-phases.mjs";
+import { describeDeclaration, recordDeclaration } from "../helpers/declarations.mjs";
 import { isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { collectVehicleRows } from "../helpers/vehicle-rows.mjs";
 import { attackDifficultyParts, mobVsVehicleRows } from "../helpers/attack-targets.mjs";
@@ -1393,6 +1395,15 @@ export default class CarlDice {
     const baseToHit = evaluateMobConstant(attack.toHit, floor);
     const attackName = attack.name || game.i18n.localize("CARLRPG.MobAttack.Unnamed");
 
+    // In a phased fight's Declaration the Attack is declared against its
+    // targets (below) - with none there's nothing to declare.
+    const phasedCombat = phasedCombatFor(actor);
+    const declaring = currentPhase(phasedCombat) === "declare" ? phasedCombat : null;
+    if (declaring && !targetUuids.length) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.NoTargets"));
+      return null;
+    }
+
     // The stat block doesn't say whether a to-hit includes the DEX Mod, so
     // Woozy is offered but left unticked here.
     const ownRows = [
@@ -1450,6 +1461,47 @@ export default class CarlDice {
       zone: isArea && splash.has(i) ? "splash" : "full",
     }).row);
     const freeEvade = !!targetRowList[0]?.freeEvade;
+
+    // A phased fight's Mob Action Declaration (p.81): the Attack is recorded
+    // for the Reaction card, not rolled - no card, no damage yet
+    // (module/helpers/declarations.mjs). Any other step resolves it at once.
+    if (declaring) {
+      if (!game.user.isGM) {
+        ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.GMOnly"));
+        return null;
+      }
+      const token = resolveActorToken(actor);
+      // The Mob's one-shot Debuffs are spent on the Attack it declares, and
+      // kept with it so withdrawing the declaration gives them back.
+      const spentIds = new Set(endedConditionIds(actor.system, resolved.applied));
+      const spentConditions = (actor.system.toObject().conditions ?? []).filter((c) => spentIds.has(c.id));
+      const declaration = await recordDeclaration(declaring, {
+        mobUuid: token?.uuid ?? actor.uuid,
+        tokenId: token?.id ?? null,
+        sceneId: token?.parent?.id ?? null,
+        mobName: token?.name ?? actor.name,
+        mobImg: actor.img,
+        attackIndex,
+        attackName,
+        damage: attack.damage?.trim() ?? "",
+        damageType: attack.damageType || "",
+        damageIsMagic: !!attack.damageType && !PHYSICAL_DAMAGE_TYPES.has(attack.damageType),
+        isArea,
+        floor,
+        difficulty,
+        mobBase,
+        mobOwnRows: ownApplied,
+        targetRows: Object.fromEntries(targetRowList.map((row) => [row.id, row])),
+        effect: attack.effect ?? "",
+        range: attack.range ?? "",
+        spentConditions,
+      });
+      await removeConditionsById(actor, [...spentIds]);
+      ui.notifications.info(game.i18n.format("CARLRPG.Declare.Recorded", {
+        mob: declaration.mobName, summary: describeDeclaration(declaration),
+      }));
+      return null;
+    }
 
     // Damage: the printed formula, "+F" resolved to the current Floor.
     const rolls = [];
@@ -1743,7 +1795,7 @@ export default class CarlDice {
    * @returns {Promise<ChatMessage|{roll: Roll, total: number, breakdown: string, naturalRoll: number|null, degree: string}|null>}
    *   null if the roll-options dialog was cancelled, regardless of `post`.
    */
-  static async rollEvadeCheck(actor, { difficulty = null, skipDialog = false, post = true, isAction = true } = {}) {
+  static async rollEvadeCheck(actor, { difficulty = null, skipDialog = false, post = true, isAction = true, preset = null } = {}) {
     const sys = actor.system;
     if (isBlockedByDebuff(actor)) return null;
     const rollData = actor.getRollData();
@@ -1754,7 +1806,12 @@ export default class CarlDice {
     ], "roll");
 
     let options = { advantage: "normal", difficulty, modifier: 0, checked: new Set(), checkedDebuffs: null };
-    if (!skipDialog) {
+    if (preset) {
+      // The choices of an earlier dialog (one Evade Action rolled against
+      // several Attacks - module/chat/reaction-card.mjs), or a fixed
+      // Advantage for an automatic free Evade; this Check's own Difficulty.
+      options = { ...options, ...preset, difficulty };
+    } else if (!skipDialog) {
       const difficultyPresets = difficulty === null ? [] : buildDifficultyPresets({
         floor: game.settings.get("carl-rpg", "currentFloor"),
         selected: "given",
@@ -1793,7 +1850,7 @@ export default class CarlDice {
     await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied, { isAction }));
 
     const formula = d20Formula(roll);
-    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote, formula, difficulty: options.difficulty };
+    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote, formula, difficulty: options.difficulty, options };
 
     let body = debuffNote;
     if (degree === "majorFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeMajorFail")}</p>`;

@@ -40,6 +40,8 @@ import { attackTargetsActionEntries, decorateTargetRows } from "./attack-targets
 import { aiRerollActionEntries, decorateAiReroll } from "./ai-favor-reroll.mjs";
 import { consumableActionEntries } from "./consumable-card.mjs";
 import { decorateDrivingCard, drivingActionEntries } from "./vehicle-card.mjs";
+import { decorateReactionCard, reactionActionEntries } from "./reaction-card.mjs";
+import { damageCardActionEntries, decorateDamageCard } from "../helpers/reaction-resolve.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
@@ -53,6 +55,8 @@ const REGISTRY = [
   ...aiRerollActionEntries,
   ...consumableActionEntries,
   ...drivingActionEntries,
+  ...reactionActionEntries,
+  ...damageCardActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 
@@ -82,6 +86,8 @@ export function registerChatListener() {
     // Driving Check card's buttons).
     decorateTargetRows(message, html);
     decorateDrivingCard(message, html);
+    decorateReactionCard(message, html);
+    decorateDamageCard(message, html);
     // The AI Favor reroll button, or a replaced card's "rerolled" state -
     // after the rows, so it can switch their buttons off too.
     decorateAiReroll(message, html);
