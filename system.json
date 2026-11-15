@@ -40,7 +40,7 @@
   "documentTypes": {
     "Actor": {
       "character": {
-        "htmlFields": ["story", "importantKills", "clubs", "deity", "sponsors", "personalSpace.notes"]
+        "htmlFields": ["story", "importantKills", "clubs", "deity.notes", "sponsors", "personalSpace.notes"]
       },
       "mob": {},
       "lootBox": {},

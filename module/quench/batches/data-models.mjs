@@ -123,6 +123,26 @@ export default function register(quench) {
           }
         });
 
+        it("system.json's htmlFields each name a text field in the schema", function () {
+          // The server cleans every htmlFields path as an HTML string. One
+          // that points at an object (as "deity" did after the Deity box
+          // became a block) wipes that object on every save. The manifest is
+          // read at startup, so this checks what the running server uses.
+          const { StringField } = foundry.data.fields;
+          let checked = 0;
+          for (const [documentName, types] of Object.entries(game.system.documentTypes ?? {})) {
+            for (const [type, { htmlFields = [] } = {}] of Object.entries(types)) {
+              const model = CONFIG[documentName]?.dataModels?.[type];
+              for (const path of htmlFields) {
+                const field = model?.schema.getField(path);
+                assert.instanceOf(field, StringField, `${documentName}.${type} htmlFields "${path}" must be a text field`);
+                checked++;
+              }
+            }
+          }
+          assert.isAbove(checked, 0, "the Character's htmlFields were found");
+        });
+
         it("Size rejects values outside the 1-8 scale", async function () {
           const actor = await createTestCharacter();
           try {
