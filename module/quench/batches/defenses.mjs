@@ -124,7 +124,7 @@ export default function register(quench) {
           try {
             assert.equal(actor.system.dr, 0);
             assert.equal(actor.system.drEffective, 0);
-            assert.equal(actor._source.system.dr, 5, "the saved value is left for the 0.6.0 migration");
+            assert.equal(actor._source.system.dr, 5, "the saved value is left for the 0.7.0 migration");
             await race(actor, "Tigran", [change("resource", "dr", 1)]);
             assert.equal(actor.system.drEffective, 1);
           } finally {

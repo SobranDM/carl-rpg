@@ -1,5 +1,5 @@
 /**
- * 0.6.0: the Character's old Pet tab becomes real actors.
+ * 0.7.0: the Character's old Pet tab becomes real actors.
  *
  * The printed sheet's Pet page held two inline stat blocks on a Character:
  * `system.pet` and `system.mount` ("Mount / Vehicle"). They're gone from the
@@ -31,7 +31,7 @@ import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { parseSize } from "./size.mjs";
 import { ownerIds, withOwners } from "./ownership.mjs";
 
-export const COMPANIONS_MIGRATION_ID = "0.6.0-companion-actors";
+export const COMPANIONS_MIGRATION_ID = "0.7.0-companion-actors";
 const SCOPE = "carl-rpg";
 
 /** The old blocks the safety net kept for this actor, or null. */
@@ -278,7 +278,7 @@ export async function migrateCompanionsOf(character, { pack = null } = {}) {
         try {
           await grantPetSkills(actor);
         } catch (err) {
-          console.error(`carl-rpg | 0.6.0 migration: ${actor.name} didn't learn its Skills`, err);
+          console.error(`carl-rpg | 0.7.0 migration: ${actor.name} didn't learn its Skills`, err);
         }
       }
     }
@@ -335,28 +335,28 @@ async function convertAll(entries) {
     try {
       const result = await migrateCompanionsOf(character, { pack });
       if (!result.ok) {
-        console.error(`carl-rpg | 0.6.0 migration: ${character.name}: ${result.error}`);
+        console.error(`carl-rpg | 0.7.0 migration: ${character.name}: ${result.error}`);
         failed.push(character.name);
         continue;
       }
       changed += result.created.length + 1;
       if (result.created.length) rows.push({ character, created: result.created });
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't move ${character.name}'s Pet tab`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't move ${character.name}'s Pet tab`, err);
       failed.push(character.name);
     }
   }
   try {
     await postSummary(rows, failed);
   } catch (err) {
-    console.error("carl-rpg | 0.6.0 migration: couldn't post its summary card", err);
+    console.error("carl-rpg | 0.7.0 migration: couldn't post its summary card", err);
   }
   if (failed.length) ui.notifications.warn(loc("Failed", { names: failed.join(", ") }), { permanent: true });
   return { changed, errors: failed.length, incomplete: failed.length > 0 };
 }
 
 /**
- * The 0.6.0 migration: world Characters, and Characters in the world's own
+ * The 0.7.0 migration: world Characters, and Characters in the world's own
  * compendiums (their new actors go in the same pack, unlocked for the run).
  * Incomplete - so it runs again next load - while any couldn't be converted.
  * @returns {Promise<{changed: number, errors: number, incomplete: boolean}>}

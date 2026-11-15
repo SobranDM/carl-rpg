@@ -16,7 +16,7 @@ export class CarlRPGActor extends Actor {
    * the Character schema, and Foundry drops keys a schema doesn't know when
    * it cleans source data. This runs first, on the whole raw source (the
    * root DataModelSchemaField migrates before any field is cleaned), and
-   * keeps a copy in a flag for the 0.6.0 migration (helpers/companion-
+   * keeps a copy in a flag for the 0.7.0 migration (helpers/companion-
    * migration.mjs) to turn into Pet and Vehicle actors. Flags aren't pruned.
    * In place: the root ignores the return value. A Character already
    * converted (marked companionsMigrated) is left alone.
@@ -72,7 +72,7 @@ export class CarlRPGActor extends Actor {
   async _preUpdate(changed, options, user) {
     const allowed = await super._preUpdate(changed, options, user);
     if (allowed === false) return false;
-    // The 0.6.0 migration rewrites the whole system to drop old keys: nothing
+    // The 0.7.0 migration rewrites the whole system to drop old keys: nothing
     // really changed, so none of the reactions below apply.
     if (options.carlMigration) return;
 
@@ -166,7 +166,7 @@ export class CarlRPGActor extends Actor {
    */
   _onCreate(data, options, userId) {
     super._onCreate(data, options, userId);
-    // The 0.6.0 migration grants a Pet it makes its Skills itself, awaited
+    // The 0.7.0 migration grants a Pet it makes its Skills itself, awaited
     // (helpers/companion-migration.mjs).
     if (isPet(this) && game.users.activeGM?.isSelf && !options.carlMigration) {
       grantPetSkills(this).catch((err) => console.error("CarlRPG | pet skill grant failed", err));

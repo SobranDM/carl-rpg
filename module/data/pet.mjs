@@ -120,7 +120,7 @@ export default class CarlRPGPet extends CarlRPGActorBase {
     }
 
     let ownerId = sys.ownerId;
-    // Not for one the 0.6.0 migration makes: a compendium Character's Pet is
+    // Not for one the 0.7.0 migration makes: a compendium Character's Pet is
     // left unbonded on purpose (helpers/companion-migration.mjs).
     if (!ownerId && !options?.carlMigration && user?.character?.type === "character") {
       ownerId = user.character.id;

@@ -3,6 +3,7 @@ import {
   DEITY_TIER_MIGRATION_ID, inferDeityTier, MIGRATIONS, migrationPlan, needsHandToHand, persistDeityBlock,
   refreshedItemUpdate, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID, zeroCharacterBaseDr,
   CHARGEN_DONE_MIGRATION_ID, madeBeforeChargen, markChargenDone, refreshSourceFor,
+  RENAMED_MIGRATION_IDS, currentMigrationIds,
 } from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
@@ -31,7 +32,7 @@ export default function register(quench) {
         useQuenchTimeout(this);
 
         it("runs each migration once per world, by id, whatever the version numbers", function () {
-          const HAND = "0.6.0-hand-to-hand-box";
+          const HAND = "0.7.0-hand-to-hand-box";
           const ids = (list) => list.map((m) => m.id);
           assert.include(ids(MIGRATIONS), HAND);
 
@@ -55,9 +56,22 @@ export default function register(quench) {
           assert.include(ids(p.run), HAND);
           assert.includeMembers(p.record, ["some-later-fix", HAND]);
         });
+
+        it("are all 0.7.0 migrations, and a world that ran them under their old 0.6.0 ids reruns none", function () {
+          for (const m of MIGRATIONS) {
+            assert.equal(m.version, "0.7.0", m.id);
+            assert.match(m.id, /^0\.7\.0-/, m.id);
+          }
+          const oldIds = Object.keys(RENAMED_MIGRATION_IDS);
+          assert.sameMembers(Object.values(RENAMED_MIGRATION_IDS), MIGRATIONS.map((m) => m.id), "every migration has its old id mapped");
+          const p = migrationPlan({ done: oldIds, hasContent: true });
+          assert.lengthOf(p.run, 0, "nothing runs twice");
+          assert.sameMembers(currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),
+            [...MIGRATIONS.map((m) => m.id), "some-later-fix"], "read as the new ids, without duplicates");
+        });
       });
 
-      describe("0.6.0: the Hand-to-Hand box", function () {
+      describe("0.7.0: the Hand-to-Hand box", function () {
         useQuenchTimeout(this);
 
         it("picks out unticked copies of the five, by name in any case - not homebrew, not ticked ones", async function () {
@@ -96,13 +110,13 @@ export default function register(quench) {
         });
       });
 
-      describe("0.6.0: the structured Deity block", function () {
+      describe("0.7.0: the structured Deity block", function () {
         useQuenchTimeout(this);
 
-        it("is one of the 0.6.0 migrations", function () {
+        it("is one of the 0.7.0 migrations", function () {
           const step = MIGRATIONS.find((m) => m.id === DEITY_MIGRATION_ID);
           assert.exists(step);
-          assert.equal(step.version, "0.6.0");
+          assert.equal(step.version, "0.7.0");
         });
 
         it("saves a Character's whole Deity block (old notes included) as a forced replacement; skips other actors", async function () {
@@ -136,10 +150,10 @@ export default function register(quench) {
         });
       });
 
-      describe("0.6.0: a Character imported after the Deity migration", function () {
+      describe("0.7.0: a Character imported after the Deity migration", function () {
         useQuenchTimeout(this);
 
-        // The /code-review worry: an old Character imported once the 0.6.0
+        // The /code-review worry: an old Character imported once the 0.7.0
         // migration has run would be stored with its old Deity text, and a
         // later partial Deity edit would wipe it on the server. Import
         // builds the (migrated) document first and saves it whole, so what
@@ -172,13 +186,13 @@ export default function register(quench) {
         });
       });
 
-      describe("0.6.0: the Deity Tier, from the Boons owned", function () {
+      describe("0.7.0: the Deity Tier, from the Boons owned", function () {
         useQuenchTimeout(this);
 
-        it("is a 0.6.0 migration of its own, after the Deity block's", function () {
+        it("is a 0.7.0 migration of its own, after the Deity block's", function () {
           const index = MIGRATIONS.findIndex((m) => m.id === DEITY_TIER_MIGRATION_ID);
           assert.isAtLeast(index, 0);
-          assert.equal(MIGRATIONS[index].version, "0.6.0");
+          assert.equal(MIGRATIONS[index].version, "0.7.0");
           assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID));
           const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
           assert.include(p.run.map((m) => m.id), DEITY_TIER_MIGRATION_ID, "a world that had the earlier ones still gets it");
@@ -216,7 +230,7 @@ export default function register(quench) {
         });
       });
 
-      describe("0.6.0: owned copies of the changed compendium items", function () {
+      describe("0.7.0: owned copies of the changed compendium items", function () {
         useQuenchTimeout(this);
 
         /** A change entry as content authors it. */
@@ -226,11 +240,11 @@ export default function register(quench) {
         /** An Upgrade tier. */
         const tier = (rankThreshold, changes) => ({ rankThreshold, changes });
 
-        it("both new 0.6.0 steps run in a world that had the earlier ones", function () {
+        it("both new 0.7.0 steps run in a world that had the earlier ones", function () {
           for (const id of [COMPENDIUM_REFRESH_ID, BASE_DR_MIGRATION_ID]) {
             const index = MIGRATIONS.findIndex((m) => m.id === id);
             assert.isAtLeast(index, 0, id);
-            assert.equal(MIGRATIONS[index].version, "0.6.0");
+            assert.equal(MIGRATIONS[index].version, "0.7.0");
             assert.isBelow(index, MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID));
             const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
             assert.include(p.run.map((m) => m.id), id);
@@ -335,7 +349,7 @@ export default function register(quench) {
         });
       });
 
-      describe("0.6.0: a Character's base DR is 0", function () {
+      describe("0.7.0: a Character's base DR is 0", function () {
         useQuenchTimeout(this);
 
         it("zeroes a Character's saved base DR, once; leaves a Mob's", async function () {
@@ -354,13 +368,13 @@ export default function register(quench) {
         });
       });
 
-      describe("0.6.0: Characters made before the Create Crawler wizard", function () {
+      describe("0.7.0: Characters made before the Create Crawler wizard", function () {
         useQuenchTimeout(this);
 
-        it("is a 0.6.0 step that runs in a world that had the earlier ones", function () {
+        it("is a 0.7.0 step that runs in a world that had the earlier ones", function () {
           const index = MIGRATIONS.findIndex((m) => m.id === CHARGEN_DONE_MIGRATION_ID);
           assert.isAtLeast(index, 0);
-          assert.equal(MIGRATIONS[index].version, "0.6.0");
+          assert.equal(MIGRATIONS[index].version, "0.7.0");
           assert.isBelow(index, MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID));
           const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
           assert.include(p.run.map((m) => m.id), CHARGEN_DONE_MIGRATION_ID);
@@ -396,13 +410,13 @@ export default function register(quench) {
         });
       });
 
-      describe("0.6.0: the Weapon Skill notice", function () {
+      describe("0.7.0: the Weapon Skill notice", function () {
         useQuenchTimeout(this);
 
-        it("is a 0.6.0 migration of its own, after the Deity block's", function () {
+        it("is a 0.7.0 migration of its own, after the Deity block's", function () {
           const index = MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID);
           assert.isAtLeast(index, 0);
-          assert.equal(MIGRATIONS[index].version, "0.6.0");
+          assert.equal(MIGRATIONS[index].version, "0.7.0");
           assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID));
           // A world that already had the earlier ones still gets it.
           const earlier = MIGRATIONS.slice(0, index).map((m) => m.id);
@@ -429,10 +443,10 @@ export default function register(quench) {
         });
       });
 
-      describe("0.6.0: the old Pet tab becomes Pet and Vehicle actors", function () {
+      describe("0.7.0: the old Pet tab becomes Pet and Vehicle actors", function () {
         useQuenchTimeout(this);
 
-        // The old blocks as a pre-0.6.0 Character stored them.
+        // The old blocks as a pre-0.7.0 Character stored them.
         const oldPet = () => ({
           name: "Rex", level: 300, str: 3, int: null, con: null, dex: 0, cha: null, dr: 2, evade: 14, move: 30,
           size: "Large (5)", attacks: ["Bite 1d6", ""], special: "Fetches", hb: { value: 6, max: 8 },

@@ -34,23 +34,23 @@ import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions 
 const SCOPE = "carl-rpg";
 export const MIGRATION_SETTING = "completedMigrations";
 
-/** The 0.6.0 Deity block migration's id (migrateDeityBlocks). */
-export const DEITY_MIGRATION_ID = "0.6.0-deity-block";
+/** The 0.7.0 Deity block migration's id (migrateDeityBlocks). */
+export const DEITY_MIGRATION_ID = "0.7.0-deity-block";
 
-/** The 0.6.0 Deity Tier backfill's id (migrateDeityTiers). */
-export const DEITY_TIER_MIGRATION_ID = "0.6.0-deity-tier";
+/** The 0.7.0 Deity Tier backfill's id (migrateDeityTiers). */
+export const DEITY_TIER_MIGRATION_ID = "0.7.0-deity-tier";
 
-/** The 0.6.0 refresh of owned compendium items' id (migrateCompendiumCopies). */
-export const COMPENDIUM_REFRESH_ID = "0.6.0-compendium-refresh";
+/** The 0.7.0 refresh of owned compendium items' id (migrateCompendiumCopies). */
+export const COMPENDIUM_REFRESH_ID = "0.7.0-compendium-refresh";
 
-/** The 0.6.0 Character base DR lock's id (migrateCharacterBaseDr). */
-export const BASE_DR_MIGRATION_ID = "0.6.0-character-base-dr";
+/** The 0.7.0 Character base DR lock's id (migrateCharacterBaseDr). */
+export const BASE_DR_MIGRATION_ID = "0.7.0-character-base-dr";
 
-/** The 0.6.0 "character creation is done" mark's id (migrateChargenDone). */
-export const CHARGEN_DONE_MIGRATION_ID = "0.6.0-chargen-done";
+/** The 0.7.0 "character creation is done" mark's id (migrateChargenDone). */
+export const CHARGEN_DONE_MIGRATION_ID = "0.7.0-chargen-done";
 
-/** The 0.6.0 Weapon Skill notice's id (announceWeaponSkill). */
-export const WEAPON_SKILL_NOTICE_ID = "0.6.0-weapon-skill-notice";
+/** The 0.7.0 Weapon Skill notice's id (announceWeaponSkill). */
+export const WEAPON_SKILL_NOTICE_ID = "0.7.0-weapon-skill-notice";
 
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
@@ -60,17 +60,46 @@ export const WEAPON_SKILL_NOTICE_ID = "0.6.0-weapon-skill-notice";
  * @type {{id: string, version: string, run: () => Promise<{changed: number, errors: number, incomplete?: boolean}>}[]}
  */
 export const MIGRATIONS = [
-  { id: "0.6.0-hand-to-hand-box", version: "0.6.0", run: migrateHandToHandSkills },
-  { id: COMPANIONS_MIGRATION_ID, version: "0.6.0", run: migrateCompanionActors },
-  { id: DEITY_MIGRATION_ID, version: "0.6.0", run: migrateDeityBlocks },
+  { id: "0.7.0-hand-to-hand-box", version: "0.7.0", run: migrateHandToHandSkills },
+  { id: COMPANIONS_MIGRATION_ID, version: "0.7.0", run: migrateCompanionActors },
+  { id: DEITY_MIGRATION_ID, version: "0.7.0", run: migrateDeityBlocks },
   // These have their own ids, so a world that already had the three above
   // still gets them.
-  { id: DEITY_TIER_MIGRATION_ID, version: "0.6.0", run: migrateDeityTiers },
-  { id: COMPENDIUM_REFRESH_ID, version: "0.6.0", run: migrateCompendiumCopies },
-  { id: BASE_DR_MIGRATION_ID, version: "0.6.0", run: migrateCharacterBaseDr },
-  { id: CHARGEN_DONE_MIGRATION_ID, version: "0.6.0", run: migrateChargenDone },
-  { id: WEAPON_SKILL_NOTICE_ID, version: "0.6.0", run: announceWeaponSkill },
+  { id: DEITY_TIER_MIGRATION_ID, version: "0.7.0", run: migrateDeityTiers },
+  { id: COMPENDIUM_REFRESH_ID, version: "0.7.0", run: migrateCompendiumCopies },
+  { id: BASE_DR_MIGRATION_ID, version: "0.7.0", run: migrateCharacterBaseDr },
+  { id: CHARGEN_DONE_MIGRATION_ID, version: "0.7.0", run: migrateChargenDone },
+  { id: WEAPON_SKILL_NOTICE_ID, version: "0.7.0", run: announceWeaponSkill },
 ];
+
+/**
+ * Ids these migrations had before they were renamed. They were first
+ * numbered for 0.6.0, but 0.6.0 had already been released without them: they
+ * ship in 0.7.0. Only development worlds ever recorded the old ids; a world
+ * that did has them read as the new ones, so nothing runs twice (a second
+ * compendium refresh would undo hand edits made since).
+ * @type {Record<string, string>}
+ */
+export const RENAMED_MIGRATION_IDS = Object.freeze({
+  "0.6.0-hand-to-hand-box": "0.7.0-hand-to-hand-box",
+  "0.6.0-companion-actors": COMPANIONS_MIGRATION_ID,
+  "0.6.0-deity-block": DEITY_MIGRATION_ID,
+  "0.6.0-deity-tier": DEITY_TIER_MIGRATION_ID,
+  "0.6.0-compendium-refresh": COMPENDIUM_REFRESH_ID,
+  "0.6.0-character-base-dr": BASE_DR_MIGRATION_ID,
+  "0.6.0-chargen-done": CHARGEN_DONE_MIGRATION_ID,
+  "0.6.0-weapon-skill-notice": WEAPON_SKILL_NOTICE_ID,
+});
+
+/**
+ * A world's completed ids with any renamed ones read as their new ids
+ * (RENAMED_MIGRATION_IDS), without duplicates.
+ * @param {string[]} done
+ * @returns {string[]}
+ */
+export function currentMigrationIds(done) {
+  return [...new Set((done ?? []).map((id) => RENAMED_MIGRATION_IDS[id] ?? id))];
+}
 
 /** Register the setting listing the migrations this world has had (init). */
 export function registerMigrationSetting() {
@@ -93,7 +122,7 @@ export function registerMigrationSetting() {
  *   when nothing needs writing.
  */
 export function migrationPlan({ done, hasContent }) {
-  const had = new Set(done ?? []);
+  const had = new Set(currentMigrationIds(done));
   const missing = MIGRATIONS.filter((m) => !had.has(m.id));
   if (!missing.length) return { run: [], record: null };
   const record = [...had, ...missing.map((m) => m.id)];
@@ -114,11 +143,16 @@ function worldHasContent() {
  */
 export async function migrateWorld() {
   if (!game.user.isActiveGM) return;
-  const done = game.settings.get(SCOPE, MIGRATION_SETTING) ?? [];
+  const stored = game.settings.get(SCOPE, MIGRATION_SETTING) ?? [];
+  // A world that recorded these migrations under their old ids keeps them done.
+  const done = currentMigrationIds(stored);
+  if (done.length !== stored.length || done.some((id, i) => id !== stored[i])) {
+    await game.settings.set(SCOPE, MIGRATION_SETTING, done);
+  }
   const { run, record } = migrationPlan({ done, hasContent: worldHasContent() });
   if (record && !run.length) await game.settings.set(SCOPE, MIGRATION_SETTING, record);
   if (run.length) await runMigrations(run, done);
-  // A pre-0.6.0 Character imported after the Pet tab migration ran still
+  // A pre-0.7.0 Character imported after the Pet tab migration ran still
   // has its old Pet tab turned into actors.
   if ((game.settings.get(SCOPE, MIGRATION_SETTING) ?? []).includes(COMPANIONS_MIGRATION_ID)) {
     await sweepLegacyCompanions();
@@ -167,10 +201,10 @@ async function runMigrations(run, done) {
 }
 
 /* -------------------------------------------------- */
-/*  0.6.0: the Hand-to-Hand box                       */
+/*  0.7.0: the Hand-to-Hand box                       */
 /* -------------------------------------------------- */
 
-// The hand-to-hand Combat Skills (p.179), which 0.6.0's pack ticks.
+// The hand-to-hand Combat Skills (p.179), which 0.7.0's pack ticks.
 const HAND_TO_HAND = new Set(["Foot Soldier", "Noggin Nocker", "Pugilism", "Unarmed Combat", "Wrasslin'"]
   .map((name) => slugifySkillName(name)));
 
@@ -191,7 +225,7 @@ export async function tickHandToHandOn(actor) {
 }
 
 /**
- * 0.6.0 added the Hand-to-Hand box to Skills. Copies of Foot Soldier,
+ * 0.7.0 added the Hand-to-Hand box to Skills. Copies of Foot Soldier,
  * Noggin Nocker, Pugilism, Unarmed Combat and Wrasslin' made before then -
  * on world Actors, in the Items directory and in world compendiums - get it
  * ticked, as the pack's own copies are.
@@ -205,7 +239,7 @@ async function migrateHandToHandSkills() {
     try {
       changed += await fn();
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't update ${label}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't update ${label}`, err);
       errors += 1;
     }
   };
@@ -234,11 +268,11 @@ function shouldMigratePack(pack) {
 }
 
 /* -------------------------------------------------- */
-/*  0.6.0: the structured Deity block                 */
+/*  0.7.0: the structured Deity block                 */
 /* -------------------------------------------------- */
 
 /**
- * 0.6.0 turned a Character's Deity rich text box into a structured block
+ * 0.7.0 turned a Character's Deity rich text box into a structured block
  * (module/data/character.mjs); CarlRPGCharacter.migrateData keeps the old
  * text as its notes, but only in memory. Until the block is saved whole,
  * the database still holds the old string, and an ordinary Deity edit -
@@ -256,7 +290,7 @@ async function migrateDeityBlocks() {
     try {
       changed += await fn();
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't save the Deity of ${label}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't save the Deity of ${label}`, err);
       errors += 1;
     }
   };
@@ -287,7 +321,7 @@ export async function persistDeityBlock(actor) {
 }
 
 /* -------------------------------------------------- */
-/*  0.6.0: the Deity Tier, from the Boons owned       */
+/*  0.7.0: the Deity Tier, from the Boons owned       */
 /* -------------------------------------------------- */
 
 /**
@@ -323,7 +357,7 @@ export async function backfillDeityTier(actor) {
 }
 
 /**
- * 0.6.0 gave the Deity block a Tier, and a tiered Boon now applies only at or
+ * 0.7.0 gave the Deity block a Tier, and a tiered Boon now applies only at or
  * below it (worship.mjs deityBenefitApplies, pp.163-164). Before, a Boon's
  * Tier was only a label and every Boon applied. So a Character keeps its
  * Boons, its Tier is set to the highest Tier among them - only where no Tier
@@ -345,7 +379,7 @@ async function migrateDeityTiers() {
         tier: esc(game.i18n.localize(CONFIG.CARLRPG.featureTiers[tier])),
       }));
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't set the Deity Tier of ${actor.name}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't set the Deity Tier of ${actor.name}`, err);
       errors += 1;
     }
   };
@@ -356,7 +390,7 @@ async function migrateDeityTiers() {
         for (const actor of await pack.getDocuments()) await attempt(actor, pack.title);
       });
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't set Deity Tiers in compendium ${pack.collection}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't set Deity Tiers in compendium ${pack.collection}`, err);
       errors += 1;
     }
   }
@@ -365,11 +399,11 @@ async function migrateDeityTiers() {
 }
 
 /* -------------------------------------------------- */
-/*  0.6.0: owned copies of the changed compendium items */
+/*  0.7.0: owned copies of the changed compendium items */
 /* -------------------------------------------------- */
 
 /**
- * The compendium items whose DR, Move, Step or Evade 0.6.0 made automatic
+ * The compendium items whose DR, Move, Step or Evade 0.7.0 made automatic
  * (Phase 2, docs/known-gaps.md 7.2c), by pack and name.
  */
 export const REFRESHED_ITEMS = {
@@ -543,7 +577,7 @@ function changesMovement(source) {
 }
 
 /**
- * Move and Step were typed by hand before 0.6.0, so a crawler whose base
+ * Move and Step were typed by hand before 0.7.0, so a crawler whose base
  * isn't the starting 20/10 may already include what its Race or Skills now
  * add - a note for the GM's list.
  * @param {Actor} actor
@@ -556,7 +590,7 @@ function typedMovementNote(actor) {
 }
 
 /**
- * 0.6.0 made the DR, Move, Step and Evade of some Races, Classes, Skills
+ * 0.7.0 made the DR, Move, Step and Evade of some Races, Classes, Skills
  * and Spells automatic (REFRESHED_ITEMS), but every actor holds its own
  * copy of an item, made before. This brings each copy's DR, Move, Step and
  * Evade changes - and Oakhide's toggle - up to the compendium's, on world
@@ -579,7 +613,7 @@ async function migrateCompendiumCopies() {
       const note = movement ? esc(typedMovementNote(actor)) : "";
       lines.push(game.i18n.format("CARLRPG.Migration.Refresh.Line", { name: esc(label), items: names.map(esc).join(", ") }) + note);
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't refresh the items of ${label}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't refresh the items of ${label}`, err);
       errors += 1;
     }
   };
@@ -603,7 +637,7 @@ async function migrateCompendiumCopies() {
         }
       });
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't refresh items in compendium ${pack.collection}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't refresh items in compendium ${pack.collection}`, err);
       errors += 1;
     }
   }
@@ -612,7 +646,7 @@ async function migrateCompendiumCopies() {
 }
 
 /* -------------------------------------------------- */
-/*  0.6.0: a Character's base DR is 0                 */
+/*  0.7.0: a Character's base DR is 0                 */
 /* -------------------------------------------------- */
 
 /**
@@ -630,7 +664,7 @@ export async function zeroCharacterBaseDr(actor) {
 }
 
 /**
- * 0.6.0 locks a Character's base DR at 0: its DR is only what its Race,
+ * 0.7.0 locks a Character's base DR at 0: its DR is only what its Race,
  * Class, gear, Skills, Spells and Buffs give. A base typed in before is
  * zeroed, on world Characters and in world compendiums, and the GM gets a
  * whispered list of who had what - DR from something not automated yet
@@ -650,7 +684,7 @@ async function migrateCharacterBaseDr() {
         name: esc(actor.name) + (where ? ` (${esc(where)})` : ""), dr,
       }));
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't zero the base DR of ${actor.name}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't zero the base DR of ${actor.name}`, err);
       errors += 1;
     }
   };
@@ -661,7 +695,7 @@ async function migrateCharacterBaseDr() {
         for (const actor of await pack.getDocuments()) await attempt(actor, pack.title);
       });
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't zero base DR in compendium ${pack.collection}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't zero base DR in compendium ${pack.collection}`, err);
       errors += 1;
     }
   }
@@ -670,14 +704,14 @@ async function migrateCharacterBaseDr() {
 }
 
 /* -------------------------------------------------- */
-/*  0.6.0: Characters made before the wizard          */
+/*  0.7.0: Characters made before the wizard          */
 /* -------------------------------------------------- */
 
 /** The item types that are a crawler's Skills. A new Character has none. */
 const SKILL_TYPES = ["skill", "spell", "damageEffect"];
 
 /**
- * Whether a Character was made before the Create Crawler wizard (0.6.0):
+ * Whether a Character was made before the Create Crawler wizard (0.7.0):
  * not marked as through it, but already holding Skills, Spells or Damage
  * Effects. A new Character starts with none, so any means it was built.
  * @param {Actor} actor
@@ -702,7 +736,7 @@ export async function markChargenDone(actor) {
 }
 
 /**
- * 0.6.0 added the Create Crawler wizard, offered on a Character's sheet
+ * 0.7.0 added the Create Crawler wizard, offered on a Character's sheet
  * until it has been through it. Characters already built (with any Skill,
  * Spell or Damage Effect) are marked as through it - on world Actors and
  * in world compendiums - or the button would stay on them for good. A
@@ -716,7 +750,7 @@ async function migrateChargenDone() {
     try {
       if (await markChargenDone(actor)) changed += 1;
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't mark ${actor.name} as created`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't mark ${actor.name} as created`, err);
       errors += 1;
     }
   };
@@ -727,7 +761,7 @@ async function migrateChargenDone() {
         for (const actor of await pack.getDocuments()) await attempt(actor);
       });
     } catch (err) {
-      console.error(`carl-rpg | 0.6.0 migration: couldn't mark Characters in compendium ${pack.collection}`, err);
+      console.error(`carl-rpg | 0.7.0 migration: couldn't mark Characters in compendium ${pack.collection}`, err);
       errors += 1;
     }
   }
@@ -750,11 +784,11 @@ function whisperGmList(key, lines) {
 }
 
 /* -------------------------------------------------- */
-/*  0.6.0: the Weapon Skill notice                    */
+/*  0.7.0: the Weapon Skill notice                    */
 /* -------------------------------------------------- */
 
 /**
- * 0.6.0 added a Weapon Skill field to gear, and an Attack with a Weapon
+ * 0.7.0 added a Weapon Skill field to gear, and an Attack with a Weapon
  * Skill now needs a weapon whose Weapon Skill names it (module/helpers/
  * weapons.mjs). Gear isn't its own "weapon" type, so there's no telling
  * which existing items are weapons, or for which Skill - the players set it.

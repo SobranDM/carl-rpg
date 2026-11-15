@@ -95,7 +95,7 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     schema.story = richText();
 
     // The old Pet tab's Pet and Mount/Vehicle blocks (system.pet,
-    // system.mount) are gone: they became Pet and Vehicle actors (the 0.6.0
+    // system.mount) are gone: they became Pet and Vehicle actors (the 0.7.0
     // migration, module/helpers/migration.mjs). Until it has run, CarlRPGActor.
     // migrateData keeps their values in a flag, as Foundry drops keys the
     // schema doesn't know.
@@ -140,7 +140,7 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     CarlRPGCharacter.#migrateNotesToRichText(source);
     // The Deity rich text box became a structured block; its text is kept
     // as the block's notes. Runs after the slot-list fold above, so an old
-    // array becomes HTML first. This only reshapes it in memory; the 0.6.0
+    // array becomes HTML first. This only reshapes it in memory; the 0.7.0
     // Deity migration (module/helpers/migration.mjs) saves it, so a later
     // partial Deity edit can't be merged over the old string.
     if (typeof source.deity === "string") source.deity = { notes: source.deity };
@@ -184,8 +184,8 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
   /**
    * A crawler has no DR of its own: all of it comes from its Race, Class,
    * gear, Skills, Spells and Buffs (resource "dr" changes). The base is
-   * locked at 0 here, in memory - a value saved before 0.6.0 is zeroed in
-   * the database by the 0.6.0 base DR migration (helpers/migration.mjs).
+   * locked at 0 here, in memory - a value saved before 0.7.0 is zeroed in
+   * the database by the 0.7.0 base DR migration (helpers/migration.mjs).
    * @override
    */
   prepareBaseData() {

@@ -2,7 +2,7 @@
  * A crawler's players run its Pet and its Vehicle too: whoever owns the
  * crawler (OWNER level) is made an owner of them. Shared by Pet and Vehicle
  * creation (module/data/pet.mjs, vehicle.mjs), the Pet bond's sync
- * (module/helpers/pets.mjs) and the 0.6.0 Pet tab migration
+ * (module/helpers/pets.mjs) and the 0.7.0 Pet tab migration
  * (companion-migration.mjs). Ownership is only ever added, never lowered.
  */
 
