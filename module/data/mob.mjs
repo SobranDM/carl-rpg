@@ -53,6 +53,13 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // hb.max before this field existed (see carl-rpg.mjs's ready hook).
     schema.hbSlotsOverride = new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 1 });
 
+    // Actions a round (helpers/actions.mjs). An Elite, like a Boss (any
+    // mobTier), gets "1 Action per crawler each round, unless their Stat
+    // Block says otherwise" (p.81); a plain Mob 1 Move + 1 Action (p.270).
+    // actionsPerRound: a stat block's own count, used instead of either.
+    schema.isElite = new fields.BooleanField({ required: true, initial: false });
+    schema.actionsPerRound = new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 0 });
+
     // Structured Attacks list, matching the printed stat block's own shape
     // (name/to-hit formula/damage formula+type/range/on-hit effect prose) -
     // deliberately not Skill/Spell items, which most Mob attacks in print

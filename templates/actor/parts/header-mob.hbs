@@ -29,6 +29,15 @@
         <label for="system.creatureType" class="resource-label">{{localize "CARLRPG.Actor.CreatureType"}}</label>
         <input type="text" class="carl-w-medium" name="system.creatureType" value="{{system.creatureType}}" placeholder="e.g. Humanoid" />
       </div>
+      {{!-- Actions a round (helpers/actions.mjs): Elites and Bosses get 1 per crawler (p.81). --}}
+      <div class="resource flex-group-center carl-name-row-field" data-tooltip="{{localize "CARLRPG.Actor.EliteHint"}}">
+        <label for="system.isElite" class="resource-label">{{localize "CARLRPG.Actor.Elite"}}</label>
+        <input type="checkbox" id="system.isElite" name="system.isElite" {{checked system.isElite}} />
+      </div>
+      <div class="resource flex-group-center carl-name-row-field" data-tooltip="{{localize "CARLRPG.Actor.ActionsPerRoundHint"}}">
+        <label for="system.actionsPerRound" class="resource-label">{{localize "CARLRPG.Actor.ActionsPerRound"}}</label>
+        <input type="number" class="carl-w-tiny" name="system.actionsPerRound" value="{{system.actionsPerRound}}" min="0" placeholder="{{localize "CARLRPG.Actor.ActionsAuto"}}" />
+      </div>
     </div>
     {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
     {{> "systems/carl-rpg/templates/actor/parts/shield-bar.hbs"}}

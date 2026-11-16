@@ -5,6 +5,8 @@ import { CarlRPGCombatTracker } from './apps/combat-tracker.mjs';
 import { reactionHandlers, registerPhaseSettings } from './helpers/combat-phases.mjs';
 import { registerReactionSocket, retireReaction, startReaction } from './chat/reaction-card.mjs';
 import { finishResolution, lockResults } from './helpers/reaction-resolve.mjs';
+import { registerActionSocket } from './helpers/actions.mjs';
+import { registerActionUndo } from './helpers/action-undo.mjs';
 import { registerDeclareHud } from './apps/declare-hud.mjs';
 import { registerDeclaredMarks } from './helpers/declared-marks.mjs';
 import { CarlRPGActorSheet } from './sheets/actor-sheet.mjs';
@@ -162,6 +164,8 @@ Hooks.once('init', function () {
   CONFIG.ui.combat = CarlRPGCombatTracker;
   // The Reaction card, posted out of Declaration and resolved by Lock Results.
   Object.assign(reactionHandlers, { startReaction, lockResults, finishResolution, retireReaction });
+  // Undoing a spent Action (helpers/action-undo.mjs).
+  registerActionUndo();
 
   CONFIG.Actor.documentClass = CarlRPGActor;
   Object.assign(CONFIG.Actor.dataModels, {
@@ -364,6 +368,9 @@ Hooks.once('ready', function () {
   registerDeclaredMarks();
   // Players' Reaction-card actions, applied on the active GM's client.
   registerReactionSocket();
+  // Combat Actions spent and undone by players, recorded by the active GM
+  // (helpers/actions.mjs).
+  registerActionSocket();
 
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 

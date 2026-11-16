@@ -31,6 +31,7 @@ import { slugifySkillName } from "../helpers/modifiers.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 import { currentPhase } from "../helpers/combat-phases.mjs";
 import { declaredAttacks } from "../helpers/declarations.mjs";
+import { canAct, combatantInFight, evadeIsFree, hasSpent, refundAction, spendAction } from "../helpers/actions.mjs";
 import {
   buildReactionState, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck, hitEvadable,
   hitLabel, hitList, hitMissed, intervenableAllies, intervenableChecks, makeCheck, pullableHits, rerollableChecks,
@@ -141,6 +142,10 @@ export async function startReaction(combat) {
  */
 export async function retireReaction(combat) {
   const message = reactionCardFor(combat);
+  // The Actions spent from it (Taunt, Catch, Evade, Intervene) come back too.
+  for (const spent of message?.getFlag(SCOPE, "reaction")?.spentActions ?? []) {
+    await refundAction(combat, spent.combatantId, spent.id);
+  }
   if (message) await message.delete();
   if (combat.getFlag(SCOPE, "reactionCard")) await combat.unsetFlag(SCOPE, "reactionCard");
 }
@@ -199,8 +204,12 @@ export function withCard(cardId, task) {
   return next;
 }
 
-/** Write a card's whole state back. */
+/**
+ * Write a card's whole state back. Each write counts up `rev`, so undoing an
+ * Action can tell whether the card has changed since (helpers/action-undo.mjs).
+ */
 export async function writeState(message, state) {
+  state.rev = (state.rev ?? 0) + 1;
   const { ForcedReplacement } = foundry.data.operators;
   await message.update({ flags: { [SCOPE]: { reaction: ForcedReplacement.create(state) } } });
 }
@@ -243,12 +252,14 @@ export function applyOp(cardId, op, data, user) {
     const current = message?.getFlag(SCOPE, "reaction");
     if (!current || current.locked) return false;
     const state = foundry.utils.deepClone(current);
+    // What an Action spent by this op undoes to (payFor).
+    opBefore.set(state, { messageId: cardId, before: current });
     const owns = (uuid) => user.isGM || !!actorFor(uuid)?.testUserPermission(user, "OWNER");
     let changed = false;
     try {
       switch (op) {
         case "taunt": changed = await opTaunt(state, data, owns); break;
-        case "catch": changed = opCatch(state, data, owns); break;
+        case "catch": changed = await opCatch(state, data, owns); break;
         case "evade": changed = await opEvade(state, data, owns); break;
         case "intervene": changed = await opIntervene(state, data, owns); break;
         case "reroll": changed = await opReroll(state, data, owns); break;
@@ -286,6 +297,7 @@ async function opTaunt(state, { byUuid, byName, mobUuid, rank, check }, owns) {
   if (state.stage !== "taunt" || !owns(byUuid)) return false;
   const mob = Object.values(state.attacks).find((a) => a.mobUuid === mobUuid);
   if (!mob) return false;
+  if (!(await payFor(state, byUuid, "CARLRPG.Reaction.Op.taunt"))) return false;
   const taunt = {
     id: foundry.utils.randomID(), order: state.nextOrder++, byUuid, byName: String(byName ?? "?"),
     mobUuid, mobName: mob.mobName, rank: Number(rank) || 0, check: receivedCheck("taunt", check), pulled: [],
@@ -323,10 +335,11 @@ async function pullTaunt(state, taunt) {
   await rollFreeEvades(state, free, { advantage: taunt.rank >= 15 ? "advantage" : "normal" });
 }
 
-function opCatch(state, { byUuid, byName, hitId }, owns) {
+async function opCatch(state, { byUuid, byName, hitId }, owns) {
   if (state.stage !== "taunt" || !owns(byUuid)) return false;
   const hit = catchableHits(state, byUuid).find((h) => h.id === hitId);
   if (!hit) return false;
+  if (!(await payFor(state, byUuid, "CARLRPG.Reaction.Op.catch"))) return false;
   const name = String(byName ?? "?");
   Object.assign(hit, { caughtBy: { uuid: byUuid, name }, targetUuid: byUuid, targetName: name });
   crawlerEntry(state, byUuid, name);
@@ -338,6 +351,8 @@ async function opEvade(state, { uuid, checks }, owns) {
   const hits = evadableHitsFor(state, uuid);
   const crawler = crawlerEntry(state, uuid, hits[0]?.targetName ?? "?");
   if (crawler.evaded || !hits.length) return false;
+  // One Evade Action covers every Attack on them this round (p.81).
+  if (!(await payFor(state, uuid, "CARLRPG.Roll.Evade", { tag: "evade" }))) return false;
   for (const hit of hits) {
     if (!checks?.[hit.id]) continue;
     hit.evade = receivedCheck("evade", checks[hit.id]);
@@ -352,6 +367,7 @@ async function opIntervene(state, { byUuid, byName, ref, value }, owns) {
   const target = intervenableChecks(state, byUuid).find((c) => sameRef(c.ref, ref));
   const roll = Math.trunc(Number(value));
   if (!target || !(roll >= 1 && roll <= 6)) return false;
+  if (!(await payFor(state, byUuid, "CARLRPG.Reaction.Op.intervene"))) return false;
   const check = checkAt(state, target.ref);
   const wasSuccess = check.success;
   check.interventions.push({ byUuid, byName: String(byName ?? "?"), value: roll });
@@ -390,6 +406,43 @@ async function afterCheckChanged(state, entry, check, wasSuccess) {
   } else {
     await grantEvadeAdvantage(state, state.hits[entry.ref.hitId], check);
   }
+}
+
+// The card as it was before the op working on a state (applyOp), by state.
+const opBefore = new WeakMap();
+
+/**
+ * Spend the Action a Reaction-card op takes (helpers/actions.mjs), on the
+ * GM's client as the op is applied. False - the op is refused - when the
+ * crawler has none left (the roller's client checked before rolling; only a
+ * race lands here). A tagged Action already spent this round (an Evade)
+ * costs nothing more. What it spends is kept on the card, so discarding the
+ * card (retireReaction) gives it back.
+ * @param {object} state  The card's state.
+ * @param {string} uuid  Who acts.
+ * @param {string} labelKey
+ * @param {{tag?: string}} [options]
+ * @returns {Promise<boolean>}
+ */
+async function payFor(state, uuid, labelKey, { tag = null } = {}) {
+  const actor = actorFor(uuid);
+  if (!actor) return true;
+  if (tag === "evade" ? evadeIsFree(actor) : (tag && hasSpent(actor, tag))) return true;
+  if (!canAct(actor, "other", { warn: false })) {
+    ui.notifications.warn(game.i18n.format("CARLRPG.Actions.NoneLeft", { name: actor.name }));
+    return false;
+  }
+  const fight = combatantInFight(actor);
+  // Undoing it puts the card back as it was before this op - if nothing
+  // has changed on it since (helpers/action-undo.mjs).
+  const card = opBefore.get(state);
+  const undo = card ? [{
+    t: "reaction", messageId: card.messageId, before: foundry.utils.deepClone(card.before), rev: (card.before.rev ?? 0) + 1,
+  }] : [];
+  const id = await spendAction(actor, "other", game.i18n.localize(labelKey), { tag, undo });
+  if (fight && !id) return false;
+  if (fight && id) (state.spentActions ??= []).push({ combatantId: fight.combatant.id, id });
+  return true;
 }
 
 function sameRef(a, b) {
@@ -457,7 +510,7 @@ function availableOps(state) {
 async function onTaunt(message, state) {
   const list = reactors(state).filter((r) => skillOf(r.actor, "Taunt") && tauntableMobs(state, r.uuid).length);
   const taunter = await pickReactor(list, game.i18n.localize("CARLRPG.Reaction.Op.taunt"));
-  if (!taunter) return;
+  if (!taunter || !canAct(taunter.actor, "other")) return;
   const mobs = tauntableMobs(state, taunter.uuid);
   const mobUuid = await pick(game.i18n.localize("CARLRPG.Reaction.Op.taunt"), game.i18n.localize("CARLRPG.Reaction.WhichMob"),
     mobs.map((m) => ({ value: m.mobUuid, label: m.mobName })));
@@ -475,7 +528,7 @@ async function onTaunt(message, state) {
 async function onCatch(message, state) {
   const list = reactors(state).filter((r) => (skillOf(r.actor, "Catcher")?.rank ?? 0) >= 1 && catchableHits(state, r.uuid).length);
   const catcher = await pickReactor(list, game.i18n.localize("CARLRPG.Reaction.Op.catch"));
-  if (!catcher) return;
+  if (!catcher || !canAct(catcher.actor, "other")) return;
   const hitId = await pick(game.i18n.localize("CARLRPG.Reaction.Op.catch"), game.i18n.localize("CARLRPG.Reaction.WhichAttack"),
     catchableHits(state, catcher.uuid).map((hit) => ({ value: hit.id, label: hitLabel(state, hit) })));
   if (hitId) await sendOp(message, "catch", { byUuid: catcher.uuid, byName: catcher.name, hitId });
@@ -485,6 +538,7 @@ async function onEvade(message, state) {
   const list = reactors(state).filter((r) => !state.crawlers[crawlerKey(r.uuid)]?.evaded && evadableHitsFor(state, r.uuid).length);
   const evader = await pickReactor(list, game.i18n.localize("CARLRPG.Reaction.Op.evade"));
   if (!evader) return;
+  if (!evadeIsFree(evader.actor) && !canAct(evader.actor, "other")) return;
   // One Evade Action, a separate Check against each Attack (p.81): one
   // dialog, then the same choices for the rest. Only the first counts as the
   // crawler's Action for "next Action" Debuffs.
@@ -513,7 +567,7 @@ async function onIntervene(message, state) {
   const list = reactors(state).filter((r) => intervenableChecks(state, r.uuid).length);
   const title = game.i18n.localize("CARLRPG.Reaction.Op.intervene");
   const helper = await pickReactor(list, title);
-  if (!helper) return;
+  if (!helper || !canAct(helper.actor, "other")) return;
   // Who to help, then which of their Checks.
   const allyUuid = await pick(title, game.i18n.localize("CARLRPG.Reaction.WhichAlly"),
     intervenableAllies(state, helper.uuid).map((a) => ({ value: a.uuid, label: a.name })));

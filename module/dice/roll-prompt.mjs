@@ -93,6 +93,8 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  * @param {boolean} [options.isArea]  Pre-ticks "Area Attack".
  * @param {string} [options.weaponNote]  A note that the weapon is swapped in
  *   from the Hotlist for this Attack (module/helpers/weapons.mjs).
+ * @param {boolean|null} [options.usesAction]  In a fight: show a "Uses an
+ *   Action" box, ticked or not (helpers/actions.mjs). null: no box.
  * @param {{choices: {id: string, label: string}[], selected: string|null,
  *   load: (id: string) => Promise<object|null>}} [options.skillPicker]
  *   The Attack! button's Attack Skill choice (CarlDice.chooseAttack), first
@@ -101,7 +103,7 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  *   and redraws the rest of the dialog for it, keeping the Advantage,
  *   Difficulty and situational modifier already entered. With nothing
  *   selected only the choice shows.
- * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number, isArea: boolean, splash: Set<number>, skillId?: string|null}|null>}
+ * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number, isArea: boolean, splash: Set<number>, usesAction: boolean|null, skillId?: string|null}|null>}
  *   null if the dialog was cancelled/closed. skillId: the picked Attack
  *   Skill, with a skillPicker.
  */
@@ -118,6 +120,8 @@ export async function promptRollOptions(options = {}) {
     manaCostChoices: args.manaCostChoices, debuffRows: args.debuffRows, showRollMode: args.showRollMode,
     difficultyLabel: args.difficultyLabel, difficultyPresets: args.difficultyPresets,
     areaTargets: args.areaTargets, isArea: args.isArea, weaponNote: args.weaponNote,
+    // In a fight: whether this roll spends one of the roller's Actions.
+    showUsesAction: args.usesAction !== null, usesAction: !!args.usesAction,
     skillPicker: skillPicker ? { choices: skillPicker.choices, selected } : null,
     // With a picker, nothing else shows until an Attack Skill is picked.
     hideOptions: !!skillPicker && !selected,
@@ -161,7 +165,7 @@ export async function promptRollOptions(options = {}) {
   if (!result) return null;
   if (skillPicker && !selected) return null;
 
-  const { conditionalModifiers, debuffRows, areaTargets } = current;
+  const { conditionalModifiers, debuffRows, areaTargets, usesAction } = current;
   // Each conditionalModifier may list multiple alternative conditions (e.g.
   // "attacking from behind OR flanking"); checking any one of them applies
   // the change once (OR logic, no double-counting).
@@ -184,6 +188,8 @@ export async function promptRollOptions(options = {}) {
     manaCostChoice: result.manaCostChoice !== undefined && result.manaCostChoice !== "" ? Number(result.manaCostChoice) : 0,
     isArea: areaTargets.length ? !!result.isArea : false,
     splash: new Set(areaTargets.map((_, i) => i).filter((i) => result.isArea && result.splash?.[i])),
+    // null when the box wasn't offered (not in a fight).
+    usesAction: usesAction === null ? null : !!result.usesAction,
     ...(skillPicker ? { skillId: selected } : {}),
   };
 }
@@ -195,11 +201,12 @@ function withDefaults({
   title, difficulty = null, showDifficulty = true, defaultAdvantage = null,
   conditionalModifiers = [], damageEffectChoices = [], manaCostChoices = [],
   debuffRows = [], showRollMode = true, difficultyLabel = null,
-  difficultyPresets = [], areaTargets = [], isArea = false, weaponNote = "",
+  difficultyPresets = [], areaTargets = [], isArea = false, weaponNote = "", usesAction = null,
 } = {}) {
   return {
     title, difficulty, showDifficulty, defaultAdvantage, conditionalModifiers, damageEffectChoices,
     manaCostChoices, debuffRows, showRollMode, difficultyLabel, difficultyPresets, areaTargets, isArea, weaponNote,
+    usesAction,
   };
 }
 

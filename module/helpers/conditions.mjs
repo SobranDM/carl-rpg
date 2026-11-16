@@ -7,6 +7,7 @@
  * and pushes conditions identically - one code path, two entry points.
  */
 import { relayRemoveConditions } from "./chat-socket.mjs";
+import { noteUndo } from "./actions.mjs";
 import { conditionLabel } from "./debuff-effects.mjs";
 import { takesConditions } from "./actor-kinds.mjs";
 
@@ -113,6 +114,9 @@ async function writeConditionToActor(actor, key, options) {
  */
 export async function removeConditionsById(actor, conditionIds) {
   if (!actor || !conditionIds?.length) return;
+  // Used up by an Action of this actor's own: back if it's undone.
+  const used = (actor.system.conditions ?? []).filter((c) => conditionIds.includes(c.id));
+  if (used.length) noteUndo(actor, { t: "conditions", uuid: actor.uuid, removed: foundry.utils.deepClone(used) });
   if (!actor.isOwner) {
     relayRemoveConditions(actor, conditionIds);
     return;

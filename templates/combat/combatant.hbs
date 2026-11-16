@@ -7,6 +7,23 @@
     {{!-- Name & Controls --}}
     <div class="token-name">
         <strong class="name">{{ name }}</strong>
+        {{#if actions}}
+        {{!-- This round's Actions (helpers/actions.mjs): green, a Mob's yellow
+              Move, AI Favor's gold; red once spent. --}}
+        <div class="carl-action-bubbles">
+            {{#each actions.bubbles}}
+            <button type="button" class="carl-action-bubble {{pool}}{{#if spent}} spent{{/if}}" data-action="actionBubble"
+                    data-pool="{{pool}}" data-entry-id="{{entryId}}" data-tooltip="{{tooltip}}" aria-label="{{tooltip}}"
+                    {{#unless ../actions.canClick}}disabled{{/unless}}></button>
+            {{/each}}
+            {{#if actions.canFavor}}
+            <button type="button" class="carl-action-favor" data-action="favorAction"
+                    data-tooltip="{{localize "CARLRPG.Actions.FavorButton"}}" aria-label="{{localize "CARLRPG.Actions.FavorButton"}}">
+                <i class="fa-solid fa-star" inert></i>
+            </button>
+            {{/if}}
+        </div>
+        {{/if}}
         <div class="combatant-controls">
             {{#if @root.user.isGM}}
             <button type="button" class="inline-control combatant-control icon fa-solid fa-eye-slash {{#if hidden}}active{{/if}}"

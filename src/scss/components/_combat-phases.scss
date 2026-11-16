@@ -538,3 +538,51 @@
     color: var(--carl-text-muted);
   }
 }
+
+// Action bubbles on the Combat Tracker (helpers/actions.mjs).
+.combat-tracker .carl-action-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  margin: 1px 0 2px;
+
+  .carl-action-bubble {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 12px;
+    min-height: 0;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+
+    &.action { background: #2ecc40; }
+    &.move { background: #f1c40f; }
+    &.favor { background: #ffd700; box-shadow: 0 0 3px #ffd700; }
+
+    &.spent {
+      background: #c0392b;
+      box-shadow: none;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 1;
+    }
+  }
+
+  .carl-action-favor {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    min-height: 0;
+    padding: 0;
+    line-height: 14px;
+    font-size: 9px;
+    color: #ffd700;
+    background: none;
+    border: 1px dashed #ffd700;
+    border-radius: 50%;
+  }
+}

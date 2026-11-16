@@ -1,9 +1,10 @@
 import {
-  hotlistCandidates, hotlistRows, inRunningFight, isInHotlist, outsideHotlist, placeInHotlist, promptHotlistPick,
+  hotlistCandidates, hotlistRows, isInHotlist, outsideHotlist, placeInHotlist, promptHotlistPick,
   toggleHotlist, useHotlistSlot,
 } from "../../helpers/hotlist.mjs";
 import CarlDice from "../../dice/dice.mjs";
 import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
+import { isInCombat } from "../../helpers/actions.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -318,7 +319,7 @@ export default function register(quench) {
             const potion = await createTestItem(actor, "item", "potion", { system: { consumable: { kind: "potion" } } });
             assert.isFalse(outsideHotlist(actor, spell), "outside a fight, anything goes");
             combat = await startedCombat(actor);
-            assert.isTrue(inRunningFight(actor));
+            assert.isTrue(isInCombat(actor));
             for (const item of [spell, scroll, potion]) assert.isTrue(outsideHotlist(actor, item), item.name);
             assert.isNull(await spell.roll(), "refused, without rolling");
             const de = await createTestItem(actor, "damageEffect", "zap", { system: { rank: 1, parentSkills: [spell.name] } });

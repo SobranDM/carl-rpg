@@ -53,6 +53,7 @@ export async function lockResults(combat) {
   if (waiting.length) {
     const proceed = await foundry.applications.api.DialogV2.confirm({
       window: { title: game.i18n.localize("CARLRPG.Reaction.Op.lock") },
+      classes: ["carl-lock-warning"],
       content: `<p>${esc(game.i18n.format("CARLRPG.Reaction.LockWarning", { names: waiting.join(", ") }))}</p>`,
       rejectClose: false,
     });
@@ -86,6 +87,7 @@ export async function finishResolution(combat) {
   if (!pending.length) return true;
   const roll = await foundry.applications.api.DialogV2.confirm({
     window: { title: game.i18n.localize("CARLRPG.Phase.Next.resolve") },
+    classes: ["carl-unrolled-warning"],
     content: `<p>${esc(game.i18n.format("CARLRPG.Resolve.UnrolledWarning", { count: pending.length }))}</p>`,
     rejectClose: false,
   });

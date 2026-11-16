@@ -145,5 +145,15 @@
       <input type="number" name="modifier" value="0" autofocus />
     </div>
   </div>
+  {{#if showUsesAction}}
+  {{!-- In a fight (helpers/actions.mjs): a Check the GM calls for "generally
+        doesn't require a crawler to spend an Action" (p.85). --}}
+  <div class="form-group carl-dialog-uses-action">
+    <label>{{localize "CARLRPG.Dialog.UsesAction"}}</label>
+    <div class="form-fields">
+      <label><input type="checkbox" name="usesAction" {{#if usesAction}}checked{{/if}} /> {{localize "CARLRPG.Dialog.UsesActionHint"}}</label>
+    </div>
+  </div>
+  {{/if}}
   {{/unless}}
 </div>

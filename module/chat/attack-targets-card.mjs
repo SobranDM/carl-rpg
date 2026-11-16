@@ -28,6 +28,7 @@ import { aiRerollFlags } from "../helpers/ai-favor.mjs";
 import { takesConditions } from "../helpers/actor-kinds.mjs";
 import { vehicleSeatOf } from "../helpers/vehicle-state.mjs";
 import { afterRamRowApplied } from "../helpers/vehicle-ram.mjs";
+import { evadeIsFree, noteUndo, takeAction } from "../helpers/actions.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -235,10 +236,24 @@ async function onRowEvade(event, message, button) {
     if (!target.actor.isOwner && !game.user.isGM) return;
 
     const free = row.freeEvade && !row.freeUsed;
-    const difficulty = rowEvadeDifficulty(row, message.flags[SCOPE]);
-    const rollData = await CarlDice.rollEvadeCheck(target.actor, { difficulty, skipDialog: false, post: false, isAction: !free });
-    if (!rollData) return;
-    await recordRowEvade(message, row, target, { ...rollData, free });
+    // A paid Evade is the Evade Action in a fight - one covers every Attack
+    // on them this round (p.81; helpers/actions.mjs). A free one costs
+    // nothing, nor does an uncommanded Pet's.
+    const pays = !free && !evadeIsFree(target.actor);
+    await takeAction(target.actor, "other", game.i18n.localize("CARLRPG.Roll.Evade"), async (ctx) => {
+      if (!pays) ctx.free();
+      else if (!ctx.require()) return null;
+      const difficulty = rowEvadeDifficulty(row, message.flags[SCOPE]);
+      const rollData = await CarlDice.rollEvadeCheck(target.actor, { difficulty, skipDialog: false, post: false, isAction: !free });
+      if (!rollData) return null;
+      // Undone: the row back to un-Evaded (its outcome card goes too).
+      noteUndo(target.actor, {
+        t: "set", uuid: message.uuid,
+        data: { [`flags.${SCOPE}.targetRows.${row.id}`]: { evade: null, freeUsed: !!row.freeUsed, redirectUuid: null, redirectName: null } },
+      });
+      await recordRowEvade(message, row, target, { ...rollData, free });
+      return true;
+    }, { tag: "evade", optional: true });
   });
 }
 

@@ -10,6 +10,8 @@
  * A store left over from another round reads as empty, and the first
  * declaration of a new round replaces it.
  */
+import { refundAction } from "./actions.mjs";
+
 const SCOPE = "carl-rpg";
 
 /**
@@ -36,6 +38,8 @@ const SCOPE = "carl-rpg";
  * @property {string} range
  * @property {object[]} spentConditions  One-shot Debuffs the Mob spent declaring it -
  *   restored if the declaration is withdrawn.
+ * @property {{combatantId: string, id: string}|null} action  The Mob Action it spent
+ *   (helpers/actions.mjs) - refunded if the declaration is withdrawn.
  * @property {number} createdAt
  */
 
@@ -117,6 +121,8 @@ export function removeDeclaration(combat, id) {
     const { ForcedDeletion } = foundry.data.operators;
     await combat.update({ flags: { [SCOPE]: { declared: { attacks: { [id]: new ForcedDeletion() } } } } });
     await restoreSpentConditions(declaration);
+    // And the Action it spent (helpers/actions.mjs).
+    if (declaration.action) await refundAction(combat, declaration.action.combatantId, declaration.action.id);
   });
 }
 

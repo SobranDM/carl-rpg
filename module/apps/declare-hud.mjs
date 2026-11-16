@@ -19,6 +19,7 @@ import { currentPhase, phasedCombatFor } from "../helpers/combat-phases.mjs";
 import { declarationsByMob, describeDeclaration, removeDeclaration } from "../helpers/declarations.mjs";
 import { isAreaMobAttack } from "../helpers/area.mjs";
 import { isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { actionBubbles } from "../helpers/actions.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -69,6 +70,7 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
       tokenId: token.id,
       name: token.name,
       img: actor.img,
+      actions: actionsLeft(combat, actor),
       attacks: (actor.system.attacks ?? []).map((attack, index) => ({
         index,
         name: attack.name || game.i18n.localize("CARLRPG.MobAttack.Unnamed"),
@@ -120,6 +122,21 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
     const entry = CarlDeclareHud.declaringMobs().find((m) => m.token.id === target.closest("[data-token-id]")?.dataset.tokenId);
     if (entry) await removeDeclaration(entry.combat, target.dataset.id);
   }
+}
+
+/**
+ * "1 + Move of 2" - a Mob's Actions left this round (helpers/actions.mjs).
+ * @param {Combat} combat
+ * @param {Actor} actor
+ * @returns {string}
+ */
+function actionsLeft(combat, actor) {
+  const combatant = combat.combatants.find((c) => c.actor === actor);
+  if (!combatant) return "";
+  const bubbles = actionBubbles(combat, combatant);
+  const left = bubbles.filter((b) => !b.spent && b.pool !== "move").length;
+  const moveLeft = bubbles.some((b) => !b.spent && b.pool === "move");
+  return game.i18n.format(moveLeft ? "CARLRPG.Declare.ActionsLeftMove" : "CARLRPG.Declare.ActionsLeft", { left });
 }
 
 /**

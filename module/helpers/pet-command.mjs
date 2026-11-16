@@ -21,6 +21,7 @@
  * shown, not enforced.
  */
 import CarlDice, { checkSubtitle } from "../dice/dice.mjs";
+import { noteUndo, takeAction } from "./actions.mjs";
 import { CARLRPG } from "./config.mjs";
 import { degreeBadge } from "./rules.mjs";
 import { isPet } from "./actor-kinds.mjs";
@@ -134,6 +135,13 @@ export async function commandPet(pet, { skipDialog = false } = {}) {
     return warn("AlreadyResolved", { state: game.i18n.localize(CARLRPG.petCommandStates[current.state].label) });
   }
 
+  // Commanding is the crawler's Action (p.232; helpers/actions.mjs).
+  const label = game.i18n.format("CARLRPG.Actions.Label.CommandPet", { name: pet.name });
+  return takeAction(owner, "other", label, () => rollCommand(owner, pet, combat, { skipDialog }));
+}
+
+/** commandPet's Check and its result, inside the crawler's Action. */
+async function rollCommand(owner, pet, combat, { skipDialog }) {
   const { skill, trained } = await animalHandlingFor(owner);
   const difficulty = commandDifficulty(pet);
   const result = await CarlDice.rollOpposedSkillCheck(owner, skill, {
@@ -158,6 +166,8 @@ export async function commandPet(pet, { skipDialog = false } = {}) {
     body,
     actor: owner,
   });
+  // Undone: the Pet back to how it was before.
+  noteUndo(owner, { t: "set", uuid: pet.uuid, data: { "system.command": foundry.utils.deepClone(pet.system.toObject().command) } });
   await pet.update({ "system.command": { state, combatId: combat.id, round: combat.round } });
   return state;
 }

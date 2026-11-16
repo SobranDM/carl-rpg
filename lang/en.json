@@ -673,6 +673,11 @@
       "RaceAndClass": "Race & Class",
       "Active": "Active",
       "MobTier": "Mob Tier",
+      "Elite": "Elite",
+      "EliteHint": "An Elite, like a Boss, has 1 Action per crawler in the fight each round (p.81).",
+      "ActionsPerRound": "Actions",
+      "ActionsPerRoundHint": "Actions per round, when the stat block sets its own. Blank: a Mob gets 1 Move + 1 Action; an Elite or Boss 1 Action per crawler.",
+      "ActionsAuto": "auto",
       "BankedStatPoints": "Stat Points",
       "AiFavor": "AI Favor",
       "AiFavorHint": "Spend 1 to reroll a d20 (not a Nat 1) or, once per round, take an extra non-Attack Action (p.61).",
@@ -1265,6 +1270,8 @@
       "SplashTargets": "In the Splash (half damage)",
       "OptionalModifiers": "Optional Modifiers",
       "SituationalModifier": "Situational Modifier",
+      "UsesAction": "Action",
+      "UsesActionHint": "Uses one of your Actions this round (untick for a Check the GM called for)",
       "SkillCheckTitle": "Skill Check: {name}",
       "StatCheckTitle": "Stat Check: {name}",
       "AttackTitle": "Attack: {name}",
@@ -1524,7 +1531,51 @@
       "Recorded": "Declared - {mob}: {summary}",
       "ListTitle": "Declared this round",
       "NoneYet": "No Attacks declared yet.",
-      "GMOnly": "Only the GM can declare Mob Attacks."
+      "GMOnly": "Only the GM can declare Mob Attacks.",
+      "ActionsLeft": "{left} Action(s) left",
+      "ActionsLeftMove": "{left} Action(s) + Move left"
+    },
+    "Actions": {
+      "NoneLeft": "{name} has no Actions left this round. The GM can add one from the Combat Tracker (right-click).",
+      "NoAttackLeft": "{name} has no Action left that can Attack (a Mob's Move or an AI Favor Action can't). The GM can add one from the Combat Tracker.",
+      "NoFavor": "{name} has no AI Favor to spend.",
+      "FavorUsed": "{name} already has this round's AI Favor Action.",
+      "FavorButton": "AI Favor: spend 1 for an extra non-Attack Action this round",
+      "Refunded": "{user} undid one of {name}'s Actions: {label}.",
+      "SpentOn": "Spent: {label}",
+      "SpentOnUndo": "Spent: {label}. Click to undo it.",
+      "Move": "Move",
+      "Other": "Action",
+      "Pool": {
+        "action": "Action",
+        "move": "Move only",
+        "favor": "AI Favor Action (not an Attack)"
+      },
+      "Menu": {
+        "Add": "Add an Action this round",
+        "Remove": "Remove an Action this round",
+        "Reset": "Reset this round's Actions"
+      },
+      "Label": {
+        "Attack": "Attack: {name}",
+        "Cast": "Cast: {name}",
+        "Check": "Check: {name}",
+        "UseItem": "Use: {item}",
+        "UseHotlist": "Use a Hotlist Item: {item}",
+        "Retrieve": "Retrieve: {item}",
+        "CommandPet": "Command Pet: {name}",
+        "Board": "Board {vehicle}",
+        "Exit": "Get out of {vehicle}"
+      },
+      "Undo": {
+        "Blocked": "That Action can't be undone. The GM can add an Action from the Combat Tracker instead.",
+        "CardUsed": "That Action's card has already been acted on (damage or healing applied, a target Evaded, a potion drunk), so it can't be undone. The GM can add an Action from the Combat Tracker instead.",
+        "ReactionLocked": "The Reaction card is locked, so that Action can't be undone.",
+        "ReactionChanged": "The Reaction card has changed since that Action. Undo the later ones first, or the GM can add an Action from the Combat Tracker.",
+        "GearChanged": "Gear has been moved by a later Action since. Undo that one first.",
+        "DeclarationOver": "The Declaration Phase is over, so that declared Attack can't be withdrawn.",
+        "Learned": "A Spell learned from a Spellbook can't be unlearned. The GM can add an Action from the Combat Tracker instead."
+      }
     },
     "Reaction": {
       "Title": "Mob Attacks - Round {round}",

@@ -18,6 +18,7 @@ import {
 } from "./vehicle-state.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { isHitDegree } from "./rules.mjs";
+import { noteUndo, takeAction } from "./actions.mjs";
 
 const SOCKET = "system.carl-rpg";
 const FLAG_SCOPE = "carl-rpg";
@@ -228,26 +229,42 @@ export async function boardVehicle(vehicle, actor, { role = "passenger", skipDia
     return false;
   }
 
-  let note = loc("BoardStationary");
-  if (!vehicle.system.parked && status.currentMove > 0 && rollsLikeCrawler(actor)) {
+  if (vehicle.system.parked || status.currentMove <= 0 || !rollsLikeCrawler(actor)) {
+    return takeSeat(vehicle, actor, role, loc("BoardStationary"));
+  }
+  // Boarding a moving vehicle is a Move Action (helpers/actions.mjs), spent
+  // on the attempt; the DEX Check is part of it.
+  const label = game.i18n.format("CARLRPG.Actions.Label.Board", { vehicle: vehicle.name });
+  const boarded = await takeAction(actor, "move", label, async (ctx) => {
     const result = await CarlDice.rollStatCheck(actor, "dex", {
-      difficulty: status.boardDifficulty, skipDialog, returnResult: true,
-      title: loc("BoardCheckTitle"),
+      difficulty: status.boardDifficulty, skipDialog, returnResult: true, title: loc("BoardCheckTitle"), within: ctx,
     });
     if (!result) return false;
+    ctx.use();
     if (!isHitDegree(result.degree)) {
       ui.notifications.info(loc("BoardFailed"));
       return false;
     }
-    note = loc("BoardMoving", { dc: status.boardDifficulty });
-  }
+    return takeSeat(vehicle, actor, role, loc("BoardMoving", { dc: status.boardDifficulty }));
+  });
+  return !!boarded;
+}
 
+/**
+ * Seat a boarding actor (boardVehicle), leaving any other vehicle first,
+ * and post the card.
+ * @returns {Promise<boolean>}
+ */
+async function takeSeat(vehicle, actor, role, note) {
+  const key = occupantKey(actor);
   const other = vehicleSeatOf(actor);
   if (other && other.vehicle !== vehicle) await exitVehicle(other.vehicle, actor, { silent: true });
 
   const occupants = vehicle.system.toObject().occupants
     .map((o) => (role === "driver" && o.role === "driver" ? { ...o, role: "passenger" } : o));
   occupants.push({ uuid: key, role, name: actor.name });
+  // Undone: this one out again - anyone else's seat is their own business.
+  noteUndo(actor, { t: "seat", uuid: vehicle.uuid, key, entry: null });
   if (!await updateVehicle(vehicle, { "system.occupants": occupants })) return false;
   await createCardMessage({ title: vehicle.name, img: vehicle.img, body: `<p>${esc(note)}</p>`, actor });
   return true;
@@ -264,13 +281,22 @@ export async function exitVehicle(vehicle, actorOrUuid, { silent = false } = {})
   const key = typeof actorOrUuid === "string" ? actorOrUuid : occupantKey(actorOrUuid);
   const leaving = vehicle.system.occupants.find((o) => o.uuid === key);
   if (!leaving) return false;
-  const occupants = vehicle.system.toObject().occupants.filter((o) => o.uuid !== key);
-  if (!await updateVehicle(vehicle, { "system.occupants": occupants })) return false;
-  if (silent) return true;
+  // A Move Action in a fight (helpers/actions.mjs) - not when it's part of
+  // boarding another vehicle (silent), which already paid.
   const actor = resolveOccupant(key);
-  const body = game.i18n.format("CARLRPG.Vehicle.Exited", { name: actor?.name ?? leaving.name, vehicle: vehicle.name });
-  await createCardMessage({ title: vehicle.name, img: vehicle.img, body: `<p>${esc(body)}</p>`, actor: actor ?? undefined });
-  return true;
+  const leave = async () => {
+    // Undone: back in their seat (helpers/action-undo.mjs).
+    const seat = vehicle.system.toObject().occupants.find((o) => o.uuid === key);
+    noteUndo(actor, { t: "seat", uuid: vehicle.uuid, key, entry: seat ?? null });
+    const occupants = vehicle.system.toObject().occupants.filter((o) => o.uuid !== key);
+    if (!await updateVehicle(vehicle, { "system.occupants": occupants })) return false;
+    if (silent) return true;
+    const body = game.i18n.format("CARLRPG.Vehicle.Exited", { name: actor?.name ?? leaving.name, vehicle: vehicle.name });
+    await createCardMessage({ title: vehicle.name, img: vehicle.img, body: `<p>${esc(body)}</p>`, actor: actor ?? undefined });
+    return true;
+  };
+  if (silent || !actor) return leave();
+  return !!(await takeAction(actor, "move", game.i18n.format("CARLRPG.Actions.Label.Exit", { vehicle: vehicle.name }), leave));
 }
 
 /**

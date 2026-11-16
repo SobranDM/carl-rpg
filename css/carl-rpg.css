@@ -1267,6 +1267,55 @@
   color: var(--carl-text-muted);
 }
 
+.combat-tracker .carl-action-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  margin: 1px 0 2px;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble.action {
+  background: #2ecc40;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble.move {
+  background: #f1c40f;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble.favor {
+  background: #ffd700;
+  box-shadow: 0 0 3px #ffd700;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble.spent {
+  background: #c0392b;
+  box-shadow: none;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.combat-tracker .carl-action-bubbles .carl-action-favor {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  padding: 0;
+  line-height: 14px;
+  font-size: 9px;
+  color: #ffd700;
+  background: none;
+  border: 1px dashed #ffd700;
+  border-radius: 50%;
+}
+
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
   --carl-accent: #c9273f;

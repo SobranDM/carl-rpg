@@ -16,7 +16,7 @@ import { aiRerollFlags, keptD20, rerollFormula } from "../helpers/ai-favor.mjs";
 import { buildScrollCast } from "../helpers/scroll-cast.mjs";
 import { isAreaItem, isAreaMobAttack } from "../helpers/area.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
-import { getDegreeOfSuccess, degreeBadge, isHitDegree, staticEvade, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
+import { getDegreeOfSuccess, degreeBadge, isHitDegree, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
 import { ownedRank, slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
@@ -29,6 +29,7 @@ import {
 import { removeConditionsById } from "../helpers/conditions.mjs";
 import { currentPhase, phasedCombatFor } from "../helpers/combat-phases.mjs";
 import { describeDeclaration, recordDeclaration } from "../helpers/declarations.mjs";
+import { canAct, combatantInFight, evadeIsFree, evadesWithoutAction, noteUndo, passiveContext, takeAction } from "../helpers/actions.mjs";
 import { isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { collectVehicleRows } from "../helpers/vehicle-rows.mjs";
 import { attackDifficultyParts, mobVsVehicleRows } from "../helpers/attack-targets.mjs";
@@ -340,7 +341,10 @@ function resolveManaCost(spellItem, manaCostChoices, chosenIndex, actor) {
 async function applyManaCost(actor, manaCost) {
   if (!manaCost) return;
   const current = actor.system.mana?.value ?? 0;
-  await actor.update({ "system.mana.value": Math.max(0, current - manaCost) });
+  const value = Math.max(0, current - manaCost);
+  // Given back if the Action is undone (helpers/action-undo.mjs).
+  noteUndo(actor, { t: "mana", uuid: actor.uuid, amount: current - value });
+  await actor.update({ "system.mana.value": value });
 }
 
 /**
@@ -464,6 +468,34 @@ function resolveActorToken(actor) {
 }
 
 /**
+ * The roll dialog's "Uses an Action" box (helpers/actions.mjs): offered,
+ * ticked or not, only when the roll is a fight's Action of its own - not
+ * part of another (a Scroll's cast, boarding a vehicle) and not outside a
+ * fight. null hides it.
+ * @param {object} ctx  takeAction's context.
+ * @param {boolean} ticked  Its default.
+ * @returns {boolean|null}
+ */
+function actionBox(ctx, ticked) {
+  return ctx.tracked ? ticked : null;
+}
+
+/**
+ * Settle a roll's Action from its "Uses an Action" box: ticked, there must
+ * be one left; unticked, it's free.
+ * @param {object} ctx  takeAction's context.
+ * @param {boolean} usesAction
+ * @returns {boolean}  False: refused, none left.
+ */
+function settleAction(ctx, usesAction) {
+  if (!usesAction) {
+    ctx.free();
+    return true;
+  }
+  return ctx.require();
+}
+
+/**
  * Narrow an Attack's conditional modifiers to what's eligible for the roll
  * as resolved: the rolled Skill's own, plus - only if a Damage Effect ended
  * up chosen - that one Damage Effect's. Every other candidate Damage
@@ -545,7 +577,7 @@ function swapNote(weapon) {
  * @param {{skipDialog?: boolean, damageEffectItem?: Item|null}} options
  * @returns {Promise<ChatMessage|null>}
  */
-async function attackWithSwap(actor, skillItem, { swap }, { skipDialog = false, damageEffectItem = null } = {}) {
+async function attackWithSwap(ctx, actor, skillItem, { swap }, { skipDialog = false, damageEffectItem = null } = {}) {
   let presetOptions = null;
   if (!skipDialog) {
     const args = await CarlDice.rollAttack(actor, skillItem, { damageEffectItem, promptArgsOnly: true });
@@ -560,7 +592,8 @@ async function attackWithSwap(actor, skillItem, { swap }, { skipDialog = false, 
     warnNoWeapon(skillItem);
     return null;
   }
-  const attack = () => CarlDice.rollAttack(actor, skillItem, { damageEffectItem, skipDialog, presetOptions });
+  // Part of this Attack's own Action (ctx), swap and all.
+  const attack = () => CarlDice.rollAttack(actor, skillItem, { damageEffectItem, skipDialog, presetOptions, within: ctx });
   return now.swap ? swapForAttack(actor, now.swap, attack) : attack();
 }
 
@@ -572,9 +605,24 @@ export default class CarlDice {
    * @param {Actor} actor
    * @param {string} statKey  e.g. "str", "con".
    * @param {{difficulty?: number|null, skipDialog?: boolean}} [options]
+   *   In a fight it offers "Uses an Action", unticked - a Stat Check is
+   *   usually one the GM calls for (p.85) - unless it's part of another
+   *   Action (boarding a moving vehicle).
    * @returns {Promise<ChatMessage|null>}
    */
-  static async rollStatCheck(actor, statKey, { difficulty = null, skipDialog = false, title = null, returnResult = false } = {}) {
+  static async rollStatCheck(actor, statKey, options = {}) {
+    const stat = actor.system.stats?.[statKey];
+    const label = game.i18n.format("CARLRPG.Actions.Label.Check", {
+      name: stat?.label || game.i18n.localize(CARLRPG.stats[statKey] ?? statKey),
+    });
+    return takeAction(actor, "other", label, (ctx) => CarlDice._statCheck(ctx, actor, statKey, options),
+      { optional: true, within: options.within });
+  }
+
+  /** rollStatCheck, inside its Action (helpers/actions.mjs takeAction). */
+  static async _statCheck(ctx, actor, statKey, {
+    difficulty = null, skipDialog = false, title = null, returnResult = false,
+  } = {}) {
     const sys = actor.system;
     const stat = sys.stats?.[statKey];
     if (!stat) return null;
@@ -583,6 +631,7 @@ export default class CarlDice {
     const statLabel = stat.label || game.i18n.localize(CARLRPG.stats[statKey] ?? statKey);
     const debuffRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check")], "roll");
 
+    const usesActionDefault = actionBox(ctx, false);
     let options = { advantage: "normal", difficulty, modifier: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const difficultyPresets = buildDifficultyPresets({
@@ -596,10 +645,12 @@ export default class CarlDice {
         difficultyPresets,
         showDifficulty: true,
         debuffRows,
+        usesAction: usesActionDefault,
       });
       if (!prompted) return null;
       options = prompted;
     }
+    if (!settleAction(ctx, skipDialog ? !!usesActionDefault : !!options.usesAction)) return null;
 
     const debuffEffect = resolveRollerRows(debuffRows, options.checkedDebuffs);
     const parts = new RollParts(actor.getRollData());
@@ -643,8 +694,17 @@ export default class CarlDice {
    * @param {{skipDialog?: boolean, castAs?: object|null}} [options]
    *   castAs: a Scroll's cast (module/helpers/scroll-cast.mjs) - its own
    *   skill entry and fixed Rank, no Mana, no use-mark.
+   *   In a fight it offers "Uses an Action", ticked (Make a Check / Cast a
+   *   Spell) - unless it's part of another Action (a Scroll's use).
    */
-  static async rollSkillCheck(actor, skillItem, { skipDialog = false, castAs = null } = {}) {
+  static async rollSkillCheck(actor, skillItem, options = {}) {
+    const key = skillItem.type === "spell" ? "CARLRPG.Actions.Label.Cast" : "CARLRPG.Actions.Label.Check";
+    return takeAction(actor, "other", game.i18n.format(key, { name: skillItem.name }),
+      (ctx) => CarlDice._skillCheck(ctx, actor, skillItem, options), { optional: true, within: options.within });
+  }
+
+  /** rollSkillCheck, inside its Action (helpers/actions.mjs takeAction). */
+  static async _skillCheck(ctx, actor, skillItem, { skipDialog = false, castAs = null } = {}) {
     const sys = actor.system;
     const skillSys = skillItem.system;
     const cast = resolveCastContext(actor, skillItem, castAs);
@@ -663,6 +723,7 @@ export default class CarlDice {
     const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
     const debuffRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })], "roll");
 
+    const usesActionDefault = actionBox(ctx, true);
     let options = { advantage: "normal", difficulty: null, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const difficultyPresets = buildSkillCheckPresets(skillItem);
@@ -674,10 +735,12 @@ export default class CarlDice {
         conditionalModifiers,
         manaCostChoices,
         debuffRows,
+        usesAction: usesActionDefault,
       });
       if (!prompted) return null;
       options = prompted;
     }
+    if (!settleAction(ctx, skipDialog ? !!usesActionDefault : !!options.usesAction)) return null;
 
     const untrained = rank === 0;
     const statKey = skillSys.governingStat;
@@ -703,7 +766,7 @@ export default class CarlDice {
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
     const body = buildDebuffNote(debuffEffect.applied);
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
       title: skillItem.name,
@@ -717,6 +780,7 @@ export default class CarlDice {
         title: skillItem.name, img: skillItem.img, label: skillItem.name, breakdown, body, chosenManaCost,
       }),
     });
+    return message;
   }
 
   /**
@@ -731,6 +795,7 @@ export default class CarlDice {
    */
   static async chooseAttack(actor) {
     if (isBlockedByDebuff(actor)) return null;
+    if (!canAct(actor, "attack")) return null;
     const choices = attackChoices(actor);
     if (!choices.length) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Weapon.NoAttacks"));
@@ -773,8 +838,11 @@ export default class CarlDice {
       warnNoWeapon(skill);
       return null;
     }
-    const attack = () => CarlDice.rollAttack(actor, skill, { presetOptions: prompted });
-    return readiness.swap ? swapForAttack(actor, readiness.swap, attack) : attack();
+    // One Attack Action: the swap out of the Hotlist is part of it (p.98).
+    return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name: skill.name }), (ctx) => {
+      const attack = () => CarlDice.rollAttack(actor, skill, { presetOptions: prompted, within: ctx });
+      return readiness.swap ? swapForAttack(actor, readiness.swap, attack) : attack();
+    });
   }
 
   /**
@@ -795,8 +863,18 @@ export default class CarlDice {
    *   arguments) without showing it or rolling - the Attack! picker's.
    *   presetOptions: roll with these dialog choices (promptRollOptions'
    *   result) instead of asking - no weapon check, it was made before.
+   *   In a fight it's the Attack Action (helpers/actions.mjs) - refused with
+   *   none left, spent once rolled - or part of the Action it's made in (a
+   *   Scroll's use, a Swap and Attack).
    */
-  static async rollAttack(actor, skillItem, {
+  static async rollAttack(actor, skillItem, options = {}) {
+    if (options.promptArgsOnly) return CarlDice._attack(passiveContext(), actor, skillItem, options);
+    return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name: skillItem.name }),
+      (ctx) => CarlDice._attack(ctx, actor, skillItem, options), { within: options.within });
+  }
+
+  /** rollAttack, inside its Action (helpers/actions.mjs takeAction). */
+  static async _attack(ctx, actor, skillItem, {
     skipDialog = false, damageEffectItem = null, castAs = null, promptArgsOnly = false, presetOptions = null,
   } = {}) {
     if (!promptArgsOnly && !presetOptions && !castAs) {
@@ -805,7 +883,7 @@ export default class CarlDice {
         warnNoWeapon(skillItem);
         return null;
       }
-      if (readiness.swap) return attackWithSwap(actor, skillItem, readiness, { skipDialog, damageEffectItem });
+      if (readiness.swap) return attackWithSwap(ctx, actor, skillItem, readiness, { skipDialog, damageEffectItem });
     }
     const sys = actor.system;
     const skillSys = skillItem.system;
@@ -1179,7 +1257,7 @@ export default class CarlDice {
       castAs: castAs ? { spellData: castAs.spellData, rank: castAs.rank } : null,
     }));
 
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls, rollMeta,
       title: skillItem.name,
       // Several targets: each row was rolled against its own Difficulty.
@@ -1191,6 +1269,7 @@ export default class CarlDice {
       flags,
       actor,
     });
+    return message;
   }
 
   /**
@@ -1383,7 +1462,16 @@ export default class CarlDice {
    * @param {{skipDialog?: boolean}} [options]
    * @returns {Promise<ChatMessage|null>}
    */
-  static async rollMobAttack(actor, attackIndex, { skipDialog = false } = {}) {
+  static async rollMobAttack(actor, attackIndex, options = {}) {
+    const attack = actor.system.attacks?.[attackIndex];
+    const name = attack?.name || game.i18n.localize("CARLRPG.MobAttack.Unnamed");
+    // Checked once its targets are known: a preview at no one is free.
+    return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name }),
+      (ctx) => CarlDice._mobAttack(ctx, actor, attackIndex, options), { optional: true });
+  }
+
+  /** rollMobAttack, inside its Action (helpers/actions.mjs takeAction). */
+  static async _mobAttack(ctx, actor, attackIndex, { skipDialog = false } = {}) {
     const attack = actor.system.attacks?.[attackIndex];
     if (!attack) return null;
     if (isBlockedByDebuff(actor)) return null;
@@ -1403,6 +1491,9 @@ export default class CarlDice {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.NoTargets"));
       return null;
     }
+    // An Attack against someone is one of the Mob's Actions (helpers/
+    // actions.mjs) - not its Move-only one. A preview with no target is free.
+    if (!settleAction(ctx, targetUuids.length > 0)) return null;
 
     // The stat block doesn't say whether a to-hit includes the DEX Mod, so
     // Woozy is offered but left unticked here.
@@ -1475,6 +1566,10 @@ export default class CarlDice {
       // kept with it so withdrawing the declaration gives them back.
       const spentIds = new Set(endedConditionIds(actor.system, resolved.applied));
       const spentConditions = (actor.system.toObject().conditions ?? []).filter((c) => spentIds.has(c.id));
+      // The Action it spends goes with it: withdrawing the declaration refunds
+      // it. (If the spend is refused - another declaration took the last
+      // Action meanwhile - takeAction takes the declaration back.)
+      const fight = ctx.tracked ? combatantInFight(actor) : null;
       const declaration = await recordDeclaration(declaring, {
         mobUuid: token?.uuid ?? actor.uuid,
         tokenId: token?.id ?? null,
@@ -1495,11 +1590,16 @@ export default class CarlDice {
         effect: attack.effect ?? "",
         range: attack.range ?? "",
         spentConditions,
+        action: fight ? { combatantId: fight.combatant.id, id: ctx.id } : null,
       });
       await removeConditionsById(actor, [...spentIds]);
+      // Noted last, so it's undone first: withdrawing gives the Debuffs back
+      // (their own record then finds them there already).
+      noteUndo(actor, { t: "declaration", combatId: declaring.id, id: declaration.id });
       ui.notifications.info(game.i18n.format("CARLRPG.Declare.Recorded", {
         mob: declaration.mobName, summary: describeDeclaration(declaration),
       }));
+      ctx.use();
       return null;
     }
 
@@ -1569,7 +1669,7 @@ export default class CarlDice {
       ? game.i18n.localize("CARLRPG.MobAttack.NoToHit")
       : game.i18n.format("CARLRPG.MobAttack.Subtitle", { difficulty });
 
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls, rollMeta,
       title: attackName,
       subtitle,
@@ -1579,6 +1679,7 @@ export default class CarlDice {
       flags,
       actor,
     });
+    return message;
   }
 
   /**
@@ -1664,7 +1765,15 @@ export default class CarlDice {
    * @param {Actor} actor
    * @param {Item} skillItem
    */
-  static async rollHeal(actor, skillItem, { castAs = null } = {}) {
+  static async rollHeal(actor, skillItem, options = {}) {
+    // In a fight this is the Heal Action (an Interrupt, p.82) - refused with
+    // none left - or part of the Action it's cast in (a Scroll's use).
+    return takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.Cast", { name: skillItem.name }),
+      () => CarlDice._heal(actor, skillItem, options), { within: options.within });
+  }
+
+  /** rollHeal, inside its Action (helpers/actions.mjs takeAction). */
+  static async _heal(actor, skillItem, { castAs = null } = {}) {
     // castAs: a Scroll's cast (module/helpers/scroll-cast.mjs) - its Rank is
     // the scroll's (already on the item), no Mana, no use-mark.
     const skillSys = skillItem.system;
@@ -1698,7 +1807,7 @@ export default class CarlDice {
     if (fullTier) {
       flags.healFull = true;
       const label = withManaCostSubtitle(game.i18n.localize("CARLRPG.Heal.SubtitleFull"), chosenManaCost);
-      return createCardMessage({
+      const message = await createCardMessage({
         title: skillItem.name,
         img: skillItem.img,
         subtitle: label,
@@ -1707,6 +1816,7 @@ export default class CarlDice {
         flags,
         actor,
       });
+      return message;
     }
 
     const rollData = actor.getRollData();
@@ -1716,7 +1826,7 @@ export default class CarlDice {
 
     flags.healAmount = total;
 
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
       title: skillItem.name,
@@ -1727,6 +1837,7 @@ export default class CarlDice {
       flags,
       actor,
     });
+    return message;
   }
 
   /**
@@ -1740,6 +1851,14 @@ export default class CarlDice {
    * @param {Item} skillItem
    */
   static async rollToggleSpell(actor, skillItem) {
+    // Casting it is the Cast a Spell Action; switching it off is free.
+    if (skillItem.system.active) return CarlDice._toggleSpell(actor, skillItem);
+    return takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.Cast", { name: skillItem.name }),
+      () => CarlDice._toggleSpell(actor, skillItem));
+  }
+
+  /** rollToggleSpell, inside its Action when switching on (helpers/actions.mjs takeAction). */
+  static async _toggleSpell(actor, skillItem) {
     const skillSys = skillItem.system;
     const turningOn = !skillSys.active;
     let manaCostSpent = null;
@@ -1747,6 +1866,9 @@ export default class CarlDice {
     if (turningOn) {
       if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
       if (isBlockedUntrainedSpell(skillItem, skillSys.rank ?? 0)) return null;
+      // Undone: off again, and the Shield back where it was.
+      noteUndo(actor, { t: "set", uuid: skillItem.uuid, data: { "system.active": false } });
+      if (skillSys.shieldSlots) noteUndo(actor, { t: "set", uuid: actor.uuid, data: { "system.shield.value": actor.system.shield?.value ?? 0 } });
       manaCostSpent = applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost);
       await applyManaCost(actor, manaCostSpent);
       await removeConditionsById(actor, endedConditionIds(actor.system, []));
@@ -1769,13 +1891,14 @@ export default class CarlDice {
       ? withManaCostSubtitle(game.i18n.localize("CARLRPG.Toggle.Activated"), { manaCost: manaCostSpent, isBase: true })
       : game.i18n.localize("CARLRPG.Toggle.Deactivated");
 
-    return createCardMessage({
+    const message = await createCardMessage({
       title: skillItem.name,
       img: skillItem.img,
       subtitle: toggleSubtitle,
       body: turningOn ? (skillItem.system.description ?? "") : "",
       actor,
     });
+    return message;
   }
 
   /**
@@ -1795,7 +1918,17 @@ export default class CarlDice {
    * @returns {Promise<ChatMessage|{roll: Roll, total: number, breakdown: string, naturalRoll: number|null, degree: string}|null>}
    *   null if the roll-options dialog was cancelled, regardless of `post`.
    */
-  static async rollEvadeCheck(actor, { difficulty = null, skipDialog = false, post = true, isAction = true, preset = null } = {}) {
+  static async rollEvadeCheck(actor, options = {}) {
+    const { post = true, isAction = true, preset = null } = options;
+    // Only the sheet's own Evade can be the Evade Action (one covers every
+    // Attack this round, p.81); a card's Evade pays for itself.
+    if (!post || !isAction || preset) return CarlDice._evadeCheck(passiveContext(), actor, options);
+    return takeAction(actor, "other", game.i18n.localize("CARLRPG.Roll.Evade"),
+      (ctx) => CarlDice._evadeCheck(ctx, actor, options), { tag: "evade", optional: true });
+  }
+
+  /** rollEvadeCheck, inside its Action (helpers/actions.mjs takeAction). */
+  static async _evadeCheck(ctx, actor, { difficulty = null, skipDialog = false, post = true, isAction = true, preset = null } = {}) {
     const sys = actor.system;
     if (isBlockedByDebuff(actor)) return null;
     const rollData = actor.getRollData();
@@ -1823,10 +1956,17 @@ export default class CarlDice {
         difficultyPresets,
         conditionalModifiers,
         debuffRows,
+        // Unticked once they have Evaded this round: one Evade Action covers
+        // every Attack (p.81). Hidden for an uncommanded Pet, whose Evade is free.
+        usesAction: evadesWithoutAction(actor) ? null : actionBox(ctx, !evadeIsFree(actor)),
       });
       if (!prompted) return null;
       options = prompted;
     }
+    // The sheet's Evade button in a fight: the Evade Action, unless unticked.
+    const usesAction = ctx.tracked && !evadesWithoutAction(actor)
+      && (skipDialog ? !evadeIsFree(actor) : !!options.usesAction);
+    if (!settleAction(ctx, usesAction)) return null;
 
     const dexMod = sys.stats?.dex?.mod ?? 0;
     const evadeBonus = sys.bonuses?.evadeBonus ?? 0;
@@ -2101,7 +2241,9 @@ export default class CarlDice {
    */
   static async markForAdvancement(item) {
     if (!item || !CarlDice.isAdvancedByUse(item)) return;
-    if (!item.system.marked) await item.update({ "system.marked": true });
+    if (item.system.marked) return;
+    noteUndo(item.parent, { t: "set", uuid: item.uuid, data: { "system.marked": false } });
+    await item.update({ "system.marked": true });
   }
 
   /**

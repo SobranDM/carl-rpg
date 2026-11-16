@@ -40,7 +40,8 @@ import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { postConsumableCard } from "../chat/consumable-card.mjs";
 import { isVehicle } from "./actor-kinds.mjs";
-import { inRunningFight, refuseOutsideHotlist } from "./hotlist.mjs";
+import { refuseOutsideHotlist } from "./hotlist.mjs";
+import { isInCombat, noteUndo, takeAction } from "./actions.mjs";
 
 // "Each crawler may only consume two Stat potions and two Skill potions
 // during the entirety of their short life" (p.218).
@@ -110,6 +111,9 @@ export function hasBuff(buff) {
 /** Use up one: quantity - 1, or delete the item when it was the last. */
 export async function consumeOne(item) {
   const quantity = Number(item.system.quantity ?? 1);
+  // Given back if the Action is undone - the last one re-made with its id,
+  // so the Hotlist still finds it (helpers/action-undo.mjs).
+  noteUndo(item.parent, { t: "item", actorUuid: item.parent?.uuid, id: item.id, data: quantity > 1 ? null : item.toObject() });
   if (quantity > 1) await item.update({ "system.quantity": quantity - 1 });
   else await item.delete();
 }
@@ -192,14 +196,33 @@ export async function useConsumable(actor, item, { skipDialog = false } = {}) {
   // Cast a Spell: "Choose a Spell or scroll in your Hotlist" (Table 3);
   // Use a Hotlist Item: "Use a prepared consumable item" (p.86).
   if (refuseOutsideHotlist(actor, item)) return null;
-  inUse.add(item.uuid);
-  try {
-    if (kind === "scroll") return await useScroll(actor, item, { skipDialog });
-    if (kind === "spellbook") return await readSpellbook(actor, item, { skipDialog });
-    return await drinkOrUse(actor, item, { skipDialog });
-  } finally {
-    inUse.delete(item.uuid);
-  }
+  // In a fight it's the Use a Hotlist Item Action (helpers/actions.mjs) - a
+  // healing potion the Heal Interrupt - spent once it's actually used. A
+  // Scroll of an Attack Spell is an Attack, which AI Favor's Action can't pay
+  // for (p.61); its cast is part of it, not another Action.
+  const actionKind = kind === "scroll" && (await scrollIsAttack(item)) ? "attack" : "other";
+  const label = game.i18n.format("CARLRPG.Actions.Label.UseItem", { item: item.name });
+  return takeAction(actor, actionKind, label, async (ctx) => {
+    inUse.add(item.uuid);
+    try {
+      if (kind === "scroll") return await useScroll(actor, item, { skipDialog, within: ctx });
+      if (kind === "spellbook") {
+        // A Spell learned can't simply be unlearned: no undo (helpers/action-undo.mjs).
+        const learned = await readSpellbook(actor, item, { skipDialog });
+        if (learned) noteUndo(actor, { t: "blocked", reason: "Learned" });
+        return learned;
+      }
+      return await drinkOrUse(actor, item, { skipDialog });
+    } finally {
+      inUse.delete(item.uuid);
+    }
+  });
+}
+
+/** Whether a Scroll casts an Attack Spell. */
+async function scrollIsAttack(item) {
+  const { source } = await resolveConsumableSpell(item);
+  return !!source?.system.castingKeywords?.includes("attack");
 }
 
 // Items being used on this client right now (by uuid).
@@ -308,7 +331,7 @@ export function wouldCauseSickness(recipient, moment = potionMoment(recipient)) 
  */
 function useNotes(actor, item, drinkers) {
   const lines = [];
-  if (inRunningFight(actor)) {
+  if (isInCombat(actor)) {
     const key = item.system.consumable?.kind === "scroll" ? "CastAction" : "UseAction";
     lines.push(`<p class="carl-dialog-hint">${esc(game.i18n.localize(`CARLRPG.Consumable.Confirm.${key}`))}</p>`);
   }
@@ -627,7 +650,7 @@ async function readSpellbook(actor, item, { skipDialog }) {
   });
 }
 
-async function useScroll(actor, item, { skipDialog }) {
+async function useScroll(actor, item, { skipDialog, within }) {
   const { source, name, rank } = await resolveConsumableSpell(item);
   if (!source) {
     ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.NoSpell", { item: item.name, spell: name || "?" }));
@@ -643,13 +666,14 @@ async function useScroll(actor, item, { skipDialog }) {
     && (keywords.includes("heal") || spell.system.isPassive || spell.system.isToggled);
   if (noRollDialog && !skipDialog && !(await confirmUse(actor, item))) return null;
   let message;
-  if (keywords.includes("attack")) message = await CarlDice.rollAttack(actor, spell, { castAs, skipDialog });
-  else if (keywords.includes("heal")) message = await CarlDice.rollHeal(actor, spell, { castAs });
+  // The scroll's use is the Action (useConsumable) - its cast is part of it.
+  if (keywords.includes("attack")) message = await CarlDice.rollAttack(actor, spell, { castAs, skipDialog, within });
+  else if (keywords.includes("heal")) message = await CarlDice.rollHeal(actor, spell, { castAs, within });
   // A Spell with no Check to roll (Hole, Wall of Fire) or one you switch on
   // and off (Shield) just takes effect: the card states it at the scroll's
   // Rank, with that Rank's Upgrades, for the table to run.
   else if (spell.system.isPassive || spell.system.isToggled) message = await postScrollEffect(actor, spell, rank);
-  else message = await CarlDice.rollSkillCheck(actor, spell, { castAs, skipDialog });
+  else message = await CarlDice.rollSkillCheck(actor, spell, { castAs, skipDialog, within });
   // A cancelled dialog (or a blocked cast) leaves the scroll unused.
   if (!message) return null;
   await consumeOne(item);

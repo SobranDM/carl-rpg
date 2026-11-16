@@ -1052,9 +1052,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const li = target.closest(".item");
     const item = this.actor.items.get(li.dataset.itemId);
     if (!item) return;
-    if (this.actor.type === "character" && isItemWorn(this.actor, item.id)) {
-      return unwearItem(this.actor, item);
-    }
+    // In a fight either is the Retrieve Action (helpers/equip-slots.mjs,
+    // CarlRPGItem#_preUpdate).
+    if (this.actor.type === "character" && isItemWorn(this.actor, item.id)) return unwearItem(this.actor, item);
     // Equipping takes it out of the Hotlist (CarlRPGItem#_preUpdate).
     return item.update({ "system.equipped": !item.system.equipped });
   }
@@ -1110,7 +1110,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onClearSlot(event, target) {
     event.preventDefault();
-    return clearSlot(this.actor, target.closest("[data-slot-type]").dataset);
+    const slot = target.closest("[data-slot-type]").dataset;
+    // Taking something out of the Hotlist is free; taking off gear is a
+    // Retrieve (helpers/equip-slots.mjs).
+    return clearSlot(this.actor, slot);
   }
 
   /**

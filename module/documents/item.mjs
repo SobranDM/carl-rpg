@@ -8,6 +8,7 @@ import { describePetCommand, petFight } from "../helpers/pet-command.mjs";
 import { refuseOutsideHotlist } from "../helpers/hotlist.mjs";
 import { hotlistWithout } from "../helpers/equip-slots.mjs";
 import { refuseWhileSwapping } from "../helpers/swap-lock.mjs";
+import { canAct, combatantInFight, gearRecord, spendAction } from "../helpers/actions.mjs";
 
 /**
  * Extend the basic Item document.
@@ -83,10 +84,26 @@ export class CarlRPGItem extends Item {
     if ((await super._preUpdate(changed, options, user)) === false) return false;
     const equipped = foundry.utils.getProperty(changed, "system.equipped");
     if (this.type !== "item" || !this.actor || equipped === undefined || equipped === this.system.equipped) return;
-    if (!options.carlSwap && refuseWhileSwapping(this.actor)) {
+    if (!options.carlSwap && !options.carlUndo && refuseWhileSwapping(this.actor)) {
       // The box was ticked in the form but nothing was saved: redraw it.
       if (this.sheet?.rendered) this.sheet.render();
       return false;
+    }
+    // Putting gear on or taking it off in a fight is the Retrieve Action
+    // (p.86; helpers/actions.mjs). The equip helpers (equip-slots.mjs) and
+    // a swap pay for it as their own Action (carlInAction / carlSwap); this
+    // is the Item sheet's Equipped box, or a macro - one Action for the whole
+    // batch (Foundry hands every item in one update the same options).
+    const paid = options.carlSwap || options.carlInAction || options.carlUndo || options.carlRetrieveCharged;
+    if (!paid && combatantInFight(this.actor)) {
+      if (!canAct(this.actor, "other")) {
+        if (this.sheet?.rendered) this.sheet.render();
+        return false;
+      }
+      options.carlRetrieveCharged = true;
+      await spendAction(this.actor, "other", game.i18n.format("CARLRPG.Actions.Label.Retrieve", { item: this.name }), {
+        undo: [gearRecord(this.actor)],
+      });
     }
     if (equipped) {
       const hotlist = hotlistWithout(this.actor, this.id);

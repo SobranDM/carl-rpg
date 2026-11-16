@@ -26,7 +26,9 @@
  *    that's the Use a Hotlist Item Action, or free "as part of the Attack
  *    Action" when swapping weapons (p.98) - the crawler picks which.
  */
+import CarlDice from "../dice/dice.mjs";
 import { isCrawler } from "./actor-kinds.mjs";
+import { canAct, isInCombat, noteGear, takeAction } from "./actions.mjs";
 import { assignItemToSlot, hotlistWithout, isItemWorn, padList, resolveSlotValue, unwearItem } from "./equip-slots.mjs";
 import { useConsumable } from "./consumables.mjs";
 import { ownedRank } from "./modifiers.mjs";
@@ -61,16 +63,6 @@ function hotlistValues(actor) {
 export function isInHotlist(actor, item) {
   const id = typeof item === "string" ? item : item?.id;
   return !!id && (actor?.system?.hotlist ?? []).includes(id);
-}
-
-/**
- * Is this actor a combatant in a fight that has started?
- * @param {Actor} actor
- * @returns {boolean}
- */
-export function inRunningFight(actor) {
-  if (!actor) return false;
-  return game.combats.some((c) => c.started && c.combatants.some((cb) => cb.actor === actor));
 }
 
 /**
@@ -200,11 +192,16 @@ export async function placeInHotlist(actor, index, item, { expectEmpty = false }
     ui.notifications.warn(game.i18n.format("CARLRPG.Hotlist.SlotTaken", { number: index + 1 }));
     return false;
   }
-  const list = padList(hotlistWithout(actor, item.id) ?? actor.system.hotlist, hotlistSize());
-  list[index] = item.id;
-  await actor.update({ "system.hotlist": list });
-  if (inRunningFight(actor)) await postRetrieveCard(actor, item);
-  return true;
+  // In a fight it's the Retrieve Action (p.86) - only with one left.
+  const placed = await takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.Retrieve", { item: item.name }), async () => {
+    noteGear(actor);
+    const list = padList(hotlistWithout(actor, item.id) ?? actor.system.hotlist, hotlistSize());
+    list[index] = item.id;
+    await actor.update({ "system.hotlist": list });
+    if (isInCombat(actor)) await postRetrieveCard(actor, item);
+    return true;
+  });
+  return !!placed;
 }
 
 /**
@@ -333,7 +330,7 @@ async function postRetrieveCard(actor, item) {
 export function outsideHotlist(actor, item) {
   if (!isCrawler(actor) || !item) return false;
   const needsHotlist = item.type === "spell" || (item.type === "item" && !!item.system.consumable?.kind);
-  return needsHotlist && inRunningFight(actor) && !isInHotlist(actor, item);
+  return needsHotlist && isInCombat(actor) && !isInHotlist(actor, item);
 }
 
 /**
@@ -372,7 +369,7 @@ export async function useHotlistSlot(actor, index, { skipDialog = false } = {}) 
   beginSwap(actor);
   try {
     // Out of a fight, a swap is "at the speed of thought": no card.
-    if (!inRunningFight(actor)) {
+    if (!isInCombat(actor)) {
       const { failed } = await readyHotlistItem(actor, index, item);
       return !failed;
     }
@@ -389,28 +386,40 @@ export async function useHotlistSlot(actor, index, { skipDialog = false } = {}) 
  * @returns {Promise<*>}
  */
 async function combatSwap(actor, index, item, { skipDialog }) {
+  // Either way it takes an Action: the swap's own, or the Attack's (which
+  // pays for itself - "swapping weapons is free as part of the Attack", p.86).
+  if (!canAct(actor, "other")) return null;
   const choice = skipDialog ? "swap" : await promptCombatSwap(actor, index, item);
   if (!choice) return null;
-  const swap = await readyHotlistItem(actor, index, item);
-  if (swap.failed) return null;
   if (choice === "swap") {
-    await postReadyCard(actor, item, swap, { free: false });
-    return true;
+    return takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.UseHotlist", { item: item.name }), async () => {
+      const swap = await readyHotlistItem(actor, index, item);
+      if (swap.failed) return null;
+      await postReadyCard(actor, item, swap, { free: false });
+      return true;
+    });
   }
+  // One Attack Action, the swap part of it - so it's an Attack AI Favor's
+  // Action can't pay for, and undoing it puts the weapons back too.
   const skill = actor.items.get(choice);
-  let result = null;
-  try {
-    result = skill ? await skill.roll() : null;
-  } catch (err) {
-    await undoOrRecord(actor, index, item, swap);
-    throw err;
-  }
-  if (!result) {
-    await undoOrRecord(actor, index, item, swap);
-    return null;
-  }
-  await postReadyCard(actor, item, swap, { free: true });
-  return result;
+  if (!skill) return null;
+  return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name: skill.name }), async (ctx) => {
+    const swap = await readyHotlistItem(actor, index, item);
+    if (swap.failed) return null;
+    let result = null;
+    try {
+      result = await CarlDice.rollAttack(actor, skill, { within: ctx });
+    } catch (err) {
+      await undoOrRecord(actor, index, item, swap);
+      throw err;
+    }
+    if (!result) {
+      await undoOrRecord(actor, index, item, swap);
+      return null;
+    }
+    await postReadyCard(actor, item, swap, { free: true });
+    return result;
+  });
 }
 
 /**
@@ -442,7 +451,7 @@ export async function swapForAttack(actor, { index, item }, attack) {
       await undoOrRecord(actor, index, item, swap);
       return null;
     }
-    if (inRunningFight(actor)) await postReadyCard(actor, item, swap, { free: true });
+    if (isInCombat(actor)) await postReadyCard(actor, item, swap, { free: true });
     return result;
   } finally {
     endSwap(actor);
@@ -501,6 +510,7 @@ async function promptCombatSwap(actor, index, item) {
  *   the item didn't reach the Main Hand (nothing else was changed).
  */
 async function readyHotlistItem(actor, index, item) {
+  noteGear(actor);
   const previousId = actor.system.gearSlots?.mainHand || "";
   const previous = previousId && previousId !== item.id ? actor.items.get(previousId) ?? null : null;
   // Wearing it takes it out of the Hotlist (equip-slots.mjs); the slot then

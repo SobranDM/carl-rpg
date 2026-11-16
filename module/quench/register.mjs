@@ -48,6 +48,7 @@ import registerWeapons from "./batches/weapons.mjs";
 import registerDefenses from "./batches/defenses.mjs";
 import registerChargen from "./batches/chargen.mjs";
 import registerCombatPhases from "./batches/combat-phases.mjs";
+import registerActionTracking from "./batches/action-tracking.mjs";
 
 const BATCH_REGISTRARS = [
   registerRules,
@@ -86,6 +87,7 @@ const BATCH_REGISTRARS = [
   registerDefenses,
   registerChargen,
   registerCombatPhases,
+  registerActionTracking,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

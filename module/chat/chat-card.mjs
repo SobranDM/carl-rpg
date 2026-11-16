@@ -5,6 +5,7 @@
  */
 
 import { buildRollRows } from "./roll-rows.mjs";
+import { noteUndo } from "../helpers/actions.mjs";
 
 const SHELL_TEMPLATE = "systems/carl-rpg/templates/chat/card-shell.hbs";
 
@@ -64,7 +65,19 @@ export async function createRollMessage({
     flags: { "carl-rpg": { chatCard: true, ...flags } },
   };
   ChatMessage.applyMode(messageData, mode);
-  return ChatMessage.create(messageData);
+  return noted(actor, await ChatMessage.create(messageData));
+}
+
+/**
+ * A card posted as part of an Action goes with it if it's undone
+ * (helpers/actions.mjs noteUndo).
+ * @param {Actor|undefined} actor
+ * @param {ChatMessage|undefined} message
+ * @returns {ChatMessage|undefined}
+ */
+function noted(actor, message) {
+  if (actor && message) noteUndo(actor, { t: "message", id: message.id });
+  return message;
 }
 
 /**
@@ -80,7 +93,7 @@ export async function createCardMessage({
     whisper,
     flags: { "carl-rpg": { chatCard: true, kind: "card", ...flags } },
   };
-  return ChatMessage.create(messageData);
+  return noted(actor, await ChatMessage.create(messageData));
 }
 
 /**

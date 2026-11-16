@@ -214,7 +214,9 @@ export default function register(quench) {
         let pc;
         let combat;
         beforeEach(async function () {
-          mob = await createTestMob("declare-mob", { system: { attacks: [bite] } });
+          // Several declarations a round: more Actions than a plain Mob's one
+          // (helpers/actions.mjs - its own batch tests the budgets).
+          mob = await createTestMob("declare-mob", { system: { attacks: [bite], actionsPerRound: 6 } });
           pc = await createTestCharacter("declare-pc");
           combat = await combatOf(mob, pc);
           await combat.startCombat();
@@ -261,7 +263,12 @@ export default function register(quench) {
           await declare();
           assert.lengthOf(declaredAttacks(combat), 1);
           await combat.nextTurn();
-          await combat.nextTurn();
+          // The Attack lands on a crawler who hasn't Evaded: Lock Results asks first.
+          await withDialog(() => combat.nextTurn(), (dialog) => pressDialog(dialog, "yes"), "carl-lock-warning");
+          assert.equal(currentPhase(combat), "resolve");
+          // Its damage is unrolled: leaving Resolution offers to roll it.
+          await withDialog(() => combat.nextTurn(), (dialog) => pressDialog(dialog, "yes"), "carl-unrolled-warning");
+          assert.equal(currentPhase(combat), "act");
           await combat.nextTurn();
           assert.equal(combat.round, 2);
           assert.lengthOf(declaredAttacks(combat), 0, "last round's are gone");
@@ -416,7 +423,10 @@ export default function register(quench) {
         beforeEach(async function () {
           // 0: to-hit 16; 1: an easy 1; 2: an easy Area Attack; 3: a hard 40.
           mob = await createTestMob("react-mob", {
-            system: { attacks: [attackWith("16"), attackWith("1"), { ...attackWith("1"), name: "Blast", range: "20ft Burst" }, attackWith("40")] },
+            system: {
+              attacks: [attackWith("16"), attackWith("1"), { ...attackWith("1"), name: "Blast", range: "20ft Burst" }, attackWith("40")],
+              actionsPerRound: 6,
+            },
           });
           pc1 = await createTestCharacter("react-pc1");
           pc2 = await createTestCharacter("react-pc2");

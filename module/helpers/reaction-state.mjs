@@ -319,6 +319,8 @@ export function buildReactionState(combat, declarations) {
   const state = {
     combatId: combat.id, round: combat.round, stage: "taunt", locked: false,
     attacks: {}, hits: {}, crawlers: {}, taunts: {}, nextOrder: 0,
+    // Actions the card's ops spent (helpers/actions.mjs), refunded if it's discarded.
+    spentActions: [],
   };
   for (const d of declarations) {
     state.attacks[d.id] = {
