@@ -231,6 +231,36 @@ export default function register(quench) {
           }
         });
 
+        it("Starting Stuff lands right however the created items come back ordered", async function () {
+          // Foundry doesn't always return created documents in the order
+          // asked for; matching them by position once put the clothes in the
+          // Main Hand. Reverse them here to prove each is found by its role.
+          const actor = await createTestCharacter("chargen order");
+          const create = actor.createEmbeddedDocuments.bind(actor);
+          actor.createEmbeddedDocuments = async (...args) => (await create(...args)).reverse();
+          try {
+            const state = humanState(actor, { arrayStats: { str: "2", int: "6", con: "4", dex: "5", cha: "3" } });
+            await quietly(() => applyChargen(actor, state));
+            const weapon = actor.items.find((i) => i.name === "Tire Iron");
+            assert.equal(actor.system.gearSlots.mainHand, weapon?.id, "the weapon, not the clothes, in the Main Hand");
+            assert.isTrue(actor.items.find((i) => i.name === "Jogging attire")?.system.equipped, "clothes worn");
+
+            const caster = await createTestCharacter("chargen order spell");
+            caster.createEmbeddedDocuments = async (...args) => (await Actor.prototype.createEmbeddedDocuments.apply(caster, args)).reverse();
+            try {
+              const spell = humanState(caster, { arrayStats: { str: "2", int: "6", con: "4", dex: "5", cha: "3" } });
+              spell.combat.type = "spell";
+              await quietly(() => applyChargen(caster, spell));
+              assert.isTrue(isInHotlist(caster, caster.items.find((i) => i.name === "Mana Potion")), "the potions, not another item, in the Hotlist");
+              assert.isFalse(caster.items.some((i) => i.name === "Lighter" && isInHotlist(caster, i)), "the Lighter stays out");
+            } finally {
+              await deleteTestActor(caster);
+            }
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
         it("an animal crawler: Slice Attack, no AI Favor, its Size, the animal backgrounds' Ranks", async function () {
           const actor = await createTestCharacter("chargen animal");
           try {

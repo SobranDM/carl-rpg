@@ -595,7 +595,10 @@ export async function applyChargen(actor, state) {
   const missing = Object.keys(gear).filter((key) => !made[key]);
   if (missing.length) {
     const created = await actor.createEmbeddedDocuments("Item", missing.map((key) => gear[key]));
-    missing.forEach((key, i) => { made[key] = created[i]; });
+    // Matched by their chargenGear flag, not by position: the documents
+    // don't always come back in the order asked for (by id, it seems), and
+    // a position match put the clothes in the Main Hand.
+    for (const key of missing) made[key] = created.find((i) => i.getFlag(SCOPE, "chargenGear") === key) ?? null;
   }
   if (made.weapon && actor.system.gearSlots.mainHand !== made.weapon.id) {
     await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, made.weapon);
