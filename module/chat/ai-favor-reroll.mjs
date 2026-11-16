@@ -1,19 +1,21 @@
 /**
  * The "Reroll (AI Favor)" button on a crawler's Check card (rules and data:
- * module/helpers/ai-favor.mjs). Clicking it spends 1 AI Favor, rolls the d20
- * again with everything else kept, and posts the result as a new card; the
- * old card is marked rerolled and its buttons stop working. Shown only to
+ * module/helpers/ai-favor.mjs). Clicking it spends 1 AI Favor and rolls the
+ * d20 again with everything else kept. A Skill, Spell, Opposed or Evade
+ * Check and an Attack are updated in place (module/chat/check-revision.mjs
+ * - any Intervene d6s stay); a Driving Check and an Attack row's Evade
+ * still post a new card, and the old one is marked rerolled. Shown only to
  * the crawler's owner (or the GM), while they have AI Favor, on a Check
  * that wasn't a Natural 1 and hasn't been rerolled or acted on yet.
  */
-import CarlDice, { checkSubtitle, extractNaturalD20, withManaCostSubtitle } from "../dice/dice.mjs";
-import { getDegreeOfSuccess, degreeBadge, isHitDegree } from "../helpers/rules.mjs";
+import { extractNaturalD20 } from "../dice/dice.mjs";
+import { getDegreeOfSuccess, isHitDegree } from "../helpers/rules.mjs";
 import { rerollFormula, rerollOpen } from "../helpers/ai-favor.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
-import { createRollMessage } from "./chat-card.mjs";
 import { isCardLocked } from "./taunt-card.mjs";
 import { recordRowEvade, resolveRowTarget } from "./attack-targets-card.mjs";
 import { drivingCardCurrent, drivingResultSettled, rerollDrivingCheck } from "../helpers/vehicle-driving.mjs";
+import { revisedInPlace, sendRevision } from "./check-revision.mjs";
 
 const SCOPE = "carl-rpg";
 const inFlight = new Set();
@@ -109,31 +111,6 @@ async function rollAgain(spec) {
   return { roll, natural, total: roll.total, degree: getDegreeOfSuccess(natural, roll.total, spec.difficulty) };
 }
 
-const rerollNote = () => `<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>`;
-
-/** Stat, Skill, Opposed and sheet Evade Checks: a new card with the new d20. */
-async function rerollCheck(spec, actor) {
-  const { roll, total, degree } = await rollAgain(spec);
-  let body = spec.body ?? "";
-  const flags = { aiReroll: { ...spec, used: true } };
-  if (spec.variant === "evade") {
-    if (degree === "majorFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeMajorFail")}</p>`;
-    else if (degree === "criticalFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeCriticalFail")}</p>`;
-    Object.assign(flags, { evadeDegree: degree, evadeTotal: total });
-  }
-  return createRollMessage({
-    rolls: [roll],
-    rollMeta: [{ label: spec.label, detail: game.i18n.localize("CARLRPG.Reroll.Detail"), breakdown: spec.breakdown }],
-    title: spec.title,
-    subtitle: withManaCostSubtitle(checkSubtitle(degree, spec.difficulty), spec.chosenManaCost),
-    img: spec.img,
-    badge: degreeBadge(degree),
-    body: body + rerollNote(),
-    flags,
-    actor,
-  });
-}
-
 /** An Attack row's Evade: the new result replaces the old one on the row. */
 async function rerollRowEvade(spec, target) {
   const { attack, row } = rowEvadeTarget(spec);
@@ -184,13 +161,18 @@ export async function rerollMessage(message) {
 
   inFlight.add(message.id);
   try {
+    // A Check or an Attack: the new d20 shown here, the card updated in
+    // place (the GM spends the AI Favor as it applies it).
+    if (revisedInPlace(message)) {
+      const { roll, natural, total } = await rollAgain(spec);
+      if (game.dice3d) await game.dice3d.showForRoll(roll, game.user, true);
+      return await sendRevision(message, "reroll", { natural, total, roll: roll.toJSON() });
+    }
     const favor = actor.system.details?.aiFavor ?? 0;
     await actor.update({ "system.details.aiFavor": favor - 1 });
     await updateCardMessage(message, { flags: { [SCOPE]: { aiRerolled: true, aiReroll: { used: true } } } });
-    if (spec.kind === "attack") await CarlDice.rerollAttack(message);
-    else if (spec.kind === "rowEvade") await rerollRowEvade(spec, target);
+    if (spec.kind === "rowEvade") await rerollRowEvade(spec, target);
     else if (spec.kind === "driving") await rerollDrivingCheck(message);
-    else await rerollCheck(spec, actor);
     return true;
   } finally {
     inFlight.delete(message.id);

@@ -367,10 +367,12 @@
   font-size: 11px;
   color: var(--carl-text-muted);
 }
-.carl-chat-card .carl-ai-reroll {
+.carl-chat-card .carl-ai-reroll,
+.carl-chat-card .carl-intervene {
   margin-top: 4px;
 }
-.carl-chat-card .carl-ai-reroll button {
+.carl-chat-card .carl-ai-reroll button,
+.carl-chat-card .carl-intervene button {
   width: 100%;
 }
 .carl-chat-card .carl-reroll-note {
@@ -1184,6 +1186,12 @@
   padding: 2px 0 2px 12px;
   font-size: var(--font-size-11);
   color: var(--carl-text-muted);
+}
+.carl-reaction .carl-pull-area {
+  width: 100%;
+  margin-top: 2px;
+  font-size: var(--font-size-11);
+  line-height: 1.6;
 }
 .carl-reaction .carl-reaction-buttons {
   display: flex;

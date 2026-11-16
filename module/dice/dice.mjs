@@ -12,7 +12,7 @@ import { buildHealFooter } from "../chat/heal-card.mjs";
 import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
 import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow } from "../helpers/attack-targets.mjs";
-import { aiRerollFlags, keptD20, rerollFormula } from "../helpers/ai-favor.mjs";
+import { aiRerollFlags, keptD20 } from "../helpers/ai-favor.mjs";
 import { buildScrollCast } from "../helpers/scroll-cast.mjs";
 import { isAreaItem, isAreaMobAttack } from "../helpers/area.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
@@ -468,6 +468,26 @@ function resolveActorToken(actor) {
 }
 
 /**
+ * A revised card's Intervene d6s (module/chat/check-revision.mjs): their
+ * Rolls and rows, and the "Total" row that follows them.
+ * @param {object[]} interventions  [{byName, value, roll}]
+ * @returns {{rolls: Roll[], meta: object[], totalRow: (total: number) => object[]}}
+ */
+export function interventionRolls(interventions = []) {
+  const rolls = interventions.map((i) => (i.roll ? Roll.fromData(i.roll) : Roll.fromTerms([new foundry.dice.terms.NumericTerm({ number: i.value })])));
+  const meta = interventions.map((i) => ({
+    label: game.i18n.format("CARLRPG.Intervene.Row", { name: i.byName }), breakdown: "1d6",
+  }));
+  return {
+    rolls,
+    meta,
+    totalRow: (total) => (interventions.length
+      ? [{ label: game.i18n.localize("CARLRPG.Intervene.Total"), total: String(total), insertAt: 1 + interventions.length }]
+      : []),
+  };
+}
+
+/**
  * The roll dialog's "Uses an Action" box (helpers/actions.mjs): offered,
  * ticked or not, only when the roll is a fight's Action of its own - not
  * part of another (a Scroll's cast, boarding a vehicle) and not outside a
@@ -676,7 +696,7 @@ export default class CarlDice {
       body,
       actor,
       flags: aiRerollFlags(actor, {
-        kind: "check", formula: d20Formula(roll), natural: naturalRoll, total, difficulty: options.difficulty,
+        kind: "check", variant: "stat", formula: d20Formula(roll), natural: naturalRoll, total, difficulty: options.difficulty,
         title: title ?? statLabel, img: actor.img, label: statLabel, breakdown, body,
       }),
     });
@@ -1174,6 +1194,11 @@ export default class CarlDice {
     // system.resistances/system.dr, same roll-now/apply-on-click shape as
     // the target-effect and heal flows above.
     let damageByType = {};
+    // The damage as rolled (before an Amazing Success's +Floor) and its
+    // rows, for a revision of this card (module/chat/check-revision.mjs).
+    let damageRaw = null;
+    let damageRollMeta = [];
+    let damageRollData = [];
     // Rolled for any targeted non-area Attack, even one that missed
     // everyone, so a Taunt redirect onto someone it does hit has damage to
     // apply (module/chat/taunt-card.mjs). The card hides the damage until
@@ -1188,6 +1213,9 @@ export default class CarlDice {
       rolls.push(...damage.rolls);
       rollMeta.push(...damage.rollMeta);
       damageByType = damage.damageByType;
+      damageRaw = foundry.utils.deepClone(damage.damageByType);
+      damageRollMeta = damage.rollMeta;
+      damageRollData = damage.rolls.map((r) => r.toJSON());
       // "Success by 10 or more (Amazing Success): the crawler's Attack
       // deals extra damage equal to their current Floor Number" (Degrees
       // of Success table, p.79) - distinct from Critical Hit (which
@@ -1203,7 +1231,7 @@ export default class CarlDice {
     }
 
     const hasDamage = Object.values(damageByType).some((v) => v);
-    const flags = {};
+    const flags = { attackDice: { extraD20: extraD20Rolls.length, damageRaw, damageRollMeta, damageRolls: damageRollData } };
     const footerParts = [];
     if (markChoicePending) {
       flags.markChoiceSkillUuid = markChoicePending.skillItem.uuid;
@@ -1244,8 +1272,8 @@ export default class CarlDice {
     const footer = footerParts.length ? footerParts.join("") : undefined;
     const body = buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]);
 
-    // AI Favor reroll (module/helpers/ai-favor.mjs): enough to re-resolve
-    // this Attack from a new d20 - see CarlDice.rerollAttack.
+    // AI Favor reroll and Intervene (module/chat/check-revision.mjs): enough
+    // to re-resolve this Attack from a new d20 or total - CarlDice.reviseAttack.
     Object.assign(flags, aiRerollFlags(actor, {
       kind: "attack", formula: primaryFormula, natural: naturalRoll, total: attackTotal, difficulty,
       breakdown: attackBreakdown, body, chosenManaCost,
@@ -1274,7 +1302,7 @@ export default class CarlDice {
 
   /**
    * An Attack's damage roll and on-hit effects - shared by rollAttack and
-   * its AI Favor reroll (rerollAttack), so both roll damage the same way.
+   * its revisions (reviseAttack), so both roll damage the same way.
    * Each damage row carries rowClass "carl-damage-roll" (hidden while no
    * target is hit - module/chat/attack-targets-card.mjs).
    * @param {Actor} actor
@@ -1307,125 +1335,162 @@ export default class CarlDice {
   }
 
   /**
-   * Re-resolve an Attack card from a new d20 (an AI Favor reroll, module/
-   * chat/ai-favor-reroll.mjs) and post the result as a new card. Only the
-   * d20 changes: the rest of the total, each target's Difficulty and zone,
-   * and the dialog's choices come from the original card. Hit/miss, Critical
-   * Hit, Amazing Success and so the damage and on-hit effects follow the new
-   * die - damage is rolled after the d20 at the table too, so it's rolled
-   * afresh. Nothing the original spent (Mana, the use-mark, consumed
-   * Debuffs, the Nat-20 Advantage) is spent again.
-   * @param {ChatMessage} message  The original Attack card.
-   * @returns {Promise<ChatMessage|null>}
+   * Re-resolve an Attack card, in place (module/chat/check-revision.mjs):
+   * from a new d20 (an AI Favor reroll) and/or with Intervene d6s added to
+   * its total. The rest of the total, each target's Difficulty and zone,
+   * and the dialog's choices come from the card. Hit/miss, Amazing Success
+   * and so the on-hit effects follow the new total.
+   *  - A reroll rolls the damage afresh (a new d20 can make or unmake a
+   *    Critical Hit; damage is rolled after the d20 at the table too).
+   *  - An Intervene never re-rolls dice already shown: the damage stays, and
+   *    is rolled only if none was (an Area Attack or one at no one that
+   *    missed, now hitting).
+   * Nothing the original spent (Mana, the use-mark, consumed Debuffs, the
+   * Nat-20 Advantage) is spent again.
+   * @param {ChatMessage} message  The Attack card.
+   * @param {{interventions: object[], reroll?: {natural: number, total: number, roll: object}|null}} change
+   * @returns {Promise<object|null>}  The card's new parts (check-revision.mjs
+   *   writes them), or null if its Skill is gone.
    */
-  static async rerollAttack(message) {
+  static async reviseAttack(message, { interventions = [], reroll = null }) {
     const flags = message.flags["carl-rpg"] ?? {};
-    const spec = flags.aiReroll;
+    const spec = foundry.utils.deepClone(flags.aiReroll);
     const actor = spec ? await fromUuid(spec.actorUuid) : null;
     // A Scroll's cast: its Spell was never owned, so rebuild it - before any
     // owned-item lookup, which could hit an unrelated owned copy.
     const scroll = actor && spec.castAs?.spellData ? buildScrollCast(actor, spec.castAs.spellData, spec.castAs.rank) : null;
     const skillItem = scroll ? scroll.item : actor?.items.get(spec.skillItemId);
-    if (!skillItem) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
-      return null;
-    }
+    if (!skillItem) return null;
     const damageEffectItem = !scroll && spec.damageEffectItemId ? (actor.items.get(spec.damageEffectItemId) ?? null) : null;
 
-    const roll = await new Roll(rerollFormula(spec)).evaluate();
-    const naturalRoll = extractNaturalD20(roll);
-    const attackTotal = roll.total;
+    const dice = flags.attackDice ?? { extraD20: 0, damageRaw: null, damageRollMeta: [] };
+    const oldRows = activeRows(flags.targetRows);
+    const rowFormulas = spec.rowFormulas ?? {};
+    const isArea = !!flags.isArea;
+    const priorD6 = (flags.interventions ?? []).length;
+    // The card's rolls: the d20, its Intervene d6s, any second d20, the damage.
+    const oldRolls = message.rolls ?? [];
+    let attackRoll = oldRolls[0];
+    let extraD20Rolls = oldRolls.slice(1 + priorD6, 1 + priorD6 + dice.extraD20);
+    // The damage rolled so far (kept even while the Attack misses, so a
+    // later hit shows the same dice).
+    let damageRolls = (dice.damageRolls ?? []).map((data) => Roll.fromData(data));
+    let rowNaturals = oldRows.map((row) => row.natural ?? spec.natural);
+
+    if (reroll) {
+      attackRoll = Roll.fromData(reroll.roll);
+      spec.rerolledFrom = { natural: spec.natural, total: spec.total };
+      Object.assign(spec, { natural: reroll.natural, total: reroll.total, used: true });
+      // Each row's kept d20 from the new dice (a second d20 if a row needs one).
+      const d20Results = (attackRoll.dice ?? []).find((d) => d.faces === 20)?.results ?? [];
+      const firstDie = d20Results[0]?.result ?? spec.natural;
+      let secondDie = d20Results[1]?.result ?? null;
+      extraD20Rolls = [];
+      if (secondDie === null && oldRows.some((row) => (rowFormulas[row.id] ?? spec.formula) !== "1d20")) {
+        const extra = await new Roll("1d20").evaluate();
+        extraD20Rolls.push(extra);
+        secondDie = extra.total;
+      }
+      rowNaturals = oldRows.map((row, i) => {
+        const formula = rowFormulas[row.id] ?? spec.formula;
+        return (i === 0 || isArea || formula === spec.formula) ? spec.natural : keptD20(formula, firstDie, secondDie);
+      });
+      damageRolls = [];
+    }
+
+    const naturalRoll = spec.natural;
+    const bonus = interventions.reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+    const attackTotal = spec.total + bonus;
     const difficulty = spec.difficulty;
     const degree = getDegreeOfSuccess(naturalRoll, attackTotal, difficulty);
     const hit = difficulty === null ? degree !== "criticalFail" : isHitDegree(degree);
-
-    const isArea = !!flags.isArea;
     const shared = isArea ? { hit, amazing: degree === "amazingSuccess" } : null;
-    const oldRows = activeRows(flags.targetRows);
-    const rowFormulas = spec.rowFormulas ?? {};
-    const d20Results = (roll.dice ?? []).find((d) => d.faces === 20)?.results ?? [];
-    const firstDie = d20Results[0]?.result ?? naturalRoll;
-    let secondDie = d20Results[1]?.result ?? null;
-    const extraD20Rolls = [];
-    if (secondDie === null && oldRows.some((row) => (rowFormulas[row.id] ?? spec.formula) !== "1d20")) {
-      const extra = await new Roll("1d20").evaluate();
-      extraD20Rolls.push(extra);
-      secondDie = extra.total;
-    }
-    const targetRowList = oldRows.map((row, i) => {
-      const formula = rowFormulas[row.id] ?? spec.formula;
-      const rowNat = (i === 0 || isArea || formula === spec.formula) ? naturalRoll : keptD20(formula, firstDie, secondDie);
-      return crawlerAttackRow({
-        id: row.id,
-        target: {
-          uuid: row.uuid,
-          actor: { name: row.name, type: row.isVehicle ? "vehicle" : row.isCharacter ? "character" : "mob" },
-        },
-        difficulty: row.difficulty,
-        attackTotal: attackTotal - (naturalRoll ?? 0) + (rowNat ?? 0), naturalRoll: rowNat,
-        zone: row.zone, shared,
-        // The vehicle the target was riding when first rolled (a Near Miss
-        // still hits it).
-        vehicle: row.vehicleUuid ? { uuid: row.vehicleUuid, name: row.vehicleName } : null,
-      });
-    });
+    const targetRowList = oldRows.map((row, i) => crawlerAttackRow({
+      id: row.id,
+      target: {
+        uuid: row.uuid,
+        actor: { name: row.name, type: row.isVehicle ? "vehicle" : row.isCharacter ? "character" : "mob" },
+      },
+      difficulty: row.difficulty,
+      attackTotal: attackTotal - (naturalRoll ?? 0) + (rowNaturals[i] ?? 0), naturalRoll: rowNaturals[i],
+      zone: row.zone, shared,
+      // The vehicle the target was riding when first rolled (a Near Miss
+      // still hits it).
+      vehicle: row.vehicleUuid ? { uuid: row.vehicleUuid, name: row.vehicleName } : null,
+    }));
     const anyHit = targetRowList.length ? targetRowList.some((row) => row.hit) : hit;
+    const isAmazingSuccess = degree === "amazingSuccess";
 
-    const rolls = [roll, ...extraD20Rolls];
-    const rollMeta = [
-      { label: skillItem.name, detail: game.i18n.localize("CARLRPG.Reroll.Detail"), breakdown: spec.breakdown },
-      ...extraD20Rolls.map(() => ({ label: game.i18n.localize("CARLRPG.Targets.ExtraD20"), detail: game.i18n.localize("CARLRPG.Targets.ExtraD20Hint") })),
-    ];
-    let damageByType = {};
+    let damageRaw = reroll ? null : dice.damageRaw;
+    let damageRollMeta = reroll ? [] : (dice.damageRollMeta ?? []);
     let targetEffects = [];
-    if (anyHit || (targetRowList.length && !isArea)) {
-      const cast = resolveCastContext(actor, skillItem, scroll?.castAs ?? null, damageEffectItem ? [damageEffectItem.id] : []);
-      const conditionalModifiers = narrowConditionalModifiers(cast.conditionalModifiers, skillItem, damageEffectItem);
-      const isAmazingSuccess = degree === "amazingSuccess";
-      const damage = await CarlDice.rollAttackDamage(actor, skillItem, {
-        damageEffectItem, isCrit: naturalRoll === 20, isAmazingSuccess,
-        conditionalModifiers, checked: new Set(spec.checked ?? []),
-        skillEntry: scroll?.castAs.skillEntry ?? null,
-      });
-      rolls.push(...damage.rolls);
-      rollMeta.push(...damage.rollMeta);
-      damageByType = damage.damageByType;
-      if (isAmazingSuccess && !targetRowList.length) {
-        damageByType[""] = (damageByType[""] ?? 0) + (flags.floor ?? game.settings.get("carl-rpg", "currentFloor"));
+    // As at the roll: damage for any targeted single-target Attack, else
+    // only on a hit.
+    const needsDamage = anyHit || (targetRowList.length && !isArea);
+    if (needsDamage) {
+      if (!damageRaw) {
+        const cast = resolveCastContext(actor, skillItem, scroll?.castAs ?? null, damageEffectItem ? [damageEffectItem.id] : []);
+        const conditionalModifiers = narrowConditionalModifiers(cast.conditionalModifiers, skillItem, damageEffectItem);
+        const damage = await CarlDice.rollAttackDamage(actor, skillItem, {
+          damageEffectItem, isCrit: naturalRoll === 20, isAmazingSuccess,
+          conditionalModifiers, checked: new Set(spec.checked ?? []),
+          skillEntry: scroll?.castAs.skillEntry ?? null,
+        });
+        damageRolls = damage.rolls;
+        damageRollMeta = damage.rollMeta;
+        damageRaw = foundry.utils.deepClone(damage.damageByType);
       }
-      targetEffects = damage.targetEffects;
+      // The on-hit effects follow the Degree (some only on an Amazing Success).
+      targetEffects = [
+        ...collectItemTargetEffects(skillItem, { isCrit: naturalRoll === 20, isAmazingSuccess }),
+        ...(damageEffectItem ? collectItemTargetEffects(damageEffectItem, { isCrit: naturalRoll === 20, isAmazingSuccess }) : []),
+      ];
     }
-
+    const damageByType = needsDamage ? foundry.utils.deepClone(damageRaw ?? {}) : {};
+    // Amazing Success's +Floor: per row with targets (rowOutcome), else here.
+    if (needsDamage && damageRaw && isAmazingSuccess && !targetRowList.length) {
+      damageByType[""] = (damageByType[""] ?? 0) + (flags.floor ?? game.settings.get("carl-rpg", "currentFloor"));
+    }
     const hasDamage = Object.values(damageByType).some((v) => v);
-    const newFlags = { aiReroll: { ...spec, used: true } };
+
+    const d6 = interventionRolls(interventions);
+    const shownDamage = needsDamage ? damageRolls : [];
+    const rolls = [attackRoll, ...d6.rolls, ...extraD20Rolls, ...shownDamage];
+    const rollMeta = [
+      { label: skillItem.name, detail: spec.used ? game.i18n.localize("CARLRPG.Reroll.Detail") : (spec.detail ?? ""), breakdown: spec.breakdown },
+      ...d6.meta,
+      ...extraD20Rolls.map(() => ({ label: game.i18n.localize("CARLRPG.Targets.ExtraD20"), detail: game.i18n.localize("CARLRPG.Targets.ExtraD20Hint") })),
+      ...(needsDamage ? damageRollMeta : []),
+    ];
+
+    const newFlags = {
+      aiReroll: spec,
+      interventions,
+      attackDice: {
+        extraD20: extraD20Rolls.length, damageRaw, damageRollMeta, damageRolls: damageRolls.map((r) => r.toJSON()),
+      },
+    };
+    const unset = [];
     const footerParts = [];
-    // A Skill-or-Damage-Effect mark choice still open on the old card moves
-    // to the new one.
+    // A Skill-or-Damage-Effect mark choice still open stays on the card.
     if (flags.markChoiceSkillUuid && !flags.markChoiceDone) {
       const skillChoice = await fromUuid(flags.markChoiceSkillUuid);
       const effectChoice = await fromUuid(flags.markChoiceDamageEffectUuid);
-      if (skillChoice && effectChoice) {
-        newFlags.markChoiceSkillUuid = flags.markChoiceSkillUuid;
-        newFlags.markChoiceDamageEffectUuid = flags.markChoiceDamageEffectUuid;
-        footerParts.push(await buildMarkChoiceFooter(skillChoice, effectChoice));
-      }
+      if (skillChoice && effectChoice) footerParts.push(await buildMarkChoiceFooter(skillChoice, effectChoice));
     }
     if (targetEffects.length) newFlags.targetEffects = targetEffects;
+    else unset.push("targetEffects");
     if (hasDamage) {
       newFlags.damageByType = damageByType;
       newFlags.damageIsMagic = skillItem.system.isMagicDamage;
+    } else {
+      unset.push("damageByType");
     }
     if (targetRowList.length) {
       Object.assign(newFlags, {
-        targetUuids: flags.targetUuids,
         targetRows: Object.fromEntries(targetRowList.map((row) => [row.id, row])),
-        isArea,
-        floor: flags.floor,
         attackTotal,
         naturalRoll,
-        targetDifficulty: difficulty,
-        attackerType: flags.attackerType,
-        attackerUuid: flags.attackerUuid,
       });
     }
     if (targetRowList.length || hasDamage || targetEffects.length) {
@@ -1433,17 +1498,17 @@ export default class CarlDice {
     }
     if (targetRowList.length && !isArea) footerParts.push(await buildTauntLinkFooter());
 
-    return createRollMessage({
-      rolls, rollMeta,
+    return {
+      rolls, rollMeta, extraRollRows: d6.totalRow(attackTotal),
       title: skillItem.name,
       subtitle: withManaCostSubtitle(checkSubtitle(degree, targetRowList.length > 1 ? null : difficulty), spec.chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
-      body: `${spec.body ?? ""}<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>`,
+      body: `${spec.body ?? ""}${spec.used ? `<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>` : ""}`,
       footer: footerParts.length ? footerParts.join("") : undefined,
       flags: newFlags,
-      actor,
-    });
+      unset,
+    };
   }
 
   /**

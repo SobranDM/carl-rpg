@@ -196,13 +196,14 @@ export function reduceViaShield(rawTotal, shield) {
  *   shieldAbsorbed: number,
  * }}
  */
-export function computeDamageApplication(damageByType, target, isMagic = true, { ignoreDr = false } = {}) {
+export function computeDamageApplication(damageByType, target, isMagic = true, { ignoreDr = false, extraDr = 0 } = {}) {
   const sys = target?.system ?? {};
   // drEffective/resistancesEffective (module/data/character.mjs,mob.mjs) fold
   // in any Race/Class/feature-granted DR bonus or Resistance/Immunity
   // override on top of the flat GM-set base - fall back to the raw base
   // fields for a plain data object that never went through prepareDerivedData.
-  const dr = ignoreDr ? 0 : (Number(sys.drEffective ?? sys.dr) || 0);
+  // extraDr: DR for this hit only (a Catcher's Upgrades, p.187).
+  const dr = ignoreDr ? 0 : (Number(sys.drEffective ?? sys.dr) || 0) + (Number(extraDr) || 0);
   const resistances = sys.resistancesEffective ?? sys.resistances ?? {};
   const slotValue = sys.hb?.slotValue ?? 0;
 

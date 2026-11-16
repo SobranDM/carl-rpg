@@ -7,6 +7,7 @@ import { registerReactionSocket, retireReaction, startReaction } from './chat/re
 import { finishResolution, lockResults } from './helpers/reaction-resolve.mjs';
 import { registerActionSocket } from './helpers/actions.mjs';
 import { registerActionUndo } from './helpers/action-undo.mjs';
+import { registerCheckRevisionSocket } from './chat/check-revision.mjs';
 import { registerDeclareHud } from './apps/declare-hud.mjs';
 import { registerDeclaredMarks } from './helpers/declared-marks.mjs';
 import { CarlRPGActorSheet } from './sheets/actor-sheet.mjs';
@@ -371,6 +372,9 @@ Hooks.once('ready', function () {
   // Combat Actions spent and undone by players, recorded by the active GM
   // (helpers/actions.mjs).
   registerActionSocket();
+  // Intervenes and AI Favor rerolls revising a Check card, applied on the
+  // active GM's client (chat/check-revision.mjs).
+  registerCheckRevisionSocket();
 
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 

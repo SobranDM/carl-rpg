@@ -211,6 +211,27 @@ export async function spendAction(actor, kind, label, { tag = null, id = null, u
   return applied === false ? null : id;
 }
 
+/**
+ * Pay for an Action applied on the GM's client as part of a change to
+ * shared state (a Reaction card op, an Intervene on a Check card): refused,
+ * with a warning, when none is left. Outside a phased fight it's free.
+ * @param {Actor} actor
+ * @param {"attack"|"move"|"other"} kind
+ * @param {string} label
+ * @param {{tag?: string|null, undo?: object[]}} [options]
+ * @returns {Promise<{paid: boolean, id: string|null, fight: object|null}>}
+ */
+export async function payAction(actor, kind, label, { tag = null, undo = [] } = {}) {
+  const fight = combatantInFight(actor);
+  if (!fight) return { paid: true, id: null, fight: null };
+  if (!canAct(actor, kind, { warn: false })) {
+    ui.notifications.warn(game.i18n.format("CARLRPG.Actions.NoneLeft", { name: actor.name }));
+    return { paid: false, id: null, fight };
+  }
+  const id = await spendAction(actor, kind, label, { tag, undo });
+  return { paid: !!id, id, fight };
+}
+
 /* -------------------------------------------- */
 /*  Taking an Action                            */
 /* -------------------------------------------- */
@@ -343,6 +364,7 @@ export function passiveContext() {
  *    gear before it;
  *  - `item` {actorUuid, id, data}: one of a consumable it used;
  *  - `declaration` {combatId, id}; `reaction` {messageId, before, rev};
+ *  - `intervene` {messageId, id}: an Intervene d6 on a Check card;
  *  - `blocked` {reason}: it can't be undone (a potion already drunk).
  * @param {Actor} actor  Whose Action it is.
  * @param {object} record

@@ -151,7 +151,24 @@ export function pullableHits(state, mobUuid, taunterUuid) {
 }
 
 /**
- * The Mobs a crawler could Taunt: those with Attacks a Taunt would pull.
+ * A Mob's Area Attacks that a Taunt against it could re-aim at the taunter,
+ * if the GM allows it (the card's "Pull Area Attacks too"): ones landing on
+ * anyone else that haven't been Caught or locked in.
+ * @param {object} state
+ * @param {string} mobUuid
+ * @param {string} taunterUuid
+ * @returns {string[]}  Their attack ids.
+ */
+export function pullableAreaAttacks(state, mobUuid, taunterUuid) {
+  return Object.entries(state?.attacks ?? {})
+    .filter(([id, attack]) => attack.isArea && attack.mobUuid === mobUuid
+      && hitList(state).some((hit) => hit.attackId === id && hit.targetUuid !== taunterUuid))
+    .map(([id]) => id);
+}
+
+/**
+ * The Mobs a crawler could Taunt: those with Attacks a Taunt would pull -
+ * single-target ones, or Area Attacks the GM may let it re-aim.
  * @param {object} state
  * @param {string} taunterUuid
  * @returns {{mobUuid: string, mobName: string}[]}
@@ -160,7 +177,8 @@ export function tauntableMobs(state, taunterUuid) {
   const seen = new Map();
   for (const attack of Object.values(state?.attacks ?? {})) {
     if (seen.has(attack.mobUuid)) continue;
-    if (pullableHits(state, attack.mobUuid, taunterUuid).length) seen.set(attack.mobUuid, attack.mobName);
+    if (pullableHits(state, attack.mobUuid, taunterUuid).length
+      || pullableAreaAttacks(state, attack.mobUuid, taunterUuid).length) seen.set(attack.mobUuid, attack.mobName);
   }
   return [...seen].map(([mobUuid, mobName]) => ({ mobUuid, mobName }));
 }

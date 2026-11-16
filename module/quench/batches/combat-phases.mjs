@@ -9,16 +9,19 @@ import { declaredAttacks, recordDeclaration, removeDeclaration } from "../../hel
 import { DECLARED_MARK_NAME, declaredCounts, drawMark } from "../../helpers/declared-marks.mjs";
 import { CarlDeclareHud } from "../../apps/declare-hud.mjs";
 import CarlDice from "../../dice/dice.mjs";
-import { applyOp, decorateReactionCard, reactionActionEntries, reactionCardFor } from "../../chat/reaction-card.mjs";
 import {
-  crawlerKey, decidingEvade, evadableHitsFor, hitEvadable, hitList, hitMissed, tauntList,
+  applyOp, decorateReactionCard, reactionActionEntries, reactionCardFor, tauntRange, tokenDistance,
+} from "../../chat/reaction-card.mjs";
+import {
+  crawlerKey, decidingEvade, evadableHitsFor, hitEvadable, hitList, hitMissed, tauntList, tauntableMobs,
 } from "../../helpers/reaction-state.mjs";
 import {
-  buildDamageState, damageCardActionEntries, damageCardFor, decorateDamageCard, postDamageCard, rollAllDamage,
+  buildDamageState, catcherDr, damageCardActionEntries, damageCardFor, decorateDamageCard, postDamageCard, rollAllDamage,
   rollAttackOnCard, unrolledAttacks,
 } from "../../helpers/reaction-resolve.mjs";
 import {
   createTestCharacter,
+  createTestItem,
   createTestMob,
   deleteTestActor,
   deleteTestCombat,
@@ -515,6 +518,55 @@ export default function register(quench) {
           await op(card, "openEvades", {});
           assert.lengthOf(evadableHitsFor(state(card), pc2.uuid), 0, "the Catcher's Evade skips it");
           assert.lengthOf(evadableHitsFor(state(card), pc1.uuid), 0, "it's no longer pc1's");
+        });
+
+        it("a Catcher gets +5 DR against what they Catch at Ranks 5, 10 and 15, adding up", async function () {
+          const catcher = await createTestItem(pc2, "skill", "Catcher", { name: "Catcher", system: { rank: 4 } });
+          assert.equal(catcherDr(pc2), 0, "Rank 4: none yet");
+          await catcher.update({ "system.rank": 5 });
+          assert.equal(catcherDr(pc2), 5);
+          await catcher.update({ "system.rank": 15 });
+          assert.equal(catcherDr(pc2), 15, "Rank 15: all three");
+          await catcher.update({ "system.rank": 10 });
+          assert.equal(catcherDr(pc2), 10);
+
+          await declareOn(pc1, 1);
+          const card = await startReaction();
+          await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: onlyHit(card).id });
+          const ownDr = Number(pc2.system.drEffective ?? pc2.system.dr) || 0;
+          const damage = await postDamageCard(combat, state(card));
+          const rowId = onlyHit(card).id;
+          assert.equal(damage.getFlag("carl-rpg", "reactionDamage").rows[rowId].extraDr, 10);
+          await rollAllDamage(damage);
+          await waitFor(() => damage.getFlag("carl-rpg", "reactionDamage").rows[rowId].result, { message: "not rolled" });
+          assert.equal(damage.getFlag("carl-rpg", "reactionDamage").rows[rowId].result.final, Math.max(0, 100 - ownDr - 10),
+            "the Maul's 100, less their DR and the Catcher's +10");
+        });
+
+        it("the GM can let a Taunt pull a Mob's Area Attack: re-aimed at the taunter", async function () {
+          // The Blast (index 2) lands on both crawlers.
+          await withSetting("currentFloor", 1, () =>
+            withFakeTargets([{ actor: pc1 }, { actor: pc2 }], () => CarlDice.rollMobAttack(mob, 2, { skipDialog: true })));
+          const card = await startReaction();
+          assert.lengthOf(hitList(state(card)), 2);
+          assert.deepEqual(tauntableMobs(state(card), pc1.uuid).map((m) => m.mobUuid), [mob.uuid],
+            "a Mob with only an Area Attack can still be Taunted");
+          await op(card, "taunt", { byUuid: pc1.uuid, byName: pc1.name, mobUuid: mob.uuid, rank: 1, check: rolled(25, 15, 20) });
+          assert.lengthOf(hitList(state(card)).filter((h) => h.targetUuid === pc1.uuid), 1, "nothing moves without the GM");
+          const [taunt] = tauntList(state(card));
+          assert.isTrue(await op(card, "pullArea", { tauntId: taunt.id }));
+          const hits = hitList(state(card));
+          assert.lengthOf(hits, 1, "one Blast, on the taunter");
+          assert.equal(hits[0].targetUuid, pc1.uuid);
+          assert.equal(hits[0].row.zone, "full");
+          assert.deepEqual(tauntList(state(card))[0].spared, [pc2.name], "pc2 is out of it");
+          assert.isFalse(await op(card, "pullArea", { tauntId: taunt.id }), "once");
+        });
+
+        it("Taunt's range is 30 ft, 60 from Rank 10; with no tokens there's no distance to check", function () {
+          assert.equal(tauntRange(9), 30);
+          assert.equal(tauntRange(10), 60);
+          assert.isNull(tokenDistance(pc1.uuid, mob.uuid));
         });
 
         it("Taunts and Catches come first, then Evades; one Evade per crawler", async function () {

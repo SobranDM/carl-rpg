@@ -1535,6 +1535,12 @@
       "ActionsLeft": "{left} Action(s) left",
       "ActionsLeftMove": "{left} Action(s) + Move left"
     },
+    "Intervene": {
+      "Button": "Intervene (+1d6)",
+      "Hint": "Spend an Action to help {name}: roll 1d6 and add it to their total.",
+      "Row": "Intervene ({name})",
+      "Total": "Total"
+    },
     "Actions": {
       "NoneLeft": "{name} has no Actions left this round. The GM can add one from the Combat Tracker (right-click).",
       "NoAttackLeft": "{name} has no Action left that can Attack (a Mob's Move or an AI Favor Action can't). The GM can add one from the Combat Tracker.",
@@ -1564,6 +1570,7 @@
         "UseHotlist": "Use a Hotlist Item: {item}",
         "Retrieve": "Retrieve: {item}",
         "CommandPet": "Command Pet: {name}",
+        "Intervene": "Intervene: {name}",
         "Board": "Board {vehicle}",
         "Exit": "Get out of {vehicle}"
       },
@@ -1573,6 +1580,7 @@
         "ReactionLocked": "The Reaction card is locked, so that Action can't be undone.",
         "ReactionChanged": "The Reaction card has changed since that Action. Undo the later ones first, or the GM can add an Action from the Combat Tracker.",
         "GearChanged": "Gear has been moved by a later Action since. Undo that one first.",
+        "InterveneFirst": "Someone has Intervened on that Action's card. Their Intervene has to be undone first.",
         "DeclarationOver": "The Declaration Phase is over, so that declared Attack can't be withdrawn.",
         "Learned": "A Spell learned from a Spellbook can't be unlearned. The GM can add an Action from the Combat Tracker instead."
       }
@@ -1614,6 +1622,13 @@
       "TauntOf": "Taunt vs. {mob}",
       "TauntPulled": "Success - {count} Attack(s) of {mob} pulled",
       "TauntFailed": "Failed - {mob}'s Attacks stay put",
+      "TauntInRange": "{mob} ({distance} ft)",
+      "TauntOutOfRange": "{mob} ({distance} ft - out of range)",
+      "TauntRangeConfirm": "{mob} is {distance} ft from {name}, beyond Taunt's range of {range} ft. Taunt anyway?",
+      "PullArea": "Pull Area Attacks too",
+      "PullAreaHint": "Re-aim this Mob's Area Attacks at {name}: they take them in full, and the crawlers they were going to hit are no longer in them. Re-declare an Attack if someone would still be caught.",
+      "AreaPulled": "Area Attacks re-aimed at {name}.",
+      "AreaPulledSpared": "Area Attacks re-aimed at {name} - no longer hitting {spared}.",
       "TauntedFrom": "Taunted from {name}",
       "CaughtFor": "Caught for {name}",
       "FreeEvadeOf": "free Evade vs. {attack}",
@@ -1641,6 +1656,7 @@
       "RolledTip": "Rolled {rolled}; {raw} against this target, {final} after DR and Resistances",
       "EvadedHalf": "Evaded - half",
       "HitsVehicle": "Hits {vehicle}",
+      "CatcherDr": "Catcher +{dr} DR",
       "MinorInjury": "{name} gains a Minor Injury after combat (Evade failed by 10 or more).",
       "MajorInjury": "{name} gains a Major Injury after combat (Natural 1 on the Evade).",
       "UnrolledWarning": "{count} Mob Attack(s) haven't had their damage rolled. Roll them now and move on to the Crawler Action Phase?"

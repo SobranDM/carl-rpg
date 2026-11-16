@@ -28,6 +28,20 @@ async function renderShell({
 }
 
 /**
+ * A roll card's content, for a card revised in place (an AI Favor reroll or
+ * an Intervene - module/chat/check-revision.mjs). Same arguments as
+ * createRollMessage's card parts.
+ * @param {object} parts
+ * @param {boolean} [isPrivate]  A blind roll's card hides its numbers.
+ * @returns {Promise<string>}
+ */
+export function renderRollCard({
+  rolls = [], rollMeta = [], extraRollRows = [], title, subtitle, img, badge, body = "", footer, description = "",
+}, isPrivate = false) {
+  return renderShell({ title, subtitle, img, badge, body, footer, rolls, rollMeta, extraRollRows, description, isPrivate });
+}
+
+/**
  * Create a chat message carrying one or more evaluated Rolls.
  *
  * @param {object} options

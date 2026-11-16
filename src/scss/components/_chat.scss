@@ -178,7 +178,9 @@
 
   // AI Favor reroll (module/chat/ai-favor-reroll.mjs): the button, the note
   // on a reroll's own card, and the faded look of the card it replaced.
-  .carl-ai-reroll {
+  // ...and another crawler's Intervene (module/chat/check-revision.mjs).
+  .carl-ai-reroll,
+  .carl-intervene {
     margin-top: 4px;
 
     button {

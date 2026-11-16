@@ -22,6 +22,7 @@ import { currentPhase } from "./combat-phases.mjs";
 import { declaredAttacks, removeDeclaration } from "./declarations.mjs";
 import { isCardLocked } from "../chat/taunt-card.mjs";
 import { withCard, writeState } from "../chat/reaction-card.mjs";
+import { applyRevision, interventionsOf, interveneOpen } from "../chat/check-revision.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -64,6 +65,15 @@ export function undoBlocker(entry, spent = []) {
       case "message": {
         const message = game.messages.get(record.id);
         if (message && cardActedOn(message)) return t("CardUsed");
+        // Someone else's Intervene is on it: that comes off first.
+        if (message && interventionsOf(message).length) return t("InterveneFirst");
+        break;
+      }
+      case "intervene": {
+        const message = game.messages.get(record.messageId);
+        // Gone (or the d6 already off): only the Action comes back.
+        if (!message || !interventionsOf(message).some((i) => i.id === record.id)) break;
+        if (!interveneOpen(message)) return t("CardUsed");
         break;
       }
       case "reaction": {
@@ -192,6 +202,10 @@ async function runRecord(record) {
       else if (record.data) await actor.createEmbeddedDocuments("Item", [record.data], { keepId: true, carlUndo: true });
       return;
     }
+    case "intervene":
+      // The d6 off the card, and the card re-graded without it.
+      await applyRevision(record.messageId, "unintervene", { id: record.id }, game.user);
+      return;
     case "declaration": {
       const combat = game.combats.get(record.combatId);
       // Withdrawing it gives back its Debuffs - and its Action (the same one).

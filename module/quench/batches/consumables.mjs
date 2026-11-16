@@ -563,7 +563,7 @@ export default function register(quench) {
               const original = await withPinnedDice(PIN_D20_MID, () => useConsumable(actor, scroll, { skipDialog: true }));
               assert.isTrue(await withPinnedDice(PIN_D20_MID, () => rerollMessage(original)));
               assert.equal(actor.system.details.aiFavor, 0);
-              assert.isTrue(original.getFlag("carl-rpg", "aiRerolled"));
+              assert.isTrue(game.messages.get(original.id).getFlag("carl-rpg", "aiReroll").used, "rerolled in place");
             });
           } finally {
             await deleteTestActor(actor);

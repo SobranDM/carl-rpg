@@ -138,25 +138,24 @@ export default function register(quench) {
           assert.equal(keptD20("1d20", 4, 16), 4);
         });
 
-        it("a Stat Check reroll spends 1 AI Favor, posts a new card and retires the old one", async function () {
+        it("a Stat Check reroll spends 1 AI Favor and updates the card in place", async function () {
           const actor = await createTestCharacter("favored", { system: { details: { aiFavor: 2 } } });
           try {
             await capturingMessages(async (created) => {
               const original = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollStatCheck(actor, "str", { skipDialog: true }));
               assert.exists(original.getFlag("carl-rpg", "aiReroll"));
               assert.isTrue(canReroll(original));
+              const total = original.rolls[0].total;
 
               assert.isTrue(await withPinnedDice(PIN_D20_MID, () => rerollMessage(original)));
               await settle();
               assert.equal(actor.system.details.aiFavor, 1);
-              assert.isTrue(original.getFlag("carl-rpg", "aiRerolled"));
-              assert.isFalse(canReroll(original));
-
-              const reroll = created().find((m) => m.id !== original.id);
-              assert.exists(reroll);
-              assert.isTrue(reroll.getFlag("carl-rpg", "aiReroll").used);
-              assert.isFalse(canReroll(reroll), "once per Check");
-              assert.equal(reroll.rolls[0].total, original.rolls[0].total, "same d20 face, same modifiers");
+              assert.lengthOf(created().filter((m) => m.id !== original.id), 0, "no new card");
+              const card = game.messages.get(original.id);
+              assert.notOk(card.getFlag("carl-rpg", "aiRerolled"), "not marked replaced");
+              assert.isTrue(card.getFlag("carl-rpg", "aiReroll").used);
+              assert.isFalse(canReroll(card), "once per Check");
+              assert.equal(card.rolls[0].total, total, "same d20 face, same modifiers");
             });
           } finally {
             await deleteTestActor(actor);
@@ -191,13 +190,15 @@ export default function register(quench) {
               const roll = () => withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
                 withFakeTargets([{ actor: target }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
               const original = await roll();
+              const targetUuid = original.getFlag("carl-rpg", "targetRows").t0.uuid;
               assert.isTrue(canReroll(original));
               assert.isTrue(await withPinnedDice(PIN_D20_MID, () => rerollMessage(original)));
               await settle();
-              const reroll = created().find((m) => m.id !== original.id && m.getFlag("carl-rpg", "aiReroll"));
+              const reroll = game.messages.get(original.id);
+              assert.isTrue(reroll.getFlag("carl-rpg", "aiReroll").used, "the same card, rerolled");
               const rows = reroll.getFlag("carl-rpg", "targetRows");
               assert.isTrue(rows.t0.hit, "10 + 3 vs. 13");
-              assert.equal(rows.t0.uuid, original.getFlag("carl-rpg", "targetRows").t0.uuid);
+              assert.equal(rows.t0.uuid, targetUuid);
               assert.equal(actor.system.details.aiFavor, 1);
 
               // Once a row has been applied, the result is out - no reroll.

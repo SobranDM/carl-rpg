@@ -153,9 +153,9 @@ export async function applyDamageToActor(actor, damageByType, isMagic, { noShiel
  * @param {{noShield?: boolean}} [options]
  * @returns {Promise<{lines: string[], result: object, dying: boolean}>}
  */
-export async function applyDamageWithResult(actor, damageByType, isMagic, { noShield = false } = {}) {
+export async function applyDamageWithResult(actor, damageByType, isMagic, { noShield = false, extraDr = 0 } = {}) {
   const lines = [];
-  const result = computeDamageApplication(damageByType, actor, isMagic || noShield);
+  const result = computeDamageApplication(damageByType, actor, isMagic || noShield, { extraDr });
 
   const dying = (actor.system.conditions ?? []).find((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown);
   if (dying) {

@@ -38,6 +38,7 @@ import { markChoiceActionEntries } from "./mark-choice-card.mjs";
 import { grindSurplusActionEntries } from "./grind-surplus-card.mjs";
 import { attackTargetsActionEntries, decorateTargetRows } from "./attack-targets-card.mjs";
 import { aiRerollActionEntries, decorateAiReroll } from "./ai-favor-reroll.mjs";
+import { decorateIntervene, interveneActionEntries } from "./check-revision.mjs";
 import { consumableActionEntries } from "./consumable-card.mjs";
 import { decorateDrivingCard, drivingActionEntries } from "./vehicle-card.mjs";
 import { decorateReactionCard, reactionActionEntries } from "./reaction-card.mjs";
@@ -53,6 +54,7 @@ const REGISTRY = [
   ...grindSurplusActionEntries,
   ...attackTargetsActionEntries,
   ...aiRerollActionEntries,
+  ...interveneActionEntries,
   ...consumableActionEntries,
   ...drivingActionEntries,
   ...reactionActionEntries,
@@ -91,6 +93,8 @@ export function registerChatListener() {
     // The AI Favor reroll button, or a replaced card's "rerolled" state -
     // after the rows, so it can switch their buttons off too.
     decorateAiReroll(message, html);
+    // Another crawler's Intervene (module/chat/check-revision.mjs).
+    decorateIntervene(message, html);
 
     for (const entry of REGISTRY) {
       if (entry.custom) continue;

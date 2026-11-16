@@ -31,10 +31,10 @@ import { slugifySkillName } from "../helpers/modifiers.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 import { currentPhase } from "../helpers/combat-phases.mjs";
 import { declaredAttacks } from "../helpers/declarations.mjs";
-import { canAct, combatantInFight, evadeIsFree, hasSpent, refundAction, spendAction } from "../helpers/actions.mjs";
+import { canAct, evadeIsFree, hasSpent, payAction, refundAction } from "../helpers/actions.mjs";
 import {
   buildReactionState, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck, hitEvadable,
-  hitLabel, hitList, hitMissed, intervenableAllies, intervenableChecks, makeCheck, pullableHits, rerollableChecks,
+  hitLabel, hitList, hitMissed, intervenableAllies, intervenableChecks, makeCheck, pullableAreaAttacks, pullableHits, rerollableChecks,
   sectionsOf, tauntableMobs, decidingEvade,
 } from "../helpers/reaction-state.mjs";
 
@@ -259,6 +259,7 @@ export function applyOp(cardId, op, data, user) {
     try {
       switch (op) {
         case "taunt": changed = await opTaunt(state, data, owns); break;
+        case "pullArea": changed = user.isGM && await opPullArea(state, data); break;
         case "catch": changed = await opCatch(state, data, owns); break;
         case "evade": changed = await opEvade(state, data, owns); break;
         case "intervene": changed = await opIntervene(state, data, owns); break;
@@ -333,6 +334,52 @@ async function pullTaunt(state, taunt) {
   }
   const free = pulled.filter((hit) => (hit.row.freeEvade || taunt.rank >= 5) && hitEvadable(hit));
   await rollFreeEvades(state, free, { advantage: taunt.rank >= 15 ? "advantage" : "normal" });
+}
+
+/**
+ * The GM lets a successful Taunt pull the Mob's Area Attacks too: each is
+ * re-aimed at the taunter - they take it in its full area, and the crawlers
+ * it was going to hit are no longer in it (the GM can re-declare it if
+ * they'd still be caught). Its to-hit is re-resolved for the taunter, with
+ * the Taunt's free Evade as for its other Attacks. Before Evades open.
+ * @param {object} state
+ * @param {{tauntId: string}} data
+ * @returns {Promise<boolean>}
+ */
+async function opPullArea(state, { tauntId }) {
+  const taunt = state.taunts?.[tauntId];
+  if (state.stage !== "taunt" || !taunt?.check?.success || taunt.areaPulled) return false;
+  const actor = actorFor(taunt.byUuid);
+  const attackIds = pullableAreaAttacks(state, taunt.mobUuid, taunt.byUuid);
+  if (!actor || !attackIds.length) return false;
+  const pulled = [];
+  const spared = new Set();
+  for (const attackId of attackIds) {
+    const attack = state.attacks[attackId];
+    const hits = hitList(state).filter((hit) => hit.attackId === attackId);
+    const keep = hits.find((hit) => hit.targetUuid === taunt.byUuid) ?? hits[0];
+    for (const hit of hits) {
+      if (hit === keep) continue;
+      if (hit.targetUuid !== taunt.byUuid) spared.add(hit.targetName);
+      delete state.hits[hit.id];
+    }
+    const wasElsewhere = keep.targetUuid !== taunt.byUuid;
+    if (wasElsewhere) spared.add(keep.targetName);
+    const { row } = mobAttackRow({
+      id: keep.row.id, target: { uuid: taunt.byUuid, actor }, base: attack.mobBase, ownRows: attack.mobOwnRows ?? [], zone: "full",
+    });
+    Object.assign(keep, {
+      row, targetUuid: taunt.byUuid, targetName: taunt.byName, free: null, evade: null,
+      ...(wasElsewhere ? { tauntedBy: { uuid: taunt.byUuid, name: taunt.byName } } : {}),
+    });
+    taunt.pulled.push(keep.id);
+    pulled.push(keep);
+  }
+  taunt.areaPulled = true;
+  taunt.spared = [...spared].filter((name) => name !== taunt.byName);
+  const free = pulled.filter((hit) => (hit.row.freeEvade || taunt.rank >= 5) && hitEvadable(hit));
+  await rollFreeEvades(state, free, { advantage: taunt.rank >= 15 ? "advantage" : "normal" });
+  return true;
 }
 
 async function opCatch(state, { byUuid, byName, hitId }, owns) {
@@ -428,19 +475,14 @@ async function payFor(state, uuid, labelKey, { tag = null } = {}) {
   const actor = actorFor(uuid);
   if (!actor) return true;
   if (tag === "evade" ? evadeIsFree(actor) : (tag && hasSpent(actor, tag))) return true;
-  if (!canAct(actor, "other", { warn: false })) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Actions.NoneLeft", { name: actor.name }));
-    return false;
-  }
-  const fight = combatantInFight(actor);
   // Undoing it puts the card back as it was before this op - if nothing
   // has changed on it since (helpers/action-undo.mjs).
   const card = opBefore.get(state);
   const undo = card ? [{
     t: "reaction", messageId: card.messageId, before: foundry.utils.deepClone(card.before), rev: (card.before.rev ?? 0) + 1,
   }] : [];
-  const id = await spendAction(actor, "other", game.i18n.localize(labelKey), { tag, undo });
-  if (fight && !id) return false;
+  const { paid, id, fight } = await payAction(actor, "other", game.i18n.localize(labelKey), { tag, undo });
+  if (!paid) return false;
   if (fight && id) (state.spentActions ??= []).push({ combatantId: fight.combatant.id, id });
   return true;
 }
@@ -511,12 +553,30 @@ async function onTaunt(message, state) {
   const list = reactors(state).filter((r) => skillOf(r.actor, "Taunt") && tauntableMobs(state, r.uuid).length);
   const taunter = await pickReactor(list, game.i18n.localize("CARLRPG.Reaction.Op.taunt"));
   if (!taunter || !canAct(taunter.actor, "other")) return;
-  const mobs = tauntableMobs(state, taunter.uuid);
-  const mobUuid = await pick(game.i18n.localize("CARLRPG.Reaction.Op.taunt"), game.i18n.localize("CARLRPG.Reaction.WhichMob"),
-    mobs.map((m) => ({ value: m.mobUuid, label: m.mobName })));
-  const mob = actorFor(mobUuid);
-  if (!mob) return;
   const { item, rank } = skillOf(taunter.actor, "Taunt");
+  // "Enemies within 30 feet of you" - 60 at Rank 10 (p.200). Measured now,
+  // taunter to Mob; one out of range is marked and asked about, not refused.
+  const range = tauntRange(rank);
+  const mobs = tauntableMobs(state, taunter.uuid).map((m) => ({ ...m, distance: tokenDistance(taunter.uuid, m.mobUuid) }));
+  const label = (m) => (m.distance === null ? m.mobName
+    : game.i18n.format(m.distance > range ? "CARLRPG.Reaction.TauntOutOfRange" : "CARLRPG.Reaction.TauntInRange",
+      { mob: m.mobName, distance: m.distance }));
+  const mobUuid = await pick(game.i18n.localize("CARLRPG.Reaction.Op.taunt"), game.i18n.localize("CARLRPG.Reaction.WhichMob"),
+    mobs.map((m) => ({ value: m.mobUuid, label: label(m) })));
+  const chosen = mobs.find((m) => m.mobUuid === mobUuid);
+  const mob = actorFor(mobUuid);
+  if (!mob || !chosen) return;
+  if (chosen.distance !== null && chosen.distance > range) {
+    const anyway = await foundry.applications.api.DialogV2.confirm({
+      window: { title: game.i18n.localize("CARLRPG.Reaction.Op.taunt") },
+      classes: ["carl-taunt-range"],
+      content: `<p>${esc(game.i18n.format("CARLRPG.Reaction.TauntRangeConfirm", {
+        mob: chosen.mobName, name: taunter.name, distance: chosen.distance, range,
+      }))}</p>`,
+      rejectClose: false,
+    });
+    if (!anyway) return;
+  }
   const statKey = item.system.opposedStat || "int";
   const difficulty = 10 + (mob.system.stats?.[statKey]?.mod ?? 0) + game.settings.get(SCOPE, "currentFloor");
   const result = await CarlDice.rollOpposedSkillCheck(taunter.actor, item, { difficulty, opponent: mob, post: false });
@@ -614,6 +674,10 @@ async function onReactionButton(event, message, button) {
   if (op === "lock") {
     const combat = game.combats.get(state.combatId);
     if (game.user.isGM && combat && currentPhase(combat) === "react") await combat.nextTurn();
+    return;
+  }
+  if (op === "pullArea") {
+    if (game.user.isGM) await sendOp(message, "pullArea", { tauntId: button.dataset.tauntId });
     return;
   }
   if (!availableOps(state).includes(op)) return;
@@ -742,17 +806,61 @@ export function attackDetails(attack) {
   return parts.length ? `<div class="carl-attack-details">${parts.join("")}</div>` : "";
 }
 
-/** One Taunt Check. */
-function renderTaunt(taunt, messageId) {
+/** One Taunt Check - with, for the GM, "Pull Area Attacks too" while it can. */
+function renderTaunt(state, taunt, messageId) {
   const i18n = game.i18n;
   const result = taunt.check.success
     ? i18n.format("CARLRPG.Reaction.TauntPulled", { mob: taunt.mobName, count: taunt.pulled.length })
     : i18n.format("CARLRPG.Reaction.TauntFailed", { mob: taunt.mobName });
+  const canPullArea = game.user.isGM && !state.locked && state.stage === "taunt" && taunt.check.success
+    && !taunt.areaPulled && pullableAreaAttacks(state, taunt.mobUuid, taunt.byUuid).length;
+  const pullArea = canPullArea
+    ? `<button type="button" class="carl-pull-area" data-action="reactionCard" data-op="pullArea" data-taunt-id="${esc(taunt.id)}"
+        data-tooltip="${esc(i18n.format("CARLRPG.Reaction.PullAreaHint", { name: taunt.byName }))}">
+        <i class="fa-solid fa-burst"></i> ${esc(i18n.localize("CARLRPG.Reaction.PullArea"))}</button>`
+    : "";
+  const spared = taunt.areaPulled
+    ? `<p class="carl-hint">${esc(taunt.spared?.length
+      ? i18n.format("CARLRPG.Reaction.AreaPulledSpared", { name: taunt.byName, spared: taunt.spared.join(", ") })
+      : i18n.format("CARLRPG.Reaction.AreaPulled", { name: taunt.byName }))}</p>`
+    : "";
   return `<li class="carl-taunt">
     <div class="carl-hit-head"><span>${esc(i18n.format("CARLRPG.Reaction.TauntOf", { mob: taunt.mobName }))}</span>
       <span class="carl-hit-status">${esc(result)}</span></div>
     ${renderCheck(taunt.check, game.i18n.localize("CARLRPG.Reaction.Op.taunt"), `taunt:${taunt.id}`, messageId)}
+    ${spared}${pullArea}
   </li>`;
+}
+
+/**
+ * Taunt's range (p.200): 30 ft, 60 ft from Rank 10.
+ * @param {number} rank
+ * @returns {number}
+ */
+export function tauntRange(rank) {
+  return rank >= 10 ? 60 : 30;
+}
+
+/**
+ * How far apart two combatants' tokens are on the viewed scene, in the
+ * scene's units by its grid rules, or null when either has no token there.
+ * @param {string} fromUuid  A token or actor uuid.
+ * @param {string} toUuid
+ * @returns {number|null}
+ */
+export function tokenDistance(fromUuid, toUuid) {
+  const a = sceneToken(fromUuid);
+  const b = sceneToken(toUuid);
+  if (!a || !b || !canvas?.grid) return null;
+  return Math.round(canvas.grid.measurePath([a.center, b.center]).distance);
+}
+
+/** A uuid's token on the viewed scene (a token's own, or an actor's first). */
+function sceneToken(uuid) {
+  const doc = uuid ? fromUuidSync(uuid) : null;
+  if (!doc || !canvas?.ready) return null;
+  const token = doc.documentName === "Token" ? doc : doc.getActiveTokens?.(false, true)?.[0];
+  return token?.parent === canvas.scene ? token.object ?? null : null;
 }
 
 /**
@@ -771,7 +879,7 @@ export function decorateReactionCard(message, html) {
     const evaded = state.crawlers[crawlerKey(section.uuid)]?.evaded;
     return `<section class="carl-reaction-section">
       <header>${esc(section.name)}${evaded ? ` <span class="carl-evaded-tag">${esc(i18n.localize("CARLRPG.Reaction.EvadeUsed"))}</span>` : ""}</header>
-      <ul class="plain">${section.taunts.map((taunt) => renderTaunt(taunt, message.id)).join("")}${section.hits.map((hit) => renderHit(state, hit, message.id)).join("")}</ul>
+      <ul class="plain">${section.taunts.map((taunt) => renderTaunt(state, taunt, message.id)).join("")}${section.hits.map((hit) => renderHit(state, hit, message.id)).join("")}</ul>
     </section>`;
   }).join("");
 

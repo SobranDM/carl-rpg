@@ -441,6 +441,14 @@
     }
   }
 
+  // The GM's "Pull Area Attacks too" on a successful Taunt.
+  .carl-pull-area {
+    width: 100%;
+    margin-top: 2px;
+    font-size: var(--font-size-11);
+    line-height: 1.6;
+  }
+
   .carl-reaction-buttons {
     display: flex;
     flex-wrap: wrap;

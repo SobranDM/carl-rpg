@@ -27,6 +27,7 @@ import { rowOutcome } from "./attack-targets.mjs";
 import { vehicleSeatOf } from "./vehicle-state.mjs";
 import { decidingEvade, hitList, unevadedNames } from "./reaction-state.mjs";
 import { setPhase } from "./combat-phases.mjs";
+import { slugifySkillName } from "./modifiers.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG = "reactionDamage";
@@ -138,6 +139,8 @@ export function buildDamageState(combat, state) {
     const notes = [];
     if (hit.tauntedBy) tags.push({ key: "CARLRPG.Reaction.TauntedFrom", data: { name: hit.originalName } });
     if (hit.caughtBy) tags.push({ key: "CARLRPG.Reaction.CaughtFor", data: { name: hit.originalName } });
+    const extraDr = hit.caughtBy ? catcherDr(actorFor(hit.caughtBy.uuid)) : 0;
+    if (extraDr) tags.push({ key: "CARLRPG.Resolve.CatcherDr", data: { dr: extraDr } });
     if (hit.row?.zone === "splash") tags.push({ key: "CARLRPG.Targets.Splash", data: {} });
     if (status === "pending" && evade?.success) tags.push({ key: "CARLRPG.Resolve.EvadedHalf", data: {} });
 
@@ -158,13 +161,26 @@ export function buildDamageState(combat, state) {
 
     data.rows[hit.id] = {
       id: hit.id, order: order++, attackId: hit.attackId, tableUuid: hit.targetUuid, tableName: hit.targetName,
-      applyUuid, status, caught: !!hit.caughtBy,
+      applyUuid, status, caught: !!hit.caughtBy, extraDr,
       row: { hit: !!hit.row?.hit, zone: hit.row?.zone ?? "full", amazing: false },
       evade: evade ? { degree: evade.degree, success: evade.success } : null,
       tags, notes, result: null,
     };
   }
   return data;
+}
+
+/**
+ * A Catcher's extra DR against the hit they Caught: +5 at Rank 5, 10 and 15,
+ * adding up (p.187).
+ * @param {Actor|null} actor
+ * @returns {number}
+ */
+export function catcherDr(actor) {
+  if (!actor) return 0;
+  const item = actor.items?.find((i) => i.type === "skill" && i.name === "Catcher");
+  const rank = actor.system?.skills?.[slugifySkillName("Catcher")]?.rank ?? item?.system.rank ?? 0;
+  return 5 * Math.min(3, Math.floor(rank / 5));
 }
 
 /**
@@ -231,7 +247,9 @@ export function rollAttackOnCard(message, attackId) {
         row.result = { raw: 0, final: 0, slots: 0, shieldSlots: 0, dying: false, extra: [] };
         continue;
       }
-      const applied = await applyDamageWithResult(actor, outcome.damage, attack.damageIsMagic, { noShield: row.caught });
+      const applied = await applyDamageWithResult(actor, outcome.damage, attack.damageIsMagic, {
+        noShield: row.caught, extraDr: row.extraDr ?? 0,
+      });
       row.result = {
         raw,
         final: applied.result.totalFinalDamage,
