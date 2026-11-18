@@ -567,6 +567,8 @@
       "SummarySkipped": "({skipped} skipped: edited since the last import)",
       "SkippedEdited": "Not overwritten because you've edited them since the last import (delete one and import again to refresh it): {names}",
       "Failed": "Rulebook import failed: {error}",
+      "CheckingQuality": "Checking {title}...",
+      "LowQuality": "{title} looks like the low-quality (LQ) edition of the book: its pictures are about {ppi} pixels per inch. The importer reads only the full-quality PDF, because the LQ files garble the text it reads and their maps are low resolution. Download the standard version of the book and import that instead.",
       "NoWebp": "This browser cannot save WebP images.",
       "Achievements": "Achievements",
       "Kind": {

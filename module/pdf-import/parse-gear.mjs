@@ -12,6 +12,9 @@ import { normalizeDamageType } from "../helpers/damage-types.mjs";
 import { parseGearSlotLine, slotsFromName } from "../helpers/gear-text.mjs";
 
 const SLOT_RE = /^Gear Slot:\s*(.*)$/;
+// Section headings on the gear pages that aren't items: the loot box
+// tiers ("GOLD BOXES"), and tables and lists of many items.
+const NOT_GEAR_RE = /^(?:\w+ Boxes|Randomized Magic Items\b.*|Memorial and Soul Crystals|Faction Wars Items)$/i;
 const STAT_WORDS = {
   strength: "str",
   dexterity: "dex",
@@ -47,7 +50,7 @@ export function parseGear(pages) {
       prevHeading = false;
     }
   }
-  return entries.filter((e) => e.lines.length).map(toGearItem);
+  return entries.filter((e) => e.lines.length && !NOT_GEAR_RE.test(e.name)).map(toGearItem);
 }
 
 /** Map one benefit bullet onto ChangeEntries, or none when it is prose. */
@@ -63,7 +66,9 @@ export function bulletToChanges(text, label) {
         value: value(m[1], m[2]),
       }),
     ];
-  m = text.match(/^([+−-])(\d+) (.+?) Skill\b/);
+  // "+3 Double Tap Skill", "+5 to the Skullcracker Skill". "+1 to all Skill
+  // or Stat Checks" names no one Skill: it stays prose.
+  m = text.match(/^([+−-])(\d+) (?!(?:to )?(?:all|any)\b)(?:to (?:the |your )?)?(.+?) Skill\b/);
   if (m)
     return [
       changeEntry({

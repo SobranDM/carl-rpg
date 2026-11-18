@@ -11,7 +11,8 @@
  * ours to redistribute, so their content only ever lives in the GM's world.
  */
 
-import { canvasToBlob, mapSceneData, renderMap, uploadMap } from "./maps.mjs";
+import { canvasToBlob, mapImageCanvas, mapSceneData, uploadMap } from "./maps.mjs";
+import { getPdfJs } from "./pdf-loader.mjs";
 import { slugify } from "./scan.mjs";
 import { ensureListedAttacks } from "../helpers/mob-attacks.mjs";
 
@@ -193,10 +194,14 @@ async function importAchievements(folder, pages, book) {
 async function importMaps(folder, maps, { pdfDoc, bookSlug, onProgress }) {
   let created = 0;
   let updated = 0;
+  const { OPS } = await getPdfJs();
   for (const [n, map] of maps.entries()) {
     onProgress?.(n, maps.length);
     const page = await pdfDoc.getPage(map.page);
-    const canvas = await renderMap(page, map.image);
+    // The embedded picture itself, not a render of the page (maps.mjs).
+    const canvas = await mapImageCanvas(page, OPS);
+    page.cleanup();
+    if (!canvas) continue;
     const blob = await canvasToBlob(canvas);
     if (blob?.type !== "image/webp")
       throw new Error(game.i18n.localize("CARLRPG.PdfImport.NoWebp"));

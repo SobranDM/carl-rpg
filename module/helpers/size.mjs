@@ -1,7 +1,10 @@
 /**
  * Size as text - a Race's "Medium (4)", the old Pet tab's free-text Size -
- * read as a size value (CONFIG.CARLRPG.sizes, 1-8).
+ * read as a size value (CONFIG.CARLRPG.sizes, 1-8). The reading itself is
+ * helpers/size-text.mjs (no Foundry globals, for the PDF parsers); this adds
+ * the localized size names.
  */
+import { parseSizeText } from "./size-text.mjs";
 
 /**
  * A size value from text: a number ("5"), a size name ("Large", "huge"), or
@@ -11,21 +14,10 @@
  * @returns {number|null}
  */
 export function parseSize(text) {
-  if (text === null || text === undefined || !String(text).trim()) return null;
-  const s = String(text).trim();
-  const number = s.match(/\d+/);
-  if (number) {
-    const n = Number(number[0]);
-    if (CONFIG.CARLRPG.sizes[n]) return n;
-  }
-  const words = s.toLowerCase().match(/[a-z]+/g) ?? [];
-  for (const word of words) {
-    for (const [value, key] of Object.entries(CONFIG.CARLRPG.sizes)) {
-      const names = [String(key).split(".").pop().toLowerCase(), game.i18n.localize(key).toLowerCase()];
-      if (names.includes(word)) return Number(value);
-    }
-  }
-  return null;
+  const localized = Object.fromEntries(
+    Object.entries(CONFIG.CARLRPG.sizes).map(([value, key]) => [value, [game.i18n.localize(key)]]),
+  );
+  return parseSizeText(text, localized);
 }
 
 /**

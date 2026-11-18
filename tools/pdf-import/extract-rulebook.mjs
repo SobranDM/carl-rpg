@@ -6,13 +6,24 @@
  * The books are copyrighted and this repo is public, so the output goes to a
  * gitignored folder (pdf_local/<book>/ by default) and is never committed.
  *
+ * Like the importer, it refuses a book's low-quality (LQ) edition
+ * (module/pdf-import/quality.mjs) and exits with code 2.
+ *
  * Usage:
- *   node tools/pdf-import/extract-rulebook.mjs <rulebook.pdf> [outDir]
+ *   node tools/pdf-import/extract-rulebook.mjs <rulebook.pdf> [outDir] [--maps]
+ *
+ * --maps also writes each map candidate's embedded image (as the importer
+ * extracts it, module/pdf-import/maps.mjs) to <outDir>/maps/ as PNG.
  */
 import fs from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 
+// The modern pdf.js build needs built-ins Node may lack; in place before it loads.
+import "../../module/pdf-import/pdf-polyfills.mjs";
+import { imageToRGBA, imageTransform, loadMapImage, orientRGBA } from "../../module/pdf-import/maps.mjs";
+import { checkImageQuality } from "../../module/pdf-import/quality.mjs";
 import {
   bookTitleFromFilename,
   parseBook,
@@ -22,17 +33,79 @@ import {
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-// pdf.js calls Math.sumPrecise, which Node may lack.
-Math.sumPrecise ??= (values) => {
-  let sum = 0;
-  for (const value of values) sum += value;
-  return sum;
-};
+/** A lang/en.json string, with {placeholders} filled in. */
+function localize(key, data = {}) {
+  const lang = JSON.parse(fs.readFileSync(path.join(ROOT, "lang", "en.json"), "utf8"));
+  const text = key.split(".").reduce((o, k) => o?.[k], lang) ?? key;
+  return String(text).replace(/\{(\w+)\}/g, (m, k) => (k in data ? String(data[k]) : m));
+}
+
+const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+  return c >>> 0;
+});
+
+function crc32(buf) {
+  let c = 0xffffffff;
+  for (const byte of buf) c = CRC_TABLE[(c ^ byte) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+/** RGBA pixels as a PNG file. */
+function encodePng({ width, height, data }) {
+  const chunk = (type, body) => {
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(body.length);
+    const typed = Buffer.concat([Buffer.from(type, "ascii"), body]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(typed));
+    return Buffer.concat([len, typed, crc]);
+  };
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8; // bit depth
+  header[9] = 6; // RGBA
+  const rows = Buffer.alloc((width * 4 + 1) * height);
+  for (let y = 0; y < height; y++) {
+    rows[y * (width * 4 + 1)] = 0;
+    Buffer.from(data.buffer, data.byteOffset + y * width * 4, width * 4).copy(rows, y * (width * 4 + 1) + 1);
+  }
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk("IHDR", header),
+    chunk("IDAT", zlib.deflateSync(rows, { level: 6 })),
+    chunk("IEND", Buffer.alloc(0)),
+  ]);
+}
+
+async function writeMaps(pdfDoc, OPS, maps, dir) {
+  fs.rmSync(dir, { recursive: true, force: true });
+  fs.mkdirSync(dir, { recursive: true });
+  for (const map of maps) {
+    const page = await pdfDoc.getPage(map.page);
+    const found = await loadMapImage(page, OPS);
+    if (!found) {
+      page.cleanup();
+      continue;
+    }
+    const { img, ctm } = found;
+    const t = imageTransform(ctm, img.width, img.height);
+    const upright = orientRGBA(imageToRGBA(img), img.width, img.height, t);
+    const file = path.join(dir, `p${String(map.page).padStart(3, "0")}-${slugify(map.name)}.png`);
+    fs.writeFileSync(file, encodePng(upright));
+    console.log(`  p${map.page} ${upright.width}x${upright.height} (stored ${img.width}x${img.height}, kind ${img.kind}) -> ${path.basename(file)}`);
+    page.cleanup();
+  }
+}
 
 async function main() {
-  const [pdf, outArg] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const withMaps = args.includes("--maps");
+  const [pdf, outArg] = args.filter((a) => a !== "--maps");
   if (!pdf || !fs.existsSync(pdf)) {
-    console.error("Usage: node tools/pdf-import/extract-rulebook.mjs <rulebook.pdf> [outDir]");
+    console.error("Usage: node tools/pdf-import/extract-rulebook.mjs <rulebook.pdf> [outDir] [--maps]");
     process.exit(1);
   }
   const book = bookTitleFromFilename(path.basename(pdf));
@@ -44,6 +117,14 @@ async function main() {
     isEvalSupported: false,
     verbosity: 0,
   }).promise;
+
+  const quality = await checkImageQuality(pdfDoc, pdfjs.OPS);
+  console.log(`image quality: median ${quality.ppi === null ? "n/a" : Math.round(quality.ppi)} ppi over ${quality.images} pictures`);
+  if (quality.lowQuality) {
+    console.error(localize("CARLRPG.PdfImport.LowQuality", { title: book, ppi: Math.round(quality.ppi) }));
+    process.exit(2);
+  }
+
   const found = parseBook(await readPages(pdfDoc));
 
   for (const [kind, docs] of Object.entries(found)) {
@@ -60,6 +141,10 @@ async function main() {
   console.log(`maps (candidate pages): ${found.maps.length}`);
   for (const map of found.maps)
     console.log(`  p${map.page} ${map.likely ? "[x]" : "[ ]"} ${map.name}`);
+  if (withMaps) {
+    console.log("map images:");
+    await writeMaps(pdfDoc, pdfjs.OPS, found.maps, path.join(outDir, "maps"));
+  }
   console.log(`Wrote ${outDir}`);
 }
 

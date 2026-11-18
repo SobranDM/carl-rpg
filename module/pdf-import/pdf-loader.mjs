@@ -4,24 +4,18 @@
  * rather than resolved from node_modules. Same approach as blades68.
  */
 
-let pdfjsLibPromise = null;
+// The modern pdf.js build needs built-ins some browsers lack: in place on
+// this thread before pdf.js loads, and in its worker via pdf-worker.mjs.
+import "./pdf-polyfills.mjs";
 
-// pdf.js calls Math.sumPrecise, which some Chromium/Electron builds lack.
-Math.sumPrecise ??= (values) => {
-  let sum = 0;
-  for (const value of values) sum += value;
-  return sum;
-};
+let pdfjsLibPromise = null;
 
 export async function getPdfJs() {
   if (!pdfjsLibPromise) {
     pdfjsLibPromise = import("../vendor/pdfjs/pdf.mjs").then((lib) => {
       // Relative to this file, so a server with a route prefix
       // (host/foundry/systems/...) still finds the worker.
-      lib.GlobalWorkerOptions.workerSrc = new URL(
-        "../vendor/pdfjs/pdf.worker.mjs",
-        import.meta.url,
-      ).href;
+      lib.GlobalWorkerOptions.workerSrc = new URL("./pdf-worker.mjs", import.meta.url).href;
       return lib;
     });
   }

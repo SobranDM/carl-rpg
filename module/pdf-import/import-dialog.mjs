@@ -7,12 +7,14 @@
 
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { importBook } from "./importer.mjs";
-import { canvasToBlob, findMapImage, renderRegion } from "./maps.mjs";
+import { canvasToBlob, mapImageCanvas } from "./maps.mjs";
 import { loadPdfDocument } from "./pdf-loader.mjs";
+import { checkImageQuality, LowQualityPdfError } from "./quality.mjs";
 import { bookTitleFromFilename, parseBook, readPages } from "./scan.mjs";
 
 const KINDS = ["gear", "spells", "mobs", "achievements"];
-const THUMB_WIDTH = 220;
+// A thumbnail's longest side, in pixels.
+const THUMB_SIZE = 320;
 
 async function pickFile() {
   return showCarlDialog({
@@ -31,7 +33,10 @@ async function pickFile() {
   });
 }
 
-/** Find each candidate page's map image and render a thumbnail of it. */
+/**
+ * Find each candidate page's map image and make a thumbnail of it - of the
+ * embedded image the import will save (maps.mjs), not of the page.
+ */
 async function resolveMaps(pdfDoc, pdfjs, candidates, progress) {
   const maps = [];
   for (const [n, candidate] of candidates.entries()) {
@@ -43,14 +48,11 @@ async function resolveMaps(pdfDoc, pdfjs, candidates, progress) {
       }),
     });
     const page = await pdfDoc.getPage(candidate.page);
-    const image = await findMapImage(page, pdfjs.OPS);
-    if (!image) continue;
-    const blob = await canvasToBlob(
-      await renderRegion(page, image.rect, { width: THUMB_WIDTH }),
-      "image/jpeg",
-      0.8,
-    );
-    maps.push({ ...candidate, image, thumb: URL.createObjectURL(blob) });
+    const thumb = await mapImageCanvas(page, pdfjs.OPS, { maxPixels: THUMB_SIZE });
+    page.cleanup();
+    if (!thumb) continue;
+    const blob = await canvasToBlob(thumb, "image/jpeg", 0.8);
+    maps.push({ ...candidate, thumb: URL.createObjectURL(blob) });
   }
   return maps;
 }
@@ -126,6 +128,10 @@ export async function openRulebookImporter() {
     const loaded = await loadPdfDocument(file);
     const pdfjs = loaded.pdfjs;
     pdfDoc = loaded.pdfDoc;
+    // Only the full-quality edition is supported (quality.mjs).
+    progress.update({ message: game.i18n.format("CARLRPG.PdfImport.CheckingQuality", { title }) });
+    const quality = await checkImageQuality(pdfDoc, pdfjs.OPS);
+    if (quality.lowQuality) throw new LowQualityPdfError(quality.ppi);
     const pages = await readPages(pdfDoc, {
       onProgress: (done, total) =>
         progress.update({
@@ -161,6 +167,13 @@ export async function openRulebookImporter() {
     const skipped = skippedNotice(results);
     if (skipped) ui.notifications.warn(skipped, { permanent: true });
   } catch (err) {
+    if (err instanceof LowQualityPdfError) {
+      ui.notifications.error(
+        game.i18n.format("CARLRPG.PdfImport.LowQuality", { title, ppi: Math.round(err.ppi) }),
+        { permanent: true },
+      );
+      return;
+    }
     console.error("CarlRPG | Rulebook PDF import failed", err);
     ui.notifications.error(game.i18n.format("CARLRPG.PdfImport.Failed", { error: err.message }));
   } finally {
