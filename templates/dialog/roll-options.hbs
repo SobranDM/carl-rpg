@@ -31,6 +31,21 @@
   </div>
   {{/if}}
   {{/unless}}
+  {{#unless hideOptions}}
+  {{#if statChoice}}
+  {{!-- Off-Stat (p.58): the Stat this roll adds, the Skill's own picked. --}}
+  <div class="form-group carl-dialog-stat">
+    <label data-tooltip="{{localize 'CARLRPG.Dialog.StatHint'}}">{{localize "CARLRPG.Dialog.Stat"}}</label>
+    <div class="form-fields">
+      <select name="stat">
+        {{#each statChoice.options as |opt|}}
+        <option value="{{opt.key}}" {{#if opt.selected}}selected{{/if}}>{{opt.label}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+  {{/if}}
+  {{/unless}}
   {{#if weaponNote}}
   {{!-- The weapon comes out of the Hotlist, free with the Attack (p.64). --}}
   <p class="carl-dialog-hint carl-dialog-weapon-note"><i class="fa-solid fa-right-left"></i> {{weaponNote}}</p>
@@ -116,7 +131,7 @@
     <label>{{localize "CARLRPG.Dialog.Debuffs"}}</label>
     <div class="form-fields carl-dialog-conditions-list">
       {{#each debuffRows as |row|}}
-      <label class="carl-dialog-condition">
+      <label class="carl-dialog-condition" {{#if row.dexOnly}}data-carl-dex-only {{#unless ../statIsDex}}hidden{{/unless}}{{/if}}>
         <input type="checkbox" name="debuffs.{{row.id}}" {{#if row.defaultOn}}checked{{/if}} />
         {{row.label}} <span class="carl-dialog-condition-source">({{row.detail}})</span>
       </label>

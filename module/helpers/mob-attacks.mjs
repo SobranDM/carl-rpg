@@ -63,7 +63,7 @@ export function effectText(html) {
  * in the shape the old list had, plus its Area, Splash and Debuffs.
  * @param {Item} item  A `mobAttack` item.
  * @returns {{id: string, name: string, toHit: string, damage: string, damageType: string, range: string,
- *   effect: string, isArea: boolean, splash: boolean, targetEffects: object[]}}
+ *   effect: string, isArea: boolean, splash: boolean, armorPiercing: boolean, targetEffects: object[]}}
  */
 export function mobAttackData(item) {
   const sys = item.system;
@@ -77,6 +77,7 @@ export function mobAttackData(item) {
     effect: effectText(sys.description),
     isArea: !!sys.isArea,
     splash: !!sys.isArea && !!sys.splash,
+    armorPiercing: !!sys.armorPiercing,
     targetEffects: (sys.targetEffects ?? []).filter((te) => te.debuffKey).map((te) => ({
       id: te.id, debuffKey: te.debuffKey, stacks: te.stacks || 1, trigger: te.trigger || "hit", label: te.label || "",
       sourceLabel: item.name,

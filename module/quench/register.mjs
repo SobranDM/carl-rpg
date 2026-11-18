@@ -57,6 +57,9 @@ import registerMobDebuffs from "./batches/mob-debuffs.mjs";
 import registerGearSlots from "./batches/gear-slots.mjs";
 import registerActorPicker from "./batches/actor-picker.mjs";
 import registerMemoryHygiene from "./batches/memory-hygiene.mjs";
+import registerHealTargets from "./batches/heal-targets.mjs";
+import registerArmorPiercing from "./batches/armor-piercing.mjs";
+import registerPartyCheck from "./batches/party-check.mjs";
 import { withMessageCleanup } from "./helpers.mjs";
 
 const BATCH_REGISTRARS = [
@@ -105,6 +108,9 @@ const BATCH_REGISTRARS = [
   registerGearSlots,
   registerActorPicker,
   registerMemoryHygiene,
+  registerHealTargets,
+  registerArmorPiercing,
+  registerPartyCheck,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

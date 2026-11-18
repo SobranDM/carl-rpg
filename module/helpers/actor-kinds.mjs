@@ -24,6 +24,14 @@ export const isCrawler = (a) => typeOf(a) === "character";
 export const isPet = (a) => typeOf(a) === "pet";
 
 /**
+ * A Pet marked Minion (module/data/pet.mjs, p.233): no Command Check - it
+ * counts as commanded in any fight, its two Actions its controller's to use
+ * (actions.mjs petCommanded, pet-command.mjs). A dedicated mount isn't one.
+ * @param {Actor|{type?: string, system?: object}|null|undefined} a
+ */
+export const isMinion = (a) => isPet(a) && typeof a === "object" && !!a.system?.isMinion && !a.system?.isMount;
+
+/**
  * Rolls its own d20 Attacks and Evades and acts in the Crawler phase:
  * crawlers and their Pets. Everything else rolls nothing - its to-hit and
  * Evade are static Difficulties (Mobs, p.267-272).

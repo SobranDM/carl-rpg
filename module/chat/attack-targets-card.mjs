@@ -91,16 +91,21 @@ function damageTypeLabel(type) {
  * The static part of the card: what the Attack carries (damage pills,
  * on-hit effects, an Area tag), a placeholder the rows are drawn into, and
  * the GM's Apply All.
- * @param {{damageByType: Record<string, number>, targetEffects: object[], isArea: boolean, noAmazing?: boolean}} args
+ * @param {{damageByType: Record<string, number>, targetEffects: object[], isArea: boolean, noAmazing?: boolean, armorPiercing?: boolean}} args
  *   noAmazing: the Attack has targets and was an Amazing Success against
  *   none - an Amazing-Success-only Debuff lands on no one, so it's dimmed.
+ *   armorPiercing: the damage ignores DR but Anti-Piercing gear's - a pill says so.
  * @returns {string}
  */
-export function buildAttackTargetsFooter({ damageByType = {}, targetEffects = [], isArea = false, noAmazing = false }) {
-  const pills = Object.entries(damageByType)
+export function buildAttackTargetsFooter({ damageByType = {}, targetEffects = [], isArea = false, noAmazing = false, armorPiercing = false }) {
+  let pills = Object.entries(damageByType)
     .filter(([, amount]) => amount)
     .map(([type, amount]) => `<span class="carl-damage-pill">${esc(amount)} ${esc(damageTypeLabel(type))}</span>`)
     .join("");
+  if (pills && armorPiercing) {
+    pills += `<span class="carl-damage-pill carl-armor-piercing-pill" data-tooltip="${esc(game.i18n.localize("CARLRPG.ArmorPiercing.Hint"))}">`
+      + `<i class="fas fa-shield-virus" aria-hidden="true"></i> ${esc(game.i18n.localize("CARLRPG.ArmorPiercing.Label"))}</span>`;
+  }
   // Each Debuff by name, with where it comes from ("Burned ×1 · Blazing
   // Longsword") and, if only on an Amazing Success, that (decided per
   // target when applied - debuffLandsOn); dimmed if no target was one.
@@ -421,7 +426,7 @@ export async function applyRow(message, row) {
   });
   const lines = [];
   if (Object.values(outcome.damage).some((v) => v)) {
-    lines.push(...await applyDamageToActor(target.actor, outcome.damage, flags.damageIsMagic ?? true));
+    lines.push(...await applyDamageToActor(target.actor, outcome.damage, flags.damageIsMagic ?? true, { armorPiercing: !!flags.armorPiercing }));
   }
   // A rammed (or ramming) vehicle passes half its damage to its occupants,
   // and the rammer loses Move - even when the recoil rounds down to nothing.

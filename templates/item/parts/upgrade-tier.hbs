@@ -6,8 +6,9 @@
       ORIGINAL index in the full system.upgrades array - every field's name
       path and deleteArrayItem's data-index need it), `damageTypeEntries`
       (#groupUpgradesByRank: its damage types as `{value, dtIndex}`, dtIndex
-      the ORIGINAL index), `showHeal` / `showDamageTypes` (in use, or added
-      from the add bar), `unlocked`, `isAttackFlavored`, plus `config`/
+      the ORIGINAL index), `showHeal` / `showDamageTypes` / `showShield` (in
+      use, or added from the add bar; Shield slots only on a Spell, `isSpell`),
+      `unlocked`, `isAttackFlavored` (also shows its Armor-Piercing box), plus `config`/
       `item`/`actorSkillNames` passed through. Inside the
       `{{#each damageTypeEntries}}` loop anything from this scope needs
       `../`. --}}
@@ -90,8 +91,33 @@
           <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.healMend'}}" {{checked upgrade.healMend}} />
           {{localize "CARLRPG.Ranked.HealMend"}}
         </label>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Ranked.HealAllTargetsHint'}}">
+          <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.healAllTargets'}}" {{checked upgrade.healAllTargets}} />
+          {{localize "CARLRPG.Ranked.HealAllTargets"}}
+        </label>
       </div>
     </div>
+    {{/if}}
+
+    {{#if showShield}}
+    {{!-- A Shield-type Spell's pool size from this Rank on (0: unchanged). --}}
+    <div class="carl-tier-part carl-upgrade-shield">
+      <span class="carl-tier-part-title">{{localize "CARLRPG.Spell.ShieldSlots"}}</span>
+      <div class="carl-field-grid">
+        <div>
+          <input type="text" class="carl-w-tiny" name="{{concat 'system.upgrades.' uIndex '.shieldSlots'}}"
+            value="{{upgrade.shieldSlots}}" data-dtype="Number" aria-label="{{localize 'CARLRPG.Spell.ShieldSlots'}}" />
+          <span class="carl-hint">{{localize "CARLRPG.Spell.ShieldSlotsTierHint"}}</span>
+        </div>
+      </div>
+    </div>
+    {{/if}}
+
+    {{#if isAttackFlavored}}
+    <label class="carl-check-field carl-upgrade-armor-piercing" data-tooltip="{{localize 'CARLRPG.ArmorPiercing.Hint'}}">
+      <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.armorPiercing'}}" {{checked upgrade.armorPiercing}} />
+      {{localize "CARLRPG.ArmorPiercing.FromRank"}}
+    </label>
     {{/if}}
 
     <div class="carl-add-bar">
@@ -111,6 +137,10 @@
       <button type="button" data-action="revealPart" data-reveal="{{concat 'heal-' upgrade.id}}">
         <i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.AddHealing"}}</button>
       {{/unless}}
+      {{#if isSpell}}{{#unless showShield}}
+      <button type="button" data-action="revealPart" data-reveal="{{concat 'shield-' upgrade.id}}">
+        <i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.AddShieldSlots"}}</button>
+      {{/unless}}{{/if}}
     </div>
   </div>
 </section>

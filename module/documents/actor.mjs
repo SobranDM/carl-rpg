@@ -7,10 +7,58 @@ import { explodeVehicle } from "../helpers/vehicle-ram.mjs";
 import { grantPetSkills, levelBondedPets, syncPetCommandStatus, syncPetOwnership } from "../helpers/pets.mjs";
 
 /**
+ * Token defaults for a new actor, by type (ruled 2026-11-18): Characters and
+ * Pets linked with vision; Mobs unlinked without (a Boss or Elite is linked
+ * by the PDF importer); Vehicles and Loot Boxes linked without. Names show
+ * on hover to anyone; bars on hover to the owner (a Mob's is the GM's);
+ * Loot Boxes have none. Characters and Pets are Friendly, Mobs Hostile,
+ * Vehicles and Loot Boxes Neutral. Applied only to what the creation data
+ * leaves out (a copy, a compendium entry or an import keeps its own), and
+ * only to new actors. Core's Prototype Token Overrides setting still
+ * applies on top.
+ * @param {string} type
+ * @returns {object|null}  Prototype token fields.
+ */
+export function tokenDefaultsFor(type) {
+  const { TOKEN_DISPLAY_MODES: MODES, TOKEN_DISPOSITIONS: DISPOSITIONS } = CONST;
+  const shown = { displayName: MODES.HOVER, displayBars: MODES.OWNER_HOVER };
+  switch (type) {
+    case "character":
+    case "pet":
+      return { actorLink: true, sight: { enabled: true }, disposition: DISPOSITIONS.FRIENDLY, ...shown };
+    case "mob":
+      return { actorLink: false, sight: { enabled: false }, disposition: DISPOSITIONS.HOSTILE, ...shown };
+    case "vehicle":
+      return { actorLink: true, sight: { enabled: false }, disposition: DISPOSITIONS.NEUTRAL, ...shown };
+    case "lootBox":
+      return { actorLink: true, sight: { enabled: false }, disposition: DISPOSITIONS.NEUTRAL, ...shown, displayBars: MODES.NONE };
+    default:
+      return null;
+  }
+}
+
+/**
  * Extend the base Actor document.
  * @extends {Actor}
  */
 export class CarlRPGActor extends Actor {
+  /**
+   * A new actor's token defaults (tokenDefaultsFor), for each field the
+   * creation data doesn't set.
+   * @override
+   */
+  async _preCreate(data, options, user) {
+    if ((await super._preCreate(data, options, user)) === false) return false;
+    const defaults = tokenDefaultsFor(this.type);
+    if (!defaults) return;
+    const given = foundry.utils.flattenObject(data?.prototypeToken ?? {});
+    const update = {};
+    for (const [path, value] of Object.entries(foundry.utils.flattenObject(defaults))) {
+      if (!(path in given)) update[`prototypeToken.${path}`] = value;
+    }
+    if (Object.keys(update).length) this.updateSource(update);
+  }
+
   /**
    * The old Pet tab's blocks (system.pet / system.mount) are no longer in
    * the Character schema, and Foundry drops keys a schema doesn't know when

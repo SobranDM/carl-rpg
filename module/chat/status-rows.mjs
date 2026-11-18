@@ -1,6 +1,7 @@
 /**
  * The status rows the combat cards share (docs/reaction-card-redesign.md):
- * the Reaction card, the Damage card, and an Attack card's target rows.
+ * the Reaction card, the Damage card, and an Attack card's target rows -
+ * and a Party Skill Check's card (module/chat/party-check-card.mjs).
  * Each row leads with a status chip - icon, colour and word, never colour
  * alone - then what it is, a right-aligned number column, its action icons,
  * and an expander for the roll behind it. A section groups the rows for one
@@ -25,6 +26,10 @@ const ICONS = {
   taunt: "fa-bullhorn",
   tauntFailed: "fa-bullhorn",
   moved: "fa-arrow-right",
+  // A Party Skill Check's rows (module/chat/party-check-card.mjs).
+  waiting: "fa-hourglass-half",
+  success: "fa-check",
+  fail: "fa-xmark",
 };
 
 /**
@@ -42,6 +47,9 @@ const TONES = {
   taunt: "taunt",
   tauntFailed: "muted",
   moved: "muted",
+  waiting: "incoming",
+  success: "good",
+  fail: "bad",
 };
 
 /**

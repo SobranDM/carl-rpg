@@ -23,6 +23,12 @@
           <label class="resource-label">{{localize "CARLRPG.Spell.Cooldown"}}</label>
           <input type="text" class="carl-w-short" name="system.cooldown" value="{{system.cooldown}}" />
         </div>
+        {{!-- The extra Health Bar a Shield-type Spell grants while it's on
+              (modifiers.mjs computeActiveShieldSlots); 0 for any other Spell. --}}
+        <div>
+          <label class="resource-label" data-tooltip="{{localize 'CARLRPG.Spell.ShieldSlotsHint'}}">{{localize "CARLRPG.Spell.ShieldSlots"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.shieldSlots" value="{{system.shieldSlots}}" data-dtype="Number" />
+        </div>
       </div>
       <div>
         <label class="resource-label">{{localize "CARLRPG.Spell.CastingKeywords"}}</label>

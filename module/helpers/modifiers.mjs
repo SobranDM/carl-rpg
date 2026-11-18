@@ -34,7 +34,7 @@
 import { getRankDamageDie } from "./rules.mjs";
 import { CARLRPG } from "./config.mjs";
 import { deityBenefitApplies } from "./worship.mjs";
-import { drGroupOf, givesBonuses } from "./gear.mjs";
+import { drGroupOf, givesBonuses, isWeaponFor } from "./gear.mjs";
 
 const RANKED_TYPES = new Set(["skill", "spell", "damageEffect"]);
 
@@ -253,6 +253,39 @@ export function attackTargetEffects(actor, skillItem, { damageEffectItem = null,
   return [skillItem, damageEffectItem, ...gear]
     .filter(Boolean)
     .flatMap((item) => collectItemTargetEffects(item, options));
+}
+
+/**
+ * Is this Skill, Spell or Damage Effect's damage Armor-Piercing at its Rank:
+ * its own box, or an unlocked Upgrade tier's (gated on the item's own Rank,
+ * as collectItemTargetEffects gates its Debuffs)?
+ * @param {Item|null} item
+ * @returns {boolean}
+ */
+export function itemIsArmorPiercing(item) {
+  const sys = item?.system;
+  if (!sys) return false;
+  if (sys.armorPiercing) return true;
+  const rank = sys.rank ?? 0;
+  return (Array.isArray(sys.upgrades) ? sys.upgrades : []).some((u) => u.armorPiercing && rank >= u.rankThreshold);
+}
+
+/**
+ * Is a crawler's (or Pet's) Attack Armor-Piercing - "Armor-Piercing damage
+ * (ignores DR)" (Dagger Rank 5, Javelin Rank 10, Spells)? From its Skill or
+ * Spell, its Damage Effect, or the weapon it's made with: equipped gear
+ * whose Weapon Skill is this Attack's Skill and whose Armor-Piercing box is
+ * ticked. Other Armor-Piercing gear doesn't count - it isn't this Attack's
+ * weapon.
+ * @param {Actor|null} actor
+ * @param {Item} skillItem
+ * @param {{damageEffectItem?: Item|null}} [options]
+ * @returns {boolean}
+ */
+export function attackIsArmorPiercing(actor, skillItem, { damageEffectItem = null } = {}) {
+  if (itemIsArmorPiercing(skillItem) || itemIsArmorPiercing(damageEffectItem)) return true;
+  return (actor?.items ?? []).some((i) => i.type === "item" && i.system.armorPiercing
+    && givesBonuses(i) && isWeaponFor(i, skillItem));
 }
 
 /**
@@ -824,6 +857,17 @@ export function aggregateActorBonuses(actorSystem) {
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }
   }
+  // The DR an Armor-Piercing hit still meets: Anti-Piercing gear's own
+  // armor DR (p.95: "The DR of a piece of armor with this quality applies
+  // against Armor-Piercing damage") - each piece that counts at all (not
+  // outclassed in its slot type). deriveDefenses (derive-creature.mjs)
+  // scales it like the rest of DR and keeps it within drEffective.
+  let antiPiercingDr = 0;
+  for (const item of items) {
+    if (item.type !== "item" || !item.system.antiPiercing || superseded.has(item.id) || !givesBonuses(item)) continue;
+    antiPiercingDr += armorDr(item, ctx.rollData);
+  }
+  actorSystem.drAntiPiercingBase = antiPiercingDr;
   // A condition entry carrying its own changes (a timed Buff such as an
   // Iron Skin Potion's "DR x2" - module/helpers/consumables.mjs) applies
   // them like a worn item, for as long as the entry lasts.

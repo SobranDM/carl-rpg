@@ -119,6 +119,19 @@ export function defineUpgradeTierSchema() {
      */
     healMend: new fields.BooleanField({ required: true, initial: false }),
     /**
+     * This tier heals every targeted token instead of one (Heal Others Rank
+     * 15: "Instead of a single target, all party members within a 20ft
+     * Burst radius are healed" - the caster targets them). Each still has
+     * to be one the Spell's "Heals" allows (module/helpers/heal-targets.mjs).
+     */
+    healAllTargets: new fields.BooleanField({ required: true, initial: false }),
+    /**
+     * From this Rank the Attack's damage is Armor-Piercing: it ignores DR,
+     * except DR from gear marked Anti-Piercing (p.95, p.225; Dagger Rank 5,
+     * Javelin Rank 10). modifiers.mjs attackIsArmorPiercing.
+     */
+    armorPiercing: new fields.BooleanField({ required: true, initial: false }),
+    /**
      * Attack-capable Skills/Spells/Damage Effects only (see docs/known-gaps.md
      * 1.3/1.7). Once this tier is unlocked, it overrides the item's own
      * baseDamage.damageType for every damage term that doesn't carry its own

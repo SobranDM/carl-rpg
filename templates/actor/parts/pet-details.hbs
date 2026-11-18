@@ -24,6 +24,10 @@
         <input type="checkbox" name="system.isMount" {{checked system.isMount}} />
         {{localize "CARLRPG.Pet.IsMount"}}
       </label>
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.IsMinionHint'}}">
+        <input type="checkbox" name="system.isMinion" {{checked system.isMinion}} {{#if system.isMount}}disabled{{/if}} />
+        {{localize "CARLRPG.Pet.IsMinion"}}
+      </label>
       <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.EarthBornHint'}}">
         <input type="checkbox" name="system.earthBorn" {{checked system.earthBorn}} />
         {{localize "CARLRPG.Pet.EarthBorn"}}

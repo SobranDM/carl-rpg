@@ -112,7 +112,7 @@ export default function register(quench) {
             const spell = await createTestItem(actor, "spell", "Heal", {
               system: { rank: 1, healDice: "1d4", castingKeywords: ["heal", "passive"] },
             });
-            await CarlDice.rollHeal(actor, spell);
+            await CarlDice.rollHeal(actor, spell, { skipDialog: true });
             assert.isFalse(spell.system.marked);
             assert.isFalse(CarlDice.isAdvancedByUse(spell));
           } finally {

@@ -1,10 +1,80 @@
 import { createTestCharacter, createTestItem, deleteTestActor, settle, useQuenchTimeout, waitFor } from "../helpers.mjs";
+import { tokenDefaultsFor } from "../../documents/actor.mjs";
 
 export default function register(quench) {
   quench.registerBatch(
     "carl-rpg.actor-document",
     (context) => {
       const { describe, it, assert } = context;
+
+      describe("_preCreate: token defaults by actor type", function () {
+        useQuenchTimeout(this);
+        const { TOKEN_DISPLAY_MODES: MODES, TOKEN_DISPOSITIONS: DISPOSITIONS } = CONST;
+        // A world's Prototype Token Overrides (core setting) win over our
+        // defaults; a path it sets for the type isn't asserted.
+        const overridden = (type) => {
+          const setting = game.settings.get("core", "prototypeTokenOverrides");
+          const flat = { ...foundry.utils.flattenObject(setting?.base ?? {}), ...foundry.utils.flattenObject(setting?.[type] ?? {}) };
+          return new Set(Object.entries(flat).filter(([, v]) => v !== undefined && v !== null).map(([k]) => k));
+        };
+        const expectDefaults = (actor) => {
+          const skip = overridden(actor.type);
+          const token = actor.prototypeToken;
+          for (const [path, value] of Object.entries(foundry.utils.flattenObject(tokenDefaultsFor(actor.type)))) {
+            if (skip.has(path)) continue;
+            assert.strictEqual(foundry.utils.getProperty(token, path), value, `${actor.type}: prototypeToken.${path}`);
+          }
+        };
+
+        it("Characters and Pets: linked, vision on, Friendly, name on hover to anyone, bars on hover to the owner", async function () {
+          assert.include(tokenDefaultsFor("character"), { actorLink: true, disposition: DISPOSITIONS.FRIENDLY, displayName: MODES.HOVER, displayBars: MODES.OWNER_HOVER });
+          assert.isTrue(tokenDefaultsFor("pet").sight.enabled);
+          for (const type of ["character", "pet"]) {
+            const actor = await createTestCharacter(type, { type });
+            try {
+              expectDefaults(actor);
+              assert.isTrue(actor.prototypeToken.actorLink);
+            } finally {
+              await deleteTestActor(actor);
+            }
+          }
+        });
+
+        it("Mobs: unlinked, no vision, Hostile", async function () {
+          assert.include(tokenDefaultsFor("mob"), { actorLink: false, disposition: DISPOSITIONS.HOSTILE });
+          const actor = await createTestCharacter("mob", { type: "mob" });
+          try {
+            expectDefaults(actor);
+            assert.isFalse(actor.prototypeToken.actorLink);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("Vehicles and Loot Boxes: linked, no vision, Neutral; a Loot Box shows no bars", async function () {
+          assert.strictEqual(tokenDefaultsFor("lootBox").displayBars, MODES.NONE);
+          for (const type of ["vehicle", "lootBox"]) {
+            const actor = await createTestCharacter(type, { type });
+            try {
+              expectDefaults(actor);
+              assert.isTrue(actor.prototypeToken.actorLink);
+            } finally {
+              await deleteTestActor(actor);
+            }
+          }
+        });
+
+        it("keeps token settings the creation data gives (an import or a copy)", async function () {
+          const actor = await createTestCharacter("mob", { type: "mob", prototypeToken: { actorLink: true, disposition: DISPOSITIONS.NEUTRAL } });
+          try {
+            assert.isTrue(actor.prototypeToken.actorLink, "a given actorLink is kept");
+            if (!overridden("mob").has("disposition")) assert.strictEqual(actor.prototypeToken.disposition, DISPOSITIONS.NEUTRAL);
+            if (!overridden("mob").has("sight.enabled")) assert.isFalse(actor.prototypeToken.sight.enabled, "an unset field still gets its default");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+      });
 
       describe("_preUpdate: +3 Stat points per Level (p.169)", function () {
         useQuenchTimeout(this);

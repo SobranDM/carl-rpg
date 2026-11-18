@@ -81,6 +81,10 @@
         {{selectOptions config.damageTypes selected=system.baseDamage.damageType localize=true}}
       </select>
     </div>
+    <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.ArmorPiercing.Hint'}}">
+      <input type="checkbox" name="system.armorPiercing" {{checked system.armorPiercing}} />
+      {{localize "CARLRPG.ArmorPiercing.AnyRank"}}
+    </label>
   </div>
 </div>
 
@@ -98,6 +102,17 @@
       <label class="resource-label">{{localize "CARLRPG.Ranked.HealDice"}}</label>
       <input type="text" class="carl-w-short" name="system.healDice" value="{{system.healDice}}" placeholder="1d4" />
     </div>
+    {{!-- Who it can heal (module/helpers/heal-targets.mjs); blank goes by Range. --}}
+    <div>
+      <label class="resource-label" data-tooltip="{{localize 'CARLRPG.Ranked.HealsHint'}}">{{localize "CARLRPG.Ranked.Heals"}}</label>
+      <select class="carl-w-medium" name="system.heals">
+        {{selectOptions config.healsChoices selected=system.heals localize=true}}
+      </select>
+    </div>
+    <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Ranked.HealToFullBaseHint'}}">
+      <input type="checkbox" name="system.healToFull" {{checked system.healToFull}} />
+      {{localize "CARLRPG.Ranked.HealToFullBase"}}
+    </label>
   </div>
 </div>
 {{/if}}

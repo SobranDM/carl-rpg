@@ -56,7 +56,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
 
   /**
    * Optional parts of an Upgrade tier shown from its add bar before they
-   * hold anything (upgrade-tier.hbs): "heal-<upgradeId>", "dt-<upgradeId>".
+   * hold anything (upgrade-tier.hbs): "heal-<upgradeId>", "dt-<upgradeId>",
+   * "shield-<upgradeId>".
    * @type {Set<string>}
    */
   #revealed = new Set();
@@ -226,6 +227,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     context.config = CONFIG.CARLRPG;
     context.itemTypeLabel = `TYPES.Item.${item.type}`;
     context.isRanked = RANKED_TYPES.includes(item.type);
+    // Only a Spell's Upgrade cards offer Shield slots (upgrade-tier.hbs).
+    context.isSpell = item.type === "spell";
     // A Pet's Ranks are the current Floor (data/ranked-item-base.mjs) and
     // never advance - show that Rank read-only instead of the stored one.
     context.petRank = item.system.rankIsFloor ? item.system.rank : null;
@@ -324,12 +327,15 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         const blank = all.findLast((entry) => !entry.value);
         if (blank) damageTypeEntries.push(blank);
       }
-      const showHeal = !!(upgrade.healDice || upgrade.healToFull || upgrade.healMend)
+      const showHeal = !!(upgrade.healDice || upgrade.healToFull || upgrade.healMend || upgrade.healAllTargets)
         || this.#revealed.has(`heal-${upgrade.id}`);
       // Once shown, it stays for this sheet's session (cleared mid-edit).
       if (showHeal) this.#revealed.add(`heal-${upgrade.id}`);
+      // A Spell's Shield slots from this Rank (only a Spell's sheet offers it).
+      const showShield = Number(upgrade.shieldSlots) > 0 || this.#revealed.has(`shield-${upgrade.id}`);
+      if (showShield) this.#revealed.add(`shield-${upgrade.id}`);
       (buckets[key] ?? buckets.rank5).push({
-        upgrade, index, damageTypeEntries, showHeal, showDamageTypes: damageTypeEntries.length > 0,
+        upgrade, index, damageTypeEntries, showHeal, showShield, showDamageTypes: damageTypeEntries.length > 0,
       });
     });
     return buckets;
@@ -347,7 +353,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   #upgradeOverview(context, rank) {
     const i18n = game.i18n;
     const count = (n, one, many) => (n ? i18n.format(n === 1 ? one : many, { n }) : null);
-    const sumUp = ({ upgrade, damageTypeEntries, showHeal }) => {
+    const sumUp = ({ upgrade, damageTypeEntries, showHeal, showShield }) => {
       const line = String(upgrade.description ?? "").split(/\r?\n/).map((s) => s.trim()).find(Boolean);
       if (line) return line;
       const parts = [
@@ -355,6 +361,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         count(upgrade.targetEffects?.length ?? 0, "CARLRPG.ItemSheet.Count.Debuff", "CARLRPG.ItemSheet.Count.Debuffs"),
         damageTypeEntries.some((e) => e.value) ? i18n.localize("CARLRPG.Ranked.DamageTypeSplit") : null,
         showHeal ? i18n.localize("CARLRPG.ItemSheet.Group.Healing") : null,
+        showShield ? i18n.localize("CARLRPG.Spell.ShieldSlots") : null,
+        upgrade.armorPiercing ? i18n.localize("CARLRPG.ArmorPiercing.Label") : null,
       ].filter(Boolean);
       return parts.join(" · ") || i18n.localize("CARLRPG.ItemSheet.EmptyUpgrade");
     };
@@ -451,6 +459,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     }));
     return {
       isConsumable: isConsumable(item),
+      // A weapon offers Armor-Piercing (its Attacks); wearable gear, Anti-Piercing.
+      isWeapon: weapon,
       wearSlots,
       wearable: worn.size > 0,
       held: worn.has("held"),
@@ -663,7 +673,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     if (tab) this.changeTab(tab, "primary");
   }
 
-  /** An Upgrade tier's add bar: show an optional part (Healing). */
+  /** An Upgrade tier's add bar: show an optional part (Healing, Shield slots). */
   static #onRevealPart(event, target) {
     event.preventDefault();
     const key = target.dataset.reveal;

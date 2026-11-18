@@ -18,6 +18,7 @@
       "damageType": ""
     },
     "healDice": "2",
+    "heals": "self",
     "upgrades": [],
     "manaCost": 2,
     "range": "Self only",

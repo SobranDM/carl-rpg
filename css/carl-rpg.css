@@ -496,6 +496,12 @@
   background: var(--carl-danger);
   color: var(--carl-header-text);
 }
+.carl-chat-card .carl-damage-card .carl-damage-pill.carl-armor-piercing-pill,
+.carl-chat-card .carl-attack-targets .carl-damage-pill.carl-armor-piercing-pill {
+  background: var(--carl-input-bg);
+  color: var(--carl-text);
+  border: 1px solid var(--carl-danger);
+}
 .carl-chat-card .carl-damage-card .carl-apply-damage,
 .carl-chat-card .carl-attack-targets .carl-apply-damage {
   width: auto;
@@ -606,13 +612,15 @@
   padding-left: 1.25em;
 }
 .carl-chat-card .carl-debuff-note,
-.carl-chat-card .carl-free-evade-note {
+.carl-chat-card .carl-free-evade-note,
+.carl-chat-card .carl-off-stat-note {
   margin: 4px 0;
   font-size: 11px;
   color: var(--carl-text-muted);
 }
 .carl-chat-card .carl-debuff-note i,
-.carl-chat-card .carl-free-evade-note i {
+.carl-chat-card .carl-free-evade-note i,
+.carl-chat-card .carl-off-stat-note i {
   color: var(--carl-danger);
   margin-right: 2px;
 }
@@ -643,6 +651,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+.carl-dialog .carl-dialog-condition[hidden] {
+  display: none;
 }
 .carl-dialog .carl-dialog-attack-skill .carl-dialog-conditions-list,
 .carl-dialog .carl-dialog-damage-effect .carl-dialog-conditions-list {
@@ -1465,6 +1476,39 @@
 }
 .carl-chat-card .carl-status-gm {
   margin-left: auto;
+}
+.carl-chat-card .carl-party-check {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-12);
+}
+.carl-chat-card .carl-party-rule {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-party-outcome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0;
+  padding: 4px 6px;
+  border-radius: 3px;
+  background: var(--carl-status-neutral-bg);
+  color: var(--carl-status-neutral-fg);
+}
+.carl-chat-card .carl-party-outcome[data-tone=good] {
+  background: var(--carl-status-good-bg);
+  color: var(--carl-status-good-fg);
+}
+.carl-chat-card .carl-party-outcome[data-tone=bad] {
+  background: var(--carl-status-bad-bg);
+  color: var(--carl-status-bad-fg);
+}
+.carl-chat-card .carl-party-outcome span {
+  font-size: 11px;
 }
 
 /* Styles limited to carl-rpg sheets */

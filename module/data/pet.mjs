@@ -50,6 +50,12 @@ export default class CarlRPGPet extends CarlRPGActorBase {
     // A dedicated mount: "Health Bar slots equal to their size, and that's
     // all they're going to get, as mounts don't level up as pets do" (p.232).
     schema.isMount = new fields.BooleanField({ initial: false });
+    // A minion (p.233): "Spells and effects that work on pets typically also
+    // work on minions", but there's no Command Check - "one command spurs
+    // them all into action. Once commanded, minions continue to follow your
+    // commands". It counts as commanded in any fight (actor-kinds.mjs
+    // isMinion).
+    schema.isMinion = new fields.BooleanField({ initial: false });
     // The bonded crawler - a world Actor id, like a Character's class/race.
     schema.ownerId = new fields.StringField({ required: true, blank: true, initial: "" });
     // "If a Class grants you a pet ... That pet starts as Calm" (p.229).

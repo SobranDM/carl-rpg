@@ -416,7 +416,7 @@ export function buildReactionState(combat, declarations) {
   for (const d of declarations) {
     state.attacks[d.id] = {
       id: d.id, mobUuid: d.mobUuid, mobName: d.mobName, mobImg: d.mobImg, attackName: d.attackName,
-      damage: d.damage, damageType: d.damageType, damageIsMagic: d.damageIsMagic, isArea: d.isArea,
+      damage: d.damage, damageType: d.damageType, damageIsMagic: d.damageIsMagic, armorPiercing: !!d.armorPiercing, isArea: d.isArea,
       floor: d.floor, mobBase: d.mobBase, mobOwnRows: d.mobOwnRows ?? [], effect: d.effect, range: d.range,
       // Its Debuffs, each with its trigger - landed at Resolution
       // (reaction-resolve.mjs; docs/mob-sheet.md).

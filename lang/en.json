@@ -432,6 +432,8 @@
       },
       "IsMount": "Mount",
       "IsMountHint": "A dedicated mount: its Health Bar slots equal its Size and it never levels (p.232). Leave unticked for a Pet you ride with a saddle.",
+      "IsMinion": "Minion",
+      "IsMinionHint": "A minion (p.233): no Command Check - one command covers them, and it fights with its two Actions in any combat. Spells for pets (Heal Critter) work on it; Heal Others doesn't.",
       "Attitude": "Attitude",
       "AttitudeHint": "Hostile, Calm, Friendly or Bonded (p.230). Changing it takes 20 minutes and an Animal Handling Check.",
       "Attitudes": {
@@ -502,7 +504,9 @@
         "Untrained": "Untrained in Animal Handling: rolled with Disadvantage.",
         "HidingAfterFight": "{name} is still hiding. Find it and coax it out.",
         "WarnNotFighting": "{name} isn't fighting: Command Pet first (p.232).",
-        "WarnRestricted": "{name} may only Evade, Move or Attack this fight."
+        "WarnRestricted": "{name} may only Evade, Move or Attack this fight.",
+        "MinionNoCheck": "{name} is a minion: it follows commands without a Command Check (p.233).",
+        "MinionState": "Minion: follows your commands"
       }
     },
     "Stat": {
@@ -847,7 +851,10 @@
       "CastingKeywords": "Casting Keywords",
       "FavoredClasses": "Favored Classes (no Mana surcharge)",
       "AddFavoredClass": "Add Favored Class",
-      "EditDetails": "Edit Spell / Add Ranks"
+      "EditDetails": "Edit Spell / Add Ranks",
+      "ShieldSlots": "Shield slots",
+      "ShieldSlotsHint": "The extra Health Bar slots this Spell grants while it's switched on (a Shield-type Spell). 0: none.",
+      "ShieldSlotsTierHint": "From this Rank on (0: unchanged)."
     },
     "DamageEffect": {
       "Cooldown": "Cooldown",
@@ -952,6 +959,12 @@
       "HealDice": "Heal Dice",
       "HealToFull": "Heal to Full",
       "HealMend": "Mend a Debuff",
+      "HealAllTargets": "Heals every target",
+      "HealAllTargetsHint": "From this Rank it heals every targeted token instead of one (Heal Others Rank 15: all party members in a 20ft Burst - target them).",
+      "Heals": "Heals",
+      "HealsHint": "Who it can be cast on. A heal with nothing targeted heals its caster, if it can.",
+      "HealToFullBase": "Heals to full",
+      "HealToFullBaseHint": "At any Rank, heals the target's whole Health Bar with no dice (Heal Critter). An Upgrade's Heal to Full also grants a Short Rest.",
       "Upgrades": "Upgrades",
       "AddUpgrade": "Add Upgrade",
       "RemoveUpgrade": "Remove Upgrade",
@@ -1064,6 +1077,7 @@
       "AddDebuff": "Debuff",
       "AddDamageType": "Damage type",
       "AddHealing": "Healing",
+      "AddShieldSlots": "Shield slots",
       "Count": { "Bonus": "{n} Bonus", "Bonuses": "{n} Bonuses", "Debuff": "{n} Debuff", "Debuffs": "{n} Debuffs" },
       "ManaChip": "{n} Mana",
       "RankChip": "Rank {n}",
@@ -1147,6 +1161,10 @@
       "SubtitleFull": "Full Heal",
       "WillHeal": "Heals {amount} Health Bar slot(s) when applied.",
       "WillHealFull": "Heals to full and grants the benefits of a Short Rest when applied.",
+      "WillHealFullOnly": "Heals to full when applied.",
+      "WillHealNamed": "Heals {names}: {amount} Health Bar slot(s) when applied.",
+      "WillHealFullNamed": "Heals {names} to full when applied.",
+      "WillHealFullRestNamed": "Heals {names} to full and grants the benefits of a Short Rest when applied.",
       "ApplyButton": "Apply Healing",
       "Applied": "Applied",
       "AppliedNotice": "Healed {name}.",
@@ -1157,6 +1175,62 @@
       "NoConditions": "{name} has no active Conditions to mend.",
       "Mended": "Mended",
       "MendedNotice": "Mended a Debuff on {name}."
+    },
+    "Heals": {
+      "ByRange": "By Range (Self only: Self; else Anyone)",
+      "self": "Self only",
+      "others": "Others (not yourself, pets or minions)",
+      "pets": "Pets and minions",
+      "anyone": "Anyone",
+      "ChooseRecipient": "{name} is targeted. Cast {spell} on them, or on yourself?",
+      "HealYourself": "Heal yourself",
+      "HealTarget": "Heal {name}",
+      "Refuse": {
+        "NeedsTarget": "{spell} can't be cast on yourself: target who to heal.",
+        "NeedsPet": "{spell} only heals pets and minions: target one.",
+        "OneTarget": "{spell} heals one target: target only one.",
+        "Vehicle": "{name} is a vehicle: it's repaired, not healed.",
+        "NotSelf": "{spell} can't be cast on yourself.",
+        "NotPets": "{spell} can't be cast on pets or minions ({name}).",
+        "PetsOnly": "{spell} may only be cast on pets and minions ({name} isn't one)."
+      }
+    },
+    "ArmorPiercing": {
+      "Label": "Armor-Piercing",
+      "Hint": "Armor-Piercing damage ignores DR, except DR from gear marked Anti-Piercing (p.95, p.225).",
+      "AnyRank": "Armor-Piercing (at any Rank)",
+      "FromRank": "Armor-Piercing from this Rank",
+      "WeaponHint": "Attacks with this weapon are Armor-Piercing: they ignore DR, except DR from gear marked Anti-Piercing.",
+      "Anti": "Anti-Piercing",
+      "AntiHint": "Anti-Piercing (p.95): this piece's DR still applies against Armor-Piercing damage."
+    },
+    "PartyCheck": {
+      "Button": "Party Check",
+      "ButtonHint": "A Party Skill Check (p.59): everyone rolls; half or more succeed and the party succeeds.",
+      "DialogTitle": "Party Skill Check",
+      "PickerPrompt": "Who rolls?",
+      "Confirm": "Post the Check",
+      "Skill": "Skill",
+      "NeedSkill": "A Party Skill Check needs a Skill and a Difficulty.",
+      "Rule": "Each crawler rolls for themselves - no aiding (p.59). Half or more succeed: the party succeeds. Untrained: a Stat Check with Disadvantage.",
+      "Title": "Party Check: {skill}",
+      "Subtitle": "Difficulty {difficulty}",
+      "Speaker": "Party Skill Check",
+      "Roll": "Roll for {name}",
+      "Untrained": "Untrained (Disadvantage)",
+      "OffStat": "Off-Stat: {stat}, not {governing}",
+      "OffStatNoGoverning": "Rolled with {stat}",
+      "Progress": "{rolled} of {total} rolled",
+      "Tally": "{successes} of {rolled} succeeded",
+      "Close": "Close",
+      "Outcome": {
+        "succeeds": "Party succeeds",
+        "fails": "Party fails",
+        "none": "No result"
+      },
+      "Result": "{successes} of {total} succeeded (half or more needed).",
+      "ResultClosed": "Closed: {successes} of the {rolled} who rolled succeeded (half or more needed; {total} were called).",
+      "NoRolls": "Closed before anyone rolled."
     },
     "Evade": {
       "RollFreeButton": "Roll Free Evade",
@@ -1338,7 +1412,10 @@
       "missed": "Missed",
       "taunt": "Taunt",
       "tauntFailed": "Failed",
-      "moved": "Moved"
+      "moved": "Moved",
+      "waiting": "Waiting",
+      "success": "Success",
+      "fail": "Fail"
     },
     "Reroll": {
       "Button": "Reroll",
@@ -1450,7 +1527,12 @@
       "ManaCostSpent": "Mana: {cost}",
       "AdvantageAutoApplied": "Advantage pre-selected — Nat 20/Amazing Success Evade bonus vs. this Mob.",
       "ChooseParentSkillTitle": "Attack With: {name}",
-      "ChooseParentSkillBody": "Which Skill or Spell are you attacking with, applying {name}?"
+      "ChooseParentSkillBody": "Which Skill or Spell are you attacking with, applying {name}?",
+      "Stat": "Stat",
+      "StatHint": "Off-Stat (p.58): the Approach may call for another Stat than the Skill's own (Survival with INT instead of CON).",
+      "NoStat": "None",
+      "OffStatNote": "Rolled with {stat} instead of {governing} (Off-Stat).",
+      "OffStatNoteNoGoverning": "Rolled with {stat} (Off-Stat)."
     },
     "TokenResolution": {
       "NoGMSelection": "Select a token on the canvas first.",

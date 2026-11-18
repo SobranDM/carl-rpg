@@ -36,6 +36,13 @@ export default class CarlRPGItem extends CarlRPGItemBase {
     // equipped ("AS: Target gains Burned", p.116; p.223), optionally only
     // with listed Attack Skills (modifiers.mjs attackTargetEffects).
     schema.targetEffects = defineGearTargetEffectsField();
+    // A weapon whose Attacks are Armor-Piercing: they ignore DR, except DR
+    // from gear marked Anti-Piercing (modifiers.mjs attackIsArmorPiercing).
+    schema.armorPiercing = new fields.BooleanField({ required: true, initial: false });
+    // Anti-Piercing (p.95): "The DR of a piece of armor with this quality
+    // applies against Armor-Piercing damage" - this piece's DR still counts
+    // against an Armor-Piercing hit (modifiers.mjs, drAntiPiercing).
+    schema.antiPiercing = new fields.BooleanField({ required: true, initial: false });
 
     // A usable, single-use item (Item Rules, p.99): Potions, Scrolls,
     // Spellbooks and other consumables like Bandages. Blank kind = ordinary

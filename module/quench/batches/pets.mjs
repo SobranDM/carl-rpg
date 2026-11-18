@@ -2,11 +2,12 @@ import { CarlRPGActorSheet } from "../../sheets/actor-sheet.mjs";
 import CarlSpendStatPointsDialog from "../../apps/spend-stat-points-dialog.mjs";
 import CarlDice from "../../dice/dice.mjs";
 import { PVE_INITIATIVE } from "../../documents/combat.mjs";
-import { isCrawler, isPet, rollsLikeCrawler, diesAtZeroHb } from "../../helpers/actor-kinds.mjs";
+import { isCrawler, isMinion, isPet, rollsLikeCrawler, diesAtZeroHb } from "../../helpers/actor-kinds.mjs";
 import { petLevelAfter, bondedPets } from "../../helpers/pets.mjs";
 import {
-  commandStateForDegree, commandDifficulty, commandPet, describePetCommand, petFight,
+  canCommandPet, commandStateForDegree, commandDifficulty, commandPet, describePetCommand, petFight,
 } from "../../helpers/pet-command.mjs";
+import { baseBudget } from "../../helpers/actions.mjs";
 import { crawlerAttackDifficulty, mobAttackRow, rowEvadeDifficulty } from "../../helpers/attack-targets.mjs";
 import { shouldBeDefeated } from "../../helpers/defeat.mjs";
 import {
@@ -406,6 +407,42 @@ export default function register(quench) {
             assert.isFalse(describePetCommand(pet).active);
           } finally {
             await deleteTestActor(pet);
+          }
+        });
+      });
+
+      describe("Minions (p.233)", function () {
+        useQuenchTimeout(this);
+
+        it("a Pet with the Minion box is a minion; a mount never is", async function () {
+          const minion = await createTestPet("minion", { system: { isMinion: true } });
+          const pet = await createTestPet("pet");
+          const mount = await createTestPet("mount", { system: { isMinion: true, isMount: true } });
+          try {
+            assert.isTrue(isMinion(minion));
+            assert.isFalse(isMinion(pet));
+            assert.isFalse(isMinion(mount));
+            assert.isTrue(describePetCommand(minion).minion);
+          } finally {
+            for (const a of [minion, pet, mount]) await deleteTestActor(a);
+          }
+        });
+
+        it("no Command Check: it's refused, and the minion fights with its two Actions anyway", async function () {
+          const owner = await createTestCharacter("controller");
+          const minion = await createTestPet("minion", { system: { ownerId: owner.id, isMinion: true } });
+          const pet = await createTestPet("pet", { system: { ownerId: owner.id } });
+          const combat = await startedCombat(owner, minion, pet);
+          try {
+            assert.isFalse(canCommandPet(minion));
+            assert.isNull(await commandPet(minion, { skipDialog: true }));
+            assert.equal(minion.system.command.state, "", "nothing recorded");
+            const budget = (actor) => baseBudget(combat, combat.combatants.find((c) => c.actor === actor)).action;
+            assert.equal(budget(minion), 2, "a minion: two Actions");
+            assert.equal(budget(pet), 0, "an uncommanded Pet: none");
+          } finally {
+            await deleteTestCombat(combat);
+            for (const a of [minion, pet, owner]) await deleteTestActor(a);
           }
         });
       });

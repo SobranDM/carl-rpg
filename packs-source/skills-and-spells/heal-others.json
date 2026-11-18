@@ -18,6 +18,7 @@
       "damageType": ""
     },
     "healDice": "1d4",
+    "heals": "others",
     "upgrades": [
       {
         "rankThreshold": 5,
@@ -33,7 +34,8 @@
       },
       {
         "rankThreshold": 15,
-        "description": "Instead of a single target, all party members within a 20ft Burst radius are healed.<br><em>Note: this multi-target AoE heal has no structural support (rollHeal only ever heals one snapshotted target) - apply it by hand to each ally in range.</em>",
+        "description": "Instead of a single target, all party members within a 20ft Burst radius are healed.",
+        "healAllTargets": true,
         "changes": []
       }
     ],

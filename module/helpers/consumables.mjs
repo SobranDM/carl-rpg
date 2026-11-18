@@ -668,7 +668,7 @@ async function useScroll(actor, item, { skipDialog, within }) {
   let message;
   // The scroll's use is the Action (useConsumable) - its cast is part of it.
   if (keywords.includes("attack")) message = await CarlDice.rollAttack(actor, spell, { castAs, skipDialog, within });
-  else if (keywords.includes("heal")) message = await CarlDice.rollHeal(actor, spell, { castAs, within });
+  else if (keywords.includes("heal")) message = await CarlDice.rollHeal(actor, spell, { castAs, within, skipDialog });
   // A Spell with no Check to roll (Hole, Wall of Fire) or one you switch on
   // and off (Shield) just takes effect: the card states it at the scroll's
   // Rank, with that Rank's Upgrades, for the table to run.

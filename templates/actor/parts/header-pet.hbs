@@ -32,12 +32,21 @@
       <span class="carl-pet-chip {{#unless pet.isBonded}}warn{{/unless}}" title="{{localize 'CARLRPG.Pet.AttitudeHint'}}">{{localize (lookup config.petAttitudes system.attitude)}}</span>
       {{#if system.isMount}}
       <span class="carl-pet-chip" title="{{localize 'CARLRPG.Pet.IsMountHint'}}">{{localize "CARLRPG.Pet.IsMount"}}</span>
+      {{else if pet.command.minion}}
+      <span class="carl-pet-chip" title="{{localize 'CARLRPG.Pet.IsMinionHint'}}">{{localize "CARLRPG.Pet.IsMinion"}}</span>
       {{else if system.role}}
       <span class="carl-pet-chip" title="{{localize (concat 'CARLRPG.Pet.RoleRules.' system.role)}}">{{localize (lookup config.petRoles system.role)}}</span>
       {{/if}}
     </div>
 
-    {{#unless system.isMount}}
+    {{#if pet.command.minion}}
+    {{!-- A Minion has no Command Check (p.233): it follows its controller's commands. --}}
+    <div class="carl-pet-command flexrow">
+      <span class="carl-pet-command-state active state-free" title="{{localize 'CARLRPG.Pet.IsMinionHint'}}">
+        {{localize "CARLRPG.Pet.Command.MinionState"}}
+      </span>
+    </div>
+    {{else unless system.isMount}}
     {{!-- Command Pet (p.232, module/helpers/pet-command.mjs) - every fight. --}}
     <div class="carl-pet-command flexrow">
       <span class="carl-pet-command-state {{#if pet.command.active}}active state-{{pet.command.state}}{{/if}}"
@@ -59,7 +68,7 @@
       </select>
       {{/if}}
     </div>
-    {{/unless}}
+    {{/if}}
 
     {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
     {{> "systems/carl-rpg/templates/actor/parts/shield-bar.hbs"}}

@@ -63,6 +63,51 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
 }
 
 /**
+ * The Stat dropdown for a Skill Check or Attack (Off-Stat, "Determine the
+ * Approach", p.58 - Survival rolled with INT instead of CON, p.77): every
+ * Stat, the Skill's governing one picked. A Skill with none also offers
+ * "None" (no Stat Mod), picked.
+ * @param {string} governing  The Skill's governingStat ("" for none).
+ * @returns {{selected: string, governing: string, options: {key: string, label: string, selected: boolean}[]}}
+ */
+export function buildStatChoice(governing = "") {
+  const stats = CONFIG.CARLRPG.stats ?? {};
+  const keys = [...(governing && !(governing in stats) ? [governing] : []), ...Object.keys(stats)];
+  const options = keys.map((key) => ({
+    key, label: game.i18n.localize(stats[key] ?? key), selected: key === governing,
+  }));
+  if (!governing) options.unshift({ key: "", label: game.i18n.localize("CARLRPG.Dialog.NoStat"), selected: true });
+  return { selected: governing, governing, options };
+}
+
+/**
+ * The Stat a roll uses: the dialog's choice when it offered one, else the
+ * Skill's own.
+ * @param {{statKey?: string}} options  promptRollOptions' result (or the defaults used without a dialog).
+ * @param {string} governing
+ * @returns {string}
+ */
+export function chosenStat(options, governing = "") {
+  return typeof options?.statKey === "string" ? options.statKey : (governing ?? "");
+}
+
+/**
+ * The card's note when a roll used another Stat than its Skill's (Off-Stat,
+ * p.58): "Rolled with INT instead of CON (Off-Stat)". "" when it didn't.
+ * @param {string} statKey
+ * @param {string} governing
+ * @returns {string}  Trusted HTML.
+ */
+export function offStatNote(statKey, governing = "") {
+  if ((statKey ?? "") === (governing ?? "")) return "";
+  const abbr = (key) => (key ? game.i18n.localize(CONFIG.CARLRPG.statAbbreviations?.[key] ?? key) : game.i18n.localize("CARLRPG.Dialog.NoStat"));
+  const text = governing
+    ? game.i18n.format("CARLRPG.Dialog.OffStatNote", { stat: abbr(statKey), governing: abbr(governing) })
+    : game.i18n.format("CARLRPG.Dialog.OffStatNoteNoGoverning", { stat: abbr(statKey) });
+  return `<p class="carl-off-stat-note"><i class="fas fa-shuffle" aria-hidden="true"></i> ${foundry.utils.escapeHTML(text)}</p>`;
+}
+
+/**
  * @param {object} options
  * @param {string} options.title
  * @param {number|null} [options.difficulty]  Pre-filled Difficulty, editable by the GM.
@@ -95,6 +140,10 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  *   from the Hotlist for this Attack (module/helpers/weapons.mjs).
  * @param {boolean|null} [options.usesAction]  In a fight: show a "Uses an
  *   Action" box, ticked or not (helpers/actions.mjs). null: no box.
+ * @param {{selected: string, governing: string, options: object[]}|null} [options.statChoice]
+ *   A Skill Check's or Attack's Stat dropdown (buildStatChoice) - Off-Stat.
+ *   The result's `statKey` is the Stat picked. A row marked `dexOnly` (Woozy's
+ *   "no DEX Mod") shows only while DEX is picked.
  * @param {{choices: {id: string, label: string}[], selected: string|null,
  *   load: (id: string) => Promise<object|null>}} [options.skillPicker]
  *   The Attack! button's Attack Skill choice (CarlDice.chooseAttack), first
@@ -103,7 +152,7 @@ export function collectApplicableConditionalModifiers(actorSystem, skillName = n
  *   and redraws the rest of the dialog for it, keeping the Advantage,
  *   Difficulty and situational modifier already entered. With nothing
  *   selected only the choice shows.
- * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number, isArea: boolean, splash: Set<number>, usesAction: boolean|null, skillId?: string|null}|null>}
+ * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number, isArea: boolean, splash: Set<number>, usesAction: boolean|null, statKey?: string, skillId?: string|null}|null>}
  *   null if the dialog was cancelled/closed. skillId: the picked Attack
  *   Skill, with a skillPicker.
  */
@@ -122,6 +171,9 @@ export async function promptRollOptions(options = {}) {
     areaTargets: args.areaTargets, isArea: args.isArea, weaponNote: args.weaponNote,
     // In a fight: whether this roll spends one of the roller's Actions.
     showUsesAction: args.usesAction !== null, usesAction: !!args.usesAction,
+    statChoice: args.statChoice,
+    // Woozy's "no DEX Mod" row only matters while DEX is picked.
+    statIsDex: (args.statChoice?.selected ?? "dex") === "dex",
     skillPicker: skillPicker ? { choices: skillPicker.choices, selected } : null,
     // With a picker, nothing else shows until an Attack Skill is picked.
     hideOptions: !!skillPicker && !selected,
@@ -165,7 +217,7 @@ export async function promptRollOptions(options = {}) {
   if (!result) return null;
   if (skillPicker && !selected) return null;
 
-  const { conditionalModifiers, debuffRows, areaTargets, usesAction } = current;
+  const { conditionalModifiers, debuffRows, areaTargets, usesAction, statChoice } = current;
   // Each conditionalModifier may list multiple alternative conditions (e.g.
   // "attacking from behind OR flanking"); checking any one of them applies
   // the change once (OR logic, no double-counting).
@@ -190,6 +242,8 @@ export async function promptRollOptions(options = {}) {
     splash: new Set(areaTargets.map((_, i) => i).filter((i) => result.isArea && result.splash?.[i])),
     // null when the box wasn't offered (not in a fight).
     usesAction: usesAction === null ? null : !!result.usesAction,
+    // The Stat picked (Off-Stat), when the dialog offered one.
+    ...(statChoice ? { statKey: typeof result.stat === "string" ? result.stat : statChoice.selected } : {}),
     ...(skillPicker ? { skillId: selected } : {}),
   };
 }
@@ -201,12 +255,12 @@ function withDefaults({
   title, difficulty = null, showDifficulty = true, defaultAdvantage = null,
   conditionalModifiers = [], damageEffectChoices = [], manaCostChoices = [],
   debuffRows = [], showRollMode = true, difficultyLabel = null,
-  difficultyPresets = [], areaTargets = [], isArea = false, weaponNote = "", usesAction = null,
+  difficultyPresets = [], areaTargets = [], isArea = false, weaponNote = "", usesAction = null, statChoice = null,
 } = {}) {
   return {
     title, difficulty, showDifficulty, defaultAdvantage, conditionalModifiers, damageEffectChoices,
     manaCostChoices, debuffRows, showRollMode, difficultyLabel, difficultyPresets, areaTargets, isArea, weaponNote,
-    usesAction,
+    usesAction, statChoice,
   };
 }
 
@@ -270,4 +324,16 @@ function wireRollOptions(root) {
   const area = root.querySelector("[data-carl-area-toggle]");
   const splash = root.querySelector(".carl-splash-targets");
   if (area && splash) area.addEventListener("change", () => { splash.style.display = area.checked ? "" : "none"; });
+  // Off-Stat: Woozy's "no DEX Mod" row only while DEX is the Stat rolled.
+  const stat = root.querySelector('select[name="stat"]');
+  if (stat) {
+    stat.addEventListener("change", () => {
+      const isDex = stat.value === "dex";
+      for (const row of root.querySelectorAll("[data-carl-dex-only]")) {
+        row.hidden = !isDex;
+        const box = row.querySelector('input[type="checkbox"]');
+        if (box) box.checked = isDex;
+      }
+    });
+  }
 }

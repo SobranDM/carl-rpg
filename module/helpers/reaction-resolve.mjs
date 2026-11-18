@@ -132,6 +132,7 @@ export function buildDamageState(combat, state) {
     data.attacks[attack.id] = {
       id: attack.id, mobUuid: attack.mobUuid, mobName: attack.mobName, attackName: attack.attackName,
       damage: attack.damage ?? "", damageType: attack.damageType ?? "", damageIsMagic: attack.damageIsMagic ?? true,
+      armorPiercing: !!attack.armorPiercing,
       isArea: !!attack.isArea, floor: attack.floor ?? game.settings.get(SCOPE, "currentFloor"), rolled: null,
       effect: attack.effect ?? "", range: attack.range ?? "",
       targetEffects: attack.targetEffects ?? [],
@@ -289,7 +290,7 @@ export function rollAttackOnCard(message, attackId) {
       row.result = { raw: 0, final: 0, slots: 0, shieldSlots: 0, dying: false, extra: [], debuffs: [] };
       if (raw > 0) {
         const applied = await applyDamageWithResult(actor, outcome.damage, attack.damageIsMagic, {
-          noShield: row.caught, extraDr: row.extraDr ?? 0,
+          noShield: row.caught, extraDr: row.extraDr ?? 0, armorPiercing: !!attack.armorPiercing,
         });
         Object.assign(row.result, {
           raw,

@@ -329,4 +329,46 @@
   .carl-status-gm {
     margin-left: auto;
   }
+
+  // A Party Skill Check (module/chat/party-check-card.mjs): laid out as the
+  // Reaction card is (_combat-phases.scss .carl-reaction), with the rule
+  // above the rows and the outcome once settled.
+  .carl-party-check {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: var(--font-size-12);
+  }
+
+  .carl-party-rule {
+    margin: 0 0 4px;
+    font-size: 11px;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-party-outcome {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    margin: 4px 0;
+    padding: 4px 6px;
+    border-radius: 3px;
+    background: var(--carl-status-neutral-bg);
+    color: var(--carl-status-neutral-fg);
+
+    &[data-tone="good"] {
+      background: var(--carl-status-good-bg);
+      color: var(--carl-status-good-fg);
+    }
+
+    &[data-tone="bad"] {
+      background: var(--carl-status-bad-bg);
+      color: var(--carl-status-bad-fg);
+    }
+
+    span {
+      font-size: 11px;
+    }
+  }
 }

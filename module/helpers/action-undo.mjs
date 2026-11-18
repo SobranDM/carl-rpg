@@ -117,6 +117,8 @@ export function undoBlocker(entry, spent = []) {
 /** Whether a card's buttons have been used: it can't simply be taken back. */
 function cardActedOn(message) {
   if (DONE_FLAGS.some((flag) => !!message.getFlag(SCOPE, flag))) return true;
+  // A heal applied to some of its recipients (module/chat/heal-card.mjs).
+  if (Object.values(message.getFlag(SCOPE, "healRecipients") ?? {}).some((r) => r?.applied)) return true;
   return !!message.getFlag(SCOPE, "targetRows") && isCardLocked(message);
 }
 

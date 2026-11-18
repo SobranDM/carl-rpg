@@ -3,7 +3,7 @@ import { createCardMessage } from "../chat/chat-card.mjs";
 import { bakeItemGrants } from "../helpers/race-class-grants.mjs";
 import { applyRaceSize } from "../helpers/size.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
-import { isPet } from "../helpers/actor-kinds.mjs";
+import { isMinion, isPet } from "../helpers/actor-kinds.mjs";
 import { describePetCommand, petFight } from "../helpers/pet-command.mjs";
 import { refuseOutsideHotlist } from "../helpers/hotlist.mjs";
 import { freeSlotFor, hotlistWithout, isItemWorn, placeInFreeSlot, takeOutOfSlots } from "../helpers/equip-slots.mjs";
@@ -288,7 +288,8 @@ export class CarlRPGItem extends Item {
  */
 function warnPetCommand(item) {
   const pet = item.actor;
-  if (!isPet(pet) || pet.system.isMount) return;
+  // A Minion needs no Command Check (p.233): it's always fighting.
+  if (!isPet(pet) || pet.system.isMount || isMinion(pet)) return;
   const fight = petFight(pet);
   if (!fight) return;
   const command = describePetCommand(pet);

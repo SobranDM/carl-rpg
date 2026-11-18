@@ -25,6 +25,7 @@ import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 import { queueForActor } from "../helpers/actor-queue.mjs";
 import { dropExpiredConditions } from "../helpers/expiry.mjs";
 import { actorPickerContent, advanceTimeField, pickerGroups, wireActorPicker } from "./actor-picker.mjs";
+import { postPartyCheck } from "../chat/party-check-card.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -105,6 +106,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       rest: CarlToolbox.#onRest,
       grind: CarlToolbox.#onGrind,
       rollLoot: CarlToolbox.#onRollLoot,
+      partyCheck: CarlToolbox.#onPartyCheck,
     },
   };
 
@@ -660,6 +662,70 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     await addGrindLevelHours(actor, hours);
     // Grinding takes that long (docs/release-0.7.0.md §6).
     if (actorResult.advanceTime !== false) await advanceWorldTime(hours * 3600);
+  }
+
+  /**
+   * Party Skill Check (p.59): the Skill's name, the Difficulty (Unopposed,
+   * 10 + Floor x 2, to start) and who rolls (the picker), then the card each
+   * crawler's player rolls from (module/chat/party-check-card.mjs).
+   */
+  static async #onPartyCheck(event, target) {
+    if (!game.user.isGM) return;
+    const i18n = game.i18n;
+    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const names = await CarlToolbox.#skillNames();
+    const before = `<div class="carl-party-check-setup">
+        <div class="form-group">
+          <label>${esc(i18n.localize("CARLRPG.PartyCheck.Skill"))}</label>
+          <input type="text" name="carl-party-skill" list="carl-party-skill-names" />
+          <datalist id="carl-party-skill-names">${names.map((n) => `<option value="${esc(n)}"></option>`).join("")}</datalist>
+        </div>
+        <div class="form-group">
+          <label>${esc(i18n.localize("CARLRPG.Dialog.Difficulty"))}</label>
+          <input type="number" name="carl-party-difficulty" value="${10 + 2 * floor}" />
+        </div>
+        <p class="carl-dialog-hint">${esc(i18n.localize("CARLRPG.PartyCheck.Rule"))}</p>
+      </div>`;
+    const picked = await CarlToolbox.#pickActors({
+      titleKey: "CARLRPG.PartyCheck.DialogTitle",
+      promptKey: "CARLRPG.PartyCheck.PickerPrompt",
+      confirmLabelKey: "CARLRPG.PartyCheck.Confirm",
+      before,
+      read: (form) => ({
+        skill: form.querySelector('input[name="carl-party-skill"]')?.value ?? "",
+        difficulty: form.querySelector('input[name="carl-party-difficulty"]')?.value ?? "",
+      }),
+    });
+    if (!picked) return;
+    const skill = String(picked.data.skill ?? "").trim();
+    const difficulty = Number(picked.data.difficulty);
+    if (!skill || !Number.isFinite(difficulty) || picked.data.difficulty === "") {
+      ui.notifications.warn(i18n.localize("CARLRPG.PartyCheck.NeedSkill"));
+      return;
+    }
+    if (!picked.actors.length) {
+      ui.notifications.warn(i18n.localize("CARLRPG.Toolbox.NoCharactersPicked"));
+      return;
+    }
+    await postPartyCheck({ skill, difficulty, actors: picked.actors });
+  }
+
+  /** Skill names for the Party Skill Check's suggestions: the compendiums' and the crawlers' own. */
+  static async #skillNames() {
+    const names = new Set();
+    for (const pack of game.packs) {
+      if (pack.documentName !== "Item") continue;
+      try {
+        const index = await pack.getIndex({ fields: ["type"] });
+        for (const entry of index) if (entry.type === "skill") names.add(entry.name);
+      } catch (e) {
+        // An unreadable pack just adds no names.
+      }
+    }
+    for (const actor of game.actors.filter((a) => a.type === "character")) {
+      for (const item of actor.items) if (item.type === "skill") names.add(item.name);
+    }
+    return [...names].sort((a, b) => a.localeCompare(b));
   }
 
   /**

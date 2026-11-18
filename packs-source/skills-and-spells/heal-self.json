@@ -18,6 +18,7 @@
       "damageType": ""
     },
     "healDice": "1d4",
+    "heals": "self",
     "upgrades": [
       {
         "rankThreshold": 5,

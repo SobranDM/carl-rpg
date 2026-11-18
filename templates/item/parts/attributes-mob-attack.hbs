@@ -24,6 +24,10 @@
             {{selectOptions config.damageTypes selected=system.damageType localize=true}}
           </select>
         </div>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.ArmorPiercing.Hint'}}">
+          <input type="checkbox" name="system.armorPiercing" {{checked system.armorPiercing}} />
+          {{localize "CARLRPG.ArmorPiercing.Label"}}
+        </label>
       </div>
       <p class="carl-hint">{{localize "CARLRPG.MobAttack.ToHitHint"}}</p>
     </div>

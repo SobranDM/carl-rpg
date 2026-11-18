@@ -6,9 +6,12 @@
  * foundryvtt-wwn's module/dice/dice.mjs.
  */
 import { RollParts } from "./roll-parts.mjs";
-import { promptRollOptions, promptParentSkillChoice, collectApplicableConditionalModifiers } from "./roll-prompt.mjs";
+import {
+  promptRollOptions, promptParentSkillChoice, collectApplicableConditionalModifiers, buildStatChoice, chosenStat, offStatNote,
+} from "./roll-prompt.mjs";
 import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
 import { buildHealFooter } from "../chat/heal-card.mjs";
+import { chooseHealRecipient, healsMode, resolveHealRecipients, userHealTargets } from "../helpers/heal-targets.mjs";
 import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
 import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow } from "../helpers/attack-targets.mjs";
@@ -18,7 +21,7 @@ import { isAreaItem } from "../helpers/area.mjs";
 import { mobAttackFor } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
-import { ownedRank, slugifySkillName, attackTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
+import { ownedRank, slugifySkillName, attackTargetEffects, attackIsArmorPiercing, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -757,6 +760,8 @@ export default class CarlDice {
         manaCostChoices,
         debuffRows,
         usesAction: usesActionDefault,
+        // Off-Stat (p.58): rolled with another Stat than its own.
+        statChoice: buildStatChoice(skillSys.governingStat ?? ""),
       });
       if (!prompted) return null;
       options = prompted;
@@ -764,7 +769,8 @@ export default class CarlDice {
     if (!settleAction(ctx, skipDialog ? !!usesActionDefault : !!options.usesAction)) return null;
 
     const untrained = rank === 0;
-    const statKey = skillSys.governingStat;
+    // The Stat picked in the dialog (Off-Stat, p.58), else the Skill's own.
+    const statKey = chosenStat(options, skillSys.governingStat);
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
     const debuffEffect = resolveRollerRows(debuffRows, options.checkedDebuffs);
 
@@ -786,7 +792,7 @@ export default class CarlDice {
     const chosenManaCost = cast.payMana ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
-    const body = buildDebuffNote(debuffEffect.applied);
+    const body = offStatNote(statKey, skillSys.governingStat) + buildDebuffNote(debuffEffect.applied);
     const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
@@ -997,8 +1003,12 @@ export default class CarlDice {
     const { conditionalModifiers } = cast;
 
     const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
-    const rollerRows = decorateRows([
-      ...collectDebuffRows(sys, "attack", { usesDex: skillSys.governingStat === "dex" }),
+    // Woozy's "no DEX Mod" row is collected whatever the Stat, marked
+    // `dexOnly`: the dialog's Stat (Off-Stat, p.58) decides whether it counts.
+    const governingDex = skillSys.governingStat === "dex";
+    const allRollerRows = decorateRows([
+      ...collectDebuffRows(sys, "attack", { usesDex: true })
+        .map((r) => (r.kind === "noDex" ? { ...r, dexOnly: true, defaultOn: r.defaultOn && governingDex } : r)),
       ...collectVehicleRows(actor, "attack", { skillItem, builtIn: !!castAs?.builtIn }),
     ], "roll");
 
@@ -1020,9 +1030,11 @@ export default class CarlDice {
         conditionalModifiers,
         damageEffectChoices,
         manaCostChoices,
-        debuffRows: [...rollerRows, ...advantageRows, ...targetRows],
+        debuffRows: [...allRollerRows, ...advantageRows, ...targetRows],
         areaTargets: targets.map((t) => ({ name: t.actor?.name ?? t.name ?? "?" })),
         isArea: detectedArea,
+        // Off-Stat (p.58): rolled with another Stat than its own.
+        statChoice: buildStatChoice(skillSys.governingStat ?? ""),
       };
       if (promptArgsOnly) return promptArgs;
       const prompted = await promptRollOptions(promptArgs);
@@ -1034,6 +1046,10 @@ export default class CarlDice {
     }
     const isArea = targets.length ? (skipDialog ? detectedArea : !!options.isArea) : false;
     const splash = options.splash ?? new Set();
+    // The Stat picked in the dialog (Off-Stat), else the Skill's own; the
+    // "no DEX Mod" row only with DEX.
+    const statKey = chosenStat(options, skillSys.governingStat);
+    const rollerRows = allRollerRows.filter((r) => !r.dexOnly || statKey === "dex");
     // The dialog's Difficulty field is the BASE value (still GM-editable,
     // e.g. to type in a printed Evade); the target's Debuff rows ticked in
     // the dialog adjust it from there.
@@ -1063,7 +1079,6 @@ export default class CarlDice {
     const activeConditionalModifiers = narrowConditionalModifiers(conditionalModifiers, skillItem, damageEffectItem);
 
     const untrained = rank === 0;
-    const statKey = skillSys.governingStat;
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
 
     const primaryFormula = resolveD20Formula(untrained, options.advantage, rollerEffect);
@@ -1253,6 +1268,11 @@ export default class CarlDice {
       // different isMagicDamage is deliberately not tracked per-term.
       flags.damageIsMagic = skillItem.system.isMagicDamage;
     }
+    // "Armor-Piercing damage (ignores DR)": from the Skill, its Damage Effect
+    // or the weapon it's made with (modifiers.mjs attackIsArmorPiercing).
+    // Kept even on a miss, so a revision that turns it into a hit has it.
+    const armorPiercing = attackIsArmorPiercing(actor, skillItem, { damageEffectItem });
+    if (armorPiercing) flags.armorPiercing = true;
     if (targetUuids.length) {
       // Per-target rows (module/chat/attack-targets-card.mjs): each target's
       // own hit/miss, Roll Evade and Apply. targetDifficulty is the first
@@ -1272,7 +1292,7 @@ export default class CarlDice {
     }
     if (targetUuids.length || hasDamage || targetEffects.length) {
       footerParts.push(buildAttackTargetsFooter({
-        damageByType, targetEffects, isArea,
+        damageByType, targetEffects, isArea, armorPiercing,
         noAmazing: targetRowList.length > 0 && !targetRowList.some((r) => r.amazing),
       }));
     }
@@ -1280,7 +1300,7 @@ export default class CarlDice {
     // Attack onto themselves (module/chat/taunt-card.mjs). Not an Area Attack.
     if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
     const footer = footerParts.length ? footerParts.join("") : undefined;
-    const body = buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]);
+    const body = offStatNote(statKey, skillSys.governingStat) + buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]);
 
     // AI Favor reroll and Intervene (module/chat/check-revision.mjs): enough
     // to re-resolve this Attack from a new d20 or total - CarlDice.reviseAttack.
@@ -1502,7 +1522,7 @@ export default class CarlDice {
     }
     if (targetRowList.length || hasDamage || targetEffects.length) {
       footerParts.push(buildAttackTargetsFooter({
-        damageByType, targetEffects, isArea,
+        damageByType, targetEffects, isArea, armorPiercing: !!flags.armorPiercing,
         noAmazing: targetRowList.length > 0 && !targetRowList.some((r) => r.amazing),
       }));
     }
@@ -1657,6 +1677,7 @@ export default class CarlDice {
         damage: attack.damage?.trim() ?? "",
         damageType: attack.damageType || "",
         damageIsMagic: !!attack.damageType && !PHYSICAL_DAMAGE_TYPES.has(attack.damageType),
+        armorPiercing: !!attack.armorPiercing,
         isArea,
         floor,
         difficulty,
@@ -1719,6 +1740,8 @@ export default class CarlDice {
       // absorb them - docs/known-gaps.md 1.4), every other type as magic.
       flags.damageIsMagic = !!damageType && !PHYSICAL_DAMAGE_TYPES.has(damageType);
     }
+    // "..., Armor-Piercing" on the stat block (module/data/mob-attack.mjs).
+    if (attack.armorPiercing) flags.armorPiercing = true;
     if (targetUuids.length) {
       flags.targetUuids = targetUuids;
       flags.targetRows = Object.fromEntries(targetRowList.map((row) => [row.id, row]));
@@ -1738,7 +1761,7 @@ export default class CarlDice {
     const targetEffects = attack.targetEffects ?? [];
     if (targetEffects.length) flags.targetEffects = targetEffects;
     if (targetUuids.length || hasDamage || targetEffects.length) {
-      footerParts.push(buildAttackTargetsFooter({ damageByType, isArea, targetEffects }));
+      footerParts.push(buildAttackTargetsFooter({ damageByType, isArea, targetEffects, armorPiercing: !!attack.armorPiercing }));
     }
     if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
 
@@ -1830,24 +1853,27 @@ export default class CarlDice {
    * is just "you heal N Health Bar slots" at increasing dice tiers per Rank
    * (see packs-source/skills-and-spells/heal-self.json's `healDice`/`healToFull`/
    * `healMend` upgrade-tier fields, module/data/shared/upgrade-tier.mjs).
-   * This rolls the currently-unlocked tier's `healDice` - or, at a
-   * `healToFull` tier, skips dice entirely, per docs/known-gaps.md 1.2's
-   * instruction that "heal to full" isn't a dice roll - and posts an "Apply
-   * Healing" chat-card button (module/chat/heal-card.mjs). The roll itself
-   * never touches `hb.value`; only clicking that button does, mirroring
-   * rollAttack's roll-now/apply-on-click shape for target effects above.
+   * This rolls the currently-unlocked tier's `healDice` - or heals to full
+   * with no dice: at a `healToFull` tier (with a Short Rest's benefits, Heal
+   * Self Rank 15), or when the item itself heals to full (Heal Critter, the
+   * Health Bar only) - and posts an "Apply Healing" chat-card button
+   * (module/chat/heal-card.mjs). The roll itself never touches `hb.value`;
+   * only clicking that button does, mirroring rollAttack's
+   * roll-now/apply-on-click shape for target effects above.
    *
    * Upgrade-tier gating uses the item's own `system.rank`, matching
    * `collectItemTargetEffects`'s convention (module/helpers/modifiers.mjs),
    * not the actor's skills-bag rank.
    *
-   * Heal Self's `range` is "Self only", so only the caster's own UUID is
-   * snapshotted (`healActorUuid`) - unlike rollAttack, this does NOT
-   * snapshot `game.user.targets`. A future ally-targeting Heal spell would
-   * need its own targeting snapshot and an actor picker on the Apply
-   * button; not built ahead of a real use case.
+   * Who it heals is decided now, before anything is spent (module/helpers/
+   * heal-targets.mjs): the targeted token(s) its "Heals" allows, or the
+   * caster with none targeted - refused with a warning otherwise. The card
+   * names them and snapshots each (`healRecipients`).
    * @param {Actor} actor
    * @param {Item} skillItem
+   * @param {{castAs?: object|null, within?: object|null, skipDialog?: boolean}} [options]
+   *   skipDialog: with one other creature targeted by a heal that could
+   *   take the caster too, heal it without asking.
    */
   static async rollHeal(actor, skillItem, options = {}) {
     // In a fight this is the Heal Action (an Interrupt, p.82) - refused with
@@ -1857,13 +1883,29 @@ export default class CarlDice {
   }
 
   /** rollHeal, inside its Action (helpers/actions.mjs takeAction). */
-  static async _heal(actor, skillItem, { castAs = null } = {}) {
+  static async _heal(actor, skillItem, { castAs = null, skipDialog = false } = {}) {
     // castAs: a Scroll's cast (module/helpers/scroll-cast.mjs) - its Rank is
     // the scroll's (already on the item), no Mana, no use-mark.
     const skillSys = skillItem.system;
     const rank = skillSys.rank ?? 0;
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
+
+    // Who it heals - refused before any Mana, use-mark or Action is spent.
+    const resolved = resolveHealRecipients(actor, skillItem, userHealTargets());
+    if (resolved.refusal) {
+      ui.notifications.warn(resolved.refusal);
+      return null;
+    }
+    let recipients = resolved.recipients;
+    // Foundry keeps the last Attack's target: a heal that could take the
+    // caster asks before going to someone else, as a potion does.
+    const other = recipients.length === 1 && recipients[0].actor !== actor ? recipients[0] : null;
+    if (other && !skipDialog && healsMode(skillItem) === "anyone") {
+      const chosen = await chooseHealRecipient(skillItem, actor, other);
+      if (!chosen) return null;
+      recipients = [chosen];
+    }
 
     const unlocked = (skillSys.upgrades ?? [])
       .filter((u) => rank >= u.rankThreshold)
@@ -1872,31 +1914,40 @@ export default class CarlDice {
     const diceTier = unlocked.find((u) => u.healDice);
     const canMend = unlocked.some((u) => u.healMend);
     const formula = diceTier?.healDice || skillSys.healDice || "1d4";
+    // A tier's "heal to full" also grants a Short Rest's benefits (Heal Self
+    // Rank 15); the item's own is the Health Bar only (Heal Critter).
+    const full = !!fullTier || !!skillSys.healToFull;
+    const rest = !!fullTier;
 
     const cast = resolveCastContext(actor, skillItem, castAs);
     await removeConditionsById(actor, endedConditionIds(actor.system, []));
     if (cast.markUse) await CarlDice.markForAdvancement(skillItem);
 
     // Casting always spends Mana, whether or not the tier rolls dice
-    // (docs/known-gaps.md 1.6) - no picker here, per this function's own
-    // "not built ahead of a real use case" precedent above: no heal spell
-    // currently has manaCostVariants. A Scroll pays none.
+    // (docs/known-gaps.md 1.6) - no picker here: no heal spell currently has
+    // manaCostVariants. A Scroll pays none.
     const chosenManaCost = cast.payMana
       ? { manaCost: applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost), isBase: true }
       : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
 
-    const flags = { healActorUuid: actor.uuid };
+    // healActorUuid: the caster. Each recipient a row (heal-card.mjs).
+    const flags = {
+      healActorUuid: actor.uuid,
+      healRecipients: Object.fromEntries(recipients.map((r, i) => [`r${i}`, { uuid: r.uuid, name: r.name, applied: false }])),
+    };
+    const names = recipients.map((r) => r.name);
 
-    if (fullTier) {
+    if (full) {
       flags.healFull = true;
+      flags.healRest = rest;
       const label = withManaCostSubtitle(game.i18n.localize("CARLRPG.Heal.SubtitleFull"), chosenManaCost);
       const message = await createCardMessage({
         title: skillItem.name,
         img: skillItem.img,
         subtitle: label,
         badge: { label: game.i18n.localize("CARLRPG.Heal.SubtitleFull"), type: "hit" },
-        footer: await buildHealFooter({ full: true, canMend }),
+        footer: await buildHealFooter({ full: true, rest, canMend, names }),
         flags,
         actor,
       });
@@ -1917,7 +1968,7 @@ export default class CarlDice {
       subtitle: withManaCostSubtitle(game.i18n.format("CARLRPG.Heal.Subtitle", { amount: total }), chosenManaCost),
       img: skillItem.img,
       badge: { label: `+${total}`, type: "hit" },
-      footer: await buildHealFooter({ amount: total, canMend }),
+      footer: await buildHealFooter({ amount: total, canMend, names }),
       flags,
       actor,
     });
@@ -2164,6 +2215,8 @@ export default class CarlDice {
         conditionalModifiers,
         manaCostChoices,
         debuffRows: [...rollerRows, ...opponentRows],
+        // Off-Stat (p.58): rolled with another Stat than its own.
+        statChoice: buildStatChoice(skillSys.governingStat ?? ""),
       });
       if (!prompted) return null;
       options = prompted;
@@ -2173,7 +2226,7 @@ export default class CarlDice {
     const finalDifficulty = opponentEffect.difficulty;
 
     const untrained = rank === 0;
-    const statKey = skillSys.governingStat;
+    const statKey = chosenStat(options, skillSys.governingStat);
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
 
     const parts = new RollParts(rollData);
@@ -2187,7 +2240,7 @@ export default class CarlDice {
     const { roll, total, breakdown } = await parts.evaluate();
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, finalDifficulty);
-    const debuffNote = buildDebuffNote([...rollerEffect.applied, ...opponentEffect.applied]);
+    const debuffNote = offStatNote(statKey, skillSys.governingStat) + buildDebuffNote([...rollerEffect.applied, ...opponentEffect.applied]);
 
     await removeConditionsById(actor, endedConditionIds(sys, rollerEffect.applied));
     if (opponent) await removeConditionsById(opponent, consumedConditionIds(opponentEffect.applied));
@@ -2204,7 +2257,7 @@ export default class CarlDice {
     // Driving Check) gets what a reroll needs, and which rows applied.
     if (!post) {
       return {
-        roll, total, breakdown, naturalRoll, degree, debuffNote, chosenManaCost,
+        roll, total, breakdown, naturalRoll, degree, debuffNote, chosenManaCost, statKey: statKey ?? "",
         formula: d20Formula(roll), difficulty: finalDifficulty, applied: rollerEffect.applied,
       };
     }

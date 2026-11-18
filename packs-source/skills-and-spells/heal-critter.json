@@ -5,7 +5,7 @@
   "folder": "YSITmHr3sIPtMPDx",
   "img": "icons/svg/heal.svg",
   "system": {
-    "description": "<p><strong>Limitations:</strong> May only be cast on pets and minions.</p><p>The target glows as they heal back to 100% Health Bar.</p><p><em>Note: this base full-heal effect isn't automated (no base-level healToFull field exists) - apply it by hand.</em></p>",
+    "description": "<p><strong>Limitations:</strong> May only be cast on pets and minions.</p><p>The target glows as they heal back to 100% Health Bar.</p>",
     "changes": [],
     "governingStat": "int",
     "rank": 0,
@@ -18,6 +18,8 @@
       "damageType": ""
     },
     "healDice": "",
+    "heals": "pets",
+    "healToFull": true,
     "upgrades": [
       {
         "rankThreshold": 5,

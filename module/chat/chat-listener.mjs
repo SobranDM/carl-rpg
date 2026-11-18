@@ -20,6 +20,9 @@
  * @property {string} wrapperSelector  Removed from the DOM when !canAct(message).
  * @property {(message: ChatMessage) => boolean} canAct
  * @property {string} doneFlag         Disables+relabels once this flag is set.
+ * @property {(message: ChatMessage) => boolean} [isDone]  Used instead of
+ *   doneFlag when "used" depends on the viewer (a heal with several
+ *   recipients is done for each owner once theirs are healed).
  * @property {() => string} doneLabel  innerHTML for the disabled/done state.
  * @property {string} [supersededFlag] Checked only when doneFlag isn't set -
  *   a distinct disabled state for "a later roll made this moot," not "used."
@@ -43,6 +46,7 @@ import { consumableActionEntries } from "./consumable-card.mjs";
 import { decorateDrivingCard, drivingActionEntries } from "./vehicle-card.mjs";
 import { decorateReactionCard, reactionActionEntries } from "./reaction-card.mjs";
 import { damageCardActionEntries, decorateDamageCard } from "../helpers/reaction-resolve.mjs";
+import { decoratePartyCheckCard, partyCheckActionEntries } from "./party-check-card.mjs";
 import { forgetCard } from "./status-rows.mjs";
 
 const REGISTRY = [
@@ -60,6 +64,7 @@ const REGISTRY = [
   ...drivingActionEntries,
   ...reactionActionEntries,
   ...damageCardActionEntries,
+  ...partyCheckActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 
@@ -72,8 +77,13 @@ function isBlocked(entry, message) {
   // handler re-checks everything for the button clicked.
   if (entry.custom) return false;
   return !entry.canAct(message)
-    || !!message.getFlag("carl-rpg", entry.doneFlag)
+    || isDoneFor(entry, message)
     || !!(entry.supersededFlag && message.getFlag("carl-rpg", entry.supersededFlag));
+}
+
+/** Whether an entry's button is used up, for this viewer. */
+function isDoneFor(entry, message) {
+  return entry.isDone ? !!entry.isDone(message) : !!message.getFlag("carl-rpg", entry.doneFlag);
 }
 
 /** Registers the single delegated listener - call once, from init. */
@@ -95,6 +105,7 @@ export function registerChatListener() {
     decorateDrivingCard(message, html);
     decorateReactionCard(message, html);
     decorateDamageCard(message, html);
+    decoratePartyCheckCard(message, html);
     // The AI Favor reroll button, or a replaced card's "rerolled" state -
     // after the rows, so it can switch their buttons off too.
     decorateAiReroll(message, html);
@@ -110,7 +121,7 @@ export function registerChatListener() {
         html.querySelector(entry.wrapperSelector)?.remove();
         continue;
       }
-      if (message.getFlag("carl-rpg", entry.doneFlag)) {
+      if (isDoneFor(entry, message)) {
         btn.disabled = true;
         btn.innerHTML = entry.doneLabel();
         continue;

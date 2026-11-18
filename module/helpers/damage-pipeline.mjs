@@ -184,9 +184,12 @@ export function reduceViaShield(rawTotal, shield) {
  * @param {boolean} [isMagic]  Whether the attacking Skill/Spell's damage is
  *   magical (module/dice/dice.mjs's damageIsMagic flag). Defaults true so an
  *   omitted/unspecified flag never lets Shield intercept damage it shouldn't.
- * @param {{ignoreDr?: boolean}} [options]  ignoreDr: "Damage from Debuffs
- *   bypasses DR, but other Resistances and Immunities still apply" (p.96) -
- *   set by the end-of-round Debuff damage (module/helpers/round-end.mjs).
+ * @param {{ignoreDr?: boolean, extraDr?: number, armorPiercing?: boolean}} [options]
+ *   ignoreDr: "Damage from Debuffs bypasses DR, but other Resistances and
+ *   Immunities still apply" (p.96) - set by the end-of-round Debuff damage
+ *   (module/helpers/round-end.mjs). armorPiercing: "Armor-Piercing damage
+ *   (ignores DR)" - only DR from Anti-Piercing gear applies (p.95, p.225;
+ *   the target's drAntiPiercing), and no hit-only extraDr.
  * @returns {{
  *   perType: Array<{type: string, raw: number, afterDr: number, state: ResistanceState, final: number}>,
  *   totalFinalDamage: number,
@@ -196,14 +199,16 @@ export function reduceViaShield(rawTotal, shield) {
  *   shieldAbsorbed: number,
  * }}
  */
-export function computeDamageApplication(damageByType, target, isMagic = true, { ignoreDr = false, extraDr = 0 } = {}) {
+export function computeDamageApplication(damageByType, target, isMagic = true, { ignoreDr = false, extraDr = 0, armorPiercing = false } = {}) {
   const sys = target?.system ?? {};
   // drEffective/resistancesEffective (module/data/character.mjs,mob.mjs) fold
   // in any Race/Class/feature-granted DR bonus or Resistance/Immunity
   // override on top of the flat GM-set base - fall back to the raw base
   // fields for a plain data object that never went through prepareDerivedData.
   // extraDr: DR for this hit only (a Catcher's Upgrades, p.187).
-  const dr = ignoreDr ? 0 : (Number(sys.drEffective ?? sys.dr) || 0) + (Number(extraDr) || 0);
+  let dr = (Number(sys.drEffective ?? sys.dr) || 0) + (Number(extraDr) || 0);
+  if (armorPiercing) dr = Math.max(0, Number(sys.drAntiPiercing) || 0);
+  if (ignoreDr) dr = 0;
   const resistances = sys.resistancesEffective ?? sys.resistances ?? {};
   const slotValue = sys.hb?.slotValue ?? 0;
 

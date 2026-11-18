@@ -131,7 +131,7 @@ export default function register(quench) {
             const spell = await createTestItem(actor, "spell", "Heal Self", {
               system: { rank: 15, castingKeywords: ["heal"], upgrades: [{ rankThreshold: 15, healToFull: true }] },
             });
-            const message = await CarlDice.rollHeal(actor, spell);
+            const message = await CarlDice.rollHeal(actor, spell, { skipDialog: true });
             assert.isTrue(message.getFlag("carl-rpg", "healFull"));
           } finally {
             await deleteTestActor(actor);
@@ -144,7 +144,7 @@ export default function register(quench) {
             const spell = await createTestItem(actor, "spell", "Heal Self", {
               system: { rank: 5, castingKeywords: ["heal"], upgrades: [{ rankThreshold: 5, healDice: "1d6" }] },
             });
-            const message = await CarlDice.rollHeal(actor, spell);
+            const message = await CarlDice.rollHeal(actor, spell, { skipDialog: true });
             assert.isNumber(message.getFlag("carl-rpg", "healAmount"));
           } finally {
             await deleteTestActor(actor);

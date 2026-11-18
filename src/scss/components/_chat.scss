@@ -342,6 +342,13 @@
       border-radius: 3px;
       background: var(--carl-danger);
       color: var(--carl-header-text);
+
+      // "Armor-Piercing" beside the damage (attack-targets-card.mjs).
+      &.carl-armor-piercing-pill {
+        background: var(--carl-input-bg);
+        color: var(--carl-text);
+        border: 1px solid var(--carl-danger);
+      }
     }
 
     .carl-apply-damage {
@@ -458,7 +465,8 @@
   // buildDebuffNote, CarlDice.rollMobAttack's free-Evade note) and the
   // end-of-round summary list (module/helpers/round-end.mjs).
   .carl-debuff-note,
-  .carl-free-evade-note {
+  .carl-free-evade-note,
+  .carl-off-stat-note {
     margin: 4px 0;
     font-size: 11px;
     color: var(--carl-text-muted);
@@ -499,6 +507,11 @@
     display: flex;
     align-items: center;
     gap: 4px;
+
+    // Woozy's "no DEX Mod" row while another Stat is picked (roll-prompt.mjs).
+    &[hidden] {
+      display: none;
+    }
   }
 
   // The Attack! dialog's Attack Skill and Damage Effect radios: one

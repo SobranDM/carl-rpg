@@ -23,7 +23,7 @@
  * one at a time per combat.
  */
 import { currentPhase, isPhased, phasedCombatFor } from "./combat-phases.mjs";
-import { isCrawler, isPet, isVehicle } from "./actor-kinds.mjs";
+import { isCrawler, isMinion, isPet, isVehicle } from "./actor-kinds.mjs";
 import { queueOn } from "./actor-queue.mjs";
 
 const SCOPE = "carl-rpg";
@@ -98,8 +98,12 @@ export function baseBudget(combat, combatant) {
   return { move: 1, action: 1 };
 }
 
-/** Whether a Pet has been commanded (free or restricted) in this fight. */
+/**
+ * Whether a Pet has been commanded (free or restricted) in this fight. A
+ * Minion always has: it needs no Command Check (p.233).
+ */
 function petCommanded(combat, actor) {
+  if (isMinion(actor)) return true;
   const command = actor.system.command ?? {};
   return ["free", "restricted"].includes(command.state) && command.combatId === combat.id;
 }

@@ -29,6 +29,7 @@ const SCOPE = "carl-rpg";
  * @property {string} damage        The printed damage formula ("F" = Floor).
  * @property {string} damageType
  * @property {boolean} damageIsMagic
+ * @property {boolean} [armorPiercing]  Its damage ignores DR but Anti-Piercing gear's.
  * @property {boolean} isArea
  * @property {number} floor
  * @property {number|null} difficulty  The to-hit against the first target.

@@ -8,6 +8,7 @@ import CarlRPGItemBase from "./item-base.mjs";
  *  - `toHit`, `damage`: as printed ("13+F", "1d8+3"); "F" is the Floor.
  *  - `range`: as printed ("30ft range", "20ft Cone") - nothing reads its shape.
  *  - `isArea` / `splash`: an Area Attack (p.83), and whether it has a Splash zone.
+ *  - `armorPiercing`: its damage ignores DR, but Anti-Piercing gear's (p.225).
  *  - `targetEffects`: the Debuffs it gives, each with the moment it lands
  *    (`trigger`, CONFIG.CARLRPG.mobAttackTriggers): on a hit, on an Evade
  *    Major Fail or worse, or on a Critical Fail - "often when crawlers fail
@@ -31,6 +32,9 @@ export default class CarlRPGMobAttack extends CarlRPGItemBase {
     schema.range = new fields.StringField({ required: true, blank: true, initial: "" });
     schema.isArea = new fields.BooleanField({ required: true, initial: false });
     schema.splash = new fields.BooleanField({ required: true, initial: false });
+    // "..., Armor-Piercing" in the stat block: ignores DR, except DR from
+    // gear marked Anti-Piercing (p.95, p.225).
+    schema.armorPiercing = new fields.BooleanField({ required: true, initial: false });
     schema.targetEffects = new fields.ArrayField(new fields.SchemaField({
       id: new fields.StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() }),
       /** Key into CONFIG.CARLRPG.debuffs. */

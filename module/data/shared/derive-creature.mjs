@@ -61,7 +61,8 @@ export function deriveStats(sys) {
  *  - DR: (base + every "dr" add) x the DR multiplier (an Iron Skin Potion's
  *    x2 doubles the whole DR - modifiers.mjs keeps it apart as
  *    drMultiplier), rounded down, then any capMax. drBonus is how far that
- *    is from the base (what the sheet shows as "= N").
+ *    is from the base (what the sheet shows as "= N"). drAntiPiercing is
+ *    the part an Armor-Piercing hit still meets (Anti-Piercing gear's).
  *  - A "resistance" ChangeEntry (e.g. a Race's "Immunity to Poison")
  *    overrides the base for its own type only, in resistancesEffective -
  *    read by module/helpers/damage-pipeline.mjs. Removing the granting item
@@ -72,6 +73,11 @@ export function deriveDefenses(sys) {
   const total = Math.floor((sys.dr + (sys.bonuses?.dr ?? 0)) * (sys.drMultiplier ?? 1));
   sys.drEffective = sys.caps?.dr !== undefined ? Math.min(total, sys.caps.dr) : total;
   sys.drBonus = sys.drEffective - sys.dr;
+  // Against an Armor-Piercing hit only Anti-Piercing gear's DR counts
+  // (modifiers.mjs drAntiPiercingBase), scaled by the same multiplier and
+  // never more than the whole DR (so a cap holds too).
+  const antiPiercing = Math.floor((sys.drAntiPiercingBase ?? 0) * (sys.drMultiplier ?? 1));
+  sys.drAntiPiercing = Math.max(0, Math.min(antiPiercing, sys.drEffective));
   sys.resistancesEffective = { ...sys.resistances, ...sys.grantedResistances };
 }
 

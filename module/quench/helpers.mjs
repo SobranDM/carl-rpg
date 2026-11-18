@@ -187,6 +187,16 @@ export async function createTestCombat(actor, token = null) {
 }
 
 /**
+ * The real game.user.targets / canvas.tokens.controlled descriptors, saved
+ * by the outermost of any overlapping withFakeTargets calls and put back only
+ * when the last one ends. Without this, two calls running at once (e.g.
+ * `Promise.all([declare(), declare()])`) could have the later one "restore"
+ * the earlier one's fake, leaving a deleted test actor targeted for every
+ * later test.
+ */
+const fakeTargetState = { depth: 0, userDesc: undefined, controlledDesc: undefined, tokens: null };
+
+/**
  * Temporarily replace game.user.targets with fake token-like objects shaped
  * the way module/dice/dice.mjs's rollAttack reads them (`target.actor`,
  * `target.document?.uuid`). Also clears canvas.tokens.controlled, matching
@@ -196,7 +206,6 @@ export async function createTestCombat(actor, token = null) {
  */
 export async function withFakeTargets(fakeTargets, fn) {
   const user = game.user;
-  const descriptor = Object.getOwnPropertyDescriptor(user, "targets");
   const fakeTokens = fakeTargets.map((t) => ({
     actor: t.actor,
     document: { uuid: t.uuid ?? t.actor.uuid },
@@ -206,27 +215,31 @@ export async function withFakeTargets(fakeTargets, fn) {
     _refreshTarget() {},
   }));
   const fakeSet = new Set(fakeTokens);
-  Object.defineProperty(user, "targets", {
-    configurable: true,
-    enumerable: true,
-    get: () => fakeSet,
-  });
-
-  const tokens = canvas?.tokens;
-  const controlledDesc = tokens ? Object.getOwnPropertyDescriptor(tokens, "controlled") : undefined;
-  if (tokens) {
-    Object.defineProperty(tokens, "controlled", { configurable: true, enumerable: true, get: () => [] });
+  const tokens = canvas?.tokens ?? null;
+  if (fakeTargetState.depth++ === 0) {
+    fakeTargetState.userDesc = Object.getOwnPropertyDescriptor(user, "targets");
+    fakeTargetState.tokens = tokens;
+    fakeTargetState.controlledDesc = tokens ? Object.getOwnPropertyDescriptor(tokens, "controlled") : undefined;
   }
+  // Each call reads its own set while it runs; overlapping calls share the
+  // stub, so the latest-started call's set is what game.user.targets shows.
+  Object.defineProperty(user, "targets", { configurable: true, enumerable: true, get: () => fakeSet });
+  if (tokens) Object.defineProperty(tokens, "controlled", { configurable: true, enumerable: true, get: () => [] });
 
   try {
     return await fn();
   } finally {
-    if (tokens) {
-      if (controlledDesc) Object.defineProperty(tokens, "controlled", controlledDesc);
-      else delete tokens.controlled;
+    if (--fakeTargetState.depth === 0) {
+      const { userDesc, controlledDesc, tokens: savedTokens } = fakeTargetState;
+      if (savedTokens) {
+        if (controlledDesc) Object.defineProperty(savedTokens, "controlled", controlledDesc);
+        else delete savedTokens.controlled;
+      }
+      if (userDesc) Object.defineProperty(user, "targets", userDesc);
+      else delete user.targets;
+      fakeTargetState.userDesc = fakeTargetState.controlledDesc = undefined;
+      fakeTargetState.tokens = null;
     }
-    if (descriptor) Object.defineProperty(user, "targets", descriptor);
-    else delete user.targets;
   }
 }
 

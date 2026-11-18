@@ -354,6 +354,16 @@ CARLRPG.castingKeywords = {
   heal: "CARLRPG.CastingKeyword.Heal",
 };
 
+// Who a heal can take (ranked-item-base.mjs `heals`; helpers/heal-targets.mjs).
+// "" goes by the Range: "Self only" is Self, anything else Anyone.
+CARLRPG.healsChoices = {
+  "": "CARLRPG.Heals.ByRange",
+  self: "CARLRPG.Heals.self",
+  others: "CARLRPG.Heals.others",
+  pets: "CARLRPG.Heals.pets",
+  anyone: "CARLRPG.Heals.anyone",
+};
+
 CARLRPG.mobTiers = {
   neighborhood: "CARLRPG.MobTier.Neighborhood",
   borough: "CARLRPG.MobTier.Borough",

@@ -269,6 +269,61 @@ export default function register(quench) {
           }
         });
 
+        it("a Spell's Main tab sets its Shield slots, and its Upgrade card adds them from the add bar", async function () {
+          const item = await worldItem("spell", "shield", { system: { rank: 2, isToggled: true, upgrades: [{ rankThreshold: 5 }] } });
+          try {
+            const sheet = await openSheet(item);
+            const main = sheet.element.querySelector('.tab[data-tab="main"] input[name="system.shieldSlots"]');
+            assert.exists(main, "Shield slots on the Main tab");
+            main.value = "4";
+            main.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => item.system.shieldSlots === 4, { message: "Shield slots never saved" });
+
+            const card = () => sheet.element.querySelector('.tab[data-tab="rank5"] .carl-tier-card');
+            await rerendered(sheet, () => card(), "the Upgrade card never drew");
+            assert.notExists(card().querySelector(".carl-upgrade-shield"), "not until added");
+            card().querySelector('.carl-add-bar [data-reveal^="shield-"]').click();
+            await rerendered(sheet, () => card()?.querySelector(".carl-upgrade-shield"), "Shield slots never showed");
+            const tier = card().querySelector('.carl-upgrade-shield input[name="system.upgrades.0.shieldSlots"]');
+            tier.value = "6";
+            tier.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => item.system.upgrades[0].shieldSlots === 6, { message: "the tier's Shield slots never saved" });
+            await rerendered(sheet, () => card()?.querySelector(".carl-upgrade-shield"), "the part went after saving");
+            assert.notExists(card().querySelector('.carl-add-bar [data-reveal^="shield-"]'), "its add button goes");
+            await sheet.close();
+          } finally {
+            await item.delete();
+          }
+        });
+
+        it("a Skill's Upgrade card offers no Shield slots; an Attack's offers Armor-Piercing", async function () {
+          const item = await worldItem("skill", "ap", { system: { category: "attack", rank: 2, upgrades: [{ rankThreshold: 5 }] } });
+          try {
+            const sheet = await openSheet(item);
+            const card = sheet.element.querySelector('.tab[data-tab="rank5"] .carl-tier-card');
+            assert.notExists(card.querySelector('[data-reveal^="shield-"]'));
+            assert.exists(card.querySelector('input[name="system.upgrades.0.armorPiercing"]'));
+            assert.exists(sheet.element.querySelector('.carl-base-damage input[name="system.armorPiercing"]'));
+            await sheet.close();
+          } finally {
+            await item.delete();
+          }
+        });
+
+        it("a healing Spell's Healing says who it heals", async function () {
+          const item = await worldItem("spell", "heals", { system: { castingKeywords: ["heal"], range: "30 feet" } });
+          try {
+            const sheet = await openSheet(item);
+            const select = sheet.element.querySelector('.carl-base-heal select[name="system.heals"]');
+            assert.exists(select);
+            assert.sameMembers([...select.options].map((o) => o.value), ["", "self", "others", "pets", "anyone"]);
+            assert.exists(sheet.element.querySelector('.carl-base-heal input[name="system.healToFull"]'));
+            await sheet.close();
+          } finally {
+            await item.delete();
+          }
+        });
+
         it("an open row stays open through the re-render an edit causes", async function () {
           const item = await worldItem("skill", "open", {
             system: { category: "attack", targetEffects: [{ debuffKey: "poisoned" }] },

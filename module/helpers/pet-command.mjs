@@ -24,7 +24,7 @@ import CarlDice, { checkSubtitle } from "../dice/dice.mjs";
 import { noteUndo, takeAction } from "./actions.mjs";
 import { CARLRPG } from "./config.mjs";
 import { degreeBadge } from "./rules.mjs";
-import { isPet } from "./actor-kinds.mjs";
+import { isMinion, isPet } from "./actor-kinds.mjs";
 import { petOwner } from "./pets.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { createCardMessage, createRollMessage, esc } from "../chat/chat-card.mjs";
@@ -69,13 +69,14 @@ export function commandDifficulty(pet) {
 /**
  * Whether this user may roll Command Pet for this Pet: the GM, or someone
  * who owns both the Pet and its crawler (the roll is the crawler's). A
- * dedicated mount is ridden, not commanded (p.232).
+ * dedicated mount is ridden, not commanded (p.232), and a Minion needs no
+ * Command Check (p.233).
  * @param {Actor} pet
  * @param {User} [user]
  * @returns {boolean}
  */
 export function canCommandPet(pet, user = game.user) {
-  if (!isPet(pet) || pet.system.isMount) return false;
+  if (!isPet(pet) || pet.system.isMount || isMinion(pet)) return false;
   const owner = petOwner(pet);
   if (!owner) return false;
   return user.isGM || (pet.testUserPermission(user, "OWNER") && owner.testUserPermission(user, "OWNER"));
@@ -85,11 +86,13 @@ export function canCommandPet(pet, user = game.user) {
  * The Pet's current command result, for its sheet. A result from a combat
  * that no longer exists is shown as none.
  * @param {Actor} pet
+ * A Minion has no Command Check: it shows as one (`minion`).
  * @returns {{state: string, active: boolean, selected: string, label: string, rule: string,
- *   stateChoices: Object<string, string>, canCommand: boolean}}
+ *   stateChoices: Object<string, string>, canCommand: boolean, minion: boolean}}
  */
 export function describePetCommand(pet) {
   const { state, combatId } = pet.system.command;
+  const minion = isMinion(pet);
   const active = !!state && game.combats.has(combatId);
   const def = CARLRPG.petCommandStates[state];
   return {
@@ -100,6 +103,7 @@ export function describePetCommand(pet) {
     rule: active ? game.i18n.localize(`CARLRPG.Pet.Command.Rules.${state}`) : "",
     stateChoices: Object.fromEntries(Object.entries(CARLRPG.petCommandStates).map(([key, d]) => [key, d.label])),
     canCommand: canCommandPet(pet),
+    minion,
   };
 }
 
@@ -126,6 +130,8 @@ export async function commandPet(pet, { skipDialog = false } = {}) {
     ui.notifications.warn(game.i18n.format(`CARLRPG.Pet.Command.${key}`, { name: pet.name, ...data }));
     return null;
   };
+  // "One command spurs them all into action" (p.233): no Check to roll.
+  if (isMinion(pet)) return warn("MinionNoCheck");
   if (!owner) return warn("NoOwner");
   if (!canCommandPet(pet)) return warn("NotAllowed");
   const combat = petFight(pet);

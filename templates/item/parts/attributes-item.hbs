@@ -33,6 +33,12 @@
             {{#each weaponSkillNames as |name|}}<option value="{{name}}"></option>{{/each}}
           </datalist>
         </div>
+        {{#if (or gear.isWeapon system.armorPiercing)}}
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.ArmorPiercing.WeaponHint'}}">
+          <input type="checkbox" name="system.armorPiercing" {{checked system.armorPiercing}} />
+          {{localize "CARLRPG.ArmorPiercing.Label"}}
+        </label>
+        {{/if}}
       </div>
       {{!-- Where it's worn (Gear Slots, p.98-99; module/helpers/gear.mjs):
             toggle pills, several for "Accessory or Head". A weapon is
@@ -59,6 +65,12 @@
           <select name="system.accessoryKind">
             {{selectOptions config.accessoryKinds selected=system.accessoryKind localize=true}}
           </select>
+        </label>
+        {{/if}}
+        {{#if (or gear.wearable system.antiPiercing)}}
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.ArmorPiercing.AntiHint'}}">
+          <input type="checkbox" name="system.antiPiercing" {{checked system.antiPiercing}} />
+          {{localize "CARLRPG.ArmorPiercing.Anti"}}
         </label>
         {{/if}}
         {{#unless gear.wearable}}<p class="carl-hint">{{localize "CARLRPG.Gear.NotWearable"}}</p>{{/unless}}
