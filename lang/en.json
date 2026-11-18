@@ -562,7 +562,7 @@
       "Imported": "Imported {name} from CrawlerForge.",
       "Failed": "CrawlerForge import failed: {error}",
       "NotInRulebook": "Not in rulebook",
-      "NotInRulebookHint": "Imported from CrawlerForge, which made this up: it isn't in our compendiums or the rulebook. Keep it, edit it or swap it for a rulebook one.",
+      "NotInRulebookHint": "Imported from CrawlerForge, which made this up: it isn't in our compendiums or the rulebook. Keep it, edit it, or swap it for something from the rulebook.",
       "Report": {
         "Title": "CrawlerForge import: {name}",
         "AllMatched": "Everything matched our compendiums and was placed.",
@@ -616,22 +616,22 @@
     "PdfImport": {
       "Title": "Import Rulebook PDF",
       "Open": "Import Rulebook PDF",
-      "MenuHint": "Read your own copy of a Dungeon Crawler Carl RPG book into this world: gear, spells, Mobs, achievements and maps.",
-      "PickHint": "Pick your own copy of a Dungeon Crawler Carl RPG book. It is read in your browser; nothing is uploaded except map images, which are saved to your Foundry Data folder.",
+      "MenuHint": "Import your own copy of a Dungeon Crawler Carl RPG book into this world: gear, spells, mobs, achievements, and maps.",
+      "PickHint": "Pick your own copy of a Dungeon Crawler Carl RPG book.",
       "File": "Rulebook PDF",
       "Read": "Read PDF",
       "Import": "Import",
       "GMOnly": "Only the GM can import a rulebook.",
       "Reading": "Reading {title}...",
       "Identifying": "Reading the PDF's title page...",
-      "UnknownBook": "This PDF isn't one the importer reads. It takes the Dungeon Crawler Carl RPG Core Rulebook and the Starter Set's Game Master's Campaign Toolkit, recognised by the title on their cover, whatever the file is called. Other books, including the Starter Set's Crawlers & Customization booklet, can't be imported.",
+      "UnknownBook": "File unrecognized. This importer supports the Core Rulebook and the Gamemaster's Toolkit from the Starter Set.",
       "Books": {
         "core": "Core Rulebook",
         "toolkit": "Game Master's Campaign Toolkit"
       },
       "ReadingPage": "Reading {title}: page {done} of {total}",
       "CheckingMaps": "Looking for maps: {n} of {total}",
-      "ResultsHint": "Found in {title}. Mobs, items and achievements go into compendiums named after the book (spells and gear a compendium already has are copied from it), maps into a Scenes folder; importing the same book again updates those documents instead of copying them, except ones you've edited since.",
+      "ResultsHint": "Found in {title}. Mobs, items, and achievements are organized into compendiums named after the book, maps into a Scenes folder. Importing the same book again updates the existing compendiums.",
       "Content": "Content",
       "Maps": "Maps",
       "MapsHint": "Pages that look like maps are checked. Uncheck any that are art, or check any the importer missed.",
@@ -650,7 +650,7 @@
       "Quest": "Quest",
       "Failed": "Rulebook import failed: {error}",
       "CheckingQuality": "Checking {title}...",
-      "LowQuality": "{title} looks like the low-quality (LQ) edition of the book: its pictures are about {ppi} pixels per inch. The importer reads only the full-quality PDF, because the LQ files garble the text it reads and their maps are low resolution. Download the standard version of the book and import that instead.",
+      "LowQuality": "{title} looks like the low-quality version of the PDF. The importer only supports the high-quality PDF, due to issues with the low-quality version.",
       "NoWebp": "This browser cannot save WebP images.",
       "Achievements": "Achievements",
       "Kind": {
@@ -670,7 +670,7 @@
       "StopTimer": "Stop Timer",
       "ResolveTwoHour": "Resolve 2-Hour Tick (+1 Level)",
       "ResolveTwoHourTitle": "Resolve 2-Hour Tick",
-      "ResolveTwoHourPickerPrompt": "Choose who played these 2 hours. Each gains 1 Level, and their marked Skills at Rank 4 or lower roll Advancement Checks (Rank 5+ waits for End Floor).",
+      "ResolveTwoHourPickerPrompt": "Choose who is eligible. Each gains 1 Level and their marked Skills at Rank 4 or lower roll Advancement Checks.",
       "TwoHourResultsTitle": "2-Hour Tick Results",
       "LevelGained": "{name} gains 1 Level (now Level {level}).",
       "LevelsGained": "{name} gains {levels} Level(s) (now Level {level}).",
@@ -734,12 +734,12 @@
           "fullDay": "Full Day's Rest (30 hours)"
         },
         "Rule": {
-          "short": "Heal 5 Health Bar slots. Crawlers also regenerate half of their total Mana (rounded down), so if they have 15 Intelligence, they regain 7 Mana.",
-          "long": "After a long rest, a crawler is as good as new with a full Health Bar and Mana. A long rest also removes all instances of the Fatigued Debuff.",
-          "fullDay": "Required to recover from long-term injuries (see Injuries, p. 96), a full day of rest also recovers their full Health Bar and all Mana."
+          "short": "Heal 5 Health Bar slots. Crawlers also regenerate half of their total Mana (rounded down). For example, a Crawler with 15 Intelligence regains 7 Mana.",
+          "long": "After a long rest, a Crawler regains all health and mana and removes all instances of the Fatigued Debuff.",
+          "fullDay": "A full day of rest recovers all health and mana and is required to recover from long-term injuries (see Injuries, p. 96)."
         },
         "Source": "Resting, p. 94",
-        "PickerPrompt": "Choose which characters rest. Not everyone has to - someone could be on watch or otherwise occupied.",
+        "PickerPrompt": "Choose which characters rest.",
         "Confirm": "Apply Rest"
       },
       "AdvanceTime": "Advance time",
@@ -877,7 +877,7 @@
         "vulnerable": "Vuln {n}"
       },
       "ResistancesTitle": "Resistances: {name}",
-      "ResistancesDialogHint": "Resistances, Immunities and Vulnerabilities come from your Race, Class, worn gear and Buffs. Add or remove those to change them.",
+      "ResistancesDialogHint": "Resistances, Immunities, and Vulnerabilities are calculated based on your Race, Class, worn gear, and Buffs.",
       "ResistNoneLong": "No Resistances, Immunities or Vulnerabilities.",
       "DamageType": "Damage type",
       "ResistanceState": "State",
