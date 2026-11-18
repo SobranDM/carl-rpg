@@ -6,11 +6,12 @@
  *    GM or the vehicle's owner) - ignoring DR.
  *  - Hydromancy Shock Absorbers, once per Floor: "Reduce the level of a
  *    Driving Check Fail by 1" - before the damage is applied.
- *  - Fuzzy Dice, once per Floor: "One Driving Skill Check reroll".
  *  - Stopping in time, on a success: park.
- * A rerolled card (AI Favor or Fuzzy Dice) keeps none of its buttons. The
- * ones that change the round's result (Critical Hit, Shock Absorbers, Fuzzy
- * Dice) are only on the card whose result the vehicle has this round
+ * Rerolls (AI Favor, and Fuzzy Dice - "One Driving Skill Check reroll per
+ * Floor", p.73) are the card's Reroll button (module/chat/ai-favor-reroll.mjs),
+ * revising it in place. A card replaced by an older reroll keeps none of its
+ * buttons. The ones that change the round's result (Critical Hit, Shock
+ * Absorbers) are only on the card whose result the vehicle has this round
  * (drivingCardCurrent) - not one from an earlier round, or one a later
  * Check has replaced.
  */
@@ -21,8 +22,7 @@ import { appendCardSection, esc } from "./chat-card.mjs";
 import { resolveOccupant, stepUpDegree } from "../helpers/vehicle-state.mjs";
 import { updateVehicle } from "../helpers/vehicles.mjs";
 import {
-  canDrive, cardOutcome, commitDrivingRound, drivingCardCurrent, drivingOutcomeText, drivingResultSettled,
-  rerollDrivingCheck,
+  canDrive, cardOutcome, commitDrivingRound, drivingCardCurrent, drivingOutcomeText, upgradeReady,
 } from "../helpers/vehicle-driving.mjs";
 
 const SCOPE = "carl-rpg";
@@ -32,12 +32,6 @@ const inFlight = new Set();
 /** The card's vehicle and driver, resolved synchronously for drawing. */
 function cardDocs(driving) {
   return { vehicle: resolveOccupant(driving?.vehicleUuid), driver: resolveOccupant(driving?.driverUuid) };
-}
-
-/** Is a once-per-Floor upgrade installed and unused on this Floor? */
-function upgradeReady(vehicle, key) {
-  const upgrade = vehicle?.system.upgrades[key];
-  return !!upgrade?.installed && upgrade.usedFloor !== game.settings.get(SCOPE, "currentFloor");
 }
 
 /**
@@ -64,9 +58,6 @@ function drivingButtons(message) {
   if (driving.mode === "table6" && failed && !driving.absorbed && !driving.damageApplied && driverSide && current
     && upgradeReady(vehicle, "shockAbsorbers")) {
     buttons.push({ action: "drivingAbsorb", icon: "fa-water", label: loc("Absorb") });
-  }
-  if (!drivingResultSettled(driving) && driverSide && current && upgradeReady(vehicle, "fuzzyDice")) {
-    buttons.push({ action: "drivingFuzzy", icon: "fa-dice", label: loc("Fuzzy") });
   }
   if (outcome?.damageSlots && !driving.damageApplied && (game.user.isGM || vehicle.isOwner)) {
     buttons.push({ action: "drivingDamage", icon: "fa-car-burst", label: loc("Damage", { slots: outcome.damageSlots }) });
@@ -150,15 +141,11 @@ const handlers = {
       }));
     });
   },
-  async drivingFuzzy(message) {
-    await run(message, "drivingFuzzy", async ({ vehicle }) => {
-      if (!await updateVehicle(vehicle, { "system.upgrades.fuzzyDice.usedFloor": game.settings.get(SCOPE, "currentFloor") })) return;
-      await rerollDrivingCheck(message, { by: "fuzzyDice" });
-    });
-  },
   async drivingPark(message) {
     await run(message, "drivingPark", async ({ vehicle }) => {
       await updateVehicle(vehicle, { "system.parked": true });
+      // Its result is used: no reroll or Intervene after this.
+      await updateCardMessage(message, { flags: { [SCOPE]: { driving: { parked: true } } } });
       await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.Parked", { vehicle: vehicle.name }));
     });
   },

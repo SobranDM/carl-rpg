@@ -107,19 +107,23 @@
   }
 }
 
-// The GM's Declare HUD (module/apps/declare-hud.mjs): bottom of the column
-// beside the sidebar, under the chat notifications.
+// The GM's Declare HUD (module/apps/declare-hud.mjs): floats at the bottom
+// of the column beside the sidebar, over the chat notifications (v14 shows
+// them there when the sidebar isn't on Chat) rather than pushing them up.
+// The column is its anchor only while it's there.
+#ui-right-column-1:has(> #carl-declare-hud) {
+  position: relative;
+}
+
 #carl-declare-hud {
   @include palette.variables;
   pointer-events: auto;
-  align-self: flex-end;
-  // Core gives every .application `position: absolute`, which takes it out of
-  // the column's flex flow (and leaves it at the top). Back in the flow, and
-  // ordered after the chat notifications (`order: 99; flex: 1` - they fill
-  // the column), it sits at the bottom, under them.
-  position: relative;
-  order: 100;
-  flex: 0 0 auto;
+  // Out of the column's flow: anchored to its bottom-right corner (above
+  // the column's own 14px bottom padding, where the chat input sits).
+  position: absolute;
+  right: 0;
+  bottom: 14px;
+  z-index: 1;
   width: 260px;
   max-height: 50vh;
   overflow-y: auto;
@@ -289,101 +293,7 @@
   gap: 6px;
   font-size: var(--font-size-12);
 
-  .carl-reaction-stage {
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-style: italic;
-    background: var(--carl-input-bg);
-    color: var(--carl-text-muted);
-
-    &[data-stage="evade"] {
-      color: var(--carl-header-text);
-      background: color-mix(in srgb, var(--carl-accent) 35%, transparent);
-    }
-
-    &[data-stage="locked"] {
-      font-weight: 700;
-    }
-  }
-
-  .carl-reaction-section {
-    border: 1px solid var(--carl-border-soft);
-    border-radius: 4px;
-    overflow: hidden;
-
-    > header {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 2px 6px;
-      font-weight: 700;
-      color: var(--carl-header-text);
-      background: var(--carl-header-bg);
-    }
-
-    ul {
-      margin: 0;
-      padding: 0;
-    }
-  }
-
-  .carl-evaded-tag {
-    margin-left: auto;
-    font-size: var(--font-size-11);
-    font-weight: 400;
-    font-style: italic;
-  }
-
-  .carl-hit,
-  .carl-taunt,
-  .carl-damage-lines li {
-    padding: 3px 6px;
-    border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 40%, transparent);
-
-    &:first-child {
-      border-top: none;
-    }
-  }
-
-  .carl-hit-head {
-    display: flex;
-    gap: 6px;
-    align-items: baseline;
-
-    > :first-child {
-      flex: 1;
-    }
-  }
-
-  .carl-hit-difficulty {
-    color: var(--carl-text-muted);
-  }
-
-  .carl-hit-status {
-    font-weight: 700;
-    text-align: right;
-  }
-
-  .carl-hit-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-
-    span {
-      padding: 0 4px;
-      border-radius: 3px;
-      font-size: var(--font-size-11);
-      background: var(--carl-input-bg);
-    }
-  }
-
   // A Mob Attack's printed range and effect.
-  .carl-attack-details {
-    display: flex;
-    flex-direction: column;
-    margin-top: 1px;
-  }
-
   .carl-attack-range {
     font-size: var(--font-size-11);
     color: var(--carl-text-muted);
@@ -394,156 +304,12 @@
     font-style: italic;
   }
 
-  .carl-check {
-    margin-top: 2px;
-
-    summary {
-      cursor: pointer;
-      display: flex;
-      align-items: baseline;
-      gap: 4px;
-      list-style: none;
-
-      &::-webkit-details-marker {
-        display: none;
-      }
-
-      &::before {
-        content: "\25B8";
-        color: var(--carl-text-muted);
-      }
-    }
-
-    &[open] summary::before {
-      content: "\25BE";
-    }
-
-    .carl-check-kind {
-      color: var(--carl-text-muted);
-    }
-
-    .carl-check-degree {
-      margin-left: auto;
-      padding: 0 4px;
-      border-radius: 3px;
-      font-size: var(--font-size-11);
-      font-weight: 700;
-
-      &.hit { background: rgba(46, 204, 64, 0.25); }
-      &.warn { background: rgba(232, 84, 44, 0.25); }
-      &.miss { background: rgba(122, 18, 32, 0.6); }
-    }
-
-    .carl-check-detail {
-      padding: 2px 0 2px 12px;
-      font-size: var(--font-size-11);
-      color: var(--carl-text-muted);
-    }
-  }
-
   // The GM's "Pull Area Attacks too" on a successful Taunt.
   .carl-pull-area {
     width: 100%;
     margin-top: 2px;
     font-size: var(--font-size-11);
     line-height: 1.6;
-  }
-
-  .carl-reaction-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-
-    button {
-      flex: 1 1 30%;
-      white-space: nowrap;
-      font-size: var(--font-size-12);
-      line-height: 1.6;
-    }
-
-    button[data-op="lock"] {
-      flex-basis: 100%;
-    }
-  }
-}
-
-// The Damage card's tables (module/helpers/reaction-resolve.mjs).
-.carl-reaction-damage {
-  .carl-damage-table {
-    width: 100%;
-    margin: 0;
-    border-collapse: collapse;
-    border: 1px solid var(--carl-border-soft);
-
-    caption {
-      padding: 2px 6px;
-      font-weight: 700;
-      text-align: left;
-      color: var(--carl-header-text);
-      background: var(--carl-header-bg);
-      border-radius: 4px 4px 0 0;
-    }
-
-    th {
-      padding: 2px 6px;
-      font-size: var(--font-size-11);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      text-align: left;
-      color: var(--carl-text-muted);
-      background: var(--carl-input-bg);
-    }
-
-    th:nth-child(n + 2),
-    td.carl-damage-amount,
-    td.carl-damage-slots {
-      width: 22%;
-      text-align: center;
-    }
-
-    td {
-      padding: 3px 6px;
-      vertical-align: middle;
-      border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 40%, transparent);
-    }
-
-    td.carl-damage-amount {
-      font-weight: 700;
-      font-size: var(--font-size-14);
-    }
-
-    td.carl-damage-status {
-      text-align: center;
-      font-style: italic;
-      color: var(--carl-text-muted);
-    }
-
-    .carl-damage-roll-button {
-      width: 100%;
-      font-style: normal;
-      line-height: 1.6;
-    }
-
-    .carl-damage-tag {
-      display: inline-block;
-      margin: 1px 3px 0 0;
-      padding: 0 4px;
-      border-radius: 3px;
-      font-size: var(--font-size-11);
-      background: var(--carl-input-bg);
-    }
-
-    .carl-damage-shield {
-      font-size: var(--font-size-11);
-      color: var(--carl-text-muted);
-    }
-  }
-
-  .carl-damage-notes {
-    margin: 2px 0 0;
-    padding: 0 6px;
-    font-size: var(--font-size-11);
-    color: var(--carl-text-muted);
   }
 }
 

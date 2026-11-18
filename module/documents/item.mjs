@@ -129,6 +129,9 @@ export class CarlRPGItem extends Item {
       return ui.notifications.warn(game.i18n.localize("CARLRPG.Warning.RollNeedsOwner"));
     }
 
+    // A Mob's Attack: declared or posted against the targets (Mobs never roll).
+    if (this.type === "mobAttack") return CarlDice.rollMobAttack(this.actor, this.id);
+
     // "If a Spell ain't in your Hotlist, you can't cast it until you Retrieve
     // it" (p.86) - in a fight. A Spell already switched on can be switched off.
     if (this.type === "spell" && !this.system.active && refuseOutsideHotlist(this.actor, this)) return null;

@@ -21,6 +21,7 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/carl-rpg/templates/actor/parts/shield-bar.hbs",
     "systems/carl-rpg/templates/actor/parts/mana-bar.hbs",
     "systems/carl-rpg/templates/actor/parts/attacks-list.hbs",
+    "systems/carl-rpg/templates/actor/parts/mob-attacks-list.hbs",
     "systems/carl-rpg/templates/actor/parts/resistances-grid.hbs",
     "systems/carl-rpg/templates/actor/parts/hotlist.hbs",
     // Chat / dialog templates.
@@ -28,7 +29,6 @@ export const preloadHandlebarsTemplates = async function () {
     "systems/carl-rpg/templates/chat/target-effects-footer.hbs",
     "systems/carl-rpg/templates/chat/heal-footer.hbs",
     "systems/carl-rpg/templates/chat/damage-footer.hbs",
-    "systems/carl-rpg/templates/chat/evade-consequence-footer.hbs",
     "systems/carl-rpg/templates/chat/taunt-footer.hbs",
     "systems/carl-rpg/templates/chat/mark-choice-footer.hbs",
     "systems/carl-rpg/templates/dialog/roll-options.hbs",

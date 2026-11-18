@@ -147,6 +147,11 @@
         "CheckMove": "(base Move {move} ft, Step {step} ft were typed in by hand: check they don't already include what these now add)",
         "ItemsDirectory": "Items directory"
       },
+      "MobAttacks": {
+        "Title": "Mob Attacks are items now",
+        "Body": "Each Mob's Attacks are now items on its sheet, with an Area box and the Debuffs they give. These Mobs have Attacks to check: one guessed to be an Area Attack, or one whose effect names a Debuff - set the Debuff, and when it lands, on the Attack:",
+        "Line": "{name}: {attacks}"
+      },
       "BaseDr": {
         "Title": "Base DR is now 0",
         "Body": "A crawler's DR now comes only from its Race, Class, gear, Skills, Spells and Buffs. These Characters had a base DR typed in, which is now 0. If it came from something not automated yet, add it back as a DR bonus on that item:",
@@ -360,7 +365,6 @@
         "DamageDone": "{vehicle} loses {slots} Health Bar slots.",
         "Absorb": "Shock Absorbers",
         "AbsorbDone": "Shock Absorbers: now a {result}. {outcome}",
-        "Fuzzy": "Fuzzy Dice reroll",
         "Park": "Park",
         "Parked": "{vehicle} parks.",
         "FuzzyNote": "Rerolled with the Fuzzy Dice."
@@ -1009,16 +1013,8 @@
     },
     "Evade": {
       "RollFreeButton": "Roll Free Evade",
-      "FreeEvade": "Free Evade",
-      "FreeEvadeFailed": "Free Evade failed",
-      "FreeEvadeFailedBody": "The Attack still lands unless they spend an Action to Evade again with Roll Evade on the Attack card.",
       "RollButton": "Roll Evade",
       "Rolled": "Evade Rolled",
-      "OutcomeTitle": "{name}'s Evade Outcome",
-      "Evaded": "Evaded — no damage.",
-      "HitNormal": "Hit — damage applies as rolled.",
-      "HitMajorFail": "Major Fail — extra damage!",
-      "HitCriticalFail": "Critical Fail — double damage!",
       "NoBaseDamage": "The original Attack rolled no damage to apply.",
       "AddMinorInjury": "Add Minor Injury Debuff",
       "AddMajorInjury": "Add Major Injury Debuff",
@@ -1027,22 +1023,23 @@
       "NoActor": "Could not find the defending actor for this card."
     },
     "Targets": {
+      "Section": "Targets",
+      "Hits": "{n} hit",
+      "AllMissed": "Missed",
+      "InjuryAdded": "Injury added",
+      "Sum": {
+        "hit": "{n} hit",
+        "incoming": "{n} incoming",
+        "half": "{n} halved",
+        "evaded": "{n} evaded",
+        "missed": "{n} missed"
+      },
       "AreaAttack": "Area Attack",
       "Splash": "Splash",
       "Apply": "Apply",
       "ApplyAll": "Apply All",
       "AppliedAll": "Applied to every remaining target.",
       "Applied": "Applied",
-      "Hit": "Hit",
-      "HitAmazing": "Hit (Amazing Success: +Floor damage)",
-      "Missed": "Missed (Evade {difficulty})",
-      "Incoming": "Lands unless Evaded (Evade vs. {difficulty})",
-      "Evaded": "Evaded - no damage",
-      "EvadedHalf": "Evaded - half damage",
-      "EvadeFailed": "Evade failed - hit",
-      "EvadeMajorFail": "Evade Major Fail - hit, +Floor damage",
-      "EvadeCriticalFail": "Evade Critical Fail - hit, double damage",
-      "ApplyFromCard": "Apply the result from this target's row on the Attack card.",
       "EvadePending": "Evade rolled - waiting for the GM to record it",
       "ExtraD20": "Extra d20",
       "ExtraD20Hint": "for targets with different Advantage",
@@ -1184,9 +1181,33 @@
         "SpellKnown": "{name} already knows {spell} at Rank {rank} - the book teaches nothing new."
       }
     },
+    "StatusChip": {
+      "incoming": "Incoming",
+      "hit": "Hit",
+      "evaded": "Evaded",
+      "half": "Half",
+      "quarter": "Quarter",
+      "caught": "Caught",
+      "missed": "Missed",
+      "taunt": "Taunt",
+      "tauntFailed": "Failed",
+      "moved": "Moved"
+    },
     "Reroll": {
-      "Button": "Reroll (AI Favor: {favor})",
-      "Hint": "Spend 1 AI Favor to reroll this Check's d20, keeping everything else (p.61). Once per Check; not on a Natural 1.",
+      "Button": "Reroll",
+      "Tooltip": {
+        "favor": "AI Reroll",
+        "fuzzyDice": "Fuzzy Dice Reroll",
+        "choose": "Reroll"
+      },
+      "PickTitle": "Reroll",
+      "PickLabel": "Reroll with",
+      "Source": {
+        "favor": "AI Favor ({favor} left)",
+        "fuzzyDice": "Fuzzy Dice ({vehicle}, once per Floor)"
+      },
+      "Rerolled": "rerolled",
+      "Closed": "This Check can't be rerolled any more: its result has been used.",
       "Detail": "AI Favor reroll",
       "Note": "Rerolled with 1 AI Favor.",
       "Superseded": "Rerolled with AI Favor - the newer card has the result.",
@@ -1465,6 +1486,45 @@
     },
     "MobAttack": {
       "Unnamed": "Attack",
+      "New": "New Attack",
+      "Add": "Add Attack",
+      "Section": "Attacks",
+      "Count": "{n} · {area} Area",
+      "CountPlain": "{n}",
+      "Attack": "Attack",
+      "AttackHint": "Declare this Attack against your targets (in Declaration), or post it",
+      "ToHit": "To hit",
+      "ToHitHint": "The Difficulty of the crawlers' Evades (p.267). \"F\" is the Floor.",
+      "ToHitAt": "At Floor {floor}: Evade {value}.",
+      "Damage": "Damage",
+      "DamageType": "Damage type",
+      "Range": "Range",
+      "Area": "Area",
+      "Splash": "Splash",
+      "GroupHitDamage": "To hit and damage",
+      "GroupRange": "Range and Area",
+      "GroupDebuffs": "On-hit Debuffs",
+      "GroupDescription": "Description",
+      "DebuffsHint": "Applied to each defender it lands on when its damage is rolled: not on an Evade, not on a full Immunity, not to a Catcher at Rank 15.",
+      "AddDebuff": "Add Debuff",
+      "When": "When",
+      "NoEffect": "No printed effect.",
+      "MobsOnly": "Mob Attacks belong on Mobs.",
+      "Kind": {
+        "melee": "Melee",
+        "ranged": "Ranged",
+        "area": "Area"
+      },
+      "Trigger": {
+        "hit": "On a hit",
+        "majorFail": "On an Evade Major Fail or worse",
+        "criticalFail": "On a Critical Fail"
+      },
+      "TriggerShort": {
+        "hit": "on a hit",
+        "majorFail": "Major Fail+",
+        "criticalFail": "Critical Fail"
+      },
       "DialogTitle": "Mob Attack: {name}",
       "ToHitLabel": "To Hit (target's Evade Difficulty)",
       "Subtitle": "To hit {difficulty}",
@@ -1539,6 +1599,7 @@
       "Button": "Intervene (+1d6)",
       "Hint": "Spend an Action to help {name}: roll 1d6 and add it to their total.",
       "Row": "Intervene ({name})",
+      "Closed": "It's too late to Intervene on this Check: its result has been used, or its round is over.",
       "Total": "Total"
     },
     "Actions": {
@@ -1587,41 +1648,47 @@
     },
     "Reaction": {
       "Title": "Mob Attacks - Round {round}",
-      "DamageTitle": "Mob Attack Damage - Round {round}",
-      "Stage": {
-        "taunt": "Taunts and Catches first - Evades open once the GM calls them.",
-        "evade": "Evades are open.",
-        "locked": "Results locked."
+      "Progress": "{settled} of {total} settled",
+      "Locked": "Locked",
+      "LockedNote": "Damage is rolled on the Damage card.",
+      "WaitingOn": "Waiting on",
+      "EvadeButton": "Evade ({count})",
+      "HasEffect": "This Attack has an effect: open the row to read it.",
+      "Sub": {
+        "evade": "Evade {difficulty}",
+        "area": "Area",
+        "from": "From {name}",
+        "freeFailed": "Free Evade {total} failed",
+        "helped": "Helped by {names}",
+        "auto": "Rolled with their Evade",
+        "notEvaded": "Not Evaded",
+        "tauntedTo": "Taunted to {name}",
+        "caughtBy": "Caught by {name}",
+        "pulled": "{count} pulled"
       },
+      "Sum": {
+        "hit": "{n} hit",
+        "incoming": "{n} incoming",
+        "caught": "{n} caught",
+        "half": "{n} halved",
+        "clear": "All clear"
+      },
+      "DamageTitle": "Mob Attack Damage - Round {round}",
       "Op": {
         "taunt": "Taunt",
         "catch": "Catch",
         "evade": "Evade",
         "intervene": "Intervene",
         "reroll": "AI Reroll",
-        "openEvades": "Open Evades",
         "lock": "Lock Results"
-      },
-      "Status": {
-        "Incoming": "Incoming",
-        "Miss": "Misses",
-        "FreeEvaded": "Missed (free Evade)",
-        "Caught": "Caught - can't be Evaded",
-        "Evaded": "Evaded",
-        "EvadedHalf": "Evaded - half damage",
-        "Hit": "Hits"
       },
       "FreeEvade": "Free Evade",
       "EvadeUsed": "Evade used",
-      "EvadeDifficulty": "Evade {difficulty}",
       "Vs": "vs. {difficulty}",
       "Dice": "d20: {dice}",
       "InterveneLine": "+{value} Intervene ({name})",
       "RerolledFrom": "AI Reroll - was {total} (d20 {natural})",
       "RerollBreakdown": "AI Reroll: {formula} = {total}",
-      "TauntOf": "Taunt vs. {mob}",
-      "TauntPulled": "Success - {count} Attack(s) of {mob} pulled",
-      "TauntFailed": "Failed - {mob}'s Attacks stay put",
       "TauntInRange": "{mob} ({distance} ft)",
       "TauntOutOfRange": "{mob} ({distance} ft - out of range)",
       "TauntRangeConfirm": "{mob} is {distance} ft from {name}, beyond Taunt's range of {range} ft. Taunt anyway?",
@@ -1631,24 +1698,23 @@
       "AreaPulledSpared": "Area Attacks re-aimed at {name} - no longer hitting {spared}.",
       "TauntedFrom": "Taunted from {name}",
       "CaughtFor": "Caught for {name}",
-      "FreeEvadeOf": "free Evade vs. {attack}",
-      "EvadeOf": "Evade vs. {attack}",
       "Choose": "Choose",
       "Who": "Who acts",
       "WhichMob": "Which Mob",
       "WhichAttack": "Which Attack",
-      "WhichCheck": "Which Check",
-      "WhichAlly": "Help whom",
       "Intervened": "{name} Intervenes: +{value} to {target}'s Check.",
       "LockWarning": "{names} haven't Evaded the Attacks still landing on them - they'll take the hits. Lock the results anyway?"
     },
     "Resolve": {
-      "Attack": "Attack",
-      "Damage": "Damage",
-      "Slots": "Slots",
-      "Missed": "Missed",
-      "Evaded": "Evaded",
       "NoDamage": "No damage",
+      "None": "none",
+      "OneSlot": "{count} slot",
+      "SlotCount": "{count} slots",
+      "Taken": "{n} damage",
+      "ToRoll": "{n} to roll",
+      "DyingShort": "Dying",
+      "Progress": "{rolled} of {total} rolled",
+      "NothingToRoll": "Nothing to roll",
       "TargetGone": "Target no longer exists",
       "Waiting": "Not rolled yet ({formula})",
       "Dying": "Dying: -1 round",
@@ -1809,7 +1875,8 @@
       "damageEffect": "Damage Effect",
       "spell": "Spell",
       "class": "Class",
-      "race": "Race"
+      "race": "Race",
+      "mobAttack": "Mob Attack"
     }
   }
 }

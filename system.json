@@ -54,7 +54,10 @@
       "damageEffect": {},
       "spell": {},
       "class": {},
-      "race": {}
+      "race": {},
+      "mobAttack": {
+        "htmlFields": ["description"]
+      }
     }
   },
   "styles": [

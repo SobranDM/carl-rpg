@@ -23,6 +23,8 @@
 @use "components/hotlist";
 @use "components/chargen";
 @use "components/combat-phases";
+@use "components/status-rows";
+@use "components/mob-attacks";
 
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
@@ -46,4 +48,5 @@
   @include vehicle-sheet.styles;
   @include hotlist.styles;
   @include chargen.styles;
+  @include mob-attacks.styles;
 }

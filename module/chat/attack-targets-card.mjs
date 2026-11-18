@@ -1,36 +1,58 @@
 /**
  * The per-target rows on an Attack card (CarlDice.rollAttack and
  * rollMobAttack). Each targeted token gets its own row - its own hit/miss,
- * its own Roll Evade, its own Apply - instead of one Evade and one Apply for
- * the whole card (p.81: "a separate Evade Check against each Attack directed
- * at their crawler"; p.83 Area Attacks). The row data lives in the card's
- * `targetRows` flag (module/helpers/attack-targets.mjs); the rows themselves
- * are drawn at render time from those flags (decorateTargetRows, called by
- * module/chat/chat-listener.mjs), so an Evade, an Apply or a Taunt redirect
- * shows up on the next render with no stored HTML to rewrite.
+ * its own Evade, its own Apply - instead of one Evade and one Apply for the
+ * whole card (p.81: "a separate Evade Check against each Attack directed at
+ * their crawler"; p.83 Area Attacks). The row data lives in the card's
+ * `targetRows` flag (module/helpers/attack-targets.mjs); the rows are drawn
+ * at render time from those flags (decorateTargetRows, called by module/
+ * chat/chat-listener.mjs) in the combat cards' status rows (module/chat/
+ * status-rows.mjs; docs/reaction-card-redesign.md, phase 3).
  *
- * Who can click: a row's Roll Evade and Apply belong to the GM and that
- * target's owner; Apply All is the GM's. Mobs don't roll Evade ("Mobs are
- * player-facing; they never roll", p.267), so only crawler rows get one.
+ * Who rolls: the crawlers. On a Mob Attack the crawlers it's aimed at roll
+ * their Evades against its fixed to-hit; on a crawler's Attack the crawler
+ * rolled against each Mob's fixed Evade - a Mob's row has Apply and nothing
+ * else ("Mobs are player-facing; they never roll", p.267). A crawler
+ * targeted by another crawler Evades (p.87).
+ *
+ * A row's Evade is kept on the row (module/chat/row-evade.mjs), with its
+ * Intervene, AI Reroll and injury icons - no card of its own. Who can click:
+ * a row's Evade, AI Reroll and injury belong to the GM and that target's
+ * owner; its Apply to whoever owns what takes the hit; Intervene to the
+ * other crawlers in the fight; Apply All to the GM.
  */
 import CarlDice from "../dice/dice.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
-import { degreeBadge, isHitDegree } from "../helpers/rules.mjs";
+import { isHitDegree } from "../helpers/rules.mjs";
 import { activeRows, rowOutcome, rowEvadeDifficulty, rowResolved } from "../helpers/attack-targets.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
-import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
-import { appendCardSection, createRollMessage, esc } from "./chat-card.mjs";
+import { appendCardSection, esc } from "./chat-card.mjs";
 import { applyDamageToActor } from "./damage-card.mjs";
 import { isImmuneToAllDamage } from "../helpers/damage-pipeline.mjs";
-import { buildEvadeConsequenceFooter, userOwnsUuid } from "./evade-link-card.mjs";
-import { aiRerollFlags } from "../helpers/ai-favor.mjs";
-import { takesConditions } from "../helpers/actor-kinds.mjs";
-import { vehicleSeatOf } from "../helpers/vehicle-state.mjs";
+import { userOwnsUuid } from "./evade-link-card.mjs";
+import { rollsLikeCrawler, takesConditions } from "../helpers/actor-kinds.mjs";
 import { afterRamRowApplied } from "../helpers/vehicle-ram.mjs";
 import { evadeIsFree, noteUndo, takeAction } from "../helpers/actions.mjs";
+import {
+  addRowInjury, decidingRowCheck, recordRowEvade, resolveRowTarget, rowInjury, rowInterveneOpen, rowInterveners,
+  rowRerollSources, shownRowCheck,
+} from "./row-evade.mjs";
+import {
+  checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, versusNum,
+} from "./status-rows.mjs";
+import { interveneRow } from "./check-revision.mjs";
+import { rerollRow } from "./ai-favor-reroll.mjs";
+
+export { resolveRowTarget };
 
 const SCOPE = "carl-rpg";
+
+/**
+ * Which rows' expanders this client has open, by `messageId:rowKey`.
+ * @type {Set<string>}
+ */
+const openRows = new Set();
 
 /** Rows this client is resolving right now (message.id:rowId) - blocks a double click. */
 const inFlight = new Set();
@@ -86,7 +108,7 @@ export function buildAttackTargetsFooter({ damageByType = {}, targetEffects = []
     ${effects ? `<div class="carl-target-effects-list"><span class="carl-target-effects-label">${game.i18n.localize("CARLRPG.TargetEffects.WillApply")}</span> ${effects}</div>` : ""}
     <div class="carl-target-rows"></div>
     <div class="carl-apply-all-row">
-      <button type="button" class="carl-apply-all" data-action="applyAllTargets">
+      <button type="button" class="carl-apply-all carl-status-button" data-action="applyAllTargets">
         <i class="fas fa-heart-crack"></i> ${game.i18n.localize("CARLRPG.Targets.ApplyAll")}
       </button>
     </div>
@@ -107,31 +129,126 @@ function recoilWaiting(row, flags) {
   return !!primary && primary.hit && primary.isCharacter && !primary.evade && !primary.applied && !primary.redirectUuid;
 }
 
-/** A short status for one row, as the viewer sees it. */
-function rowStatus(row, flags) {
-  const i18n = game.i18n;
-  if (row.applied) return i18n.localize("CARLRPG.Targets.Applied");
-  if (row.evade?.pending) return i18n.localize("CARLRPG.Targets.EvadePending");
-  if (!row.hit) return i18n.format("CARLRPG.Targets.Missed", { difficulty: row.difficulty ?? "-" });
-  // "A Near Miss targeting an occupant hits the vehicle" (p.72).
-  if (row.redirectUuid) return i18n.format("CARLRPG.Vehicle.NearMissHitsVehicle", { vehicle: row.redirectName ?? "?" });
-  if (recoilWaiting(row, flags)) return i18n.localize("CARLRPG.Vehicle.Ram.RecoilWaiting");
-  if (row.evade) {
-    if (row.evade.success) return i18n.localize(flags.isArea ? "CARLRPG.Targets.EvadedHalf" : "CARLRPG.Targets.Evaded");
-    if (row.evade.degree === "criticalFail") return i18n.localize("CARLRPG.Targets.EvadeCriticalFail");
-    if (row.evade.degree === "majorFail") return i18n.localize("CARLRPG.Targets.EvadeMajorFail");
-    return i18n.localize("CARLRPG.Targets.EvadeFailed");
-  }
-  if (row.isCharacter) {
-    const difficulty = rowEvadeDifficulty(row, flags);
-    return i18n.format("CARLRPG.Targets.Incoming", { difficulty: difficulty ?? "-" });
-  }
-  return i18n.localize(row.amazing ? "CARLRPG.Targets.HitAmazing" : "CARLRPG.Targets.Hit");
+/** Whether a row's target is on the party's side: a hit on it is bad news. */
+function partySide(row) {
+  return !!row.isCharacter || !!row.isVehicle;
 }
 
 /**
- * Draw the target rows into an Attack card, for whoever is viewing it.
- * Called from module/chat/chat-listener.mjs on every render.
+ * A crawler's Attack total against one row: each row keeps its own kept d20
+ * (Advantage against one target and not another), the rest is the card's.
+ * @param {object} row
+ * @param {object} flags
+ * @returns {number|null}
+ */
+function attackTotalFor(row, flags) {
+  if (typeof flags.attackTotal !== "number") return null;
+  const natural = flags.naturalRoll ?? null;
+  if (natural === null || row.natural === null || row.natural === undefined) return flags.attackTotal;
+  return flags.attackTotal - natural + row.natural;
+}
+
+/**
+ * Where one row stands, as its chip shows it, with the Evade it shows.
+ * @param {object} row
+ * @param {object} flags
+ * @returns {{status: string, check: object|null, which: "free"|"evade"|null}}
+ */
+function targetStatus(row, flags) {
+  const shown = shownRowCheck(row);
+  if (!row.hit) return { status: "missed", ...shown };
+  if (row.evade?.pending) return { status: "incoming", ...shown };
+  if (row.evade?.success) {
+    if (flags.isArea) return { status: row.zone === "splash" ? "quarter" : "half", ...shown };
+    const deciding = decidingRowCheck(row);
+    return { status: deciding && deciding === row.checks?.free ? "missed" : "evaded", ...shown };
+  }
+  if (row.evade || row.redirectUuid || !row.isCharacter || row.applied) return { status: "hit", ...shown };
+  return { status: "incoming", ...shown };
+}
+
+/** One row, for this viewer. */
+function targetRow(message, row, flags, { status, check, which }) {
+  const i18n = game.i18n;
+  const sub = [];
+  if (row.zone === "splash") sub.push(i18n.localize("CARLRPG.Targets.Splash"));
+  if (row.amazing) sub.push(i18n.localize(CARLRPG.degreesOfSuccess.amazingSuccess));
+  if (which === "free") sub.push(check.success ? i18n.localize("CARLRPG.Reaction.FreeEvade") : i18n.format("CARLRPG.Reaction.Sub.freeFailed", { total: check.total }));
+  if (which === "evade" && check.degree === "nearMissFail") sub.push(i18n.localize(CARLRPG.degreesOfSuccess.nearMissFail));
+  sub.push(...checkNotes(check));
+  // "A Near Miss targeting an occupant hits the vehicle" (p.72).
+  if (row.redirectUuid) sub.push(i18n.format("CARLRPG.Vehicle.NearMissHitsVehicle", { vehicle: row.redirectName ?? "?" }));
+  if (recoilWaiting(row, flags)) sub.push(i18n.localize("CARLRPG.Vehicle.Ram.RecoilWaiting"));
+  if (row.evade?.pending) sub.push(i18n.localize("CARLRPG.Targets.EvadePending"));
+  if (row.injuryAdded) sub.push(i18n.localize("CARLRPG.Targets.InjuryAdded"));
+  if (row.applied) sub.push(i18n.localize("CARLRPG.Targets.Applied"));
+
+  let num = "";
+  if (check) num = versusNum(check.total, check.difficulty);
+  else if (status === "incoming") {
+    num = `<span class="carl-status-vs">${esc(i18n.localize("CARLRPG.Roll.Evade"))}</span> <b>${esc(rowEvadeDifficulty(row, flags) ?? "-")}</b>`;
+  } else if (rollsLikeCrawler(flags.attackerType)) num = versusNum(attackTotalFor(row, flags) ?? "-", row.difficulty);
+  else if (row.toHit !== undefined && row.toHit !== null) num = versusNum(row.toHit, row.difficulty);
+
+  // This viewer's icons on the row.
+  const mine = userOwnsUuid(row.uuid);
+  // Whoever owns what actually takes the hit applies it - the vehicle, when
+  // a Near Miss on its occupant hits it instead.
+  const applier = userOwnsUuid(row.redirectUuid ?? row.uuid);
+  const data = { "row-id": row.id };
+  const acts = [];
+  if (mine && !row.applied && row.hit && row.isCharacter && !row.evade && !row.redirectUuid) {
+    const free = row.freeEvade && !row.freeUsed;
+    acts.push(iconButton("fa-person-running", i18n.localize(free ? "CARLRPG.Evade.RollFreeButton" : "CARLRPG.Evade.RollButton"),
+      { ...data, action: "rowEvade" }));
+  }
+  if (which && rowRerollSources(message, row.id, which).length) {
+    acts.push(iconButton("fa-dice-d20", i18n.localize("CARLRPG.Reaction.Op.reroll"), { ...data, which, action: "rowReroll" }));
+  }
+  if (which && d6CouldChange(check) && rowInterveneOpen(message, row.id, which) && rowInterveners(message, row.id, which).length) {
+    acts.push(iconButton("fa-handshake-angle", i18n.localize("CARLRPG.Intervene.Button"), { ...data, which, action: "rowIntervene" }));
+  }
+  const injury = rowInjury(row);
+  if (injury && !row.injuryAdded && mine) {
+    acts.push(iconButton("fa-band-aid", i18n.localize(injury === "majorInjury" ? "CARLRPG.Evade.AddMajorInjury" : "CARLRPG.Evade.AddMinorInjury"),
+      { ...data, action: "rowInjury" }));
+  }
+  if (applier && !rowResolved(row, flags.isArea) && !row.evade?.pending && !recoilWaiting(row, flags)) {
+    acts.push(iconButton("fa-heart-crack", i18n.localize("CARLRPG.Targets.Apply"), { ...data, action: "rowApply" }));
+  }
+
+  // The expander: the Evade shown, and a free one it replaced.
+  const freeBehind = which === "evade" && row.checks?.free
+    ? `<div class="carl-status-detail-head">${esc(i18n.localize("CARLRPG.Reaction.FreeEvade"))}</div>${checkDetail(row.checks.free)}` : "";
+  const key = `row:${row.id}`;
+  const tone = status === "hit" ? (partySide(row) ? "bad" : "good") : null;
+  return statusRow({
+    id: row.id, key, open: openRows.has(`${message.id}:${key}`),
+    chip: statusChip(status, tone ? { tone } : {}),
+    what: `<strong>${esc(row.name)}</strong>`, sub, num, acts: acts.join(""),
+    detail: check ? `${checkDetail(check)}${freeBehind}` : "",
+  });
+}
+
+/** The rows' heading summary: how many of each. */
+function targetSummary(statuses) {
+  const i18n = game.i18n;
+  const counts = {};
+  for (const { status } of statuses) {
+    const key = status === "quarter" ? "half" : status;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return ["hit", "incoming", "half", "evaded", "missed"]
+    .filter((key) => counts[key])
+    .map((key) => i18n.format(`CARLRPG.Targets.Sum.${key}`, { n: counts[key] }))
+    .join(" · ");
+}
+
+/**
+ * Draw the target rows into an Attack card, for whoever is viewing it: a
+ * section of status rows, and the header's badge - "0 of 2 settled" on a
+ * Mob's Attack, "1 hit" on a crawler's. Called from module/chat/
+ * chat-listener.mjs on every render.
  * @param {ChatMessage} message
  * @param {HTMLElement} html
  */
@@ -140,6 +257,7 @@ export function decorateTargetRows(message, html) {
   if (!container) return;
   const flags = message.flags?.[SCOPE] ?? {};
   const rows = activeRows(flags.targetRows).map((row) => withLocal(message, row));
+  const i18n = game.i18n;
 
   // A targeted Attack that missed everyone still rolls its damage (a Taunt
   // may redirect it onto someone it does hit); keep it out of sight until a
@@ -148,29 +266,24 @@ export function decorateTargetRows(message, html) {
     html.querySelectorAll(".carl-damage-roll, .carl-attack-targets .carl-damage-portions, .carl-attack-targets .carl-target-effects-list")
       .forEach((el) => el.remove());
   }
-  container.innerHTML = rows.map((row) => {
-    const mine = userOwnsUuid(row.uuid);
-    // Whoever owns what actually takes the hit applies it - the vehicle,
-    // when a Near Miss on its occupant hits it instead.
-    const applier = userOwnsUuid(row.redirectUuid ?? row.uuid);
-    const buttons = [];
-    if (mine && !row.applied && row.hit && row.isCharacter && !row.evade && !row.redirectUuid) {
-      const free = row.freeEvade && !row.freeUsed;
-      buttons.push(`<button type="button" class="carl-row-evade" data-action="rowEvade">
-        <i class="fas fa-person-running"></i> ${game.i18n.localize(free ? "CARLRPG.Evade.RollFreeButton" : "CARLRPG.Evade.RollButton")}</button>`);
+  if (rows.length) {
+    const statuses = rows.map((row) => targetStatus(row, flags));
+    container.innerHTML = statusSection({
+      name: i18n.localize("CARLRPG.Targets.Section"),
+      summary: targetSummary(statuses),
+      rows: rows.map((row, i) => targetRow(message, row, flags, statuses[i])),
+    });
+    if (rollsLikeCrawler(flags.attackerType)) {
+      const hits = rows.filter((row) => row.hit).length;
+      headerProgress(html, hits ? i18n.format("CARLRPG.Targets.Hits", { n: hits }) : i18n.localize("CARLRPG.Targets.AllMissed"));
+    } else {
+      const settled = statuses.filter((s) => s.status !== "incoming").length;
+      headerProgress(html, i18n.format("CARLRPG.Reaction.Progress", { settled, total: rows.length }));
     }
-    if (applier && !rowResolved(row, flags.isArea) && !row.evade?.pending && !recoilWaiting(row, flags)) {
-      buttons.push(`<button type="button" class="carl-row-apply" data-action="rowApply">
-        <i class="fas fa-heart-crack"></i> ${game.i18n.localize("CARLRPG.Targets.Apply")}</button>`);
-    }
-    const zone = row.zone === "splash"
-      ? `<span class="carl-target-zone">${game.i18n.localize("CARLRPG.Targets.Splash")}</span>` : "";
-    return `<div class="carl-target-row" data-row-id="${esc(row.id)}">
-      <span class="carl-target-name">${esc(row.name)}</span>${zone}
-      <span class="carl-target-status">${esc(rowStatus(row, flags))}</span>
-      <span class="carl-target-buttons">${buttons.join("")}</span>
-    </div>`;
-  }).join("");
+    rememberOpenRows(container, message.id, openRows);
+  } else {
+    container.innerHTML = "";
+  }
 
   const pending = rows.some((row) => !rowResolved(row, flags.isArea));
   if (!game.user.isGM || !pending) html.querySelector(".carl-apply-all-row")?.remove();
@@ -181,14 +294,6 @@ function clickedRow(message, button) {
   const rowId = button?.closest("[data-row-id]")?.dataset.rowId;
   const row = rowId ? message.getFlag(SCOPE, "targetRows")?.[rowId] : null;
   return row && !row.replaced ? withLocal(message, row) : null;
-}
-
-/** Resolve a row's token/actor uuid to {actor, token}. */
-export async function resolveRowTarget(row) {
-  const doc = row?.uuid ? await fromUuid(row.uuid) : null;
-  if (!doc) return null;
-  if (doc instanceof Actor) return { actor: doc, token: null };
-  return doc.actor ? { actor: doc.actor, token: doc } : null;
 }
 
 /**
@@ -212,18 +317,28 @@ async function guarded(message, rowId, fn) {
   }
 }
 
+/** The row's Roll Evade button. */
+function onRowEvade(event, message, button) {
+  event.preventDefault();
+  const rowId = button?.closest("[data-row-id]")?.dataset.rowId;
+  return rowId ? evadeRow(message, rowId) : undefined;
+}
+
 /**
- * Roll this row's Evade (an Interrupt, p.81). The result is written to the
+ * Roll a row's Evade (an Interrupt, p.81). The result is written to the
  * row only; damage is then applied from the row's Apply. A failed free Evade
  * (p.96) changes nothing but spends the freebie - "If they fail that free
  * Check, they may still spend an Action to Evade as usual and try again."
- * @param {PointerEvent} event
- * @param {ChatMessage} message
- * @param {HTMLElement} button
+ * It's kept on the row, which can be Intervened on or rerolled in place
+ * (module/chat/row-evade.mjs).
+ * @param {ChatMessage} message  The Attack card.
+ * @param {string} rowId
+ * @param {{skipDialog?: boolean}} [options]
+ * @returns {Promise<void>}
  */
-async function onRowEvade(event, message, button) {
-  event.preventDefault();
-  const row = clickedRow(message, button);
+export async function evadeRow(message, rowId, { skipDialog = false } = {}) {
+  const stored = message.getFlag(SCOPE, "targetRows")?.[rowId];
+  const row = stored && !stored.replaced ? withLocal(message, stored) : null;
   // A Near Miss that hit the occupant's vehicle instead has nothing to Evade.
   if (!row || row.applied || row.evade || !row.hit || row.redirectUuid) return;
   await guarded(message, row.id, async () => {
@@ -244,126 +359,15 @@ async function onRowEvade(event, message, button) {
       if (!pays) ctx.free();
       else if (!ctx.require()) return null;
       const difficulty = rowEvadeDifficulty(row, message.flags[SCOPE]);
-      const rollData = await CarlDice.rollEvadeCheck(target.actor, { difficulty, skipDialog: false, post: false, isAction: !free });
+      const rollData = await CarlDice.rollEvadeCheck(target.actor, { difficulty, skipDialog, post: false, isAction: !free });
       if (!rollData) return null;
-      // Undone: the row back to un-Evaded (its outcome card goes too).
-      noteUndo(target.actor, {
-        t: "set", uuid: message.uuid,
-        data: { [`flags.${SCOPE}.targetRows.${row.id}`]: { evade: null, freeUsed: !!row.freeUsed, redirectUuid: null, redirectName: null } },
-      });
-      await recordRowEvade(message, row, target, { ...rollData, free });
+      // Shown as done here until the GM's write of the row arrives.
+      if (!(free && !isHitDegree(rollData.degree))) markLocal(message, row.id, { evaded: true });
+      const check = await recordRowEvade(message, row, target, rollData, { free });
+      // Undone: the row back to before this Evade (a free one costs nothing).
+      if (!free) noteUndo(target.actor, { t: "rowEvade", messageId: message.id, rowId: row.id, checkId: check.id });
       return true;
     }, { tag: "evade", optional: true });
-  });
-}
-
-const GREAT_EVADE = ["criticalHit", "amazingSuccess"];
-
-/**
- * Record a row's Evade result on the Attack card and post the outcome card.
- * Shared by the row's Roll Evade and an AI Favor reroll of that Evade
- * (module/chat/ai-favor-reroll.mjs), which passes `reroll` (the original
- * roll's data) - its result replaces the earlier one.
- * @param {ChatMessage} message  The Attack card.
- * @param {object} row
- * @param {{actor: Actor, token: TokenDocument|null}} target
- * @param {{roll: Roll, breakdown: string, degree: string, debuffNote?: string, free: boolean,
- *   formula?: string, naturalRoll?: number|null, total?: number, difficulty?: number|null, reroll?: object|null}} result
- * @returns {Promise<void>}
- */
-export async function recordRowEvade(message, row, target, {
-  roll, breakdown, degree, debuffNote = "", free, formula, naturalRoll, total, difficulty, reroll = null,
-}) {
-  const flags = message.flags[SCOPE];
-  const success = isHitDegree(degree);
-
-  // Nat 20 / Amazing Success: Advantage on the evader's next Attack against
-  // this attacker (Degrees of Success, p.79) - see CarlDice.rollAttack. A
-  // reroll that loses that result takes the Advantage back.
-  if (flags.attackerUuid) {
-    const combatant = resolveCombatantFor(target);
-    if (combatant?.canUserModify(game.user, "update")) {
-      if (GREAT_EVADE.includes(degree)) {
-        await combatant.setFlag(SCOPE, "advantageVsUuid", flags.attackerUuid);
-      } else if (GREAT_EVADE.includes(reroll?.degree)
-        && combatant.getFlag(SCOPE, "advantageVsUuid") === flags.attackerUuid) {
-        await combatant.unsetFlag(SCOPE, "advantageVsUuid");
-      }
-    }
-  }
-
-  // The outcome card offers the AI Favor reroll (once - a reroll's own card
-  // carries it as used).
-  const rerollFlags = reroll
-    ? { aiReroll: { ...reroll, used: true } }
-    : aiRerollFlags(target.actor, {
-      kind: "rowEvade", formula, natural: naturalRoll, total, difficulty, breakdown, body: debuffNote,
-      attackMessageId: message.id, rowId: row.id, free, degree,
-    });
-  const rerollNote = reroll ? `<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>` : "";
-
-  if (free && !success) {
-    await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: { [row.id]: { freeUsed: true } } } } });
-    await createRollMessage({
-      rolls: [roll],
-      rollMeta: [{ label: game.i18n.localize("CARLRPG.Evade.FreeEvade"), breakdown }],
-      title: game.i18n.format("CARLRPG.Evade.OutcomeTitle", { name: target.actor.name }),
-      img: target.actor.img,
-      subtitle: game.i18n.localize("CARLRPG.Evade.FreeEvadeFailed"),
-      badge: degreeBadge(degree),
-      body: `${debuffNote}<p>${game.i18n.localize("CARLRPG.Evade.FreeEvadeFailedBody")}</p>${rerollNote}`,
-      flags: rerollFlags,
-      actor: target.actor,
-      token: target.token,
-    });
-    return;
-  }
-
-  markLocal(message, row.id, { evaded: true });
-  // An occupant whose Evade misses by 1-2 (a Near Miss) isn't hit - the
-  // vehicle is ("A Near Miss targeting an occupant hits the vehicle", p.72).
-  // A reroll that changes the result takes the redirect back.
-  // Not for an Area Attack: the vehicle is caught in it on its own row.
-  const seat = !success && degree === "nearMissFail" && !flags.isArea ? vehicleSeatOf(target.actor) : null;
-  await updateCardMessage(message, {
-    flags: {
-      [SCOPE]: {
-        targetRows: {
-          [row.id]: {
-            evade: { degree, success },
-            freeUsed: row.freeUsed || free,
-            redirectUuid: seat?.vehicle.uuid ?? null,
-            redirectName: seat?.vehicle.name ?? null,
-          },
-        },
-      },
-    },
-  });
-
-  const subtitleKey = success
-    ? (flags.isArea ? "CARLRPG.Targets.EvadedHalf" : "CARLRPG.Evade.Evaded")
-    : degree === "majorFail" ? "CARLRPG.Evade.HitMajorFail"
-      : degree === "criticalFail" ? "CARLRPG.Evade.HitCriticalFail" : "CARLRPG.Evade.HitNormal";
-  const debuffKey = degree === "majorFail" ? "minorInjury" : degree === "criticalFail" ? "majorInjury" : null;
-  const outcomeFlags = { ...rerollFlags };
-  let footer;
-  if (debuffKey) {
-    outcomeFlags.debuffKey = debuffKey;
-    outcomeFlags.debuffActorUuid = row.uuid;
-    footer = await buildEvadeConsequenceFooter(debuffKey);
-  }
-  await createRollMessage({
-    rolls: [roll],
-    rollMeta: [{ label: game.i18n.localize("CARLRPG.Roll.Evade"), breakdown }],
-    title: game.i18n.format("CARLRPG.Evade.OutcomeTitle", { name: target.actor.name }),
-    img: target.actor.img,
-    subtitle: game.i18n.localize(subtitleKey),
-    badge: degreeBadge(degree),
-    body: `${debuffNote}<p>${game.i18n.localize("CARLRPG.Targets.ApplyFromCard")}</p>${rerollNote}`,
-    footer,
-    flags: outcomeFlags,
-    actor: target.actor,
-    token: target.token,
   });
 }
 
@@ -457,6 +461,32 @@ async function onApplyAll(event, message) {
   });
 }
 
+/** A row's id and Check ("free"/"evade") from its icon. */
+function rowRef(button) {
+  return { rowId: button?.closest("[data-row-id]")?.dataset.rowId ?? null, which: button?.dataset.which ?? null };
+}
+
+/** A row's AI Reroll (its d20 icon). */
+async function onRowReroll(event, message, button) {
+  event.preventDefault();
+  const { rowId, which } = rowRef(button);
+  if (rowId && which) await rerollRow(message, rowId, which);
+}
+
+/** A row's Intervene (its handshake icon). */
+async function onRowIntervene(event, message, button) {
+  event.preventDefault();
+  const { rowId, which } = rowRef(button);
+  if (rowId && which) await interveneRow(message, rowId, which);
+}
+
+/** A row's injury (its band-aid icon): the Debuff its Evade called for. */
+async function onRowInjury(event, message, button) {
+  event.preventDefault();
+  const { rowId } = rowRef(button);
+  if (rowId) await guarded(message, `${rowId}:injury`, () => addRowInjury(message, rowId));
+}
+
 /**
  * Registry entries for module/chat/chat-listener.mjs. `custom: true` - these
  * buttons are drawn per viewer by decorateTargetRows, so the listener's
@@ -466,4 +496,7 @@ export const attackTargetsActionEntries = [
   { action: "rowEvade", custom: true, onClick: onRowEvade },
   { action: "rowApply", custom: true, onClick: onRowApply },
   { action: "applyAllTargets", custom: true, onClick: onApplyAll },
+  { action: "rowReroll", custom: true, onClick: onRowReroll },
+  { action: "rowIntervene", custom: true, onClick: onRowIntervene },
+  { action: "rowInjury", custom: true, onClick: onRowInjury },
 ];

@@ -4,14 +4,18 @@
  * Action Declaration, it lists every declared Mob Attack, grouped by who it
  * is aimed at, and players react from its buttons:
  *  - Taunt (p.200): an Opposed Check against a Mob; on a Success every
- *    single-target Attack of that Mob moves onto the taunter.
+ *    single-target Attack of that Mob still landing moves onto the taunter.
  *  - Catch (Catcher, p.191): take one ally's single-target Attack.
- *  - Evade: one button per crawler rolls every Evade it needs (p.81).
- *  - Intervene (p.82): +1d6 to another crawler's Check.
- *  - AI Reroll (p.61): reroll one of your own failed Checks.
- *  - GM: Open Evades (Taunts and Catches first, then Evades - "Taunt... after
- *    seeing where the Mob Attacks are headed"), and Lock Results, which runs
- *    Resolution (module/helpers/reaction-resolve.mjs).
+ *  - Evade, in each crawler's section: rolls every Evade it needs (p.81).
+ *  - Intervene (p.82) and AI Reroll (p.61), on the row of the Check they
+ *    change.
+ *  - GM: Lock Results, which runs Resolution (module/helpers/
+ *    reaction-resolve.mjs).
+ * No stages (docs/reaction-card-redesign.md): everything is open until Lock
+ * Results. An Attack that moves off a crawler takes their Evade of it along
+ * (an Evade left covering nothing gives its Action back); one that lands on
+ * a crawler who has Evaded is rolled with their Evade's choices - one Evade
+ * Action covers every Attack (p.81).
  * A Disadvantaged Attack's free Evade (p.61, p.96) is rolled for its target
  * when the card is posted, and Taunt Rank 5+ rolls one against each Attack it
  * pulls (Advantage at Rank 15).
@@ -24,6 +28,9 @@
  */
 import CarlDice, { extractNaturalD20 } from "../dice/dice.mjs";
 import { createCardMessage, esc } from "./chat-card.mjs";
+import {
+  checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, versusNum,
+} from "./status-rows.mjs";
 import { rerollFormula } from "../helpers/ai-favor.mjs";
 import { mobAttackRow } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
@@ -33,9 +40,9 @@ import { currentPhase } from "../helpers/combat-phases.mjs";
 import { declaredAttacks } from "../helpers/declarations.mjs";
 import { canAct, evadeIsFree, hasSpent, payAction, refundAction } from "../helpers/actions.mjs";
 import {
-  buildReactionState, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck, hitEvadable,
-  hitLabel, hitList, hitMissed, intervenableAllies, intervenableChecks, makeCheck, pullableAreaAttacks, pullableHits, rerollableChecks,
-  sectionsOf, tauntableMobs, decidingEvade,
+  buildReactionState, cardProgress, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck, hitEvadable,
+  hitLabel, hitList, hitStatus, idleEvaders, intervenableChecks, makeCheck, pullableAreaAttacks, pullableHits, rerollableChecks,
+  sectionCounts, sectionsOf, tauntableMobs, unevadedNames,
 } from "../helpers/reaction-state.mjs";
 
 const SCOPE = "carl-rpg";
@@ -264,20 +271,21 @@ export function applyOp(cardId, op, data, user) {
         case "evade": changed = await opEvade(state, data, owns); break;
         case "intervene": changed = await opIntervene(state, data, owns); break;
         case "reroll": changed = await opReroll(state, data, owns); break;
-        case "openEvades":
-          // "Last call" for Taunts and Catches (p.90): Evades open.
-          if (user.isGM && state.stage === "taunt") {
-            state.stage = "evade";
-            changed = true;
-          }
-          break;
       }
     } catch (err) {
       console.error(`CarlRPG | Reaction card: "${op}" failed`, err);
       return false;
     }
-    if (changed) await writeState(message, state);
-    return changed;
+    if (!changed) return false;
+    // An op that gave someone's Evade Action back can't be undone: putting
+    // the card back would restore an Evade whose Action is already refunded.
+    // An extra count on `rev` makes its undo record stale.
+    if (state.blockUndo) {
+      delete state.blockUndo;
+      state.rev = (state.rev ?? 0) + 1;
+    }
+    await writeState(message, state);
+    return true;
   });
 }
 
@@ -295,9 +303,11 @@ function crawlerEntry(state, uuid, name) {
 }
 
 async function opTaunt(state, { byUuid, byName, mobUuid, rank, check }, owns) {
-  if (state.stage !== "taunt" || !owns(byUuid)) return false;
+  if (!owns(byUuid)) return false;
   const mob = Object.values(state.attacks).find((a) => a.mobUuid === mobUuid);
-  if (!mob) return false;
+  // Nothing left to pull (all dodged since the Mob was picked): refused
+  // before it costs an Action.
+  if (!mob || !tauntableMobs(state, byUuid).some((m) => m.mobUuid === mobUuid)) return false;
   if (!(await payFor(state, byUuid, "CARLRPG.Reaction.Op.taunt"))) return false;
   const taunt = {
     id: foundry.utils.randomID(), order: state.nextOrder++, byUuid, byName: String(byName ?? "?"),
@@ -310,10 +320,12 @@ async function opTaunt(state, { byUuid, byName, mobUuid, rank, check }, owns) {
 }
 
 /**
- * A successful Taunt: every single-target Attack of that Mob moves onto the
- * taunter, its to-hit re-resolved for them (their Held, their vehicle seat),
- * and gets a free Evade when it is still Disadvantaged - or from Taunt Rank 5
- * ("a free Evade Check against each Taunted Attack"), with Advantage at 15.
+ * A successful Taunt: every single-target Attack of that Mob still landing
+ * moves onto the taunter, its to-hit re-resolved for them (their Held, their
+ * vehicle seat), and gets a free Evade when it is still Disadvantaged - or
+ * from Taunt Rank 5 ("a free Evade Check against each Taunted Attack"), with
+ * Advantage at 15. A taunter who has already Evaded rolls against the rest
+ * with that Evade; anyone whose Evade now covers nothing gets its Action back.
  * @param {object} state
  * @param {object} taunt
  */
@@ -334,6 +346,67 @@ async function pullTaunt(state, taunt) {
   }
   const free = pulled.filter((hit) => (hit.row.freeEvade || taunt.rank >= 5) && hitEvadable(hit));
   await rollFreeEvades(state, free, { advantage: taunt.rank >= 15 ? "advantage" : "normal" });
+  await evadeArrivals(state, pulled);
+  await refundIdleEvades(state);
+}
+
+/**
+ * Attacks that have landed on someone who already Evaded this round: rolled
+ * now with that Evade's choices (one Evade Action covers every Attack,
+ * p.81). One that can't be rolled (a Stunned crawler) stays incoming, and
+ * their Evade button comes back - free, the Action is spent.
+ * @param {object} state
+ * @param {object[]} hits
+ */
+async function evadeArrivals(state, hits) {
+  for (const hit of hits) {
+    const crawler = state.crawlers?.[crawlerKey(hit.targetUuid)];
+    if (!crawler?.evaded || !hitEvadable(hit)) continue;
+    const actor = actorFor(hit.targetUuid);
+    if (!actor) continue;
+    const result = await CarlDice.rollEvadeCheck(actor, {
+      difficulty: hit.row.difficulty, post: false, isAction: false, preset: presetFrom(crawler.evadePreset),
+    });
+    if (!result) continue;
+    showDice(result.roll);
+    hit.evade = { ...makeCheck("evade", result), auto: true };
+    await grantEvadeAdvantage(state, hit, hit.evade);
+  }
+}
+
+/**
+ * Give back the Evade Action of anyone whose Evade no longer covers any
+ * Attack - everything it rolled against moved away. It's as if they'd never
+ * Evaded: an Attack landing on them later needs a new Evade.
+ * @param {object} state
+ */
+async function refundIdleEvades(state) {
+  const combat = game.combats.get(state.combatId);
+  for (const crawler of idleEvaders(state)) {
+    const spent = crawler.evadeSpent;
+    Object.assign(crawler, { evaded: false, evadePreset: null, evadeSpent: null });
+    if (!spent || !combat) continue;
+    await refundAction(combat, spent.combatantId, spent.id);
+    state.spentActions = (state.spentActions ?? []).filter((s) => s.id !== spent.id);
+    state.blockUndo = true;
+  }
+}
+
+/** An Evade dialog's choices, as kept on the card (Sets as arrays). */
+function presetData(preset) {
+  const list = (value) => (value ? [...value].map(String) : null);
+  return {
+    advantage: ["advantage", "disadvantage"].includes(preset?.advantage) ? preset.advantage : "normal",
+    modifier: Number(preset?.modifier) || 0,
+    checked: list(preset?.checked) ?? [],
+    checkedDebuffs: list(preset?.checkedDebuffs),
+  };
+}
+
+/** The kept choices, as rollEvadeCheck's `preset` takes them. */
+function presetFrom(data) {
+  const kept = presetData(data);
+  return { ...kept, checked: new Set(kept.checked), checkedDebuffs: kept.checkedDebuffs ? new Set(kept.checkedDebuffs) : null };
 }
 
 /**
@@ -348,7 +421,7 @@ async function pullTaunt(state, taunt) {
  */
 async function opPullArea(state, { tauntId }) {
   const taunt = state.taunts?.[tauntId];
-  if (state.stage !== "taunt" || !taunt?.check?.success || taunt.areaPulled) return false;
+  if (!taunt?.check?.success || taunt.areaPulled) return false;
   const actor = actorFor(taunt.byUuid);
   const attackIds = pullableAreaAttacks(state, taunt.mobUuid, taunt.byUuid);
   if (!actor || !attackIds.length) return false;
@@ -379,33 +452,42 @@ async function opPullArea(state, { tauntId }) {
   taunt.spared = [...spared].filter((name) => name !== taunt.byName);
   const free = pulled.filter((hit) => (hit.row.freeEvade || taunt.rank >= 5) && hitEvadable(hit));
   await rollFreeEvades(state, free, { advantage: taunt.rank >= 15 ? "advantage" : "normal" });
+  await evadeArrivals(state, pulled);
+  await refundIdleEvades(state);
   return true;
 }
 
 async function opCatch(state, { byUuid, byName, hitId }, owns) {
-  if (state.stage !== "taunt" || !owns(byUuid)) return false;
+  if (!owns(byUuid)) return false;
   const hit = catchableHits(state, byUuid).find((h) => h.id === hitId);
   if (!hit) return false;
   if (!(await payFor(state, byUuid, "CARLRPG.Reaction.Op.catch"))) return false;
   const name = String(byName ?? "?");
-  Object.assign(hit, { caughtBy: { uuid: byUuid, name }, targetUuid: byUuid, targetName: name });
+  // The ally's failed Evade of it (if any) drops off: the Catcher takes it,
+  // and can't Evade it.
+  Object.assign(hit, { caughtBy: { uuid: byUuid, name }, targetUuid: byUuid, targetName: name, free: null, evade: null });
   crawlerEntry(state, byUuid, name);
+  await refundIdleEvades(state);
   return true;
 }
 
-async function opEvade(state, { uuid, checks }, owns) {
-  if (state.stage !== "evade" || !owns(uuid)) return false;
+async function opEvade(state, { uuid, checks, preset }, owns) {
+  if (!owns(uuid)) return false;
   const hits = evadableHitsFor(state, uuid);
-  const crawler = crawlerEntry(state, uuid, hits[0]?.targetName ?? "?");
-  if (crawler.evaded || !hits.length) return false;
-  // One Evade Action covers every Attack on them this round (p.81).
-  if (!(await payFor(state, uuid, "CARLRPG.Roll.Evade", { tag: "evade" }))) return false;
+  if (!hits.length) return false;
+  const crawler = crawlerEntry(state, uuid, hits[0].targetName ?? "?");
+  // One Evade Action covers every Attack on them this round (p.81) - a
+  // second Evade (an Attack that couldn't be rolled for them) is free.
+  const paid = await payFor(state, uuid, "CARLRPG.Roll.Evade", { tag: "evade" });
+  if (!paid) return false;
   for (const hit of hits) {
     if (!checks?.[hit.id]) continue;
     hit.evade = receivedCheck("evade", checks[hit.id]);
     await grantEvadeAdvantage(state, hit, hit.evade);
   }
   crawler.evaded = true;
+  crawler.evadePreset = presetData(preset);
+  if (paid.spent) crawler.evadeSpent = paid.spent;
   return true;
 }
 
@@ -445,7 +527,7 @@ async function opReroll(state, { ref, naturalRoll, total, roll, breakdown }, own
 
 /**
  * After an Intervene or reroll: a Taunt that became a Success pulls its
- * Mob's Attacks now; a great Evade earns its Advantage.
+ * Mob's Attacks still landing now; a great Evade earns its Advantage.
  */
 async function afterCheckChanged(state, entry, check, wasSuccess) {
   if (entry.ref.type === "taunt") {
@@ -469,12 +551,14 @@ const opBefore = new WeakMap();
  * @param {string} uuid  Who acts.
  * @param {string} labelKey
  * @param {{tag?: string}} [options]
- * @returns {Promise<boolean>}
+ * @returns {Promise<{spent: {combatantId: string, id: string}|null}|false>}
+ *   false: refused. `spent`: the Action spent here, if one was.
  */
 async function payFor(state, uuid, labelKey, { tag = null } = {}) {
   const actor = actorFor(uuid);
-  if (!actor) return true;
-  if (tag === "evade" ? evadeIsFree(actor) : (tag && hasSpent(actor, tag))) return true;
+  const free = { spent: null };
+  if (!actor) return free;
+  if (tag === "evade" ? (evadeIsFree(actor) || hasSpent(actor, tag)) : (tag && hasSpent(actor, tag))) return free;
   // Undoing it puts the card back as it was before this op - if nothing
   // has changed on it since (helpers/action-undo.mjs).
   const card = opBefore.get(state);
@@ -483,8 +567,10 @@ async function payFor(state, uuid, labelKey, { tag = null } = {}) {
   }] : [];
   const { paid, id, fight } = await payAction(actor, "other", game.i18n.localize(labelKey), { tag, undo });
   if (!paid) return false;
-  if (fight && id) (state.spentActions ??= []).push({ combatantId: fight.combatant.id, id });
-  return true;
+  if (!fight || !id) return free;
+  const spent = { combatantId: fight.combatant.id, id };
+  (state.spentActions ??= []).push(spent);
+  return { spent };
 }
 
 function sameRef(a, b) {
@@ -521,36 +607,39 @@ async function pickReactor(list, title) {
   return list.find((r) => r.uuid === uuid) ?? null;
 }
 
-/** "Wren: Evade vs. Goblin's Bite (16)" for a Check picker. */
-function checkLabel(state, entry) {
-  const i18n = game.i18n;
-  const what = entry.ref.type === "taunt"
-    ? i18n.format("CARLRPG.Reaction.TauntOf", { mob: entry.taunt.mobName })
-    : i18n.format(entry.ref.which === "free" ? "CARLRPG.Reaction.FreeEvadeOf" : "CARLRPG.Reaction.EvadeOf",
-      { attack: hitLabel(state, entry.hit) });
-  return `${entry.ownerName}: ${what} - ${entry.check.total}`;
+/* -------------------------------------------- */
+/*  What this viewer can do                     */
+/* -------------------------------------------- */
+
+/** This viewer's crawlers who could Taunt now. */
+function taunters(state) {
+  return reactors(state).filter((r) => skillOf(r.actor, "Taunt") && tauntableMobs(state, r.uuid).length);
 }
 
-/** The buttons this viewer gets on this card. */
-function availableOps(state) {
-  if (!state || state.locked) return [];
-  const mine = reactors(state);
-  const ops = [];
-  if (state.stage === "taunt") {
-    if (mine.some((r) => skillOf(r.actor, "Taunt") && tauntableMobs(state, r.uuid).length)) ops.push("taunt");
-    if (mine.some((r) => (skillOf(r.actor, "Catcher")?.rank ?? 0) >= 1 && catchableHits(state, r.uuid).length)) ops.push("catch");
-  } else if (mine.some((r) => !state.crawlers[crawlerKey(r.uuid)]?.evaded && evadableHitsFor(state, r.uuid).length)) {
-    ops.push("evade");
-  }
-  if (mine.some((r) => intervenableChecks(state, r.uuid).length)) ops.push("intervene");
-  if (mine.some((r) => r.actor.type === "character" && (r.actor.system.details?.aiFavor ?? 0) >= 1
-    && rerollableChecks(state, r.uuid).length)) ops.push("reroll");
-  if (game.user.isGM && state.stage === "taunt") ops.push("openEvades");
-  return ops;
+/** This viewer's crawlers who could Catch now (Catcher Rank 1+). */
+function catchers(state) {
+  return reactors(state).filter((r) => (skillOf(r.actor, "Catcher")?.rank ?? 0) >= 1 && catchableHits(state, r.uuid).length);
+}
+
+/** This viewer's crawler whose section this is, if they have Attacks to Evade. */
+function evaderFor(state, uuid) {
+  if (!evadableHitsFor(state, uuid).length) return null;
+  return reactors(state).find((r) => r.uuid === uuid) ?? null;
+}
+
+/** This viewer's crawlers who could Intervene on this Check (not their own). */
+function helpersFor(state, ref) {
+  return reactors(state).filter((r) => intervenableChecks(state, r.uuid).some((c) => sameRef(c.ref, ref)));
+}
+
+/** This viewer's crawler who could AI Reroll this Check: its own, with AI Favor. */
+function rerollerFor(state, ref) {
+  return reactors(state).find((r) => r.actor.type === "character" && (r.actor.system.details?.aiFavor ?? 0) >= 1
+    && rerollableChecks(state, r.uuid).some((c) => sameRef(c.ref, ref))) ?? null;
 }
 
 async function onTaunt(message, state) {
-  const list = reactors(state).filter((r) => skillOf(r.actor, "Taunt") && tauntableMobs(state, r.uuid).length);
+  const list = taunters(state);
   const taunter = await pickReactor(list, game.i18n.localize("CARLRPG.Reaction.Op.taunt"));
   if (!taunter || !canAct(taunter.actor, "other")) return;
   const { item, rank } = skillOf(taunter.actor, "Taunt");
@@ -586,22 +675,23 @@ async function onTaunt(message, state) {
 }
 
 async function onCatch(message, state) {
-  const list = reactors(state).filter((r) => (skillOf(r.actor, "Catcher")?.rank ?? 0) >= 1 && catchableHits(state, r.uuid).length);
-  const catcher = await pickReactor(list, game.i18n.localize("CARLRPG.Reaction.Op.catch"));
+  const catcher = await pickReactor(catchers(state), game.i18n.localize("CARLRPG.Reaction.Op.catch"));
   if (!catcher || !canAct(catcher.actor, "other")) return;
   const hitId = await pick(game.i18n.localize("CARLRPG.Reaction.Op.catch"), game.i18n.localize("CARLRPG.Reaction.WhichAttack"),
     catchableHits(state, catcher.uuid).map((hit) => ({ value: hit.id, label: hitLabel(state, hit) })));
   if (hitId) await sendOp(message, "catch", { byUuid: catcher.uuid, byName: catcher.name, hitId });
 }
 
-async function onEvade(message, state) {
-  const list = reactors(state).filter((r) => !state.crawlers[crawlerKey(r.uuid)]?.evaded && evadableHitsFor(state, r.uuid).length);
-  const evader = await pickReactor(list, game.i18n.localize("CARLRPG.Reaction.Op.evade"));
+/**
+ * A section's Evade: one Evade Action, a separate Check against each Attack
+ * (p.81) - one dialog, then the same choices for the rest. Only the first
+ * counts as the crawler's Action for "next Action" Debuffs. The choices go
+ * to the card too, for Attacks that land on them later.
+ */
+async function onEvade(message, state, uuid) {
+  const evader = evaderFor(state, uuid);
   if (!evader) return;
-  if (!evadeIsFree(evader.actor) && !canAct(evader.actor, "other")) return;
-  // One Evade Action, a separate Check against each Attack (p.81): one
-  // dialog, then the same choices for the rest. Only the first counts as the
-  // crawler's Action for "next Action" Debuffs.
+  if (!evadeIsFree(evader.actor) && !hasSpent(evader.actor, "evade") && !canAct(evader.actor, "other")) return;
   const hits = evadableHitsFor(state, evader.uuid);
   const checks = {};
   let preset = null;
@@ -620,44 +710,42 @@ async function onEvade(message, state) {
     showDice(result.roll);
     checks[hit.id] = checkPayload(result);
   }
-  await sendOp(message, "evade", { uuid: evader.uuid, checks });
+  await sendOp(message, "evade", { uuid: evader.uuid, checks, preset: presetData(preset) });
 }
 
-async function onIntervene(message, state) {
-  const list = reactors(state).filter((r) => intervenableChecks(state, r.uuid).length);
+/** A row's Intervene: pick who (if several), roll their d6, send it. */
+async function onIntervene(message, state, ref) {
   const title = game.i18n.localize("CARLRPG.Reaction.Op.intervene");
-  const helper = await pickReactor(list, title);
+  const helper = await pickReactor(helpersFor(state, ref), title);
   if (!helper || !canAct(helper.actor, "other")) return;
-  // Who to help, then which of their Checks.
-  const allyUuid = await pick(title, game.i18n.localize("CARLRPG.Reaction.WhichAlly"),
-    intervenableAllies(state, helper.uuid).map((a) => ({ value: a.uuid, label: a.name })));
-  if (!allyUuid) return;
-  const options = intervenableChecks(state, helper.uuid).filter((c) => c.ownerUuid === allyUuid);
-  const index = await pick(title, game.i18n.localize("CARLRPG.Reaction.WhichCheck"),
-    options.map((c, i) => ({ value: String(i), label: checkLabel(state, c) })));
-  const target = options[Number(index)];
-  if (!target) return;
+  const owner = checkList(state).find((c) => sameRef(c.ref, ref));
   const roll = await new Roll("1d6").evaluate();
   showDice(roll);
-  ui.notifications.info(game.i18n.format("CARLRPG.Reaction.Intervened", { name: helper.name, value: roll.total, target: target.ownerName }));
-  await sendOp(message, "intervene", { byUuid: helper.uuid, byName: helper.name, ref: target.ref, value: roll.total });
+  ui.notifications.info(game.i18n.format("CARLRPG.Reaction.Intervened", { name: helper.name, value: roll.total, target: owner?.ownerName ?? "?" }));
+  await sendOp(message, "intervene", { byUuid: helper.uuid, byName: helper.name, ref, value: roll.total });
 }
 
-async function onReroll(message, state) {
-  const options = reactors(state)
-    .filter((r) => r.actor.type === "character" && (r.actor.system.details?.aiFavor ?? 0) >= 1)
-    .flatMap((r) => rerollableChecks(state, r.uuid));
-  const index = await pick(game.i18n.localize("CARLRPG.Reaction.Op.reroll"), game.i18n.localize("CARLRPG.Reaction.WhichCheck"),
-    options.map((c, i) => ({ value: String(i), label: checkLabel(state, c) })));
-  const target = options[Number(index)];
-  if (!target) return;
-  const { check } = target;
+/** A row's AI Reroll: the d20 again with the rest of the old total. */
+async function onReroll(message, state, ref) {
+  if (!rerollerFor(state, ref)) return;
+  const check = checkAt(state, ref);
+  if (!check) return;
   const roll = await new Roll(rerollFormula({ formula: check.formula, natural: check.natural, total: check.base })).evaluate();
   showDice(roll);
   await sendOp(message, "reroll", {
-    ref: target.ref, naturalRoll: extractNaturalD20(roll), total: roll.total, roll: roll.toJSON(),
+    ref, naturalRoll: extractNaturalD20(roll), total: roll.total, roll: roll.toJSON(),
     breakdown: game.i18n.format("CARLRPG.Reaction.RerollBreakdown", { formula: roll.formula, total: roll.total }),
   });
+}
+
+/** A row's Check reference, from its button. */
+function refOf(button) {
+  try {
+    const ref = JSON.parse(button.dataset.ref ?? "null");
+    return ref && typeof ref === "object" ? ref : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -667,7 +755,9 @@ async function onReroll(message, state) {
  * @param {HTMLElement} button
  */
 async function onReactionButton(event, message, button) {
+  // A row's icon sits in its expander's summary: don't toggle it too.
   event.preventDefault();
+  event.stopPropagation();
   const state = message.getFlag(SCOPE, "reaction");
   const op = button.dataset.op;
   if (!state || state.locked) return;
@@ -680,16 +770,14 @@ async function onReactionButton(event, message, button) {
     if (game.user.isGM) await sendOp(message, "pullArea", { tauntId: button.dataset.tauntId });
     return;
   }
-  if (!availableOps(state).includes(op)) return;
   button.disabled = true;
   try {
     switch (op) {
-      case "taunt": await onTaunt(message, state); break;
-      case "catch": await onCatch(message, state); break;
-      case "evade": await onEvade(message, state); break;
-      case "intervene": await onIntervene(message, state); break;
-      case "reroll": await onReroll(message, state); break;
-      case "openEvades": await sendOp(message, "openEvades", {}); break;
+      case "taunt": if (taunters(state).length) await onTaunt(message, state); break;
+      case "catch": if (catchers(state).length) await onCatch(message, state); break;
+      case "evade": await onEvade(message, state, button.dataset.uuid); break;
+      case "intervene": if (refOf(button)) await onIntervene(message, state, refOf(button)); break;
+      case "reroll": if (refOf(button)) await onReroll(message, state, refOf(button)); break;
     }
   } finally {
     button.disabled = false;
@@ -703,133 +791,156 @@ export const reactionActionEntries = [{ action: "reactionCard", custom: true, on
 /*  Drawing the card                            */
 /* -------------------------------------------- */
 
-const OP_ICONS = {
-  taunt: "fa-bullhorn", catch: "fa-hand", evade: "fa-person-running", intervene: "fa-handshake-angle",
-  reroll: "fa-rotate", openEvades: "fa-forward", lock: "fa-lock",
-};
-
 /**
- * Which roll breakdowns this client has open, by `messageId:checkKey`. The
+ * Which rows' expanders this client has open, by `messageId:rowKey`. The
  * card is redrawn on every change, which would otherwise close them.
  * @type {Set<string>}
  */
-const openChecks = new Set();
+const openRows = new Set();
 
-/**
- * One Check, collapsed to its result; expands to its roll.
- * @param {object|null} check
- * @param {string} label
- * @param {string} key  Stable per Check on the card ("hit:<id>:evade", "taunt:<id>").
- * @param {string} messageId
- */
-function renderCheck(check, label, key, messageId) {
-  const i18n = game.i18n;
-  if (!check) return "";
-  const degree = i18n.localize(CARLRPG.degreesOfSuccess[check.degree] ?? check.degree);
-  const css = check.success ? "hit" : ["criticalFail", "majorFail"].includes(check.degree) ? "miss" : "warn";
-  const details = [];
-  details.push(`<div>${esc(check.breakdown || "")}</div>`);
-  const dice = rolledD20s(check.roll);
-  if (dice) details.push(`<div>${esc(i18n.format("CARLRPG.Reaction.Dice", { dice }))}</div>`);
-  for (const i of check.interventions ?? []) {
-    details.push(`<div>${esc(i18n.format("CARLRPG.Reaction.InterveneLine", { name: i.byName, value: i.value }))}</div>`);
+
+/** A row's Intervene and AI Reroll icons, for this viewer. */
+function checkActions(state, ref) {
+  if (!ref || state.locked) return "";
+  const data = { action: "reactionCard", ref: JSON.stringify(ref) };
+  const acts = [];
+  if (rerollerFor(state, ref)) acts.push(iconButton("fa-dice-d20", game.i18n.localize("CARLRPG.Reaction.Op.reroll"), { ...data, op: "reroll" }));
+  // Only where a d6 could still change the result (the op itself allows any).
+  if (d6CouldChange(checkAt(state, ref), { taunt: ref.type === "taunt" }) && helpersFor(state, ref).length) {
+    acts.push(iconButton("fa-handshake-angle", game.i18n.localize("CARLRPG.Intervene.Button"), { ...data, op: "intervene" }));
   }
-  if (check.aiRerolled) {
-    details.push(`<div>${esc(i18n.format("CARLRPG.Reaction.RerolledFrom", { total: check.aiRerolled.base, natural: check.aiRerolled.natural ?? "-" }))}</div>`);
-  }
-  const vs = check.difficulty === null || check.difficulty === undefined ? "" : ` ${esc(i18n.format("CARLRPG.Reaction.Vs", { difficulty: check.difficulty }))}`;
-  const tags = [
-    (check.interventions ?? []).length ? `<i class="fas fa-handshake-angle" data-tooltip="${esc(i18n.localize("CARLRPG.Reaction.Op.intervene"))}"></i>` : "",
-    check.aiRerolled ? `<i class="fas fa-rotate" data-tooltip="${esc(i18n.localize("CARLRPG.Reaction.Op.reroll"))}"></i>` : "",
-  ].join("");
-  const open = openChecks.has(`${messageId}:${key}`) ? " open" : "";
-  return `<details class="carl-check" data-check-key="${esc(key)}"${open}>
-    <summary><span class="carl-check-kind">${esc(label)}</span> <strong>${esc(check.total)}</strong>${vs}
-      <span class="carl-check-degree ${css}">${esc(degree)}</span>${tags}</summary>
-    <div class="carl-check-detail">${details.join("")}</div>
-  </details>`;
+  return acts.join("");
 }
 
-/** "7, 15" - the d20s a stored Roll rolled. */
-function rolledD20s(rollData) {
-  const term = rollData?.terms?.find((t) => t.faces === 20);
-  const results = term?.results?.map((r) => r.result);
-  return results?.length ? results.join(", ") : "";
+/** "<strong>Ghoul</strong> · Bite", and the scroll icon when it has printed effect text. */
+function attackWhat(attack) {
+  return `<strong>${esc(attack.mobName ?? "?")}</strong>`;
+}
+
+/**
+ * The line under a row's Mob name: its Attack and the Evade it calls for
+ * ("Bite · Evade 15"), so the name keeps the row's width.
+ * @param {object} attack
+ * @param {number|null} [difficulty]  The Evade target, where there is one.
+ * @returns {string[]}
+ */
+export function attackLine(attack, difficulty = null) {
+  const line = [attack?.attackName ?? "?"];
+  if (difficulty !== null && difficulty !== undefined) line.push(game.i18n.format("CARLRPG.Reaction.Sub.evade", { difficulty }));
+  return line;
+}
+
+function effectFlag(attack) {
+  return attack?.effect
+    ? `<i class="fas fa-scroll carl-status-flag" data-tooltip="${esc(game.i18n.localize("CARLRPG.Reaction.HasEffect"))}"></i>` : "";
 }
 
 /** One Attack on one defender. */
-function renderHit(state, hit, messageId) {
+function hitRow(state, hit, messageId) {
   const i18n = game.i18n;
   const attack = state.attacks[hit.attackId] ?? {};
-  const tags = [];
-  if (attack.isArea) tags.push(i18n.localize("CARLRPG.Targets.AreaAttack"));
-  if (hit.row.zone === "splash") tags.push(i18n.localize("CARLRPG.Targets.Splash"));
-  if (hit.tauntedBy) tags.push(i18n.format("CARLRPG.Reaction.TauntedFrom", { name: hit.originalName }));
-  if (hit.caughtBy) tags.push(i18n.format("CARLRPG.Reaction.CaughtFor", { name: hit.originalName }));
+  const { status, check, which } = hitStatus(state, hit);
+  // The Evade target: a creature that Evades, and isn't Caught (it can't).
+  const evadeTarget = hit.row?.isCharacter && hit.row?.hit && !hit.caughtBy ? (check?.difficulty ?? hit.row.difficulty) : null;
+  const sub = attackLine(attack, evadeTarget);
+  if (attack.isArea) sub.push(i18n.localize("CARLRPG.Reaction.Sub.area"));
+  if (hit.row?.zone === "splash") sub.push(i18n.localize("CARLRPG.Targets.Splash"));
+  if (hit.tauntedBy) sub.push(i18n.format("CARLRPG.Reaction.Sub.from", { name: hit.originalName }));
+  if (hit.caughtBy) sub.push(i18n.format("CARLRPG.Reaction.CaughtFor", { name: hit.originalName }));
+  if (which === "free") sub.push(check.success ? i18n.localize("CARLRPG.Reaction.FreeEvade") : i18n.format("CARLRPG.Reaction.Sub.freeFailed", { total: check.total }));
+  if (which === "evade" && check.degree === "nearMissFail") sub.push(i18n.localize(CARLRPG.degreesOfSuccess.nearMissFail));
+  sub.push(...checkNotes(check));
+  if (check?.auto) sub.push(i18n.localize("CARLRPG.Reaction.Sub.auto"));
+  if (status === "hit" && hit.row?.isCharacter && !hit.evade) sub.push(i18n.localize("CARLRPG.Reaction.Sub.notEvaded"));
 
-  let status;
-  if (!hit.row.hit) status = i18n.localize("CARLRPG.Reaction.Status.Miss");
-  else if (hit.caughtBy) status = i18n.localize("CARLRPG.Reaction.Status.Caught");
-  else if (hitMissed(hit)) status = i18n.localize("CARLRPG.Reaction.Status.FreeEvaded");
-  else {
-    const deciding = decidingEvade(hit);
-    if (deciding?.success) status = i18n.localize(attack.isArea ? "CARLRPG.Reaction.Status.EvadedHalf" : "CARLRPG.Reaction.Status.Evaded");
-    else if (hit.evade) status = i18n.localize("CARLRPG.Reaction.Status.Hit");
-    else status = i18n.localize(hit.row.isCharacter ? "CARLRPG.Reaction.Status.Incoming" : "CARLRPG.Reaction.Status.Hit");
+  // The roll's total; its target is on the line under the name.
+  const num = check && (which === "evade" || status !== "incoming") ? `<b>${esc(check.total)}</b>` : "";
+  const key = `hit:${hit.id}`;
+  const detail = `${checkDetail(check)}${attackDetails(attack)}`;
+  return statusRow({
+    chip: statusChip(status), what: attackWhat(attack), flag: effectFlag(attack), sub, num,
+    acts: which ? checkActions(state, { type: "hit", hitId: hit.id, which }) : "",
+    detail, key, open: openRows.has(`${messageId}:${key}`),
+  });
+}
+
+/** An Attack that has moved off this crawler: struck through, saying where it went. */
+function movedRow(state, hit) {
+  const i18n = game.i18n;
+  const attack = state.attacks[hit.attackId] ?? {};
+  const where = hit.caughtBy
+    ? i18n.format("CARLRPG.Reaction.Sub.caughtBy", { name: hit.targetName })
+    : i18n.format("CARLRPG.Reaction.Sub.tauntedTo", { name: hit.targetName });
+  return statusRow({ chip: statusChip("moved"), what: attackWhat(attack), sub: [...attackLine(attack), where], ghost: true });
+}
+
+/** One Taunt Check - with, for the GM, "Pull Area Attacks too" while it can. */
+function tauntRow(state, taunt, messageId) {
+  const i18n = game.i18n;
+  const success = taunt.check.success;
+  const sub = [success
+    ? i18n.format("CARLRPG.Reaction.Sub.pulled", { count: taunt.pulled.length })
+    : i18n.localize("CARLRPG.StatusChip.tauntFailed")];
+  if (taunt.areaPulled) {
+    sub.push(taunt.spared?.length
+      ? i18n.format("CARLRPG.Reaction.AreaPulledSpared", { name: taunt.byName, spared: taunt.spared.join(", ") })
+      : i18n.format("CARLRPG.Reaction.AreaPulled", { name: taunt.byName }));
   }
-  const difficulty = hit.row.isCharacter && hit.row.difficulty !== null && hit.row.difficulty !== undefined
-    ? ` <span class="carl-hit-difficulty">${esc(i18n.format("CARLRPG.Reaction.EvadeDifficulty", { difficulty: hit.row.difficulty }))}</span>` : "";
-  return `<li class="carl-hit">
-    <div class="carl-hit-head">
-      <span class="carl-hit-attack"><strong>${esc(attack.mobName)}</strong>: ${esc(attack.attackName)}${difficulty}</span>
-      <span class="carl-hit-status">${esc(status)}</span>
-    </div>
-    ${tags.length ? `<div class="carl-hit-tags">${tags.map((t) => `<span>${esc(t)}</span>`).join("")}</div>` : ""}
-    ${attackDetails(attack)}
-    ${renderCheck(hit.free, i18n.localize("CARLRPG.Reaction.FreeEvade"), `hit:${hit.id}:free`, messageId)}
-    ${renderCheck(hit.evade, i18n.localize("CARLRPG.Roll.Evade"), `hit:${hit.id}:evade`, messageId)}
-  </li>`;
+  sub.push(...checkNotes(taunt.check));
+  const canPullArea = game.user.isGM && !state.locked && success && !taunt.areaPulled
+    && pullableAreaAttacks(state, taunt.mobUuid, taunt.byUuid).length;
+  const pullArea = canPullArea
+    ? `<button type="button" class="carl-pull-area" data-action="reactionCard" data-op="pullArea" data-taunt-id="${esc(taunt.id)}"
+        data-tooltip="${esc(i18n.format("CARLRPG.Reaction.PullAreaHint", { name: taunt.byName }))}">
+        <i class="fa-solid fa-burst"></i> ${esc(i18n.localize("CARLRPG.Reaction.PullArea"))}</button>`
+    : "";
+  const key = `taunt:${taunt.id}`;
+  return statusRow({
+    chip: statusChip(success ? "taunt" : "tauntFailed", success ? {} : { label: i18n.localize("CARLRPG.StatusChip.taunt") }),
+    what: `<strong>${esc(taunt.mobName)}</strong>`, sub,
+    num: versusNum(taunt.check.total, taunt.check.difficulty),
+    acts: checkActions(state, { type: "taunt", tauntId: taunt.id }),
+    detail: checkDetail(taunt.check), key, open: openRows.has(`${messageId}:${key}`),
+    after: pullArea,
+  });
+}
+
+/** A section's heading summary: what's still bad or pending, or "All clear". */
+function sectionSummary(state, section) {
+  const i18n = game.i18n;
+  const counts = sectionCounts(state, section);
+  const parts = [];
+  if (section.taunts.length) parts.push(i18n.localize("CARLRPG.StatusChip.taunt"));
+  for (const key of ["hit", "incoming", "caught", "half"]) {
+    if (counts[key]) parts.push(i18n.format(`CARLRPG.Reaction.Sum.${key}`, { n: counts[key] }));
+  }
+  const pending = counts.hit + counts.incoming + counts.caught + counts.half;
+  if (!pending && (section.hits.length || section.moved.length)) parts.push(i18n.localize("CARLRPG.Reaction.Sum.clear"));
+  if (!state.locked && state.crawlers?.[crawlerKey(section.uuid)]?.evaded) parts.push(i18n.localize("CARLRPG.Reaction.EvadeUsed"));
+  return parts.join(" · ");
+}
+
+/** A section's Evade button, for whoever owns that crawler. */
+function sectionEvade(state, section) {
+  if (state.locked || !evaderFor(state, section.uuid)) return "";
+  const count = evadableHitsFor(state, section.uuid).length;
+  return `<button type="button" class="carl-status-button is-primary" data-action="reactionCard" data-op="evade" data-uuid="${esc(section.uuid)}">
+    <i class="fas fa-person-running"></i> ${esc(game.i18n.format("CARLRPG.Reaction.EvadeButton", { count }))}</button>`;
 }
 
 /**
  * A Mob Attack's printed range and effect ("the target is Poisoned"), as its
- * stat block gives them - on-hit effects are the GM's to apply, so they stay
- * in view through Reaction and Resolution. Shared with the Damage card.
+ * stat block gives them - on-hit effects are the GM's to apply. In the row's
+ * expander here; shared with the Damage card.
  * @param {{effect?: string, range?: string}} attack
  * @returns {string}
  */
 export function attackDetails(attack) {
   const i18n = game.i18n;
   const parts = [];
-  if (attack?.range) parts.push(`<span class="carl-attack-range">${esc(i18n.localize("CARLRPG.Attack.Range"))}: ${esc(attack.range)}</span>`);
-  if (attack?.effect) parts.push(`<span class="carl-attack-effect">${esc(attack.effect)}</span>`);
-  return parts.length ? `<div class="carl-attack-details">${parts.join("")}</div>` : "";
-}
-
-/** One Taunt Check - with, for the GM, "Pull Area Attacks too" while it can. */
-function renderTaunt(state, taunt, messageId) {
-  const i18n = game.i18n;
-  const result = taunt.check.success
-    ? i18n.format("CARLRPG.Reaction.TauntPulled", { mob: taunt.mobName, count: taunt.pulled.length })
-    : i18n.format("CARLRPG.Reaction.TauntFailed", { mob: taunt.mobName });
-  const canPullArea = game.user.isGM && !state.locked && state.stage === "taunt" && taunt.check.success
-    && !taunt.areaPulled && pullableAreaAttacks(state, taunt.mobUuid, taunt.byUuid).length;
-  const pullArea = canPullArea
-    ? `<button type="button" class="carl-pull-area" data-action="reactionCard" data-op="pullArea" data-taunt-id="${esc(taunt.id)}"
-        data-tooltip="${esc(i18n.format("CARLRPG.Reaction.PullAreaHint", { name: taunt.byName }))}">
-        <i class="fa-solid fa-burst"></i> ${esc(i18n.localize("CARLRPG.Reaction.PullArea"))}</button>`
-    : "";
-  const spared = taunt.areaPulled
-    ? `<p class="carl-hint">${esc(taunt.spared?.length
-      ? i18n.format("CARLRPG.Reaction.AreaPulledSpared", { name: taunt.byName, spared: taunt.spared.join(", ") })
-      : i18n.format("CARLRPG.Reaction.AreaPulled", { name: taunt.byName }))}</p>`
-    : "";
-  return `<li class="carl-taunt">
-    <div class="carl-hit-head"><span>${esc(i18n.format("CARLRPG.Reaction.TauntOf", { mob: taunt.mobName }))}</span>
-      <span class="carl-hit-status">${esc(result)}</span></div>
-    ${renderCheck(taunt.check, game.i18n.localize("CARLRPG.Reaction.Op.taunt"), `taunt:${taunt.id}`, messageId)}
-    ${spared}${pullArea}
-  </li>`;
+  if (attack?.range) parts.push(`<div class="carl-attack-range">${esc(i18n.localize("CARLRPG.Attack.Range"))}: ${esc(attack.range)}</div>`);
+  if (attack?.effect) parts.push(`<div class="carl-attack-effect">${esc(attack.effect)}</div>`);
+  return parts.join("");
 }
 
 /**
@@ -864,8 +975,11 @@ function sceneToken(uuid) {
 }
 
 /**
- * Draw a Reaction card's sections and buttons, for whoever is viewing it.
- * Called from module/chat/chat-listener.mjs on every render.
+ * Draw a Reaction card for whoever is viewing it (docs/reaction-card-
+ * redesign.md): the progress badge in its header, who it's waiting on, a
+ * section per creature with a row per Attack or Taunt, and the footer's
+ * Taunt, Catch and (GM) Lock Results. Called from module/chat/
+ * chat-listener.mjs on every render.
  * @param {ChatMessage} message
  * @param {HTMLElement} html
  */
@@ -874,37 +988,49 @@ export function decorateReactionCard(message, html) {
   const state = message.getFlag(SCOPE, "reaction");
   if (!container || !state) return;
   const i18n = game.i18n;
-  const stage = state.locked ? "locked" : state.stage;
-  const sections = sectionsOf(state).map((section) => {
-    const evaded = state.crawlers[crawlerKey(section.uuid)]?.evaded;
-    return `<section class="carl-reaction-section">
-      <header>${esc(section.name)}${evaded ? ` <span class="carl-evaded-tag">${esc(i18n.localize("CARLRPG.Reaction.EvadeUsed"))}</span>` : ""}</header>
-      <ul class="plain">${section.taunts.map((taunt) => renderTaunt(state, taunt, message.id)).join("")}${section.hits.map((hit) => renderHit(state, hit, message.id)).join("")}</ul>
-    </section>`;
-  }).join("");
 
-  const ops = new Set(availableOps(state));
-  const order = ["taunt", "catch", "evade", "intervene", "reroll"];
-  const buttons = order.filter((op) => ops.has(op) || state.locked).map((op) => button(op, state.locked || !ops.has(op)));
-  if (game.user.isGM) {
-    if (ops.has("openEvades")) buttons.push(button("openEvades", false));
-    buttons.push(button("lock", !!state.locked));
+  // The header: "3 of 5 settled", or Locked (and Resolution's name).
+  const { settled, total } = cardProgress(state);
+  if (state.locked) {
+    headerProgress(html, i18n.localize("CARLRPG.Reaction.Locked"), { locked: true, subtitle: i18n.localize("CARLRPG.Phase.Step.resolve") });
+  } else {
+    headerProgress(html, i18n.format("CARLRPG.Reaction.Progress", { settled, total }));
   }
-  container.innerHTML = `<div class="carl-reaction-stage" data-stage="${esc(stage)}">${esc(i18n.localize(`CARLRPG.Reaction.Stage.${stage}`))}</div>
-    ${sections}
-    ${buttons.length ? `<div class="carl-reaction-buttons">${buttons.join("")}</div>` : ""}`;
-  // Remember which breakdowns this viewer opens, so a redraw keeps them open.
-  // "toggle" doesn't bubble - listen in the capture phase.
-  container.addEventListener("toggle", (event) => {
-    const key = event.target?.dataset?.checkKey;
-    if (!key) return;
-    const id = `${message.id}:${key}`;
-    if (event.target.open) openChecks.add(id);
-    else openChecks.delete(id);
-  }, true);
+
+  let lead = "";
+  if (state.locked) {
+    lead = `<div class="carl-status-note">${esc(i18n.localize("CARLRPG.Reaction.LockedNote"))}</div>`;
+  } else {
+    const waiting = unevadedNames(state);
+    if (waiting.length) {
+      lead = `<div class="carl-status-waiting"><i class="fas fa-person-running" aria-hidden="true"></i>
+        <span>${esc(i18n.localize("CARLRPG.Reaction.WaitingOn"))} ${waiting.map((n) => `<b>${esc(n)}</b>`).join(" · ")}</span></div>`;
+    }
+  }
+
+  const sections = sectionsOf(state).map((section) => statusSection({
+    name: section.name,
+    summary: sectionSummary(state, section),
+    rows: [
+      ...section.taunts.map((taunt) => tauntRow(state, taunt, message.id)),
+      ...section.moved.map((hit) => movedRow(state, hit)),
+      ...section.hits.map((hit) => hitRow(state, hit, message.id)),
+    ],
+    actions: sectionEvade(state, section),
+  })).join("");
+
+  const foot = [];
+  if (!state.locked) {
+    if (taunters(state).length) foot.push(footButton("taunt", "fa-bullhorn"));
+    if (catchers(state).length) foot.push(footButton("catch", "fa-hand"));
+    if (game.user.isGM) foot.push(`<span class="carl-status-gm">${footButton("lock", "fa-lock")}</span>`);
+  }
+  container.innerHTML = `${lead}${sections}${foot.length ? `<div class="carl-status-foot">${foot.join("")}</div>` : ""}`;
+  rememberOpenRows(container, message.id, openRows);
 }
 
-function button(op, disabled) {
-  return `<button type="button" data-action="reactionCard" data-op="${op}" ${disabled ? "disabled" : ""}>
-    <i class="fas ${OP_ICONS[op]}"></i> ${esc(game.i18n.localize(`CARLRPG.Reaction.Op.${op}`))}</button>`;
+/** A footer button. */
+function footButton(op, icon) {
+  return `<button type="button" class="carl-status-button" data-action="reactionCard" data-op="${op}">
+    <i class="fas ${icon}"></i> ${esc(game.i18n.localize(`CARLRPG.Reaction.Op.${op}`))}</button>`;
 }

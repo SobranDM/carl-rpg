@@ -17,7 +17,7 @@
 import CarlDice, { evaluateMobConstant } from "../dice/dice.mjs";
 import { currentPhase, phasedCombatFor } from "../helpers/combat-phases.mjs";
 import { declarationsByMob, describeDeclaration, removeDeclaration } from "../helpers/declarations.mjs";
-import { isAreaMobAttack } from "../helpers/area.mjs";
+import { mobAttacksOf } from "../helpers/mob-attacks.mjs";
 import { isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { actionBubbles } from "../helpers/actions.mjs";
 
@@ -71,12 +71,13 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
       name: token.name,
       img: actor.img,
       actions: actionsLeft(combat, actor),
-      attacks: (actor.system.attacks ?? []).map((attack, index) => ({
-        index,
-        name: attack.name || game.i18n.localize("CARLRPG.MobAttack.Unnamed"),
-        toHit: evaluateMobConstant(attack.toHit, floor),
-        damage: [attack.damage, attack.damageType].filter(Boolean).join(" "),
-        isArea: isAreaMobAttack(attack),
+      // Its Attacks (mobAttack items, module/helpers/mob-attacks.mjs).
+      attacks: mobAttacksOf(actor).map((item) => ({
+        id: item.id,
+        name: item.name || game.i18n.localize("CARLRPG.MobAttack.Unnamed"),
+        toHit: evaluateMobConstant(item.system.toHit, floor),
+        damage: [item.system.damage, item.system.damageType].filter(Boolean).join(" "),
+        isArea: !!item.system.isArea,
       })),
       declared: declarationsByMob(combat, { tokenUuid: token.document?.uuid, actorUuid: actor.uuid })
         .map((d) => ({ id: d.id, label: describeDeclaration(d) })),
@@ -86,8 +87,9 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * Insert into the column beside the sidebar, under the chat notifications,
-   * so the two stack rather than overlap.
+   * Insert into the column beside the sidebar, where it floats at the bottom
+   * over the chat notifications (_combat-phases.scss) instead of pushing them
+   * up.
    * @override
    */
   _insertElement(element) {
@@ -109,7 +111,7 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.NoTargets"));
       return;
     }
-    await CarlDice.rollMobAttack(entry.actor, Number(target.dataset.index), { skipDialog: event.shiftKey });
+    await CarlDice.rollMobAttack(entry.actor, target.dataset.attackId, { skipDialog: event.shiftKey });
   }
 
   /**

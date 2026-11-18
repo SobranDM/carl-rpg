@@ -13,6 +13,7 @@
 
 import { canvasToBlob, mapSceneData, renderMap, uploadMap } from "./maps.mjs";
 import { slugify } from "./scan.mjs";
+import { ensureListedAttacks } from "../helpers/mob-attacks.mjs";
 
 const FLAG = "pdfImport";
 
@@ -101,13 +102,21 @@ async function stampHashes(written, shapes, keyOf, update) {
   if (stamps.length) await update(stamps);
 }
 
-/** Create or update world documents of one class inside `folder`. */
-async function upsert(cls, folder, docs, book) {
+/**
+ * Create or update world documents of one class inside `folder`.
+ * @param {(doc: Document, entry: object) => Promise<void>} [afterWrite]  Run
+ *   for each document created or updated (an unchanged one too), with the
+ *   entry it was written from.
+ */
+async function upsert(cls, folder, docs, book, afterWrite = null) {
   const existing = new Map(folder.contents.map((d) => [`${d.type}:${d.name}`, d]));
   const creates = [];
   const updates = [];
+  const updated = [];
   const skipped = [];
+  const entries = new Map();
   for (const doc of dedupe(docs)) {
+    entries.set(`${doc.data.type}:${doc.name}`, doc);
     const data = {
       ...doc.data,
       folder: folder.id,
@@ -115,14 +124,41 @@ async function upsert(cls, folder, docs, book) {
     };
     const old = existing.get(`${data.type}:${data.name}`);
     if (old && editedSinceImport(old, doc.data)) skipped.push(old.name);
-    else if (old) updates.push({ ...data, _id: old.id });
-    else creates.push(data);
+    else if (old) {
+      updates.push({ ...data, _id: old.id });
+      updated.push(old);
+    } else creates.push(data);
   }
   const update = (stamps) => cls.updateDocuments(stamps);
   const keyOf = (d) => `${d.type}:${d.name}`;
-  if (creates.length) await stampHashes(await cls.createDocuments(creates), creates, keyOf, update);
+  // Every document written - an update that changed nothing isn't
+  // returned by updateDocuments, so the existing documents are used.
+  const written = [...updated];
+  if (creates.length) {
+    const made = await cls.createDocuments(creates);
+    written.push(...(made ?? []));
+    await stampHashes(made, creates, keyOf, update);
+  }
   if (updates.length) await stampHashes(await cls.updateDocuments(updates), updates, keyOf, update);
+  if (afterWrite) {
+    for (const doc of written) {
+      const entry = entries.get(keyOf(doc));
+      if (entry) await afterWrite(doc, entry);
+    }
+  }
   return { created: creates.length, updated: updates.length, skipped };
+}
+
+/**
+ * A parsed Mob's data with its Attacks taken off (`legacyAttacks`): they're
+ * written as `mobAttack` items after the Mob (module/helpers/mob-attacks.mjs),
+ * so a re-import replaces the ones it made before.
+ * @param {object} doc
+ * @returns {object}
+ */
+function withAttacksApart(doc) {
+  const { attacks = [], ...system } = doc.data?.system ?? {};
+  return { ...doc, legacyAttacks: attacks, data: { ...doc.data, system } };
 }
 
 async function importAchievements(folder, pages, book) {
@@ -224,8 +260,9 @@ export async function importBook({ title, found, kinds, maps, pdfDoc, onProgress
     results.mobs = await upsert(
       Actor.implementation,
       await getFolder("Actor", title),
-      found.mobs,
+      found.mobs.map(withAttacksApart),
       book,
+      (actor, entry) => ensureListedAttacks(actor, entry.legacyAttacks ?? []),
     );
   }
   if (kinds.includes("achievements") && found.achievements.length) {

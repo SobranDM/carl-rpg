@@ -176,16 +176,15 @@
     color: var(--carl-text-muted);
   }
 
-  // AI Favor reroll (module/chat/ai-favor-reroll.mjs): the button, the note
-  // on a reroll's own card, and the faded look of the card it replaced.
-  // ...and another crawler's Intervene (module/chat/check-revision.mjs).
-  .carl-ai-reroll,
-  .carl-intervene {
+  // A card's roll icons (module/chat/check-revision.mjs rollIcons): another
+  // crawler's Intervene (the handshake) and the Reroll (the d20), icons
+  // alone at the right of the footer, named in their tooltips. The note on
+  // a rerolled card, and the faded look of a card an old reroll replaced.
+  .carl-roll-icons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
     margin-top: 4px;
-
-    button {
-      width: 100%;
-    }
   }
 
   .carl-reroll-note {
@@ -380,40 +379,8 @@
       margin-bottom: 4px;
     }
 
-    .carl-target-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 4px 6px;
-      padding: 3px 0;
-      border-top: 1px solid var(--carl-border-soft-2);
-
-      .carl-target-name {
-        font-weight: bold;
-      }
-
-      .carl-target-zone {
-        font-size: 10px;
-        text-transform: uppercase;
-        padding: 0 4px;
-        border-radius: 3px;
-        border: 1px solid var(--carl-border-soft-2);
-      }
-
-      .carl-target-status {
-        flex: 1 1 100%;
-        font-size: 11px;
-        opacity: 0.85;
-      }
-
-      .carl-target-buttons {
-        display: flex;
-        gap: 4px;
-      }
-    }
-
-    .carl-row-evade,
-    .carl-row-apply,
+    // The rows themselves: _status-rows.scss. Cards posted before them
+    // still carry the old Apply All markup.
     .carl-apply-all {
       width: auto;
       font-size: 11px;
@@ -422,8 +389,9 @@
     }
 
     .carl-apply-all-row {
+      display: flex;
+      justify-content: flex-end;
       margin-top: 4px;
-      text-align: right;
     }
   }
 
@@ -616,5 +584,19 @@
     .carl-actor-picker-option {
       margin-left: 4px;
     }
+  }
+}
+
+// The Reroll button's source picker (module/chat/ai-favor-reroll.mjs), shown
+// when more than one reroll fits the roll (AI Favor and Fuzzy Dice).
+.carl-reroll-pick fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .carl-reroll-source {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 }

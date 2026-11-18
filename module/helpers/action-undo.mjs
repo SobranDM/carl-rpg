@@ -10,6 +10,7 @@
  *  - a card has already been acted on (damage applied, a target Evaded, a
  *    potion drunk, a Heal applied);
  *  - the Reaction card has changed since, or is locked;
+ *  - a row's Evade has been applied, its injury added, or Intervened on;
  *  - a declaration's Declaration Phase is over.
  * The GM can still add an Action from the tracker.
  *
@@ -23,6 +24,7 @@ import { declaredAttacks, removeDeclaration } from "./declarations.mjs";
 import { isCardLocked } from "../chat/taunt-card.mjs";
 import { withCard, writeState } from "../chat/reaction-card.mjs";
 import { applyRevision, interventionsOf, interveneOpen } from "../chat/check-revision.mjs";
+import { clearRowEvade, recoilSettledBy, rowAt, rowCheck, rowInterveneOpen } from "../chat/row-evade.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -71,9 +73,27 @@ export function undoBlocker(entry, spent = []) {
       }
       case "intervene": {
         const message = game.messages.get(record.messageId);
+        // On a row's Evade (an Attack card): that Check's d6s.
+        if (record.rowId) {
+          const check = rowCheck(rowAt(message, record.rowId), record.which);
+          if (!check?.interventions?.some((i) => i.id === record.id)) break;
+          if (!rowInterveneOpen(message, record.rowId, record.which)) return t("CardUsed");
+          break;
+        }
         // Gone (or the d6 already off): only the Action comes back.
         if (!message || !interventionsOf(message).some((i) => i.id === record.id)) break;
         if (!interveneOpen(message)) return t("CardUsed");
+        break;
+      }
+      case "rowEvade": {
+        // A row's paid Evade (module/chat/row-evade.mjs). Gone, or replaced
+        // by a later one: only the Action comes back.
+        const attack = game.messages.get(record.messageId);
+        const row = rowAt(attack, record.rowId);
+        const check = rowCheck(row, "evade");
+        if (!check || check.id !== record.checkId) break;
+        if (row.applied || row.injuryAdded || recoilSettledBy(attack, record.rowId)) return t("CardUsed");
+        if (check.interventions?.length) return t("InterveneFirst");
         break;
       }
       case "reaction": {
@@ -203,9 +223,16 @@ async function runRecord(record) {
       return;
     }
     case "intervene":
-      // The d6 off the card, and the card re-graded without it.
-      await applyRevision(record.messageId, "unintervene", { id: record.id }, game.user);
+      // The d6 off the card (or its row), and it re-graded without it.
+      await applyRevision(record.messageId, "unintervene", record.rowId
+        ? { id: record.id, rowId: record.rowId, which: record.which }
+        : { id: record.id }, game.user);
       return;
+    case "rowEvade": {
+      const message = game.messages.get(record.messageId);
+      if (message) await clearRowEvade(message, record.rowId, record.checkId);
+      return;
+    }
     case "declaration": {
       const combat = game.combats.get(record.combatId);
       // Withdrawing it gives back its Debuffs - and its Action (the same one).

@@ -9,6 +9,8 @@ import { declaredAttacks, recordDeclaration, removeDeclaration } from "../../hel
 import { DECLARED_MARK_NAME, declaredCounts, drawMark } from "../../helpers/declared-marks.mjs";
 import { CarlDeclareHud } from "../../apps/declare-hud.mjs";
 import CarlDice from "../../dice/dice.mjs";
+import { actionRecord, undoAction } from "../../helpers/actions.mjs";
+import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
 import {
   applyOp, decorateReactionCard, reactionActionEntries, reactionCardFor, tauntRange, tokenDistance,
 } from "../../chat/reaction-card.mjs";
@@ -333,6 +335,7 @@ export default function register(quench) {
             await hud.render({ force: true });
             await waitFor(() => button(), { message: "the HUD never showed the Attack" });
             assert.equal(hud.element.parentElement?.id, "ui-right-column-1", "beside the sidebar");
+            assert.equal(getComputedStyle(hud.element).position, "absolute", "floating over the chat notifications, not pushing them up");
             assert.include(button().textContent, "Bite");
 
             await withFakeTargets([], async () => {
@@ -345,6 +348,7 @@ export default function register(quench) {
               shiftClick(button());
               await waitFor(() => declaredAttacks(combat).length === 1, { message: "the click didn't declare" });
             });
+            assert.equal(declaredAttacks(combat)[0].attackId, mobAttacksOf(mob)[0].id, "it records the Attack item");
             await hud.render({ force: true });
             await waitFor(() => hud.element?.querySelector('[data-action="removeDeclaration"]'), { message: "no declared entry" });
             hud.element.querySelector('[data-action="removeDeclaration"]').click();
@@ -456,6 +460,11 @@ export default function register(quench) {
         const state = (card) => card.getFlag("carl-rpg", "reaction");
         const op = (card, name, data) => applyOp(card.id, name, data, game.user);
         const onlyHit = (card) => hitList(state(card))[0];
+        const of = (actor) => combat.combatants.find((c) => c.actor === actor);
+        const spentBy = (actor) => actionRecord(combat, of(actor).id).spent;
+        const hitOn = (card, actor) => hitList(state(card)).filter((h) => h.targetUuid === actor.uuid);
+        const taunt = (card, by, total) => op(card, "taunt", { byUuid: by.uuid, byName: by.name, mobUuid: mob.uuid, rank: 1, check: rolled(total, 12, 20) });
+        const preset = { advantage: "normal", modifier: 0, checked: [], checkedDebuffs: null };
 
         it("Start Reaction posts the card last in chat, one entry per Attack and target", async function () {
           await declareOn(pc1);
@@ -465,7 +474,7 @@ export default function register(quench) {
           const hits = hitList(state(card));
           assert.lengthOf(hits, 1);
           assert.equal(hits[0].targetUuid, pc1.uuid);
-          assert.equal(state(card).stage, "taunt");
+          assert.notProperty(state(card), "stage", "no stages");
           assert.isNull(hits[0].free, "not Disadvantaged: no free Evade");
         });
 
@@ -515,7 +524,6 @@ export default function register(quench) {
           const hit = onlyHit(card);
           assert.equal(hit.targetUuid, pc2.uuid);
           assert.equal(hit.caughtBy.uuid, pc2.uuid);
-          await op(card, "openEvades", {});
           assert.lengthOf(evadableHitsFor(state(card), pc2.uuid), 0, "the Catcher's Evade skips it");
           assert.lengthOf(evadableHitsFor(state(card), pc1.uuid), 0, "it's no longer pc1's");
         });
@@ -569,24 +577,78 @@ export default function register(quench) {
           assert.isNull(tokenDistance(pc1.uuid, mob.uuid));
         });
 
-        it("Taunts and Catches come first, then Evades; one Evade per crawler", async function () {
+        it("no stages: Evade is open at once, and one Evade covers every Attack", async function () {
           await declareOn(pc1);
           const card = await startReaction();
           const hitId = onlyHit(card).id;
-          assert.isFalse(await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(20, 12, 16) } }), "no Evades yet");
-          await op(card, "openEvades", {});
-          assert.equal(state(card).stage, "evade");
-          assert.isFalse(await op(card, "taunt", { byUuid: pc2.uuid, byName: pc2.name, mobUuid: mob.uuid, rank: 1, check: rolled(25, 15, 20) }),
-            "no Taunts once Evades are open");
-          assert.isTrue(await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(20, 12, 16) } }));
+          assert.isTrue(await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(20, 12, 16) }, preset }), "no Open Evades");
           assert.isTrue(onlyHit(card).evade.success);
-          assert.isFalse(await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(30, 19, 16) } }), "only one Evade");
+          assert.isFalse(await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(30, 19, 16) } }), "nothing left to Evade");
+          assert.lengthOf(spentBy(pc1), 1);
+        });
+
+        it("a Taunt after Evades pulls only the Attacks still landing; with nothing to pull it's refused", async function () {
+          await declareOn(pc1);
+          await declareOn(pc1);
+          const card = await startReaction();
+          const [dodged, failed] = hitList(state(card));
+          await op(card, "evade", { uuid: pc1.uuid, checks: { [dodged.id]: rolled(20, 12, 16), [failed.id]: rolled(8, 5, 16) }, preset });
+          assert.isTrue(await taunt(card, pc2, 25));
+          assert.equal(state(card).hits[dodged.id].targetUuid, pc1.uuid, "the dodged one stays");
+          assert.equal(state(card).hits[failed.id].targetUuid, pc2.uuid, "the one still landing is pulled");
+          assert.isNull(state(card).hits[failed.id].evade, "pc1's failed Evade of it goes with it");
+          assert.lengthOf(spentBy(pc1), 1, "pc1's Evade still covers the dodged one");
+          assert.isFalse(await taunt(card, pc2, 25), "nothing left to pull: refused");
+          assert.lengthOf(spentBy(pc2), 1, "and it cost nothing");
+        });
+
+        it("an Evade left covering nothing gives its Action back, and the Taunt that did it can't be undone", async function () {
+          await declareOn(pc1);
+          const card = await startReaction();
+          await op(card, "evade", { uuid: pc1.uuid, checks: { [onlyHit(card).id]: rolled(8, 5, 16) }, preset });
+          assert.lengthOf(spentBy(pc1), 1);
+          await taunt(card, pc2, 25);
+          assert.equal(onlyHit(card).targetUuid, pc2.uuid);
+          assert.lengthOf(spentBy(pc1), 0, "pc1's Evade Action is back");
+          assert.isFalse(state(card).crawlers[crawlerKey(pc1.uuid)].evaded);
+          await undoAction(combat, of(pc2).id, spentBy(pc2)[0].id);
+          assert.lengthOf(spentBy(pc2), 1, "the Taunt's undo is refused");
+          assert.lengthOf(tauntList(state(card)), 1);
+        });
+
+        it("an Attack pulled onto someone who has Evaded is rolled with their Evade", async function () {
+          await declareOn(pc1);
+          await declareOn(pc2);
+          const card = await startReaction();
+          const [onPc1, onPc2] = hitList(state(card));
+          await op(card, "evade", { uuid: pc2.uuid, checks: { [onPc2.id]: rolled(20, 12, 16) }, preset });
+          await taunt(card, pc2, 25);
+          const pulled = state(card).hits[onPc1.id];
+          assert.equal(pulled.targetUuid, pc2.uuid);
+          assert.exists(pulled.evade, "rolled for them");
+          assert.isTrue(pulled.evade.auto);
+          assert.equal(pulled.evade.difficulty, 16);
+          assert.lengthOf(spentBy(pc2), 2, "their Evade and the Taunt: nothing more");
+          assert.lengthOf(evadableHitsFor(state(card), pc2.uuid), 0);
+        });
+
+        it("Catch takes an Attack the ally failed to Evade, but not one they dodged", async function () {
+          await declareOn(pc1);
+          await declareOn(pc1);
+          const card = await startReaction();
+          const [dodged, failed] = hitList(state(card));
+          await op(card, "evade", { uuid: pc1.uuid, checks: { [dodged.id]: rolled(20, 12, 16), [failed.id]: rolled(8, 5, 16) }, preset });
+          assert.isFalse(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: dodged.id }), "nothing to catch");
+          assert.isTrue(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: failed.id }));
+          const caught = state(card).hits[failed.id];
+          assert.equal(caught.caughtBy.uuid, pc2.uuid);
+          assert.isNull(caught.evade, "the failed Evade drops off");
+          assert.lengthOf(spentBy(pc1), 1, "pc1's Evade still covers the dodged one");
         });
 
         it("Intervene adds its d6 and re-grades the Check, but not on one's own", async function () {
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "openEvades", {});
           const hitId = onlyHit(card).id;
           await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(15, 10, 16) } });
           assert.equal(onlyHit(card).evade.degree, "nearMissFail");
@@ -603,7 +665,6 @@ export default function register(quench) {
           await pc1.update({ "system.details.aiFavor": 2 });
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "openEvades", {});
           const hitId = onlyHit(card).id;
           await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(8, 5, 16) } });
           const ref = { type: "hit", hitId, which: "evade" };
@@ -619,7 +680,6 @@ export default function register(quench) {
           await pc1.update({ "system.details.aiFavor": 2 });
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "openEvades", {});
           const hitId = onlyHit(card).id;
           await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(3, 1, 16) } });
           assert.isFalse(await op(card, "reroll", { ref: { type: "hit", hitId, which: "evade" }, naturalRoll: 18, total: 20, roll: null, breakdown: "" }));
@@ -630,7 +690,6 @@ export default function register(quench) {
           await declareOn(pc1);
           await declareOn(pc2);
           const card = await startReaction();
-          await op(card, "openEvades", {});
           const [hit1, hit2] = hitList(state(card));
           await op(card, "evade", { uuid: pc1.uuid, checks: { [hit1.id]: rolled(8, 5, 16) } });
           await op(card, "evade", { uuid: pc2.uuid, checks: { [hit2.id]: rolled(20, 12, 16) } });
@@ -654,10 +713,14 @@ export default function register(quench) {
           const html = document.createElement("div");
           html.innerHTML = `<div class="carl-reaction-damage"></div>`;
           decorateDamageCard(damage, html);
-          assert.lengthOf(html.querySelectorAll(".carl-damage-table"), 2, "a table per target");
+          assert.lengthOf(html.querySelectorAll(".carl-status-section"), 2, "a section per target");
           const button = html.querySelector(".carl-damage-roll-button");
           assert.include(button.textContent, "100", "the button shows the formula");
-          assert.equal(button.closest("td").colSpan, 2);
+          assert.exists(button.closest(".carl-status-num"), "in the row's number column");
+          assert.include(html.querySelector(`[data-row-id="${hit1.id}"] .carl-status-sub`).textContent, "Maul · Evade 16",
+            "the Attack and its Evade target under the Mob's name");
+          assert.exists(html.querySelector(`[data-row-id="${hit1.id}"] .carl-status-chip[data-tone="bad"]`), "a Hit");
+          assert.exists(html.querySelector(`[data-row-id="${hit2.id}"] .carl-status-chip[data-tone="good"]`), "Evaded");
 
           const [entry] = damageCardActionEntries;
           await entry.onClick(new MouseEvent("click"), damage, button);
@@ -681,7 +744,6 @@ export default function register(quench) {
           await declareOn(pc1);
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "openEvades", {});
           const html = document.createElement("div");
           html.innerHTML = `<div class="carl-reaction"></div>`;
           decorateReactionCard(card, html);
@@ -703,7 +765,6 @@ export default function register(quench) {
         it("two operations sent at once are applied one after the other", async function () {
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "openEvades", {});
           const hitId = onlyHit(card).id;
           const results = await Promise.all([
             op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(20, 12, 16) } }),
@@ -767,10 +828,7 @@ export default function register(quench) {
         });
 
         it("both cards show the Mob Attack's printed effect", async function () {
-          const attacks = foundry.utils.deepClone(mob.system.toObject().attacks);
-          attacks[0].effect = "The target is Poisoned.";
-          attacks[0].range = "Melee";
-          await mob.update({ "system.attacks": attacks });
+          await mobAttacksOf(mob)[0].update({ "system.description": "<p>The target is Poisoned.</p>", "system.range": "Melee" });
           await declareOn(pc1);
           const card = await startReaction();
           const html = document.createElement("div");
@@ -783,13 +841,12 @@ export default function register(quench) {
           const table = document.createElement("div");
           table.innerHTML = `<div class="carl-reaction-damage"></div>`;
           decorateDamageCard(damage, table);
-          assert.include(table.querySelector(".carl-damage-attack .carl-attack-effect")?.textContent, "Poisoned", "on the Damage card");
+          assert.include(table.querySelector(".carl-status-detail .carl-attack-effect")?.textContent, "Poisoned", "on the Damage card");
         });
 
         it("an opened roll breakdown stays open when the card redraws", async function () {
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "openEvades", {});
           await op(card, "evade", { uuid: pc1.uuid, checks: { [onlyHit(card).id]: rolled(20, 12, 16) } });
           const draw = () => {
             const html = document.createElement("div");
@@ -800,7 +857,7 @@ export default function register(quench) {
           };
           const first = draw();
           try {
-            const details = first.querySelector("details.carl-check");
+            const details = first.querySelector("details.carl-status-row");
             assert.isFalse(details.open, "closed to start");
             details.open = true;
             await settle(50); // "toggle" is dispatched asynchronously
@@ -809,15 +866,15 @@ export default function register(quench) {
           }
           const second = draw();
           try {
-            assert.isTrue(second.querySelector("details.carl-check").open, "still open after the redraw");
-            second.querySelector("details.carl-check").open = false;
+            assert.isTrue(second.querySelector("details.carl-status-row").open, "still open after the redraw");
+            second.querySelector("details.carl-status-row").open = false;
             await settle(50);
           } finally {
             second.remove();
           }
           const third = draw();
           try {
-            assert.isFalse(third.querySelector("details.carl-check").open, "closed again when closed");
+            assert.isFalse(third.querySelector("details.carl-status-row").open, "closed again when closed");
           } finally {
             third.remove();
           }
@@ -832,20 +889,45 @@ export default function register(quench) {
           assert.lengthOf(declaredAttacks(combat), 1, "the declaration stays");
         });
 
-        it("the card draws a section per target and the GM's buttons", async function () {
+        it("the card draws a section per target, a chip per Attack, and its buttons where they act", async function () {
+          await pc1.update({ "system.details.aiFavor": 1 });
           await declareOn(pc1);
           await declareOn(pc2);
           const card = await startReaction();
-          const html = document.createElement("div");
-          html.innerHTML = `<div class="carl-reaction"></div>`;
-          decorateReactionCard(card, html);
-          assert.lengthOf(html.querySelectorAll(".carl-reaction-section"), 2);
-          assert.exists(html.querySelector('[data-op="openEvades"]'));
+          const draw = () => {
+            const html = document.createElement("div");
+            html.innerHTML = `<header class="carl-chat-header"><span class="carl-badge"></span></header><div class="carl-reaction"></div>`;
+            decorateReactionCard(game.messages.get(card.id), html);
+            return html;
+          };
+          let html = draw();
+          assert.lengthOf(html.querySelectorAll(".carl-status-section"), 2);
+          assert.lengthOf(html.querySelectorAll('.carl-status-chip[data-tone="incoming"]'), 2);
+          const first = html.querySelector(".carl-status-row");
+          assert.notInclude(first.querySelector(".carl-status-what strong").textContent, "Maul", "the Mob's name on its own");
+          assert.include(first.querySelector(".carl-status-sub").textContent, "Maul", "the Attack under it");
+          assert.include(first.querySelector(".carl-status-sub").textContent, "Evade 16", "and the Evade target");
+          assert.include(html.querySelector(".carl-status-progress").textContent, "0", "0 of 2 settled");
+          assert.exists(html.querySelector(".carl-status-waiting"), "waiting on both");
+          assert.lengthOf(html.querySelectorAll('[data-op="evade"]'), 2, "an Evade in each section, from the start");
           assert.exists(html.querySelector('[data-op="lock"]'));
-          assert.notExists(html.querySelector('[data-op="evade"]'), "Evades aren't open yet");
-          await op(card, "openEvades", {});
-          decorateReactionCard(card, html);
-          assert.exists(html.querySelector('[data-op="evade"]'));
+          assert.notExists(html.querySelector('[data-op="openEvades"]'), "no Open Evades");
+
+          const [hit1, hit2] = hitList(state(card));
+          await op(card, "evade", { uuid: pc1.uuid, checks: { [hit1.id]: rolled(8, 5, 16) }, preset });
+          await op(card, "evade", { uuid: pc2.uuid, checks: { [hit2.id]: rolled(30, 15, 16) }, preset });
+          html = draw();
+          assert.exists(html.querySelector('.carl-status-chip[data-tone="bad"]'), "a Hit");
+          assert.lengthOf(html.querySelectorAll('[data-op="intervene"]'), 1,
+            "only on the failed Evade: a d6 can't change pc2's Amazing Success");
+          const reroll = html.querySelector('[data-op="reroll"]');
+          assert.exists(reroll, "AI Reroll on the failed Evade's row");
+          assert.deepEqual(JSON.parse(reroll.dataset.ref), { type: "hit", hitId: hit1.id, which: "evade" });
+          assert.exists(html.querySelector('[data-op="intervene"]'), "the GM can Intervene with pc2");
+
+          await taunt(card, pc2, 25);
+          html = draw();
+          assert.exists(html.querySelector(".carl-status-row.is-ghost"), "the moved Attack, struck through in pc1's section");
         });
       });
 

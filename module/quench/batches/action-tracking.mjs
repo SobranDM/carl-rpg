@@ -255,7 +255,6 @@ export default function register(quench) {
           await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
           await combat.nextTurn();
           const card = reactionCardFor(combat);
-          await applyOp(card.id, "openEvades", {}, game.user);
           const checks = Object.fromEntries(hitList(card.getFlag("carl-rpg", "reaction"))
             .map((h) => [h.id, { total: 20, naturalRoll: 12, difficulty: 14, formula: "1d20", breakdown: "", roll: null }]));
           assert.isTrue(await applyOp(card.id, "evade", { uuid: pc.uuid, checks }, game.user));
@@ -339,15 +338,21 @@ export default function register(quench) {
         });
 
         it("Previous Phase out of Reaction gives back what the card spent", async function () {
-          await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
-          await combat.nextTurn();
-          const card = reactionCardFor(combat);
-          const check = { total: 25, naturalRoll: 15, difficulty: 12, formula: "1d20", breakdown: "", roll: null };
-          assert.isTrue(await applyOp(card.id, "taunt", { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check }, game.user));
-          assert.lengthOf(spent(), 1, "the Taunt");
-          await combat.previousTurn();
-          assert.equal(currentPhase(combat), "declare");
-          assert.lengthOf(spent(), 0, "refunded with the card");
+          // A Taunt needs an Attack aimed at someone else to pull.
+          const ally = await createTestCharacter("spend-ally");
+          try {
+            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await combat.nextTurn();
+            const card = reactionCardFor(combat);
+            const check = { total: 25, naturalRoll: 15, difficulty: 12, formula: "1d20", breakdown: "", roll: null };
+            assert.isTrue(await applyOp(card.id, "taunt", { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check }, game.user));
+            assert.lengthOf(spent(), 1, "the Taunt");
+            await combat.previousTurn();
+            assert.equal(currentPhase(combat), "declare");
+            assert.lengthOf(spent(), 0, "refunded with the card");
+          } finally {
+            await deleteTestActor(ally);
+          }
         });
       });
       describe("Paying once, and undoing", function () {
@@ -466,22 +471,30 @@ export default function register(quench) {
         });
 
         it("undoing a Taunt puts the Reaction card back - unless it has changed since", async function () {
-          await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
-          await combat.nextTurn();
-          const card = reactionCardFor(combat);
-          const taunts = () => Object.keys(card.getFlag("carl-rpg", "reaction").taunts ?? {});
-          const taunt = () => applyOp(card.id, "taunt", { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check }, game.user);
-          assert.isTrue(await taunt());
-          assert.lengthOf(taunts(), 1);
-          await undoLast(pc);
-          assert.lengthOf(taunts(), 0, "the Taunt is gone");
-          assert.lengthOf(spentBy(pc), 0, "and its Action is back");
+          // A Taunt needs an Attack aimed at someone else to pull.
+          const ally = await createTestCharacter("undo-ally");
+          try {
+            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await combat.nextTurn();
+            const card = reactionCardFor(combat);
+            const taunts = () => Object.keys(card.getFlag("carl-rpg", "reaction").taunts ?? {});
+            const taunt = (made) => applyOp(card.id, "taunt", { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check: made }, game.user);
+            assert.isTrue(await taunt(check));
+            assert.lengthOf(taunts(), 1);
+            await undoLast(pc);
+            assert.lengthOf(taunts(), 0, "the Taunt is gone");
+            assert.lengthOf(spentBy(pc), 0, "and its Action is back");
 
-          assert.isTrue(await taunt());
-          await applyOp(card.id, "openEvades", {}, game.user); // the card moves on
-          await undoLast(pc);
-          assert.lengthOf(taunts(), 1, "refused: the card changed since");
-          assert.lengthOf(spentBy(pc), 1);
+            assert.isTrue(await taunt({ ...check, total: 5, naturalRoll: 3 }));
+            const [tauntId] = taunts();
+            // The card moves on: the ally helps the (still failed) Taunt.
+            await applyOp(card.id, "intervene", { byUuid: ally.uuid, byName: ally.name, ref: { type: "taunt", tauntId }, value: 1 }, game.user);
+            await undoLast(pc);
+            assert.lengthOf(taunts(), 1, "refused: the card changed since");
+            assert.lengthOf(spentBy(pc), 1);
+          } finally {
+            await deleteTestActor(ally);
+          }
         });
 
         it("undo is refused once the Action's card has been acted on", async function () {

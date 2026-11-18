@@ -10,11 +10,14 @@
  *  - `hits.<id>`     One Attack on one defender (a declaration's target row):
  *    who it's aimed at now and first, whether it was Caught or Taunted, and
  *    its free and paid Evade Checks.
- *  - `crawlers.<key>` Who has used their Evade.
+ *  - `crawlers.<key>` Who has used their Evade: its dialog's choices
+ *    (`evadePreset`, for Attacks that land on them later) and the Action it
+ *    spent (`evadeSpent`, given back if it ends up covering nothing).
  *  - `taunts.<id>`   Each Taunt Check and the Attacks it pulled.
- *  - `stage`         "taunt" first (Taunts and Catches - "Taunt... after
- *    seeing where the Mob Attacks are headed", p.200), then "evade" once the
- *    GM opens Evades; `locked` once Lock Results runs.
+ *  - `locked`        once Lock Results runs.
+ * There are no stages (docs/reaction-card-redesign.md): Taunt, Catch, Evade,
+ * Intervene and AI Reroll are all open until Lock Results, and the card
+ * ends where "Taunts first, then Evades" would have, whatever the order.
  *
  * A Check: `{kind, formula, natural, base, difficulty, breakdown, roll,
  * advantage, interventions: [{byUuid, byName, value}], aiRerolled}` plus the
@@ -135,8 +138,9 @@ export function evadableHitsFor(state, uuid) {
 
 /**
  * The hits a Taunt against this Mob would pull onto the taunter: its
- * single-target Attacks aimed at someone else that haven't missed and
- * weren't Caught.
+ * single-target Attacks aimed at someone else that are still landing - not
+ * missed, not Caught, and not already Evaded (an Attack already dodged
+ * isn't "headed" anywhere, p.200).
  * @param {object} state
  * @param {string} mobUuid
  * @param {string} taunterUuid
@@ -146,7 +150,7 @@ export function pullableHits(state, mobUuid, taunterUuid) {
   return hitList(state).filter((hit) => {
     const attack = state.attacks?.[hit.attackId];
     return attack?.mobUuid === mobUuid && !attack.isArea && hit.targetUuid !== taunterUuid
-      && !hit.caughtBy && !hitMissed(hit) && !!hit.row?.isCharacter;
+      && !hit.caughtBy && !hitMissed(hit) && !hit.evade?.success && !!hit.row?.isCharacter;
   });
 }
 
@@ -185,7 +189,9 @@ export function tauntableMobs(state, taunterUuid) {
 
 /**
  * The hits a Catcher could take for an ally: single-target, aimed at
- * someone else who rolls their own Evade, not already Caught or a miss.
+ * someone else who rolls their own Evade, not already Caught, a miss or
+ * Evaded. One the ally failed to Evade can still be Caught (their failed
+ * Evade drops off).
  * @param {object} state
  * @param {string} catcherUuid
  * @returns {object[]}
@@ -194,7 +200,7 @@ export function catchableHits(state, catcherUuid) {
   return hitList(state).filter((hit) => {
     const attack = state.attacks?.[hit.attackId];
     return attack && !attack.isArea && hit.targetUuid !== catcherUuid && !!hit.row?.isCharacter
-      && !hit.caughtBy && !hitMissed(hit) && !hit.evade;
+      && !hit.caughtBy && !hitMissed(hit) && !hit.evade?.success;
   });
 }
 
@@ -243,22 +249,20 @@ export function checkAt(state, ref) {
 }
 
 /**
- * Whether a Check can still change in this stage. A Taunt's result decides
- * where Attacks go, so it can only change before Evades open; a free Evade
- * only while no paid Evade has replaced it; a paid Evade once Evades are open.
+ * Whether a Check can still change: anything until Lock Results, but a free
+ * Evade only while no paid Evade has replaced it, and nothing on a Caught
+ * hit (it can't be Evaded).
  * @param {object} state
  * @param {object} ref
  * @returns {boolean}
  */
 export function checkOpen(state, ref) {
   if (!state || state.locked) return false;
-  if (ref.type === "taunt") return state.stage === "taunt";
+  if (ref.type === "taunt") return !!state.taunts?.[ref.tauntId];
   const hit = state.hits?.[ref.hitId];
   if (!hit || hit.caughtBy) return false;
-  // A free Evade can still be helped or rerolled until a paid Evade takes
-  // its place - but not once Evades are open and the crawler has used theirs.
-  if (ref.which === "free") return !hit.evade && !state.crawlers?.[crawlerKey(hit.targetUuid)]?.evaded;
-  return state.stage === "evade";
+  if (ref.which === "free") return !!hit.free && !hit.evade;
+  return !!hit.evade;
 }
 
 /**
@@ -311,20 +315,89 @@ export function hitLabel(state, hit) {
 }
 
 /**
- * The sections of the card: one per creature with an Attack on it or a
- * Taunt of its own, in the order first seen.
+ * The sections of the card: one per creature with an Attack on it, a Taunt
+ * of its own, or an Attack that has moved off it, in the order first seen.
+ * `moved` are the hits that were aimed at it first and now aren't (drawn
+ * struck through, saying where they went).
  * @param {object} state
- * @returns {{uuid: string, name: string, hits: object[], taunts: object[]}[]}
+ * @returns {{uuid: string, name: string, hits: object[], taunts: object[], moved: object[]}[]}
  */
 export function sectionsOf(state) {
   const sections = new Map();
   const section = (uuid, name) => {
-    if (!sections.has(uuid)) sections.set(uuid, { uuid, name, hits: [], taunts: [] });
+    if (!sections.has(uuid)) sections.set(uuid, { uuid, name, hits: [], taunts: [], moved: [] });
     return sections.get(uuid);
   };
-  for (const hit of hitList(state)) section(hit.targetUuid, hit.targetName).hits.push(hit);
+  for (const hit of hitList(state)) {
+    if (hit.originalUuid && hit.originalUuid !== hit.targetUuid) section(hit.originalUuid, hit.originalName).moved.push(hit);
+    section(hit.targetUuid, hit.targetName).hits.push(hit);
+  }
   for (const taunt of tauntList(state)) section(taunt.byUuid, taunt.byName).taunts.push(taunt);
   return [...sections.values()];
+}
+
+/**
+ * Where one hit stands, as its row shows it (the status chips,
+ * docs/reaction-card-redesign.md), with the Check that shows it.
+ *  - missed: the to-hit didn't reach it, or a free Evade made it miss;
+ *  - caught: taken by a Catcher, who can't Evade it;
+ *  - evaded / half / quarter: Evaded - an Area Attack halved, or quartered
+ *    in its Splash (p.83);
+ *  - hit: lands (after a failed Evade, on a creature that doesn't Evade, or
+ *    once locked without one);
+ *  - incoming: still to be Evaded.
+ * @param {object} state
+ * @param {object} hit
+ * @returns {{status: string, check: object|null, which: "free"|"evade"|null}}
+ */
+export function hitStatus(state, hit) {
+  if (!hit.row?.hit) return { status: "missed", check: null, which: null };
+  if (hit.caughtBy) return { status: "caught", check: null, which: null };
+  const deciding = decidingEvade(hit);
+  const which = deciding ? (deciding === hit.evade ? "evade" : "free") : null;
+  if (deciding?.success) {
+    if (!hit.isArea) return { status: which === "free" ? "missed" : "evaded", check: deciding, which };
+    return { status: hit.row.zone === "splash" ? "quarter" : "half", check: deciding, which };
+  }
+  if (hit.evade) return { status: "hit", check: hit.evade, which: "evade" };
+  // Not Evaded yet: a failed free Evade shows, but decides nothing.
+  const free = hit.free ? { check: hit.free, which: "free" } : { check: null, which: null };
+  if (!hit.row.isCharacter || state?.locked) return { status: "hit", ...free };
+  return { status: "incoming", ...free };
+}
+
+/** How far the card has got: the hits no longer incoming, of all of them. */
+export function cardProgress(state) {
+  const hits = hitList(state);
+  return { settled: hits.filter((hit) => hitStatus(state, hit).status !== "incoming").length, total: hits.length };
+}
+
+/**
+ * A section's headline counts: what's still bad or pending for this
+ * creature (hits, incoming, caught, halved). None of those is "all clear".
+ * @param {object} state
+ * @param {{hits: object[]}} section
+ * @returns {Record<"hit"|"incoming"|"caught"|"half", number>}
+ */
+export function sectionCounts(state, section) {
+  const counts = { hit: 0, incoming: 0, caught: 0, half: 0 };
+  for (const hit of section.hits) {
+    const { status } = hitStatus(state, hit);
+    if (status === "quarter" || status === "half") counts.half++;
+    else if (status in counts) counts[status]++;
+  }
+  return counts;
+}
+
+/**
+ * The crawlers whose Evade no longer covers any Attack (every Attack it
+ * rolled against has moved away): their Action comes back.
+ * @param {object} state
+ * @returns {object[]}  Their `crawlers` entries.
+ */
+export function idleEvaders(state) {
+  return Object.values(state?.crawlers ?? {}).filter((crawler) => crawler.evaded
+    && !hitList(state).some((hit) => hit.targetUuid === crawler.uuid && hit.evade));
 }
 
 /**
@@ -335,7 +408,7 @@ export function sectionsOf(state) {
  */
 export function buildReactionState(combat, declarations) {
   const state = {
-    combatId: combat.id, round: combat.round, stage: "taunt", locked: false,
+    combatId: combat.id, round: combat.round, locked: false,
     attacks: {}, hits: {}, crawlers: {}, taunts: {}, nextOrder: 0,
     // Actions the card's ops spent (helpers/actions.mjs), refunded if it's discarded.
     spentActions: [],

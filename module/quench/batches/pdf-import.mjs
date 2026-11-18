@@ -3,6 +3,7 @@ import { parseAchievements } from "../../pdf-import/parse-achievements.mjs";
 import { bulletToChanges, parseGear } from "../../pdf-import/parse-gear.mjs";
 import { parseMobs } from "../../pdf-import/parse-mobs.mjs";
 import { importBook } from "../../pdf-import/importer.mjs";
+import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
 import { useQuenchTimeout } from "../helpers.mjs";
 
 // Every block below is made up in the books' layout. No rulebook text is
@@ -258,11 +259,25 @@ export default function register(quench) {
           assert.equal(blob.system.hb.max, 3);
           assert.equal(blob.system.stats.con.value, 6);
           assert.equal(blob.flags["carl-rpg"].pdfImport.book, "quench-pdf-import-test-book");
+          const printed = found.mobs.find((m) => m.name === "Test Blob").data.system.attacks;
+          assert.isAbove(printed.length, 0);
+          assert.lengthOf(mobAttacksOf(blob), printed.length, "its Attacks are items");
+          assert.equal(mobAttacksOf(blob)[0].name, printed[0].name);
+          assert.lengthOf(blob.system.attacks, 0, "and not the old list");
 
           const second = await importBook({ title, found, kinds, maps: [] });
           assert.deepEqual(second.items, { created: 0, updated: 1, skipped: [] });
           assert.deepEqual(second.mobs, { created: 0, updated: 2, skipped: [] });
           assert.deepEqual(second.achievements, { created: 0, updated: 1, skipped: [] });
+          assert.lengthOf(mobAttacksOf(blob), printed.length, "a re-import doesn't double them");
+
+          // The GM's work on an Attack survives a re-import; Attacks deleted are made again.
+          await mobAttacksOf(blob)[0].update({ "system.targetEffects": [{ debuffKey: "poisoned", trigger: "majorFail" }] });
+          await importBook({ title, found, kinds, maps: [] });
+          assert.equal(mobAttacksOf(blob)[0].system.targetEffects[0]?.trigger, "majorFail", "never replaced");
+          await blob.deleteEmbeddedDocuments("Item", mobAttacksOf(blob).map((a) => a.id));
+          await importBook({ title, found, kinds, maps: [] });
+          assert.lengthOf(mobAttacksOf(blob), printed.length, "made again once deleted");
         });
 
         it("leaves a document the GM edited alone on re-import", async function () {

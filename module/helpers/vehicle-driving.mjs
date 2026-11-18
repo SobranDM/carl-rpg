@@ -15,14 +15,17 @@
  *
  * "Stop" mode is the other Check (p.72): stopping in time, at 10 + Move ÷ 5
  * - on a success you stop where you want, on a fail the GM decides.
+ *
+ * The card is revised in place (module/chat/check-revision.mjs; docs/
+ * intervene.md, stage 2) by an AI Favor or Fuzzy Dice reroll and by an
+ * Intervene: it keeps its `checkId`, and the vehicle's round follows.
  */
-import CarlDice, { checkSubtitle, extractNaturalD20 } from "../dice/dice.mjs";
+import CarlDice, { checkSubtitle, interventionRolls } from "../dice/dice.mjs";
 import { CARLRPG } from "./config.mjs";
 import { degreeBadge, getDegreeOfSuccess, isHitDegree } from "./rules.mjs";
 import { rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
-import { aiRerollFlags, rerollFormula } from "./ai-favor.mjs";
-import { updateCardMessage } from "./chat-socket.mjs";
+import { aiRerollFlags } from "./ai-favor.mjs";
 import { createRollMessage, esc } from "../chat/chat-card.mjs";
 import { drivingOutcome, resolveOccupant, vehicleDriver, vehicleFight, vehicleStatus } from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
@@ -130,9 +133,43 @@ export function drivingOutcomeText(mode, degree) {
 }
 
 /**
+ * A Driving Check card's parts, for its first posting and every revision.
+ * @param {Actor} vehicle
+ * @param {Actor} driver
+ * @param {object} data
+ * @param {string[]} [data.rerolledBy]  The rerolls made on it ("favor", "fuzzyDice").
+ * @returns {object}  createRollMessage / renderRollCard parts.
+ */
+function drivingCardParts(vehicle, driver, {
+  mode, degree, difficulty, rolls, rollMeta, extraRollRows = [], debuffNote = "", trained = true, rerolledBy = [],
+}) {
+  const notes = rerolledBy.map((by) => `<p class="carl-reroll-note">${esc(game.i18n.localize(
+    by === "favor" ? "CARLRPG.Reroll.Note" : "CARLRPG.Vehicle.Card.FuzzyNote"))}</p>`);
+  return {
+    rolls,
+    rollMeta,
+    extraRollRows,
+    title: game.i18n.format(mode === "stop" ? "CARLRPG.Vehicle.StopTitle" : "CARLRPG.Vehicle.DrivingTitle", {
+      name: driver.name, vehicle: vehicle.name,
+    }),
+    subtitle: checkSubtitle(degree, difficulty),
+    img: vehicle.img,
+    badge: degreeBadge(degree),
+    body: [
+      `<p>${esc(drivingOutcomeText(mode, degree))}</p>`,
+      trained ? "" : `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Vehicle.Untrained"))}</p>`,
+      debuffNote ?? "",
+      ...notes,
+    ].join(""),
+    footer: `<div class="carl-driving-buttons"></div>`,
+  };
+}
+
+/**
  * Post a Driving Check card. Its buttons (module/chat/vehicle-card.mjs) read
- * `flags.carl-rpg.driving`; `driving.roll` is what a reroll (AI Favor or
- * Fuzzy Dice) rolls again.
+ * `flags.carl-rpg.driving`; `driving.roll` is the Check a reroll (AI Favor
+ * or Fuzzy Dice) rolls again and an Intervene adds to - every Driving card
+ * has it, while `aiReroll` is only on a character driver's.
  * @param {Actor} vehicle
  * @param {Actor} driver
  * @param {object} data
@@ -140,35 +177,21 @@ export function drivingOutcomeText(mode, degree) {
  */
 export async function postDrivingCard(vehicle, driver, {
   mode, checkId = "", degree, roll, natural, total, difficulty, formula, breakdown, label, debuffNote = "", trained = true,
-  rerolledBy = null, favorUsed = false,
 }) {
-  const title = game.i18n.format(mode === "stop" ? "CARLRPG.Vehicle.StopTitle" : "CARLRPG.Vehicle.DrivingTitle", {
-    name: driver.name, vehicle: vehicle.name,
+  const parts = drivingCardParts(vehicle, driver, {
+    mode, degree, difficulty, rolls: [roll], rollMeta: [{ label, detail: vehicle.name, breakdown }], debuffNote, trained,
   });
-  const body = [
-    `<p>${esc(drivingOutcomeText(mode, degree))}</p>`,
-    trained ? "" : `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Vehicle.Untrained"))}</p>`,
-    debuffNote ?? "",
-    rerolledBy ? `<p class="carl-reroll-note">${esc(game.i18n.localize(rerolledBy === "favor" ? "CARLRPG.Reroll.Note" : "CARLRPG.Vehicle.Card.FuzzyNote"))}</p>` : "",
-  ].join("");
-  const rollSpec = { formula, natural, total, difficulty, breakdown, label, title, img: vehicle.img };
+  const rollSpec = { formula, natural, total, difficulty, breakdown, label, title: parts.title, img: vehicle.img };
   return createRollMessage({
-    rolls: [roll],
-    rollMeta: [{ label, detail: vehicle.name, breakdown }],
-    title,
-    subtitle: checkSubtitle(degree, difficulty),
-    img: vehicle.img,
-    badge: degreeBadge(degree),
-    body,
-    footer: `<div class="carl-driving-buttons"></div>`,
+    ...parts,
     actor: driver,
     flags: {
       driving: {
         vehicleUuid: vehicle.uuid, driverUuid: driver.uuid, mode, checkId, degree, trained,
-        critChoice: "", damageApplied: false, absorbed: false, roll: rollSpec, favorUsed,
+        critChoice: "", damageApplied: false, absorbed: false, parked: false, roll: rollSpec, debuffNote,
+        rerolledBy: [], favorUsed: false,
       },
-      // One AI Favor reroll per Check: none once one has been spent on it.
-      ...(favorUsed ? {} : aiRerollFlags(driver, { kind: "driving", ...rollSpec, body: debuffNote })),
+      ...aiRerollFlags(driver, { kind: "driving", ...rollSpec, body: debuffNote }),
     },
   });
 }
@@ -201,33 +224,83 @@ export function drivingResultSettled(driving) {
 }
 
 /**
- * Reroll a Driving Check card (AI Favor, or Fuzzy Dice): roll the same d20
- * expression plus the rest of the old total, post a new card, record its
- * result, and retire the old card. The caller has already paid. A Fuzzy
- * Dice reroll still allows an AI Favor one; after an AI Favor one, no more.
- * @param {ChatMessage} message
- * @param {{by?: "favor"|"fuzzyDice"}} [options]
- * @returns {Promise<ChatMessage|null>}
+ * Is a once-per-Floor upgrade installed and unused on this Floor?
+ * @param {Actor|null} vehicle
+ * @param {"fuzzyDice"|"shockAbsorbers"} key
+ * @returns {boolean}
  */
-export async function rerollDrivingCheck(message, { by = "favor" } = {}) {
-  const driving = message.flags?.[SCOPE]?.driving;
-  const vehicle = driving ? await fromUuid(driving.vehicleUuid) : null;
-  const driver = driving ? await fromUuid(driving.driverUuid) : null;
+export function upgradeReady(vehicle, key) {
+  const upgrade = vehicle?.system.upgrades?.[key];
+  return !!upgrade?.installed && upgrade.usedFloor !== game.settings.get(SCOPE, "currentFloor");
+}
+
+/**
+ * Whether a Driving card's Check can still change (a reroll, an Intervene):
+ * its result hasn't been used (a Critical Hit pick, its damage, Shock
+ * Absorbers), it's still the vehicle's result this round, and - stopping in
+ * time - the vehicle hasn't been parked from it. A card replaced by an
+ * older reroll (before they were made in place) is closed.
+ * @param {ChatMessage} message
+ * @returns {boolean}
+ */
+export function drivingOpen(message) {
+  const flags = message?.flags?.[SCOPE] ?? {};
+  const driving = flags.driving;
+  if (!driving?.roll || flags.aiRerolled) return false;
+  if (drivingResultSettled(driving) || !drivingCardCurrent(driving)) return false;
+  return !(driving.mode === "stop" && driving.parked);
+}
+
+/**
+ * A Driving card's new parts after a reroll (AI Favor or Fuzzy Dice), an
+ * Intervene, or its undo - written by module/chat/check-revision.mjs, which
+ * then runs `after`: the round's result re-committed under the same
+ * `checkId`, so the card still owns it.
+ * @param {ChatMessage} message
+ * @param {{interventions: object[], reroll: {natural: number, total: number, roll: object, source: string}|null}} change
+ * @returns {Promise<object|null>}  null if the vehicle or driver is gone.
+ */
+export async function reviseDriving(message, { interventions = [], reroll = null }) {
+  const flags = message.flags[SCOPE];
+  const driving = foundry.utils.deepClone(flags.driving);
+  const vehicle = resolveOccupant(driving.vehicleUuid);
+  const driver = resolveOccupant(driving.driverUuid);
   if (!vehicle || !driver) return null;
   const spec = driving.roll;
-  const roll = await new Roll(rerollFormula(spec)).evaluate();
-  const natural = extractNaturalD20(roll);
-  const degree = getDegreeOfSuccess(natural, roll.total, spec.difficulty);
-  await updateCardMessage(message, { flags: { [SCOPE]: { aiRerolled: true } } });
-  // The new card is a new Check: its buttons, not the old card's, now own
-  // the round.
-  const checkId = foundry.utils.randomID();
-  if (driving.mode === "table6") await commitDrivingRound(vehicle, degree, { checkId });
-  return postDrivingCard(vehicle, driver, {
-    mode: driving.mode, checkId, degree, roll, natural, total: roll.total, difficulty: spec.difficulty,
-    formula: spec.formula, breakdown: spec.breakdown, label: spec.label, trained: driving.trained,
-    rerolledBy: by, favorUsed: by === "favor" || !!driving.favorUsed,
+  const aiReroll = flags.aiReroll ? foundry.utils.deepClone(flags.aiReroll) : null;
+  let base = message.rolls?.[0];
+  if (reroll) {
+    spec.rerolledFrom = { natural: spec.natural, total: spec.total };
+    Object.assign(spec, { natural: reroll.natural, total: reroll.total });
+    base = Roll.fromData(reroll.roll);
+    driving.rerolledBy = [...(driving.rerolledBy ?? []), reroll.source];
+    if (reroll.source === "favor") driving.favorUsed = true;
+    // The Intervene window and the AI Favor reroll read the d20 from here.
+    if (aiReroll) Object.assign(aiReroll, { natural: reroll.natural, total: reroll.total, used: aiReroll.used || reroll.source === "favor" });
+  }
+  const total = spec.total + interventions.reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+  const degree = getDegreeOfSuccess(spec.natural, total, spec.difficulty);
+  driving.degree = degree;
+  const d6 = interventionRolls(interventions);
+  const rerolled = (driving.rerolledBy ?? []).length > 0;
+  const parts = drivingCardParts(vehicle, driver, {
+    mode: driving.mode, degree, difficulty: spec.difficulty,
+    rolls: [base, ...d6.rolls],
+    rollMeta: [
+      { label: spec.label, detail: rerolled ? `${vehicle.name} · ${game.i18n.localize("CARLRPG.Reroll.Rerolled")}` : vehicle.name, breakdown: spec.breakdown },
+      ...d6.meta,
+    ],
+    extraRollRows: d6.totalRow(total),
+    debuffNote: driving.debuffNote ?? aiReroll?.body ?? "", trained: driving.trained, rerolledBy: driving.rerolledBy ?? [],
   });
+  const newFlags = { driving, interventions };
+  if (aiReroll) newFlags.aiReroll = aiReroll;
+  return {
+    ...parts,
+    flags: newFlags,
+    unset: [],
+    after: driving.mode === "table6" ? () => commitDrivingRound(vehicle, degree, { checkId: driving.checkId }) : null,
+  };
 }
 
 /**

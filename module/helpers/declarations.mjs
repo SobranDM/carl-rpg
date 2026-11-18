@@ -23,7 +23,7 @@ const SCOPE = "carl-rpg";
  * @property {string|null} sceneId
  * @property {string} mobName
  * @property {string} mobImg
- * @property {number} attackIndex   Index into the Mob's system.attacks.
+ * @property {string} attackId      The Attack's item id (module/data/mob-attack.mjs).
  * @property {string} attackName
  * @property {string} damage        The printed damage formula ("F" = Floor).
  * @property {string} damageType
@@ -36,6 +36,8 @@ const SCOPE = "carl-rpg";
  * @property {Record<string, object>} targetRows  One row per defender (helpers/attack-targets.mjs).
  * @property {string} effect
  * @property {string} range
+ * @property {object[]} targetEffects  The Debuffs it gives, each with its trigger
+ *   (helpers/mob-attacks.mjs mobAttackData).
  * @property {object[]} spentConditions  One-shot Debuffs the Mob spent declaring it -
  *   restored if the declaration is withdrawn.
  * @property {{combatantId: string, id: string}|null} action  The Mob Action it spent

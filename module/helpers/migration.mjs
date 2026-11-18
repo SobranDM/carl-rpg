@@ -30,6 +30,7 @@ import { slugifySkillName } from "./modifiers.mjs";
 import { createNoticeMessage, esc } from "../chat/chat-card.mjs";
 import { tierRank } from "./worship.mjs";
 import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions } from "./companion-migration.mjs";
+import { MOB_ATTACK_TYPE, attacksToCheck, convertLegacyAttacks } from "./mob-attacks.mjs";
 
 const SCOPE = "carl-rpg";
 export const MIGRATION_SETTING = "completedMigrations";
@@ -52,6 +53,9 @@ export const CHARGEN_DONE_MIGRATION_ID = "0.7.0-chargen-done";
 /** The 0.7.0 Weapon Skill notice's id (announceWeaponSkill). */
 export const WEAPON_SKILL_NOTICE_ID = "0.7.0-weapon-skill-notice";
 
+/** 0.7.0: a Mob's Attacks became items (docs/mob-sheet.md). */
+export const MOB_ATTACKS_MIGRATION_ID = "0.7.0-mob-attack-items";
+
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
  * is the release whose data it brings a world up to (for messages). A run
@@ -70,6 +74,7 @@ export const MIGRATIONS = [
   { id: BASE_DR_MIGRATION_ID, version: "0.7.0", run: migrateCharacterBaseDr },
   { id: CHARGEN_DONE_MIGRATION_ID, version: "0.7.0", run: migrateChargenDone },
   { id: WEAPON_SKILL_NOTICE_ID, version: "0.7.0", run: announceWeaponSkill },
+  { id: MOB_ATTACKS_MIGRATION_ID, version: "0.7.0", run: migrateMobAttacks },
 ];
 
 /**
@@ -781,6 +786,107 @@ function whisperGmList(key, lines) {
       + `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
     whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
   });
+}
+
+/* -------------------------------------------------- */
+/*  0.7.0: a Mob's Attacks as items                   */
+/* -------------------------------------------------- */
+
+/**
+ * 0.7.0 made a Mob's Attacks `mobAttack` items (module/data/mob-attack.mjs;
+ * docs/mob-sheet.md) in place of the printed-text list `system.attacks`.
+ * Each Mob's list is converted (module/helpers/mob-attacks.mjs
+ * convertLegacyAttacks - safe to run again) in world Actors, in unlinked
+ * tokens whose own data overrides the list, and in the world's Actor
+ * compendiums. A Mob whose Attacks were guessed to be Area Attacks, or whose
+ * effect text names a Debuff, is listed for the GM: when a Debuff lands
+ * can't be read reliably from prose, so it's set on the Attack by hand.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+export async function migrateMobAttacks() {
+  let changed = 0;
+  let errors = 0;
+  const lines = [];
+  const convert = async (actor, where, attacks = actor.system?.attacks ?? []) => {
+    if (actor?.type !== "mob" || !attacks.length) return;
+    const list = foundry.utils.deepClone(attacks);
+    try {
+      await convertLegacyAttacks(actor, { attacks: list });
+      changed += 1;
+      const check = attacksToCheck(list);
+      if (check.length) {
+        lines.push(game.i18n.format("CARLRPG.Migration.MobAttacks.Line", {
+          name: esc(actor.name) + (where ? ` (${esc(where)})` : ""), attacks: esc(check.join(", ")),
+        }));
+      }
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't convert the Attacks of ${actor.name}`, err);
+      errors += 1;
+    }
+  };
+
+  for (const actor of game.actors) await convert(actor);
+
+  for (const scene of game.scenes) {
+    for (const token of scene.tokens) {
+      const own = tokenOwnAttacks(token);
+      if (!own) continue;
+      try {
+        await clearInheritedAttacks(token);
+      } catch (err) {
+        console.error(`carl-rpg | 0.7.0 migration: couldn't clear the inherited Attacks of token ${token.name}`, err);
+        errors += 1;
+        continue;
+      }
+      await convert(token.actor, `${scene.name}: ${token.name}`, own);
+    }
+  }
+
+  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        for (const actor of await pack.getDocuments()) await convert(actor, pack.title);
+      });
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't convert Mob Attacks in compendium ${pack.collection}`, err);
+      errors += 1;
+    }
+  }
+  if (lines.length) await whisperGmList("MobAttacks", lines);
+  return { changed, errors };
+}
+
+/**
+ * An unlinked Mob token's own Attacks list (the GM edited that token's
+ * Attacks before 0.7.0), or null: one without one inherits its Mob's.
+ * @param {TokenDocument} token
+ * @returns {object[]|null}
+ */
+function tokenOwnAttacks(token) {
+  const own = token.actorLink ? null : token.delta?._source?.system?.attacks;
+  return Array.isArray(own) && own.length && token.actor?.type === "mob" ? own : null;
+}
+
+/** A token's Attacks inherited from its Mob's conversion - its own replace them. */
+async function clearInheritedAttacks(token) {
+  const inherited = token.actor.items
+    .filter((i) => i.type === MOB_ATTACK_TYPE && Number.isInteger(i.getFlag("carl-rpg", "legacyAttack")))
+    .map((i) => i.id);
+  if (inherited.length) await token.actor.deleteEmbeddedDocuments("Item", inherited, { carlMigration: true });
+}
+
+/**
+ * Convert one unlinked token's own Attacks list (the migration's step for
+ * tokens; tests). Its inherited Attacks go, its own are made in their place.
+ * @param {TokenDocument} token
+ * @returns {Promise<number>}  How many Attacks were made (0: no list of its own).
+ */
+export async function convertTokenAttacks(token) {
+  const own = tokenOwnAttacks(token);
+  if (!own) return 0;
+  const list = foundry.utils.deepClone(own);
+  await clearInheritedAttacks(token);
+  return convertLegacyAttacks(token.actor, { attacks: list });
 }
 
 /* -------------------------------------------------- */

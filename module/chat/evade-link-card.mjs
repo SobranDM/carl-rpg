@@ -5,28 +5,13 @@
  * the other cards share:
  *  - the PvP Evade Difficulty rule (resolveEvadeDifficulty);
  *  - the GM/owner gate many card buttons use (canActOnUuidFlag);
- *  - the Evade outcome card's "Add Minor/Major Injury Debuff" button for a
- *    Major or Critical Fail (p.79-80) - never auto-applied.
+ *  - the "Add Minor/Major Injury Debuff" button on Evade outcome cards
+ *    posted before a row's Evade was kept on the row (module/chat/
+ *    row-evade.mjs) - their stored markup still carries it.
  */
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
-
-const CONSEQUENCE_FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/evade-consequence-footer.hbs";
-
-/**
- * Render the "Add Minor/Major Injury Debuff" footer for an Evade-outcome
- * card that came back Major or Critical Fail.
- * @param {string} debuffKey  "minorInjury" | "majorInjury"
- * @returns {Promise<string>}
- */
-export async function buildEvadeConsequenceFooter(debuffKey) {
-  const { renderTemplate } = foundry.applications.handlebars;
-  const debuffButtonLabel = game.i18n.localize(
-    debuffKey === "majorInjury" ? "CARLRPG.Evade.AddMajorInjury" : "CARLRPG.Evade.AddMinorInjury"
-  );
-  return renderTemplate(CONSEQUENCE_FOOTER_TEMPLATE, { debuffButtonLabel });
-}
 
 /**
  * Resolve a snapshotted token/actor UUID back to its Actor, if it (and its

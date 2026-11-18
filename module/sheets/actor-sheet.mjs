@@ -14,7 +14,8 @@ import {
   resolveSlotValue,
   unwearItem,
 } from "../helpers/equip-slots.mjs";
-import CarlDice from "../dice/dice.mjs";
+import CarlDice, { evaluateMobConstant } from "../dice/dice.mjs";
+import { MOB_ATTACK_TYPE, attackKind, mobAttacksOf } from "../helpers/mob-attacks.mjs";
 import { isLootBoxItem, takeLootItem } from "../helpers/loot-box.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
 import { isCrawler, isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
@@ -457,6 +458,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       { relativeTo: actor, secrets: actor.isOwner, rollData: context.rollData },
     );
     context.biographyHTML = await enrich(actor.system.biography);
+    if (context.isMob) context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);
     if (context.isCharacter) {
       await this.#prepareDetailsBoxes(context, enrich);
       await this.#prepareBenefits(context, enrich);
@@ -931,13 +933,15 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static async #createItem(event, target) {
     event.preventDefault();
     const type = target.dataset.type;
-    const name = `New ${type.capitalize()}`;
+    const name = target.dataset.name ? game.i18n.localize(target.dataset.name) : `New ${type.capitalize()}`;
     const itemData = {
       name: name,
       type: type,
     };
     // The Benefits tab's Church Benefits list makes a Boon at a Tier.
     if (target.dataset.tier) itemData.system = { tier: target.dataset.tier };
+    // A new Attack goes last in the Mob's list.
+    if (type === MOB_ATTACK_TYPE) itemData.sort = Math.max(0, ...mobAttacksOf(this.actor).map((i) => i.sort ?? 0)) + 1000;
     return await Item.create(itemData, { parent: this.actor });
   }
 
@@ -1025,7 +1029,49 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onRollMobAttack(event, target) {
     event.preventDefault();
-    return CarlDice.rollMobAttack(this.actor, Number(target.dataset.index));
+    // A Mob's Attack by its item; a Vehicle's weapon (fired as a Mob Attack
+    // by its crew) by its place in the Vehicle's list.
+    const itemId = target.closest("[data-item-id]")?.dataset.itemId;
+    const ref = itemId ?? (target.dataset.index !== undefined ? Number(target.dataset.index) : null);
+    return ref === null ? null : CarlDice.rollMobAttack(this.actor, ref);
+  }
+
+  /**
+   * A Mob's Attacks as the Combat tab's rows (abilities-mob.hbs): the
+   * chat cards' row shape - a kind chip, the name with its range, damage
+   * type and Debuffs under it, the to-hit and damage on the right, and the
+   * printed effect in the expander (docs/mob-sheet.md).
+   * @param {(html: string) => Promise<string>} enrich
+   * @param {number} floor
+   * @returns {Promise<object[]>}
+   */
+  async #prepareMobAttacks(enrich, floor) {
+    const { damageTypes, debuffs, mobAttackKinds } = CONFIG.CARLRPG;
+    return Promise.all(mobAttacksOf(this.actor).map(async (item) => {
+      const sys = item.system;
+      const kind = attackKind(sys);
+      return {
+        id: item.id,
+        name: item.name,
+        img: item.img,
+        kind,
+        kindLabel: mobAttackKinds[kind],
+        kindIcon: { melee: "fa-hand-fist", ranged: "fa-bullseye", area: "fa-burst" }[kind],
+        toHit: sys.toHit,
+        toHitValue: evaluateMobConstant(sys.toHit, floor),
+        damage: sys.damage,
+        notes: [
+          sys.range,
+          sys.damageType ? game.i18n.localize(damageTypes[sys.damageType] ?? sys.damageType) : "",
+          sys.isArea && sys.splash ? game.i18n.localize("CARLRPG.MobAttack.Splash") : "",
+        ].filter(Boolean),
+        effects: (sys.targetEffects ?? []).filter((te) => te.debuffKey).map((te) => ({
+          label: te.label || game.i18n.localize(debuffs[te.debuffKey]?.label ?? te.debuffKey),
+          when: `CARLRPG.MobAttack.TriggerShort.${te.trigger || "hit"}`,
+        })),
+        descriptionHTML: await enrich(sys.description),
+      };
+    }));
   }
 
   /**
@@ -1448,6 +1494,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // A Vehicle carries gear as Cargo; it has no Skills, Boons or Class.
     if (isVehicle(this.actor) && item.type !== "item") {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.OnlyCargo"));
+      return null;
+    }
+    // A Mob's Attack is a stat block line: only a Mob has one.
+    if (item.type === MOB_ATTACK_TYPE && this.actor.type !== "mob") {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.MobAttack.MobsOnly"));
       return null;
     }
     // A Pet has no Class or Race ("Pets don't have a Class", p.232).

@@ -14,7 +14,8 @@ import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow } from "../helpers/attack-targets.mjs";
 import { aiRerollFlags, keptD20 } from "../helpers/ai-favor.mjs";
 import { buildScrollCast } from "../helpers/scroll-cast.mjs";
-import { isAreaItem, isAreaMobAttack } from "../helpers/area.mjs";
+import { isAreaItem } from "../helpers/area.mjs";
+import { mobAttackFor } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
 import { ownedRank, slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
@@ -1512,7 +1513,7 @@ export default class CarlDice {
   }
 
   /**
-   * A Mob's printed Attack (module/data/mob.mjs's `attacks` list) against
+   * A Mob's Attack (a `mobAttack` item - module/data/mob-attack.mjs) against
    * the targeted crawler(s). "Mobs are player-facing; they never roll"
    * (p.267): the "to hit" value IS the Difficulty of the target's Evade
    * Check, and the GM rolls only the damage (Step 3: Mob Action Resolution,
@@ -1522,22 +1523,23 @@ export default class CarlDice {
    * free Evade Check (the `freeEvade` flag - module/chat/
    * evade-link-card.mjs). The card carries the same flag shape rollAttack
    * does, so Roll Evade / Taunt / Apply Damage work on it unchanged.
-   * @param {Actor} actor  The attacking Mob.
-   * @param {number} attackIndex  Index into actor.system.attacks.
+   * @param {Actor} actor  The attacking Mob (or a GM-crewed Vehicle).
+   * @param {string|number} ref  The Attack item's id - or (tests, macros) its
+   *   place in the Mob's Attacks; a Vehicle's weapon by its place in its
+   *   list (module/helpers/mob-attacks.mjs mobAttackFor).
    * @param {{skipDialog?: boolean}} [options]
    * @returns {Promise<ChatMessage|null>}
    */
-  static async rollMobAttack(actor, attackIndex, options = {}) {
-    const attack = actor.system.attacks?.[attackIndex];
+  static async rollMobAttack(actor, ref, options = {}) {
+    const attack = mobAttackFor(actor, ref);
     const name = attack?.name || game.i18n.localize("CARLRPG.MobAttack.Unnamed");
     // Checked once its targets are known: a preview at no one is free.
     return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name }),
-      (ctx) => CarlDice._mobAttack(ctx, actor, attackIndex, options), { optional: true });
+      (ctx) => CarlDice._mobAttack(ctx, actor, attack, options), { optional: true });
   }
 
   /** rollMobAttack, inside its Action (helpers/actions.mjs takeAction). */
-  static async _mobAttack(ctx, actor, attackIndex, { skipDialog = false } = {}) {
-    const attack = actor.system.attacks?.[attackIndex];
+  static async _mobAttack(ctx, actor, attack, { skipDialog = false } = {}) {
     if (!attack) return null;
     if (isBlockedByDebuff(actor)) return null;
 
@@ -1578,8 +1580,8 @@ export default class CarlDice {
       : [];
     const debuffRows = decorateRows([...ownRows, ...defenderRows], "difficulty");
 
-    // Area Attack (p.83): "30ft Cone", "15ft Burst radius"... in the stat line.
-    const detectedArea = isAreaMobAttack(attack);
+    // Area Attack (p.83): marked on the Attack; the dialog can still change it.
+    const detectedArea = attack.isArea;
     let options = { difficulty: baseToHit, modifier: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const prompted = await promptRollOptions({
@@ -1641,7 +1643,7 @@ export default class CarlDice {
         sceneId: token?.parent?.id ?? null,
         mobName: token?.name ?? actor.name,
         mobImg: actor.img,
-        attackIndex,
+        attackId: attack.id,
         attackName,
         damage: attack.damage?.trim() ?? "",
         damageType: attack.damageType || "",
@@ -1654,6 +1656,8 @@ export default class CarlDice {
         targetRows: Object.fromEntries(targetRowList.map((row) => [row.id, row])),
         effect: attack.effect ?? "",
         range: attack.range ?? "",
+        // The Debuffs it gives, each with when it lands (docs/mob-sheet.md).
+        targetEffects: attack.targetEffects,
         spentConditions,
         action: fight ? { combatantId: fight.combatant.id, id: ctx.id } : null,
       });

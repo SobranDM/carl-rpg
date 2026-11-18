@@ -13,7 +13,14 @@ const ATTRIBUTES_TEMPLATES = {
   spell: 'systems/carl-rpg/templates/item/parts/attributes-spell.hbs',
   class: 'systems/carl-rpg/templates/item/parts/attributes-class.hbs',
   race: 'systems/carl-rpg/templates/item/parts/attributes-race.hbs',
+  mobAttack: 'systems/carl-rpg/templates/item/parts/attributes-mob-attack.hbs',
 };
+
+/**
+ * Types drawn as one page (no tabs): a Mob Attack (docs/mob-sheet.md). Its
+ * part isn't a `.tab` section, so _onRender has no tab to activate.
+ */
+const SINGLE_PAGE_TYPES = ['mobAttack'];
 
 const RANKED_TYPES = ['skill', 'spell', 'damageEffect'];
 
@@ -89,6 +96,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
    * @override
    */
   _getTabsConfig(group) {
+    if (group === 'primary' && SINGLE_PAGE_TYPES.includes(this.item?.type)) {
+      return { tabs: [{ id: 'attributes', label: 'CARLRPG.Tab.Main' }], initial: 'attributes' };
+    }
     if (group === 'primary' && RANKED_TYPES.includes(this.item?.type)) {
       return {
         tabs: [
@@ -114,6 +124,11 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       parts.rank5 = { template: rankTabTemplate, scrollable: [""] };
       parts.rank10 = { template: rankTabTemplate, scrollable: [""] };
       parts.rank15 = { template: rankTabTemplate, scrollable: [""] };
+    } else if (SINGLE_PAGE_TYPES.includes(this.item.type)) {
+      // One page: its description is a section of it.
+      delete parts.tabs;
+      delete parts.description;
+      parts.attributes.template = ATTRIBUTES_TEMPLATES[this.item.type];
     } else {
       parts.attributes.template = ATTRIBUTES_TEMPLATES[this.item.type] ?? ATTRIBUTES_TEMPLATES.item;
     }

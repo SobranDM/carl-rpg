@@ -605,6 +605,25 @@ CARLRPG.titheByTier = {
  * module/helpers/debuff-effects.mjs for both halves.
  * @type {Object}
  */
+/**
+ * When a Mob Attack's Debuff lands (module/data/mob-attack.mjs): "Some
+ * attacks have additional effects... often when crawlers fail spectacularly
+ * at Evading an Attack" (p.267) - "On an Evade Major Fail or worse, the
+ * target gains the Burning Debuff."
+ */
+CARLRPG.mobAttackTriggers = {
+  hit: "CARLRPG.MobAttack.Trigger.hit",
+  majorFail: "CARLRPG.MobAttack.Trigger.majorFail",
+  criticalFail: "CARLRPG.MobAttack.Trigger.criticalFail",
+};
+
+/** A Mob Attack's kind, for its chip on the sheet (module/helpers/mob-attacks.mjs attackKind). */
+CARLRPG.mobAttackKinds = {
+  melee: "CARLRPG.MobAttack.Kind.melee",
+  ranged: "CARLRPG.MobAttack.Kind.ranged",
+  area: "CARLRPG.MobAttack.Kind.area",
+};
+
 CARLRPG.debuffs = {
   blinded: {
     label: "CARLRPG.Debuff.Blinded.Label",

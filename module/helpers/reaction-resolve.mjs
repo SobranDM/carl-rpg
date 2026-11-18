@@ -4,12 +4,13 @@
  * Evade".
  *
  * Lock Results (on the Reaction card or the tracker) locks the card, moves
- * the round to Resolution and posts the Damage card: a table per targeted
- * creature, a row per Attack on it. A row that will take damage shows the
- * GM a button with the Attack's damage formula; clicking it rolls that
- * Attack's damage once ("The GM rolls each Attack's damage dice"), applies it
- * to every defender it landed on, and fills in their Damage and Slots - the
- * card is updated in place. By the book:
+ * the round to Resolution and posts the Damage card: a section per targeted
+ * creature, a status row per Attack on it (module/chat/status-rows.mjs, the
+ * Reaction card's look). A row that will take damage shows the GM a button
+ * with the Attack's damage formula in its number column; clicking it rolls
+ * that Attack's damage once ("The GM rolls each Attack's damage dice"),
+ * applies it to every defender it landed on, and shows their damage and
+ * Health Bar slots - the card is updated in place. By the book:
  *  - not Evaded (or Caught): full damage;
  *  - Evaded: none - or half for an Area Attack, a quarter in its Splash (p.83);
  *  - an Evade that failed by 10 or more: +Floor damage and a Minor Injury
@@ -22,7 +23,8 @@
 import { RollParts } from "../dice/roll-parts.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { applyDamageWithResult } from "../chat/damage-card.mjs";
-import { actorFor, reactionCardFor, withCard, writeState } from "../chat/reaction-card.mjs";
+import { actorFor, attackDetails, attackLine, reactionCardFor, withCard, writeState } from "../chat/reaction-card.mjs";
+import { headerProgress, rememberOpenRows, statusChip, statusRow, statusSection } from "../chat/status-rows.mjs";
 import { rowOutcome } from "./attack-targets.mjs";
 import { vehicleSeatOf } from "./vehicle-state.mjs";
 import { decidingEvade, hitList, unevadedNames } from "./reaction-state.mjs";
@@ -162,6 +164,8 @@ export function buildDamageState(combat, state) {
     data.rows[hit.id] = {
       id: hit.id, order: order++, attackId: hit.attackId, tableUuid: hit.targetUuid, tableName: hit.targetName,
       applyUuid, status, caught: !!hit.caughtBy, extraDr,
+      // The Evade it called for, shown under the Mob's name.
+      difficulty: hit.row?.isCharacter && hit.row?.hit && !hit.caughtBy ? (hit.row.difficulty ?? null) : null,
       row: { hit: !!hit.row?.hit, zone: hit.row?.zone ?? "full", amazing: false },
       evade: evade ? { degree: evade.degree, success: evade.success } : null,
       tags, notes, result: null,
@@ -305,8 +309,62 @@ function displayFormula(attack) {
 /* -------------------------------------------- */
 
 /**
- * Draw the Damage card's tables, for whoever is viewing it (the roll
- * buttons are the GM's). Called from module/chat/chat-listener.mjs.
+ * Which rows' expanders this client has open, by `messageId:rowKey`.
+ * @type {Set<string>}
+ */
+const openRows = new Set();
+
+/** A Damage card row's status chip: why it does what it does. */
+function damageStatus(row) {
+  if (row.status === "missed") return "missed";
+  if (row.status === "evaded") return "evaded";
+  if (row.caught) return "caught";
+  if (row.evade?.success) return row.row?.zone === "splash" ? "quarter" : "half";
+  return "hit";
+}
+
+/** The number column: the GM's roll button, the damage and slots, or a word. */
+function damageNum(row, attack) {
+  const i18n = game.i18n;
+  const muted = (text) => `<span class="carl-status-vs">${esc(text)}</span>`;
+  switch (row.status) {
+    case "missed": return "";
+    case "evaded": return muted(i18n.localize("CARLRPG.Resolve.None"));
+    case "noDamage": return muted(i18n.localize("CARLRPG.Resolve.NoDamage"));
+    case "pending": {
+      const formula = displayFormula(attack);
+      if (!game.user.isGM) return `<span class="carl-status-vs" data-tooltip="${esc(i18n.format("CARLRPG.Resolve.Waiting", { formula }))}">${esc(formula)}</span>`;
+      return `<button type="button" class="carl-status-button is-primary carl-damage-roll-button" data-action="reactionDamage" data-attack-id="${esc(row.attackId)}">
+        <i class="fas fa-dice"></i> ${esc(formula)}</button>`;
+    }
+  }
+  const r = row.result ?? {};
+  if (r.missing) return muted(i18n.localize("CARLRPG.Resolve.TargetGone"));
+  const slots = r.dying ? esc(i18n.localize("CARLRPG.Resolve.Dying"))
+    : esc(i18n.format(r.slots === 1 ? "CARLRPG.Resolve.OneSlot" : "CARLRPG.Resolve.SlotCount", { count: r.slots ?? 0 }));
+  const shield = r.shieldSlots ? ` ${esc(i18n.format("CARLRPG.Resolve.ShieldSlots", { count: r.shieldSlots }))}` : "";
+  return `<b class="carl-damage-amount">${esc(r.final ?? 0)}</b> <span class="carl-status-vs">· <span class="carl-damage-slots">${slots}${shield}</span></span>`;
+}
+
+/** A section's heading: the damage taken, what's still to roll, or "All clear". */
+function damageSummary(rows) {
+  const i18n = game.i18n;
+  const parts = [];
+  const taken = rows.reduce((sum, row) => sum + (row.status === "rolled" ? (row.result?.final ?? 0) : 0), 0);
+  const pending = rows.filter((row) => row.status === "pending").length;
+  if (taken) parts.push(i18n.format("CARLRPG.Resolve.Taken", { n: taken }));
+  if (pending) parts.push(i18n.format("CARLRPG.Resolve.ToRoll", { n: pending }));
+  if (rows.some((row) => row.result?.dying)) parts.push(i18n.localize("CARLRPG.Resolve.DyingShort"));
+  if (!parts.length) parts.push(i18n.localize("CARLRPG.Reaction.Sum.clear"));
+  return parts.join(" · ");
+}
+
+/**
+ * Draw the Damage card for whoever is viewing it, in the Reaction card's
+ * look (docs/reaction-card-redesign.md): "1 of 3 rolled" in its header, a
+ * section per target, a row per Attack with its chip, its damage (or the
+ * GM's roll button) and the roll in its expander, and the injury reminders
+ * under each section. Called from module/chat/chat-listener.mjs.
  * @param {ChatMessage} message
  * @param {HTMLElement} html
  */
@@ -315,52 +373,51 @@ export function decorateDamageCard(message, html) {
   const data = message.getFlag(SCOPE, FLAG);
   if (!container || !data) return;
   const i18n = game.i18n;
-  const tables = new Map();
+
+  const rolling = new Set(Object.values(data.rows ?? {}).filter((r) => ["pending", "rolled"].includes(r.status)).map((r) => r.attackId));
+  const rolled = [...rolling].filter((id) => data.attacks[id]?.rolled).length;
+  headerProgress(html, rolling.size
+    ? i18n.format("CARLRPG.Resolve.Progress", { rolled, total: rolling.size })
+    : i18n.localize("CARLRPG.Resolve.NothingToRoll"));
+
+  const sections = new Map();
   for (const row of Object.values(data.rows ?? {}).sort((a, b) => a.order - b.order)) {
-    if (!tables.has(row.tableUuid)) tables.set(row.tableUuid, { name: row.tableName, rows: [] });
-    tables.get(row.tableUuid).rows.push(row);
+    if (!sections.has(row.tableUuid)) sections.set(row.tableUuid, { name: row.tableName, rows: [] });
+    sections.get(row.tableUuid).rows.push(row);
   }
-  container.innerHTML = [...tables.values()].map((table) => {
+  container.innerHTML = [...sections.values()].map((section) => {
     const notes = [];
-    const body = table.rows.map((row) => {
+    const rows = section.rows.map((row) => {
       const attack = data.attacks[row.attackId] ?? {};
       for (const note of row.notes ?? []) notes.push(esc(i18n.format(note.key, note.data)));
+      // Already HTML: the damage pipeline's lines (a Dying countdown, a Debuff the hit ended).
       for (const line of row.result?.extra ?? []) notes.push(line);
-      const tags = (row.tags ?? []).map((t) => `<span class="carl-damage-tag">${esc(i18n.format(t.key, t.data))}</span>`).join("");
-      // The printed effect stays in view: on-hit Debuffs are the GM's to apply.
-      const effect = attack.effect ? `<div class="carl-attack-effect">${esc(attack.effect)}</div>` : "";
-      const name = `<td class="carl-damage-attack"><strong>${esc(attack.mobName)}</strong><br>${esc(attack.attackName)}${tags ? `<div>${tags}</div>` : ""}${effect}</td>`;
-      return `<tr data-row-id="${esc(row.id)}">${name}${damageCells(row, attack)}</tr>`;
-    }).join("");
-    return `<table class="carl-damage-table">
-      <caption>${esc(table.name)}</caption>
-      <thead><tr><th>${esc(i18n.localize("CARLRPG.Resolve.Attack"))}</th><th>${esc(i18n.localize("CARLRPG.Resolve.Damage"))}</th><th>${esc(i18n.localize("CARLRPG.Resolve.Slots"))}</th></tr></thead>
-      <tbody>${body}</tbody>
-    </table>${notes.length ? `<ul class="carl-damage-notes plain">${notes.map((n) => `<li>${n}</li>`).join("")}</ul>` : ""}`;
+      // Under the Mob's name: its Attack and Evade target, then the notes
+      // (the chip says it was Evaded).
+      const sub = [
+        ...attackLine(attack, row.difficulty ?? null),
+        ...(row.tags ?? []).filter((t) => t.key !== "CARLRPG.Resolve.EvadedHalf").map((t) => i18n.format(t.key, t.data)),
+      ];
+      const r = row.result;
+      const tip = row.status === "rolled" && r && !r.missing
+        ? i18n.format("CARLRPG.Resolve.RolledTip", { rolled: attack.rolled?.total ?? "-", raw: r.raw ?? 0, final: r.final ?? 0 }) : "";
+      const detail = [
+        attack.rolled ? `<div>${esc(attack.rolled.breakdown ?? "")}</div>` : "",
+        tip ? `<div>${esc(tip)}</div>` : "",
+        attackDetails(attack),
+      ].join("");
+      const key = `damage:${row.id}`;
+      return statusRow({
+        id: row.id, key, open: openRows.has(`${message.id}:${key}`),
+        chip: statusChip(damageStatus(row)),
+        what: `<strong>${esc(attack.mobName ?? "?")}</strong>`,
+        flag: attack.effect ? `<i class="fas fa-scroll carl-status-flag" data-tooltip="${esc(i18n.localize("CARLRPG.Reaction.HasEffect"))}"></i>` : "",
+        sub, num: damageNum(row, attack), numTip: tip, detail,
+      });
+    });
+    return statusSection({ name: section.name, summary: damageSummary(section.rows), rows, notes });
   }).join("");
-}
-
-/** A row's Damage and Slots cells - or one merged cell before it's rolled. */
-function damageCells(row, attack) {
-  const i18n = game.i18n;
-  const merged = (text) => `<td colspan="2" class="carl-damage-status">${text}</td>`;
-  switch (row.status) {
-    case "missed": return merged(esc(i18n.localize("CARLRPG.Resolve.Missed")));
-    case "evaded": return merged(esc(i18n.localize("CARLRPG.Resolve.Evaded")));
-    case "noDamage": return merged(esc(i18n.localize("CARLRPG.Resolve.NoDamage")));
-    case "pending": {
-      const formula = esc(displayFormula(attack));
-      if (!game.user.isGM) return merged(esc(i18n.format("CARLRPG.Resolve.Waiting", { formula: displayFormula(attack) })));
-      return merged(`<button type="button" class="carl-damage-roll-button" data-action="reactionDamage" data-attack-id="${esc(row.attackId)}">
-        <i class="fas fa-dice"></i> ${formula}</button>`);
-    }
-  }
-  const r = row.result ?? {};
-  if (r.missing) return merged(esc(i18n.localize("CARLRPG.Resolve.TargetGone")));
-  const tip = esc(i18n.format("CARLRPG.Resolve.RolledTip", { rolled: attack.rolled?.total ?? "-", raw: r.raw ?? 0, final: r.final ?? 0 }));
-  const shield = r.shieldSlots ? ` <span class="carl-damage-shield">${esc(i18n.format("CARLRPG.Resolve.ShieldSlots", { count: r.shieldSlots }))}</span>` : "";
-  const slots = r.dying ? esc(i18n.localize("CARLRPG.Resolve.Dying")) : `${esc(r.slots ?? 0)}${shield}`;
-  return `<td class="carl-damage-amount" data-tooltip="${tip}">${esc(r.final ?? 0)}</td><td class="carl-damage-slots">${slots}</td>`;
+  rememberOpenRows(container, message.id, openRows);
 }
 
 /**

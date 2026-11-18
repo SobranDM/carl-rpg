@@ -3,7 +3,7 @@ import {
   DEITY_TIER_MIGRATION_ID, inferDeityTier, MIGRATIONS, migrationPlan, needsHandToHand, persistDeityBlock,
   refreshedItemUpdate, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID, zeroCharacterBaseDr,
   CHARGEN_DONE_MIGRATION_ID, madeBeforeChargen, markChargenDone, refreshSourceFor,
-  RENAMED_MIGRATION_IDS, currentMigrationIds,
+  RENAMED_MIGRATION_IDS, currentMigrationIds, MOB_ATTACKS_MIGRATION_ID,
 } from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
@@ -63,11 +63,15 @@ export default function register(quench) {
             assert.match(m.id, /^0\.7\.0-/, m.id);
           }
           const oldIds = Object.keys(RENAMED_MIGRATION_IDS);
-          assert.sameMembers(Object.values(RENAMED_MIGRATION_IDS), MIGRATIONS.map((m) => m.id), "every migration has its old id mapped");
+          const renamed = Object.values(RENAMED_MIGRATION_IDS);
+          assert.includeMembers(MIGRATIONS.map((m) => m.id), renamed, "every old id maps to a migration");
+          // Migrations added after the renaming never had an old id.
+          const added = MIGRATIONS.map((m) => m.id).filter((id) => !renamed.includes(id));
+          assert.sameMembers(added, [MOB_ATTACKS_MIGRATION_ID]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
-          assert.lengthOf(p.run, 0, "nothing runs twice");
+          assert.sameMembers(ids(p.run), added, "nothing runs twice - only what's been added since");
           assert.sameMembers(currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),
-            [...MIGRATIONS.map((m) => m.id), "some-later-fix"], "read as the new ids, without duplicates");
+            [...renamed, "some-later-fix"], "read as the new ids, without duplicates");
         });
       });
 

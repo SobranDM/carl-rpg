@@ -186,6 +186,7 @@ Hooks.once('init', function () {
     spell: models.CarlRPGSpell,
     class: models.CarlRPGClass,
     race: models.CarlRPGRace,
+    mobAttack: models.CarlRPGMobAttack,
   });
 
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Actor, 'carl-rpg', CarlRPGActorSheet, {
@@ -199,7 +200,7 @@ Hooks.once('init', function () {
     label: 'CARLRPG.SheetLabels.LootBox',
   });
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Item, 'carl-rpg', CarlRPGItemSheet, {
-    types: ['item', 'feature', 'skill', 'damageEffect', 'spell', 'class', 'race'],
+    types: ['item', 'feature', 'skill', 'damageEffect', 'spell', 'class', 'race', 'mobAttack'],
     makeDefault: true,
     label: 'CARLRPG.SheetLabels.Item',
   });

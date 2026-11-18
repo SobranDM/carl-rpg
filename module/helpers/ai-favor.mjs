@@ -17,7 +17,8 @@
  * of its total. A reroll swaps only the d20: the Rank, Stat Mod, Debuff
  * penalties and any bonus dice keep what they rolled, and nothing the
  * original roll already spent (Mana, a use-mark, a consumed Debuff) is
- * spent again. See module/chat/ai-favor-reroll.mjs for the button.
+ * spent again. See module/chat/ai-favor-reroll.mjs for the button and
+ * module/chat/check-revision.mjs for the card revised in place.
  */
 
 /**
@@ -25,7 +26,7 @@
  * reroll (anyone but a crawler).
  * @param {Actor} actor  Whoever rolled the Check.
  * @param {object} spec
- * @param {"check"|"attack"|"rowEvade"} spec.kind
+ * @param {"check"|"attack"|"rowEvade"|"driving"} spec.kind
  * @param {string} spec.formula     The d20 expression, e.g. "2d20kh".
  * @param {number|null} spec.natural  The kept d20.
  * @param {number} spec.total

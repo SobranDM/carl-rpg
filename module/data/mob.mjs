@@ -6,6 +6,7 @@ import {
   defineStatsField, deriveStats, deriveDefenses, deriveResourceCaps, creatureRollData,
 } from "./shared/derive-creature.mjs";
 import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effects.mjs";
+import { legacyAttackItems } from "../helpers/mob-attacks.mjs";
 
 /**
  * Mob actor ("Building a Mob", p.270-272) - a GM-built monster/NPC stat
@@ -60,11 +61,12 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     schema.isElite = new fields.BooleanField({ required: true, initial: false });
     schema.actionsPerRound = new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 0 });
 
-    // Structured Attacks list, matching the printed stat block's own shape
-    // (name/to-hit formula/damage formula+type/range/on-hit effect prose) -
-    // deliberately not Skill/Spell items, which most Mob attacks in print
-    // never are. A Mob that genuinely needs a real itemized Skill can still
-    // own one; this is the common case, not a replacement for that.
+    // The OLD Attacks list (printed text: name, to-hit, damage + type, range,
+    // effect). A Mob's Attacks are `mobAttack` items now (module/data/
+    // mob-attack.mjs; docs/mob-sheet.md). The field stays only so old data
+    // can be read and converted: a Mob created with a list has it turned
+    // into items (_preCreate), and the 0.7.0 migration converts existing
+    // ones (module/helpers/mob-attacks.mjs). Nothing reads it otherwise.
     schema.attacks = new fields.ArrayField(
       new fields.SchemaField({
         name: new fields.StringField({ required: false, blank: true, initial: "" }),
@@ -158,5 +160,22 @@ export default class CarlRPGMob extends CarlRPGActorBase {
 
   getRollData() {
     return creatureRollData(this, this.level);
+  }
+
+  /**
+   * A Mob created with the old Attacks list (the PDF importer, a macro, an
+   * old compendium's Mob) gets them as `mobAttack` items instead.
+   * @override
+   */
+  async _preCreate(data, options, user) {
+    const allowed = await super._preCreate(data, options, user);
+    if (allowed === false) return false;
+    const attacks = data.system?.attacks;
+    if (!Array.isArray(attacks) || !attacks.length) return;
+    const startSort = Math.max(0, ...(data.items ?? []).map((i) => i.sort ?? 0));
+    this.parent.updateSource({
+      items: [...(data.items ?? []), ...legacyAttackItems(attacks, { startSort })],
+      system: { attacks: [] },
+    });
   }
 }
