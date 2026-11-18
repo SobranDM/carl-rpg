@@ -479,6 +479,17 @@
     color: var(--carl-text);
   }
 
+  // "Used before cooldown." - the user went ahead past the warning
+  // (helpers/cooldowns.mjs), shown so the GM can see it.
+  .carl-cooldown-early {
+    margin: 4px 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--carl-danger);
+
+    i { margin-right: 2px; }
+  }
+
   .carl-round-end-list,
   .carl-consumable-list {
     margin: 4px 0;

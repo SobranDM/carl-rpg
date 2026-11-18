@@ -628,6 +628,15 @@
   font-weight: 700;
   color: var(--carl-text);
 }
+.carl-chat-card .carl-cooldown-early {
+  margin: 4px 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--carl-danger);
+}
+.carl-chat-card .carl-cooldown-early i {
+  margin-right: 2px;
+}
 .carl-chat-card .carl-round-end-list,
 .carl-chat-card .carl-consumable-list {
   margin: 4px 0;
@@ -1949,6 +1958,20 @@
   font-size: 11px;
   color: var(--carl-text-muted);
   white-space: nowrap;
+}
+.carl-rpg .carl-cooldown-chip {
+  flex: 0 0 auto;
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--carl-accent);
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--carl-accent);
+  white-space: nowrap;
+}
+.carl-rpg .carl-cooldown-chip i {
+  margin-right: 2px;
 }
 .carl-rpg .carl-hint {
   font-size: 11px;

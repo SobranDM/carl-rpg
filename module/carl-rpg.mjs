@@ -29,6 +29,7 @@ import { registerVehicleHooks, registerVehicleSocket } from './helpers/vehicles.
 import { rollDrivingCheck } from './helpers/vehicle-driving.mjs';
 import { rollRam } from './helpers/vehicle-ram.mjs';
 import { registerExpirySweep } from './helpers/expiry.mjs';
+import { registerCooldowns } from './helpers/cooldowns.mjs';
 import { commandPet } from './helpers/pet-command.mjs';
 import { bakeItemGrants } from './helpers/race-class-grants.mjs';
 import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
@@ -150,6 +151,9 @@ Hooks.once('init', function () {
   // Buffs - module/helpers/expiry.mjs) run out in combat as well as out.
   CONFIG.time.roundTime = 10;
   registerExpirySweep();
+  // Cooldowns (module/helpers/cooldowns.mjs): the "New scene" counter, the
+  // sheets' cooldown chip, and redrawing the chips as time moves.
+  registerCooldowns();
 
   // Command Pet results (module/helpers/pet-command.mjs) as token status
   // icons - shown on the token and in the combat tracker, offered on a

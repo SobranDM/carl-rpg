@@ -3,6 +3,7 @@ const { ActorSheetV2 } = foundry.applications.sheets;
 import { onAddArrayItem, onDeleteArrayItem } from "../helpers/array-editor.mjs";
 import { onToggleDrawer } from "../helpers/drawer-toggle.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
+import { cooldownSignature } from "../helpers/cooldowns.mjs";
 import DragDropMixin from "./mixins/drag-drop-mixin.mjs";
 import CarlSpendStatPointsDialog from "../apps/spend-stat-points-dialog.mjs";
 import CrawlerCreation from "../apps/crawler-creation.mjs";
@@ -402,6 +403,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const context = await super._prepareContext(options);
     const actor = context.document;
     const actorData = actor.system;
+    // The cooldown chips as drawn now - redrawn when they change
+    // (module/helpers/cooldowns.mjs refreshCooldownSheets).
+    this._carlCooldownSig = cooldownSignature(actor);
 
     // Add the actor's data to context for easier access, as well as flags.
     context.actor = actor;

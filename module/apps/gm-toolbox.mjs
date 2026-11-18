@@ -26,6 +26,7 @@ import { queueForActor } from "../helpers/actor-queue.mjs";
 import { dropExpiredConditions } from "../helpers/expiry.mjs";
 import { actorPickerContent, advanceTimeField, pickerGroups, wireActorPicker } from "./actor-picker.mjs";
 import { postPartyCheck } from "../chat/party-check-card.mjs";
+import { startNewScene } from "../helpers/cooldowns.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -107,6 +108,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       grind: CarlToolbox.#onGrind,
       rollLoot: CarlToolbox.#onRollLoot,
       partyCheck: CarlToolbox.#onPartyCheck,
+      newScene: CarlToolbox.#onNewScene,
     },
   };
 
@@ -708,6 +710,16 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       return;
     }
     await postPartyCheck({ skill, difficulty, actors: picked.actors });
+  }
+
+  /**
+   * New scene (ruling Q4): every "Once per scene" cooldown ends, for every
+   * actor (module/helpers/cooldowns.mjs startNewScene).
+   */
+  static async #onNewScene(event, target) {
+    if (!game.user.isGM) return;
+    await startNewScene();
+    ui.notifications.info(game.i18n.localize("CARLRPG.Toolbox.NewSceneDone"));
   }
 
   /** Skill names for the Party Skill Check's suggestions: the compendiums' and the crawlers' own. */

@@ -40,6 +40,8 @@ import { attackDifficultyParts, mobVsVehicleRows } from "../helpers/attack-targe
 import { outsideHotlist, refuseOutsideHotlist, swapForAttack } from "../helpers/hotlist.mjs";
 import { attackChoices, attackReadiness, warnNoWeapon } from "../helpers/weapons.mjs";
 import { takesDamageEffects } from "../helpers/hand-to-hand.mjs";
+import { earlyUseNote, passCooldown, passCooldowns, startCooldown } from "../helpers/cooldowns.mjs";
+import { SPELL_TIMER_PATH, spellTimerFor } from "../helpers/spell-timers.mjs";
 
 /**
  * Net Advantage/Disadvantage don't stack (Playing the Game, p. 60): an
@@ -616,9 +618,24 @@ async function attackWithSwap(ctx, actor, skillItem, { swap }, { skipDialog = fa
     warnNoWeapon(skillItem);
     return null;
   }
+  // Still cooling down (helpers/cooldowns.mjs): asked before the weapon
+  // moves, so a "no" leaves everything where it was.
+  const cooldownAsked = await passCooldowns([skillItem, chosenDamageEffect(actor, presetOptions, damageEffectItem)]);
+  if (!cooldownAsked.ok) return null;
   // Part of this Attack's own Action (ctx), swap and all.
-  const attack = () => CarlDice.rollAttack(actor, skillItem, { damageEffectItem, skipDialog, presetOptions, within: ctx });
+  const attack = () => CarlDice.rollAttack(actor, skillItem, { damageEffectItem, skipDialog, presetOptions, within: ctx, cooldownAsked });
   return now.swap ? swapForAttack(actor, now.swap, attack) : attack();
+}
+
+/**
+ * The Damage Effect an Attack dialog's choices picked, else the one passed in.
+ * @param {Actor} actor
+ * @param {object|null} options  promptRollOptions' result.
+ * @param {Item|null} fallback
+ * @returns {Item|null}
+ */
+function chosenDamageEffect(actor, options, fallback = null) {
+  return (options?.damageEffectId ? actor.items.get(options.damageEffectId) : null) ?? fallback;
 }
 
 export default class CarlDice {
@@ -741,6 +758,10 @@ export default class CarlDice {
     }
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
+    // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+    // anything is spent. A Scroll's Spell isn't the crawler's own.
+    const cooldown = castAs ? { ok: true, early: false } : await passCooldown(skillItem);
+    if (!cooldown.ok) return null;
 
     const rollData = actor.getRollData();
     const { conditionalModifiers } = cast;
@@ -791,8 +812,9 @@ export default class CarlDice {
 
     const chosenManaCost = cast.payMana ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+    if (!castAs) await startCooldown(skillItem);
 
-    const body = offStatNote(statKey, skillSys.governingStat) + buildDebuffNote(debuffEffect.applied);
+    const body = (cooldown.early ? earlyUseNote() : "") + offStatNote(statKey, skillSys.governingStat) + buildDebuffNote(debuffEffect.applied);
     const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
@@ -865,9 +887,13 @@ export default class CarlDice {
       warnNoWeapon(skill);
       return null;
     }
+    // Still cooling down (helpers/cooldowns.mjs): asked before anything
+    // moves or is spent.
+    const cooldownAsked = await passCooldowns([skill, chosenDamageEffect(actor, prompted)]);
+    if (!cooldownAsked.ok) return null;
     // One Attack Action: the swap out of the Hotlist is part of it (p.98).
     return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name: skill.name }), (ctx) => {
-      const attack = () => CarlDice.rollAttack(actor, skill, { presetOptions: prompted, within: ctx });
+      const attack = () => CarlDice.rollAttack(actor, skill, { presetOptions: prompted, within: ctx, cooldownAsked });
       return readiness.swap ? swapForAttack(actor, readiness.swap, attack) : attack();
     });
   }
@@ -885,7 +911,10 @@ export default class CarlDice {
    * @param {Actor} actor
    * @param {Item} skillItem
    * @param {{skipDialog?: boolean, damageEffectItem?: Item|null, castAs?: object|null,
-   *   promptArgsOnly?: boolean, presetOptions?: object|null, targets?: object[]|null}} [options]
+   *   promptArgsOnly?: boolean, presetOptions?: object|null, targets?: object[]|null,
+   *   cooldownAsked?: {ok: boolean, early: boolean}|null}} [options]
+   *   cooldownAsked: the cooldown prompt's answer, when the caller asked
+   *   already (the Attack! picker, a Swap and Attack - helpers/cooldowns.mjs).
    *   promptArgsOnly: return what the dialog would show (promptRollOptions'
    *   arguments) without showing it or rolling - the Attack! picker's.
    *   presetOptions: roll with these dialog choices (promptRollOptions'
@@ -906,6 +935,7 @@ export default class CarlDice {
   /** rollAttack, inside its Action (helpers/actions.mjs takeAction). */
   static async _attack(ctx, actor, skillItem, {
     skipDialog = false, damageEffectItem = null, castAs = null, promptArgsOnly = false, presetOptions = null, targets: givenTargets = null,
+    cooldownAsked = null,
   } = {}) {
     if (!promptArgsOnly && !presetOptions && !castAs) {
       const readiness = attackReadiness(actor, skillItem);
@@ -1018,6 +1048,19 @@ export default class CarlDice {
     // Area Attack (p.83) - pre-ticked in the dialog when the Skill/Spell (or
     // the Damage Effect passed in) reads as one (module/helpers/area.mjs).
     const detectedArea = isAreaItem(skillItem, rank) || isAreaItem(damageEffectItem);
+
+    // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+    // anything is spent - the Skill before its dialog when that's shown
+    // here, and the Damage Effect it ends up with once the choices are made.
+    // The Attack! picker and a Swap and Attack ask before the weapon moves
+    // and pass their answer in (cooldownAsked).
+    const skillAskedFirst = !castAs && !promptArgsOnly && !presetOptions && !cooldownAsked;
+    let cooldownEarly = !!cooldownAsked?.early;
+    if (skillAskedFirst) {
+      const pass = await passCooldown(skillItem);
+      if (!pass.ok) return null;
+      cooldownEarly = pass.early;
+    }
     let options = {
       advantage: advantageEntitled ? "advantage" : "normal",
       difficulty: targetDifficulty, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null,
@@ -1080,6 +1123,12 @@ export default class CarlDice {
     // checked box for a Damage Effect that isn't the one actually used here
     // is silently dropped rather than leaking its bonus onto this attack.
     const activeConditionalModifiers = narrowConditionalModifiers(conditionalModifiers, skillItem, damageEffectItem);
+
+    if (!castAs && !cooldownAsked) {
+      const pass = await passCooldowns([skillAskedFirst ? null : skillItem, damageEffectItem]);
+      if (!pass.ok) return null;
+      cooldownEarly ||= pass.early;
+    }
 
     const untrained = rank === 0;
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
@@ -1195,6 +1244,11 @@ export default class CarlDice {
     // of hit/miss (docs/known-gaps.md 1.6).
     const chosenManaCost = cast.payMana ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+    // Used: their cooldowns start (the Damage Effect's too, if it was used).
+    if (!castAs) {
+      await startCooldown(skillItem);
+      await startCooldown(damageEffectItem);
+    }
 
     const rolls = [attackRoll, ...extraD20Rolls];
     const rollMeta = [
@@ -1305,7 +1359,8 @@ export default class CarlDice {
     // Attack onto themselves (module/chat/taunt-card.mjs). Not an Area Attack.
     if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
     const footer = footerParts.length ? footerParts.join("") : undefined;
-    const body = offStatNote(statKey, skillSys.governingStat) + buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]);
+    const body = (cooldownEarly ? earlyUseNote() : "") + offStatNote(statKey, skillSys.governingStat)
+      + buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]);
 
     // AI Favor reroll and Intervene (module/chat/check-revision.mjs): enough
     // to re-resolve this Attack from a new d20 or total - CarlDice.reviseAttack.
@@ -1911,6 +1966,11 @@ export default class CarlDice {
       if (!chosen) return null;
       recipients = [chosen];
     }
+    // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+    // anything is spent. A Scroll's Spell isn't the crawler's own.
+    const cooldown = castAs ? { ok: true, early: false } : await passCooldown(skillItem);
+    if (!cooldown.ok) return null;
+    const body = cooldown.early ? earlyUseNote() : "";
 
     const unlocked = (skillSys.upgrades ?? [])
       .filter((u) => rank >= u.rankThreshold)
@@ -1935,6 +1995,7 @@ export default class CarlDice {
       ? { manaCost: applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost), isBase: true }
       : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+    if (!castAs) await startCooldown(skillItem);
 
     // healActorUuid: the caster. Each recipient a row (heal-card.mjs).
     const flags = {
@@ -1952,6 +2013,7 @@ export default class CarlDice {
         img: skillItem.img,
         subtitle: label,
         badge: { label: game.i18n.localize("CARLRPG.Heal.SubtitleFull"), type: "hit" },
+        body,
         footer: await buildHealFooter({ full: true, rest, canMend, names }),
         flags,
         actor,
@@ -1973,6 +2035,7 @@ export default class CarlDice {
       subtitle: withManaCostSubtitle(game.i18n.format("CARLRPG.Heal.Subtitle", { amount: total }), chosenManaCost),
       img: skillItem.img,
       badge: { label: `+${total}`, type: "hit" },
+      body,
       footer: await buildHealFooter({ amount: total, canMend, names }),
       flags,
       actor,
@@ -2002,19 +2065,30 @@ export default class CarlDice {
     const skillSys = skillItem.system;
     const turningOn = !skillSys.active;
     let manaCostSpent = null;
+    let cooldown = { ok: true, early: false };
 
     if (turningOn) {
       if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
       if (isBlockedUntrainedSpell(skillItem, skillSys.rank ?? 0)) return null;
-      // Undone: off again, and the Shield back where it was.
-      noteUndo(actor, { t: "set", uuid: skillItem.uuid, data: { "system.active": false } });
+      // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+      // anything is spent.
+      cooldown = await passCooldown(skillItem);
+      if (!cooldown.ok) return null;
+      // Undone: off again (its timer gone), and the Shield back where it was.
+      noteUndo(actor, { t: "set", uuid: skillItem.uuid, data: { "system.active": false, [SPELL_TIMER_PATH]: null } });
       if (skillSys.shieldSlots) noteUndo(actor, { t: "set", uuid: actor.uuid, data: { "system.shield.value": actor.system.shield?.value ?? 0 } });
       manaCostSpent = applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost);
       await applyManaCost(actor, manaCostSpent);
       await removeConditionsById(actor, endedConditionIds(actor.system, []));
     }
 
-    await skillItem.update({ "system.active": turningOn });
+    // Its duration, worked out now (helpers/spell-timers.mjs): the active
+    // GM switches it off when that's up. Off by hand clears it.
+    await skillItem.update({
+      "system.active": turningOn,
+      [SPELL_TIMER_PATH]: turningOn ? spellTimerFor(actor, skillItem) : null,
+    });
+    if (turningOn) await startCooldown(skillItem);
 
     // Shield-style pools (docs/known-gaps.md 1.4) refill to full on
     // (re)activation - "you can't heal a Shield" means recasting is the only
@@ -2035,7 +2109,7 @@ export default class CarlDice {
       title: skillItem.name,
       img: skillItem.img,
       subtitle: toggleSubtitle,
-      body: turningOn ? (skillItem.system.description ?? "") : "",
+      body: turningOn ? (cooldown.early ? earlyUseNote() : "") + (skillItem.system.description ?? "") : "",
       actor,
     });
     return message;
@@ -2193,6 +2267,10 @@ export default class CarlDice {
     }
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
+    // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+    // anything is spent. A stand-in Skill that isn't saved has none.
+    const cooldown = await passCooldown(skillItem);
+    if (!cooldown.ok) return null;
 
     const rollData = actor.getRollData();
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
@@ -2245,7 +2323,10 @@ export default class CarlDice {
     const { roll, total, breakdown } = await parts.evaluate();
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, finalDifficulty);
-    const debuffNote = offStatNote(statKey, skillSys.governingStat) + buildDebuffNote([...rollerEffect.applied, ...opponentEffect.applied]);
+    // A caller folding this roll into its own card (Taunt, Command Pet, a
+    // Driving Check) shows this note, the early-use one included.
+    const debuffNote = (cooldown.early ? earlyUseNote() : "") + offStatNote(statKey, skillSys.governingStat)
+      + buildDebuffNote([...rollerEffect.applied, ...opponentEffect.applied]);
 
     await removeConditionsById(actor, endedConditionIds(sys, rollerEffect.applied));
     if (opponent) await removeConditionsById(opponent, consumedConditionIds(opponentEffect.applied));
@@ -2257,6 +2338,7 @@ export default class CarlDice {
     // into its own card (Taunt) pays too.
     const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+    await startCooldown(skillItem);
 
     // A caller folding this roll into its own card (Taunt, Command Pet, a
     // Driving Check) gets what a reroll needs, and which rows applied.

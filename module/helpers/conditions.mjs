@@ -23,14 +23,22 @@ import { takesConditions } from "./actor-kinds.mjs";
  */
 export function buildConditionEntry(key, { stacks = 1, source = "", label = "" } = {}) {
   const preset = CONFIG.CARLRPG.debuffs[key];
-  const hasTimedDuration = preset?.durationType === "rounds" || preset?.durationType === "real-minutes";
-  return {
+  const entry = {
     key,
     label: label || (preset ? game.i18n.localize(preset.label) : ""),
     stacks,
-    remaining: hasTimedDuration ? (preset.durationValue ?? null) : null,
+    remaining: preset?.durationType === "rounds" ? (preset.durationValue ?? null) : null,
     source,
   };
+  // "Until the end of 10 minutes" (Shit-Faced), "...of 1 hour" (Sore as
+  // Shit), "until the end of the combat or 5 minutes" (Burned...): on the
+  // world clock, ended by the expiry sweep (module/helpers/expiry.mjs). A
+  // combat round moves the clock 10 seconds (p.62), so this holds in a
+  // fight too; "end of the combat" is processCombatEnd's (round-end.mjs).
+  if (preset?.durationType === "real-minutes" && preset.durationValue) {
+    entry.expiresAt = game.time.worldTime + preset.durationValue * 60;
+  }
+  return entry;
 }
 
 // "A 2nd Minor/Major Injury converts to the matching Long-Term version"

@@ -685,6 +685,9 @@
         "Confirm": "Confirm"
       },
       "Other": "Other",
+      "NewScene": "New scene",
+      "NewSceneHint": "Start a new scene: every \"Once per scene\" cooldown ends, for every actor.",
+      "NewSceneDone": "New scene: \"Once per scene\" cooldowns are cleared.",
       "Grind": "Grind",
       "GrindTitle": "Grinding",
       "GrindActor": "Character",
@@ -1603,7 +1606,22 @@
     "Toggle": {
       "Activated": "Activated",
       "Deactivated": "Deactivated",
-      "Active": "Active"
+      "Active": "Active",
+      "Ended": "{name}: {spell} has ended."
+    },
+    "Cooldown": {
+      "Label": "Cooldown",
+      "Chip": {
+        "Seconds": "Cooldown {amount} sec",
+        "Minutes": "Cooldown {amount} min",
+        "Hours": "Cooldown {amount} h",
+        "Round": "Until next round",
+        "Scene": "This scene"
+      },
+      "AskTitle": "{name} is cooling down",
+      "AskBody": "{name} is still cooling down ({left}). Use it anyway?",
+      "UseAnyway": "Use anyway",
+      "UsedEarly": "Used before cooldown."
     },
     "DamageType": {
       "Acid": "Acid",

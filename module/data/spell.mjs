@@ -44,9 +44,11 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
     // Ongoing/toggled spell effects (docs/known-gaps.md 1.4) - e.g. Shield,
     // Bang Bro: cast once to start a timed effect, rather than a one-shot
     // roll. isToggled is content-authored (true only for spells that work this
-    // way); active is player/GM-toggled runtime state, off by default. No
-    // in-game timer is modeled - a person turns it off manually when the
-    // fiction says the duration elapsed (see CarlDice.rollToggleSpell).
+    // way); active is player/GM-toggled runtime state, off by default. When
+    // its `duration` text is a time, it switches itself off when that's up
+    // (module/helpers/spell-timers.mjs - the timer sits beside `active` in
+    // flags.carl-rpg.spellTimer); otherwise a person turns it off by hand
+    // (see CarlDice.rollToggleSpell).
     schema.isToggled = new fields.BooleanField({ required: true, initial: false });
     schema.active = new fields.BooleanField({ required: true, initial: false });
 

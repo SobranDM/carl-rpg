@@ -9,11 +9,14 @@
  * The active GM sweeps every actor - world actors and the actors of tokens
  * on any scene - whenever world time changes. Each actor's sweep runs
  * through the per-actor queue (module/helpers/actor-queue.mjs) so it never
- * overwrites round-end processing's own write to the same conditions.
+ * overwrites round-end processing's own write to the same conditions. The
+ * same sweep switches off toggled Spells whose time is up (module/helpers/
+ * spell-timers.mjs).
  */
 import { queueForActor } from "./actor-queue.mjs";
 import { removeConditionsById } from "./conditions.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { expireSpellTimers, hasSpellTimers, spellEndedLines } from "./spell-timers.mjs";
 
 /**
  * Ids of the condition entries that have run out by `worldTime`.
@@ -114,16 +117,24 @@ export function registerExpirySweep() {
     if (!game.users.activeGM?.isSelf) return;
     const lines = [];
     for (const actor of sweepableActors()) {
-      if (!actor.system?.conditions?.some?.((c) => c.expiresAt !== null && c.expiresAt !== undefined)) continue;
-      try {
-        const ended = await expireConditions(actor, worldTime);
-        if (ended.length) {
-          lines.push(game.i18n.format("CARLRPG.Consumable.Expired", {
-            name: esc(actor.name), effects: ended.map(esc).join(", "),
-          }));
+      if (actor.system?.conditions?.some?.((c) => c.expiresAt !== null && c.expiresAt !== undefined)) {
+        try {
+          const ended = await expireConditions(actor, worldTime);
+          if (ended.length) {
+            lines.push(game.i18n.format("CARLRPG.Consumable.Expired", {
+              name: esc(actor.name), effects: ended.map(esc).join(", "),
+            }));
+          }
+        } catch (err) {
+          console.error(`CarlRPG | Expiring timed effects failed for ${actor.name}`, err);
         }
-      } catch (err) {
-        console.error(`CarlRPG | Expiring timed effects failed for ${actor.name}`, err);
+      }
+      if (hasSpellTimers(actor)) {
+        try {
+          lines.push(...spellEndedLines(actor, await expireSpellTimers(actor, worldTime)));
+        } catch (err) {
+          console.error(`CarlRPG | Ending timed Spells failed for ${actor.name}`, err);
+        }
       }
     }
     if (lines.length) {

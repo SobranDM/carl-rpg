@@ -37,6 +37,7 @@ import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { beginSwap, endSwap, refuseWhileSwapping } from "./swap-lock.mjs";
 import { attackReadiness } from "./weapons.mjs";
+import { activeCooldown, cooldownLabel } from "./cooldowns.mjs";
 import { isTwoHanded } from "./gear.mjs";
 
 export { refuseWhileSwapping };
@@ -167,6 +168,9 @@ export function hotlistRows(actor) {
     } else {
       Object.assign(row, { kind: "other", action: null });
     }
+    // A Spell or Skill cooling down shows its chip (helpers/cooldowns.mjs).
+    const cooldown = activeCooldown(item);
+    if (cooldown) Object.assign(row, { cooldown: cooldownLabel(cooldown), cooldownText: cooldown.text ?? "" });
     return row;
   });
 }

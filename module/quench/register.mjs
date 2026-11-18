@@ -61,6 +61,7 @@ import registerHealTargets from "./batches/heal-targets.mjs";
 import registerArmorPiercing from "./batches/armor-piercing.mjs";
 import registerPartyCheck from "./batches/party-check.mjs";
 import registerShieldBlock from "./batches/shield-block.mjs";
+import registerTimers from "./batches/timers.mjs";
 import { withMessageCleanup } from "./helpers.mjs";
 
 const BATCH_REGISTRARS = [
@@ -113,6 +114,7 @@ const BATCH_REGISTRARS = [
   registerArmorPiercing,
   registerPartyCheck,
   registerShieldBlock,
+  registerTimers,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

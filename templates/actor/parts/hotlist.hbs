@@ -31,6 +31,9 @@
           {{#if (eq slot.kind "skill")}}R{{slot.rank}}{{/if}}
           {{#if (eq slot.kind "consumable")}}×{{slot.quantity}}{{/if}}
         </span>
+        {{#if slot.cooldown}}
+        <span class="carl-cooldown-chip" data-tooltip="{{localize 'CARLRPG.Cooldown.Label'}}: {{slot.cooldownText}}"><i class="fas fa-hourglass-half"></i> {{slot.cooldown}}</span>
+        {{/if}}
         {{#if slot.action}}
         <span class="carl-hotlist-badge">{{localize (concat "CARLRPG.Hotlist.Action." slot.action)}}</span>
         {{else if slot.inHand}}

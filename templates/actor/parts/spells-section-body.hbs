@@ -1,6 +1,7 @@
 {{!-- Spells list body - the content of the Spells drawer: a Character's
       Skills tab (skills-tab.hbs), a Mob's or Pet's Abilities tab.
-      A Character pins a Spell to the Hotlist with the star. --}}
+      A Character pins a Spell to the Hotlist with the star. A Spell
+      cooling down shows its chip (module/helpers/cooldowns.mjs). --}}
 <ol class="items-list">
   <li class="item flexrow items-header">
     <div class="item-name carl-sort-header" data-action="sortList" data-list="spells" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.spells.name}}"></i></div>
@@ -24,6 +25,7 @@
         title="{{localize 'CARLRPG.Ranked.ToggleDetails'}}">
         <h4>{{item.name}}{{#if item.system.active}} <i class="fas fa-bolt carl-spell-active-indicator" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}</h4>
       </a>
+      {{cooldownChip item}}
     </div>
     <div class="item-prop">{{item.system.manaCost}}</div>
     <div class="item-prop">{{item.system.rank}}</div>

@@ -38,7 +38,8 @@
  * are removed. A consumable's Buff counting rounds instead pays out what its
  * per-round restore still owes, all at once (as it would have outside a
  * fight), and if it carries bonuses it carries on, on the clock, for its
- * remaining rounds (10 seconds each).
+ * remaining rounds (10 seconds each). A toggled Spell lasting "until the
+ * end of the combat" (module/helpers/spell-timers.mjs) switches off.
  */
 import { CARLRPG } from "./config.mjs";
 import { computeDamageApplication } from "./damage-pipeline.mjs";
@@ -48,6 +49,7 @@ import { createRollMessage, createCardMessage, esc } from "../chat/chat-card.mjs
 import { queueForActor } from "./actor-queue.mjs";
 import { restorePerRound, restoresPerRound } from "./rest.mjs";
 import { diesAtZeroHb, isCrawler } from "./actor-kinds.mjs";
+import { endCombatSpellTimers, spellEndedLines } from "./spell-timers.mjs";
 
 /** An entry's own duration type (Potion Sickness's Poisoned) wins over its preset's. */
 function durationTypeOf(condition) {
@@ -404,6 +406,14 @@ export async function processCombatEnd(combat) {
         console.error(`CarlRPG | End-of-combat cleanup failed for ${actor.name}`, err);
       }
     });
+  }
+  // "Until the end of the combat or N minutes": a Spell cast in this fight.
+  for (const actor of combatActors(combat)) {
+    try {
+      lines.push(...spellEndedLines(actor, await endCombatSpellTimers(actor, combat.id)));
+    } catch (err) {
+      console.error(`CarlRPG | Ending Spells with the combat failed for ${actor.name}`, err);
+    }
   }
   if (!lines.length) return null;
   return createCardMessage({
