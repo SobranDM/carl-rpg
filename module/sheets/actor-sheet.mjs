@@ -140,8 +140,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     primary: {
       tabs: [
         { id: "abilities", label: "CARLRPG.Tab.Abilities" },
-        { id: "skills", label: "CARLRPG.Tab.Skills" },
+        // Inventory before Skills (ruled 2026-11-18), for Characters and Mobs.
         { id: "items", label: "CARLRPG.Tab.Inventory" },
+        { id: "skills", label: "CARLRPG.Tab.Skills" },
         { id: "features", label: "CARLRPG.Tab.Boons" },
         { id: "conditions", label: "CARLRPG.Tab.Conditions" },
         { id: "defenses", label: "CARLRPG.Tab.Defenses" },
@@ -164,12 +165,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       template: "systems/carl-rpg/templates/actor/parts/abilities.hbs",
       scrollable: [""],
     },
-    skills: {
-      template: "systems/carl-rpg/templates/actor/parts/skills-tab.hbs",
-      scrollable: [""],
-    },
     items: {
       template: "systems/carl-rpg/templates/actor/parts/items-list.hbs",
+      scrollable: [""],
+    },
+    skills: {
+      template: "systems/carl-rpg/templates/actor/parts/skills-tab.hbs",
       scrollable: [""],
     },
     features: {
@@ -204,14 +205,16 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static TABS_BY_TYPE = {
     // A Character's first tab is Combat (Stats, Defenses, Hotlist,
-    // Attacks); Skills and Spells have their own. Its Defenses are on the
-    // Combat tab's Stats column and Size is in the header, so it has no
-    // Defenses tab.
-    character: ["abilities", "skills", "items", "features", "conditions", "description"],
-    // A Mob's (docs/mob-sheet.md) as the Character's: Combat (Stats,
-    // Defenses with its DR and Resistances, Attacks), Skills, Inventory,
-    // Boons, Debuffs, Notes - no Defenses tab.
-    mob: ["abilities", "skills", "items", "features", "conditions", "description"],
+    // Attacks), then Inventory, then Skills (and Spells). Its Defenses are
+    // on the Combat tab's Stats column and Size is in the header, so it has
+    // no Defenses tab. (The nav order is TABS' order; these say which show.)
+    character: ["abilities", "items", "skills", "features", "conditions", "description"],
+    // A Mob's (docs/mob-sheet.md) as the Character's, without Skills: Combat
+    // (Stats, Defenses with its DR and Resistances, Attacks, then its Spells
+    // and Mana), Inventory, Boons, Debuffs, Notes. No Mob stat block has
+    // Skills; the book's NPCs with "Additional Skills" are Bard patrons
+    // (p.315), Character-sheet material (ruled 2026-11-18).
+    mob: ["abilities", "items", "features", "conditions", "description"],
     pet: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
     // An object: no Boons, Debuffs or Defenses tab (Resistances are on its
     // Details tab). Its "abilities" slot is the Vehicle tab, "items" Cargo.
@@ -832,12 +835,18 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
         spell.inHotlist = isInHotlist(this.actor, spell.id);
         spell.showHotlistPin = spell.inHotlist || canHotlist(this.actor, spell);
       }
-      // Worn gear lists first (a stable sort keeps the name order within).
-      gear.sort((a, b) => (a.worn ? 0 : 1) - (b.worn ? 0 : 1));
     }
+    // On a Character an item is in one place at a time: the Inventory list,
+    // the Equipment Doll or the Hotlist (ruled 2026-11-18). Gear on the doll
+    // or in the Hotlist isn't listed; the doll's slots have their own edit
+    // control, and the Hotlist's (x) puts an item back in the list.
+    // (Equipped with no slot - old data - stays listed, so it's reachable.)
+    const listed = this.actor.type === "character"
+      ? gear.filter((item) => !isItemWorn(this.actor, item.id) && !item.inHotlist)
+      : gear;
     raceAndClass.sort((a, b) => (a.type === b.type ? 0 : a.type === "race" ? -1 : 1) || byName(a, b));
 
-    context.gear = gear;
+    context.gear = listed;
     context.features = features;
     context.skills = skills;
     context.spells = spells;
@@ -1625,7 +1634,17 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // whole, rather than creating the item and skipping the slot.
     if (slot && refuseWhileSwapping(this.actor)) return null;
     if (this.actor.uuid === item.parent?.uuid) {
-      if (!slot) return null;
+      // Dragged off the Equipment Doll onto the Inventory list: taken off,
+      // as its (x) does (a Retrieve in a fight). An item is in one place at
+      // a time - the list, the doll or the Hotlist.
+      if (!slot) {
+        const onList = event.target.closest?.('section.tab[data-tab="items"] .carl-inventory-layout > ol.items-list');
+        if (onList && this.actor.type === "character" && isItemWorn(this.actor, item.id)) {
+          await unwearItem(this.actor, item);
+          return item;
+        }
+        return null;
+      }
       await assignItemToSlot(this.actor, slot, item);
       return item;
     }

@@ -521,8 +521,8 @@ export default function register(quench) {
             await waitFor(() => actor.system.gearSlots.head === helm.id, { message: "never worn" });
             assert.isTrue(actor.items.get(helm.id).system.equipped);
             assert.equal(actor.items.size, 2, "worn, not copied");
-            await waitFor(() => sheet.element.querySelector('section[data-tab="items"] li.item[data-item-id]')?.dataset.itemId === helm.id,
-              { message: "worn gear should list first" });
+            await waitFor(() => !sheet.element.querySelector(`section[data-tab="items"] li.item[data-item-id="${helm.id}"]`),
+              { message: "worn gear shouldn't be listed: it's on the doll" });
             await waitFor(() => dollSlot(sheet, "gear", "head")?.classList.contains("filled"), { message: "the doll never showed it" });
 
             await dropOnDoll(sheet, "gear", "torso", helm);
@@ -543,7 +543,7 @@ export default function register(quench) {
           }
         });
 
-        it("the Equipped box wears gear with no slot: out of the Hotlist, star hidden", async function () {
+        it("one place at a time: a Hotlisted item isn't listed; the Equipped box moves a listed one to the doll", async function () {
           const actor = await createTestCharacter("worn");
           const sheet = actor.sheet;
           try {
@@ -551,11 +551,15 @@ export default function register(quench) {
             await placeInHotlist(actor, 0, cloak);
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            sheet.element.querySelector(`li.item[data-item-id="${cloak.id}"] .carl-equip-toggle`).click();
-            await waitFor(() => !isInHotlist(actor, cloak), { message: "still in the Hotlist" });
-            assert.isTrue(actor.items.get(cloak.id).system.equipped);
-            await waitFor(() => !sheet.element.querySelector(`li.item[data-item-id="${cloak.id}"] .carl-hotlist-pin`),
-              { message: "worn gear shouldn't offer the star" });
+            const row = () => sheet.element.querySelector(`section[data-tab="items"] li.item[data-item-id="${cloak.id}"]`);
+            assert.notExists(row(), "in the Hotlist, so not in the Inventory list");
+
+            // Back out of the Hotlist: listed again, then worn with the box.
+            sheet.element.querySelector('[data-slot-type="hotlist"][data-slot-key="0"] .carl-slot-clear').click();
+            await waitFor(() => !isInHotlist(actor, cloak) && row(), { message: "never listed again" });
+            row().querySelector(".carl-equip-toggle").click();
+            await waitFor(() => actor.items.get(cloak.id).system.equipped, { message: "never worn" });
+            await waitFor(() => !row(), { message: "worn, so not in the Inventory list" });
           } finally {
             await sheet.close();
             await deleteTestActor(actor);

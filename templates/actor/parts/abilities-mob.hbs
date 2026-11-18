@@ -2,8 +2,10 @@
       column, then the Defenses (the stat block's Surprise and Evade as
       "13+F" with today's value, DR, Move, Actions per round, and the
       Resistances - their grid opens here to edit), then the Attacks.
-      Mobs never roll (p.267), so there's no Evade roll. Skills and Spells
-      are on their own tab (skills-tab.hbs). --}}
+      Mobs never roll (p.267), so there's no Evade roll. Then its Spells,
+      whose header edits its Mana (a Mob has no Mana bar). A Mob has no
+      Skills tab (no stat block has Skills); a Skill one has anyway is
+      shown here, so nothing it owns is hidden. --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="abilities">
   <div class="carl-abilities-layout">
     {{> "systems/carl-rpg/templates/actor/parts/stats-column.hbs"}}
@@ -52,6 +54,21 @@
       </fieldset>
 
       {{> "systems/carl-rpg/templates/actor/parts/mob-attacks-list.hbs"}}
+
+      {{#> carlCollapsibleSection sectionId="spells" expanded=system.uiState.spellsExpanded
+           label=(localize "CARLRPG.Tab.Spells") toggleScope="actor" togglePath="system.uiState.spellsExpanded"
+           showMana=true manaReadonly=false manaValue=system.mana.value manaMax=system.mana.max}}
+        {{> "systems/carl-rpg/templates/actor/parts/spells-section-body.hbs" spells=spells locked=system.uiState.itemsLocked}}
+      {{/carlCollapsibleSection}}
+
+      {{#if (or skills.length unmatchedDamageEffects.length)}}
+      {{#> carlCollapsibleSection sectionId="skills" expanded=system.uiState.skillsExpanded
+           label=(localize "CARLRPG.Tab.Skills") toggleScope="actor" togglePath="system.uiState.skillsExpanded"
+           showLockToggle=true locked=system.uiState.itemsLocked}}
+        {{> "systems/carl-rpg/templates/actor/parts/skills-section-body.hbs"
+            skills=skills unmatchedDamageEffects=unmatchedDamageEffects config=config locked=system.uiState.itemsLocked}}
+      {{/carlCollapsibleSection}}
+      {{/if}}
     </div>
   </div>
 </section>

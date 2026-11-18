@@ -654,7 +654,8 @@ export default function register(quench) {
         it("reports a localised error", function () {
           const message = game.i18n.format("CARLRPG.PdfImport.LowQuality", { title: "Test Book", ppi: 72 });
           assert.include(message, "Test Book");
-          assert.include(message, "72");
+          // The wording may or may not show the measured resolution ({ppi}).
+          assert.notInclude(message, "{ppi}", "no unfilled placeholder");
           assert.notInclude(message, "CARLRPG.");
           assert.instanceOf(new LowQualityPdfError(72), Error);
         });

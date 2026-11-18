@@ -1,18 +1,12 @@
 {{!-- Inventory tab: every gear item. A Character also gets the Equipment
       Doll beside the list: drop a row onto a slot to wear it there, (x) to
-      take it off (helpers/equip-slots.mjs). The checkbox wears gear with no
-      slot (or takes it off), and the star pins it to the Hotlist
-      (helpers/hotlist.mjs). Worn items list first. --}}
+      take it off, the pencil to edit it (helpers/equip-slots.mjs). The
+      checkbox wears gear in its first free slot, and the star pins it to the
+      Hotlist (helpers/hotlist.mjs). On a Character an item is in exactly one
+      place: the list, the doll or the Hotlist - worn and Hotlisted items
+      aren't listed here (actor-sheet.mjs _prepareItems). Gold sits above
+      the doll, so it doesn't push the list down. --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="items">
-  {{#if isCharacter}}
-  {{!-- Gold takes one Inventory slot however much there is (p.23). --}}
-  <div class="carl-inventory-bar">
-    <label class="carl-gold">
-      <span class="resource-label">{{localize "CARLRPG.Actor.Gold"}}</span>
-      <input type="text" class="carl-w-short" name="system.details.gold" value="{{system.details.gold}}" data-dtype="Number" />
-    </label>
-  </div>
-  {{/if}}
   <div class="carl-inventory-layout">
   <ol class="items-list">
     <li class="item flexrow items-header">
@@ -66,13 +60,23 @@
 
   {{#if equipSlots}}
   <aside class="carl-equip-panel">
+    {{!-- Gold takes one Inventory slot however much there is (p.23). --}}
+    <div class="carl-inventory-bar">
+      <label class="carl-gold">
+        <span class="resource-label">{{localize "CARLRPG.Actor.Gold"}}</span>
+        <input type="text" class="carl-w-short" name="system.details.gold" value="{{system.details.gold}}" data-dtype="Number" />
+      </label>
+    </div>
     <fieldset class="carl-equipped">
       <legend>{{localize "CARLRPG.Item.Equipped"}}</legend>
       <div class="carl-gear-grid">
         {{#each equipSlots.gear as |slot|}}
-        <div class="carl-equip-slot carl-gear-slot{{#if slot.name}} filled{{/if}}" style="grid-area: {{slot.key}}" data-slot-type="gear" data-slot-key="{{slot.key}}" title="{{#if slot.name}}{{slot.name}}{{else}}{{localize slot.label}}{{/if}}">
+        <div class="carl-equip-slot carl-gear-slot{{#if slot.name}} filled{{/if}}" style="grid-area: {{slot.key}}" data-slot-type="gear" data-slot-key="{{slot.key}}"{{#if slot.itemId}} data-item-id="{{slot.itemId}}"{{/if}} title="{{#if slot.name}}{{slot.name}}{{else}}{{localize slot.label}}{{/if}}">
           {{#if slot.img}}<img src="{{slot.img}}" alt="" />{{else}}<span class="carl-gear-icon" style="mask-image: url('{{slot.icon}}')"></span>{{/if}}
           <span class="carl-equip-slot-name">{{#if slot.name}}{{slot.name}}{{else}}{{localize slot.label}}{{/if}}</span>
+          {{#if slot.itemId}}
+          <a class="item-control carl-slot-edit" data-action="editItem" title="{{localize 'DOCUMENT.Update' type='Item'}}"><i class="fas fa-edit"></i></a>
+          {{/if}}
           {{#if slot.name}}
           <a class="item-control carl-slot-clear" data-action="clearSlot" title="{{localize 'CARLRPG.Actor.ClearSlot'}}"><i class="fas fa-times"></i></a>
           {{/if}}
@@ -85,9 +89,12 @@
       </div>
       <div class="carl-accessory-slots">
         {{#each equipSlots.accessories as |slot|}}
-        <div class="carl-equip-slot carl-gear-slot filled" data-slot-type="accessory" data-slot-key="{{slot.index}}" title="{{slot.name}}">
+        <div class="carl-equip-slot carl-gear-slot filled" data-slot-type="accessory" data-slot-key="{{slot.index}}"{{#if slot.itemId}} data-item-id="{{slot.itemId}}"{{/if}} title="{{slot.name}}">
           {{#if slot.img}}<img src="{{slot.img}}" alt="" />{{else}}<span class="carl-gear-icon" style="mask-image: url('{{@root.config.accessoryIcon}}')"></span>{{/if}}
           <span class="carl-equip-slot-name">{{slot.name}}</span>
+          {{#if slot.itemId}}
+          <a class="item-control carl-slot-edit" data-action="editItem" title="{{localize 'DOCUMENT.Update' type='Item'}}"><i class="fas fa-edit"></i></a>
+          {{/if}}
           <a class="item-control carl-slot-clear" data-action="clearSlot" title="{{localize 'CARLRPG.Actor.ClearSlot'}}"><i class="fas fa-times"></i></a>
         </div>
         {{/each}}

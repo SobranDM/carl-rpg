@@ -1,10 +1,10 @@
-{{!-- A Character's (and a Mob's) Skills tab: every owned Skill (with its Damage
-      Effects) and Spell. Pin a Spell (the star) to put it in the Hotlist -
-      in a fight it can only be cast from there (p.86). The Spells section
-      shows only once the crawler has a Spell; until then the Skills header
-      has a "+ Spell" link. A Character's Mana is edited in the header
-      (mana-bar.hbs), so its Spells header shows it read-only; a Mob has no
-      Mana bar, so its Spells header edits it. --}}
+{{!-- A Character's Skills tab: every owned Skill (with its Damage Effects)
+      and Spell. Pin a Spell (the star) to put it in the Hotlist - in a fight
+      it can only be cast from there (p.86). The Spells section shows only
+      once the crawler has a Spell; until then the Skills header has a
+      "+ Spell" link. A Character's Mana is edited in the header
+      (mana-bar.hbs), so its Spells header shows it read-only. (A Mob has no
+      Skills tab: its Spells are on its Combat tab, abilities-mob.hbs.) --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="skills">
   {{#> carlCollapsibleSection sectionId="skills" expanded=system.uiState.skillsExpanded
        label=(localize "CARLRPG.Tab.Skills") toggleScope="actor" togglePath="system.uiState.skillsExpanded"

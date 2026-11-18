@@ -220,10 +220,10 @@ export default function register(quench) {
         };
         const rerendered = (sheet, check, message) => waitFor(() => sheet.rendered && check(sheet.element), { message });
 
-        it("tabs: Combat, Skills, Inventory, Boons, Debuffs, Notes", async function () {
+        it("tabs: Combat, Inventory, Boons, Debuffs, Notes - no Skills tab", async function () {
           const sheet = await open();
           const labels = [...sheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.textContent.trim());
-          assert.deepEqual(labels, ["Combat", "Skills", "Inventory", "Boons", "Debuffs", "Notes"].map((k) => game.i18n.localize(`CARLRPG.Tab.${k}`)));
+          assert.deepEqual(labels, ["Combat", "Inventory", "Boons", "Debuffs", "Notes"].map((k) => game.i18n.localize(`CARLRPG.Tab.${k}`)));
         });
 
         it("the header: Level and Elite under the portrait; Tier, Size and Type by the name; no Floor or Actions", async function () {
@@ -301,14 +301,25 @@ export default function register(quench) {
           await waitFor(() => mob.system.size === 5, { message: "Size never saved" });
         });
 
-        it("no Evade roll; the Attacks' heading counts its Area ones; Skills are on the Skills tab", async function () {
-          const skill = await createTestItem(mob, "skill", "Sneak", { name: "Sneak" });
+        it("no Evade roll; the Attacks' heading counts its Area ones; Spells and Mana on the Combat tab", async function () {
           const sheet = await open();
           assert.notExists(sheet.element.querySelector('[data-action="rollEvade"]'), "Mobs never roll (p.267)");
           assert.equal(sheet.element.querySelector(".carl-mob-attacks-count").textContent.trim(),
             game.i18n.format("CARLRPG.MobAttack.CountWithArea", { n: 2, area: 1 }));
-          assert.exists(sheet.element.querySelector(`section.tab[data-tab="skills"] [data-item-id="${skill.id}"]`));
-          assert.notExists(sheet.element.querySelector(`section.tab[data-tab="abilities"] [data-item-id="${skill.id}"]`));
+          const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
+          assert.exists(combat.querySelector('[data-section-id="spells"]'), "a Spells section");
+          assert.exists(combat.querySelector('input[name="system.mana.value"]'), "its Mana is edited there");
+          assert.notExists(sheet.element.querySelector('section.tab[data-tab="skills"]'), "no Skills tab");
+          assert.notExists(combat.querySelector(".carl-skills-list"), "no Skills section while it has none");
+        });
+
+        it("a Spell shows on the Combat tab; a Skill it owns anyway shows there too", async function () {
+          const spell = await createTestItem(mob, "spell", "Bolt", { name: "Bolt", system: { rank: 1 } });
+          const skill = await createTestItem(mob, "skill", "Sneak", { name: "Sneak" });
+          const sheet = await open();
+          const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
+          assert.exists(combat.querySelector(`[data-item-id="${spell.id}"]`), "the Spell");
+          assert.exists(combat.querySelector(`[data-item-id="${skill.id}"]`), "the Skill isn't hidden");
         });
       });
     },

@@ -1,5 +1,7 @@
 import { CarlRPGActorSheet } from "../../sheets/actor-sheet.mjs";
 import { refreshTimedSheets } from "../../helpers/expiry.mjs";
+import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
+import { placeInHotlist } from "../../helpers/hotlist.mjs";
 import { BOON_HOURS, boonAvailable, deityTithe, describeDeity, receiveBoon } from "../../helpers/worship.mjs";
 import {
   createTestCharacter,
@@ -126,7 +128,7 @@ export default function register(quench) {
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
             const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
-            assert.deepEqual(tabs.slice(0, 3), ["abilities", "skills", "items"]);
+            assert.deepEqual(tabs.slice(0, 3), ["abilities", "items", "skills"], "Combat, Inventory, Skills");
             assert.include(sheet.element.querySelector('nav [data-tab="abilities"]').textContent, game.i18n.localize("CARLRPG.Tab.Combat"));
             const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
             assert.exists(combat.querySelector(".carl-stats-column"));
@@ -215,7 +217,7 @@ export default function register(quench) {
             // Resistances are on the Combat tab, and it never rolls an Evade.
             const mobSheet = await openSheet(mob);
             const mobTabs = [...mobSheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
-            assert.deepEqual(mobTabs, ["abilities", "skills", "items", "features", "conditions", "description"]);
+            assert.deepEqual(mobTabs, ["abilities", "items", "features", "conditions", "description"], "no Skills tab on a Mob");
             assert.include(mobSheet.element.querySelector('nav [data-tab="features"]').textContent, game.i18n.localize("CARLRPG.Tab.Boons"));
             assert.exists(mobSheet.element.querySelector(".carl-mob-defenses"), "the Combat tab's Defenses");
             assert.notExists(mobSheet.element.querySelector('.carl-stats-column [data-action="rollEvade"]'), "no Evade roll");
@@ -749,6 +751,92 @@ export default function register(quench) {
           }
         });
       });
+      describe("Inventory tab: one place per item, Gold above the doll", function () {
+        useQuenchTimeout(this);
+
+        it("lists only gear that's neither worn nor Hotlisted; the doll's slots edit their item", async function () {
+          const actor = await createTestCharacter("one place");
+          const sheet = actor.sheet;
+          try {
+            const helm = await createTestItem(actor, "item", "helm", { system: { slots: ["head"] } });
+            const ring = await createTestItem(actor, "item", "ring", { system: { slots: ["accessory"] } });
+            const rope = await createTestItem(actor, "item", "rope", { system: { slots: [] } });
+            const torch = await createTestItem(actor, "item", "torch", { system: { slots: ["held"] } });
+            await assignItemToSlot(actor, { slotType: "gear", slotKey: "head" }, helm);
+            await assignItemToSlot(actor, { slotType: "accessory", slotKey: "0" }, ring);
+            await placeInHotlist(actor, 0, torch);
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered && sheet.element.querySelector(".carl-equip-panel"), { message: "no doll" });
+
+            const listed = [...sheet.element.querySelectorAll('section.tab[data-tab="items"] ol.items-list > li.item[data-item-id]')]
+              .map((li) => li.dataset.itemId);
+            assert.deepEqual(listed, [rope.id], "only the rope: the helm and ring are worn, the torch is Hotlisted");
+
+            for (const [type, key, item] of [["gear", "head", helm], ["accessory", "0", ring]]) {
+              const slot = sheet.element.querySelector(`.carl-equip-slot[data-slot-type="${type}"][data-slot-key="${key}"]`);
+              assert.equal(slot?.dataset.itemId, item.id, `${type} ${key} carries its item`);
+              const edit = slot.querySelector(".carl-slot-edit");
+              assert.exists(edit, `${type} ${key} has an edit control`);
+              edit.click();
+              await waitFor(() => actor.items.get(item.id).sheet.rendered, { message: `${item.name}'s sheet never opened` });
+              await actor.items.get(item.id).sheet.close();
+            }
+            const emptySlot = sheet.element.querySelector('.carl-equip-slot[data-slot-type="gear"][data-slot-key="feet"]');
+            assert.notExists(emptySlot.querySelector(".carl-slot-edit"), "an empty slot has nothing to edit");
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("dragging a worn item from the doll onto the list takes it off", async function () {
+          const actor = await createTestCharacter("drag off");
+          const sheet = actor.sheet;
+          try {
+            const helm = await createTestItem(actor, "item", "helm", { system: { slots: ["head"] } });
+            const ring = await createTestItem(actor, "item", "ring", { system: { slots: ["accessory"] } });
+            await assignItemToSlot(actor, { slotType: "gear", slotKey: "head" }, helm);
+            await assignItemToSlot(actor, { slotType: "accessory", slotKey: "0" }, ring);
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered && sheet.element.querySelector(".carl-equip-panel"), { message: "no doll" });
+            const list = () => sheet.element.querySelector('section.tab[data-tab="items"] .carl-inventory-layout > ol.items-list');
+
+            for (const item of [helm, ring]) {
+              await dropOn(sheet, list(), actor.items.get(item.id).toDragData());
+              await waitFor(() => !actor.items.get(item.id).system.equipped, { message: `${item.name} never taken off` });
+              assert.notInclude(Object.values(actor.system.gearSlots), item.id);
+              assert.notInclude(actor.system.accessories, item.id);
+              await waitFor(() => list().querySelector(`li.item[data-item-id="${item.id}"]`), { message: `${item.name} never listed` });
+            }
+            assert.equal(actor.items.size, 2, "moved, not copied");
+
+            // An unworn item dropped on the list does nothing.
+            const before = actor.items.get(helm.id).toObject();
+            await dropOn(sheet, list(), actor.items.get(helm.id).toDragData());
+            assert.deepEqual(actor.items.get(helm.id).toObject().system, before.system);
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("Gold sits above the doll, so the list starts at the top of the tab", async function () {
+          const actor = await createTestCharacter("gold place");
+          const sheet = actor.sheet;
+          try {
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            const tab = sheet.element.querySelector('section.tab[data-tab="items"]');
+            assert.exists(tab.querySelector('.carl-equip-panel .carl-inventory-bar input[name="system.details.gold"]'), "Gold is in the doll's panel");
+            assert.equal(tab.querySelector(".carl-inventory-layout").firstElementChild?.matches("ol.items-list"), true, "the list comes first in the layout");
+            assert.notEqual(getComputedStyle(tab).scrollbarGutter, "stable", "no reserved scrollbar strip");
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
       describe("a cleared number input keeps the stored value", function () {
         useQuenchTimeout(this);
 

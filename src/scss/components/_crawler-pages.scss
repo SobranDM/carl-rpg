@@ -5,6 +5,12 @@
 // and the shared fixed-length free-text list partial (text-slots.hbs).
 @mixin styles {
   // Inventory tab: item list on the left, the Equipment Doll on the right.
+  // Core gives every .scrollable a stable scrollbar gutter, which left an
+  // empty strip to the right of the doll when nothing scrolls.
+  .tab.scrollable[data-tab="items"] {
+    scrollbar-gutter: auto;
+  }
+
   .carl-inventory-layout {
     display: flex;
     gap: $padding-md;
@@ -13,6 +19,9 @@
     > .items-list {
       flex: 1 1 auto;
       min-width: 0;
+      // As tall as the doll beside it: a short list still has room to drop
+      // a worn item onto (to take it off).
+      align-self: stretch;
     }
   }
 
@@ -116,6 +125,13 @@
       position: absolute;
       top: 1px;
       right: 3px;
+    }
+
+    // Edit, beside the (x): a worn item isn't in the Inventory list.
+    .carl-slot-edit {
+      position: absolute;
+      top: 1px;
+      left: 3px;
     }
   }
 

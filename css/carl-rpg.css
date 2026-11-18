@@ -2720,6 +2720,9 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
+.carl-rpg .tab.scrollable[data-tab=items] {
+  scrollbar-gutter: auto;
+}
 .carl-rpg .carl-inventory-layout {
   display: flex;
   gap: 10px;
@@ -2728,6 +2731,7 @@
 .carl-rpg .carl-inventory-layout > .items-list {
   flex: 1 1 auto;
   min-width: 0;
+  align-self: stretch;
 }
 .carl-rpg .carl-equip-panel {
   flex: 0 0 240px;
@@ -2801,6 +2805,11 @@
   position: absolute;
   top: 1px;
   right: 3px;
+}
+.carl-rpg .carl-gear-slot .carl-slot-edit {
+  position: absolute;
+  top: 1px;
+  left: 3px;
 }
 .carl-rpg .carl-accessories-label {
   margin: 10px 0 4px;

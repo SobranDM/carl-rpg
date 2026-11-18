@@ -32,7 +32,7 @@
 ### Characters
 
 - **Create Crawler wizard:** a new Character opens a step-by-step First Floor creation wizard, animal crawlers included. World settings choose how Stats and backgrounds are generated. Crawlers you already have are left alone.
-- **A reorganised Character sheet:** the tabs are now Combat, Skills, Inventory, Benefits, Conditions and Details.
+- **A reorganised Character sheet:** the tabs are now Combat, Inventory, Skills, Benefits, Conditions and Details.
   - **The Combat tab comes first,** with your Stats, defenses, an Attack! button and the Hotlist.
   - **The header** gains a Mana bar; Gold moved to the Inventory.
   - **Defense tooltips** say where each bonus comes from.
