@@ -33,7 +33,8 @@ import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions 
 import { MOB_ATTACK_TYPE, attacksToCheck, convertLegacyAttacks } from "./mob-attacks.mjs";
 import { parseSize } from "./size.mjs";
 import {
-  HANDS, WEAR_SLOT_OF_GEAR_SLOT, accessoryKindOf, canWear, fitsSlot, guessGearSlots, heldOrWearable, isConsumable, isTwoHanded,
+  HANDS, WEAR_SLOT_OF_GEAR_SLOT, accessoryKindOf, canWear, fitsSlot, guessGearSlots, heldOrWearable, isConsumable, isShield,
+  isTwoHanded, isWeapon, slotsFromName,
 } from "./gear.mjs";
 import { freeSlotFor, isItemWorn, placeInFreeSlot } from "./equip-slots.mjs";
 
@@ -67,6 +68,9 @@ export const MOB_SIZE_MIGRATION_ID = "0.7.0-mob-size";
 /** 0.7.0: gear says where it's worn (docs/gear-slots.md; migrateGearSlots). */
 export const GEAR_SLOTS_MIGRATION_ID = "0.7.0-gear-slots";
 
+/** 0.7.0: a blank Weapon Skill guessed from the item's name (migrateWeaponSkillGuesses). */
+export const WEAPON_SKILL_GUESS_ID = "0.7.0-weapon-skill-guess";
+
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
  * is the release whose data it brings a world up to (for messages). A run
@@ -84,10 +88,14 @@ export const MIGRATIONS = [
   { id: COMPENDIUM_REFRESH_ID, version: "0.7.0", run: migrateCompendiumCopies },
   { id: BASE_DR_MIGRATION_ID, version: "0.7.0", run: migrateCharacterBaseDr },
   { id: CHARGEN_DONE_MIGRATION_ID, version: "0.7.0", run: migrateChargenDone },
-  { id: WEAPON_SKILL_NOTICE_ID, version: "0.7.0", run: announceWeaponSkill },
+  // Before the gear slots (a guessed weapon is then Held) and the notice
+  // (which says what it filled in).
+  { id: WEAPON_SKILL_GUESS_ID, version: "0.7.0", run: migrateWeaponSkillGuesses },
   { id: MOB_ATTACKS_MIGRATION_ID, version: "0.7.0", run: migrateMobAttacks },
   { id: MOB_SIZE_MIGRATION_ID, version: "0.7.0", run: migrateMobSizes },
   { id: GEAR_SLOTS_MIGRATION_ID, version: "0.7.0", run: migrateGearSlots },
+  // Last: it lists the weapons still blank, by where they're now worn.
+  { id: WEAPON_SKILL_NOTICE_ID, version: "0.7.0", run: announceWeaponSkill },
 ];
 
 /**
@@ -1265,24 +1273,297 @@ export function announceRemovedGear(removed) {
 }
 
 /* -------------------------------------------------- */
+/*  0.7.0: Weapon Skills guessed from names           */
+/* -------------------------------------------------- */
+
+// The system's packs the guesses are read from (only read, never written).
+const GEAR_PACK = "carl-rpg.gear";
+const SKILLS_PACK = "carl-rpg.skills-and-spells";
+
+/** How many this load's guess run filled in, for the notice (null: it didn't run this load). */
+let weaponSkillsFilled = null;
+
+/**
+ * A name's Skill slug, or null for one with no Latin letters or digits
+ * (slugifySkillName makes those all "unknown", which would match each other).
+ * @param {string} name
+ * @returns {string|null}
+ */
+function nameSlug(name) {
+  const slug = slugifySkillName(name);
+  return slug === "unknown" ? null : slug;
+}
+
+/**
+ * An Attack Skill that needs a weapon (weapons.mjs needsWeapon): not
+ * hand-to-hand, not one of CONFIG.CARLRPG.weaponlessAttackSkills. Works on
+ * a Skill item or a compendium index entry.
+ * @param {object} skill
+ * @returns {boolean}
+ */
+function isWieldedAttackSkill(skill) {
+  if (skill?.type !== "skill" || skill.system?.category !== "attack" || skill.system?.isHandToHand) return false;
+  const slug = nameSlug(skill.name);
+  return !!slug && !(CONFIG.CARLRPG.weaponlessAttackSkills ?? []).some((name) => slugifySkillName(name) === slug);
+}
+
+/**
+ * What the guesses are read from, by name slug - loaded once per run from
+ * the system packs' indexes (a pack that isn't there gives nothing):
+ *  - gear: the Gear compendium's weapons -> their Weapon Skill (null where
+ *    two of the same name disagree);
+ *  - notWeapons: the Gear compendium's other gear (a Torch, a Lantern);
+ *  - skills: the Skills and Spells compendium's Attack Skills that need a
+ *    weapon -> their name.
+ * @returns {Promise<{gear: Map<string, string|null>, notWeapons: Set<string>, skills: Map<string, string>}>}
+ */
+export async function loadWeaponSkillSources() {
+  const gear = new Map();
+  const notWeapons = new Set();
+  const skills = new Map();
+  const gearPack = game.packs.get(GEAR_PACK);
+  for (const entry of (await gearPack?.getIndex({ fields: ["type", "system.weaponSkill", "system.consumable.kind"] })) ?? []) {
+    const slug = nameSlug(entry.name);
+    if (entry.type !== "item" || !slug) continue;
+    const weaponSkill = String(entry.system?.weaponSkill ?? "").trim();
+    if (!weaponSkill || entry.system?.consumable?.kind) {
+      notWeapons.add(slug);
+      continue;
+    }
+    gear.set(slug, gear.has(slug) && gear.get(slug) !== weaponSkill ? null : weaponSkill);
+  }
+  const skillsPack = game.packs.get(SKILLS_PACK);
+  for (const entry of (await skillsPack?.getIndex({ fields: ["type", "system.category", "system.isHandToHand"] })) ?? []) {
+    if (isWieldedAttackSkill(entry)) skills.set(nameSlug(entry.name), entry.name);
+  }
+  return { gear, notWeapons, skills };
+}
+
+/**
+ * The Weapon Skill a gear item's name says it has, or null. Only gear with
+ * a blank Weapon Skill that isn't a consumable; by exact name (compared as
+ * Skill names are: case and punctuation aside), in order:
+ *  1. one of its owner's Attack Skills that needs a weapon;
+ *  2. a weapon of that name in the Gear compendium ("Greatsword":
+ *     Longsword);
+ *  3. an Attack Skill of that name in the Skills and Spells compendium -
+ *     unless its owner has a Skill of that name of its own that 1 passed
+ *     over (hand-to-hand, weaponless, or not an Attack): that's the one
+ *     the name means.
+ * @param {Item} item
+ * @param {Awaited<ReturnType<typeof loadWeaponSkillSources>>} sources
+ * @param {Actor|null} [owner]  Who has it (default: its actor).
+ * @returns {{weaponSkill: string, from: "owner"|"gear"|"skills"}|null}
+ */
+export function guessWeaponSkill(item, sources, owner = item?.actor ?? null) {
+  if (item?.type !== "item" || String(item.system?.weaponSkill ?? "").trim() || item.system?.consumable?.kind) return null;
+  const slug = nameSlug(item.name);
+  if (!slug) return null;
+  const own = owner ? owner.items.filter((i) => i.type === "skill" && nameSlug(i.name) === slug) : [];
+  const skill = own.find(isWieldedAttackSkill);
+  if (skill) return { weaponSkill: skill.name, from: "owner" };
+  const weaponSkill = sources.gear.get(slug);
+  if (weaponSkill) return { weaponSkill, from: "gear" };
+  if (!own.length && sources.skills.has(slug)) return { weaponSkill: sources.skills.get(slug), from: "skills" };
+  return null;
+}
+
+/**
+ * The updates filling in these items' guessed Weapon Skills.
+ * @param {Iterable<Item>} items
+ * @param {object} sources  loadWeaponSkillSources.
+ * @param {Actor|null} [owner]
+ * @returns {object[]}
+ */
+function weaponSkillUpdates(items, sources, owner = null) {
+  const updates = [];
+  for (const item of items) {
+    const guess = guessWeaponSkill(item, sources, owner);
+    if (guess) updates.push({ _id: item.id, "system.weaponSkill": guess.weaponSkill });
+  }
+  return updates;
+}
+
+/**
+ * The guess on one actor's gear (the migration's step for actors; tests).
+ * @param {Actor} actor
+ * @param {object} sources  loadWeaponSkillSources.
+ * @returns {Promise<number>}  How many were filled in.
+ */
+export async function guessActorWeaponSkills(actor, sources) {
+  const updates = weaponSkillUpdates(actor.items, sources, actor);
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { carlMigration: true, render: false });
+  return updates.length;
+}
+
+/**
+ * The guess on unowned gear - the Items directory's, or a compendium's
+ * (the migration's step for those; tests).
+ * @param {Item[]} items
+ * @param {object} sources  loadWeaponSkillSources.
+ * @param {object} [options]  Update options ({pack} for a compendium's).
+ * @returns {Promise<number>}  How many were filled in.
+ */
+export async function guessItemWeaponSkills(items, sources, options = {}) {
+  const updates = weaponSkillUpdates(items, sources);
+  if (updates.length) await Item.implementation.updateDocuments(updates, { ...options, carlMigration: true, render: false });
+  return updates.length;
+}
+
+/**
+ * 0.7.0 added gear's Weapon Skill (module/helpers/weapons.mjs), blank on
+ * everything made before. Where the name tells (guessWeaponSkill), it's
+ * filled in: on gear in the Items directory, on every actor (and unlinked
+ * tokens' own gear), and in world compendiums. Runs before the gear slots
+ * migration, so a weapon guessed here is made Held there, and before the
+ * notice, which says how many were filled in and lists what's left.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+export async function migrateWeaponSkillGuesses() {
+  let changed = 0;
+  let errors = 0;
+  let sources;
+  try {
+    sources = await loadWeaponSkillSources();
+  } catch (err) {
+    console.error("carl-rpg | 0.7.0 migration: couldn't read the Gear and Skills compendiums for Weapon Skills", err);
+    sources = { gear: new Map(), notWeapons: new Set(), skills: new Map() };
+    errors += 1;
+  }
+  try {
+    changed += await guessItemWeaponSkills(game.items.contents, sources);
+  } catch (err) {
+    console.error("carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills on sidebar items", err);
+    errors += 1;
+  }
+  for (const actor of actorsWithOwnGear()) {
+    try {
+      changed += await guessActorWeaponSkills(actor, sources);
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills for ${actor.name}`, err);
+      errors += 1;
+    }
+  }
+  for (const pack of game.packs.filter(shouldMigratePack)) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        const documents = await pack.getDocuments();
+        if (pack.documentName === "Item") {
+          changed += await guessItemWeaponSkills(documents, sources, { pack: pack.collection });
+          return;
+        }
+        for (const actor of documents) changed += await guessActorWeaponSkills(actor, sources);
+      });
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills in compendium ${pack.collection}`, err);
+      errors += 1;
+    }
+  }
+  weaponSkillsFilled = changed;
+  return { changed, errors };
+}
+
+/** World actors, and unlinked tokens with gear of their own (as migrateGearSlots walks them). */
+function actorsWithOwnGear() {
+  const actors = [...game.actors];
+  for (const scene of game.scenes) {
+    for (const token of scene.tokens) {
+      if (!token.actorLink && token.actor && token.delta?._source?.items?.length) actors.push(token.actor);
+    }
+  }
+  return actors;
+}
+
+/* -------------------------------------------------- */
 /*  0.7.0: the Weapon Skill notice                    */
 /* -------------------------------------------------- */
 
 /**
+ * Gear with a blank Weapon Skill that looks like a weapon: held in its
+ * Character's Main or Off Hand, or worn only in a hand (Held) - but not a
+ * consumable, a Shield (ticked, or named a shield or buckler), or gear the
+ * Gear compendium has by that name without a Weapon Skill (a Torch, a
+ * Lantern).
+ * @param {Item} item
+ * @param {{notWeapons?: Set<string>}} [sources]  loadWeaponSkillSources.
+ * @returns {boolean}
+ */
+export function looksLikeWeapon(item, sources = {}) {
+  if (item?.type !== "item" || isWeapon(item) || isConsumable(item) || isShield(item)) return false;
+  if (slotsFromName(item.name)?.slots.includes("held")) return false;
+  if (sources.notWeapons?.has(nameSlug(item.name))) return false;
+  const hands = item.actor?.system?.gearSlots;
+  if (hands && HANDS.some((hand) => hands[hand] === item.id)) return true;
+  const slots = item.system?.slots ?? [];
+  return slots.length === 1 && slots[0] === "held";
+}
+
+/**
  * 0.7.0 added a Weapon Skill field to gear, and an Attack with a Weapon
  * Skill now needs a weapon whose Weapon Skill names it (module/helpers/
- * weapons.mjs). Gear isn't its own "weapon" type, so there's no telling
- * which existing items are weapons, or for which Skill - the players set it.
- * This posts a chat notice, to everyone, saying so. A new world (nothing
- * in it) never gets it: migrationPlan marks every migration had.
+ * weapons.mjs). The guess migration filled in what names told; this tells
+ * everyone, and whispers the GM the weapons still blank (looksLikeWeapon),
+ * by who has them. Runs after the gear slots migration, so it sees where
+ * gear is worn now. A new world (nothing in it) never gets it:
+ * migrationPlan marks every migration had.
  * @returns {Promise<{changed: number, errors: number}>}
  */
 export async function announceWeaponSkill() {
-  await createNoticeMessage({
-    title: game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"),
-    body: game.i18n.localize("CARLRPG.Migration.WeaponSkill.Body"),
+  let errors = 0;
+  let sources = {};
+  try {
+    sources = await loadWeaponSkillSources();
+  } catch (err) {
+    console.error("carl-rpg | 0.7.0 migration: couldn't read the Gear compendium for the Weapon Skill notice", err);
+    errors += 1;
+  }
+  const remaining = new Map();
+  const note = (where, items) => {
+    const names = [...items].filter((item) => looksLikeWeapon(item, sources)).map((item) => item.name);
+    if (names.length) remaining.set(where, [...(remaining.get(where) ?? []), ...names]);
+  };
+  note(game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Sidebar"), game.items);
+  for (const actor of actorsWithOwnGear()) note(actor.name, actor.items);
+  for (const pack of game.packs.filter(shouldMigratePack)) {
+    try {
+      const documents = await pack.getDocuments();
+      if (pack.documentName === "Item") note(pack.title, documents);
+      else for (const actor of documents) note(`${pack.title}: ${actor.name}`, actor.items);
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't read compendium ${pack.collection} for the Weapon Skill notice`, err);
+      errors += 1;
+    }
+  }
+  await postWeaponSkillNotice({ filled: weaponSkillsFilled, remaining });
+  return { changed: 0, errors };
+}
+
+/**
+ * The Weapon Skill notice, to everyone: what the field is, how many were
+ * filled in from names, and whether any are left. The weapons left, by who
+ * has them, go to the GM only (they can name Mobs and compendium entries).
+ * @param {{filled: number|null, remaining: Map<string, string[]>}} result
+ *   filled: how many the guess filled in (0 or null: not said).
+ * @returns {Promise<{notice: ChatMessage, list: ChatMessage|null}>}
+ */
+export async function postWeaponSkillNotice({ filled, remaining }) {
+  const i18n = game.i18n;
+  const paragraphs = [i18n.localize("CARLRPG.Migration.WeaponSkill.Body")];
+  if (filled) paragraphs.push(i18n.format("CARLRPG.Migration.WeaponSkill.Filled", { count: filled }));
+  paragraphs.push(i18n.localize(remaining.size ? "CARLRPG.Migration.WeaponSkill.Left" : "CARLRPG.Migration.WeaponSkill.NoneLeft"));
+  const notice = await createNoticeMessage({
+    title: i18n.localize("CARLRPG.Migration.WeaponSkill.Title"),
+    bodyHtml: paragraphs.map((p) => `<p>${esc(p)}</p>`).join(""),
   });
-  return { changed: 0, errors: 0 };
+  if (!remaining.size) return { notice, list: null };
+  const sections = [...remaining.entries()].map(([where, names]) =>
+    `<h4>${esc(where)}</h4><ul>${names.map((name) => `<li>${esc(name)}</li>`).join("")}</ul>`).join("");
+  const list = await createNoticeMessage({
+    title: i18n.localize("CARLRPG.Migration.WeaponSkillLeft.Title"),
+    bodyHtml: `<p>${esc(i18n.localize("CARLRPG.Migration.WeaponSkillLeft.Body"))}</p>${sections}`,
+    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+  });
+  return { notice, list };
 }
 
 /** Run fn with a compendium unlocked, locked again after. */

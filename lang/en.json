@@ -174,7 +174,14 @@
       },
       "WeaponSkill": {
         "Title": "New: Weapon Skill",
-        "Body": "Gear items now have a Weapon Skill field: the Attack Skill the item is wielded with (e.g. Longsword). An Attack with a Weapon Skill now needs a weapon in hand or in the Hotlist whose Weapon Skill names it. Weapons made before this update have it blank, so GM and players: open each of your weapons and set its Weapon Skill. Hand-to-hand Skills, Improvised Weapons and natural attacks need no weapon."
+        "Body": "Gear items now have a Weapon Skill field: the Attack Skill the item is wielded with (e.g. Longsword). An Attack with a Weapon Skill now needs a weapon in hand or in the Hotlist whose Weapon Skill names it. Hand-to-hand Skills, Improvised Weapons and natural attacks need no weapon.",
+        "Filled": "Weapons made before this update had it blank. It was filled in from the weapon's name for {count} of them (a Greatsword, say, is a Longsword weapon).",
+        "Left": "Some weapons still need theirs set by hand: the GM has the list. GM and players, open any weapon whose Weapon Skill is still blank and set it.",
+        "NoneLeft": "No weapon in a hand, or made to be held, is left without one. If you find a weapon whose Weapon Skill is still blank, open it and set it."
+      },
+      "WeaponSkillLeft": {
+        "Title": "Weapons with no Weapon Skill",
+        "Body": "Couldn't tell these weapons' Weapon Skill from their names. Each is in a hand or can only be held. Open each one and set its Weapon Skill (or leave it blank if it isn't a weapon). By who has it:"
       }
     },
     "Hotlist": {

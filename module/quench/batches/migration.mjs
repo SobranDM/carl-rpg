@@ -4,7 +4,9 @@ import {
   refreshedItemUpdate, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID, zeroCharacterBaseDr,
   CHARGEN_DONE_MIGRATION_ID, madeBeforeChargen, markChargenDone, refreshSourceFor,
   RENAMED_MIGRATION_IDS, currentMigrationIds, MOB_ATTACKS_MIGRATION_ID,
-  MOB_SIZE_MIGRATION_ID, saveMobSizes, GEAR_SLOTS_MIGRATION_ID,
+  MOB_SIZE_MIGRATION_ID, saveMobSizes, GEAR_SLOTS_MIGRATION_ID, WEAPON_SKILL_GUESS_ID, loadWeaponSkillSources,
+  guessWeaponSkill, guessActorWeaponSkills, guessItemWeaponSkills, looksLikeWeapon, postWeaponSkillNotice,
+  gearSlotUpdate, inferActorGear,
 } from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
@@ -70,7 +72,7 @@ export default function register(quench) {
           assert.includeMembers(MIGRATIONS.map((m) => m.id), renamed, "every old id maps to a migration");
           // Migrations added after the renaming never had an old id.
           const added = MIGRATIONS.map((m) => m.id).filter((id) => !renamed.includes(id));
-          assert.sameMembers(added, [MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID, GEAR_SLOTS_MIGRATION_ID]);
+          assert.sameMembers(added, [WEAPON_SKILL_GUESS_ID, MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID, GEAR_SLOTS_MIGRATION_ID]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
           assert.sameMembers(ids(p.run), added, "nothing runs twice - only what's been added since");
           assert.sameMembers(currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),
@@ -417,37 +419,221 @@ export default function register(quench) {
         });
       });
 
+      describe("0.7.0: Weapon Skills guessed from names", function () {
+        useQuenchTimeout(this);
+
+        const index = (id) => MIGRATIONS.findIndex((m) => m.id === id);
+        /** Nothing to guess from but an owner's Skills. */
+        const none = () => ({ gear: new Map(), notWeapons: new Set(), skills: new Map() });
+        /** Gear with this exact name and a blank Weapon Skill, unless given. */
+        const gear = (actor, name, system = {}) => createTestItem(actor, "item", name, { name, system: { weaponSkill: "", ...system } });
+        /** A sidebar Item with this exact name. */
+        const worldItem = (name, system = {}) =>
+          Item.implementation.create({ name, type: "item", system: { weaponSkill: "", slots: [], ...system } });
+        /** The system packs, which these need built (`npm run build:packs`). */
+        const packSources = async () => {
+          const sources = await loadWeaponSkillSources();
+          assert.isAbove(sources.gear.size, 0, "the Gear compendium is built");
+          assert.isAbove(sources.skills.size, 0, "the Skills and Spells compendium is built");
+          return sources;
+        };
+
+        it("runs before the gear slots and the notice; a world that had every other one runs it alone", function () {
+          const guess = index(WEAPON_SKILL_GUESS_ID);
+          assert.isAtLeast(guess, 0);
+          assert.equal(MIGRATIONS[guess].version, "0.7.0");
+          assert.isBelow(guess, index(GEAR_SLOTS_MIGRATION_ID));
+          assert.isBelow(guess, index(WEAPON_SKILL_NOTICE_ID));
+          assert.isAbove(index(WEAPON_SKILL_NOTICE_ID), index(GEAR_SLOTS_MIGRATION_ID), "the notice sees where gear is worn");
+          const p = migrationPlan({ done: ids(MIGRATIONS).filter((id) => id !== WEAPON_SKILL_GUESS_ID), hasContent: true });
+          assert.deepEqual(ids(p.run), [WEAPON_SKILL_GUESS_ID]);
+        });
+
+        it("an owned weapon named for one of its owner's Attack Skills gets that Skill", async function () {
+          const actor = await createTestCharacter("guess own");
+          try {
+            await attackSkill(actor, "Flying Spear");
+            const spear = await gear(actor, "flying SPEAR!");
+            assert.deepEqual(guessWeaponSkill(spear, none()), { weaponSkill: "Flying Spear", from: "owner" });
+            assert.equal(await guessActorWeaponSkills(actor, none()), 1);
+            assert.equal(actor.items.get(spear.id).system.weaponSkill, "Flying Spear");
+            assert.equal(await guessActorWeaponSkills(actor, none()), 0, "once");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a sidebar Item named for a Gear compendium weapon gets its Skill: a Greatsword is a Longsword", async function () {
+          const sources = await packSources();
+          const greatsword = await worldItem("Greatsword");
+          try {
+            assert.deepEqual(guessWeaponSkill(greatsword, sources), { weaponSkill: "Longsword", from: "gear" });
+            assert.equal(await guessItemWeaponSkills([greatsword], sources), 1);
+            assert.equal(game.items.get(greatsword.id).system.weaponSkill, "Longsword");
+          } finally {
+            await greatsword.delete();
+          }
+        });
+
+        it("a sidebar Item named for a compendium Attack Skill gets it", async function () {
+          // Without the Gear compendium's weapons, which name the same Skills.
+          const sources = { ...(await packSources()), gear: new Map() };
+          const rapier = await worldItem("RAPIER");
+          try {
+            assert.deepEqual(guessWeaponSkill(rapier, sources), { weaponSkill: "Rapier", from: "skills" });
+            assert.equal(await guessItemWeaponSkills([rapier], sources), 1);
+            assert.equal(game.items.get(rapier.id).system.weaponSkill, "Rapier");
+          } finally {
+            await rapier.delete();
+          }
+        });
+
+        it("leaves a set Weapon Skill, a name that matches nothing, and a consumable alone", async function () {
+          const sources = await packSources();
+          const actor = await createTestCharacter("guess leave");
+          try {
+            await attackSkill(actor, "Longsword");
+            const set = await gear(actor, "Longsword", { weaponSkill: "Rapier" });
+            const odd = await gear(actor, "Mystery Stick");
+            const tonic = await gear(actor, "Longsword", { consumable: { kind: "other" } });
+            // Names with no Latin letters or digits all slug alike: never a match.
+            await attackSkill(actor, "斧");
+            const unlatin = await gear(actor, "剣");
+            for (const item of [set, odd, tonic, unlatin]) assert.isNull(guessWeaponSkill(item, sources), item.name);
+            assert.equal(await guessActorWeaponSkills(actor, sources), 0);
+            assert.equal(actor.items.get(set.id).system.weaponSkill, "Rapier");
+            assert.equal(actor.items.get(odd.id).system.weaponSkill, "");
+            assert.equal(actor.items.get(tonic.id).system.weaponSkill, "");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("never uses a hand-to-hand or weaponless Skill - nor the compendium's, for a name its owner's own Skill means", async function () {
+          const sources = await packSources();
+          const actor = await createTestCharacter("guess h2h");
+          const bite = await worldItem("Bite");
+          try {
+            await attackSkill(actor, "Pugilism", { isHandToHand: true });
+            await attackSkill(actor, "Improvised Weapons");
+            // This crawler's own Rapier is hand-to-hand (homebrew).
+            await attackSkill(actor, "Rapier", { isHandToHand: true });
+            const noSources = { ...sources, gear: new Map() };
+            assert.isNull(guessWeaponSkill(await gear(actor, "Pugilism"), sources), "hand-to-hand");
+            assert.isNull(guessWeaponSkill(await gear(actor, "Improvised Weapons"), sources), "weaponless");
+            assert.isNull(guessWeaponSkill(bite, sources), "a natural attack, unowned");
+            assert.isNull(guessWeaponSkill(await gear(actor, "Rapier"), noSources), "its owner's Rapier is the one meant");
+            assert.deepEqual(guessWeaponSkill(await gear(actor, "Rapier"), sources), { weaponSkill: "Rapier", from: "gear" },
+              "the Gear compendium's Rapier still says what it is");
+          } finally {
+            await deleteTestActor(actor);
+            await bite.delete();
+          }
+        });
+
+        it("a weapon guessed here is then made Held by the gear slots migration", async function () {
+          const actor = await createTestCharacter("guess then slots");
+          try {
+            await attackSkill(actor, "Flying Spear");
+            const spear = await gear(actor, "Flying Spear", { slots: [] });
+            assert.isNull(gearSlotUpdate(spear), "with no Weapon Skill, nothing tells where it goes");
+            await guessActorWeaponSkills(actor, none());
+            await inferActorGear(actor);
+            assert.deepEqual(actor.items.get(spear.id).system.slots, ["held"]);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
       describe("0.7.0: the Weapon Skill notice", function () {
         useQuenchTimeout(this);
 
-        it("is a 0.7.0 migration of its own, after the Deity block's", function () {
+        /** A notice's text, tags out. */
+        const text = (message) => message.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+        /** A gear item with this exact name. */
+        const gear = (actor, name, system = {}) => createTestItem(actor, "item", name, { name, system: { weaponSkill: "", ...system } });
+
+        it("is the last 0.7.0 migration, after the gear slots'", function () {
           const index = MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID);
           assert.isAtLeast(index, 0);
           assert.equal(MIGRATIONS[index].version, "0.7.0");
           assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID));
+          assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === GEAR_SLOTS_MIGRATION_ID));
           // A world that already had the earlier ones still gets it.
           const earlier = MIGRATIONS.slice(0, index).map((m) => m.id);
-          // (Migrations added after it - the Mob Attacks' - run too.)
           const p = migrationPlan({ done: earlier, hasContent: true });
           assert.deepEqual(ids(p.run), ids(MIGRATIONS.slice(index)));
           assert.equal(p.run[0].id, WEAPON_SKILL_NOTICE_ID);
         });
 
-        it("posts one chat notice everyone sees, changing no documents", async function () {
-          let posted = null;
+        it("lists only blank gear in a hand or held only - not a weapon, a shield, a torch, a consumable or a pack", async function () {
+          const actor = await createTestCharacter("notice list");
+          try {
+            const sources = { notWeapons: new Set(["torch"]) };
+            const inHand = await gear(actor, "Odd Stick", { slots: [] });
+            const heldOnly = await gear(actor, "Odd Blade", { slots: ["held"] });
+            const weapon = await gear(actor, "Longsword", { slots: ["held"], weaponSkill: "Longsword" });
+            const buckler = await gear(actor, "Buckler", { slots: ["held"] });
+            const shield = await gear(actor, "Round Thing", { slots: ["held"], shield: true });
+            const torch = await gear(actor, "Torch", { slots: ["held"] });
+            const pack = await gear(actor, "Backpack", { slots: ["torso"] });
+            const rope = await gear(actor, "Rope", { slots: [] });
+            await actor.update({ "system.gearSlots.mainHand": inHand.id });
+            const listed = actor.items.filter((i) => looksLikeWeapon(i, sources)).map((i) => i.id);
+            assert.sameMembers(listed, [inHand.id, heldOnly.id]);
+            for (const item of [weapon, buckler, shield, torch, pack, rope]) assert.notInclude(listed, item.id, item.name);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("says how many were filled in, to everyone; the ones left go to the GM, by who has them", async function () {
+          const { notice, list } = await postWeaponSkillNotice({
+            filled: 7, remaining: new Map([["Carl", ["Odd Stick"]], ["Ghoul", ["Bone Thing", "Rusty Hook"]]]),
+          });
+          try {
+            assert.lengthOf(notice.whisper, 0, "the notice isn't whispered");
+            assert.include(text(notice), game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"));
+            assert.include(text(notice), game.i18n.format("CARLRPG.Migration.WeaponSkill.Filled", { count: 7 }));
+            assert.include(text(notice), game.i18n.localize("CARLRPG.Migration.WeaponSkill.Left"));
+            for (const name of ["Carl", "Odd Stick", "Ghoul"]) assert.notInclude(text(notice), name, "names only in the GM's list");
+            assert.exists(list);
+            assert.isAbove(list.whisper.length, 0, "the list is the GM's");
+            for (const name of ["Carl", "Odd Stick", "Ghoul", "Bone Thing", "Rusty Hook"]) assert.include(text(list), name);
+          } finally {
+            await notice.delete();
+            await list?.delete();
+          }
+        });
+
+        it("with none left, says so and sends no list", async function () {
+          const { notice, list } = await postWeaponSkillNotice({ filled: 2, remaining: new Map() });
+          try {
+            assert.isNull(list);
+            assert.include(text(notice), game.i18n.localize("CARLRPG.Migration.WeaponSkill.NoneLeft"));
+          } finally {
+            await notice.delete();
+          }
+        });
+
+        it("run on the world, posts the notice to everyone and changes no documents", async function () {
+          const posted = [];
           const hookId = Hooks.on("createChatMessage", (message) => {
-            if (message.isAuthor) posted = message;
+            if (message.isAuthor) posted.push(message);
           });
           try {
             const result = await announceWeaponSkill();
-            assert.deepEqual(result, { changed: 0, errors: 0 });
-            assert.exists(posted, "a chat message was posted");
-            assert.lengthOf(posted.whisper, 0, "not whispered");
-            assert.include(posted.content, game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"));
-            assert.include(posted.content, "Weapon Skill");
+            assert.equal(result.changed, 0);
+            const notices = posted.filter((m) => !m.whisper.length);
+            assert.lengthOf(notices, 1, "one notice everyone sees");
+            assert.include(notices[0].content, game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"));
+            for (const m of posted.filter((m) => m.whisper.length)) {
+              assert.isTrue(m.whisper.every((id) => game.users.get(id)?.isGM), "anything else is the GM's");
+            }
           } finally {
             Hooks.off("createChatMessage", hookId);
-            await posted?.delete();
+            for (const m of posted) await m.delete();
           }
         });
       });
