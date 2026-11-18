@@ -121,8 +121,11 @@ export async function openRulebookImporter() {
     progress: true,
   });
   let maps = [];
+  let pdfDoc = null;
   try {
-    const { pdfjs, pdfDoc } = await loadPdfDocument(file);
+    const loaded = await loadPdfDocument(file);
+    const pdfjs = loaded.pdfjs;
+    pdfDoc = loaded.pdfDoc;
     const pages = await readPages(pdfDoc, {
       onProgress: (done, total) =>
         progress.update({
@@ -163,6 +166,8 @@ export async function openRulebookImporter() {
   } finally {
     progress?.update?.({ pct: 1 });
     for (const map of maps) URL.revokeObjectURL(map.thumb);
+    // Each document has its own pdf.js worker holding the whole book: end it.
+    pdfDoc?.destroy().catch((err) => console.warn("CarlRPG | closing the rulebook PDF failed", err));
   }
 }
 

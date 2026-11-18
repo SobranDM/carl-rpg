@@ -32,6 +32,7 @@ import {
   checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, versusNum,
 } from "./status-rows.mjs";
 import { rerollFormula } from "../helpers/ai-favor.mjs";
+import { queueOn } from "../helpers/actor-queue.mjs";
 import { mobAttackRow } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { slugifySkillName } from "../helpers/modifiers.mjs";
@@ -206,9 +207,7 @@ const queues = new Map();
  * @returns {Promise<T>}
  */
 export function withCard(cardId, task) {
-  const next = (queues.get(cardId) ?? Promise.resolve()).then(task, task);
-  queues.set(cardId, next.catch(() => {}));
-  return next;
+  return queueOn(queues, cardId, task);
 }
 
 /**

@@ -4,6 +4,7 @@ import {
   refreshedItemUpdate, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID, zeroCharacterBaseDr,
   CHARGEN_DONE_MIGRATION_ID, madeBeforeChargen, markChargenDone, refreshSourceFor,
   RENAMED_MIGRATION_IDS, currentMigrationIds, MOB_ATTACKS_MIGRATION_ID,
+  MOB_SIZE_MIGRATION_ID, saveMobSizes,
 } from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
@@ -69,7 +70,7 @@ export default function register(quench) {
           assert.includeMembers(MIGRATIONS.map((m) => m.id), renamed, "every old id maps to a migration");
           // Migrations added after the renaming never had an old id.
           const added = MIGRATIONS.map((m) => m.id).filter((id) => !renamed.includes(id));
-          assert.sameMembers(added, [MOB_ATTACKS_MIGRATION_ID]);
+          assert.sameMembers(added, [MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
           assert.sameMembers(ids(p.run), added, "nothing runs twice - only what's been added since");
           assert.sameMembers(currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),
@@ -601,6 +602,30 @@ export default function register(quench) {
           } finally {
             for (const actor of made()) await actor.delete();
             await deleteTestActor(character);
+          }
+        });
+      });
+
+      describe("0.7.0: a Mob's Size saved as Table 9's value", function () {
+        useQuenchTimeout(this);
+
+        it("is a 0.7.0 migration, after the Mob Attacks'", function () {
+          const index = MIGRATIONS.findIndex((m) => m.id === MOB_SIZE_MIGRATION_ID);
+          assert.isAtLeast(index, 0);
+          assert.equal(MIGRATIONS[index].version, "0.7.0");
+          assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === MOB_ATTACKS_MIGRATION_ID));
+        });
+
+        it("saves a Mob's Size as read, and only Mobs", async function () {
+          const mob = await createTestMob("size save", { system: { size: "Large (5)" } });
+          const pc = await createTestCharacter("size save pc");
+          try {
+            assert.equal(await saveMobSizes([mob, pc]), 1, "only the Mob");
+            assert.equal(mob.system.size, 5);
+            assert.equal(mob._source.system.size, 5, "the stored value is the number");
+          } finally {
+            await deleteTestActor(mob);
+            await deleteTestActor(pc);
           }
         });
       });

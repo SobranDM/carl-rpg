@@ -29,6 +29,7 @@ import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { canAct, payAction } from "../helpers/actions.mjs";
 import { rerollOpen } from "../helpers/ai-favor.mjs";
 import { resolveOccupant } from "../helpers/vehicle-state.mjs";
+import { queueOn } from "../helpers/actor-queue.mjs";
 import { canDrive, drivingOpen, reviseDriving, upgradeReady } from "../helpers/vehicle-driving.mjs";
 import { updateVehicle } from "../helpers/vehicles.mjs";
 import { esc, renderRollCard } from "./chat-card.mjs";
@@ -356,14 +357,11 @@ const queues = new Map();
  * @returns {Promise<boolean>}  Whether the card changed.
  */
 export function applyRevision(cardId, op, data, user) {
-  const key = cardId;
   const task = () => reviseNow(cardId, op, data, user).catch((err) => {
     console.error(`CarlRPG | revising a card: "${op}" failed`, err);
     return false;
   });
-  const next = (queues.get(key) ?? Promise.resolve()).then(task, task);
-  queues.set(key, next);
-  return next;
+  return queueOn(queues, cardId, task);
 }
 
 async function reviseNow(cardId, op, data, user) {

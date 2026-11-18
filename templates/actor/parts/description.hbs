@@ -5,7 +5,8 @@
         core only shows its rendered content, no chrome, until hovered) - a
         heading here is the only visual signal this section exists at all,
         especially with no biography text yet written. --}}
-  <label class="resource-label">{{localize "CARLRPG.Actor.Biography"}}</label>
+  {{!-- A Mob's is its stat block's "Notes:" (the Notes tab). --}}
+  <label class="resource-label">{{#if isMob}}{{localize "CARLRPG.Tab.Notes"}}{{else}}{{localize "CARLRPG.Actor.Biography"}}{{/if}}</label>
   <prose-mirror name="system.biography" toggled value="{{actor.system.biography}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
     {{{biographyHTML}}}
   </prose-mirror>

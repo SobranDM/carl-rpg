@@ -7,6 +7,7 @@ import {
 } from "./shared/derive-creature.mjs";
 import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effects.mjs";
 import { legacyAttackItems } from "../helpers/mob-attacks.mjs";
+import { parseSize } from "../helpers/size.mjs";
 
 /**
  * Mob actor ("Building a Mob", p.270-272) - a GM-built monster/NPC stat
@@ -16,6 +17,16 @@ import { legacyAttackItems } from "../helpers/mob-attacks.mjs";
  * formulas (see prepareDerivedData), not the fields available.
  */
 export default class CarlRPGMob extends CarlRPGActorBase {
+
+  /** @override */
+  static migrateData(source) {
+    // Size was free text before 0.7.0 ("Large (5)", "Huge"): read as its
+    // Table 9 value (p.92), or null if it names none - in memory on every
+    // load, so world Mobs, tokens and compendiums all read it. The 0.7.0
+    // migration saves it (migration.mjs migrateMobSizes).
+    if (typeof source.size === "string") source.size = parseSize(source.size);
+    return super.migrateData(source);
+  }
 
   static defineSchema() {
     const fields = foundry.data.fields;
@@ -35,10 +46,13 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // bossSeverity (module/helpers/config.mjs).
     schema.level = new fields.NumberField({ ...requiredInteger, initial: 1, min: 1 });
 
-    // Free text, matching race.mjs's own size field exactly (e.g.
-    // "Colossal (7)") - nothing in this codebase reads size as a structured
-    // enum, so a closed dropdown here would just be dead config.
-    schema.size = new fields.StringField({ required: false, blank: true, initial: "" });
+    // Table 9: Creature Size (p.92) - a value 1-8 (Tiny to Gargantuan), as a
+    // Character's, Pet's and Vehicle's; null when not set. It was free text
+    // ("Colossal (7)") before 0.7.0: migrateData reads that as its value.
+    schema.size = new fields.NumberField({
+      required: false, nullable: true, integer: true, initial: null,
+      choices: () => Object.keys(CONFIG.CARLRPG.sizes).map(Number),
+    });
     // Flavor text (e.g. "Humanoid", "Undead"). Named creatureType, not type,
     // to avoid colliding with actor.type/system.type in templates.
     schema.creatureType = new fields.StringField({ required: false, blank: true, initial: "" });

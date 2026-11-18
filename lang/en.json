@@ -519,6 +519,8 @@
       "PetGear": "Pet Gear",
       "Details": "Details",
       "Combat": "Combat",
+      "Debuffs": "Debuffs",
+      "Notes": "Notes",
       "Vehicle": "Vehicle",
       "Cargo": "Cargo",
       "Boons": "Boons",
@@ -682,6 +684,8 @@
       "ActionsPerRound": "Actions",
       "ActionsPerRoundHint": "Actions per round, when the stat block sets its own. Blank: a Mob gets 1 Move + 1 Action; an Elite or Boss 1 Action per crawler.",
       "ActionsAuto": "auto",
+      "AtFloor": "Today, at Floor {floor}",
+      "ActionsShort": "Actions",
       "BankedStatPoints": "Stat Points",
       "AiFavor": "AI Favor",
       "AiFavorHint": "Spend 1 to reroll a d20 (not a Nat 1) or, once per round, take an extra non-Attack Action (p.61).",
@@ -1571,6 +1575,7 @@
       "NoteTitle": "Debuffs"
     },
     "MobAttack": {
+      "CountWithArea": "{n} · {area} Area",
       "Unnamed": "Attack",
       "New": "New Attack",
       "Add": "Add Attack",

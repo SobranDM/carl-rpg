@@ -214,6 +214,7 @@ export function checkNotes(check) {
  * @param {Set<string>} opened  The card module's own set.
  */
 export function rememberOpenRows(container, cardId, opened) {
+  trackPerCard(opened);
   // "toggle" doesn't bubble - listen in the capture phase.
   container.addEventListener("toggle", (event) => {
     const key = event.target?.dataset?.rowKey;
@@ -222,4 +223,46 @@ export function rememberOpenRows(container, cardId, opened) {
     if (event.target.open) opened.add(id);
     else opened.delete(id);
   }, true);
+}
+
+/* -------------------------------------------- */
+/*  Per-card client state                       */
+/* -------------------------------------------- */
+
+/**
+ * The card modules' client-side Sets and Maps keyed by a card's id
+ * (`cardId`, or `cardId:rest`): open expanders, results not yet arrived.
+ * @type {Set<Set<string>|Map<string, *>>}
+ */
+const perCardStores = new Set();
+
+/**
+ * Forget a card's entries in `store` when the card is deleted (forgetCard).
+ * @template {Set<string>|Map<string, *>} T
+ * @param {T} store
+ * @returns {T}
+ */
+export function trackPerCard(store) {
+  perCardStores.add(store);
+  return store;
+}
+
+/** Stop tracking a store (trackPerCard). */
+export function untrackPerCard(store) {
+  perCardStores.delete(store);
+}
+
+/**
+ * Drop every entry for one card from the tracked stores. Called on
+ * `deleteChatMessage` (module/chat/chat-listener.mjs).
+ * @param {string} cardId
+ */
+export function forgetCard(cardId) {
+  if (!cardId) return;
+  const prefix = `${cardId}:`;
+  for (const store of perCardStores) {
+    for (const key of [...store.keys()]) {
+      if (key === cardId || String(key).startsWith(prefix)) store.delete(key);
+    }
+  }
 }

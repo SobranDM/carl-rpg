@@ -39,7 +39,7 @@ import {
   rowRerollSources, shownRowCheck,
 } from "./row-evade.mjs";
 import {
-  checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, versusNum,
+  checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, trackPerCard, versusNum,
 } from "./status-rows.mjs";
 import { interveneRow } from "./check-revision.mjs";
 import { rerollRow } from "./ai-favor-reroll.mjs";
@@ -64,7 +64,7 @@ const inFlight = new Set();
  * (or a re-render before the flag arrives) can't resolve it twice.
  * @type {Map<string, {evaded?: boolean, applied?: boolean}>}
  */
-const doneLocally = new Map();
+const doneLocally = trackPerCard(new Map());
 
 /** The row as this client should treat it, with any not-yet-arrived local result folded in. */
 function withLocal(message, row) {

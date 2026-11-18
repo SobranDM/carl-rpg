@@ -11,12 +11,14 @@ import {
 import { convertTokenAttacks } from "../../helpers/migration.mjs";
 import {
   createTestCharacter,
+  createTestItem,
   createTestMob,
   deleteTestActor,
   settle,
   useQuenchTimeout,
   waitFor,
   withFakeTargets,
+  withSetting,
 } from "../helpers.mjs";
 
 /** An old-style list, as Mobs carried before 0.7.0. */
@@ -29,7 +31,7 @@ export default function register(quench) {
   quench.registerBatch(
     "carl-rpg.mob-attacks",
     (context) => {
-      const { describe, it, assert, afterEach } = context;
+      const { describe, it, assert, beforeEach, afterEach } = context;
 
       describe("The Mob Attack item", function () {
         useQuenchTimeout(this);
@@ -195,6 +197,118 @@ export default function register(quench) {
             await bite.sheet.close();
             await settle();
           }
+        });
+      });
+
+      // docs/mob-sheet.md, phase 3: the Character sheet's shape.
+      describe("The Mob sheet", function () {
+        useQuenchTimeout(this);
+        let mob;
+        beforeEach(async function () {
+          mob = await createTestMob("mob-sheet", { system: { attacks: LIST, level: 6 } });
+        });
+        afterEach(async function () {
+          if (mob?.sheet?.rendered) await mob.sheet.close();
+          await deleteTestActor(mob);
+        });
+
+        const open = async () => {
+          const sheet = mob.sheet;
+          await sheet.render({ force: true });
+          await waitFor(() => sheet.rendered && sheet.element.querySelector(".carl-mob-defenses"), { message: "no Combat tab" });
+          return sheet;
+        };
+        const rerendered = (sheet, check, message) => waitFor(() => sheet.rendered && check(sheet.element), { message });
+
+        it("tabs: Combat, Skills, Inventory, Boons, Debuffs, Notes", async function () {
+          const sheet = await open();
+          const labels = [...sheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.textContent.trim());
+          assert.deepEqual(labels, ["Combat", "Skills", "Inventory", "Boons", "Debuffs", "Notes"].map((k) => game.i18n.localize(`CARLRPG.Tab.${k}`)));
+        });
+
+        it("the header: Level and Elite under the portrait; Tier, Size and Type by the name; no Floor or Actions", async function () {
+          const sheet = await open();
+          const header = sheet.element.querySelector(".sheet-header");
+          const portrait = header.querySelector(".carl-portrait-column");
+          assert.exists(portrait.querySelector('input[name="system.level"]'));
+          assert.exists(portrait.querySelector('input[name="system.isElite"]'));
+          for (const name of ["system.mobTier", "system.size", "system.creatureType"]) {
+            assert.exists(header.querySelector(`.carl-name-row [name="${name}"]`), name);
+          }
+          assert.notExists(header.querySelector(".carl-floor-readonly"), "no Floor");
+          assert.notExists(header.querySelector('[name="system.actionsPerRound"]'), "Actions moved to Defenses");
+        });
+
+        it("Defenses: Surprise and Evade as \"+F\" and today's value; DR, Move and Actions edit", async function () {
+          await withSetting("currentFloor", 3, async () => {
+            const sheet = await open();
+            const defenses = sheet.element.querySelector(".carl-mob-defenses");
+            const text = defenses.textContent.replace(/\s+/g, " ");
+            assert.include(text, `${mob.system.surpriseBase}+F (${mob.system.surpriseBase + 3})`);
+            assert.include(text, `${mob.system.evadeBase}+F (${mob.system.evadeBase + 3})`);
+            assert.lengthOf(sheet.element.querySelectorAll('[name="system.dr"]'), 1, "one DR input on the sheet");
+
+            const dr = defenses.querySelector('input[name="system.dr"]');
+            dr.value = "4";
+            dr.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => mob.system.dr === 4, { message: "DR never saved" });
+
+            await rerendered(sheet, (el) => el.querySelector('.carl-mob-defenses input[name="system.actionsPerRound"]'), "no Actions");
+            const actions = sheet.element.querySelector('.carl-mob-defenses input[name="system.actionsPerRound"]');
+            actions.value = "3";
+            actions.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => mob.system.actionsPerRound === 3, { message: "Actions never saved" });
+          });
+        });
+
+        it("the Resistances button opens their grid to edit, and it stays open through an edit", async function () {
+          const sheet = await open();
+          assert.notExists(sheet.element.querySelector(".carl-mob-resistances"), "closed at first");
+          sheet.element.querySelector('[data-action="toggleMobResistances"]').click();
+          await rerendered(sheet, (el) => el.querySelector('.carl-mob-resistances select[name="system.resistances.fire"]'), "the grid never opened");
+          const fire = sheet.element.querySelector('select[name="system.resistances.fire"]');
+          fire.value = "resist";
+          fire.dispatchEvent(new Event("change", { bubbles: true }));
+          await waitFor(() => mob.system.resistances.fire === "resist", { message: "the Resistance never saved" });
+          await rerendered(sheet, (el) => el.querySelector('select[name="system.resistances.fire"]')?.value === "resist", "the grid closed");
+          sheet.element.querySelector('[data-action="toggleMobResistances"]').click();
+          await rerendered(sheet, (el) => !el.querySelector(".carl-mob-resistances"), "the grid never closed");
+        });
+
+        it("Size is Table 9's value (p.92): old text is read as it, and the header picks it from a list", async function () {
+          const Mob = CONFIG.Actor.dataModels.mob;
+          const read = (size) => Mob.migrateData({ size }).size;
+          assert.equal(read("Large (5)"), 5);
+          assert.equal(read("huge"), 6);
+          assert.equal(read("Small (2) to Huge (6)"), 2, "a range: its first");
+          assert.isNull(read("Unchanged, but size changes when shifting"), "names none");
+          assert.isNull(read(""));
+          assert.equal(read(7), 7, "already a value");
+
+          const old = await createTestMob("old-size", { system: { size: "Colossal (7)" } });
+          try {
+            assert.equal(old.system.size, 7, "a Mob made with text gets the value");
+          } finally {
+            await deleteTestActor(old);
+          }
+
+          const sheet = await open();
+          const select = sheet.element.querySelector('.sheet-header select[name="system.size"]');
+          assert.exists(select, "a dropdown");
+          assert.lengthOf(select.options, Object.keys(CONFIG.CARLRPG.sizes).length + 1, "Table 9's eight, and none");
+          select.value = "5";
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          await waitFor(() => mob.system.size === 5, { message: "Size never saved" });
+        });
+
+        it("no Evade roll; the Attacks' heading counts its Area ones; Skills are on the Skills tab", async function () {
+          const skill = await createTestItem(mob, "skill", "Sneak", { name: "Sneak" });
+          const sheet = await open();
+          assert.notExists(sheet.element.querySelector('[data-action="rollEvade"]'), "Mobs never roll (p.267)");
+          assert.equal(sheet.element.querySelector(".carl-mob-attacks-count").textContent.trim(),
+            game.i18n.format("CARLRPG.MobAttack.CountWithArea", { n: 2, area: 1 }));
+          assert.exists(sheet.element.querySelector(`section.tab[data-tab="skills"] [data-item-id="${skill.id}"]`));
+          assert.notExists(sheet.element.querySelector(`section.tab[data-tab="abilities"] [data-item-id="${skill.id}"]`));
         });
       });
     },

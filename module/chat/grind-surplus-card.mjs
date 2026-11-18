@@ -18,6 +18,7 @@ import { createCardMessage, esc } from "./chat-card.mjs";
 import { canActOnUuidFlag, resolveTargetActor } from "./evade-link-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
+import { trackPerCard } from "./status-rows.mjs";
 
 
 /** Surplus cards this client is applying right now - blocks a second click before the first lands. */
@@ -28,7 +29,7 @@ const inFlight = new Set();
  * card through the GM's client a moment later, so until then it's treated as
  * spent here - a second click can't apply the same hours again.
  */
-const spentLocally = new Set();
+const spentLocally = trackPerCard(new Set());
 
 /**
  * Grind hours into a Skill and, if they overshoot it, post the surplus card.

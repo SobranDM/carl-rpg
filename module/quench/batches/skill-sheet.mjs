@@ -1,6 +1,7 @@
 import CarlDice from "../../dice/dice.mjs";
 import { collectItemTargetEffects } from "../../helpers/modifiers.mjs";
 import { changeSummary, debuffSummary, debuffTrigger } from "../../helpers/sheet-rows.mjs";
+import { mergeSubmitted } from "../../helpers/form-arrays.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -324,6 +325,49 @@ export default function register(quench) {
             await waitFor(() => item.system.changes[0].value === "2", { message: "the edit never saved" });
             await rerendered(sheet, () => row()?.querySelector(".carl-edit-row-value")?.textContent.trim() === "+2",
               "the summary never updated");
+            await sheet.close();
+          } finally {
+            await item.delete();
+          }
+        });
+
+        it("the form merges what it submits onto the stored arrays", function () {
+          const stored = {
+            upgrades: [{ id: "u1", description: "a", shieldSlots: 3, damageTypes: ["fire", ""],
+              changes: [{ id: "c1", value: "1", conditions: [{ id: "k1", label: "x", default: false }] }] }],
+            castingKeywords: ["attack", "area"],
+          };
+          const out = mergeSubmitted(stored, {
+            upgrades: { 0: { description: "A", damageTypes: { 0: "cold" }, changes: { 0: { value: "2", conditions: { 0: { label: "y" } } } } } },
+            castingKeywords: ["attack"],
+          });
+          const tier = out.upgrades[0];
+          assert.equal(tier.description, "A");
+          assert.equal(tier.shieldSlots, 3, "a field with no input is kept");
+          assert.deepEqual(tier.damageTypes, ["cold", ""], "an entry not submitted is kept");
+          assert.equal(tier.changes[0].value, "2");
+          assert.equal(tier.changes[0].conditions[0].id, "k1", "nested entries keep theirs");
+          assert.equal(tier.changes[0].conditions[0].label, "y");
+          assert.deepEqual(out.castingKeywords, ["attack"], "a multi-select replaces its list");
+        });
+
+        it("editing an Upgrade keeps its Shield slots and its Bonus conditions' ids", async function () {
+          const item = await worldItem("skill", "keeps", {
+            system: {
+              category: "attack", rank: 5,
+              upgrades: [{ rankThreshold: 5, description: "old", shieldSlots: 3,
+                changes: [{ targetType: "stat", target: "dex", mode: "add", value: "1", conditions: [{ label: "Flanking?" }] }] }],
+            },
+          });
+          try {
+            const conditionId = item.system.upgrades[0].changes[0].conditions[0].id;
+            const sheet = await openSheet(item);
+            const text = sheet.element.querySelector('textarea[name="system.upgrades.0.description"]');
+            text.value = "new";
+            text.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => item.system.upgrades[0].description === "new", { message: "the edit never saved" });
+            assert.equal(item.system.upgrades[0].shieldSlots, 3, "Shield slots kept");
+            assert.equal(item.system.upgrades[0].changes[0].conditions[0].id, conditionId, "condition id kept");
             await sheet.close();
           } finally {
             await item.delete();

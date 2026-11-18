@@ -153,7 +153,7 @@ export default function register(quench) {
           assert.equal(blob.name, "Test Blob");
           assert.equal(blob.data.type, "mob");
           assert.equal(s.mobTier, "");
-          assert.equal(s.size, "Small (2)");
+          assert.equal(s.size, 2, "Table 9's value");
           assert.equal(s.creatureType, "Ooze");
           assert.equal(s.level, 4);
           assert.equal(s.move, "20+S");

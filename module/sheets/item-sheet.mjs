@@ -4,6 +4,7 @@ import { onAddArrayItem, onDeleteArrayItem } from '../helpers/array-editor.mjs';
 import CarlDice from '../dice/dice.mjs';
 import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
 import { needsWeapon } from '../helpers/weapons.mjs';
+import { mergeSubmitted } from '../helpers/form-arrays.mjs';
 
 const ATTRIBUTES_TEMPLATES = {
   item: 'systems/carl-rpg/templates/item/parts/attributes-item.hbs',
@@ -92,6 +93,22 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       scrollable: [""],
     },
   };
+
+  /**
+   * The form submits arrays as index-keyed objects holding only the fields
+   * it has inputs for, and Foundry replaces an array outright - so an
+   * entry's other fields (an Upgrade tier's Shield slots, a Bonus
+   * condition's id) would be lost on any edit. Merge the submission onto
+   * the stored data first (module/helpers/form-arrays.mjs).
+   * @override
+   */
+  _processFormData(event, form, formData) {
+    const data = super._processFormData(event, form, formData);
+    if (data.system && typeof data.system === "object") {
+      data.system = mergeSubmitted(this.item.system.toObject(), data.system);
+    }
+    return data;
+  }
 
   /**
    * This system doesn't use ActiveEffect documents (modifiers are Item

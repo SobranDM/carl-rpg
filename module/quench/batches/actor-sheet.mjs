@@ -200,7 +200,7 @@ export default function register(quench) {
           return sheet;
         };
 
-        it("a Character has no Defenses tab and its Boons tab is labelled Benefits; a Mob keeps both", async function () {
+        it("a Character has no Defenses tab and its Boons tab is labelled Benefits; a Mob has Boons and no Defenses tab", async function () {
           const actor = await createTestCharacter("tabs");
           const mob = await createTestMob("tabs");
           try {
@@ -211,12 +211,14 @@ export default function register(quench) {
             assert.include(sheet.element.querySelector('nav [data-tab="features"]').textContent, game.i18n.localize("CARLRPG.Tab.Benefits"));
             await sheet.close();
 
+            // A Mob's tabs are the Character's (docs/mob-sheet.md): its DR and
+            // Resistances are on the Combat tab, and it never rolls an Evade.
             const mobSheet = await openSheet(mob);
             const mobTabs = [...mobSheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
-            assert.include(mobTabs, "defenses");
+            assert.deepEqual(mobTabs, ["abilities", "skills", "items", "features", "conditions", "description"]);
             assert.include(mobSheet.element.querySelector('nav [data-tab="features"]').textContent, game.i18n.localize("CARLRPG.Tab.Boons"));
-            assert.notExists(mobSheet.element.querySelector(".carl-combat-defenses"), "the Combat-tab Defenses row is Character-only");
-            assert.exists(mobSheet.element.querySelector('.carl-stats-column [data-action="rollEvade"]'), "a Mob keeps its Evade link");
+            assert.exists(mobSheet.element.querySelector(".carl-mob-defenses"), "the Combat tab's Defenses");
+            assert.notExists(mobSheet.element.querySelector('.carl-stats-column [data-action="rollEvade"]'), "no Evade roll");
             await mobSheet.close();
           } finally {
             await deleteTestActor(actor);

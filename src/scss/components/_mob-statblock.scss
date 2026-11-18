@@ -21,6 +21,34 @@
     align-items: center;
   }
 
+  // A Mob's Combat tab (abilities-mob.hbs; docs/mob-sheet.md): today's
+  // value beside the stat block's "13+F", the Resistances grid opened under
+  // the Defenses row, and Elite under the portrait (header-mob.hbs).
+  .carl-mob-defense-now {
+    font-size: 11px;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-mob-defenses .carl-resistances-button.is-open {
+    border-color: var(--carl-accent);
+  }
+
+  .carl-mob-resistances {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--carl-border-soft);
+
+    .carl-resistances-grid {
+      margin-bottom: 0;
+    }
+  }
+
+  .carl-portrait-stat.carl-portrait-check input[type="checkbox"] {
+    width: auto;
+    height: 18px;
+    margin: 2px 0 0;
+  }
+
   // Shown beside Surprise/Evade when the Mob's Debuffs adjusted the value.
   .carl-debuffed-marker {
     font-size: 10px;

@@ -1,21 +1,23 @@
-{{!-- A Character's Skills tab: every owned Skill (with its Damage
+{{!-- A Character's (and a Mob's) Skills tab: every owned Skill (with its Damage
       Effects) and Spell. Pin a Spell (the star) to put it in the Hotlist -
       in a fight it can only be cast from there (p.86). The Spells section
       shows only once the crawler has a Spell; until then the Skills header
-      has a "+ Spell" link. Mana is edited in the header (mana-bar.hbs), so
-      the Spells header shows it read-only. --}}
+      has a "+ Spell" link. A Character's Mana is edited in the header
+      (mana-bar.hbs), so its Spells header shows it read-only; a Mob has no
+      Mana bar, so its Spells header edits it. --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="skills">
   {{#> carlCollapsibleSection sectionId="skills" expanded=system.uiState.skillsExpanded
        label=(localize "CARLRPG.Tab.Skills") toggleScope="actor" togglePath="system.uiState.skillsExpanded"
-       showLockToggle=true locked=system.uiState.itemsLocked showAddSpell=(not hasSpells)}}
+       showLockToggle=true locked=system.uiState.itemsLocked showAddSpell=(not (or hasSpells isMob))}}
     {{> "systems/carl-rpg/templates/actor/parts/skills-section-body.hbs"
         skills=skills unmatchedDamageEffects=unmatchedDamageEffects config=config locked=system.uiState.itemsLocked}}
   {{/carlCollapsibleSection}}
 
-  {{#if hasSpells}}
+  {{!-- A Mob's always shows: it's where its Mana is edited. --}}
+  {{#if (or hasSpells isMob)}}
   {{#> carlCollapsibleSection sectionId="spells" expanded=system.uiState.spellsExpanded
        label=(localize "CARLRPG.Tab.Spells") toggleScope="actor" togglePath="system.uiState.spellsExpanded"
-       showMana=true manaReadonly=true manaValue=system.mana.value manaMax=system.mana.max}}
+       showMana=true manaReadonly=isCharacter manaValue=system.mana.value manaMax=system.mana.max}}
     {{> "systems/carl-rpg/templates/actor/parts/spells-section-body.hbs" spells=spells locked=system.uiState.itemsLocked}}
   {{/carlCollapsibleSection}}
   {{/if}}

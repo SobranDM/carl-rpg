@@ -43,6 +43,7 @@ import { consumableActionEntries } from "./consumable-card.mjs";
 import { decorateDrivingCard, drivingActionEntries } from "./vehicle-card.mjs";
 import { decorateReactionCard, reactionActionEntries } from "./reaction-card.mjs";
 import { damageCardActionEntries, decorateDamageCard } from "../helpers/reaction-resolve.mjs";
+import { forgetCard } from "./status-rows.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
@@ -77,6 +78,10 @@ function isBlocked(entry, message) {
 
 /** Registers the single delegated listener - call once, from init. */
 export function registerChatListener() {
+  // A deleted card's client-side state (open expanders, results still on
+  // their way) goes with it.
+  Hooks.on("deleteChatMessage", (message) => forgetCard(message.id));
+
   Hooks.on("renderChatMessageHTML", (message, html) => {
     // Generic convention for any GM-only appended content (e.g. the folded
     // damage digest, module/chat/damage-card.mjs) - not one specific selector.

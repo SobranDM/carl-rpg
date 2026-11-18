@@ -16,6 +16,7 @@
 
 import { bodySize, escapeHtml, isHeading, joinText } from "./page-text.mjs";
 import { findDamageType } from "../helpers/damage-types.mjs";
+import { parseSize } from "../helpers/size.mjs";
 
 const CLASS_RE = /^([A-Z][A-Za-z ]{1,30});\s*([A-Za-z]+)\s*\((\d+)\),\s*(.+)$/;
 // One % per slot; a % is sometimes missing or mistyped in print ("50 60%", "80&").
@@ -99,7 +100,9 @@ function toMob(rawName, classLine, body, flavor) {
   const tierWord = kind.match(/^(\w+) Boss$/)?.[1]?.toLowerCase();
   const system = {
     mobTier: TIERS.includes(tierWord) ? tierWord : "",
-    size: `${size} (${sizeN})`,
+    // Table 9's value (p.92) from the printed "Large (5)" - by its number,
+    // else its name (a misprinted number), else none.
+    size: parseSize(`${size} (${sizeN})`),
     creatureType: /^(Mob|Boss)$/i.test(kind) || tierWord ? type : `${type} ${kind}`,
     attacks: [],
     biography: "",

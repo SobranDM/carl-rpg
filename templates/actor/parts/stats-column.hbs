@@ -14,8 +14,9 @@
         Character's Combat tab, where it's the cell under the button beside
         the Hotlist (the button shares a row with the Defenses there). --}}
   <div class="carl-stats-rest">
-    {{!-- A Character's Evade is in the Combat tab's Defenses row. --}}
-    {{#unless isCharacter}}
+    {{!-- A Character's Evade is in the Combat tab's Defenses row; a Mob
+          never rolls (p.267), so it has none. --}}
+    {{#unless (or isCharacter isMob)}}
     <a class="rollable flex-group-center carl-evade-link" data-action="rollEvade">
       <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
     </a>

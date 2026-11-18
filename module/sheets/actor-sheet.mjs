@@ -38,6 +38,9 @@ import {
 } from "../helpers/worship.mjs";
 import { evadeModifier } from "../helpers/rules.mjs";
 import { describeDefenses } from "../helpers/bonus-sources.mjs";
+import { mergeSubmitted } from '../helpers/form-arrays.mjs';
+import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
+import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -45,6 +48,23 @@ const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
 /** Position of a Skill's category in SKILL_CATEGORY_ORDER (unknown last). */
 const skillCategoryRank = (category) =>
   SKILL_CATEGORY_ORDER.indexOf(category) + 1 || SKILL_CATEGORY_ORDER.length + 1;
+
+/**
+ * "2 Resist · 1 Immune": a summary of an actor's effective Resistances
+ * (the Resistances button, abilities.hbs / abilities-mob.hbs).
+ * @param {object} sys  The actor's system data.
+ * @returns {string}
+ */
+function resistanceSummary(sys) {
+  const counts = { resist: 0, immune: 0, vulnerable: 0 };
+  for (const state of Object.values(sys.resistancesEffective ?? {})) {
+    if (state in counts) counts[state] += 1;
+  }
+  return Object.entries(counts)
+    .filter(([, n]) => n)
+    .map(([state, n]) => game.i18n.format(`CARLRPG.Actor.ResistSummary.${state}`, { n }))
+    .join(" · ");
+}
 
 /**
  * Extend the basic ActorSheet with some very simple modifications
@@ -105,8 +125,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       receiveBoon: CarlRPGActorSheet.#onReceiveBoon,
       addWorshipDay: CarlRPGActorSheet.#onAddWorshipDay,
       setMissedOfferings: CarlRPGActorSheet.#onSetMissedOfferings,
+      toggleMobResistances: CarlRPGActorSheet.#onToggleMobResistances,
     },
   };
+
+  /** Whether a Mob's Resistances grid is open under its Defenses (abilities-mob.hbs). */
+  #mobResistancesOpen = false;
 
   /** @override */
   static TABS = {
@@ -181,7 +205,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Combat tab's Stats column and Size is in the header, so it has no
     // Defenses tab.
     character: ["abilities", "skills", "items", "features", "conditions", "description"],
-    mob: ["abilities", "items", "features", "conditions", "defenses", "description"],
+    // A Mob's (docs/mob-sheet.md) as the Character's: Combat (Stats,
+    // Defenses with its DR and Resistances, Attacks), Skills, Inventory,
+    // Boons, Debuffs, Notes - no Defenses tab.
+    mob: ["abilities", "skills", "items", "features", "conditions", "description"],
     pet: ["abilities", "items", "features", "conditions", "defenses", "pet", "description"],
     // An object: no Boons, Debuffs or Defenses tab (Resistances are on its
     // Details tab). Its "abilities" slot is the Vehicle tab, "items" Cargo.
@@ -219,6 +246,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static TAB_LABELS_BY_TYPE = {
     character: { abilities: "CARLRPG.Tab.Combat", features: "CARLRPG.Tab.Benefits", description: "CARLRPG.Tab.Details" },
+    mob: { abilities: "CARLRPG.Tab.Combat", conditions: "CARLRPG.Tab.Debuffs", description: "CARLRPG.Tab.Notes" },
     pet: { items: "CARLRPG.Tab.PetGear", pet: "CARLRPG.Tab.Details" },
     vehicle: { abilities: "CARLRPG.Tab.Vehicle", items: "CARLRPG.Tab.Cargo", pet: "CARLRPG.Tab.Details" },
   };
@@ -250,10 +278,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   #listSort = {};
 
   /**
-   * Rows of an array of objects (the Conditions tab, a Mob's Attacks) submit
-   * only the fields they show, keyed by index ("system.conditions.0.label").
-   * Foundry replaces an array outright, so each submitted row is merged onto
-   * the stored entry here - otherwise an edit would drop the fields no input
+   * Rows of an array of objects (the Conditions tab) submit only the fields
+   * they show, keyed by index ("system.conditions.0.label"). Foundry
+   * replaces an array outright, so each submitted row is merged onto the
+   * stored entry here, at any depth (module/helpers/form-arrays.mjs, as the
+   * item sheet does) - otherwise an edit would drop the fields no input
    * shows (a condition's key and id, a timed Buff's changes and expiry).
    * Arrays of plain values (the Hotlist's text slots) are left to Foundry.
    * @override
@@ -269,9 +298,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       const current = source[key];
       if (!Array.isArray(current) || !value || typeof value !== "object" || Array.isArray(value)) continue;
       if (!current.some((entry) => entry && typeof entry === "object")) continue;
-      submitted[key] = current.map((entry, i) => (value[i] && typeof entry === "object"
-        ? foundry.utils.mergeObject(foundry.utils.deepClone(entry), value[i], { inplace: false })
-        : entry));
+      submitted[key] = mergeSubmitted(current, value);
     }
     return data;
   }
@@ -458,7 +485,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       { relativeTo: actor, secrets: actor.isOwner, rollData: context.rollData },
     );
     context.biographyHTML = await enrich(actor.system.biography);
-    if (context.isMob) context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);
+    if (context.isMob) {
+      context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);
+      this.#prepareMobContext(context);
+    }
     if (context.isCharacter) {
       await this.#prepareDetailsBoxes(context, enrich);
       await this.#prepareBenefits(context, enrich);
@@ -504,20 +534,40 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.evadeTotal = evadeModifier(sys);
     // Evade, DR, Move and Step with their source tooltips (bonus-sources.mjs).
     context.defenses = describeDefenses(sys);
-    const counts = { resist: 0, immune: 0, vulnerable: 0 };
-    for (const state of Object.values(sys.resistancesEffective ?? {})) {
-      if (state in counts) counts[state] += 1;
-    }
-    context.resistanceSummary = Object.entries(counts)
-      .filter(([, n]) => n)
-      .map(([state, n]) => game.i18n.format(`CARLRPG.Actor.ResistSummary.${state}`, { n }))
-      .join(" · ");
+    context.resistanceSummary = resistanceSummary(sys);
     context.potions = {
       limit: PERMANENT_POTION_LIMIT,
       stat: sys.permanentPotions.stat,
       skill: sys.permanentPotions.skill,
     };
     context.hasSpells = context.spells.length > 0;
+  }
+
+  /**
+   * A Mob's Combat tab (abilities-mob.hbs; docs/mob-sheet.md): Surprise and
+   * Evade at today's Floor beside the stat block's "+F" form, whether its
+   * Resistances grid is open and their summary, the Attacks' heading, and
+   * whether the Skills tab shows Spells.
+   * @param {object} context
+   */
+  #prepareMobContext(context) {
+    const sys = context.system;
+    const floor = Number(context.currentFloor) || 0;
+    // Evade today is the Difficulty an Attack on it rolls against - its
+    // Debuffs and, riding a moving vehicle, the occupant's bonus (p.72) -
+    // with the rows that are on by default, as the sheet's "+F" value.
+    const evade = attackDifficultyParts(this.actor, floor);
+    context.mobDefenses = {
+      surprise: (Number(sys.surpriseBase) || 0) + floor,
+      evade: resolveDifficultyRows(evade.base, evade.rows).difficulty,
+      resistancesOpen: this.#mobResistancesOpen,
+    };
+    context.resistanceSummary = resistanceSummary(sys);
+    context.hasSpells = (context.spells ?? []).length > 0;
+    const areas = (context.mobAttacks ?? []).filter((a) => a.kind === "area").length;
+    context.mobAttackSummary = areas
+      ? game.i18n.format("CARLRPG.MobAttack.CountWithArea", { n: context.mobAttacks.length, area: areas })
+      : String((context.mobAttacks ?? []).length);
   }
 
   /**
@@ -898,6 +948,13 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   }
 
   /* -------------------------------------------- */
+
+  /** A Mob's Resistances button: open or close the grid under its Defenses. */
+  static #onToggleMobResistances(event) {
+    event.preventDefault();
+    this.#mobResistancesOpen = !this.#mobResistancesOpen;
+    return this.render();
+  }
 
   /** @override */
   async _onFirstRender(context, options) {

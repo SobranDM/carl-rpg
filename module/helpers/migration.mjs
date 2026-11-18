@@ -31,6 +31,7 @@ import { createNoticeMessage, esc } from "../chat/chat-card.mjs";
 import { tierRank } from "./worship.mjs";
 import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions } from "./companion-migration.mjs";
 import { MOB_ATTACK_TYPE, attacksToCheck, convertLegacyAttacks } from "./mob-attacks.mjs";
+import { parseSize } from "./size.mjs";
 
 const SCOPE = "carl-rpg";
 export const MIGRATION_SETTING = "completedMigrations";
@@ -56,6 +57,9 @@ export const WEAPON_SKILL_NOTICE_ID = "0.7.0-weapon-skill-notice";
 /** 0.7.0: a Mob's Attacks became items (docs/mob-sheet.md). */
 export const MOB_ATTACKS_MIGRATION_ID = "0.7.0-mob-attack-items";
 
+/** 0.7.0: a Mob's Size became Table 9's value, saved (migrateMobSizes). */
+export const MOB_SIZE_MIGRATION_ID = "0.7.0-mob-size";
+
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
  * is the release whose data it brings a world up to (for messages). A run
@@ -75,6 +79,7 @@ export const MIGRATIONS = [
   { id: CHARGEN_DONE_MIGRATION_ID, version: "0.7.0", run: migrateChargenDone },
   { id: WEAPON_SKILL_NOTICE_ID, version: "0.7.0", run: announceWeaponSkill },
   { id: MOB_ATTACKS_MIGRATION_ID, version: "0.7.0", run: migrateMobAttacks },
+  { id: MOB_SIZE_MIGRATION_ID, version: "0.7.0", run: migrateMobSizes },
 ];
 
 /**
@@ -887,6 +892,84 @@ export async function convertTokenAttacks(token) {
   const list = foundry.utils.deepClone(own);
   await clearInheritedAttacks(token);
   return convertLegacyAttacks(token.actor, { attacks: list });
+}
+
+/* -------------------------------------------------- */
+/*  0.7.0: a Mob's Size as Table 9's value            */
+/* -------------------------------------------------- */
+
+/**
+ * 0.7.0 made a Mob's Size Table 9's value (p.92; module/data/mob.mjs) in
+ * place of free text ("Large (5)"). The data model reads old text as the
+ * value in memory on every load (migrateData); this saves it, so the stored
+ * data holds the number too:
+ *  - every world Mob, written with no diff (in memory it's already the
+ *    number, so a normal update would see no change);
+ *  - an unlinked token whose own data still holds text;
+ *  - Mobs in the world's Actor compendiums whose stored Size is text (read
+ *    from the index, which isn't migrated).
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+export async function migrateMobSizes() {
+  let changed = 0;
+  let errors = 0;
+  const mobs = game.actors.filter((a) => a.type === "mob");
+  if (mobs.length) {
+    try {
+      changed += await saveMobSizes(mobs);
+    } catch (err) {
+      console.error("carl-rpg | 0.7.0 migration: couldn't save Mob Sizes", err);
+      errors += 1;
+    }
+  }
+
+  for (const scene of game.scenes) {
+    for (const token of scene.tokens) {
+      const raw = token.actorLink ? undefined : token.delta?._source?.system?.size;
+      if (typeof raw !== "string" || token.actor?.type !== "mob") continue;
+      try {
+        await token.actor.update({ "system.size": parseSize(raw) }, { diff: false, render: false, carlMigration: true });
+        changed += 1;
+      } catch (err) {
+        console.error(`carl-rpg | 0.7.0 migration: couldn't save the Size of token ${token.name}`, err);
+        errors += 1;
+      }
+    }
+  }
+
+  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
+    try {
+      const index = await pack.getIndex({ fields: ["type", "system.size"] });
+      const updates = index
+        .filter((entry) => entry.type === "mob" && typeof entry.system?.size === "string")
+        .map((entry) => ({ _id: entry._id, "system.size": parseSize(entry.system.size) }));
+      if (!updates.length) continue;
+      await withUnlockedPack(pack, () => Actor.implementation.updateDocuments(updates, {
+        pack: pack.collection, diff: false, render: false, carlMigration: true,
+      }));
+      changed += updates.length;
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't save Mob Sizes in compendium ${pack.collection}`, err);
+      errors += 1;
+    }
+  }
+  return { changed, errors };
+}
+
+/**
+ * Save world Mobs' Sizes as read (the migration's step for world actors;
+ * tests). Written with no diff: in memory it's already the number.
+ * @param {Actor[]} mobs
+ * @returns {Promise<number>}  How many were written.
+ */
+export async function saveMobSizes(mobs) {
+  const list = mobs.filter((a) => a?.type === "mob");
+  if (!list.length) return 0;
+  await Actor.implementation.updateDocuments(
+    list.map((a) => ({ _id: a.id, "system.size": a.system.size ?? null })),
+    { diff: false, render: false, carlMigration: true },
+  );
+  return list.length;
 }
 
 /* -------------------------------------------------- */

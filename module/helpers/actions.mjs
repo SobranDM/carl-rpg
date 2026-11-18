@@ -24,6 +24,7 @@
  */
 import { currentPhase, isPhased, phasedCombatFor } from "./combat-phases.mjs";
 import { isCrawler, isPet, isVehicle } from "./actor-kinds.mjs";
+import { queueOn } from "./actor-queue.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -585,9 +586,7 @@ export function registerActionSocket() {
  * @returns {Promise<boolean>}  Whether it changed anything.
  */
 export function applyActionOp(combatId, op, data, user) {
-  const next = (queues.get(combatId) ?? Promise.resolve()).then(() => applyNow(combatId, op, data, user));
-  queues.set(combatId, next.catch(() => {}));
-  return next;
+  return queueOn(queues, combatId, () => applyNow(combatId, op, data, user));
 }
 
 async function applyNow(combatId, op, data, user) {

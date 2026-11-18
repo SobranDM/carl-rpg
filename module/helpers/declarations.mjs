@@ -11,6 +11,7 @@
  * declaration of a new round replaces it.
  */
 import { refundAction } from "./actions.mjs";
+import { queueOn } from "./actor-queue.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -82,9 +83,7 @@ const writes = new Map();
  * @returns {Promise<T>}
  */
 function queueWrite(combat, task) {
-  const next = (writes.get(combat.id) ?? Promise.resolve()).then(task, task);
-  writes.set(combat.id, next.catch(() => {}));
-  return next;
+  return queueOn(writes, combat.id, task);
 }
 
 /**

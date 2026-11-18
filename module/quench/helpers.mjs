@@ -293,6 +293,62 @@ export async function dropOnSheet(sheet, element, data, { expectDispatch = true 
   }
 }
 
+/**
+ * Wrap a batch's registration function so the chat messages posted while
+ * the batch runs are deleted when it ends (module/quench/register.mjs wraps
+ * every batch). Rolls, Initiative, "Combat Over" and other cards are side
+ * effects many tests never clean up; left behind they pile up in the world
+ * (loaded at every startup) and in the chat log, a run at a time.
+ *
+ * Deletes every message created while the batch ran, whoever posted it.
+ * After a combat was deleted it waits a moment and looks again: "Combat
+ * Over" is posted un-awaited after the deletion (documents/combat.mjs).
+ * @param {string} key  The batch key, for the log line.
+ * @param {Function} fn  The batch's registration function.
+ * @returns {Function}
+ */
+export function withMessageCleanup(key, fn) {
+  return function (context) {
+    let before = null;
+    let combatDeleted = false;
+    let hookId = null;
+    // On the batch's root suite: before and after all of the batch's suites.
+    context.before(function () {
+      before = new Set(game.messages.keys());
+      combatDeleted = false;
+      hookId = Hooks.on("deleteCombat", () => { combatDeleted = true; });
+    });
+    context.after(async function () {
+      this.timeout?.(QUENCH_DEFAULT_TIMEOUT_MS);
+      if (!before) return;
+      let deleted = 0;
+      const sweep = async () => {
+        const ids = game.messages.filter((m) => !before.has(m.id)).map((m) => m.id);
+        if (!ids.length) return;
+        try {
+          await ChatMessage.deleteDocuments(ids);
+          deleted += ids.length;
+        } catch (err) {
+          console.warn(`CarlRPG | ${key}: deleting its chat messages failed`, err);
+        }
+      };
+      try {
+        await sweep();
+        if (combatDeleted) {
+          await settle(300);
+          await sweep();
+        }
+        if (deleted) console.info(`CarlRPG | ${key} left ${deleted} chat message(s); deleted`);
+      } finally {
+        if (hookId !== null) Hooks.off("deleteCombat", hookId);
+        hookId = null;
+        before = null;
+      }
+    });
+    return fn.call(this, context);
+  };
+}
+
 /** Pins a d20 to face 10, regardless of which direction randomUniform maps to a face - see withPinnedDice. */
 export const PIN_D20_MID = 0.5;
 

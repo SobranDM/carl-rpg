@@ -54,6 +54,8 @@ import registerMobAttacks from "./batches/mob-attacks.mjs";
 import registerSkillSheet from "./batches/skill-sheet.mjs";
 import registerGearSheet from "./batches/gear-sheet.mjs";
 import registerMobDebuffs from "./batches/mob-debuffs.mjs";
+import registerMemoryHygiene from "./batches/memory-hygiene.mjs";
+import { withMessageCleanup } from "./helpers.mjs";
 
 const BATCH_REGISTRARS = [
   registerRules,
@@ -98,9 +100,13 @@ const BATCH_REGISTRARS = [
   registerSkillSheet,
   registerGearSheet,
   registerMobDebuffs,
+  registerMemoryHygiene,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {
-  for (const register of BATCH_REGISTRARS) register(quench);
+  const withCleanup = {
+    registerBatch: (key, fn, options) => quench.registerBatch(key, withMessageCleanup(key, fn), options),
+  };
+  for (const register of BATCH_REGISTRARS) register(withCleanup);
   console.log(`CarlRPG | Registered ${BATCH_REGISTRARS.length} Quench batches`);
 }
