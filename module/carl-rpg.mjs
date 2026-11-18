@@ -33,6 +33,7 @@ import { bakeItemGrants } from './helpers/race-class-grants.mjs';
 import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
 import { openRulebookImporter, RulebookImportMenu } from './pdf-import/import-dialog.mjs';
 import { migrateWorld, registerMigrationSetting } from './helpers/migration.mjs';
+import { changeLineHtml, debuffLineHtml } from './helpers/sheet-rows.mjs';
 
 Hooks.once('init', function () {
   game.carlrpg = {
@@ -342,6 +343,11 @@ Handlebars.registerHelper('debuffEffectHint', function (debuffs, key, isMob) {
 // rather than erroring; the actor's stored `mode` value itself is untouched
 // until this sheet is next submitted (submitOnChange posts the whole form),
 // at which point it self-heals to whatever the dropdown was showing (Add).
+// The item sheets' compact Bonus and Debuff rows (module/helpers/sheet-rows.mjs;
+// docs/skill-item-sheets.md): each row's summary line, from the entry.
+Handlebars.registerHelper('changeLine', (change) => new Handlebars.SafeString(changeLineHtml(change)));
+Handlebars.registerHelper('debuffLine', (te) => new Handlebars.SafeString(debuffLineHtml(te)));
+
 Handlebars.registerHelper('changeModeChoices', function (allModes, modesByTarget, targetType, itemType) {
   if (targetType === "stat" && (itemType === "class" || itemType === "race")) return allModes;
   const allowed = modesByTarget?.[targetType];

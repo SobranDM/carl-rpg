@@ -10,6 +10,8 @@ import {
 
 const ITEM_TYPES = ["item", "feature", "skill", "damageEffect", "spell", "class", "race"];
 const RANKED_TYPES = ["skill", "spell", "damageEffect"];
+/** Drawn as one page, no tabs (item-sheet.mjs SINGLE_PAGE_TYPES). */
+const SINGLE_PAGE_TYPES = ["item"];
 
 const worldItem = (type, label = type, data = {}) =>
   Item.create({ name: `Quench ${label} ${foundry.utils.randomID()}`, type, ...data });
@@ -39,10 +41,17 @@ export default function register(quench) {
               assert.instanceOf(sheet, foundry.applications.sheets.ItemSheetV2, type);
               assert.instanceOf(sheet, CarlRPGItemSheet, type);
               assert.exists(sheet.element.querySelector('input[name="name"]'), `${type}: the form rendered`);
-              const active = sheet.element.querySelector('.tab[data-group="primary"].active');
-              assert.exists(active, `${type}: a primary tab is active`);
-              const expected = RANKED_TYPES.includes(type) ? "main" : "description";
-              assert.equal(active.dataset.tab, expected, `${type}: opens on its first tab`);
+              if (SINGLE_PAGE_TYPES.includes(type)) {
+                const page = sheet.element.querySelector(".carl-single-page");
+                assert.exists(page, `${type}: one page`);
+                assert.isNotNull(page.offsetParent, `${type}: the page is shown`);
+                assert.notExists(sheet.element.querySelector("nav.tabs"), `${type}: no tab bar`);
+              } else {
+                const active = sheet.element.querySelector('.tab[data-group="primary"].active');
+                assert.exists(active, `${type}: a primary tab is active`);
+                const expected = RANKED_TYPES.includes(type) ? "main" : "description";
+                assert.equal(active.dataset.tab, expected, `${type}: opens on its first tab`);
+              }
               await sheet.close();
             } finally {
               await item.delete();

@@ -826,7 +826,7 @@
       "Equipped": "Equipped",
       "Armor": "Armor",
       "ArmorHint": "Worn armor: \"your entire ensemble only grants you a single DR bonus\" (p.225). Of the equipped pieces with this ticked, only the one adding the most DR counts. DR from a Race, Class, Skill, Spell or Buff still adds on top.",
-      "Changes": "Changes"
+      "Changes": "Bonuses"
     },
     "Feature": {
       "Tier": "Tier"
@@ -961,13 +961,99 @@
       "Remaining": "Remaining",
       "Source": "Source"
     },
+    "Bonus": {
+      "Add": "Add Bonus",
+      "What": "What",
+      "How": "How",
+      "NotSet": "Not set",
+      "FromLevelField": "From Level",
+      "OnlyWhenField": "Only when",
+      "AlwaysOn": "No conditions: always on.",
+      "AtLeast": "at least {value}",
+      "AtMost": "at most {value}",
+      "Cap": "max {cap}",
+      "OnlyWhen": "Only when: {conditions}",
+      "FromLevel": "From Level {level}",
+      "Resist": { "none": "None", "resist": "Resistant", "vulnerable": "Vulnerable", "immune": "Immune" },
+      "Kind": {
+        "stat": "Stat",
+        "skillRank": "Skill Rank",
+        "skillDamage": "Damage",
+        "resource": "Resource",
+        "rollMode": "Roll",
+        "custom": "Custom",
+        "resistance": "Resist",
+        "advancementBonus": "Advance"
+      }
+    },
+    "OnHitDebuff": {
+      "Debuff": "Debuff",
+      "OnlyWith": "Only with: {skills}",
+      "OnlyWithField": "Only with these Attack Skills",
+      "OnAmazing": "on an Amazing Success",
+      "NoAmazing": "Only on an Amazing Success, and no target was one: it lands on no one.",
+      "OnlyWithHint": "Blank: any Attack. One \"On an Amazing Success\" effect per weapon (p.223).",
+      "AddSkill": "Add a Skill",
+      "RemoveSkill": "Remove this Skill",
+      "Trigger": { "hit": "On a hit", "crit": "Critical Hit", "amazing": "Amazing Success", "both": "Crit + Amazing" },
+      "TriggerHint": {
+        "hit": "Lands on any hit the target doesn't Evade.",
+        "crit": "Lands only on a Critical Hit.",
+        "amazing": "Lands only on an Amazing Success.",
+        "both": "Lands only on a Critical Hit that is also an Amazing Success."
+      }
+    },
+    "ItemSheet": {
+      "Group": {
+        "About": "What it is",
+        "Advancement": "Rank and advancement",
+        "Rolling": "Rolling it",
+        "Damage": "Damage",
+        "Healing": "Healing",
+        "Debuffs": "On-hit Debuffs",
+        "Upgrades": "Upgrades",
+        "Bonuses": "Bonuses"
+      },
+      "AnyRank": "at any Rank",
+      "Unlocked": "Unlocked",
+      "Locked": "Locked",
+      "NoUpgrade": "No Upgrade yet",
+      "NoUpgradeHere": "No Upgrade at this Rank yet.",
+      "EmptyUpgrade": "Nothing in it yet",
+      "AddAnotherUpgrade": "Add another Upgrade at this Rank",
+      "UpgradeTitle": "Rank {rank} Upgrade",
+      "MoveUpgrade": "Move this Upgrade to another Rank",
+      "UpgradeDescriptionPlaceholder": "What this Upgrade does",
+      "AddBar": "Add:",
+      "AddBonus": "Bonus",
+      "AddDebuff": "Debuff",
+      "AddDamageType": "Damage type",
+      "AddHealing": "Healing",
+      "Count": { "Bonus": "{n} Bonus", "Bonuses": "{n} Bonuses", "Debuff": "{n} Debuff", "Debuffs": "{n} Debuffs" },
+      "ManaChip": "{n} Mana",
+      "RankChip": "Rank {n}",
+      "MarkedHint": "Marked for an Advancement Check",
+      "WhileHeld": "while held or worn",
+      "AlsoBar": "Also:",
+      "ConsumableUse": "Consumable use",
+      "WeaponChip": "Weapon · {skill}",
+      "KindChip": { "potion": "Potion", "scroll": "Scroll", "spellbook": "Spellbook", "other": "Single-use" },
+      "Consumable": {
+        "Heals": "Heals",
+        "Mana": "Restores Mana",
+        "Raises": "Raises",
+        "AddCure": "Add…",
+        "RemoveCure": "Remove this Cure",
+        "SicknessNote": "counts toward Potion Sickness"
+      }
+    },
     "TargetEffect": {
       "Stacks": "Stacks",
-      "CritOnly": "Crit Only",
-      "AmazingSuccessOnly": "Amazing Success Only",
-      "LabelPlaceholder": "Label override (optional)",
-      "Remove": "Remove",
-      "Add": "Add Target Effect"
+      "CritOnly": "Critical Hit only",
+      "AmazingSuccessOnly": "Amazing Success only",
+      "LabelPlaceholder": "Shown on the Attack card (optional)",
+      "Remove": "Remove Debuff",
+      "Add": "Add Debuff"
     },
     "Chat": {
       "Description": "Description",
@@ -1723,6 +1809,10 @@
       "EvadedHalf": "Evaded - half",
       "HitsVehicle": "Hits {vehicle}",
       "CatcherDr": "Catcher +{dr} DR",
+      "CatcherNoDebuffs": "Catcher Rank 15: its Debuffs don't apply",
+      "ApplyDebuffs": "Apply Debuffs",
+      "WillGain": "+ {debuffs}",
+      "Gained": "Gains {debuffs}",
       "MinorInjury": "{name} gains a Minor Injury after combat (Evade failed by 10 or more).",
       "MajorInjury": "{name} gains a Major Injury after combat (Natural 1 on the Evade).",
       "UnrolledWarning": "{count} Mob Attack(s) haven't had their damage rolled. Roll them now and move on to the Crawler Action Phase?"

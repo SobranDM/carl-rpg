@@ -22,6 +22,9 @@ function attackSkill(actor, name, system = {}) {
   return createTestItem(actor, "skill", name, { name, system: { category: "attack", rank: 2, ...system } });
 }
 
+/** Migration ids, in order. */
+const ids = (list) => list.map((m) => m.id);
+
 export default function register(quench) {
   quench.registerBatch(
     "carl-rpg.migration",
@@ -33,7 +36,6 @@ export default function register(quench) {
 
         it("runs each migration once per world, by id, whatever the version numbers", function () {
           const HAND = "0.7.0-hand-to-hand-box";
-          const ids = (list) => list.map((m) => m.id);
           assert.include(ids(MIGRATIONS), HAND);
 
           // A world from before migrations were tracked, with content in it.
@@ -424,8 +426,10 @@ export default function register(quench) {
           assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID));
           // A world that already had the earlier ones still gets it.
           const earlier = MIGRATIONS.slice(0, index).map((m) => m.id);
+          // (Migrations added after it - the Mob Attacks' - run too.)
           const p = migrationPlan({ done: earlier, hasContent: true });
-          assert.deepEqual(p.run.map((m) => m.id), [WEAPON_SKILL_NOTICE_ID]);
+          assert.deepEqual(ids(p.run), ids(MIGRATIONS.slice(index)));
+          assert.equal(p.run[0].id, WEAPON_SKILL_NOTICE_ID);
         });
 
         it("posts one chat notice everyone sees, changing no documents", async function () {

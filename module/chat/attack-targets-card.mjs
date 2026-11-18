@@ -25,13 +25,13 @@ import CarlDice from "../dice/dice.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 import { isHitDegree } from "../helpers/rules.mjs";
 import { activeRows, rowOutcome, rowEvadeDifficulty, rowResolved } from "../helpers/attack-targets.mjs";
-import { addConditionToActor } from "../helpers/conditions.mjs";
+import { resolveTargetEffectLabel } from "../helpers/conditions.mjs";
+import { landDebuffs } from "../helpers/land-debuffs.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { appendCardSection, esc } from "./chat-card.mjs";
 import { applyDamageToActor } from "./damage-card.mjs";
-import { isImmuneToAllDamage } from "../helpers/damage-pipeline.mjs";
 import { userOwnsUuid } from "./evade-link-card.mjs";
-import { rollsLikeCrawler, takesConditions } from "../helpers/actor-kinds.mjs";
+import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { afterRamRowApplied } from "../helpers/vehicle-ram.mjs";
 import { evadeIsFree, noteUndo, takeAction } from "../helpers/actions.mjs";
 import {
@@ -91,16 +91,32 @@ function damageTypeLabel(type) {
  * The static part of the card: what the Attack carries (damage pills,
  * on-hit effects, an Area tag), a placeholder the rows are drawn into, and
  * the GM's Apply All.
- * @param {{damageByType: Record<string, number>, targetEffects: object[], isArea: boolean}} args
+ * @param {{damageByType: Record<string, number>, targetEffects: object[], isArea: boolean, noAmazing?: boolean}} args
+ *   noAmazing: the Attack has targets and was an Amazing Success against
+ *   none - an Amazing-Success-only Debuff lands on no one, so it's dimmed.
  * @returns {string}
  */
-export function buildAttackTargetsFooter({ damageByType = {}, targetEffects = [], isArea = false }) {
+export function buildAttackTargetsFooter({ damageByType = {}, targetEffects = [], isArea = false, noAmazing = false }) {
   const pills = Object.entries(damageByType)
     .filter(([, amount]) => amount)
     .map(([type, amount]) => `<span class="carl-damage-pill">${esc(amount)} ${esc(damageTypeLabel(type))}</span>`)
     .join("");
+  // Each Debuff by name, with where it comes from ("Burned ×1 · Blazing
+  // Longsword") and, if only on an Amazing Success, that (decided per
+  // target when applied - debuffLandsOn); dimmed if no target was one.
   const effects = targetEffects
-    .map((te) => `<span class="carl-target-effect-pill">${esc(te.displayLabel ?? te.label ?? te.debuffKey)} &times;${esc(te.stacks ?? 1)}</span>`)
+    .map((te) => {
+      const name = te.displayLabel || resolveTargetEffectLabel(te);
+      // A Mob Attack's trigger, when it's more than "on a hit".
+      const trigger = te.trigger && te.trigger !== "hit" ? game.i18n.localize(CARLRPG.mobAttackTriggers[te.trigger] ?? te.trigger) : "";
+      const notes = [te.sourceLabel, te.amazingSuccessOnly ? game.i18n.localize("CARLRPG.OnHitDebuff.OnAmazing") : "", trigger]
+        .filter(Boolean).map((n) => ` · ${esc(n)}`).join("");
+      const dim = te.amazingSuccessOnly && noAmazing;
+      const tipKey = dim ? "CARLRPG.OnHitDebuff.NoAmazing" : "CARLRPG.OnHitDebuff.TriggerHint.amazing";
+      const tip = te.amazingSuccessOnly ? ` data-tooltip="${esc(game.i18n.localize(tipKey))}"` : "";
+      return `<span class="carl-target-effect-pill${dim ? " is-dim" : ""}"${tip}>${esc(name)} &times;${esc(te.stacks ?? 1)}`
+        + (notes ? `<span class="carl-target-effect-source">${notes}</span>` : "") + `</span>`;
+    })
     .join("");
   return `<div class="carl-attack-targets">
     ${isArea ? `<div class="carl-area-tag"><i class="fas fa-burst"></i> ${game.i18n.localize("CARLRPG.Targets.AreaAttack")}</div>` : ""}
@@ -410,18 +426,7 @@ export async function applyRow(message, row) {
   // A rammed (or ramming) vehicle passes half its damage to its occupants,
   // and the rammer loses Move - even when the recoil rounds down to nothing.
   if (flags.ram && row.hit) lines.push(...await afterRamRowApplied(message, row, target.actor, outcome.damage));
-  // An Immunity to the whole hit also ignores its Debuffs (p.93).
-  const immune = outcome.effects && (flags.targetEffects ?? []).length
-    && isImmuneToAllDamage(flags.damageByType, target.actor);
-  if (immune) {
-    lines.push(game.i18n.format("CARLRPG.Targets.ImmuneNoEffects", { name: esc(target.actor.name) }));
-  } else if (outcome.effects && (flags.targetEffects ?? []).length && !takesConditions(target.actor)) {
-    lines.push(game.i18n.format("CARLRPG.Vehicle.ImmuneToDebuffs", { name: esc(target.actor.name) }));
-  } else if (outcome.effects) {
-    for (const te of flags.targetEffects ?? []) {
-      await addConditionToActor(target.actor, te.debuffKey, { stacks: te.stacks, source: te.sourceLabel, label: te.label });
-    }
-  }
+  if (outcome.effects) lines.push(...(await landDebuffs(target.actor, flags.targetEffects, row, flags.damageByType)).lines);
   return lines;
 }
 

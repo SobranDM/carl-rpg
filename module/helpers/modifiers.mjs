@@ -177,8 +177,9 @@ function collectItemChanges(item) {
 
 /**
  * Collect every currently-triggered `targetEffects` entry (see
- * module/data/shared/upgrade-tier.mjs) from one item's unlocked Upgrade
- * tiers - i.e. "on hit, the target gains Debuff X". Rank-gated exactly like
+ * module/data/shared/upgrade-tier.mjs) from one item - its base list (any
+ * Rank, module/data/ranked-item-base.mjs) and its unlocked Upgrade tiers -
+ * i.e. "on hit, the target gains Debuff X". Tiers are Rank-gated exactly like
  * collectItemChanges above (only tiers whose rankThreshold the item's own
  * current Rank meets); additionally gated per-entry via `critOnly` (natural
  * 20) and/or `amazingSuccessOnly` (Degree of Success "Amazing Success") -
@@ -191,31 +192,98 @@ function collectItemChanges(item) {
  * *would* apply, for the chat card's "Apply to Target(s)" button
  * (module/chat/target-effects-card.mjs) to offer.
  *
+ * A gear item's entries (module/data/item.mjs) may name the Attack Skills
+ * they come with (`skills`, "Only with": blank means any Attack); with
+ * `skillName` given, an entry naming others is left out.
+ *
  * @param {Item} item
- * @param {{isCrit?: boolean, isAmazingSuccess?: boolean}} [options]
- * @returns {Array<{id: string, debuffKey: string, stacks: number, label: string, sourceLabel: string}>}
+ * @param {{isCrit?: boolean, isAmazingSuccess?: boolean|null, skillName?: string|null}} [options]
+ *   isAmazingSuccess null: keep Amazing-Success-only entries, marked
+ *   `amazingSuccessOnly`, for each target to decide (attackTargetEffects).
+ * @returns {Array<{id: string, debuffKey: string, stacks: number, label: string, sourceLabel: string, amazingSuccessOnly: boolean}>}
  */
-export function collectItemTargetEffects(item, { isCrit = false, isAmazingSuccess = false } = {}) {
+export function collectItemTargetEffects(item, { isCrit = false, isAmazingSuccess = false, skillName = null } = {}) {
   const sys = item.system;
   const sourceItemRank = sys.rank ?? 0;
   const out = [];
-  if (!Array.isArray(sys.upgrades)) return out;
-  for (const upgrade of sys.upgrades) {
+  const skillSlug = skillName ? slugifySkillName(skillName) : null;
+  const take = (te, sourceLabel) => {
+    if (!te.debuffKey) return;
+    if (te.critOnly && !isCrit) return;
+    if (te.amazingSuccessOnly && isAmazingSuccess === false) return;
+    const only = (te.skills ?? []).map((s) => String(s ?? "").trim()).filter(Boolean);
+    if (skillSlug && only.length && !only.some((s) => slugifySkillName(s) === skillSlug)) return;
+    out.push({
+      id: te.id,
+      debuffKey: te.debuffKey,
+      stacks: te.stacks || 1,
+      label: te.label || "",
+      sourceLabel,
+      amazingSuccessOnly: !!te.amazingSuccessOnly,
+    });
+  };
+  // The base list: at any Rank.
+  for (const te of sys.targetEffects ?? []) take(te, item.name);
+  for (const upgrade of Array.isArray(sys.upgrades) ? sys.upgrades : []) {
     if (sourceItemRank < upgrade.rankThreshold) continue;
-    for (const te of upgrade.targetEffects ?? []) {
-      if (!te.debuffKey) continue;
-      if (te.critOnly && !isCrit) continue;
-      if (te.amazingSuccessOnly && !isAmazingSuccess) continue;
-      out.push({
-        id: te.id,
-        debuffKey: te.debuffKey,
-        stacks: te.stacks || 1,
-        label: te.label || "",
-        sourceLabel: `${item.name} (Rank ${upgrade.rankThreshold})`,
-      });
-    }
+    for (const te of upgrade.targetEffects ?? []) take(te, `${item.name} (Rank ${upgrade.rankThreshold})`);
   }
   return out;
+}
+
+/**
+ * Every On-hit Debuff a crawler's Attack carries (docs/skill-item-
+ * sheets.md): its Skill's (base and unlocked tiers), its Damage Effect's,
+ * and each held or worn gear item's - equipped, as gear in a slot or hand
+ * always is (equip-slots.mjs; "You must be holding or wearing it", p.116) -
+ * that fits this Attack Skill ("Only with"). A Critical-Hit-only entry is
+ * decided here (a natural 20 is the whole Attack's). An Amazing-Success-
+ * only one is decided here too when `isAmazingSuccess` is a boolean; pass
+ * null to keep it, marked, for each target's own Degree to decide
+ * (debuffLandsOn - attack-targets-card.mjs's applyRow).
+ * @param {Actor|null} actor
+ * @param {Item} skillItem
+ * @param {{damageEffectItem?: Item|null, isCrit?: boolean, isAmazingSuccess?: boolean|null}} [options]
+ * @returns {object[]}  collectItemTargetEffects's entries.
+ */
+export function attackTargetEffects(actor, skillItem, { damageEffectItem = null, isCrit = false, isAmazingSuccess = null } = {}) {
+  const options = { isCrit, isAmazingSuccess, skillName: skillItem?.name ?? null };
+  const gear = (actor?.items ?? []).filter((i) => i.type === "item" && i.system.equipped && (i.system.targetEffects ?? []).length);
+  return [skillItem, damageEffectItem, ...gear]
+    .filter(Boolean)
+    .flatMap((item) => collectItemTargetEffects(item, options));
+}
+
+/**
+ * A Mob Attack Debuff's trigger (CONFIG.CARLRPG.mobAttackTriggers) and the
+ * Evade Degrees it lands on.
+ */
+const BAD_EVADE_DEGREES = {
+  majorFail: ["majorFail", "criticalFail"],
+  criticalFail: ["criticalFail"],
+};
+
+/**
+ * Does this carried Debuff land on this defender? Hit, not Evaded, not
+ * Immune, a Catcher at Rank 15 are the caller's (attack-targets-card.mjs
+ * landDebuffs); this is the entry's own trigger:
+ *  - a crawler's Amazing-Success-only one needs an Amazing Success against
+ *    this target;
+ *  - a Mob Attack's "on an Evade Major Fail or worse" / "on a Critical
+ *    Fail" one (docs/mob-sheet.md) needs that Evade - or no Evade at all:
+ *    "a debuff that only lands on a particularly bad Evade DOES land if the
+ *    Crawler doesn't Evade at all" (ruled 2026-11-17). A failed free Evade
+ *    decides nothing (p.96), so it counts as none.
+ * @param {{amazingSuccessOnly?: boolean, trigger?: string}} te
+ * @param {{amazing?: boolean, evade?: {degree: string, success: boolean}|null}} row
+ *   An Attack card target row, or a Damage card row's `{...row, evade}`.
+ * @returns {boolean}
+ */
+export function debuffLandsOn(te, row) {
+  if (te.amazingSuccessOnly && !row?.amazing) return false;
+  const degrees = BAD_EVADE_DEGREES[te.trigger];
+  if (degrees && row?.evade && !degrees.includes(row.evade.degree)) return false;
+  return true;
 }
 
 /**

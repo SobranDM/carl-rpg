@@ -58,6 +58,21 @@ export function defineTargetEffectsField(options = {}) {
 }
 
 /**
+ * A gear item's On-hit Debuffs (module/data/item.mjs; docs/skill-item-
+ * sheets.md): the same entries, plus "Only with" - the Attack Skills they
+ * come with (blank: any Attack the holder or wearer makes). Read by
+ * modifiers.mjs's collectItemTargetEffects / attackTargetEffects.
+ * @returns {foundry.data.fields.ArrayField}
+ */
+export function defineGearTargetEffectsField() {
+  const fields = foundry.data.fields;
+  return new fields.ArrayField(new fields.SchemaField({
+    ...defineTargetEffectSchema(),
+    skills: new fields.ArrayField(new fields.StringField({ required: true, blank: true }), { required: true, initial: [] }),
+  }), { required: false, initial: [] });
+}
+
+/**
  * Shared schema for one Rank-gated "Upgrade" tier (Rank 5 / 10 / 15), used by
  * Skills, Spells, and Damage Effects - the three item types that follow the
  * book's "gains additional bonuses at Ranks 5, 10, and 15" pattern.

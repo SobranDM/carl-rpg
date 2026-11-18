@@ -51,6 +51,9 @@ import registerCombatPhases from "./batches/combat-phases.mjs";
 import registerActionTracking from "./batches/action-tracking.mjs";
 import registerIntervene from "./batches/intervene.mjs";
 import registerMobAttacks from "./batches/mob-attacks.mjs";
+import registerSkillSheet from "./batches/skill-sheet.mjs";
+import registerGearSheet from "./batches/gear-sheet.mjs";
+import registerMobDebuffs from "./batches/mob-debuffs.mjs";
 
 const BATCH_REGISTRARS = [
   registerRules,
@@ -92,6 +95,9 @@ const BATCH_REGISTRARS = [
   registerActionTracking,
   registerIntervene,
   registerMobAttacks,
+  registerSkillSheet,
+  registerGearSheet,
+  registerMobDebuffs,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

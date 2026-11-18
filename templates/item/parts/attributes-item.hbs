@@ -1,154 +1,248 @@
-<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="attributes">
-  <div class="carl-field-grid">
-    <div>
-      <label class="resource-label">{{localize "CARLRPG.Item.Quantity"}}</label>
-      <input type="text" class="carl-w-tiny" name="system.quantity" value="{{system.quantity}}" data-dtype="Number" />
-    </div>
-    <div>
-      <label class="resource-label">{{localize "CARLRPG.Item.Weight"}}</label>
-      <input type="text" class="carl-w-tiny" name="system.weight" value="{{system.weight}}" data-dtype="Number" />
-    </div>
-    <div>
-      <label class="resource-label">{{localize "CARLRPG.Item.Equipped"}}</label>
-      <input type="checkbox" name="system.equipped" {{checked system.equipped}} />
-    </div>
-    {{!-- Worn armor: only the best equipped piece adds its DR (p.225). --}}
-    <div>
-      <label class="resource-label" title="{{localize 'CARLRPG.Item.ArmorHint'}}">{{localize "CARLRPG.Item.Armor"}}</label>
-      <input type="checkbox" name="system.isArmor" {{checked system.isArmor}} title="{{localize 'CARLRPG.Item.ArmorHint'}}" />
-    </div>
-    {{!-- A weapon: the Attack Skill it's wielded with (module/helpers/weapons.mjs). --}}
-    <div>
-      <label class="resource-label" title="{{localize 'CARLRPG.Weapon.SkillHint'}}">{{localize "CARLRPG.Weapon.Skill"}}</label>
-      <input type="text" class="carl-w-medium" name="system.weaponSkill" value="{{system.weaponSkill}}"
-        list="carl-weapon-skills-{{item.id}}" placeholder="{{localize 'CARLRPG.Weapon.NotAWeapon'}}" />
-      <datalist id="carl-weapon-skills-{{item.id}}">
-        {{#each weaponSkillNames as |name|}}<option value="{{name}}"></option>{{/each}}
-      </datalist>
-    </div>
-  </div>
+{{!-- A gear item, on one page (docs/skill-item-sheets.md): the Description
+      first, then what it is; Bonuses, On-hit Debuffs and Consumable use show
+      once they hold something, or from the add bar (item-sheet.mjs
+      #gearContext - `gear`). A plain page, not a tab: the sheet has no tab
+      bar (SINGLE_PAGE_TYPES), and core's changeTab needs one. --}}
+<section class="scrollable carl-single-page">
+  <div class="carl-item-page carl-gear-sheet">
+    {{> "systems/carl-rpg/templates/item/parts/description-editor.hbs"}}
 
-  <fieldset class="carl-changes">
-    <legend>{{localize "CARLRPG.Item.Changes"}}</legend>
-    {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
-      changes=system.changes path="system.changes" config=config item=item actorSkillNames=actorSkillNames}}
-  </fieldset>
-
-  {{!-- Single-use items (Item Rules, p.99) - module/helpers/consumables.mjs. --}}
-  <fieldset class="carl-consumable">
-    <legend>{{localize "CARLRPG.Consumable.Title"}}</legend>
-    <div class="carl-field-grid">
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.KindLabel"}}</label>
-        <select name="system.consumable.kind">
-          {{selectOptions config.consumableKinds selected=system.consumable.kind localize=true}}
-        </select>
-      </div>
-    </div>
-    {{#with system.consumable as |c|}}
-    {{#if (or (eq c.kind "potion") (eq c.kind "other"))}}
-    <p class="carl-dialog-hint">{{localize "CARLRPG.Consumable.PotionHint"}}</p>
-    <div class="carl-field-grid">
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.HealSlots"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.consumable.heal.slots" value="{{c.heal.slots}}" data-dtype="Number" />
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.HealFull"}}</label>
-        <input type="checkbox" name="system.consumable.heal.full" {{checked c.heal.full}} />
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.MendLabel"}}</label>
-        <select name="system.consumable.heal.mend">
-          {{selectOptions @root.config.consumableMend selected=c.heal.mend localize=true}}
-        </select>
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.ManaAmount"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.consumable.mana.amount" value="{{c.mana.amount}}" data-dtype="Number" />
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.ManaFull"}}</label>
-        <input type="checkbox" name="system.consumable.mana.full" {{checked c.mana.full}} />
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.Cures"}}</label>
-        <select name="system.consumable.cures" multiple size="4">
-          {{selectOptions @root.config.debuffs selected=c.cures labelAttr="label" localize=true}}
-        </select>
-      </div>
-    </div>
-    <div class="carl-field-grid">
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentLabel"}}</label>
-        <select name="system.consumable.permanent.kind">
-          {{selectOptions @root.config.consumablePermanent selected=c.permanent.kind localize=true}}
-        </select>
-      </div>
-      {{#if (eq c.permanent.kind "stat")}}
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentStat"}}</label>
-        <select name="system.consumable.permanent.target">
-          {{selectOptions @root.config.statAbbreviations selected=c.permanent.target localize=true blank=""}}
-        </select>
-      </div>
-      {{else if (eq c.permanent.kind "skill")}}
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentSkill"}}</label>
-        <input type="text" name="system.consumable.permanent.target" value="{{c.permanent.target}}" placeholder="{{localize 'CARLRPG.Consumable.AnySkill'}}" />
-      </div>
-      {{/if}}
-      {{#if c.permanent.kind}}
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentValue"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.consumable.permanent.value" value="{{c.permanent.value}}" data-dtype="Number" />
-      </div>
-      {{/if}}
-    </div>
-    <fieldset class="carl-consumable-buff">
-      <legend>{{localize "CARLRPG.Consumable.BuffTitle"}}</legend>
+    <div class="carl-item-group">
+      <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.About"}}</span>
       <div class="carl-field-grid">
         <div>
-          <label class="resource-label">{{localize "CARLRPG.Consumable.BuffLabel"}}</label>
-          <input type="text" name="system.consumable.buff.label" value="{{c.buff.label}}" />
+          <label class="resource-label">{{localize "CARLRPG.Item.Quantity"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.quantity" value="{{system.quantity}}" data-dtype="Number" />
         </div>
         <div>
-          <label class="resource-label">{{localize "CARLRPG.Consumable.BuffDuration"}}</label>
-          <input type="text" class="carl-w-tiny" name="system.consumable.buff.duration" value="{{c.buff.duration}}" data-dtype="Number" />
-          <select name="system.consumable.buff.unit">
-            {{selectOptions @root.config.consumableUnits selected=c.buff.unit localize=true}}
-          </select>
+          <label class="resource-label">{{localize "CARLRPG.Item.Weight"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.weight" value="{{system.weight}}" data-dtype="Number" />
         </div>
+        <label class="carl-check-field">
+          <input type="checkbox" name="system.equipped" {{checked system.equipped}} />
+          {{localize "CARLRPG.Item.Equipped"}}
+        </label>
+        {{!-- Worn armor: only the best equipped piece adds its DR (p.225). --}}
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Item.ArmorHint'}}">
+          <input type="checkbox" name="system.isArmor" {{checked system.isArmor}} />
+          {{localize "CARLRPG.Item.Armor"}}
+        </label>
+        {{!-- A weapon: the Attack Skill it's wielded with (module/helpers/weapons.mjs). --}}
         <div>
-          <label class="resource-label">{{localize "CARLRPG.Consumable.PerRoundHb"}}</label>
-          <input type="text" class="carl-w-tiny" name="system.consumable.buff.perRound.hb" value="{{c.buff.perRound.hb}}" data-dtype="Number" />
+          <label class="resource-label" data-tooltip="{{localize 'CARLRPG.Weapon.SkillHint'}}">{{localize "CARLRPG.Weapon.Skill"}}</label>
+          <input type="text" class="carl-w-medium" name="system.weaponSkill" value="{{system.weaponSkill}}"
+            list="carl-weapon-skills-{{item.id}}" placeholder="{{localize 'CARLRPG.Weapon.NotAWeapon'}}" />
+          <datalist id="carl-weapon-skills-{{item.id}}">
+            {{#each weaponSkillNames as |name|}}<option value="{{name}}"></option>{{/each}}
+          </datalist>
         </div>
-        <div>
-          <label class="resource-label">{{localize "CARLRPG.Consumable.PerRoundMana"}}</label>
-          <input type="text" class="carl-w-tiny" name="system.consumable.buff.perRound.mana" value="{{c.buff.perRound.mana}}" data-dtype="Number" />
-        </div>
-      </div>
-      <p class="carl-dialog-hint">{{localize "CARLRPG.Consumable.PerRoundHint"}}</p>
-      {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
-        changes=c.buff.changes path="system.consumable.buff.changes" config=@root.config item=@root.item actorSkillNames=@root.actorSkillNames}}
-    </fieldset>
-    {{else if (or (eq c.kind "scroll") (eq c.kind "spellbook"))}}
-    <p class="carl-dialog-hint">{{localize (concat "CARLRPG.Consumable.SpellHint." c.kind)}}</p>
-    <div class="carl-field-grid">
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.SpellName"}}</label>
-        <input type="text" name="system.consumable.spell.name" value="{{c.spell.name}}" />
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.SpellRank"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.consumable.spell.rank" value="{{c.spell.rank}}" data-dtype="Number" />
-      </div>
-      <div>
-        <label class="resource-label">{{localize "CARLRPG.Consumable.SpellUuid"}}</label>
-        <input type="text" name="system.consumable.spell.uuid" value="{{c.spell.uuid}}" />
       </div>
     </div>
+
+    {{#if gear.showBonuses}}
+    <div class="carl-item-group carl-changes">
+      <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Bonuses"}}
+        <span class="carl-item-group-summary">{{localize "CARLRPG.ItemSheet.WhileHeld"}}</span></span>
+      {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
+        changes=system.changes path="system.changes" config=config item=item actorSkillNames=actorSkillNames}}
+    </div>
     {{/if}}
-    {{/with}}
-  </fieldset>
+
+    {{#if gear.showDebuffs}}
+    <div class="carl-item-group carl-gear-debuffs">
+      <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Debuffs"}}
+        <span class="carl-item-group-summary">{{localize "CARLRPG.ItemSheet.WhileHeld"}}</span></span>
+      {{> "systems/carl-rpg/templates/item/parts/target-effects-editor.hbs"
+        targetEffects=system.targetEffects path="system.targetEffects" config=config item=item
+        gear=true onlyWithNames=gear.onlyWithNames addTemplate=gear.debuffTemplate}}
+    </div>
+    {{/if}}
+
+    {{!-- Single-use items (Item Rules, p.99) - module/helpers/consumables.mjs. --}}
+    {{#if gear.showConsumable}}
+    <div class="carl-item-group carl-consumable">
+      <span class="carl-item-group-title">{{localize "CARLRPG.Consumable.Title"}}
+        {{#if gear.consumableSummary}}<span class="carl-item-group-summary">{{gear.consumableSummary}}</span>{{/if}}</span>
+      <div class="carl-field-grid">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Consumable.KindLabel"}}</label>
+          <select name="system.consumable.kind">
+            {{selectOptions config.consumableKinds selected=system.consumable.kind localize=true}}
+          </select>
+        </div>
+      </div>
+      {{#with system.consumable as |c|}}
+      {{#if @root.gear.potionLike}}
+      <p class="carl-hint">{{localize "CARLRPG.Consumable.PotionHint"}}</p>
+
+      {{#if @root.gear.parts.heal}}
+      <div class="carl-tier-part carl-consumable-heal">
+        <span class="carl-tier-part-title">{{localize "CARLRPG.ItemSheet.Consumable.Heals"}}</span>
+        <div class="carl-field-grid">
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.HealSlots"}}</label>
+            <input type="text" class="carl-w-tiny" name="system.consumable.heal.slots" value="{{c.heal.slots}}" data-dtype="Number" />
+          </div>
+          <label class="carl-check-field">
+            <input type="checkbox" name="system.consumable.heal.full" {{checked c.heal.full}} />
+            {{localize "CARLRPG.Consumable.HealFull"}}
+          </label>
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.MendLabel"}}</label>
+            <select name="system.consumable.heal.mend">
+              {{selectOptions @root.config.consumableMend selected=c.heal.mend localize=true}}
+            </select>
+          </div>
+        </div>
+      </div>
+      {{/if}}
+
+      {{#if @root.gear.parts.mana}}
+      <div class="carl-tier-part carl-consumable-mana">
+        <span class="carl-tier-part-title">{{localize "CARLRPG.ItemSheet.Consumable.Mana"}}</span>
+        <div class="carl-field-grid">
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.ManaAmount"}}</label>
+            <input type="text" class="carl-w-tiny" name="system.consumable.mana.amount" value="{{c.mana.amount}}" data-dtype="Number" />
+          </div>
+          <label class="carl-check-field">
+            <input type="checkbox" name="system.consumable.mana.full" {{checked c.mana.full}} />
+            {{localize "CARLRPG.Consumable.ManaFull"}}
+          </label>
+        </div>
+      </div>
+      {{/if}}
+
+      {{#if @root.gear.parts.cures}}
+      <div class="carl-tier-part carl-consumable-cures">
+        <span class="carl-tier-part-title">{{localize "CARLRPG.Consumable.Cures"}}</span>
+        <div class="carl-only-with-pills">
+          {{#each @root.gear.cures as |cure|}}
+          <span class="carl-only-with-pill">{{cure.label}}
+            <a data-action="removeCure" data-key="{{cure.key}}" aria-label="{{localize 'CARLRPG.ItemSheet.Consumable.RemoveCure'}}"><i class="fas fa-times"></i></a>
+          </span>
+          {{/each}}
+          <select class="carl-cure-picker" aria-label="{{localize 'CARLRPG.ItemSheet.Consumable.AddCure'}}">
+            <option value="">{{localize "CARLRPG.ItemSheet.Consumable.AddCure"}}</option>
+            {{#each @root.gear.cureChoices as |choice|}}<option value="{{choice.key}}">{{choice.label}}</option>{{/each}}
+          </select>
+        </div>
+      </div>
+      {{/if}}
+
+      {{#if @root.gear.parts.permanent}}
+      <div class="carl-tier-part carl-consumable-permanent">
+        <span class="carl-tier-part-title">{{localize "CARLRPG.Consumable.PermanentLabel"}}</span>
+        <div class="carl-field-grid">
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.ItemSheet.Consumable.Raises"}}</label>
+            <select name="system.consumable.permanent.kind">
+              {{selectOptions @root.config.consumablePermanent selected=c.permanent.kind localize=true}}
+            </select>
+          </div>
+          {{#if (eq c.permanent.kind "stat")}}
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentStat"}}</label>
+            <select name="system.consumable.permanent.target">
+              {{selectOptions @root.config.statAbbreviations selected=c.permanent.target localize=true blank=""}}
+            </select>
+          </div>
+          {{else if (eq c.permanent.kind "skill")}}
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentSkill"}}</label>
+            <input type="text" name="system.consumable.permanent.target" value="{{c.permanent.target}}" placeholder="{{localize 'CARLRPG.Consumable.AnySkill'}}" />
+          </div>
+          {{/if}}
+          {{#if c.permanent.kind}}
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.PermanentValue"}}</label>
+            <input type="text" class="carl-w-tiny" name="system.consumable.permanent.value" value="{{c.permanent.value}}" data-dtype="Number" />
+          </div>
+          {{/if}}
+        </div>
+      </div>
+      {{/if}}
+
+      {{#if @root.gear.parts.buff}}
+      <div class="carl-tier-part carl-consumable-buff">
+        <span class="carl-tier-part-title">{{localize "CARLRPG.Consumable.BuffTitle"}}</span>
+        <div class="carl-field-grid">
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.BuffLabel"}}</label>
+            <input type="text" name="system.consumable.buff.label" value="{{c.buff.label}}" />
+          </div>
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.BuffDuration"}}</label>
+            <span class="carl-inline-fields">
+              <input type="text" class="carl-w-tiny" name="system.consumable.buff.duration" value="{{c.buff.duration}}" data-dtype="Number" />
+              <select name="system.consumable.buff.unit">
+                {{selectOptions @root.config.consumableUnits selected=c.buff.unit localize=true}}
+              </select>
+            </span>
+          </div>
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.PerRoundHb"}}</label>
+            <input type="text" class="carl-w-tiny" name="system.consumable.buff.perRound.hb" value="{{c.buff.perRound.hb}}" data-dtype="Number" />
+          </div>
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.Consumable.PerRoundMana"}}</label>
+            <input type="text" class="carl-w-tiny" name="system.consumable.buff.perRound.mana" value="{{c.buff.perRound.mana}}" data-dtype="Number" />
+          </div>
+        </div>
+        <p class="carl-hint">{{localize "CARLRPG.Consumable.PerRoundHint"}}</p>
+        {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
+          changes=c.buff.changes path="system.consumable.buff.changes" config=@root.config item=@root.item actorSkillNames=@root.actorSkillNames}}
+      </div>
+      {{/if}}
+
+      {{#if @root.gear.partsHidden}}
+      <div class="carl-add-bar">
+        <span class="carl-add-bar-label">{{localize "CARLRPG.ItemSheet.AlsoBar"}}</span>
+        {{#unless @root.gear.parts.heal}}<button type="button" data-action="revealPart" data-reveal="c-heal"><i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.Consumable.Heals"}}</button>{{/unless}}
+        {{#unless @root.gear.parts.mana}}<button type="button" data-action="revealPart" data-reveal="c-mana"><i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.Consumable.Mana"}}</button>{{/unless}}
+        {{#unless @root.gear.parts.cures}}<button type="button" data-action="revealPart" data-reveal="c-cures"><i class="fas fa-plus"></i> {{localize "CARLRPG.Consumable.Cures"}}</button>{{/unless}}
+        {{#unless @root.gear.parts.permanent}}<button type="button" data-action="revealPart" data-reveal="c-permanent"><i class="fas fa-plus"></i> {{localize "CARLRPG.Consumable.PermanentLabel"}}</button>{{/unless}}
+        {{#unless @root.gear.parts.buff}}<button type="button" data-action="revealPart" data-reveal="c-buff"><i class="fas fa-plus"></i> {{localize "CARLRPG.Consumable.BuffTitle"}}</button>{{/unless}}
+      </div>
+      {{/if}}
+
+      {{else if @root.gear.spellLike}}
+      <p class="carl-hint">{{localize (concat "CARLRPG.Consumable.SpellHint." c.kind)}}</p>
+      <div class="carl-field-grid">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Consumable.SpellName"}}</label>
+          <input type="text" name="system.consumable.spell.name" value="{{c.spell.name}}" />
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Consumable.SpellRank"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.consumable.spell.rank" value="{{c.spell.rank}}" data-dtype="Number" />
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Consumable.SpellUuid"}}</label>
+          <input type="text" name="system.consumable.spell.uuid" value="{{c.spell.uuid}}" />
+        </div>
+      </div>
+      {{/if}}
+      {{/with}}
+    </div>
+    {{/if}}
+
+    {{#if gear.addBar}}
+    <div class="carl-add-bar">
+      <span class="carl-add-bar-label">{{localize "CARLRPG.ItemSheet.AddBar"}}</span>
+      {{#unless gear.showBonuses}}
+      <button type="button" data-action="addArrayItem" data-path="system.changes" data-template="{}">
+        <i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.Group.Bonuses"}}</button>
+      {{/unless}}
+      {{#unless gear.showDebuffs}}
+      <button type="button" data-action="addArrayItem" data-path="system.targetEffects" data-template="{{gear.debuffTemplate}}">
+        <i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.Group.Debuffs"}}</button>
+      {{/unless}}
+      {{#unless gear.showConsumable}}
+      <button type="button" data-action="revealPart" data-reveal="consumable">
+        <i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.ConsumableUse"}}</button>
+      {{/unless}}
+    </div>
+    {{/if}}
+  </div>
 </section>

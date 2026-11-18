@@ -1,5 +1,6 @@
 import CarlRPGItemBase from "./item-base.mjs";
 import { defineChangesField } from "./shared/change-entry.mjs";
+import { defineGearTargetEffectsField } from "./shared/upgrade-tier.mjs";
 
 export default class CarlRPGItem extends CarlRPGItemBase {
 
@@ -19,6 +20,10 @@ export default class CarlRPGItem extends CarlRPGItemBase {
     // (p.225) - of the equipped pieces with this ticked, only the one adding
     // the most DR counts (modifiers.mjs supersededArmorIds).
     schema.isArmor = new fields.BooleanField({ required: true, initial: false });
+    // On-hit Debuffs it gives its holder's or wearer's Attacks while
+    // equipped ("AS: Target gains Burned", p.116; p.223), optionally only
+    // with listed Attack Skills (modifiers.mjs attackTargetEffects).
+    schema.targetEffects = defineGearTargetEffectsField();
 
     // A usable, single-use item (Item Rules, p.99): Potions, Scrolls,
     // Spellbooks and other consumables like Bandages. Blank kind = ordinary

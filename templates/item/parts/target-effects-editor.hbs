@@ -1,41 +1,102 @@
-{{!-- Target Effects editor: "on hit, the target gains Debuff X" for this
-      Upgrade tier (module/data/shared/upgrade-tier.mjs's defineTargetEffectSchema).
-      NOT the same thing as a ChangeEntry's own `conditions` field just above
-      (roll-time opt-in checkboxes gating a bonus to the ACTING actor) - see
-      changes-editor.hbs's docstring for that distinction. `debuffKey` drives
-      a real dropdown into CONFIG.CARLRPG.debuffs (a closed enum), not free
-      text. Invoke with `targetEffects` (the array) and `path` (its dotted
-      path) - same context-depth rules as changes-editor.hbs apply: any
-      reference to `path`/`config` from inside {{#each targetEffects}} needs
-      one `../`. --}}
+{{!-- On-hit Debuffs editor - "on a hit, the target gains Debuff X"
+      (module/data/shared/upgrade-tier.mjs's defineTargetEffectSchema;
+      docs/skill-item-sheets.md). Each Debuff is a compact row: a chip that
+      says when it lands in full ("On a hit", "Critical Hit", "Amazing
+      Success" - never "AS"), the Debuff and stacks, its label under it; it
+      opens to edit (the `debuffLine` helper, module/helpers/sheet-rows.mjs).
+      NOT a ChangeEntry's `conditions` (changes-editor.hbs: roll-time opt-ins
+      gating the ACTING actor's bonus). Invoke with `targetEffects` (the
+      array) and `path` (its dotted path); `noAdd=true` drops the Add link.
+      `gear=true` (a gear item, module/data/item.mjs) adds each entry's "Only
+      with" Attack Skills - pills (each posted as a hidden field, so a
+      submit keeps them) and an input that adds one on change (item-sheet.mjs
+      #wireOnlyWith), suggesting `onlyWithNames` - and `addTemplate` (JSON)
+      for a new entry's defaults.
+      Same context-depth rules as changes-editor.hbs: `path`/`config` from
+      inside {{#each targetEffects}} need one `../`. --}}
 <div class="carl-target-effects-editor">
-  <label class="resource-label">{{localize "CARLRPG.Ranked.TargetEffectsLegend"}}</label>
-  {{#each targetEffects as |te teIndex|}}
-  <div class="carl-target-effect-row flexrow">
-    <select class="carl-w-wide" name="{{concat ../path '.' teIndex '.debuffKey'}}">
-      <option value=""></option>
-      {{selectOptions ../config.debuffs selected=te.debuffKey localize=true}}
-    </select>
-    <input type="text" class="carl-w-tiny" name="{{concat ../path '.' teIndex '.stacks'}}" value="{{te.stacks}}"
-      data-dtype="Number" title="{{localize 'CARLRPG.TargetEffect.Stacks'}}" />
-    <label class="carl-target-effect-crit">
-      <input type="checkbox" name="{{concat ../path '.' teIndex '.critOnly'}}" {{checked te.critOnly}} />
-      {{localize "CARLRPG.TargetEffect.CritOnly"}}
-    </label>
-    <label class="carl-target-effect-crit">
-      <input type="checkbox" name="{{concat ../path '.' teIndex '.amazingSuccessOnly'}}" {{checked te.amazingSuccessOnly}} />
-      {{localize "CARLRPG.TargetEffect.AmazingSuccessOnly"}}
-    </label>
-    <input type="text" class="carl-w-medium" name="{{concat ../path '.' teIndex '.label'}}" value="{{te.label}}"
-      placeholder="{{localize 'CARLRPG.TargetEffect.LabelPlaceholder'}}" />
-    <a class="item-control" data-action="deleteArrayItem" data-path="{{../path}}" data-index="{{teIndex}}"
-      title="{{localize 'CARLRPG.TargetEffect.Remove'}}">
-      <i class="fas fa-trash"></i>
-    </a>
+  {{#if targetEffects.length}}
+  <div class="carl-edit-rows">
+    {{#each targetEffects as |te teIndex|}}
+    <details class="carl-edit-row carl-target-effect-row is-debuff" data-row-key="{{te.id}}">
+      <summary class="carl-edit-row-line">
+        {{debuffLine te}}
+        <span class="carl-edit-row-acts">
+          <a class="carl-edit-row-icon" data-action="deleteArrayItem" data-path="{{../path}}" data-index="{{teIndex}}"
+            data-tooltip="{{localize 'CARLRPG.TargetEffect.Remove'}}" aria-label="{{localize 'CARLRPG.TargetEffect.Remove'}}">
+            <i class="fas fa-trash"></i>
+          </a>
+        </span>
+      </summary>
+      <div class="carl-edit-row-body">
+        {{!-- Posted so a submit keeps the row's id (its open state is keyed on it). --}}
+        <input type="hidden" name="{{concat ../path '.' teIndex '.id'}}" value="{{te.id}}" />
+        <div class="carl-field-grid">
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.OnHitDebuff.Debuff"}}</label>
+            <select name="{{concat ../path '.' teIndex '.debuffKey'}}">
+              <option value=""></option>
+              {{selectOptions ../config.debuffs selected=te.debuffKey localize=true}}
+            </select>
+          </div>
+          <div>
+            <label class="resource-label">{{localize "CARLRPG.TargetEffect.Stacks"}}</label>
+            <input type="text" class="carl-w-tiny" name="{{concat ../path '.' teIndex '.stacks'}}" value="{{te.stacks}}"
+              data-dtype="Number" />
+          </div>
+          <label class="carl-check-field">
+            <input type="checkbox" name="{{concat ../path '.' teIndex '.critOnly'}}" {{checked te.critOnly}} />
+            {{localize "CARLRPG.TargetEffect.CritOnly"}}
+          </label>
+          <label class="carl-check-field">
+            <input type="checkbox" name="{{concat ../path '.' teIndex '.amazingSuccessOnly'}}" {{checked te.amazingSuccessOnly}} />
+            {{localize "CARLRPG.TargetEffect.AmazingSuccessOnly"}}
+          </label>
+        </div>
+        {{#if ../gear}}
+        <div class="carl-only-with">
+          <label class="resource-label">{{localize "CARLRPG.OnHitDebuff.OnlyWithField"}}</label>
+          <div class="carl-only-with-pills">
+            {{#each te.skills as |skill sIndex|}}
+            <span class="carl-only-with-pill">
+              <input type="hidden" name="{{concat ../../path '.' teIndex '.skills.' sIndex}}" value="{{skill}}" />
+              {{skill}}
+              <a data-action="deleteArrayItem" data-path="{{concat ../../path '.' teIndex '.skills'}}" data-index="{{sIndex}}"
+                aria-label="{{localize 'CARLRPG.OnHitDebuff.RemoveSkill'}}"><i class="fas fa-times"></i></a>
+            </span>
+            {{/each}}
+            <input type="text" class="carl-w-medium carl-only-with-add" data-add-to="{{concat ../path '.' teIndex '.skills'}}"
+              list="carl-only-with-{{../item.id}}" placeholder="{{localize 'CARLRPG.OnHitDebuff.AddSkill'}}"
+              aria-label="{{localize 'CARLRPG.OnHitDebuff.AddSkill'}}" />
+          </div>
+          <p class="carl-hint">{{localize "CARLRPG.OnHitDebuff.OnlyWithHint"}}</p>
+        </div>
+        {{/if}}
+        <div class="carl-edit-row-grow">
+          <label class="resource-label">{{localize "CARLRPG.Change.Label"}}</label>
+          <input type="text" name="{{concat ../path '.' teIndex '.label'}}" value="{{te.label}}"
+            placeholder="{{localize 'CARLRPG.TargetEffect.LabelPlaceholder'}}" />
+        </div>
+      </div>
+    </details>
+    {{/each}}
   </div>
-  {{/each}}
+  {{/if}}
+  {{#unless noAdd}}
+  {{#if addTemplate}}
+  <a class="item-control carl-add-link" data-action="addArrayItem" data-path="{{path}}" data-template="{{addTemplate}}">
+    <i class="fas fa-plus"></i> {{localize "CARLRPG.TargetEffect.Add"}}
+  </a>
+  {{else}}
   <a class="item-control carl-add-link" data-action="addArrayItem" data-path="{{path}}"
     data-template='{"debuffKey":"","stacks":1,"critOnly":false,"amazingSuccessOnly":false,"label":""}'>
     <i class="fas fa-plus"></i> {{localize "CARLRPG.TargetEffect.Add"}}
   </a>
+  {{/if}}
+  {{/unless}}
+  {{#if gear}}
+  <datalist id="carl-only-with-{{item.id}}">
+    {{#each onlyWithNames as |name|}}<option value="{{name}}"></option>{{/each}}
+  </datalist>
+  {{/if}}
 </div>

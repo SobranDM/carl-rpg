@@ -18,7 +18,7 @@ import { isAreaItem } from "../helpers/area.mjs";
 import { mobAttackFor } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
-import { ownedRank, slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
+import { ownedRank, slugifySkillName, attackTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -1228,7 +1228,13 @@ export default class CarlDice {
       if (isAmazingSuccess && !targetRowList.length) {
         damageByType[""] = (damageByType[""] ?? 0) + floor;
       }
-      targetEffects = damage.targetEffects;
+      // Every Debuff it carries: the Skill's, its Damage Effect's, held or
+      // worn gear's (modifiers.mjs attackTargetEffects). With targets, an
+      // Amazing-Success-only one waits for each target's own Degree.
+      targetEffects = attackTargetEffects(actor, skillItem, {
+        damageEffectItem, isCrit: naturalRoll === 20,
+        isAmazingSuccess: targetRowList.length ? null : isAmazingSuccess,
+      });
     }
 
     const hasDamage = Object.values(damageByType).some((v) => v);
@@ -1265,7 +1271,10 @@ export default class CarlDice {
       flags.attackerUuid = attackerUuid;
     }
     if (targetUuids.length || hasDamage || targetEffects.length) {
-      footerParts.push(buildAttackTargetsFooter({ damageByType, targetEffects, isArea }));
+      footerParts.push(buildAttackTargetsFooter({
+        damageByType, targetEffects, isArea,
+        noAmazing: targetRowList.length > 0 && !targetRowList.some((r) => r.amazing),
+      }));
     }
     // Taunt (Interrupt, p.81) - a third party may redirect a single-target
     // Attack onto themselves (module/chat/taunt-card.mjs). Not an Area Attack.
@@ -1328,10 +1337,7 @@ export default class CarlDice {
       rolls: evaluated.rolls,
       rollMeta: evaluated.rollMeta.map((meta) => ({ ...meta, rowClass: "carl-damage-roll" })),
       damageByType: evaluated.damageByType,
-      targetEffects: [
-        ...collectItemTargetEffects(skillItem, { isCrit, isAmazingSuccess }),
-        ...(damageEffectItem ? collectItemTargetEffects(damageEffectItem, { isCrit, isAmazingSuccess }) : []),
-      ],
+      targetEffects: attackTargetEffects(actor, skillItem, { damageEffectItem, isCrit, isAmazingSuccess }),
     };
   }
 
@@ -1442,10 +1448,10 @@ export default class CarlDice {
         damageRaw = foundry.utils.deepClone(damage.damageByType);
       }
       // The on-hit effects follow the Degree (some only on an Amazing Success).
-      targetEffects = [
-        ...collectItemTargetEffects(skillItem, { isCrit: naturalRoll === 20, isAmazingSuccess }),
-        ...(damageEffectItem ? collectItemTargetEffects(damageEffectItem, { isCrit: naturalRoll === 20, isAmazingSuccess }) : []),
-      ];
+      targetEffects = attackTargetEffects(actor, skillItem, {
+        damageEffectItem, isCrit: naturalRoll === 20,
+        isAmazingSuccess: targetRowList.length ? null : isAmazingSuccess,
+      });
     }
     const damageByType = needsDamage ? foundry.utils.deepClone(damageRaw ?? {}) : {};
     // Amazing Success's +Floor: per row with targets (rowOutcome), else here.
@@ -1495,7 +1501,10 @@ export default class CarlDice {
       });
     }
     if (targetRowList.length || hasDamage || targetEffects.length) {
-      footerParts.push(buildAttackTargetsFooter({ damageByType, targetEffects, isArea }));
+      footerParts.push(buildAttackTargetsFooter({
+        damageByType, targetEffects, isArea,
+        noAmazing: targetRowList.length > 0 && !targetRowList.some((r) => r.amazing),
+      }));
     }
     if (targetRowList.length && !isArea) footerParts.push(await buildTauntLinkFooter());
 
@@ -1724,7 +1733,13 @@ export default class CarlDice {
       flags.mobOwnRows = ownApplied;
       if (freeEvade) flags.freeEvade = true;
     }
-    if (targetUuids.length || hasDamage) footerParts.push(buildAttackTargetsFooter({ damageByType, isArea }));
+    // Its Debuffs, each landed by its trigger when a row is applied
+    // (attack-targets-card.mjs landDebuffs; docs/mob-sheet.md).
+    const targetEffects = attack.targetEffects ?? [];
+    if (targetEffects.length) flags.targetEffects = targetEffects;
+    if (targetUuids.length || hasDamage || targetEffects.length) {
+      footerParts.push(buildAttackTargetsFooter({ damageByType, isArea, targetEffects }));
+    }
     if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
 
     const esc = foundry.utils.escapeHTML;

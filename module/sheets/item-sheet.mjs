@@ -17,10 +17,11 @@ const ATTRIBUTES_TEMPLATES = {
 };
 
 /**
- * Types drawn as one page (no tabs): a Mob Attack (docs/mob-sheet.md). Its
- * part isn't a `.tab` section, so _onRender has no tab to activate.
+ * Types drawn as one page (no tabs): a Mob Attack (docs/mob-sheet.md) and
+ * gear (docs/skill-item-sheets.md). Their part isn't a `.tab` section, so
+ * _onRender has no tab to activate.
  */
-const SINGLE_PAGE_TYPES = ['mobAttack'];
+const SINGLE_PAGE_TYPES = ['mobAttack', 'item'];
 
 const RANKED_TYPES = ['skill', 'spell', 'damageEffect'];
 
@@ -43,8 +44,25 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       addArrayItem: CarlRPGItemSheet.#onAddArrayItem,
       deleteArrayItem: CarlRPGItemSheet.#onDeleteArrayItem,
       resolveSkillChoice: CarlRPGItemSheet.#onResolveSkillChoice,
+      showTab: CarlRPGItemSheet.#onShowTab,
+      revealPart: CarlRPGItemSheet.#onRevealPart,
+      addDamageType: CarlRPGItemSheet.#onAddDamageType,
+      removeCure: CarlRPGItemSheet.#onRemoveCure,
     }
   };
+
+  /**
+   * Optional parts of an Upgrade tier shown from its add bar before they
+   * hold anything (upgrade-tier.hbs): "heal-<upgradeId>", "dt-<upgradeId>".
+   * @type {Set<string>}
+   */
+  #revealed = new Set();
+
+  /** Compact Bonus / Debuff rows the user has open, by data-row-key. */
+  #openRows = new Set();
+
+  /** Row keys already drawn (null before the first render): a new one opens. */
+  #seenRows = null;
 
   /** @override */
   static TABS = {
@@ -100,13 +118,15 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       return { tabs: [{ id: 'attributes', label: 'CARLRPG.Tab.Main' }], initial: 'attributes' };
     }
     if (group === 'primary' && RANKED_TYPES.includes(this.item?.type)) {
+      // Each Rank tab says whether its Upgrades apply at the current Rank.
+      const rank = Number(this.item.system.rank) || 0;
+      const tier = (n) => ({
+        id: `rank${n}`,
+        label: `CARLRPG.Ranked.Rank${n}`,
+        icon: rank >= n ? 'fas fa-lock-open' : 'fas fa-lock',
+      });
       return {
-        tabs: [
-          { id: 'main', label: 'CARLRPG.Tab.Main' },
-          { id: 'rank5', label: 'CARLRPG.Ranked.Rank5' },
-          { id: 'rank10', label: 'CARLRPG.Ranked.Rank10' },
-          { id: 'rank15', label: 'CARLRPG.Ranked.Rank15' },
-        ],
+        tabs: [{ id: 'main', label: 'CARLRPG.Tab.Main' }, tier(5), tier(10), tier(15)],
         initial: 'main',
       };
     }
@@ -166,6 +186,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     if (partId === 'rank5' || partId === 'rank10' || partId === 'rank15') {
       context.entries = context[partId];
       context.rankThreshold = Number(partId.slice('rank'.length));
+      context.tierUnlocked = context.liveRank >= context.rankThreshold;
     }
     return context;
   }
@@ -202,6 +223,11 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       : item.type === "damageEffect"; // always attack-flavored, no heal concept
     if (context.isRanked) {
       Object.assign(context, this.#groupUpgradesByRank(itemData.system.upgrades));
+      // The live Rank (a Pet's is the Floor) decides what's unlocked.
+      context.liveRank = Number(item.system.rank) || 0;
+      context.upgradeOverview = this.#upgradeOverview(context, context.liveRank);
+      context.headerChips = this.#headerChips(item, context);
+      context.damageSummary = this.#damageSummary(item.system.baseDamage);
     }
 
     // Suggestions for the Skill Rank / Skill Damage ChangeEntry target field
@@ -226,6 +252,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         ? item.actor.items.filter((i) => i.type === "skill" && needsWeapon(item.actor, i)).map((i) => i.name)
         : [];
       context.weaponSkillNames = [...new Set([...CONFIG.CARLRPG.weaponSkills, ...owned])].sort();
+      context.gear = this.#gearContext(item, itemData, context.weaponSkillNames);
+      context.headerChips = this.#gearChips(item);
     }
 
     // Template convenience variables
@@ -270,12 +298,185 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const buckets = { rank5: [], rank10: [], rank15: [] };
     upgrades.forEach((upgrade, index) => {
       const key = `rank${upgrade.rankThreshold}`;
-      const damageTypeEntries = (upgrade.damageTypes ?? [])
-        .map((value, dtIndex) => ({ value, dtIndex }))
-        .filter((entry) => entry.value);
-      (buckets[key] ?? buckets.rank5).push({ upgrade, index, damageTypeEntries });
+      const all = (upgrade.damageTypes ?? []).map((value, dtIndex) => ({ value, dtIndex }));
+      const damageTypeEntries = all.filter((entry) => entry.value);
+      // "+ Damage type" (#onAddDamageType) shows one blank entry to pick in.
+      if (this.#revealed.has(`dt-${upgrade.id}`)) {
+        const blank = all.findLast((entry) => !entry.value);
+        if (blank) damageTypeEntries.push(blank);
+      }
+      const showHeal = !!(upgrade.healDice || upgrade.healToFull || upgrade.healMend)
+        || this.#revealed.has(`heal-${upgrade.id}`);
+      // Once shown, it stays for this sheet's session (cleared mid-edit).
+      if (showHeal) this.#revealed.add(`heal-${upgrade.id}`);
+      (buckets[key] ?? buckets.rank5).push({
+        upgrade, index, damageTypeEntries, showHeal, showDamageTypes: damageTypeEntries.length > 0,
+      });
     });
     return buckets;
+  }
+
+  /**
+   * The Main tab's Upgrades overview (ranked-fields.hbs): one row per Rank
+   * tier - Unlocked at the current Rank or Locked - and a one-line summary
+   * of what it gives: each Upgrade's description's first line, or what it
+   * holds ("2 Bonuses · 1 Debuff").
+   * @param {object} context  With rank5/rank10/rank15 buckets.
+   * @param {number} rank     The live Rank.
+   * @returns {object[]}
+   */
+  #upgradeOverview(context, rank) {
+    const i18n = game.i18n;
+    const count = (n, one, many) => (n ? i18n.format(n === 1 ? one : many, { n }) : null);
+    const sumUp = ({ upgrade, damageTypeEntries, showHeal }) => {
+      const line = String(upgrade.description ?? "").split(/\r?\n/).map((s) => s.trim()).find(Boolean);
+      if (line) return line;
+      const parts = [
+        count(upgrade.changes?.length ?? 0, "CARLRPG.ItemSheet.Count.Bonus", "CARLRPG.ItemSheet.Count.Bonuses"),
+        count(upgrade.targetEffects?.length ?? 0, "CARLRPG.ItemSheet.Count.Debuff", "CARLRPG.ItemSheet.Count.Debuffs"),
+        damageTypeEntries.some((e) => e.value) ? i18n.localize("CARLRPG.Ranked.DamageTypeSplit") : null,
+        showHeal ? i18n.localize("CARLRPG.ItemSheet.Group.Healing") : null,
+      ].filter(Boolean);
+      return parts.join(" · ") || i18n.localize("CARLRPG.ItemSheet.EmptyUpgrade");
+    };
+    return [5, 10, 15].map((n) => {
+      const entries = context[`rank${n}`] ?? [];
+      return {
+        tab: `rank${n}`,
+        label: `CARLRPG.Ranked.Rank${n}`,
+        unlocked: rank >= n,
+        count: entries.length,
+        summary: entries.length ? entries.map(sumUp).join(" · ") : i18n.localize("CARLRPG.ItemSheet.NoUpgrade"),
+      };
+    });
+  }
+
+  /**
+   * Chips under a Skill, Spell or Damage Effect's name (header.hbs):
+   * Category and Attack type (Skills), Mana cost (Spells), Rank, governing
+   * Stat, and Marked when it is.
+   * @param {Item} item
+   * @param {object} context
+   * @returns {{label: string, tone: string, icon?: string, tooltip?: string}[]}
+   */
+  #headerChips(item, context) {
+    const cfg = CONFIG.CARLRPG;
+    const t = (key) => game.i18n.localize(key);
+    const sys = item.system;
+    const chips = [];
+    if (item.type === "skill") {
+      if (sys.category) {
+        chips.push({ label: t(cfg.skillCategories[sys.category] ?? sys.category), tone: sys.category === "attack" ? "accent" : "neutral" });
+      }
+      if (context.isAttackFlavored && sys.attackType) {
+        chips.push({ label: t(cfg.attackTypes[sys.attackType] ?? sys.attackType), tone: sys.attackType === "ranged" ? "blue" : "neutral" });
+      }
+    }
+    if (item.type === "spell" && Number(sys.manaCost) > 0) {
+      chips.push({ label: game.i18n.format("CARLRPG.ItemSheet.ManaChip", { n: sys.manaCost }), tone: "blue" });
+    }
+    chips.push({ label: game.i18n.format("CARLRPG.ItemSheet.RankChip", { n: context.liveRank }), tone: "neutral" });
+    if (sys.governingStat) {
+      chips.push({ label: t(cfg.statAbbreviations[sys.governingStat] ?? sys.governingStat), tone: "neutral" });
+    }
+    if (sys.marked) {
+      chips.push({ label: t("CARLRPG.Ranked.Marked"), tone: "gold", icon: "fas fa-bookmark", tooltip: t("CARLRPG.ItemSheet.MarkedHint") });
+    }
+    return chips;
+  }
+
+  /**
+   * The gear sheet's optional parts (attributes-item.hbs): each shown once
+   * it holds something or was added from an add bar (#revealed: "consumable",
+   * "c-heal", "c-mana", "c-cures", "c-permanent", "c-buff"), the Cures as
+   * pills, and a new On-hit Debuff's defaults - a weapon's starts "Only
+   * with" its Weapon Skill, on an Amazing Success (the book's "AS:", p.116).
+   * @param {Item} item
+   * @param {object} itemData  item.toObject()
+   * @param {string[]} weaponSkillNames
+   * @returns {object}
+   */
+  #gearContext(item, itemData, weaponSkillNames) {
+    const cfg = CONFIG.CARLRPG;
+    const sys = itemData.system;
+    const c = sys.consumable ?? {};
+    const shown = (key) => this.#revealed.has(key);
+    const set = (v) => v !== null && v !== undefined && v !== "";
+    const used = {
+      heal: set(c.heal?.slots) || !!c.heal?.full || !!c.heal?.mend,
+      mana: set(c.mana?.amount) || !!c.mana?.full,
+      cures: (c.cures ?? []).length > 0,
+      permanent: !!c.permanent?.kind,
+      buff: !!(c.buff?.label || c.buff?.duration || (c.buff?.changes ?? []).length
+        || set(c.buff?.perRound?.hb) || set(c.buff?.perRound?.mana)),
+    };
+    const parts = Object.fromEntries(Object.entries(used).map(([k, v]) => [k, v || shown(`c-${k}`)]));
+    // Once shown, a part stays for this sheet's session: clearing its only
+    // value mid-edit doesn't whisk it away.
+    for (const [k, v] of Object.entries(parts)) if (v) this.#revealed.add(`c-${k}`);
+    const debuffName = (key) => game.i18n.localize(cfg.debuffs[key]?.label ?? key);
+    const cures = (c.cures ?? []).map((key) => ({ key, label: debuffName(key) }));
+    const weaponSkill = String(sys.weaponSkill ?? "").trim();
+    const ownedAttacks = item.actor
+      ? item.actor.items.filter((i) => i.type === "skill" && i.system.category === "attack").map((i) => i.name)
+      : [];
+    const showBonuses = (sys.changes ?? []).length > 0;
+    const showDebuffs = (sys.targetEffects ?? []).length > 0;
+    const showConsumable = !!c.kind || shown("consumable");
+    if (showConsumable) this.#revealed.add("consumable");
+    return {
+      showBonuses,
+      showDebuffs,
+      showConsumable,
+      addBar: !showBonuses || !showDebuffs || !showConsumable,
+      potionLike: c.kind === "potion" || c.kind === "other",
+      spellLike: c.kind === "scroll" || c.kind === "spellbook",
+      consumableSummary: c.kind === "potion" ? game.i18n.localize("CARLRPG.ItemSheet.Consumable.SicknessNote") : "",
+      parts,
+      partsHidden: Object.values(parts).some((v) => !v),
+      cures,
+      cureChoices: Object.keys(cfg.debuffs).filter((key) => !(c.cures ?? []).includes(key))
+        .map((key) => ({ key, label: debuffName(key) })),
+      onlyWithNames: [...new Set([...weaponSkillNames, ...ownedAttacks])].sort(),
+      debuffTemplate: JSON.stringify({
+        debuffKey: "", stacks: 1, critOnly: false, amazingSuccessOnly: !!weaponSkill, label: "",
+        skills: weaponSkill ? [weaponSkill] : [],
+      }),
+    };
+  }
+
+  /**
+   * Chips under a gear item's name (header.hbs): Weapon · its Skill, Armor,
+   * its consumable kind, Equipped, and how many.
+   * @param {Item} item
+   * @returns {{label: string, tone: string, icon?: string}[]}
+   */
+  #gearChips(item) {
+    const sys = item.system;
+    const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
+    const chips = [];
+    const weaponSkill = String(sys.weaponSkill ?? "").trim();
+    if (weaponSkill) chips.push({ label: t("CARLRPG.ItemSheet.WeaponChip", { skill: weaponSkill }), tone: "accent" });
+    if (sys.isArmor) chips.push({ label: t("CARLRPG.Item.Armor"), tone: "neutral" });
+    const kind = sys.consumable?.kind;
+    if (kind) chips.push({ label: t(`CARLRPG.ItemSheet.KindChip.${kind}`), tone: "blue" });
+    if (sys.equipped) chips.push({ label: t("CARLRPG.Item.Equipped"), tone: "good", icon: "fas fa-check" });
+    chips.push({ label: `×${sys.quantity ?? 1}`, tone: "neutral" });
+    return chips;
+  }
+
+  /**
+   * "1d8 + STR · Slashing" for the Damage section's title.
+   * @param {object} [base]  system.baseDamage
+   * @returns {string}
+   */
+  #damageSummary(base) {
+    const cfg = CONFIG.CARLRPG;
+    if (!base) return "";
+    const stat = base.stat ? game.i18n.localize(cfg.statAbbreviations[base.stat] ?? base.stat) : "";
+    const roll = [base.dice, stat].filter(Boolean).join(" + ");
+    const type = base.damageType ? game.i18n.localize(cfg.damageTypes[base.damageType] ?? base.damageType) : "";
+    return [roll, type].filter(Boolean).join(" · ");
   }
 
   /* -------------------------------------------- */
@@ -304,6 +505,61 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     if (activeTab && this.element.querySelector(`.tab[data-group="primary"][data-tab="${activeTab}"]`)) {
       this.changeTab(activeTab, "primary", { force: true, updatePosition: false });
     }
+
+    this.#restoreOpenRows();
+    this.#wireGearInputs();
+  }
+
+  /**
+   * The gear sheet's add-on-change controls (attributes-item.hbs,
+   * target-effects-editor.hbs): an "Only with" Skill typed in, a Cure
+   * picked. They have no name, and their change stops here, so the form's
+   * own submit doesn't race the write.
+   */
+  #wireGearInputs() {
+    for (const input of this.element.querySelectorAll("input.carl-only-with-add[data-add-to]")) {
+      input.addEventListener("change", (event) => {
+        event.stopPropagation();
+        const value = input.value.trim();
+        const path = input.dataset.addTo;
+        if (!value || !path) return;
+        const current = foundry.utils.getProperty(this.item, path) ?? [];
+        if (current.some((s) => String(s).trim().toLowerCase() === value.toLowerCase())) return this.render();
+        onAddArrayItem(event, { dataset: { path, template: JSON.stringify(value) } }, this.item);
+      });
+    }
+    for (const select of this.element.querySelectorAll("select.carl-cure-picker")) {
+      select.addEventListener("change", (event) => {
+        event.stopPropagation();
+        const key = select.value;
+        if (!key) return;
+        const cures = this.item.system.consumable?.cures ?? [];
+        if (!cures.includes(key)) this.item.update({ "system.consumable.cures": [...cures, key] });
+      });
+    }
+  }
+
+  /**
+   * Compact Bonus / Debuff rows (changes-editor.hbs, target-effects-
+   * editor.hbs) stay open across the re-render every edit causes, and a
+   * row that wasn't there last render (just added) opens to be filled in.
+   */
+  #restoreOpenRows() {
+    const firstRender = this.#seenRows === null;
+    const seen = this.#seenRows ?? new Set();
+    for (const row of this.element.querySelectorAll("details[data-row-key]")) {
+      const key = row.dataset.rowKey;
+      if (this.#openRows.has(key) || (!firstRender && !seen.has(key))) {
+        row.open = true;
+        this.#openRows.add(key);
+      }
+      seen.add(key);
+      row.addEventListener("toggle", () => {
+        if (row.open) this.#openRows.add(key);
+        else this.#openRows.delete(key);
+      });
+    }
+    this.#seenRows = seen;
   }
 
   /* -------------------------------------------- */
@@ -338,6 +594,47 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
 
   static #onDeleteArrayItem(event, target) {
     return onDeleteArrayItem(event, target, this.item);
+  }
+
+  /** A Cure pill's ×: the consumable no longer cures that Debuff. */
+  static async #onRemoveCure(event, target) {
+    event.preventDefault();
+    const key = target.dataset.key;
+    const cures = this.item.system.consumable?.cures ?? [];
+    if (!key || !cures.includes(key)) return;
+    return this.item.update({ "system.consumable.cures": cures.filter((k) => k !== key) });
+  }
+
+  /** The Upgrades overview's rows open their Rank tab. */
+  static #onShowTab(event, target) {
+    event.preventDefault();
+    const tab = target.dataset.tab;
+    if (tab) this.changeTab(tab, "primary");
+  }
+
+  /** An Upgrade tier's add bar: show an optional part (Healing). */
+  static #onRevealPart(event, target) {
+    event.preventDefault();
+    const key = target.dataset.reveal;
+    if (!key) return;
+    this.#revealed.add(key);
+    return this.render();
+  }
+
+  /**
+   * An Upgrade tier's "+ Damage type": a blank entry to pick in, shown
+   * though blank (#groupUpgradesByRank hides stored blanks otherwise).
+   * Reuses a blank one already stored rather than adding another.
+   */
+  static async #onAddDamageType(event, target) {
+    event.preventDefault();
+    const index = Number(target.dataset.index);
+    const upgrade = this.item.system.upgrades?.[index];
+    if (!upgrade) return;
+    this.#revealed.add(`dt-${upgrade.id}`);
+    if ((upgrade.damageTypes ?? []).some((value) => !value)) return this.render();
+    const path = `system.upgrades.${index}.damageTypes`;
+    return onAddArrayItem(event, { dataset: { path, template: '""' } }, this.item);
   }
 
   /**

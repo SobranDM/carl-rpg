@@ -1,5 +1,5 @@
 import CarlRPGItemBase from "./item-base.mjs";
-import { defineUpgradesField } from "./shared/upgrade-tier.mjs";
+import { defineTargetEffectsField, defineUpgradesField } from "./shared/upgrade-tier.mjs";
 
 /**
  * Shared base for the three Rank-progression Item types: Skill, Spell, and
@@ -70,6 +70,11 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     schema.shieldSlots = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
 
     schema.upgrades = defineUpgradesField();
+
+    // On-hit Debuffs at any Rank (docs/skill-item-sheets.md): the base tier
+    // the Rank 5/10/15 Upgrades build on - "on a hit, the target gains X",
+    // with the same Critical Hit only / Amazing Success only flags.
+    schema.targetEffects = defineTargetEffectsField();
 
     return schema;
   }

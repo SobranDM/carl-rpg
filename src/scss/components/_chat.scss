@@ -258,6 +258,19 @@
       margin-right: 4px;
     }
 
+    // An Amazing-Success-only Debuff no target was an Amazing Success for.
+    .carl-target-effect-pill.is-dim {
+      opacity: 0.5;
+    }
+
+    // "Blazing Longsword · on an Amazing Success", after the Debuff's name.
+    .carl-target-effect-source {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: 0.85;
+    }
+
     .carl-target-effect-pill {
       display: inline-block;
       font-size: 10px;

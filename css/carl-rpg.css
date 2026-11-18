@@ -420,6 +420,17 @@
 .carl-chat-card .carl-attack-targets .carl-target-effects-label {
   margin-right: 4px;
 }
+.carl-chat-card .carl-target-effects .carl-target-effect-pill.is-dim,
+.carl-chat-card .carl-attack-targets .carl-target-effect-pill.is-dim {
+  opacity: 0.5;
+}
+.carl-chat-card .carl-target-effects .carl-target-effect-source,
+.carl-chat-card .carl-attack-targets .carl-target-effect-source {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
 .carl-chat-card .carl-target-effects .carl-target-effect-pill,
 .carl-chat-card .carl-attack-targets .carl-target-effect-pill {
   display: inline-block;
@@ -1805,15 +1816,6 @@
   flex: 0 0 200px;
   padding: 0 8px;
 }
-.carl-rpg .carl-consumable {
-  margin-top: 6px;
-}
-.carl-rpg .carl-consumable select[multiple] {
-  min-width: 12em;
-}
-.carl-rpg .carl-consumable .carl-consumable-buff {
-  margin-top: 6px;
-}
 .carl-rpg .carl-condition-expiry {
   font-size: 11px;
   color: var(--carl-text-muted);
@@ -1855,132 +1857,6 @@
   background: var(--carl-header-bg);
   border-radius: 3px;
   padding: 2px 6px;
-}
-.carl-rpg .carl-upgrades {
-  margin: 11px 0;
-}
-.carl-rpg .carl-section-divider {
-  border: none;
-  border-top: 1px solid var(--carl-border-soft);
-  margin: 6px 0 0;
-}
-.carl-rpg .carl-section-divider + .carl-section-header {
-  margin-top: 4px;
-}
-.carl-rpg .carl-section-header {
-  margin: 4px 0;
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  text-align: center;
-  color: var(--carl-header-text);
-}
-.carl-rpg .carl-upgrade-tier {
-  border: 1px solid var(--carl-border-soft);
-  border-radius: 4px;
-  background: var(--carl-panel-bg);
-  padding: 8px;
-  margin-bottom: 11px;
-}
-.carl-rpg .carl-upgrade-tier:last-of-type {
-  margin-bottom: 0;
-}
-.carl-rpg .carl-upgrade-tier .carl-upgrade-tier-header {
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-.carl-rpg .carl-upgrade-tier .carl-upgrade-tier-header select {
-  font-weight: 700;
-  color: var(--carl-header-text);
-}
-.carl-rpg .carl-upgrade-tier .carl-upgrade-description {
-  width: 100%;
-  min-height: 2.4em;
-  resize: vertical;
-  margin-bottom: 6px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row {
-  border: 1px solid var(--color-border-light-tertiary);
-  border-radius: 3px;
-  padding: 6px;
-  margin-bottom: 9px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-fields {
-  margin: 0 0 4px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta {
-  align-items: flex-end;
-  gap: 6px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field--label {
-  flex: 1;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field--label .carl-change-label {
-  width: 100%;
-}
-.carl-rpg .carl-changes-editor .carl-change-group {
-  border: 1px solid var(--carl-border-soft-2);
-  border-radius: 3px;
-  background: var(--carl-panel-bg-2);
-  padding: 4px 6px 6px;
-  margin-bottom: 4px;
-}
-.carl-rpg .carl-changes-editor .carl-change-group legend {
-  font-weight: 700;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--carl-header-text);
-  background: var(--carl-header-bg);
-  border-radius: 3px;
-  padding: 1px 5px;
-}
-.carl-rpg .carl-changes-editor .carl-change-fields-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.carl-rpg .carl-changes-editor .carl-change-field-full {
-  grid-column: 1/-1;
-}
-.carl-rpg .carl-changes-editor .carl-conditions-editor {
-  margin-top: 4px;
-  padding-left: 10px;
-  border-left: 2px solid var(--color-border-light-tertiary);
-}
-.carl-rpg .carl-changes-editor .carl-conditions-editor .carl-condition-row {
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 2px;
-}
-.carl-rpg .carl-changes-editor .carl-conditions-editor .carl-condition-row input[type=text] {
-  flex: 1;
-}
-.carl-rpg .carl-target-effects-editor {
-  margin: 4px 0 8px;
-}
-.carl-rpg .carl-target-effects-editor .carl-target-effect-row {
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-.carl-rpg .carl-target-effects-editor .carl-target-effect-row .carl-target-effect-crit {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 11px;
-  white-space: nowrap;
-}
-.carl-rpg .carl-target-effects-editor .carl-target-effect-row input[type=text].carl-w-medium {
-  flex: 1;
 }
 .carl-rpg .carl-resistances-grid {
   display: grid;
@@ -2029,11 +1905,6 @@
 }
 .carl-rpg .carl-skill-choice-row input[type=text] {
   flex: 1;
-}
-.carl-rpg .carl-advancement-row {
-  align-items: center;
-  gap: 10px;
-  margin: 8px 0;
 }
 .carl-rpg .carl-marked-toggle {
   display: inline-flex;
@@ -3826,4 +3697,372 @@
   align-items: center;
   gap: 5px;
   align-self: end;
+}
+.carl-rpg .carl-row-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #4a4243;
+  color: #ddd5d4;
+}
+.carl-rpg .carl-row-chip i {
+  font-size: 9px;
+}
+.carl-rpg .carl-row-chip[data-tone=good] {
+  background: #2f9e4f;
+  color: #f2fff4;
+}
+.carl-rpg .carl-row-chip[data-tone=accent] {
+  background: var(--carl-danger);
+  color: var(--carl-header-text);
+}
+.carl-rpg .carl-row-chip[data-tone=blue] {
+  background: #2f5f9e;
+  color: #eef4ff;
+}
+.carl-rpg .carl-row-chip[data-tone=gold] {
+  background: #d99a26;
+  color: #2a1a02;
+}
+.carl-rpg .carl-row-chip[data-tone=muted] {
+  background: transparent;
+  border: 1px dashed var(--carl-text-muted);
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-item-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.carl-rpg .carl-item-chips .item-type-label {
+  margin-right: 2px;
+}
+.carl-rpg .carl-item-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+.carl-rpg .carl-item-page > prose-mirror {
+  min-height: 3em;
+}
+.carl-rpg .carl-item-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.carl-rpg .carl-item-group-summary {
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-check-field {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-edit-row-grow {
+  flex: 1 1 100%;
+}
+.carl-rpg .carl-edit-row-grow input[type=text] {
+  width: 100%;
+}
+.carl-rpg .carl-edit-rows {
+  border: 1px solid color-mix(in srgb, var(--carl-text) 14%, transparent);
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.12);
+}
+.carl-rpg .carl-edit-rows > * + * {
+  border-top: 1px solid color-mix(in srgb, var(--carl-text) 10%, transparent);
+}
+.carl-rpg .carl-edit-row-line {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto auto 10px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 4px 6px;
+  list-style: none;
+  cursor: pointer;
+}
+.carl-rpg .carl-edit-row-line::-webkit-details-marker {
+  display: none;
+}
+.carl-rpg .carl-edit-row-line::after {
+  content: "▸";
+  justify-self: end;
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-edit-row-line:hover, .carl-rpg .carl-edit-row-line:focus-visible {
+  background: color-mix(in srgb, var(--carl-accent) 10%, transparent);
+  outline: none;
+}
+.carl-rpg .carl-edit-row.is-debuff > .carl-edit-row-line {
+  grid-template-columns: 116px minmax(0, 1fr) auto auto 10px;
+}
+.carl-rpg .carl-edit-row[open] > .carl-edit-row-line {
+  background: color-mix(in srgb, var(--carl-accent) 8%, transparent);
+}
+.carl-rpg .carl-edit-row[open] > .carl-edit-row-line::after {
+  content: "▾";
+}
+.carl-rpg .carl-edit-row-what {
+  min-width: 0;
+}
+.carl-rpg .carl-edit-row-what b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-rpg .carl-edit-row-sub {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-edit-row-value {
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--carl-accent);
+  font-variant-numeric: tabular-nums;
+}
+.carl-rpg .carl-edit-row-acts {
+  display: flex;
+  gap: 3px;
+}
+.carl-rpg .carl-edit-row-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+  border: 1px solid color-mix(in srgb, var(--carl-text) 25%, transparent);
+  border-radius: 3px;
+  background: var(--carl-input-bg);
+  font-size: 11px;
+}
+.carl-rpg .carl-edit-row-icon:hover, .carl-rpg .carl-edit-row-icon:focus-visible {
+  border-color: var(--carl-accent);
+  text-shadow: none;
+}
+.carl-rpg .carl-edit-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  border-top: 1px dashed color-mix(in srgb, var(--carl-text) 14%, transparent);
+}
+.carl-rpg .carl-edit-row-body .carl-field-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px 10px;
+}
+.carl-rpg .carl-conditions-editor .carl-condition-row {
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.carl-rpg .carl-conditions-editor .carl-condition-row input[type=text] {
+  flex: 1;
+}
+.carl-rpg .carl-conditions-editor .carl-hint {
+  margin: 0;
+}
+.carl-rpg .carl-conditions-editor .carl-add-link {
+  margin-top: 2px;
+}
+.carl-rpg .carl-tier-link {
+  display: grid;
+  grid-template-columns: 74px 56px minmax(0, 1fr) 12px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 4px 6px;
+  color: var(--carl-text);
+}
+.carl-rpg .carl-tier-link:hover, .carl-rpg .carl-tier-link:focus-visible {
+  background: color-mix(in srgb, var(--carl-accent) 10%, transparent);
+  text-shadow: none;
+  outline: none;
+}
+.carl-rpg .carl-tier-link-rank {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.carl-rpg .carl-tier-link-summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+.carl-rpg .carl-tier-link-summary.is-empty {
+  color: var(--carl-text-muted);
+  font-style: italic;
+}
+.carl-rpg .carl-tier-link-go {
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-tier-card {
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.carl-rpg .carl-tier-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px 3px 8px;
+  background: var(--carl-header-bg);
+  color: var(--carl-header-text);
+}
+.carl-rpg .carl-tier-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.carl-rpg .carl-tier-card-ctl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.carl-rpg .carl-tier-card-ctl select {
+  height: 22px;
+  font-size: 12px;
+}
+.carl-rpg .carl-tier-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-tier-card-body .carl-upgrade-description {
+  width: 100%;
+  min-height: 2.6em;
+  resize: vertical;
+}
+.carl-rpg .carl-tier-part {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.carl-rpg .carl-tier-part.carl-upgrade-damage-split {
+  margin: 0;
+}
+.carl-rpg .carl-tier-part .carl-add-link {
+  margin-top: 0;
+}
+.carl-rpg .carl-tier-part-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--carl-accent-dim);
+}
+.carl-rpg .carl-add-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px dashed color-mix(in srgb, var(--carl-text) 30%, transparent);
+  border-radius: 4px;
+}
+.carl-rpg .carl-add-bar button {
+  flex: 0 0 auto;
+  width: auto;
+  height: 22px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, var(--carl-text) 28%, transparent);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--carl-text);
+  font-size: 12px;
+  line-height: 1;
+}
+.carl-rpg .carl-add-bar button i {
+  margin-right: 3px;
+  font-size: 10px;
+}
+.carl-rpg .carl-add-bar button:hover, .carl-rpg .carl-add-bar button:focus-visible {
+  border-color: var(--carl-accent);
+  box-shadow: none;
+}
+.carl-rpg .carl-add-bar-label {
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-only-with-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-only-with-pills select,
+.carl-rpg .carl-only-with-pills input[type=text] {
+  width: auto;
+  min-width: 9em;
+}
+.carl-rpg .carl-only-with-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--carl-border-soft-2);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--carl-accent-2) 22%, transparent);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-only-with-pill a {
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-only-with-pill a:hover, .carl-rpg .carl-only-with-pill a:focus-visible {
+  color: var(--carl-text);
+  text-shadow: none;
+}
+.carl-rpg .carl-only-with .carl-hint {
+  margin: 2px 0 0;
+}
+.carl-rpg .carl-inline-fields {
+  display: inline-flex;
+  gap: 4px;
+}
+.carl-rpg .carl-consumable .carl-hint {
+  margin: 0;
+}
+.carl-rpg.item nav.tabs [data-tab] i {
+  margin-right: 4px;
+  font-size: 10px;
+  opacity: 0.8;
 }

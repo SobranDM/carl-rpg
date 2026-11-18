@@ -1,60 +1,67 @@
-{{!-- Shared Rank/Upgrades block for Skill, Spell, and Damage Effect item
-      sheets - all three follow the book's "Rank 5/10/15 Upgrades" pattern.
-      isAttackFlavored (item-sheet.mjs's _prepareContext) gates Base
-      Damage/Heal fieldsets below - true for an Attack-category Skill, an
-      "attack"-keyword Spell, or any Damage Effect (no heal concept). --}}
-<div class="carl-field-grid">
-  <div>
-    <label class="resource-label">{{localize "CARLRPG.Ranked.GoverningStat"}}</label>
-    <select class="carl-w-medium" name="system.governingStat">
-      <option value=""></option>
-      {{selectOptions config.stats selected=system.governingStat localize=true}}
-    </select>
-  </div>
-  <div>
-    <label class="resource-label">{{localize "CARLRPG.Ranked.OpposedStat"}}</label>
-    <select class="carl-w-medium" name="system.opposedStat">
-      <option value=""></option>
-      {{selectOptions config.stats selected=system.opposedStat localize=true}}
-    </select>
-  </div>
-  <div>
-    <label class="resource-label">{{localize "CARLRPG.Ranked.Rank"}}</label>
-    {{#if petRank}}
-    <input type="text" class="carl-w-tiny" value="{{petRank}}" disabled title="{{localize 'CARLRPG.Pet.RankIsFloorHint'}}" />
-    <span class="carl-hint">{{localize "CARLRPG.Pet.RankIsFloor"}}</span>
-    {{else}}
-    <input type="text" class="carl-w-tiny" name="system.rank" value="{{system.rank}}" data-dtype="Number" />
+{{!-- The shared lower half of a Skill, Spell or Damage Effect's Main tab
+      (docs/skill-item-sheets.md), after its Description and "What it is":
+      Rank and advancement, Rolling it, Damage or Healing, On-hit Debuffs
+      (at any Rank), and the Upgrades overview. isAttackFlavored
+      (item-sheet.mjs's _prepareContext) picks Damage or Healing and shows
+      the Debuffs - true for an Attack-category Skill, an "attack"-keyword
+      Spell, or any Damage Effect. --}}
+<div class="carl-item-group">
+  <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Advancement"}}
+    <span class="carl-item-group-summary">{{localize (lookup config.advancementGates system.advancementGate)}}</span></span>
+  <div class="carl-field-grid">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.Rank"}}</label>
+      {{#if petRank}}
+      <input type="text" class="carl-w-tiny" value="{{petRank}}" disabled data-tooltip="{{localize 'CARLRPG.Pet.RankIsFloorHint'}}" />
+      <span class="carl-hint">{{localize "CARLRPG.Pet.RankIsFloor"}}</span>
+      {{else}}
+      <input type="text" class="carl-w-tiny" name="system.rank" value="{{system.rank}}" data-dtype="Number" />
+      {{/if}}
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.AdvancementGate"}}</label>
+      <select class="carl-w-wide" name="system.advancementGate">
+        {{selectOptions config.advancementGates selected=system.advancementGate localize=true}}
+      </select>
+    </div>
+    {{!-- Marked is the bookkeeping flag ordinary rolls set
+          (CarlDice.markForAdvancement); it sits with the Advancement roll. --}}
+    <label class="carl-check-field carl-marked-toggle">
+      <input type="checkbox" name="system.marked" {{checked system.marked}} />
+      {{localize "CARLRPG.Ranked.Marked"}}
+    </label>
+    {{#if canRollAdvancement}}
+    <button type="button" class="carl-roll-advancement" data-action="rollAdvancement">
+      <i class="fas fa-dice-d20"></i> {{localize "CARLRPG.Ranked.RollAdvancement"}}
+    </button>
     {{/if}}
-  </div>
-  <div>
-    <label class="resource-label">{{localize "CARLRPG.Ranked.AdvancementGate"}}</label>
-    <select class="carl-w-wide" name="system.advancementGate">
-      {{selectOptions config.advancementGates selected=system.advancementGate localize=true}}
-    </select>
   </div>
 </div>
 
-{{!-- Marked is a bookkeeping flag ordinary Skill/Attack/Heal rolls set
-      automatically (CarlDice.markForAdvancement) - the button below never
-      reads it, but both are about the same Advancement-Check lifecycle, so
-      they sit together here instead of competing with Governing Stat/Rank
-      above for attention. --}}
-<div class="carl-advancement-row flexrow">
-  <label class="carl-marked-toggle">
-    <input type="checkbox" name="system.marked" {{checked system.marked}} />
-    {{localize "CARLRPG.Ranked.Marked"}}
-  </label>
-  {{#if canRollAdvancement}}
-  <button type="button" class="carl-roll-advancement" data-action="rollAdvancement">
-    <i class="fas fa-dice-d20"></i> {{localize "CARLRPG.Ranked.RollAdvancement"}}
-  </button>
-  {{/if}}
+<div class="carl-item-group">
+  <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Rolling"}}</span>
+  <div class="carl-field-grid">
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.GoverningStat"}}</label>
+      <select class="carl-w-medium" name="system.governingStat">
+        <option value=""></option>
+        {{selectOptions config.stats selected=system.governingStat localize=true}}
+      </select>
+    </div>
+    <div>
+      <label class="resource-label">{{localize "CARLRPG.Ranked.OpposedStat"}}</label>
+      <select class="carl-w-medium" name="system.opposedStat">
+        <option value=""></option>
+        {{selectOptions config.stats selected=system.opposedStat localize=true}}
+      </select>
+    </div>
+  </div>
 </div>
 
 {{#if isAttackFlavored}}
-<fieldset class="carl-base-damage">
-  <legend>{{localize "CARLRPG.Ranked.BaseDamage"}}</legend>
+<div class="carl-item-group carl-base-damage">
+  <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Damage"}}
+    {{#if damageSummary}}<span class="carl-item-group-summary">{{damageSummary}}</span>{{/if}}</span>
   <div class="carl-field-grid">
     <div>
       <label class="resource-label">{{localize "CARLRPG.Ranked.BaseDamageDice"}}</label>
@@ -75,15 +82,43 @@
       </select>
     </div>
   </div>
-</fieldset>
+</div>
+
+<div class="carl-item-group carl-base-debuffs">
+  <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Debuffs"}}
+    <span class="carl-item-group-summary">{{localize "CARLRPG.ItemSheet.AnyRank"}}</span></span>
+  {{> "systems/carl-rpg/templates/item/parts/target-effects-editor.hbs"
+    targetEffects=system.targetEffects path="system.targetEffects" config=config}}
+</div>
 {{else}}
-<fieldset class="carl-base-heal">
-  <legend>{{localize "CARLRPG.Ranked.Heal"}}</legend>
+<div class="carl-item-group carl-base-heal">
+  <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Healing"}}</span>
   <div class="carl-field-grid">
     <div>
       <label class="resource-label">{{localize "CARLRPG.Ranked.HealDice"}}</label>
       <input type="text" class="carl-w-short" name="system.healDice" value="{{system.healDice}}" placeholder="1d4" />
     </div>
   </div>
-</fieldset>
+</div>
 {{/if}}
+
+{{!-- One row per Rank tier: Unlocked or Locked at the current Rank and a
+      one-line summary (item-sheet.mjs #upgradeOverview); a click opens its
+      tab. --}}
+<div class="carl-item-group carl-upgrades-overview">
+  <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Upgrades"}}</span>
+  <div class="carl-edit-rows">
+    {{#each upgradeOverview as |tier|}}
+    <a class="carl-tier-link" data-action="showTab" data-tab="{{tier.tab}}">
+      {{#if tier.unlocked}}
+      <span class="carl-row-chip" data-tone="good"><i class="fas fa-lock-open"></i>{{localize "CARLRPG.ItemSheet.Unlocked"}}</span>
+      {{else}}
+      <span class="carl-row-chip" data-tone="muted"><i class="fas fa-lock"></i>{{localize "CARLRPG.ItemSheet.Locked"}}</span>
+      {{/if}}
+      <span class="carl-tier-link-rank">{{localize tier.label}}</span>
+      <span class="carl-tier-link-summary{{#unless tier.count}} is-empty{{/unless}}">{{tier.summary}}</span>
+      <i class="fas fa-chevron-right carl-tier-link-go"></i>
+    </a>
+    {{/each}}
+  </div>
+</div>

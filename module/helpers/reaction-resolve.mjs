@@ -16,6 +16,12 @@
  *  - an Evade that failed by 10 or more: +Floor damage and a Minor Injury
  *    after combat; a Natural 1: double damage and a Major Injury (p.80);
  *  - Caught: the Catcher takes it, with no Shield (p.191);
+ *  - its Debuffs land with the damage, each by its trigger: on a hit, or on
+ *    an Evade Major Fail or worse / a Critical Fail - which an unEvaded hit
+ *    counts as (ruled 2026-11-17) - but not on a full Immunity, nor on a
+ *    Catcher at Rank 15 ("ignore any Debuffs attached to this damage",
+ *    p.187). An Attack with Debuffs and no damage gets an Apply button in
+ *    place of a roll (docs/mob-sheet.md);
  *  - a Near Miss by a vehicle's occupant hits the vehicle (p.72).
  * Next Phase then goes to the Crawler Action Phase, offering to roll
  * anything still unrolled first.
@@ -23,6 +29,9 @@
 import { RollParts } from "../dice/roll-parts.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { applyDamageWithResult } from "../chat/damage-card.mjs";
+import { landDebuffs } from "./land-debuffs.mjs";
+import { resolveTargetEffectLabel } from "./conditions.mjs";
+import { debuffLandsOn } from "./modifiers.mjs";
 import { actorFor, attackDetails, attackLine, reactionCardFor, withCard, writeState } from "../chat/reaction-card.mjs";
 import { headerProgress, rememberOpenRows, statusChip, statusRow, statusSection } from "../chat/status-rows.mjs";
 import { rowOutcome } from "./attack-targets.mjs";
@@ -125,6 +134,7 @@ export function buildDamageState(combat, state) {
       damage: attack.damage ?? "", damageType: attack.damageType ?? "", damageIsMagic: attack.damageIsMagic ?? true,
       isArea: !!attack.isArea, floor: attack.floor ?? game.settings.get(SCOPE, "currentFloor"), rolled: null,
       effect: attack.effect ?? "", range: attack.range ?? "",
+      targetEffects: attack.targetEffects ?? [],
     };
   }
   let order = 0;
@@ -141,8 +151,12 @@ export function buildDamageState(combat, state) {
     const notes = [];
     if (hit.tauntedBy) tags.push({ key: "CARLRPG.Reaction.TauntedFrom", data: { name: hit.originalName } });
     if (hit.caughtBy) tags.push({ key: "CARLRPG.Reaction.CaughtFor", data: { name: hit.originalName } });
-    const extraDr = hit.caughtBy ? catcherDr(actorFor(hit.caughtBy.uuid)) : 0;
+    const catcher = hit.caughtBy ? actorFor(hit.caughtBy.uuid) : null;
+    const extraDr = catcher ? catcherDr(catcher) : 0;
     if (extraDr) tags.push({ key: "CARLRPG.Resolve.CatcherDr", data: { dr: extraDr } });
+    // "Ignore any Debuffs attached to this damage" (Catcher Rank 15, p.187).
+    const ignoreDebuffs = !!catcher && catcherRank(catcher) >= 15;
+    if (ignoreDebuffs && attack.targetEffects.length) tags.push({ key: "CARLRPG.Resolve.CatcherNoDebuffs", data: {} });
     if (hit.row?.zone === "splash") tags.push({ key: "CARLRPG.Targets.Splash", data: {} });
     if (status === "pending" && evade?.success) tags.push({ key: "CARLRPG.Resolve.EvadedHalf", data: {} });
 
@@ -163,13 +177,16 @@ export function buildDamageState(combat, state) {
 
     data.rows[hit.id] = {
       id: hit.id, order: order++, attackId: hit.attackId, tableUuid: hit.targetUuid, tableName: hit.targetName,
-      applyUuid, status, caught: !!hit.caughtBy, extraDr,
+      applyUuid, status, caught: !!hit.caughtBy, extraDr, ignoreDebuffs,
       // The Evade it called for, shown under the Mob's name.
       difficulty: hit.row?.isCharacter && hit.row?.hit && !hit.caughtBy ? (hit.row.difficulty ?? null) : null,
       row: { hit: !!hit.row?.hit, zone: hit.row?.zone ?? "full", amazing: false },
       evade: evade ? { degree: evade.degree, success: evade.success } : null,
       tags, notes, result: null,
     };
+    // No damage, but Debuffs that would land: the GM applies them (an
+    // Apply button in place of a roll).
+    if (status === "noDamage" && rowDebuffs(data.rows[hit.id], attack).length) data.rows[hit.id].status = "pending";
   }
   return data;
 }
@@ -181,10 +198,30 @@ export function buildDamageState(combat, state) {
  * @returns {number}
  */
 export function catcherDr(actor) {
+  return 5 * Math.min(3, Math.floor(catcherRank(actor) / 5));
+}
+
+/**
+ * A crawler's Catcher Rank (p.187), 0 without the Skill.
+ * @param {Actor|null} actor
+ * @returns {number}
+ */
+export function catcherRank(actor) {
   if (!actor) return 0;
   const item = actor.items?.find((i) => i.type === "skill" && i.name === "Catcher");
-  const rank = actor.system?.skills?.[slugifySkillName("Catcher")]?.rank ?? item?.system.rank ?? 0;
-  return 5 * Math.min(3, Math.floor(rank / 5));
+  return actor.system?.skills?.[slugifySkillName("Catcher")]?.rank ?? item?.system.rank ?? 0;
+}
+
+/**
+ * The Debuffs that would land on a Damage card row, before immunities
+ * (shown on the row before it's rolled).
+ * @param {object} row  A Damage card row.
+ * @param {object} attack  Its Attack.
+ * @returns {object[]}
+ */
+export function rowDebuffs(row, attack) {
+  if (row.ignoreDebuffs || !row.row?.hit || row.evade?.success) return [];
+  return (attack.targetEffects ?? []).filter((te) => te.debuffKey && debuffLandsOn(te, { ...row.row, evade: row.evade }));
 }
 
 /**
@@ -231,12 +268,14 @@ export function rollAttackOnCard(message, attackId) {
     if (!current?.attacks?.[attackId] || current.attacks[attackId].rolled) return false;
     const data = foundry.utils.deepClone(current);
     const attack = data.attacks[attackId];
-    const rolled = await rollAttackDamage(attack);
+    // An Attack with no damage (only Debuffs) has nothing to roll.
+    const hasDamage = !!String(attack.damage ?? "").trim();
+    const rolled = hasDamage ? await rollAttackDamage(attack) : { total: 0, breakdown: "" };
     if (!rolled) return false;
-    if (game.dice3d) void game.dice3d.showForRoll(rolled.roll, game.user, true).catch(() => {});
+    if (hasDamage && game.dice3d) void game.dice3d.showForRoll(rolled.roll, game.user, true).catch(() => {});
     attack.rolled = { total: rolled.total, breakdown: rolled.breakdown };
 
-    const damageByType = { [attack.damageType]: rolled.total };
+    const damageByType = hasDamage ? { [attack.damageType]: rolled.total } : {};
     const rows = Object.values(data.rows).filter((r) => r.attackId === attackId && r.status === "pending");
     for (const row of rows) {
       row.status = "rolled";
@@ -247,22 +286,28 @@ export function rollAttackOnCard(message, attackId) {
         row.result = { missing: true };
         continue;
       }
-      if (raw <= 0) {
-        row.result = { raw: 0, final: 0, slots: 0, shieldSlots: 0, dying: false, extra: [] };
-        continue;
+      row.result = { raw: 0, final: 0, slots: 0, shieldSlots: 0, dying: false, extra: [], debuffs: [] };
+      if (raw > 0) {
+        const applied = await applyDamageWithResult(actor, outcome.damage, attack.damageIsMagic, {
+          noShield: row.caught, extraDr: row.extraDr ?? 0,
+        });
+        Object.assign(row.result, {
+          raw,
+          final: applied.result.totalFinalDamage,
+          slots: applied.dying ? 0 : applied.result.slotsLost,
+          shieldSlots: applied.dying ? 0 : applied.result.shieldSlotsLost,
+          dying: applied.dying,
+          // Beyond the digest line: a Dying countdown, a Debuff ended by the hit.
+          extra: applied.dying ? applied.lines : applied.lines.slice(1),
+        });
       }
-      const applied = await applyDamageWithResult(actor, outcome.damage, attack.damageIsMagic, {
-        noShield: row.caught, extraDr: row.extraDr ?? 0,
-      });
-      row.result = {
-        raw,
-        final: applied.result.totalFinalDamage,
-        slots: applied.dying ? 0 : applied.result.slotsLost,
-        shieldSlots: applied.dying ? 0 : applied.result.shieldSlotsLost,
-        dying: applied.dying,
-        // Beyond the digest line: a Dying countdown, a Debuff ended by the hit.
-        extra: applied.dying ? applied.lines : applied.lines.slice(1),
-      };
+      // Its Debuffs, each by its trigger (not on an Evade; not for a
+      // Catcher at Rank 15).
+      if (outcome.effects && !row.ignoreDebuffs) {
+        const { landed, lines } = await landDebuffs(actor, attack.targetEffects, { ...row.row, evade: row.evade }, damageByType);
+        row.result.debuffs = landed.map((te) => ({ label: resolveTargetEffectLabel(te), stacks: te.stacks ?? 1 }));
+        row.result.extra.push(...lines);
+      }
     }
     const { ForcedReplacement } = foundry.data.operators;
     await message.update({ flags: { [SCOPE]: { [FLAG]: ForcedReplacement.create(data) } } });
@@ -332,6 +377,13 @@ function damageNum(row, attack) {
     case "evaded": return muted(i18n.localize("CARLRPG.Resolve.None"));
     case "noDamage": return muted(i18n.localize("CARLRPG.Resolve.NoDamage"));
     case "pending": {
+      // Debuffs and no damage: the GM applies them.
+      if (!String(attack.damage ?? "").trim()) {
+        const label = i18n.localize("CARLRPG.Resolve.ApplyDebuffs");
+        if (!game.user.isGM) return muted(label);
+        return `<button type="button" class="carl-status-button is-primary carl-damage-roll-button" data-action="reactionDamage" data-attack-id="${esc(row.attackId)}">
+        <i class="fas fa-skull-crossbones"></i> ${esc(label)}</button>`;
+      }
       const formula = displayFormula(attack);
       if (!game.user.isGM) return `<span class="carl-status-vs" data-tooltip="${esc(i18n.format("CARLRPG.Resolve.Waiting", { formula }))}">${esc(formula)}</span>`;
       return `<button type="button" class="carl-status-button is-primary carl-damage-roll-button" data-action="reactionDamage" data-attack-id="${esc(row.attackId)}">
@@ -340,6 +392,8 @@ function damageNum(row, attack) {
   }
   const r = row.result ?? {};
   if (r.missing) return muted(i18n.localize("CARLRPG.Resolve.TargetGone"));
+  // A Debuffs-only Attack that dealt nothing: its "Gains" line says it all.
+  if (!String(attack.damage ?? "").trim() && !r.final && !r.dying) return muted(i18n.localize("CARLRPG.Resolve.NoDamage"));
   const slots = r.dying ? esc(i18n.localize("CARLRPG.Resolve.Dying"))
     : esc(i18n.format(r.slots === 1 ? "CARLRPG.Resolve.OneSlot" : "CARLRPG.Resolve.SlotCount", { count: r.slots ?? 0 }));
   const shield = r.shieldSlots ? ` ${esc(i18n.format("CARLRPG.Resolve.ShieldSlots", { count: r.shieldSlots }))}` : "";
@@ -398,6 +452,14 @@ export function decorateDamageCard(message, html) {
         ...attackLine(attack, row.difficulty ?? null),
         ...(row.tags ?? []).filter((t) => t.key !== "CARLRPG.Resolve.EvadedHalf").map((t) => i18n.format(t.key, t.data)),
       ];
+      // Its Debuffs: what will land once rolled, then what did.
+      const named = (list) => list.map((d) => `${d.label} ×${d.stacks ?? 1}`).join(", ");
+      if (row.status === "pending") {
+        const coming = rowDebuffs(row, attack).map((te) => ({ label: resolveTargetEffectLabel(te), stacks: te.stacks }));
+        if (coming.length) sub.push(i18n.format("CARLRPG.Resolve.WillGain", { debuffs: named(coming) }));
+      } else if (row.result?.debuffs?.length) {
+        sub.push(i18n.format("CARLRPG.Resolve.Gained", { debuffs: named(row.result.debuffs) }));
+      }
       const r = row.result;
       const tip = row.status === "rolled" && r && !r.missing
         ? i18n.format("CARLRPG.Resolve.RolledTip", { rolled: attack.rolled?.total ?? "-", raw: r.raw ?? 0, final: r.final ?? 0 }) : "";
