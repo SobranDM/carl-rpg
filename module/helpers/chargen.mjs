@@ -20,6 +20,7 @@ import { createCardMessage, esc } from "../chat/chat-card.mjs";
 const SCOPE = "carl-rpg";
 const TABLES_PACK = `${SCOPE}.roll-tables`;
 const CONSUMABLES_PACK = `${SCOPE}.consumables`;
+const GEAR_PACK = `${SCOPE}.gear`;
 
 /**
  * Step 1's four backgrounds, by kind of crawler: the table each is chosen
@@ -472,6 +473,33 @@ async function manaPotionData() {
   return data;
 }
 
+/**
+ * The starting weapon, from the Gear compendium when it has one for the
+ * Weapon Skill (ruled 2026-11-18): the item named like the chosen weapon,
+ * else the Skill's basic one (named after the Skill). It keeps the name the
+ * player gave ("Boffer sword") and takes the item's icon, Held slot and
+ * Two-Handed. A plain item when the compendium has none (or isn't built).
+ * @param {string} name   The weapon's name as chosen.
+ * @param {string} skill  Its Weapon Skill.
+ * @returns {Promise<object>}
+ */
+async function weaponData(name, skill) {
+  const pack = game.packs.get(GEAR_PACK);
+  const index = (await pack?.getIndex({ fields: ["system.weaponSkill"] })) ?? [];
+  const lower = (s) => String(s ?? "").trim().toLowerCase();
+  const forSkill = index.filter((e) => lower(e.system?.weaponSkill) === lower(skill));
+  const entry = forSkill.find((e) => lower(e.name) === lower(name)) ?? forSkill.find((e) => lower(e.name) === lower(skill));
+  const doc = entry ? await pack.getDocument(entry._id) : null;
+  if (!doc) return gearData(name, { weaponSkill: skill });
+  const data = doc.toObject();
+  delete data._id;
+  delete data.folder;
+  data.name = name || data.name;
+  data.system.weaponSkill = skill;
+  data._stats = { ...(data._stats ?? {}), compendiumSource: doc.uuid };
+  return data;
+}
+
 /** A plain gear item's data. */
 function gearData(name, system = {}) {
   return { name, type: "item", system };
@@ -515,7 +543,7 @@ async function gearWrites(state) {
   // The starting outfit is worn (a Torso piece; docs/gear-slots.md).
   if (stuff.clothing) gear.clothing = gearData(stuff.clothing, { equipped: true, slots: ["torso"] });
   if (state.combat.type === "weapon") {
-    gear.weapon = gearData(stuff.weapon || state.combat.weaponName || choice.skill, { weaponSkill: choice.skill });
+    gear.weapon = await weaponData(stuff.weapon || state.combat.weaponName || choice.skill, choice.skill);
   }
   if (stuff.item) gear.item = gearData(stuff.item);
   if (stuff.weird) gear.weird = gearData(stuff.weird);

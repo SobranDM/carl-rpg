@@ -1114,6 +1114,7 @@
       "TwoHandedHint": "\"Limitation: Two-Handed\": held in both hands, so nothing else can be held (p.98).",
       "AccessoryKind": "Kind",
       "HeldByWeapon": "A weapon is always held.",
+      "HeldByShield": "A Shield is always held.",
       "NotWearable": "Can't be worn until you pick where it goes - though it can be held in a hand (no bonuses there unless it's Held).",
       "NoSlot": "{item} can't be worn: pick where it goes on its sheet (Worn on). It can still be held in a hand.",
       "WrongSlot": "{item} isn't worn there. It goes on: {slots}.",
@@ -1203,6 +1204,39 @@
       "WeaponHint": "Attacks with this weapon are Armor-Piercing: they ignore DR, except DR from gear marked Anti-Piercing.",
       "Anti": "Anti-Piercing",
       "AntiHint": "Anti-Piercing (p.95): this piece's DR still applies against Armor-Piercing damage."
+    },
+    "ShieldBlock": {
+      "Name": "Shield Block",
+      "Button": "Shield Block: an Action for this Attack - half damage on a Success (p.198)",
+      "Bash": "Shield Bash",
+      "BashButton": "Shield Bash: a free Attack at the attacker (Natural 20, Rank 10)",
+      "DamageSource": "{name} (Shield damage)",
+      "Sub": {
+        "success": "Shield Block - half damage",
+        "failed": "Shield Block failed",
+        "loss": "{shield} -{amount} DR",
+        "bashed": "Shield Bash made"
+      },
+      "Tag": {
+        "half": "Shield Block - half",
+        "halfLess": "Shield Block - half, then -{reduction}",
+        "loss": "{shield} -{amount} DR (now {dr})",
+        "broken": "{shield} breaks"
+      },
+      "Digest": {
+        "loss": "<strong>{name}</strong>'s {shield} loses {amount} DR (now {dr}).",
+        "broken": "<strong>{name}</strong>'s {shield} breaks."
+      },
+      "Shield": "Shield",
+      "ShieldHint": "A Shield (p.98): always held, in a hand. Its wielder can use the Shield Block Skill (p.198).",
+      "ShieldChip": "Shield",
+      "Damage": "Shield damage",
+      "DamageHint": "DR lost to Shield Blocks: -1 on a Major Fail, -2 on a Critical Fail. At 0 DR it's broken: no DR, and it can't block.",
+      "DrLeft": "DR {dr} of {base}",
+      "Broken": "Broken",
+      "Repair": "Repair",
+      "RepairHint": "\"A broken shield and lost DR can be Repaired\" (p.198): clear its Shield damage.",
+      "Repaired": "{name} is repaired."
     },
     "PartyCheck": {
       "Button": "Party Check",
@@ -1409,6 +1443,7 @@
       "half": "Half",
       "quarter": "Quarter",
       "caught": "Caught",
+      "blocked": "Blocked",
       "missed": "Missed",
       "taunt": "Taunt",
       "tauntFailed": "Failed",

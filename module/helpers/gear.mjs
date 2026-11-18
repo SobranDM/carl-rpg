@@ -43,17 +43,36 @@ export function isWeapon(item) {
   return isGear(item) && !!String(item.system?.weaponSkill ?? "").trim();
 }
 
+/** A Shield: gear with its Shield box ticked (never a consumable). */
+export function isShield(item) {
+  return isGear(item) && !isConsumable(item) && !!item.system?.shield;
+}
+
 /**
- * Where this gear can be worn: its slots, plus Held for a weapon. None for
- * a consumable or anything else not gear.
+ * Where this gear can be worn: its slots, plus Held for a weapon or a
+ * Shield ("If you carry a Shield, that uses up a Holding slot", p.98). None
+ * for a consumable or anything else not gear.
  * @param {Item} item
  * @returns {string[]}  CONFIG.CARLRPG.wearSlots keys.
  */
 export function slotsOf(item) {
   if (!isGear(item) || isConsumable(item)) return [];
   const slots = new Set((item.system?.slots ?? []).filter(Boolean));
-  if (isWeapon(item)) slots.add("held");
+  if (isWeapon(item) || isShield(item)) slots.add("held");
   return [...slots];
+}
+
+/**
+ * Is this gear in one of its wearer's hands? Equipped and in the Main or
+ * Off Hand; on a creature without hand slots (a Pet, a Mob), equipped.
+ * @param {Item} item
+ * @returns {boolean}
+ */
+export function isInHand(item) {
+  if (!isGear(item) || !item.system?.equipped) return false;
+  const gearSlots = item.actor?.system?.gearSlots;
+  if (!gearSlots) return true;
+  return HANDS.some((hand) => gearSlots[hand] === item.id);
 }
 
 /** Can it be worn at all (it has a slot)? */

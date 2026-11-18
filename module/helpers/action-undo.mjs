@@ -86,11 +86,12 @@ export function undoBlocker(entry, spent = []) {
         break;
       }
       case "rowEvade": {
-        // A row's paid Evade (module/chat/row-evade.mjs). Gone, or replaced
-        // by a later one: only the Action comes back.
+        // A row's paid Evade or Shield Block (`which`, module/chat/
+        // row-evade.mjs). Gone, or replaced by a later one: only the Action
+        // comes back.
         const attack = game.messages.get(record.messageId);
         const row = rowAt(attack, record.rowId);
-        const check = rowCheck(row, "evade");
+        const check = rowCheck(row, record.which ?? "evade");
         if (!check || check.id !== record.checkId) break;
         if (row.applied || row.injuryAdded || recoilSettledBy(attack, record.rowId)) return t("CardUsed");
         if (check.interventions?.length) return t("InterveneFirst");
@@ -232,7 +233,7 @@ async function runRecord(record) {
       return;
     case "rowEvade": {
       const message = game.messages.get(record.messageId);
-      if (message) await clearRowEvade(message, record.rowId, record.checkId);
+      if (message) await clearRowEvade(message, record.rowId, record.checkId, record.which ?? "evade");
       return;
     }
     case "declaration": {

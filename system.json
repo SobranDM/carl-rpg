@@ -101,6 +101,13 @@
       "path": "packs/consumables",
       "type": "Item",
       "system": "carl-rpg"
+    },
+    {
+      "name": "gear",
+      "label": "Gear",
+      "path": "packs/gear",
+      "type": "Item",
+      "system": "carl-rpg"
     }
   ],
   "packFolders": [],

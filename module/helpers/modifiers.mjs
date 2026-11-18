@@ -720,15 +720,73 @@ function isArmorDrBonus(change) {
  * @returns {number}
  */
 function armorDr(item, rollData) {
-  let dr = 0;
+  return shieldDrParts(item, rollData).dr;
+}
+
+/**
+ * A piece's armor DR before and after Shield damage: a Shield's DR is
+ * lowered by its `shieldDamage` (Shield Block, p.198), to no less than 0 -
+ * "It breaks at 0 DR". Other gear is unaffected.
+ * @param {Item} item
+ * @param {object} rollData
+ * @returns {{base: number, damage: number, dr: number}}
+ */
+function shieldDrParts(item, rollData) {
+  let base = 0;
   for (const { change, sourceItemRank } of collectItemChanges(item)) {
     if (!isArmorDrBonus(change)) continue;
     if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
     const value = resolveValue(change.value, { ...rollData, rank: sourceItemRank });
     if (typeof value !== "number") continue;
-    dr += change.mode === "add" ? value : -value;
+    base += change.mode === "add" ? value : -value;
   }
-  return dr;
+  const damage = item?.system?.shield ? Math.max(0, Number(item.system.shieldDamage) || 0) : 0;
+  if (!damage) return { base, damage: 0, dr: base };
+  return { base, damage, dr: Math.max(0, Math.min(base, base - damage)) };
+}
+
+/**
+ * The DR a damaged Shield has lost, as a change taking it off: its armor
+ * DR bonuses apply as written (aggregateActorBonuses), then this subtracts
+ * what its Shield damage has cost - never more than it gave.
+ * @param {Item} item
+ * @param {object} rollData
+ * @returns {object|null}  A ChangeEntry, or null if it has lost none.
+ */
+function shieldDamageChange(item, rollData) {
+  const { base, dr } = shieldDrParts(item, rollData);
+  const lost = base - dr;
+  if (!(lost > 0)) return null;
+  return {
+    targetType: "resource", target: "dr", mode: "subtract", value: String(lost),
+    label: game.i18n.format("CARLRPG.ShieldBlock.DamageSource", { name: item.name }),
+  };
+}
+
+/**
+ * A Shield's DR and whether it's broken (Shield Block, p.198): its armor DR
+ * less its Shield damage. Broken once its damage has taken all of its DR -
+ * a Shield that never had any DR ("With no DR, this shield is useless")
+ * isn't broken by damage it has nowhere to take. Read as its wearer would
+ * get it (their Stats and Level), whether or not it's worn now - an
+ * unequipped Shield's own changes are skipped by collectItemChanges, so
+ * this reads its bonuses as if equipped.
+ * @param {Item} item  A gear item.
+ * @returns {{base: number, damage: number, dr: number, broken: boolean}}
+ */
+export function shieldDrState(item) {
+  const rollData = makeAggregationContext(item?.actor?.system ?? {}).rollData;
+  let base = 0;
+  for (const change of item?.system?.changes ?? []) {
+    if (!isArmorDrBonus(change)) continue;
+    if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
+    const value = resolveValue(change.value, { ...rollData, rank: item.system.rank ?? 0 });
+    if (typeof value !== "number") continue;
+    base += change.mode === "add" ? value : -value;
+  }
+  const damage = Math.max(0, Number(item?.system?.shieldDamage) || 0);
+  const dr = Math.max(0, base - damage);
+  return { base, damage, dr, broken: damage > 0 && base > 0 && dr <= 0 };
 }
 
 /**
@@ -855,6 +913,12 @@ export function aggregateActorBonuses(actorSystem) {
     for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
       if (superseded.has(item.id) && isArmorDrBonus(change)) continue;
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
+    }
+    // A damaged Shield's lost DR (Shield Block, p.198) - only where its DR
+    // counts at all (worn, not outclassed in its slot type).
+    if (item.type === "item" && item.system.shield && givesBonuses(item) && !superseded.has(item.id)) {
+      const lost = shieldDamageChange(item, ctx.rollData);
+      if (lost) applyOneChange(lost, lost.label, item.id, item.system.rank ?? 0, ctx, item.type);
     }
   }
   // The DR an Armor-Piercing hit still meets: Anti-Piercing gear's own

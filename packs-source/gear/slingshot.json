@@ -1,0 +1,37 @@
+{
+  "_id": "jCfONKzHyZSD60nc",
+  "name": "Slingshot",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/weapons/slings/slingshot-wood.webp",
+  "system": {
+    "description": "<p>A basic slingshot. Its Attacks use the Slingshot Skill, which sets their damage, range and Stat. Two-handed.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Slingshot",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": true
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!jCfONKzHyZSD60nc"
+}

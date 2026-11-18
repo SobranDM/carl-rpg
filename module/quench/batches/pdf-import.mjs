@@ -617,6 +617,12 @@ export default function register(quench) {
           assert.lengthOf(mobAttacksOf(blob), printed.length, "its Attacks are items");
           assert.equal(mobAttacksOf(blob)[0].name, printed[0].name);
           assert.lengthOf(blob.system.attacks, 0, "and not the old list");
+          // A Boss's token is linked on create (a unique creature); a plain Mob
+          // keeps the unlinked default. The second import below still counts
+          // both as unedited, so the link isn't part of the fingerprint.
+          const queen = game.actors.find((a) => a.name === "Test Blob Queen" && a.folder?.name === title);
+          assert.isTrue(queen.prototypeToken.actorLink, "a Boss imports linked");
+          assert.isFalse(blob.prototypeToken.actorLink, "a Mob imports unlinked");
 
           const second = await importBook({ title, found, kinds, maps: [] });
           assert.deepEqual(second.items, { created: 0, updated: 1, skipped: [] });

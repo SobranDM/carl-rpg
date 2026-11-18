@@ -22,6 +22,8 @@ const ICONS = {
   half: "fa-circle-half-stroke",
   quarter: "fa-circle-half-stroke",
   caught: "fa-hand",
+  // Shield Blocked: half damage, still a hit (helpers/shield-block.mjs).
+  blocked: "fa-shield",
   missed: "fa-shield-halved",
   taunt: "fa-bullhorn",
   tauntFailed: "fa-bullhorn",
@@ -43,6 +45,7 @@ const TONES = {
   half: "half",
   quarter: "half",
   caught: "caught",
+  blocked: "half",
   missed: "neutral",
   taunt: "taunt",
   tauntFailed: "muted",

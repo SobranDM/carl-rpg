@@ -8,8 +8,10 @@
  *  - `attacks.<id>`  A declared Mob Attack (module/helpers/declarations.mjs):
  *    the Mob, the Attack, its damage formula, what a Taunt re-resolves against.
  *  - `hits.<id>`     One Attack on one defender (a declaration's target row):
- *    who it's aimed at now and first, whether it was Caught or Taunted, and
- *    its free and paid Evade Checks.
+ *    who it's aimed at now and first, whether it was Caught or Taunted, its
+ *    free and paid Evade Checks, and a Shield Block (`block`: its Check, the
+ *    Shield and Rank it was made with, the Action it spent - helpers/
+ *    shield-block.mjs). A block isn't an Evade: the hit still lands (p.198).
  *  - `crawlers.<key>` Who has used their Evade: its dialog's choices
  *    (`evadePreset`, for Attacks that land on them later) and the Action it
  *    spent (`evadeSpent`, given back if it ends up covering nothing).
@@ -25,6 +27,9 @@
  * total; Intervene d6s add to it (p.82).
  */
 import { getDegreeOfSuccess, isHitDegree } from "./rules.mjs";
+
+/** A hit's Checks, by key: free and paid Evades, and a Shield Block. */
+const HIT_CHECKS = Object.freeze(["free", "evade", "block"]);
 
 /** The Advantage a Check was rolled with, from its d20 expression. */
 export function advantageOf(formula) {
@@ -123,7 +128,41 @@ export function hitMissed(hit) {
  * @returns {boolean}
  */
 export function hitEvadable(hit) {
-  return !!hit.row?.hit && !!hit.row?.isCharacter && !hit.caughtBy && !hit.evade && !hit.free?.success;
+  return !!hit.row?.hit && !!hit.row?.isCharacter && !hit.caughtBy && !hit.evade && !hit.free?.success && !hit.block;
+}
+
+/**
+ * Whether a hit's current target could Shield Block it (p.198), as far as
+ * the card can tell - the Skill and a Shield are the caller's (helpers/
+ * shield-block.mjs): a landing hit on a creature that defends itself, not
+ * Caught ("You can't use Evade, Shield Block... to negate damage dealt to
+ * you this way", Catcher p.191), not an Area Attack, with damage, not
+ * Evaded (a failed Evade can be followed by a block) and not blocked yet;
+ * physical - or, `magicOk` (Rank 5), magical too. An Attack is physical
+ * when its damage isn't magical (`damageIsMagic` false - Bludgeoning,
+ * Piercing, Slashing or untyped, dice.mjs); unknown counts as magical.
+ * @param {object} state
+ * @param {object} hit
+ * @param {{magicOk?: boolean}} [options]
+ * @returns {boolean}
+ */
+export function hitBlockable(state, hit, { magicOk = false } = {}) {
+  const attack = state?.attacks?.[hit?.attackId];
+  if (!attack || attack.isArea || !String(attack.damage ?? "").trim()) return false;
+  if (!hit.row?.hit || !hit.row?.isCharacter || hit.caughtBy || hit.block) return false;
+  if (hit.evade?.success || hit.free?.success) return false;
+  return magicOk || attack.damageIsMagic === false;
+}
+
+/**
+ * The hits on this creature it could Shield Block now.
+ * @param {object} state
+ * @param {string} uuid
+ * @param {{magicOk?: boolean}} [options]
+ * @returns {object[]}
+ */
+export function blockableHitsFor(state, uuid, options = {}) {
+  return hitList(state).filter((hit) => hit.targetUuid === uuid && hitBlockable(state, hit, options));
 }
 
 /**
@@ -219,7 +258,7 @@ export function intervenableAllies(state, intervenerUuid) {
 
 /**
  * Every Check on the card as a reference plus who rolled it:
- * `{ref: {type: "hit", hitId, which: "free"|"evade"} | {type: "taunt", tauntId}, check, ownerUuid, label}`.
+ * `{ref: {type: "hit", hitId, which: "free"|"evade"|"block"} | {type: "taunt", tauntId}, check, ownerUuid, label}`.
  * @param {object} state
  * @returns {object[]}
  */
@@ -229,7 +268,7 @@ export function checkList(state) {
     out.push({ ref: { type: "taunt", tauntId: taunt.id }, check: taunt.check, ownerUuid: taunt.byUuid, ownerName: taunt.byName, taunt });
   }
   for (const hit of hitList(state)) {
-    for (const which of ["free", "evade"]) {
+    for (const which of HIT_CHECKS) {
       if (hit[which]) out.push({ ref: { type: "hit", hitId: hit.id, which }, check: hit[which], ownerUuid: hit.targetUuid, ownerName: hit.targetName, hit });
     }
   }
@@ -244,14 +283,15 @@ export function checkList(state) {
  */
 export function checkAt(state, ref) {
   if (ref?.type === "taunt") return state.taunts?.[ref.tauntId]?.check ?? null;
-  if (ref?.type === "hit" && ["free", "evade"].includes(ref.which)) return state.hits?.[ref.hitId]?.[ref.which] ?? null;
+  if (ref?.type === "hit" && HIT_CHECKS.includes(ref.which)) return state.hits?.[ref.hitId]?.[ref.which] ?? null;
   return null;
 }
 
 /**
  * Whether a Check can still change: anything until Lock Results, but a free
- * Evade only while no paid Evade has replaced it, and nothing on a Caught
- * hit (it can't be Evaded).
+ * Evade only while no paid Evade has replaced it, an Evade only while no
+ * Shield Block has followed it, and nothing on a Caught hit (it can't be
+ * Evaded).
  * @param {object} state
  * @param {object} ref
  * @returns {boolean}
@@ -261,6 +301,8 @@ export function checkOpen(state, ref) {
   if (ref.type === "taunt") return !!state.taunts?.[ref.tauntId];
   const hit = state.hits?.[ref.hitId];
   if (!hit || hit.caughtBy) return false;
+  if (ref.which === "block") return !!hit.block;
+  if (hit.block) return false;
   if (ref.which === "free") return !!hit.free && !hit.evade;
   return !!hit.evade;
 }
@@ -343,16 +385,19 @@ export function sectionsOf(state) {
  *  - caught: taken by a Catcher, who can't Evade it;
  *  - evaded / half / quarter: Evaded - an Area Attack halved, or quartered
  *    in its Splash (p.83);
+ *  - blocked: Shield Blocked - half damage, still a hit (p.198); a failed
+ *    block is a hit;
  *  - hit: lands (after a failed Evade, on a creature that doesn't Evade, or
  *    once locked without one);
  *  - incoming: still to be Evaded.
  * @param {object} state
  * @param {object} hit
- * @returns {{status: string, check: object|null, which: "free"|"evade"|null}}
+ * @returns {{status: string, check: object|null, which: "free"|"evade"|"block"|null}}
  */
 export function hitStatus(state, hit) {
   if (!hit.row?.hit) return { status: "missed", check: null, which: null };
   if (hit.caughtBy) return { status: "caught", check: null, which: null };
+  if (hit.block) return { status: hit.block.success ? "blocked" : "hit", check: hit.block, which: "block" };
   const deciding = decidingEvade(hit);
   const which = deciding ? (deciding === hit.evade ? "evade" : "free") : null;
   if (deciding?.success) {
@@ -383,7 +428,7 @@ export function sectionCounts(state, section) {
   const counts = { hit: 0, incoming: 0, caught: 0, half: 0 };
   for (const hit of section.hits) {
     const { status } = hitStatus(state, hit);
-    if (status === "quarter" || status === "half") counts.half++;
+    if (status === "quarter" || status === "half" || status === "blocked") counts.half++;
     else if (status in counts) counts[status]++;
   }
   return counts;

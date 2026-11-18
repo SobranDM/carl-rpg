@@ -885,11 +885,14 @@ export default class CarlDice {
    * @param {Actor} actor
    * @param {Item} skillItem
    * @param {{skipDialog?: boolean, damageEffectItem?: Item|null, castAs?: object|null,
-   *   promptArgsOnly?: boolean, presetOptions?: object|null}} [options]
+   *   promptArgsOnly?: boolean, presetOptions?: object|null, targets?: object[]|null}} [options]
    *   promptArgsOnly: return what the dialog would show (promptRollOptions'
    *   arguments) without showing it or rolling - the Attack! picker's.
    *   presetOptions: roll with these dialog choices (promptRollOptions'
    *   result) instead of asking - no weapon check, it was made before.
+   *   targets: attack these instead of the user's targets - token-like
+   *   `{actor, document, name}` (a Shield Bash at the attacker,
+   *   helpers/shield-block.mjs).
    *   In a fight it's the Attack Action (helpers/actions.mjs) - refused with
    *   none left, spent once rolled - or part of the Action it's made in (a
    *   Scroll's use, a Swap and Attack).
@@ -902,7 +905,7 @@ export default class CarlDice {
 
   /** rollAttack, inside its Action (helpers/actions.mjs takeAction). */
   static async _attack(ctx, actor, skillItem, {
-    skipDialog = false, damageEffectItem = null, castAs = null, promptArgsOnly = false, presetOptions = null,
+    skipDialog = false, damageEffectItem = null, castAs = null, promptArgsOnly = false, presetOptions = null, targets: givenTargets = null,
   } = {}) {
     if (!promptArgsOnly && !presetOptions && !castAs) {
       const readiness = attackReadiness(actor, skillItem);
@@ -930,7 +933,7 @@ export default class CarlDice {
     // reads these back off the chat message's flags, so re-targeting after
     // the roll (or before the GM gets around to clicking the button) can't
     // change who gets hit by this specific roll's target effects.
-    const targets = Array.from(game.user.targets ?? []);
+    const targets = givenTargets ?? Array.from(game.user.targets ?? []);
     const target = targets[0] ?? null;
     const targetUuids = targets.map((t) => t.document?.uuid).filter(Boolean);
     let targetDifficulty = null;
@@ -1289,6 +1292,8 @@ export default class CarlDice {
       flags.targetDifficulty = difficulty;
       flags.attackerType = actor.type;
       flags.attackerUuid = attackerUuid;
+      // A Spell can only be Shield Blocked from Rank 5 (helpers/shield-block.mjs).
+      if (skillItem.type === "spell") flags.isSpell = true;
     }
     if (targetUuids.length || hasDamage || targetEffects.length) {
       footerParts.push(buildAttackTargetsFooter({

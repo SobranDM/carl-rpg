@@ -43,6 +43,14 @@ export default class CarlRPGItem extends CarlRPGItemBase {
     // applies against Armor-Piercing damage" - this piece's DR still counts
     // against an Armor-Piercing hit (modifiers.mjs, drAntiPiercing).
     schema.antiPiercing = new fields.BooleanField({ required: true, initial: false });
+    // A Shield (p.98: "If you carry a Shield, that uses up a Holding slot"):
+    // always Held, like a weapon (gear.mjs slotsOf). Held in a hand, it lets
+    // a crawler with the Shield Block Skill use it (helpers/shield-block.mjs).
+    schema.shield = new fields.BooleanField({ required: true, initial: false });
+    // The DR a Shield Block has cost it: "-1 DR penalty on a Major Fail; -2
+    // on a Critical Fail. It breaks at 0 DR" (p.198). Taken off its armor DR
+    // (modifiers.mjs armorDr); a Repair clears it.
+    schema.shieldDamage = new fields.NumberField({ required: true, nullable: false, integer: true, initial: 0, min: 0 });
 
     // A usable, single-use item (Item Rules, p.99): Potions, Scrolls,
     // Spellbooks and other consumables like Bandages. Blank kind = ordinary

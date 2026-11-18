@@ -222,6 +222,10 @@ function toMob(rawName, classLine, body, flavor) {
     name,
     page: classLine.page,
     data: { name, type: "mob", img: "icons/svg/mystery-man.svg", system },
+    // A Boss or Elite is one unique creature: its token is linked (ruled
+    // 2026-11-18). Only when first created - kept out of `data`, so it isn't
+    // part of the re-import fingerprint and a GM's later choice stands.
+    ...(system.mobTier || system.isElite ? { createData: { prototypeToken: { actorLink: true } } } : {}),
   };
 }
 

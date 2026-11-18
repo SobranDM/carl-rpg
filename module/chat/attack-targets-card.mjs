@@ -20,6 +20,14 @@
  * a row's Evade, AI Reroll and injury belong to the GM and that target's
  * owner; its Apply to whoever owns what takes the hit; Intervene to the
  * other crawlers in the fight; Apply All to the GM.
+ *
+ * Shield Block (p.198; helpers/shield-block.mjs): a target's owner whose
+ * crawler has the Skill and a Shield in hand can block a physical, non-Area
+ * Attack on its row (magical too from Rank 5) - an Action of its own, a
+ * Check against what its Evade would roll against. On Success the row's
+ * Apply halves the damage before DR (Rank 15: less the STR Mod); a Major or
+ * Critical Fail costs the Shield DR when the row is applied. A Natural 20
+ * at Rank 10 offers a free Shield Bash at the attacker.
  */
 import CarlDice from "../dice/dice.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
@@ -34,8 +42,12 @@ import { userOwnsUuid } from "./evade-link-card.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { afterRamRowApplied } from "../helpers/vehicle-ram.mjs";
 import { evadeIsFree, noteUndo, takeAction } from "../helpers/actions.mjs";
+import { blockedDamage } from "../helpers/damage-pipeline.mjs";
 import {
-  addRowInjury, decidingRowCheck, recordRowEvade, resolveRowTarget, rowInjury, rowInterveneOpen, rowInterveners,
+  attackIsMagical, bashOffered, blockableAttack, blockNotes, blockReduction, damageShield, rollShieldBash, shieldBlocker, shieldLossFor,
+} from "../helpers/shield-block.mjs";
+import {
+  addRowInjury, decidingRowCheck, recordRowBlock, recordRowEvade, resolveRowTarget, rowInjury, rowInterveneOpen, rowInterveners,
   rowRerollSources, shownRowCheck,
 } from "./row-evade.mjs";
 import {
@@ -58,11 +70,12 @@ const openRows = new Set();
 const inFlight = new Set();
 
 /**
- * Rows this client has already Evaded or applied, by message.id:rowId. A
- * player's write reaches the card through the GM's client and lands a moment
- * later, so until it does the row is treated as done here - a second click
- * (or a re-render before the flag arrives) can't resolve it twice.
- * @type {Map<string, {evaded?: boolean, applied?: boolean}>}
+ * Rows this client has already Evaded, Shield Blocked, applied or Shield
+ * Bashed from, by message.id:rowId. A player's write reaches the card
+ * through the GM's client and lands a moment later, so until it does the
+ * row is treated as done here - a second click (or a re-render before the
+ * flag arrives) can't resolve it twice.
+ * @type {Map<string, {evaded?: boolean, applied?: boolean, blocked?: boolean, bashed?: boolean}>}
  */
 const doneLocally = trackPerCard(new Map());
 
@@ -71,11 +84,15 @@ function withLocal(message, row) {
   const local = doneLocally.get(`${message.id}:${row.id}`);
   if (!local) return row;
   // Once the card's own flags show the result, the local copy is no longer needed.
-  if ((!local.applied || row.applied) && (!local.evaded || row.evade)) {
+  if ((!local.applied || row.applied) && (!local.evaded || row.evade) && (!local.blocked || row.block)
+    && (!local.bashed || row.checks?.block?.bashed)) {
     doneLocally.delete(`${message.id}:${row.id}`);
     return row;
   }
-  return { ...row, applied: row.applied || !!local.applied, evade: row.evade ?? (local.evaded ? { pending: true } : null) };
+  const out = { ...row, applied: row.applied || !!local.applied, evade: row.evade ?? (local.evaded ? { pending: true } : null) };
+  if (local.blocked) out.block = row.block ?? { pending: true };
+  if (local.bashed && row.checks?.block) out.checks = { ...row.checks, block: { ...row.checks.block, bashed: true } };
+  return out;
 }
 
 function markLocal(message, rowId, result) {
@@ -178,7 +195,9 @@ function attackTotalFor(row, flags) {
 function targetStatus(row, flags) {
   const shown = shownRowCheck(row);
   if (!row.hit) return { status: "missed", ...shown };
-  if (row.evade?.pending) return { status: "incoming", ...shown };
+  if (row.evade?.pending || row.block?.pending) return { status: "incoming", ...shown };
+  // A Shield Block: halved, or a hit (it still counts as one, p.198).
+  if (row.block) return { status: row.block.success ? "blocked" : "hit", ...shown };
   if (row.evade?.success) {
     if (flags.isArea) return { status: row.zone === "splash" ? "quarter" : "half", ...shown };
     const deciding = decidingRowCheck(row);
@@ -196,11 +215,12 @@ function targetRow(message, row, flags, { status, check, which }) {
   if (row.amazing) sub.push(i18n.localize(CARLRPG.degreesOfSuccess.amazingSuccess));
   if (which === "free") sub.push(check.success ? i18n.localize("CARLRPG.Reaction.FreeEvade") : i18n.format("CARLRPG.Reaction.Sub.freeFailed", { total: check.total }));
   if (which === "evade" && check.degree === "nearMissFail") sub.push(i18n.localize(CARLRPG.degreesOfSuccess.nearMissFail));
+  if (which === "block") sub.push(...blockNotes(check));
   sub.push(...checkNotes(check));
   // "A Near Miss targeting an occupant hits the vehicle" (p.72).
   if (row.redirectUuid) sub.push(i18n.format("CARLRPG.Vehicle.NearMissHitsVehicle", { vehicle: row.redirectName ?? "?" }));
   if (recoilWaiting(row, flags)) sub.push(i18n.localize("CARLRPG.Vehicle.Ram.RecoilWaiting"));
-  if (row.evade?.pending) sub.push(i18n.localize("CARLRPG.Targets.EvadePending"));
+  if (row.evade?.pending || row.block?.pending) sub.push(i18n.localize("CARLRPG.Targets.EvadePending"));
   if (row.injuryAdded) sub.push(i18n.localize("CARLRPG.Targets.InjuryAdded"));
   if (row.applied) sub.push(i18n.localize("CARLRPG.Targets.Applied"));
 
@@ -218,10 +238,16 @@ function targetRow(message, row, flags, { status, check, which }) {
   const applier = userOwnsUuid(row.redirectUuid ?? row.uuid);
   const data = { "row-id": row.id };
   const acts = [];
-  if (mine && !row.applied && row.hit && row.isCharacter && !row.evade && !row.redirectUuid) {
+  if (mine && !row.applied && row.hit && row.isCharacter && !row.evade && !row.block && !row.redirectUuid) {
     const free = row.freeEvade && !row.freeUsed;
     acts.push(iconButton("fa-person-running", i18n.localize(free ? "CARLRPG.Evade.RollFreeButton" : "CARLRPG.Evade.RollButton"),
       { ...data, action: "rowEvade" }));
+  }
+  if (mine && rowBlockable(row, flags)) {
+    acts.push(iconButton("fa-shield", i18n.localize("CARLRPG.ShieldBlock.Button"), { ...data, action: "rowBlock" }));
+  }
+  if (mine && rowBashOpen(row, flags)) {
+    acts.push(iconButton("fa-shield-halved", i18n.localize("CARLRPG.ShieldBlock.BashButton"), { ...data, action: "rowBash" }));
   }
   if (which && rowRerollSources(message, row.id, which).length) {
     acts.push(iconButton("fa-dice-d20", i18n.localize("CARLRPG.Reaction.Op.reroll"), { ...data, which, action: "rowReroll" }));
@@ -234,7 +260,7 @@ function targetRow(message, row, flags, { status, check, which }) {
     acts.push(iconButton("fa-band-aid", i18n.localize(injury === "majorInjury" ? "CARLRPG.Evade.AddMajorInjury" : "CARLRPG.Evade.AddMinorInjury"),
       { ...data, action: "rowInjury" }));
   }
-  if (applier && !rowResolved(row, flags.isArea) && !row.evade?.pending && !recoilWaiting(row, flags)) {
+  if (applier && !rowResolved(row, flags.isArea) && !row.evade?.pending && !row.block?.pending && !recoilWaiting(row, flags)) {
     acts.push(iconButton("fa-heart-crack", i18n.localize("CARLRPG.Targets.Apply"), { ...data, action: "rowApply" }));
   }
 
@@ -251,12 +277,54 @@ function targetRow(message, row, flags, { status, check, which }) {
   });
 }
 
+/** An Actor from a row's uuid (sync), or null. */
+function rowActor(uuid) {
+  try {
+    const doc = uuid ? fromUuidSync(uuid) : null;
+    return doc instanceof Actor ? doc : (doc?.actor ?? null);
+  } catch {
+    return null;
+  }
+}
+
+/** What Shield Block needs to know about the card's Attack. */
+function attackFacts(flags) {
+  return {
+    isArea: !!flags.isArea,
+    hasDamage: Object.values(flags.damageByType ?? {}).some((v) => v),
+    magical: attackIsMagical({ damageIsMagic: flags.damageIsMagic, isSpell: flags.isSpell }),
+  };
+}
+
+/**
+ * Can this row's target Shield Block it now (helpers/shield-block.mjs)? A
+ * landing hit on a creature that defends itself - not applied, blocked or
+ * Evaded yet (a failed Evade can still be followed by a block), not a ram's
+ * extra row or a Near Miss on its vehicle - whose target has the Skill and
+ * a Shield in hand, and an Attack it can block at its Rank.
+ * @param {object} row
+ * @param {object} flags  The card's flags.
+ * @returns {boolean}
+ */
+export function rowBlockable(row, flags) {
+  if (!row?.hit || !row.isCharacter || row.applied || row.block || row.redirectUuid || row.damageOverride) return false;
+  if ((row.role ?? "target") !== "target" || row.evade?.success || row.evade?.pending) return false;
+  const blocker = shieldBlocker(rowActor(row.uuid));
+  return !!blocker && blockableAttack(attackFacts(flags), blocker.rank);
+}
+
+/** Whether a row's Shield Block offers its Shield Bash (Rank 10, a Natural 20) and it hasn't been made. */
+function rowBashOpen(row, flags) {
+  const check = row?.checks?.block;
+  return !!check && !check.bashed && !!flags.attackerUuid && bashOffered(check, check.rank ?? 0);
+}
+
 /** The rows' heading summary: how many of each. */
 function targetSummary(statuses) {
   const i18n = game.i18n;
   const counts = {};
   for (const { status } of statuses) {
-    const key = status === "quarter" ? "half" : status;
+    const key = status === "quarter" || status === "blocked" ? "half" : status;
     counts[key] = (counts[key] ?? 0) + 1;
   }
   return ["hit", "incoming", "half", "evaded", "missed"]
@@ -392,11 +460,75 @@ export async function evadeRow(message, rowId, { skipDialog = false } = {}) {
   });
 }
 
+/** The row's Shield Block icon. */
+function onRowBlock(event, message, button) {
+  event.preventDefault();
+  const rowId = button?.closest("[data-row-id]")?.dataset.rowId;
+  return rowId ? blockRow(message, rowId) : undefined;
+}
+
+/**
+ * Roll a row's Shield Block (p.198): one Action (an Interrupt) for this one
+ * Attack, a Shield Block Skill Check against what the row's Evade would roll
+ * against (the Mob's to-hit; another crawler's Attack total, p.87). The
+ * Check is written to the row; the row's Apply uses it.
+ * @param {ChatMessage} message  The Attack card.
+ * @param {string} rowId
+ * @param {{skipDialog?: boolean}} [options]
+ * @returns {Promise<void>}
+ */
+export async function blockRow(message, rowId, { skipDialog = false } = {}) {
+  const stored = message.getFlag(SCOPE, "targetRows")?.[rowId];
+  const row = stored && !stored.replaced ? withLocal(message, stored) : null;
+  const flags = message.flags[SCOPE];
+  if (!row || !rowBlockable(row, flags)) return;
+  await guarded(message, row.id, async () => {
+    if (withLocal(message, row).block) return;
+    const target = await resolveRowTarget(row);
+    if (!target) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Evade.NoActor"));
+      return;
+    }
+    if (!target.actor.isOwner && !game.user.isGM) return;
+    const blocker = shieldBlocker(target.actor);
+    if (!blocker) return;
+    // Its own Action for this one Attack - never the round's Evade Action.
+    await takeAction(target.actor, "other", game.i18n.localize("CARLRPG.ShieldBlock.Name"), async () => {
+      const difficulty = rowEvadeDifficulty(row, flags);
+      const result = await CarlDice.rollOpposedSkillCheck(target.actor, blocker.skill, { difficulty, skipDialog, post: false });
+      if (!result) return null;
+      markLocal(message, row.id, { blocked: true });
+      const check = await recordRowBlock(message, row, target, result, { shield: blocker.shield, rank: blocker.rank });
+      // Undone: the row back to before this block.
+      noteUndo(target.actor, { t: "rowEvade", which: "block", messageId: message.id, rowId: row.id, checkId: check.id });
+      return true;
+    });
+  });
+}
+
+/** The row's Shield Bash icon: the free Attack at the attacker, then the row marked. */
+async function onRowBash(event, message, button) {
+  event.preventDefault();
+  const row = clickedRow(message, button);
+  const flags = message.flags[SCOPE];
+  if (!row || !rowBashOpen(row, flags) || !userOwnsUuid(row.uuid)) return;
+  await guarded(message, `${row.id}:bash`, async () => {
+    const target = await resolveRowTarget(row);
+    if (!target) return;
+    const card = await rollShieldBash(target.actor, { targetUuid: flags.attackerUuid, rank: row.checks.block.rank ?? 0 });
+    if (!card) return;
+    markLocal(message, row.id, { bashed: true });
+    await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { block: { bashed: true } } } } } } });
+  });
+}
+
 /**
  * Apply one row: its damage (scaled for Splash/Evade/Amazing - module/
  * helpers/attack-targets.mjs's rowOutcome) through the damage pipeline, and
- * the Attack's on-hit effects unless the target Evaded. The row is marked
- * applied first, so a second click can't apply it twice.
+ * the Attack's on-hit effects unless the target Evaded. A Shield Block on it
+ * halves the damage before DR (helpers/shield-block.mjs) - its Debuffs still
+ * land - and a Major or Critical Fail costs the Shield DR now. The row is
+ * marked applied first, so a second click can't apply it twice.
  * @param {ChatMessage} message
  * @param {object} row
  * @returns {Promise<string[]>} GM digest lines.
@@ -425,14 +557,33 @@ export async function applyRow(message, row) {
     floor: flags.floor ?? game.settings.get(SCOPE, "currentFloor"),
   });
   const lines = [];
-  if (Object.values(outcome.damage).some((v) => v)) {
-    lines.push(...await applyDamageToActor(target.actor, outcome.damage, flags.damageIsMagic ?? true, { armorPiercing: !!flags.armorPiercing }));
+  // A Shield Block (p.198): half the damage before DR, less the STR Mod at Rank 15.
+  const block = row.redirectUuid ? null : (row.checks?.block ?? null);
+  const damage = block?.success ? blockedDamage(outcome.damage, blockReduction(target.actor, block.rank ?? 0)) : outcome.damage;
+  if (Object.values(damage).some((v) => v)) {
+    lines.push(...await applyDamageToActor(target.actor, damage, flags.damageIsMagic ?? true, { armorPiercing: !!flags.armorPiercing }));
   }
+  if (block) lines.push(...await shieldDamageLines(target.actor, block));
   // A rammed (or ramming) vehicle passes half its damage to its occupants,
   // and the rammer loses Move - even when the recoil rounds down to nothing.
   if (flags.ram && row.hit) lines.push(...await afterRamRowApplied(message, row, target.actor, outcome.damage));
   if (outcome.effects) lines.push(...(await landDebuffs(target.actor, flags.targetEffects, row, flags.damageByType)).lines);
   return lines;
+}
+
+/**
+ * A failed Shield Block's cost to the Shield (a Major Fail -1 DR, a
+ * Critical Fail -2), written now, and the digest line saying so.
+ * @param {Actor} actor
+ * @param {object} block  The row's block Check.
+ * @returns {Promise<string[]>}
+ */
+async function shieldDamageLines(actor, block) {
+  const loss = shieldLossFor(block.degree);
+  const hurt = loss ? await damageShield(actor, block.shieldId, loss) : null;
+  if (!hurt) return [];
+  const key = hurt.broken ? "CARLRPG.ShieldBlock.Digest.broken" : "CARLRPG.ShieldBlock.Digest.loss";
+  return [game.i18n.format(key, { name: esc(actor.name), shield: esc(hurt.name), amount: hurt.amount, dr: hurt.dr })];
 }
 
 /** Append GM digest lines to the Attack card. */
@@ -448,7 +599,7 @@ async function appendDigest(message, lines) {
 async function onRowApply(event, message, button) {
   event.preventDefault();
   const row = clickedRow(message, button);
-  if (!row || row.evade?.pending || rowResolved(row, message.getFlag(SCOPE, "isArea"))) return;
+  if (!row || row.evade?.pending || row.block?.pending || rowResolved(row, message.getFlag(SCOPE, "isArea"))) return;
   if (!userOwnsUuid(row.redirectUuid ?? row.uuid)) return;
   await guarded(message, row.id, async () => {
     const lines = await applyRow(message, row);
@@ -509,4 +660,6 @@ export const attackTargetsActionEntries = [
   { action: "rowReroll", custom: true, onClick: onRowReroll },
   { action: "rowIntervene", custom: true, onClick: onRowIntervene },
   { action: "rowInjury", custom: true, onClick: onRowInjury },
+  { action: "rowBlock", custom: true, onClick: onRowBlock },
+  { action: "rowBash", custom: true, onClick: onRowBash },
 ];

@@ -16,6 +16,10 @@
  *  - an Evade that failed by 10 or more: +Floor damage and a Minor Injury
  *    after combat; a Natural 1: double damage and a Major Injury (p.80);
  *  - Caught: the Catcher takes it, with no Shield (p.191);
+ *  - Shield Blocked (p.198; helpers/shield-block.mjs): half the damage
+ *    before DR (Rank 15: less the STR Mod), still a hit - its Debuffs land
+ *    as on an unEvaded hit. A Major or Critical Fail costs the Shield 1 or 2
+ *    DR when the card is posted (Lock Results), once nothing can change it;
  *  - its Debuffs land with the damage, each by its trigger: on a hit, or on
  *    an Evade Major Fail or worse / a Critical Fail - which an unEvaded hit
  *    counts as (ruled 2026-11-17) - but not on a full Immunity, nor on a
@@ -29,6 +33,8 @@
 import { RollParts } from "../dice/roll-parts.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { applyDamageWithResult } from "../chat/damage-card.mjs";
+import { blockedDamage } from "./damage-pipeline.mjs";
+import { blockReduction, damageShield, shieldLossFor } from "./shield-block.mjs";
 import { landDebuffs } from "./land-debuffs.mjs";
 import { resolveTargetEffectLabel } from "./conditions.mjs";
 import { debuffLandsOn } from "./modifiers.mjs";
@@ -124,9 +130,12 @@ export function damageCardFor(combat) {
  * defender, decided as far as it can be before the damage is rolled.
  * @param {Combat} combat
  * @param {object} state  The Reaction card's state.
+ * @param {{shields?: Record<string, {name: string, amount: number, dr: number, broken: boolean}>}} [options]
+ *   shields: what each hit's failed Shield Block did to the Shield, by hit
+ *   id (damageBlockingShields).
  * @returns {object}  The card's `reactionDamage` flag.
  */
-export function buildDamageState(combat, state) {
+export function buildDamageState(combat, state, { shields = {} } = {}) {
   const data = { combatId: combat.id, round: combat.round, attacks: {}, rows: {} };
   for (const attack of Object.values(state.attacks ?? {})) {
     data.attacks[attack.id] = {
@@ -172,13 +181,32 @@ export function buildDamageState(combat, state) {
         tags.push({ key: "CARLRPG.Resolve.HitsVehicle", data: { vehicle: seat.vehicle.name } });
       }
     }
+    // A Shield Block (p.198): half before DR - on whoever it was aimed at,
+    // not a vehicle a Near Miss moved it to - and what it cost the Shield.
+    let block = null;
+    if (hit.block) {
+      const blocked = hit.block.success && applyUuid === hit.targetUuid;
+      const reduction = blocked ? blockReduction(actorFor(hit.targetUuid), hit.block.rank ?? 0) : 0;
+      block = { success: blocked, degree: hit.block.degree, reduction };
+      if (blocked) {
+        tags.push(reduction
+          ? { key: "CARLRPG.ShieldBlock.Tag.halfLess", data: { reduction } }
+          : { key: "CARLRPG.ShieldBlock.Tag.half", data: {} });
+      }
+      const hurt = shields[hit.id];
+      if (hurt) {
+        tags.push(hurt.broken
+          ? { key: "CARLRPG.ShieldBlock.Tag.broken", data: { shield: hurt.name } }
+          : { key: "CARLRPG.ShieldBlock.Tag.loss", data: { shield: hurt.name, amount: hurt.amount, dr: hurt.dr } });
+      }
+    }
     // Injuries land "after combat, once the adrenaline wears off" (p.80).
     if (evade?.degree === "majorFail") notes.push({ key: "CARLRPG.Resolve.MinorInjury", data: { name: hit.targetName } });
     if (evade?.degree === "criticalFail") notes.push({ key: "CARLRPG.Resolve.MajorInjury", data: { name: hit.targetName } });
 
     data.rows[hit.id] = {
       id: hit.id, order: order++, attackId: hit.attackId, tableUuid: hit.targetUuid, tableName: hit.targetName,
-      applyUuid, status, caught: !!hit.caughtBy, extraDr, ignoreDebuffs,
+      applyUuid, status, caught: !!hit.caughtBy, extraDr, ignoreDebuffs, block,
       // The Evade it called for, shown under the Mob's name.
       difficulty: hit.row?.isCharacter && hit.row?.hit && !hit.caughtBy ? (hit.row.difficulty ?? null) : null,
       row: { hit: !!hit.row?.hit, zone: hit.row?.zone ?? "full", amazing: false },
@@ -226,18 +254,38 @@ export function rowDebuffs(row, attack) {
 }
 
 /**
- * Post the round's Damage card (GM).
+ * The Shields a failed Shield Block costs DR (p.198: "-1 DR penalty on a
+ * Major Fail; -2 on a Critical Fail"), written once the Reaction card is
+ * locked - no Intervene, reroll or undo can change the block after. GM.
+ * @param {object} state  The locked Reaction card's state.
+ * @returns {Promise<Record<string, {name: string, amount: number, dr: number, broken: boolean}>>}  By hit id.
+ */
+export async function damageBlockingShields(state) {
+  const out = {};
+  for (const hit of hitList(state)) {
+    const loss = shieldLossFor(hit.block?.degree);
+    if (!loss) continue;
+    const hurt = await damageShield(actorFor(hit.targetUuid), hit.block.shieldId, loss);
+    if (hurt) out[hit.id] = hurt;
+  }
+  return out;
+}
+
+/**
+ * Post the round's Damage card (GM), after a failed Shield Block's cost to
+ * its Shield is written (damageBlockingShields).
  * @param {Combat} combat
  * @param {object} state  The locked Reaction card's state.
  * @returns {Promise<ChatMessage>}
  */
 export async function postDamageCard(combat, state) {
+  const shields = await damageBlockingShields(state);
   const message = await createCardMessage({
     title: game.i18n.format("CARLRPG.Reaction.DamageTitle", { round: combat.round }),
     subtitle: game.i18n.localize("CARLRPG.Phase.Step.resolve"),
     img: "icons/svg/combat.svg",
     body: `<div class="carl-reaction carl-reaction-damage"></div>`,
-    flags: { kind: "reactionDamage", [FLAG]: buildDamageState(combat, state) },
+    flags: { kind: "reactionDamage", [FLAG]: buildDamageState(combat, state, { shields }) },
     speaker: { alias: game.i18n.localize("CARLRPG.Phase.Speaker") },
   });
   await combat.setFlag(SCOPE, "damageCard", { round: combat.round, messageId: message.id });
@@ -288,8 +336,10 @@ export function rollAttackOnCard(message, attackId) {
         continue;
       }
       row.result = { raw: 0, final: 0, slots: 0, shieldSlots: 0, dying: false, extra: [], debuffs: [] };
+      // A Shield Block: half before DR, less the STR Mod at Rank 15 (p.198).
+      const damage = row.block?.success ? blockedDamage(outcome.damage, row.block.reduction ?? 0) : outcome.damage;
       if (raw > 0) {
-        const applied = await applyDamageWithResult(actor, outcome.damage, attack.damageIsMagic, {
+        const applied = await applyDamageWithResult(actor, damage, attack.damageIsMagic, {
           noShield: row.caught, extraDr: row.extraDr ?? 0, armorPiercing: !!attack.armorPiercing,
         });
         Object.assign(row.result, {
@@ -365,6 +415,7 @@ function damageStatus(row) {
   if (row.status === "missed") return "missed";
   if (row.status === "evaded") return "evaded";
   if (row.caught) return "caught";
+  if (row.block?.success) return "blocked";
   if (row.evade?.success) return row.row?.zone === "splash" ? "quarter" : "half";
   return "hit";
 }

@@ -5,7 +5,9 @@ import CarlDice from '../dice/dice.mjs';
 import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
 import { needsWeapon } from '../helpers/weapons.mjs';
 import { mergeSubmitted } from '../helpers/form-arrays.mjs';
-import { isConsumable, isTwoHanded, isWeapon, slotsOf } from '../helpers/gear.mjs';
+import { isConsumable, isShield, isTwoHanded, isWeapon, slotsOf } from '../helpers/gear.mjs';
+import { shieldDrState } from '../helpers/modifiers.mjs';
+import { repairShield } from '../helpers/shield-block.mjs';
 
 const ATTRIBUTES_TEMPLATES = {
   item: 'systems/carl-rpg/templates/item/parts/attributes-item.hbs',
@@ -51,6 +53,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       addDamageType: CarlRPGItemSheet.#onAddDamageType,
       removeCure: CarlRPGItemSheet.#onRemoveCure,
       toggleWornSlot: CarlRPGItemSheet.#onToggleWornSlot,
+      repairShield: CarlRPGItemSheet.#onRepairShield,
     }
   };
 
@@ -451,16 +454,20 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const showDebuffs = (sys.targetEffects ?? []).length > 0;
     const showConsumable = !!c.kind || shown("consumable");
     if (showConsumable) this.#revealed.add("consumable");
-    // Where it's worn (gear.mjs): a pill per slot; a weapon is always Held.
+    // Where it's worn (gear.mjs): a pill per slot; a weapon or a Shield is always Held.
     const worn = new Set(slotsOf(item));
     const weapon = isWeapon(item);
+    const shield = isShield(item);
     const wearSlots = Object.entries(cfg.wearSlots).map(([key, label]) => ({
-      key, label: game.i18n.localize(label), on: worn.has(key), locked: key === "held" && weapon,
+      key, label: game.i18n.localize(label), on: worn.has(key), locked: key === "held" && (weapon || shield),
+      lockedHint: weapon ? "CARLRPG.Gear.HeldByWeapon" : "CARLRPG.Gear.HeldByShield",
     }));
     return {
       isConsumable: isConsumable(item),
       // A weapon offers Armor-Piercing (its Attacks); wearable gear, Anti-Piercing.
       isWeapon: weapon,
+      // A Shield (Shield Block, p.198): its DR left after Shield damage, and Repair.
+      shield: shield ? shieldDrState(item) : null,
       wearSlots,
       wearable: worn.size > 0,
       held: worn.has("held"),
@@ -507,6 +514,10 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       chips.push({ label: t("CARLRPG.Gear.AnySlot"), tone: "neutral" });
     }
     if (isTwoHanded(item)) chips.push({ label: t("CARLRPG.Gear.TwoHanded"), tone: "neutral" });
+    if (isShield(item)) {
+      chips.push({ label: t("CARLRPG.ShieldBlock.ShieldChip"), tone: "neutral", icon: "fas fa-shield" });
+      if (shieldDrState(item).broken) chips.push({ label: t("CARLRPG.ShieldBlock.Broken"), tone: "accent", icon: "fas fa-heart-crack" });
+    }
     const kind = sys.consumable?.kind;
     if (kind) chips.push({ label: t(`CARLRPG.ItemSheet.KindChip.${kind}`), tone: "blue" });
     if (sys.equipped) chips.push({ label: t("CARLRPG.Item.Equipped"), tone: "good", icon: "fas fa-check" });
@@ -655,6 +666,14 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     else slots.add(key);
     const ordered = Object.keys(CONFIG.CARLRPG.wearSlots).filter((s) => slots.has(s));
     return this.item.update({ "system.slots": ordered });
+  }
+
+  /** A Shield's Repair: "a broken shield and lost DR can be Repaired" (p.198) - its Shield damage cleared. */
+  static async #onRepairShield(event) {
+    event.preventDefault();
+    if (!isShield(this.item) || !this.item.system.shieldDamage) return;
+    await repairShield(this.item);
+    ui.notifications.info(game.i18n.format("CARLRPG.ShieldBlock.Repaired", { name: this.item.name }));
   }
 
   /** A Cure pill's ×: the consumable no longer cures that Debuff. */

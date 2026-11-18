@@ -48,7 +48,8 @@ export async function buildTauntLinkFooter() {
 
 export function isCardLocked(message) {
   if (LOCK_FLAGS.some((flag) => !!message.getFlag("carl-rpg", flag))) return true;
-  return activeRows(message.getFlag("carl-rpg", "targetRows")).some((row) => row.applied || row.evade);
+  // A Shield Block counts as a reaction too (helpers/shield-block.mjs).
+  return activeRows(message.getFlag("carl-rpg", "targetRows")).some((row) => row.applied || row.evade || row.block);
 }
 
 /**

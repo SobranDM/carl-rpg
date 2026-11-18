@@ -246,6 +246,26 @@ export function computeDamageApplication(damageByType, target, isMagic = true, {
 }
 
 /**
+ * A successful Shield Block (p.198): "take half the damage before applying
+ * your DR" - the hit's whole damage halved (rounded down), less a flat
+ * reduction (Rank 15: "Further reduce the damage you would take by your STR
+ * Mod" - "After halving 30 damage down to 15, your STR Mod of 5 reduces it
+ * to 10"), then shared back across its damage types in proportion, so DR,
+ * Resistances and Immunities still meet each type's share.
+ * @param {Record<string, number>} damageByType  This target's damage (after
+ *   Splash, Amazing Success and Evade scaling - attack-targets.mjs rowOutcome).
+ * @param {number} [reduction]  Taken off after halving (the STR Mod).
+ * @returns {Record<string, number>}  Only the nonzero types.
+ */
+export function blockedDamage(damageByType, reduction = 0) {
+  const total = Object.values(damageByType ?? {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  const left = Math.max(0, Math.floor(total / 2) - Math.max(0, Math.floor(Number(reduction) || 0)));
+  const out = splitDamageProportionally(left, damageByType);
+  for (const type of Object.keys(out)) if (!out[type]) delete out[type];
+  return out;
+}
+
+/**
  * Scale a rolled damage-by-type map for one target, before its own DR and
  * Resistances: Splash half, an Area-Attack Evade half (p.83 - "Such damage
  * is rounded down as usual"), an Evade Critical Fail x2; then any flat extra

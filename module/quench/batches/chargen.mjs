@@ -186,6 +186,14 @@ export default function register(quench) {
             assert.exists(weapon, "the weapon, by its own name");
             assert.equal(weapon.system.weaponSkill, "Longsword");
             assert.equal(actor.system.gearSlots.mainHand, weapon.id, "in the Main Hand");
+            // From the Gear compendium's basic Longsword when it's built: its
+            // icon and source, the player's name kept.
+            const basic = (await game.packs.get("carl-rpg.gear")?.getIndex())?.find((e) => e.name === "Longsword");
+            if (basic) {
+              assert.equal(weapon.img, basic.img, "the compendium weapon's icon");
+              assert.equal(weapon._stats.compendiumSource, basic.uuid);
+              assert.isFalse(weapon.system.twoHanded);
+            }
             assert.isTrue(actor.items.some((i) => i.name === "Jogging attire" && i.system.equipped), "clothes worn");
             assert.isTrue(actor.items.some((i) => i.name === "Lighter"));
 

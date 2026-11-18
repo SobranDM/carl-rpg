@@ -49,7 +49,7 @@
         <div class="carl-worn-on-pills">
           {{#each gear.wearSlots as |slot|}}
           <button type="button" class="carl-worn-pill{{#if slot.on}} is-on{{/if}}" data-action="toggleWornSlot" data-slot="{{slot.key}}"
-            aria-pressed="{{#if slot.on}}true{{else}}false{{/if}}" {{#if slot.locked}}disabled data-tooltip="{{localize 'CARLRPG.Gear.HeldByWeapon'}}"{{/if}}>
+            aria-pressed="{{#if slot.on}}true{{else}}false{{/if}}" {{#if slot.locked}}disabled data-tooltip="{{localize slot.lockedHint}}"{{/if}}>
             {{#if slot.on}}<i class="fas fa-check"></i>{{/if}}{{slot.label}}</button>
           {{/each}}
         </div>
@@ -72,6 +72,23 @@
           <input type="checkbox" name="system.antiPiercing" {{checked system.antiPiercing}} />
           {{localize "CARLRPG.ArmorPiercing.Anti"}}
         </label>
+        {{/if}}
+        {{!-- A Shield (p.98) is always held; with the Shield Block Skill its
+              wielder can block (p.198). Its DR lost to blocks, and Repair. --}}
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.ShieldBlock.ShieldHint'}}">
+          <input type="checkbox" name="system.shield" {{checked system.shield}} />
+          {{localize "CARLRPG.ShieldBlock.Shield"}}
+        </label>
+        {{#if gear.shield}}
+        <div class="carl-shield-damage">
+          <label class="resource-label" data-tooltip="{{localize 'CARLRPG.ShieldBlock.DamageHint'}}">{{localize "CARLRPG.ShieldBlock.Damage"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.shieldDamage" value="{{system.shieldDamage}}" data-dtype="Number" />
+          <span class="carl-shield-dr">{{#if gear.shield.broken}}{{localize "CARLRPG.ShieldBlock.Broken"}}{{else}}{{localize "CARLRPG.ShieldBlock.DrLeft" dr=gear.shield.dr base=gear.shield.base}}{{/if}}</span>
+          {{#if system.shieldDamage}}
+          <button type="button" class="carl-shield-repair" data-action="repairShield" data-tooltip="{{localize 'CARLRPG.ShieldBlock.RepairHint'}}">
+            <i class="fas fa-hammer"></i> {{localize "CARLRPG.ShieldBlock.Repair"}}</button>
+          {{/if}}
+        </div>
         {{/if}}
         {{#unless gear.wearable}}<p class="carl-hint">{{localize "CARLRPG.Gear.NotWearable"}}</p>{{/unless}}
       </div>

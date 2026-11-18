@@ -4231,6 +4231,28 @@
   flex: 0 0 100%;
   margin: 0;
 }
+.carl-rpg .carl-shield-damage {
+  display: flex;
+  flex: 0 0 100%;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-shield-damage .resource-label {
+  margin: 0;
+}
+.carl-rpg .carl-shield-damage .carl-shield-dr {
+  color: var(--carl-text-muted);
+  font-size: 12px;
+}
+.carl-rpg .carl-shield-damage .carl-shield-repair {
+  flex: 0 0 auto;
+  width: auto;
+  height: 22px;
+  margin: 0;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 1;
+}
 .carl-rpg .carl-worn-on-pills {
   display: flex;
   flex-wrap: wrap;

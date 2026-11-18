@@ -5,7 +5,7 @@
  * and the 0.7.0 migration.
  */
 import {
-  fitsSlot, guessGearSlots, isTwoHanded, parseGearSlotLine, slotsFromName, slotsOf,
+  fitsSlot, guessGearSlots, isShield, isTwoHanded, parseGearSlotLine, slotsFromName, slotsOf,
 } from "../../helpers/gear.mjs";
 import { assignItemToSlot, clearSlot } from "../../helpers/equip-slots.mjs";
 import { placeInHotlist, swapForAttack } from "../../helpers/hotlist.mjs";
@@ -447,6 +447,51 @@ export default function register(quench) {
           } finally {
             await deleteTestActor(actor);
           }
+        });
+      });
+
+      describe("the Gear compendium (needs `npm run build:packs`)", function () {
+        useQuenchTimeout(this);
+        const GEAR = "carl-rpg.gear";
+        const SKILLS = "carl-rpg.skills-and-spells";
+        const docs = async (id) => (await game.packs.get(id)?.getDocuments()) ?? [];
+
+        it("has a basic weapon for each Weapon Skill, linked to it, Two-Handed as the Skill says", async function () {
+          const gear = await docs(GEAR);
+          const skills = new Map((await docs(SKILLS)).map((s) => [s.name, s]));
+          assert.isAbove(gear.length, 0, "the pack is built");
+          const weapons = gear.filter((g) => g.system.weaponSkill);
+          for (const name of ["Club", "Warhammer", "Axe", "Dagger", "Longsword", "Rapier", "Bow", "Crossbow", "Handgun",
+            "Javelin", "Shotgun", "Shuriken", "Slingshot", "Lance", "Polearm", "Quarterstaff"]) {
+            const w = weapons.find((g) => g.name === name);
+            assert.exists(w, name);
+            const skill = skills.get(w.system.weaponSkill);
+            assert.exists(skill, `${name}'s Skill is in the compendium`);
+            const twoHands = /requires two hands/i.test(skill.system.limitations ?? "");
+            assert.equal(w.system.twoHanded, twoHands, `${name} Two-Handed as its Skill says`);
+            assert.include(slotsOf(w), "held");
+          }
+        });
+
+        it("a sword and an axe each come one- and two-handed, on the same Skill", async function () {
+          const gear = await docs(GEAR);
+          const by = (n) => gear.find((g) => g.name === n);
+          assert.include(by("Longsword").system, { weaponSkill: "Longsword", twoHanded: false });
+          assert.include(by("Greatsword").system, { weaponSkill: "Longsword", twoHanded: true });
+          assert.include(by("Axe").system, { weaponSkill: "Axe", twoHanded: false });
+          assert.include(by("Greataxe").system, { weaponSkill: "Axe", twoHanded: true });
+        });
+
+        it("the mundane shield is a held Shield with +1 DR; the armor fits its slot", async function () {
+          const gear = await docs(GEAR);
+          const by = (n) => gear.find((g) => g.name === n);
+          const lid = by("Trash-Can Lid Shield");
+          assert.isTrue(isShield(lid));
+          assert.include(slotsOf(lid), "held");
+          assert.equal(lid.system.changes.find((c) => c.target === "dr")?.value, "1");
+          assert.deepEqual(slotsOf(by("Heavy Winter Coat")), ["torso"]);
+          assert.deepEqual(slotsOf(by("Hockey Pads")), ["legs"]);
+          for (const name of ["Torch", "Lantern", "Rope", "Lighter", "Crawler Biscuits", "Plain Clothes"]) assert.exists(by(name), name);
         });
       });
     },

@@ -9,6 +9,9 @@
  *  - Evade, in each crawler's section: rolls every Evade it needs (p.81).
  *  - Intervene (p.82) and AI Reroll (p.61), on the row of the Check they
  *    change.
+ *  - Shield Block (p.198; helpers/shield-block.mjs), on the row of each
+ *    Attack its target could block: one Action and one Check per Attack. A
+ *    Natural 20 at Rank 10 adds the free Shield Bash to the row.
  *  - GM: Lock Results, which runs Resolution (module/helpers/
  *    reaction-resolve.mjs).
  * No stages (docs/reaction-card-redesign.md): everything is open until Lock
@@ -40,8 +43,9 @@ import { CARLRPG } from "../helpers/config.mjs";
 import { currentPhase } from "../helpers/combat-phases.mjs";
 import { declaredAttacks } from "../helpers/declarations.mjs";
 import { canAct, evadeIsFree, hasSpent, payAction, refundAction } from "../helpers/actions.mjs";
+import { bashOffered, blockNotes, rollShieldBash, shieldBlocker } from "../helpers/shield-block.mjs";
 import {
-  buildReactionState, cardProgress, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck, hitEvadable,
+  buildReactionState, cardProgress, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck, hitBlockable, hitEvadable,
   hitLabel, hitList, hitStatus, idleEvaders, intervenableChecks, makeCheck, pullableAreaAttacks, pullableHits, rerollableChecks,
   sectionCounts, sectionsOf, tauntableMobs, unevadedNames,
 } from "../helpers/reaction-state.mjs";
@@ -150,7 +154,7 @@ export async function startReaction(combat) {
  */
 export async function retireReaction(combat) {
   const message = reactionCardFor(combat);
-  // The Actions spent from it (Taunt, Catch, Evade, Intervene) come back too.
+  // The Actions spent from it (Taunt, Catch, Evade, Intervene, Shield Block) come back too.
   for (const spent of message?.getFlag(SCOPE, "reaction")?.spentActions ?? []) {
     await refundAction(combat, spent.combatantId, spent.id);
   }
@@ -270,6 +274,8 @@ export function applyOp(cardId, op, data, user) {
         case "evade": changed = await opEvade(state, data, owns); break;
         case "intervene": changed = await opIntervene(state, data, owns); break;
         case "reroll": changed = await opReroll(state, data, owns); break;
+        case "block": changed = await opBlock(state, data, owns); break;
+        case "bash": changed = opBash(state, data, owns); break;
       }
     } catch (err) {
       console.error(`CarlRPG | Reaction card: "${op}" failed`, err);
@@ -334,6 +340,8 @@ async function pullTaunt(state, taunt) {
   const pulled = [];
   for (const hit of pullableHits(state, taunt.mobUuid, taunt.byUuid)) {
     const attack = state.attacks[hit.attackId];
+    // Its target's Shield Block of it drops off, its Action given back.
+    await dropBlock(state, hit);
     const { row } = mobAttackRow({
       id: hit.row.id, target: { uuid: taunt.byUuid, actor }, base: attack.mobBase, ownRows: attack.mobOwnRows ?? [], zone: hit.row.zone,
     });
@@ -463,11 +471,59 @@ async function opCatch(state, { byUuid, byName, hitId }, owns) {
   if (!(await payFor(state, byUuid, "CARLRPG.Reaction.Op.catch"))) return false;
   const name = String(byName ?? "?");
   // The ally's failed Evade of it (if any) drops off: the Catcher takes it,
-  // and can't Evade it.
+  // and can't Evade it. The ally's Shield Block of it drops off too, and
+  // its Action comes back (it blocked nothing).
+  await dropBlock(state, hit);
   Object.assign(hit, { caughtBy: { uuid: byUuid, name }, targetUuid: byUuid, targetName: name, free: null, evade: null });
   crawlerEntry(state, byUuid, name);
   await refundIdleEvades(state);
   return true;
+}
+
+/**
+ * A Shield Block (p.198): one Action for this one Attack, its Check (rolled
+ * on the blocker's client) against the Attack's to-hit. Refused when the
+ * hit can no longer be blocked, or the blocker no longer has the Skill and
+ * an unbroken Shield in hand (helpers/shield-block.mjs).
+ */
+async function opBlock(state, { uuid, hitId, check }, owns) {
+  if (!owns(uuid)) return false;
+  const hit = state.hits?.[hitId];
+  const blocker = shieldBlocker(actorFor(uuid));
+  if (!hit || hit.targetUuid !== uuid || !blocker || !hitBlockable(state, hit, { magicOk: blocker.rank >= 5 })) return false;
+  const paid = await payFor(state, uuid, "CARLRPG.ShieldBlock.Name");
+  if (!paid) return false;
+  hit.block = {
+    ...receivedCheck("block", check), shieldId: blocker.shield.id, shieldName: blocker.shield.name, rank: blocker.rank,
+    spent: paid.spent, bashed: false,
+  };
+  crawlerEntry(state, uuid, hit.targetName ?? "?");
+  return true;
+}
+
+/** A Shield Bash made from a block's Natural 20 (rolled on the blocker's client): marked, so it's offered once. */
+function opBash(state, { uuid, hitId }, owns) {
+  const hit = state.hits?.[hitId];
+  if (!hit?.block || hit.targetUuid !== uuid || !owns(uuid)) return false;
+  if (hit.block.bashed || !bashOffered(hit.block, hit.block.rank ?? 0)) return false;
+  hit.block.bashed = true;
+  return true;
+}
+
+/**
+ * A hit's Shield Block drops off (it moved to someone else: Caught or
+ * Taunted), and the Action it spent comes back - as an idle Evade's does.
+ * @param {object} state
+ * @param {object} hit
+ */
+async function dropBlock(state, hit) {
+  const spent = hit.block?.spent;
+  hit.block = null;
+  if (!spent) return;
+  const combat = game.combats.get(state.combatId);
+  if (combat) await refundAction(combat, spent.combatantId, spent.id);
+  state.spentActions = (state.spentActions ?? []).filter((s) => s.id !== spent.id);
+  state.blockUndo = true;
 }
 
 async function opEvade(state, { uuid, checks, preset }, owns) {
@@ -531,7 +587,8 @@ async function opReroll(state, { ref, naturalRoll, total, roll, breakdown }, own
 async function afterCheckChanged(state, entry, check, wasSuccess) {
   if (entry.ref.type === "taunt") {
     if (!wasSuccess && check.success) await pullTaunt(state, state.taunts[entry.ref.tauntId]);
-  } else {
+  } else if (entry.ref.which !== "block") {
+    // An Evade's Advantage; a Shield Block gives none.
     await grantEvadeAdvantage(state, state.hits[entry.ref.hitId], check);
   }
 }
@@ -724,6 +781,50 @@ async function onIntervene(message, state, ref) {
   await sendOp(message, "intervene", { byUuid: helper.uuid, byName: helper.name, ref, value: roll.total });
 }
 
+/**
+ * This viewer's crawler who could Shield Block this hit now: its target,
+ * theirs, with the Skill and a Shield in hand, and an Attack they can block
+ * at their Rank (helpers/shield-block.mjs).
+ * @returns {{uuid: string, name: string, actor: Actor, blocker: object}|null}
+ */
+function blockerFor(state, hit) {
+  const reactor = hit ? reactors(state).find((r) => r.uuid === hit.targetUuid) : null;
+  const blocker = reactor ? shieldBlocker(reactor.actor) : null;
+  if (!blocker || !hitBlockable(state, hit, { magicOk: blocker.rank >= 5 })) return null;
+  return { ...reactor, blocker };
+}
+
+/** This viewer's crawler who could make this hit's Shield Bash (a Natural 20 block at Rank 10). */
+function basherFor(state, hit) {
+  if (!hit?.block || hit.block.bashed || !bashOffered(hit.block, hit.block.rank ?? 0)) return null;
+  return reactors(state).find((r) => r.uuid === hit.targetUuid) ?? null;
+}
+
+/**
+ * A row's Shield Block: one Action, a Shield Block Skill Check against
+ * this Attack's to-hit (p.198) - rolled here, applied by the GM.
+ */
+async function onBlock(message, state, hitId) {
+  const hit = state.hits?.[hitId];
+  const who = blockerFor(state, hit);
+  if (!who || !canAct(who.actor, "other")) return;
+  // The to-hit already carries the Mob's own Debuff rows (mobAttackRow), so no opponent here.
+  const result = await CarlDice.rollOpposedSkillCheck(who.actor, who.blocker.skill, { difficulty: hit.row.difficulty, post: false });
+  if (!result) return;
+  showDice(result.roll);
+  await sendOp(message, "block", { uuid: who.uuid, hitId, check: checkPayload(result) });
+}
+
+/** A row's Shield Bash: the free Attack at the Mob, then the block marked as used. */
+async function onBash(message, state, hitId) {
+  const hit = state.hits?.[hitId];
+  const who = basherFor(state, hit);
+  const mobUuid = state.attacks?.[hit?.attackId]?.mobUuid;
+  if (!who || !mobUuid) return;
+  const card = await rollShieldBash(who.actor, { targetUuid: mobUuid, rank: hit.block.rank ?? 0 });
+  if (card) await sendOp(message, "bash", { uuid: who.uuid, hitId });
+}
+
 /** A row's AI Reroll: the d20 again with the rest of the old total. */
 async function onReroll(message, state, ref) {
   if (!rerollerFor(state, ref)) return;
@@ -777,6 +878,8 @@ async function onReactionButton(event, message, button) {
       case "evade": await onEvade(message, state, button.dataset.uuid); break;
       case "intervene": if (refOf(button)) await onIntervene(message, state, refOf(button)); break;
       case "reroll": if (refOf(button)) await onReroll(message, state, refOf(button)); break;
+      case "block": await onBlock(message, state, button.dataset.hitId); break;
+      case "bash": await onBash(message, state, button.dataset.hitId); break;
     }
   } finally {
     button.disabled = false;
@@ -848,18 +951,25 @@ function hitRow(state, hit, messageId) {
   if (hit.caughtBy) sub.push(i18n.format("CARLRPG.Reaction.CaughtFor", { name: hit.originalName }));
   if (which === "free") sub.push(check.success ? i18n.localize("CARLRPG.Reaction.FreeEvade") : i18n.format("CARLRPG.Reaction.Sub.freeFailed", { total: check.total }));
   if (which === "evade" && check.degree === "nearMissFail") sub.push(i18n.localize(CARLRPG.degreesOfSuccess.nearMissFail));
+  if (which === "block") sub.push(...blockNotes(check));
   sub.push(...checkNotes(check));
   if (check?.auto) sub.push(i18n.localize("CARLRPG.Reaction.Sub.auto"));
-  if (status === "hit" && hit.row?.isCharacter && !hit.evade) sub.push(i18n.localize("CARLRPG.Reaction.Sub.notEvaded"));
+  if (status === "hit" && hit.row?.isCharacter && !hit.evade && !hit.block) sub.push(i18n.localize("CARLRPG.Reaction.Sub.notEvaded"));
 
   // The roll's total; its target is on the line under the name.
   const num = check && (which === "evade" || status !== "incoming") ? `<b>${esc(check.total)}</b>` : "";
   const key = `hit:${hit.id}`;
   const detail = `${checkDetail(check)}${attackDetails(attack)}`;
+  const acts = [which ? checkActions(state, { type: "hit", hitId: hit.id, which }) : ""];
+  if (!state.locked && blockerFor(state, hit)) {
+    acts.push(iconButton("fa-shield", i18n.localize("CARLRPG.ShieldBlock.Button"), { action: "reactionCard", op: "block", "hit-id": hit.id }));
+  }
+  if (!state.locked && basherFor(state, hit)) {
+    acts.push(iconButton("fa-shield-halved", i18n.localize("CARLRPG.ShieldBlock.BashButton"), { action: "reactionCard", op: "bash", "hit-id": hit.id }));
+  }
   return statusRow({
     chip: statusChip(status), what: attackWhat(attack), flag: effectFlag(attack), sub, num,
-    acts: which ? checkActions(state, { type: "hit", hitId: hit.id, which }) : "",
-    detail, key, open: openRows.has(`${messageId}:${key}`),
+    acts: acts.join(""), detail, key, open: openRows.has(`${messageId}:${key}`),
   });
 }
 

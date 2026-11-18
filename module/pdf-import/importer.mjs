@@ -112,6 +112,7 @@ async function stampHashes(written, shapes, keyOf, update) {
 async function upsert(cls, folder, docs, book, afterWrite = null) {
   const existing = new Map(folder.contents.map((d) => [`${d.type}:${d.name}`, d]));
   const creates = [];
+  const createShapes = [];
   const updates = [];
   const updated = [];
   const skipped = [];
@@ -128,7 +129,12 @@ async function upsert(cls, folder, docs, book, afterWrite = null) {
     else if (old) {
       updates.push({ ...data, _id: old.id });
       updated.push(old);
-    } else creates.push(data);
+    } else {
+      // createData (a Boss's linked token) is sent on create only, and left
+      // out of the fingerprint's shape.
+      creates.push(doc.createData ? foundry.utils.mergeObject(data, doc.createData, { inplace: false }) : data);
+      createShapes.push(data);
+    }
   }
   const update = (stamps) => cls.updateDocuments(stamps);
   const keyOf = (d) => `${d.type}:${d.name}`;
@@ -138,7 +144,7 @@ async function upsert(cls, folder, docs, book, afterWrite = null) {
   if (creates.length) {
     const made = await cls.createDocuments(creates);
     written.push(...(made ?? []));
-    await stampHashes(made, creates, keyOf, update);
+    await stampHashes(made, createShapes, keyOf, update);
   }
   if (updates.length) await stampHashes(await cls.updateDocuments(updates), updates, keyOf, update);
   if (afterWrite) {

@@ -1,0 +1,37 @@
+{
+  "_id": "QbtAwM4Y0Xr8QHA3",
+  "name": "Greatsword",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/weapons/swords/greatsword-guard.webp",
+  "system": {
+    "description": "<p>A basic greatsword. Its Attacks use the Longsword Skill, which sets their damage, range and Stat. A two-handed sword: it uses the same Skill, and needs both hands.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Longsword",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": true
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!QbtAwM4Y0Xr8QHA3"
+}
