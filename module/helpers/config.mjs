@@ -152,6 +152,30 @@ CARLRPG.gearSlots = {
   feet: { label: "CARLRPG.GearSlot.Feet", icon: gearIcon("feet") },
 };
 
+/**
+ * Where a piece of gear can be worn (its `system.slots`; module/helpers/
+ * gear.mjs; Gear Slots, p.98-99). The Equipment Doll's Main and Off Hand are
+ * both Held; Accessories are the doll's ten Accessory slots. Keys as
+ * gear-text.mjs WEAR_SLOT_KEYS (the PDF parsers can't read CONFIG).
+ */
+CARLRPG.wearSlots = {
+  head: "CARLRPG.WearSlot.head",
+  torso: "CARLRPG.WearSlot.torso",
+  arms: "CARLRPG.WearSlot.arms",
+  held: "CARLRPG.WearSlot.held",
+  gloves: "CARLRPG.WearSlot.gloves",
+  legs: "CARLRPG.WearSlot.legs",
+  feet: "CARLRPG.WearSlot.feet",
+  accessory: "CARLRPG.WearSlot.accessory",
+};
+
+/** An Accessory's kind: a crawler wears at most one Belt and one Cape (p.99). */
+CARLRPG.accessoryKinds = {
+  "": "CARLRPG.AccessoryKind.other",
+  belt: "CARLRPG.AccessoryKind.belt",
+  cape: "CARLRPG.AccessoryKind.cape",
+};
+
 /** Empty accessory slot art, the same set as CARLRPG.gearSlots. */
 CARLRPG.accessoryIcon = gearIcon("accessory");
 

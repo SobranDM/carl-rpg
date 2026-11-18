@@ -37,6 +37,7 @@ import { createCardMessage, esc } from "../chat/chat-card.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { beginSwap, endSwap, refuseWhileSwapping } from "./swap-lock.mjs";
 import { attackReadiness } from "./weapons.mjs";
+import { isTwoHanded } from "./gear.mjs";
 
 export { refuseWhileSwapping };
 
@@ -513,19 +514,24 @@ async function readyHotlistItem(actor, index, item) {
   noteGear(actor);
   const previousId = actor.system.gearSlots?.mainHand || "";
   const previous = previousId && previousId !== item.id ? actor.items.get(previousId) ?? null : null;
+  // A two-handed item takes the Off Hand too: what's there is given back if
+  // the swap is undone (undoOrRecord).
+  const previousOffId = isTwoHanded(item) ? (actor.system.gearSlots?.offHand || "") : "";
+  const previousOff = previousOffId && previousOffId !== item.id && previousOffId !== previousId
+    ? actor.items.get(previousOffId) ?? null : null;
   // Wearing it takes it out of the Hotlist (equip-slots.mjs); the slot then
   // takes the previous item - written directly, as a swap isn't a Retrieve.
   await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, item, { duringSwap: true });
   if (actor.system.gearSlots?.mainHand !== item.id) {
     ui.notifications.warn(game.i18n.format("CARLRPG.Hotlist.Swap.Failed", { item: item.name }));
-    return { previous, stowed: false, failed: true };
+    return { previous, previousOff, stowed: false, failed: true };
   }
   const now = previous ? actor.items.get(previous.id) : null;
   const stowed = !!now && !isWorn(actor, now);
   const list = hotlistValues(actor);
   list[index] = stowed ? now.id : "";
   await actor.update({ "system.hotlist": list });
-  return { previous, stowed, failed: false };
+  return { previous, previousOff, stowed, failed: false };
 }
 
 /**
@@ -539,7 +545,7 @@ async function readyHotlistItem(actor, index, item) {
  * @param {{previous: Item|null, stowed: boolean}} swap  readyHotlistItem's result.
  */
 async function undoOrRecord(actor, index, item, swap) {
-  const { previous, stowed } = swap;
+  const { previous, previousOff, stowed } = swap;
   const unchanged = actor.system.gearSlots?.mainHand === item.id
     && hotlistValues(actor)[index] === (stowed ? previous.id : "");
   const record = async () => {
@@ -552,6 +558,8 @@ async function undoOrRecord(actor, index, item, swap) {
     // It never left another slot (older data, in both hands): only the Main
     // Hand goes back to it - assignItemToSlot would take it out of the other.
     await actor.update({ "system.gearSlots.mainHand": back.id });
+    // A two-handed item also left the Off Hand.
+    if (actor.system.gearSlots?.offHand === item.id) await actor.update({ "system.gearSlots.offHand": "" });
     if (!isItemWorn(actor, item.id) && item.system.equipped) {
       await item.update({ "system.equipped": false }, { carlSwap: true });
     }
@@ -562,6 +570,11 @@ async function undoOrRecord(actor, index, item, swap) {
     if (actor.system.gearSlots?.mainHand !== back.id) return record();
   } else {
     await unwearItem(actor, item, { duringSwap: true });
+  }
+  // The Off Hand item a two-handed one took off, back in the Off Hand.
+  const off = previousOff ? actor.items.get(previousOff.id) : null;
+  if (off && !actor.system.gearSlots?.offHand && !isItemWorn(actor, off.id)) {
+    await assignItemToSlot(actor, { slotType: "gear", slotKey: "offHand" }, off, { duringSwap: true });
   }
   const list = hotlistValues(actor);
   list[index] = item.id;

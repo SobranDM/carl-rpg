@@ -5,6 +5,7 @@ import CarlDice from '../dice/dice.mjs';
 import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
 import { needsWeapon } from '../helpers/weapons.mjs';
 import { mergeSubmitted } from '../helpers/form-arrays.mjs';
+import { isConsumable, isTwoHanded, isWeapon, slotsOf } from '../helpers/gear.mjs';
 
 const ATTRIBUTES_TEMPLATES = {
   item: 'systems/carl-rpg/templates/item/parts/attributes-item.hbs',
@@ -49,6 +50,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       revealPart: CarlRPGItemSheet.#onRevealPart,
       addDamageType: CarlRPGItemSheet.#onAddDamageType,
       removeCure: CarlRPGItemSheet.#onRemoveCure,
+      toggleWornSlot: CarlRPGItemSheet.#onToggleWornSlot,
     }
   };
 
@@ -441,7 +443,18 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const showDebuffs = (sys.targetEffects ?? []).length > 0;
     const showConsumable = !!c.kind || shown("consumable");
     if (showConsumable) this.#revealed.add("consumable");
+    // Where it's worn (gear.mjs): a pill per slot; a weapon is always Held.
+    const worn = new Set(slotsOf(item));
+    const weapon = isWeapon(item);
+    const wearSlots = Object.entries(cfg.wearSlots).map(([key, label]) => ({
+      key, label: game.i18n.localize(label), on: worn.has(key), locked: key === "held" && weapon,
+    }));
     return {
+      isConsumable: isConsumable(item),
+      wearSlots,
+      wearable: worn.size > 0,
+      held: worn.has("held"),
+      accessory: worn.has("accessory"),
       showBonuses,
       showDebuffs,
       showConsumable,
@@ -474,7 +487,16 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const chips = [];
     const weaponSkill = String(sys.weaponSkill ?? "").trim();
     if (weaponSkill) chips.push({ label: t("CARLRPG.ItemSheet.WeaponChip", { skill: weaponSkill }), tone: "accent" });
-    if (sys.isArmor) chips.push({ label: t("CARLRPG.Item.Armor"), tone: "neutral" });
+    // Where it's worn: "Head", "Held · Two-handed", "Belt".
+    const worn = slotsOf(item).filter((s) => !(s === "held" && weaponSkill));
+    if (worn.length && worn.length < Object.keys(CONFIG.CARLRPG.wearSlots).length) {
+      const names = worn.map((s) => (s === "accessory" && sys.accessoryKind
+        ? t(CONFIG.CARLRPG.accessoryKinds[sys.accessoryKind]) : t(CONFIG.CARLRPG.wearSlots[s])));
+      chips.push({ label: names.join(" / "), tone: "neutral" });
+    } else if (worn.length) {
+      chips.push({ label: t("CARLRPG.Gear.AnySlot"), tone: "neutral" });
+    }
+    if (isTwoHanded(item)) chips.push({ label: t("CARLRPG.Gear.TwoHanded"), tone: "neutral" });
     const kind = sys.consumable?.kind;
     if (kind) chips.push({ label: t(`CARLRPG.ItemSheet.KindChip.${kind}`), tone: "blue" });
     if (sys.equipped) chips.push({ label: t("CARLRPG.Item.Equipped"), tone: "good", icon: "fas fa-check" });
@@ -611,6 +633,18 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
 
   static #onDeleteArrayItem(event, target) {
     return onDeleteArrayItem(event, target, this.item);
+  }
+
+  /** A "Worn on" pill: add or remove a slot it can be worn in (gear.mjs). */
+  static async #onToggleWornSlot(event, target) {
+    event.preventDefault();
+    const key = target.dataset.slot;
+    if (!key || !(key in CONFIG.CARLRPG.wearSlots)) return;
+    const slots = new Set(this.item.system.slots ?? []);
+    if (slots.has(key)) slots.delete(key);
+    else slots.add(key);
+    const ordered = Object.keys(CONFIG.CARLRPG.wearSlots).filter((s) => slots.has(s));
+    return this.item.update({ "system.slots": ordered });
   }
 
   /** A Cure pill's ×: the consumable no longer cures that Debuff. */

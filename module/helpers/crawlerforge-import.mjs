@@ -24,6 +24,7 @@ import { cleanSkillLikeCopy, findSkillLikeItem } from "./race-class-grants.mjs";
 import { changeEntry } from "../pdf-import/shared.mjs";
 import { escapeHtml } from "../pdf-import/page-text.mjs";
 import { storyToHtml } from "./rich-text.mjs";
+import { WEAR_SLOT_OF_GEAR_SLOT } from "./gear.mjs";
 
 const SUPPORTED_SCHEMA_VERSION = 1;
 const GEAR_SLOT_MAP = {
@@ -38,6 +39,19 @@ const GEAR_SLOT_MAP = {
   feet: "feet",
 };
 const RESISTANCE_MAP = { resistance: "resist", vulnerability: "vulnerable", immunity: "immune" };
+
+/**
+ * A CrawlerForge slot as where-worn keys (CONFIG.CARLRPG.wearSlots): a
+ * hand is Held; none for an item with no slot.
+ * @param {string} slot
+ * @returns {string[]}
+ */
+function crawlerforgeSlots(slot) {
+  if (slot === "accessory") return ["accessory"];
+  const gearSlot = GEAR_SLOT_MAP[slot];
+  if (!gearSlot) return [];
+  return [WEAR_SLOT_OF_GEAR_SLOT[gearSlot] ?? gearSlot];
+}
 const UPGRADE_RANKS = [5, 10, 15];
 
 /**
@@ -315,7 +329,10 @@ export function buildCrawlerForgeActorData(state) {
     system: {
       description: item.notes ? `<p>${escapeHtml(item.notes)}</p>` : "",
       quantity: item.quantity ?? 1,
-      equipped: !!item.equipped,
+      // Where it's worn (docs/gear-slots.md): the export's slot. Gear with
+      // none can't be worn, so it isn't equipped.
+      equipped: !!item.equipped && crawlerforgeSlots(item.slot).length > 0,
+      slots: crawlerforgeSlots(item.slot),
       changes: effectsToChanges(item.effects, item.name),
     },
   }));

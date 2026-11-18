@@ -54,6 +54,8 @@ import registerMobAttacks from "./batches/mob-attacks.mjs";
 import registerSkillSheet from "./batches/skill-sheet.mjs";
 import registerGearSheet from "./batches/gear-sheet.mjs";
 import registerMobDebuffs from "./batches/mob-debuffs.mjs";
+import registerGearSlots from "./batches/gear-slots.mjs";
+import registerActorPicker from "./batches/actor-picker.mjs";
 import registerMemoryHygiene from "./batches/memory-hygiene.mjs";
 import { withMessageCleanup } from "./helpers.mjs";
 
@@ -100,6 +102,8 @@ const BATCH_REGISTRARS = [
   registerSkillSheet,
   registerGearSheet,
   registerMobDebuffs,
+  registerGearSlots,
+  registerActorPicker,
   registerMemoryHygiene,
 ];
 

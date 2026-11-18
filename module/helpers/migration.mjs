@@ -32,6 +32,10 @@ import { tierRank } from "./worship.mjs";
 import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions } from "./companion-migration.mjs";
 import { MOB_ATTACK_TYPE, attacksToCheck, convertLegacyAttacks } from "./mob-attacks.mjs";
 import { parseSize } from "./size.mjs";
+import {
+  HANDS, WEAR_SLOT_OF_GEAR_SLOT, accessoryKindOf, canWear, fitsSlot, guessGearSlots, heldOrWearable, isConsumable, isTwoHanded,
+} from "./gear.mjs";
+import { freeSlotFor, isItemWorn, placeInFreeSlot } from "./equip-slots.mjs";
 
 const SCOPE = "carl-rpg";
 export const MIGRATION_SETTING = "completedMigrations";
@@ -60,6 +64,9 @@ export const MOB_ATTACKS_MIGRATION_ID = "0.7.0-mob-attack-items";
 /** 0.7.0: a Mob's Size became Table 9's value, saved (migrateMobSizes). */
 export const MOB_SIZE_MIGRATION_ID = "0.7.0-mob-size";
 
+/** 0.7.0: gear says where it's worn (docs/gear-slots.md; migrateGearSlots). */
+export const GEAR_SLOTS_MIGRATION_ID = "0.7.0-gear-slots";
+
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
  * is the release whose data it brings a world up to (for messages). A run
@@ -80,6 +87,7 @@ export const MIGRATIONS = [
   { id: WEAPON_SKILL_NOTICE_ID, version: "0.7.0", run: announceWeaponSkill },
   { id: MOB_ATTACKS_MIGRATION_ID, version: "0.7.0", run: migrateMobAttacks },
   { id: MOB_SIZE_MIGRATION_ID, version: "0.7.0", run: migrateMobSizes },
+  { id: GEAR_SLOTS_MIGRATION_ID, version: "0.7.0", run: migrateGearSlots },
 ];
 
 /**
@@ -970,6 +978,290 @@ export async function saveMobSizes(mobs) {
     { diff: false, render: false, carlMigration: true },
   );
   return list.length;
+}
+
+/* -------------------------------------------------- */
+/*  0.7.0: where gear is worn                         */
+/* -------------------------------------------------- */
+
+/**
+ * 0.7.0 gave gear the slots it's worn in (docs/gear-slots.md; module/
+ * helpers/gear.mjs). In two passes, the first finished before the second
+ * (ruled 2026-11-17: "complete the [inference] FIRST, so that something
+ * without a slot type that gains it doesn't get unequipped prematurely"):
+ *  1. Every gear item with no slot gets one guessed (gear.mjs
+ *     guessGearSlots: its "Gear Slot:" line, its name, a Weapon Skill, the
+ *     slot it's worn in) - in the sidebar, on every actor, and in world
+ *     compendiums.
+ *  2. On every actor, gear worn where it doesn't fit comes off: a doll
+ *     slot it isn't worn in, a second Belt or Cape, a two-handed item with
+ *     the other hand full, or equipped gear with no slot at all.
+ * A card lists every creature that had gear taken off, by actor type; the
+ * gear left with no slot is whispered to the GM.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+export async function migrateGearSlots() {
+  let changed = 0;
+  let errors = 0;
+  // Gear left with no slot, by who has it (an actor, the Items directory,
+  // a compendium): each named, and marked if it was worn and comes off.
+  const unplaced = new Map();
+  const noteUnplaced = (where, item, owned = true) => {
+    if (!unplaced.has(where)) unplaced.set(where, []);
+    // Only an actor's gear is taken off (unequipMisfits).
+    unplaced.get(where).push({ name: item.name, takenOff: owned && !!item.system?.equipped && !heldOrWearable(item) });
+  };
+  const removed = [];
+
+  // 1. Slots for gear that has none.
+  const inferItems = async (items, where, options = {}) => {
+    const updates = [];
+    for (const item of items) {
+      const update = gearSlotUpdate(item);
+      if (update) updates.push(update);
+      else if (needsSlot(item)) noteUnplaced(where, item, false);
+    }
+    if (updates.length) await Item.implementation.updateDocuments(updates, { ...options, carlMigration: true, render: false });
+    changed += updates.length;
+  };
+  const actorsToCheck = [];
+  try {
+    await inferItems(game.items.contents, game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Sidebar"));
+  } catch (err) {
+    console.error("carl-rpg | 0.7.0 migration: couldn't set gear slots on sidebar items", err);
+    errors += 1;
+  }
+  const actors = [...game.actors];
+  for (const scene of game.scenes) {
+    for (const token of scene.tokens) {
+      if (!token.actorLink && token.actor && token.delta?._source?.items?.length) actors.push(token.actor);
+    }
+  }
+  for (const actor of actors) {
+    try {
+      const result = await inferActorGear(actor);
+      changed += result.changed;
+      for (const item of result.unplaced) noteUnplaced(actor.name, item);
+      actorsToCheck.push(actor);
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't set gear slots for ${actor.name}`, err);
+      errors += 1;
+    }
+  }
+  for (const pack of game.packs.filter(shouldMigratePack)) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        const documents = await pack.getDocuments();
+        if (pack.documentName === "Item") return inferItems(documents, pack.title, { pack: pack.collection });
+        for (const actor of documents) {
+          const result = await inferActorGear(actor);
+          changed += result.changed;
+          for (const item of result.unplaced) noteUnplaced(`${pack.title}: ${actor.name}`, item);
+          const off = await unequipMisfits(actor);
+          if (off.length) {
+            removed.push({ type: actor.type, name: `${actor.name} (${pack.title})`, items: off });
+            changed += 1;
+          }
+        }
+      });
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't set gear slots in compendium ${pack.collection}`, err);
+      errors += 1;
+    }
+  }
+
+  // 2. Off what doesn't fit - only once every slot above is set.
+  for (const actor of actorsToCheck) {
+    try {
+      const off = await unequipMisfits(actor);
+      if (off.length) {
+        removed.push({ type: actor.type, name: actor.name, items: off });
+        changed += 1;
+      }
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't take misfit gear off ${actor.name}`, err);
+      errors += 1;
+    }
+  }
+
+  if (removed.length) await announceRemovedGear(removed);
+  if (unplaced.size) await whisperUnplacedGear(unplaced);
+  return { changed, errors };
+}
+
+/** Gear with no slot, which can't be worn until one is set. */
+function needsSlot(item) {
+  return item?.type === "item" && !item.system?.consumable?.kind && !canWear(item);
+}
+
+/**
+ * The update setting a gear item's slots, guessed (gear.mjs
+ * guessGearSlots), or null when it has some or nothing tells.
+ * @param {Item} item
+ * @param {string|null} [wornIn]  Where it's worn now (a where-worn key).
+ * @returns {object|null}
+ */
+export function gearSlotUpdate(item, wornIn = null) {
+  if (item?.type !== "item" || (item.system?.slots ?? []).length || item.system?.consumable?.kind) return null;
+  const guess = guessGearSlots(item, { wornIn });
+  if (!guess) return null;
+  const update = { _id: item.id, "system.slots": guess.slots };
+  if (guess.twoHanded) update["system.twoHanded"] = true;
+  if (guess.accessoryKind && guess.slots.includes("accessory")) update["system.accessoryKind"] = guess.accessoryKind;
+  return update;
+}
+
+/**
+ * The migration's first pass on one actor: slots for its gear that has
+ * none (the slot it's worn in is the last guess).
+ * @param {Actor} actor
+ * @returns {Promise<{changed: number, unplaced: Item[]}>}  unplaced: its gear left with no slot.
+ */
+export async function inferActorGear(actor) {
+  const sys = actor.system ?? {};
+  const wornIn = (item) => {
+    const key = Object.keys(sys.gearSlots ?? {}).find((k) => sys.gearSlots[k] === item.id);
+    if (key) return WEAR_SLOT_OF_GEAR_SLOT[key] ?? null;
+    return (sys.accessories ?? []).includes(item.id) ? "accessory" : null;
+  };
+  const updates = [];
+  const unplaced = [];
+  for (const item of actor.items) {
+    const update = gearSlotUpdate(item, wornIn(item));
+    if (update) updates.push(update);
+    else if (needsSlot(item)) unplaced.push(item);
+  }
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { carlMigration: true, render: false });
+  return { changed: updates.length, unplaced };
+}
+
+/**
+ * The migration's second pass on one actor: gear worn where it doesn't fit
+ * comes off (docs/gear-slots.md Q6) - out of a doll slot it isn't worn in,
+ * a second Belt or Cape, a two-handed item whose other hand holds something
+ * else (one alone in a hand takes both), and equipped gear with no slot.
+ * @param {Actor} actor
+ * @returns {Promise<string[]>}  The names of the gear taken off.
+ */
+export async function unequipMisfits(actor) {
+  const sys = actor.system ?? {};
+  const off = new Set();
+  // In a doll slot when this started: a misfit comes off (ruled
+  // 2026-11-17), it isn't moved to a slot it fits.
+  const wornBefore = new Set([...Object.values(sys.gearSlots ?? {}), ...(sys.accessories ?? [])].filter(Boolean));
+  const update = {};
+  if (sys.gearSlots) {
+    const gearSlots = { ...sys.gearSlots };
+    for (const [key, id] of Object.entries(gearSlots)) {
+      const item = id ? actor.items.get(id) : null;
+      if (item && !fitsSlot(item, { slotType: "gear", slotKey: key })) {
+        off.add(item.id);
+        gearSlots[key] = "";
+      }
+    }
+    // A two-handed item: both hands, or off if the other holds something else.
+    for (const hand of HANDS) {
+      const item = gearSlots[hand] ? actor.items.get(gearSlots[hand]) : null;
+      if (!item || !isTwoHanded(item)) continue;
+      const other = HANDS.find((h) => h !== hand);
+      // Empty, or a deleted item's id: free.
+      if (!gearSlots[other] || !actor.items.get(gearSlots[other])) gearSlots[other] = item.id;
+      else if (gearSlots[other] !== item.id) {
+        off.add(item.id);
+        for (const h of HANDS) if (gearSlots[h] === item.id) gearSlots[h] = "";
+      }
+    }
+    const kinds = new Set();
+    const accessories = (sys.accessories ?? []).filter((id) => {
+      const item = actor.items.get(id);
+      if (!item) return true;
+      if (!fitsSlot(item, { slotType: "accessory", slotKey: "0" })) {
+        off.add(item.id);
+        return false;
+      }
+      const kind = accessoryKindOf(item);
+      if (kind && kinds.has(kind)) {
+        off.add(item.id);
+        return false;
+      }
+      if (kind) kinds.add(kind);
+      return true;
+    });
+    if (off.size) Object.assign(update, { "system.gearSlots": gearSlots, "system.accessories": accessories });
+    else if (JSON.stringify(gearSlots) !== JSON.stringify(sys.gearSlots)) update["system.gearSlots"] = gearSlots;
+  }
+  if (Object.keys(update).length) await actor.update(update, { carlMigration: true, render: false });
+  // A Character's gear equipped through the old Equipped box (in no doll
+  // slot): into a free slot it fits, or off - one item per slot (p.98).
+  if (actor.system.gearSlots) {
+    for (const item of actor.items) {
+      if (item.type !== "item" || !item.system.equipped || isConsumable(item) || wornBefore.has(item.id)
+        || isItemWorn(actor, item.id) || !canWear(item)) continue;
+      const slot = freeSlotFor(actor, item);
+      if (slot) await placeInFreeSlot(actor, slot, item);
+      else off.add(item.id);
+    }
+  }
+  // An equipped consumable: never worn - unequipped, not listed.
+  const quiet = actor.items.filter((i) => i.type === "item" && i.system.equipped && isConsumable(i)).map((i) => i.id);
+  if (quiet.length) {
+    await actor.updateEmbeddedDocuments("Item", quiet.map((id) => ({ _id: id, "system.equipped": false })),
+      { carlMigration: true, carlInAction: true, render: false });
+  }
+  // Equipped with no slot, and not held in a hand.
+  for (const item of actor.items) {
+    if (item.type === "item" && item.system.equipped && !heldOrWearable(item)) off.add(item.id);
+  }
+  // Worn elsewhere still? Then it stays equipped (only its misfit slot went).
+  const unequip = [...off].filter((id) => actor.items.get(id)?.system.equipped
+    && (!isItemWorn(actor, id) || !heldOrWearable(actor.items.get(id))));
+  if (unequip.length) {
+    await actor.updateEmbeddedDocuments("Item", unequip.map((id) => ({ _id: id, "system.equipped": false })),
+      { carlMigration: true, carlInAction: true, render: false });
+  }
+  return [...off].map((id) => actor.items.get(id)?.name).filter(Boolean);
+}
+
+/**
+ * The GM's list of gear the 0.7.0 gear slots migration couldn't place, by
+ * who has it, each named - and marked where it was worn and so taken off.
+ * @param {Map<string, {name: string, takenOff: boolean}[]>} unplaced
+ */
+export function whisperUnplacedGear(unplaced) {
+  const i18n = game.i18n;
+  const sections = [...unplaced.entries()].map(([where, items]) => {
+    const lines = items.map((i) => `<li>${esc(i.name)}${i.takenOff ? ` <em>(${esc(i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.TakenOff"))})</em>` : ""}</li>`).join("");
+    return `<h4>${esc(where)}</h4><ul>${lines}</ul>`;
+  }).join("");
+  return createNoticeMessage({
+    title: i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Title"),
+    bodyHtml: `<p>${esc(i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Body"))}</p>${sections}`,
+    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+  });
+}
+
+/**
+ * The card naming every creature that had gear taken off by the 0.7.0 gear
+ * slots migration, grouped by actor type (ruled 2026-11-17), whispered to
+ * the GM.
+ * @param {{type: string, name: string, items: string[]}[]} removed
+ */
+export function announceRemovedGear(removed) {
+  const groups = new Map();
+  for (const entry of removed) {
+    if (!groups.has(entry.type)) groups.set(entry.type, []);
+    groups.get(entry.type).push(entry);
+  }
+  const sections = [...groups.entries()].map(([type, entries]) => {
+    const heading = game.i18n.localize(`TYPES.Actor.${type}`);
+    const lines = entries.map((e) => `<li><strong>${esc(e.name)}:</strong> ${esc(e.items.join(", "))}</li>`).join("");
+    return `<h4>${esc(heading)}</h4><ul>${lines}</ul>`;
+  }).join("");
+  return createNoticeMessage({
+    title: game.i18n.localize("CARLRPG.Migration.GearSlots.Title"),
+    bodyHtml: `<p>${esc(game.i18n.localize("CARLRPG.Migration.GearSlots.Body"))}</p>${sections}`,
+    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+  });
 }
 
 /* -------------------------------------------------- */

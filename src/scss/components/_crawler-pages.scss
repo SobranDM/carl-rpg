@@ -28,6 +28,19 @@
   }
 
   // A drop slot: dashed when empty, a solid panel when filled.
+  // Dragging gear: the slots it fits light up, the rest dim
+  // (actor-sheet.mjs _onDragStart; docs/gear-slots.md).
+  .carl-equip-panel.is-dragging {
+    .carl-equip-slot[data-slot-type]:not(.is-fit) {
+      opacity: 0.35;
+    }
+
+    .carl-equip-slot.is-fit {
+      outline: 2px solid var(--carl-accent);
+      outline-offset: -2px;
+    }
+  }
+
   .carl-equip-slot {
     border: 1px dashed var(--carl-border-soft);
     border-radius: 3px;

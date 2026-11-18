@@ -14,6 +14,10 @@
 import { isCrawler } from "./actor-kinds.mjs";
 import { slugifySkillName } from "./modifiers.mjs";
 import { isHandToHand, withoutOutclassedUnarmed } from "./hand-to-hand.mjs";
+import { isTwoHanded, isWeaponFor } from "./gear.mjs";
+
+// What gear is lives in gear.mjs; re-exported for this module's callers.
+export { isWeaponFor };
 
 /**
  * Does this Attack need a weapon?
@@ -26,21 +30,6 @@ export function needsWeapon(actor, skill) {
   if (isHandToHand(skill)) return false;
   const slug = slugifySkillName(skill.name);
   return !(CONFIG.CARLRPG.weaponlessAttackSkills ?? []).some((name) => slugifySkillName(name) === slug);
-}
-
-/**
- * Is this gear item a weapon for this Skill (its Weapon Skill names it)?
- * @param {Item|null} item
- * @param {Item} skill
- * @returns {boolean}
- */
-export function isWeaponFor(item, skill) {
-  if (item?.type !== "item") return false;
-  // Blank means "not a weapon". Checked before slugifying, which turns a
-  // blank name into "unknown" - the slug of any name with no Latin letters
-  // or digits, too.
-  const weaponSkill = String(item.system?.weaponSkill ?? "").trim();
-  return !!weaponSkill && slugifySkillName(weaponSkill) === slugifySkillName(skill?.name ?? "");
 }
 
 /**
@@ -59,7 +48,8 @@ export function attackReadiness(actor, skill, { mainHand } = {}) {
   if (!needsWeapon(actor, skill)) return { ready: true, weapon: null, swap: null };
   const slots = actor.system.gearSlots ?? {};
   const inMain = mainHand !== undefined ? mainHand : (slots.mainHand ? actor.items.get(slots.mainHand) : null);
-  const inOff = slots.offHand ? actor.items.get(slots.offHand) : null;
+  // A two-handed item about to go in the Main Hand takes the Off Hand too.
+  const inOff = mainHand && isTwoHanded(mainHand) ? null : (slots.offHand ? actor.items.get(slots.offHand) : null);
   const held = [inMain, inOff].find((item) => isWeaponFor(item, skill));
   if (held) return { ready: true, weapon: held, swap: null };
   const hotlist = actor.system.hotlist ?? [];

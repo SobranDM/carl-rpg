@@ -147,6 +147,16 @@
         "CheckMove": "(base Move {move} ft, Step {step} ft were typed in by hand: check they don't already include what these now add)",
         "ItemsDirectory": "Items directory"
       },
+      "GearSlots": {
+        "Title": "Gear says where it's worn now",
+        "Body": "Each piece of gear now has the slots it's worn in (Worn on, on its sheet), and the Equipment Doll keeps to them: one Belt and one Cape, and a two-handed weapon takes both hands. This gear was worn where it doesn't fit, so it's been taken off - put it back where it goes:"
+      },
+      "GearSlotsUnplaced": {
+        "Title": "Gear with no slot",
+        "Body": "Couldn't tell where this gear is worn, so it can't be worn until its sheet says where (Worn on) - though it can still be held in a hand. By who has it; anything marked \"taken off\" was worn and is now unequipped:",
+        "Sidebar": "Items directory",
+        "TakenOff": "taken off"
+      },
       "MobAttacks": {
         "Title": "Mob Attacks are items now",
         "Body": "Each Mob's Attacks are now items on its sheet, with an Area box and the Debuffs they give. These Mobs have Attacks to check: one guessed to be an Area Attack, or one whose effect names a Debuff - set the Debuff, and when it lands, on the Attack:",
@@ -627,23 +637,44 @@
       "FloorIncrement": "Increment Floor",
       "FloorDecrement": "Decrement Floor",
       "InWorldRest": "In-World Rest",
-      "ShortRest": "Short Rest (2h)",
-      "LongRest": "Long Rest (8h)",
-      "FullDayRest": "Full Day Rest (30h)",
       "Rest": {
+        "Title": "Rest",
+        "Button": "Rest",
         "ShortTitle": "Short Rest",
         "LongTitle": "Long Rest",
         "FullDayTitle": "Full Day's Rest",
+        "Length": "How long",
+        "Kind": {
+          "short": "Short Rest (2 hours)",
+          "long": "Long Rest (8 hours)",
+          "fullDay": "Full Day's Rest (30 hours)"
+        },
+        "Rule": {
+          "short": "Heal 5 Health Bar slots. Crawlers also regenerate half of their total Mana (rounded down), so if they have 15 Intelligence, they regain 7 Mana.",
+          "long": "After a long rest, a crawler is as good as new with a full Health Bar and Mana. A long rest also removes all instances of the Fatigued Debuff.",
+          "fullDay": "Required to recover from long-term injuries (see Injuries, p. 96), a full day of rest also recovers their full Health Bar and all Mana."
+        },
+        "Source": "Resting, p. 94",
         "PickerPrompt": "Choose which characters rest. Not everyone has to - someone could be on watch or otherwise occupied.",
         "Confirm": "Apply Rest"
       },
+      "AdvanceTime": "Advance time",
+      "AdvanceTimeHint": "Moves the world clock forward {hours}. Untick it when that time is already being counted - say, some crawlers rest while others grind for the same hours.",
+      "HoursCount": "{n} hours",
+      "TheHours": "the hours above",
+      "ClockAdvanced": "The world clock moved forward {hours} hours.",
+      "ClockNotAdvanced": "The world clock wasn't moved.",
       "RestApplied": "Applied to {count} character(s).",
       "RestAppliedNone": "No characters were selected - no rest was applied.",
       "ActorPicker": {
         "SelectAll": "Select All",
         "SelectedCount": "{count}/{total} selected",
         "FilterPlaceholder": "Filter by name...",
-        "OtherCharacters": "Other Characters ({count})",
+        "LoggedIn": "Logged in ({count})",
+        "NotLoggedIn": "Not logged in ({count})",
+        "NotLoggedInHint": "Characters whose player isn't connected right now, or that only the GM plays. Tick any to include them.",
+        "GmOnly": "GM",
+        "PetOf": "{crawler}'s pet",
         "Pets": "Pets ({count})",
         "Confirm": "Confirm"
       },
@@ -828,8 +859,6 @@
       "Quantity": "Quantity",
       "Weight": "Weight",
       "Equipped": "Equipped",
-      "Armor": "Armor",
-      "ArmorHint": "Worn armor: \"your entire ensemble only grants you a single DR bonus\" (p.225). Of the equipped pieces with this ticked, only the one adding the most DR counts. DR from a Race, Class, Skill, Spell or Buff still adds on top.",
       "Changes": "Bonuses"
     },
     "Feature": {
@@ -1050,6 +1079,32 @@
         "RemoveCure": "Remove this Cure",
         "SicknessNote": "counts toward Potion Sickness"
       }
+    },
+    "WearSlot": {
+      "head": "Head",
+      "torso": "Torso",
+      "arms": "Arms",
+      "held": "Held",
+      "gloves": "Gloves",
+      "legs": "Legs",
+      "feet": "Feet",
+      "accessory": "Accessory"
+    },
+    "AccessoryKind": { "other": "Other", "belt": "Belt", "cape": "Cape" },
+    "Gear": {
+      "WornOn": "Worn on",
+      "AnySlot": "Any slot",
+      "TwoHanded": "Two-handed",
+      "TwoHandedHint": "\"Limitation: Two-Handed\": held in both hands, so nothing else can be held (p.98).",
+      "AccessoryKind": "Kind",
+      "HeldByWeapon": "A weapon is always held.",
+      "NotWearable": "Can't be worn until you pick where it goes - though it can be held in a hand (no bonuses there unless it's Held).",
+      "NoSlot": "{item} can't be worn: pick where it goes on its sheet (Worn on). It can still be held in a hand.",
+      "WrongSlot": "{item} isn't worn there. It goes on: {slots}.",
+      "OneKind": "Only one {kind} at a time: {item} is already worn.",
+      "NoFreeSlot": "{item} has nowhere free to go ({slots}): take something off first.",
+      "ConsumableNotWorn": "{item} is used, not worn: put it in your Hotlist.",
+      "TakenOff": "{item} isn't worn where it was any more, so it was taken off."
     },
     "TargetEffect": {
       "Stacks": "Stacks",

@@ -16,10 +16,22 @@ export default class CarlRPGItem extends CarlRPGItemBase {
     // Attack with that Skill needs it in hand or in the Hotlist
     // (module/helpers/weapons.mjs). Blank for anything that isn't a weapon.
     schema.weaponSkill = new fields.StringField({ required: true, blank: true, initial: "" });
-    // Worn armor: "your entire ensemble only grants you a single DR bonus"
-    // (p.225) - of the equipped pieces with this ticked, only the one adding
-    // the most DR counts (modifiers.mjs supersededArmorIds).
-    schema.isArmor = new fields.BooleanField({ required: true, initial: false });
+    // Where it can be worn (Gear Slots, p.98-99; module/helpers/gear.mjs):
+    // one or more of CONFIG.CARLRPG.wearSlots ("Accessory or Head"; all for
+    // "Any"). Empty: it can't be worn until one is set (a Weapon Skill
+    // always makes it Held). DR from worn gear stacks across slot types,
+    // but only the best piece within one counts (modifiers.mjs
+    // supersededArmorIds; p.225). The old "Armor" box is gone with that.
+    schema.slots = new fields.ArrayField(
+      new fields.StringField({ required: true, blank: false, choices: () => Object.keys(CONFIG.CARLRPG.wearSlots) }),
+      { required: true, initial: [] },
+    );
+    // Held in both hands ("Limitation: Two-Handed", p.98).
+    schema.twoHanded = new fields.BooleanField({ required: true, initial: false });
+    // An Accessory's kind: one Belt and one Cape at most (p.99).
+    schema.accessoryKind = new fields.StringField({
+      required: true, blank: true, initial: "", choices: () => Object.keys(CONFIG.CARLRPG.accessoryKinds),
+    });
     // On-hit Debuffs it gives its holder's or wearer's Attacks while
     // equipped ("AS: Target gains Burned", p.116; p.223), optionally only
     // with listed Attack Skills (modifiers.mjs attackTargetEffects).

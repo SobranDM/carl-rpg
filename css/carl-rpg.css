@@ -687,34 +687,119 @@
   font-size: 12px;
   opacity: 1;
 }
+.carl-dialog .carl-actor-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.carl-dialog .carl-actor-picker p {
+  margin: 0;
+}
 .carl-dialog .carl-actor-picker-filter {
   width: 100%;
   box-sizing: border-box;
 }
 .carl-dialog .carl-actor-picker-select-all {
-  justify-content: space-between;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--carl-border-soft);
 }
 .carl-dialog .carl-actor-picker-count {
+  margin-left: auto;
   font-size: 11px;
   opacity: 0.75;
   font-weight: normal;
 }
 .carl-dialog .carl-actor-picker-list {
-  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
   overflow-y: auto;
   padding-right: 2px;
 }
-.carl-dialog .carl-actor-picker-other {
-  margin-top: 4px;
-}
-.carl-dialog .carl-actor-picker-other summary {
-  cursor: pointer;
+.carl-dialog .carl-actor-picker-heading {
+  margin: 0 0 2px;
   font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   opacity: 0.85;
-  padding: 2px 0;
+  cursor: default;
 }
-.carl-dialog .carl-actor-picker-other .carl-actor-picker-option {
-  margin-left: 4px;
+.carl-dialog details.carl-actor-picker-group > summary.carl-actor-picker-heading {
+  cursor: pointer;
+}
+.carl-dialog .carl-actor-picker-hint {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.75;
+}
+.carl-dialog .carl-actor-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+}
+.carl-dialog .carl-actor-picker-option[hidden] {
+  display: none;
+}
+.carl-dialog .carl-actor-picker-who {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.7;
+}
+.carl-dialog .carl-rest-length {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 8px 8px;
+}
+.carl-dialog .carl-rest-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 14px;
+}
+.carl-dialog .carl-rest-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.carl-dialog .carl-rest-rule {
+  margin: 0;
+  padding: 6px 8px;
+  border-left: 3px solid var(--carl-accent);
+  background: var(--carl-panel-bg);
+  font-size: 12px;
+}
+.carl-dialog .carl-rest-rule[hidden] {
+  display: none;
+}
+.carl-dialog .carl-rest-rule p {
+  margin: 0 0 2px;
+}
+.carl-dialog .carl-rest-rule cite {
+  font-size: 10px;
+  opacity: 0.7;
+}
+.carl-dialog .carl-advance-time {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--carl-border-soft);
+}
+.carl-dialog .carl-advance-time-hint {
+  flex: 0 0 100%;
+  font-size: 11px;
+  opacity: 0.75;
 }
 
 .carl-reroll-pick fieldset {
@@ -2570,6 +2655,13 @@
 .carl-rpg .carl-equip-panel fieldset {
   margin: 0 0 10px;
 }
+.carl-rpg .carl-equip-panel.is-dragging .carl-equip-slot[data-slot-type]:not(.is-fit) {
+  opacity: 0.35;
+}
+.carl-rpg .carl-equip-panel.is-dragging .carl-equip-slot.is-fit {
+  outline: 2px solid var(--carl-accent);
+  outline-offset: -2px;
+}
 .carl-rpg .carl-equip-slot {
   border: 1px dashed var(--carl-border-soft);
   border-radius: 3px;
@@ -4080,6 +4172,56 @@
 }
 .carl-rpg .carl-consumable .carl-hint {
   margin: 0;
+}
+.carl-rpg .carl-worn-on {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.carl-rpg .carl-worn-on > .resource-label {
+  flex: 0 0 100%;
+  margin: 0;
+}
+.carl-rpg .carl-worn-on .carl-hint {
+  flex: 0 0 100%;
+  margin: 0;
+}
+.carl-rpg .carl-worn-on-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.carl-rpg .carl-worn-pill {
+  flex: 0 0 auto;
+  width: auto;
+  height: 22px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px dashed color-mix(in srgb, var(--carl-text) 35%, transparent);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--carl-text-muted);
+  font-size: 12px;
+  line-height: 1;
+}
+.carl-rpg .carl-worn-pill i {
+  margin-right: 4px;
+  font-size: 10px;
+}
+.carl-rpg .carl-worn-pill.is-on {
+  border-style: solid;
+  border-color: var(--carl-border-soft-2);
+  background: color-mix(in srgb, var(--carl-accent-2) 22%, transparent);
+  color: var(--carl-text);
+}
+.carl-rpg .carl-worn-pill:hover:not(:disabled), .carl-rpg .carl-worn-pill:focus-visible {
+  border-color: var(--carl-accent);
+  box-shadow: none;
+}
+.carl-rpg .carl-worn-pill:disabled {
+  opacity: 0.8;
+  cursor: default;
 }
 .carl-rpg.item nav.tabs [data-tab] i {
   margin-right: 4px;

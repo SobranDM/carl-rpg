@@ -456,6 +456,67 @@
     margin: 0;
   }
 
+  // ---- Gear: where it's worn (docs/gear-slots.md) ----
+  .carl-worn-on {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+
+    > .resource-label {
+      flex: 0 0 100%;
+      margin: 0;
+    }
+
+    .carl-hint {
+      flex: 0 0 100%;
+      margin: 0;
+    }
+  }
+
+  .carl-worn-on-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .carl-worn-pill {
+    flex: 0 0 auto;
+    width: auto;
+    height: 22px;
+    margin: 0;
+    padding: 0 8px;
+    border: 1px dashed color-mix(in srgb, var(--carl-text) 35%, transparent);
+    border-radius: 11px;
+    background: transparent;
+    color: var(--carl-text-muted);
+    font-size: 12px;
+    line-height: 1;
+
+    i {
+      margin-right: 4px;
+      font-size: 10px;
+    }
+
+    &.is-on {
+      border-style: solid;
+      border-color: var(--carl-border-soft-2);
+      background: color-mix(in srgb, var(--carl-accent-2) 22%, transparent);
+      color: var(--carl-text);
+    }
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      border-color: var(--carl-accent);
+      box-shadow: none;
+    }
+
+    &:disabled {
+      opacity: 0.8;
+      cursor: default;
+    }
+  }
+
   // The Rank tabs' lock icons (item-sheet.mjs _getTabsConfig).
   &.item nav.tabs [data-tab] i {
     margin-right: 4px;

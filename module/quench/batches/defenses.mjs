@@ -28,8 +28,8 @@ function skill(actor, name, rank, tiers = {}, changes = []) {
 }
 
 /** Equipped gear with these changes. */
-function gear(actor, label, changes, { isArmor = false, equipped = true } = {}) {
-  return createTestItem(actor, "item", label, { name: label, system: { equipped, isArmor, changes } });
+function gear(actor, label, changes, { slots = ["torso"], equipped = true } = {}) {
+  return createTestItem(actor, "item", label, { name: label, system: { equipped, slots, changes } });
 }
 
 const RUNNING = { 5: [change("resource", "move", 5)], 10: [change("resource", "move", 10)], 15: [change("resource", "move", 15)] };
@@ -136,7 +136,7 @@ export default function register(quench) {
           const actor = await createTestCharacter("dr x2");
           try {
             await race(actor, "Tigran", [change("resource", "dr", 1)]);
-            await gear(actor, "Helm", [change("resource", "dr", 2)], { isArmor: true });
+            await gear(actor, "Helm", [change("resource", "dr", 2)], { slots: ["head"] });
             assert.equal(actor.system.drEffective, 3);
             await actor.update({ "system.conditions": [{
               key: "custom", label: "Iron Skin", stacks: 1, source: "Iron Skin Potion",
@@ -153,41 +153,41 @@ export default function register(quench) {
           }
         });
 
-        it("only the best piece of worn armor adds its DR; other DR and the armor's other changes still count", async function () {
+        it("worn gear's DR stacks across slot types; within one only the best counts; Accessories each count", async function () {
           const actor = await createTestCharacter("armor");
           try {
-            const helm = await gear(actor, "Helm", [change("resource", "dr", 2), change("stat", "str", 1)], { isArmor: true });
-            const plate = await gear(actor, "Plate", [change("resource", "dr", 3)], { isArmor: true });
-            await gear(actor, "Lucky Charm", [change("resource", "dr", 1)]);
-            assert.equal(actor.system.drEffective, 4, "Plate 3 + the charm 1, not the Helm's 2");
+            const helm = await gear(actor, "Helm", [change("resource", "dr", 2), change("stat", "str", 1)], { slots: ["head"] });
+            await gear(actor, "Plate", [change("resource", "dr", 3)], { slots: ["torso"] });
+            const spare = await gear(actor, "Spare Helm", [change("resource", "dr", 1)], { slots: ["head"] });
+            await gear(actor, "Ring A", [change("resource", "dr", 1)], { slots: ["accessory"] });
+            await gear(actor, "Ring B", [change("resource", "dr", 1)], { slots: ["accessory"] });
+            assert.equal(actor.system.drEffective, 7, "Helm 2 + Plate 3 + both rings, not the spare Helm");
             assert.equal(actor.system.stats.str.bonus, 1, "the Helm's other change still applies");
-            assert.deepEqual([...supersededArmorIds(actor.items, {})], [helm.id]);
+            assert.deepEqual([...supersededArmorIds(actor.items, {}, actor.system)], [spare.id]);
 
-            await plate.update({ "system.equipped": false });
-            assert.equal(actor.system.drEffective, 3, "with the Plate off, the Helm counts");
-            await plate.update({ "system.equipped": true, "system.isArmor": false });
-            assert.equal(actor.system.drEffective, 6, "gear not marked as armor stacks as before");
+            await helm.update({ "system.equipped": false });
+            assert.equal(actor.system.drEffective, 6, "with the Helm off, the spare counts");
           } finally {
             await deleteTestActor(actor);
           }
         });
 
-        it("ranks armor by the DR it gives now; a losing piece keeps its conditional DR", async function () {
+        it("ranks a slot type's pieces by the DR they give now; a losing piece keeps its conditional DR", async function () {
           const actor = await createTestCharacter("armor gates");
           try {
-            const helm = await gear(actor, "Helm", [change("resource", "dr", 2)], { isArmor: true });
-            await gear(actor, "Runed Plate", [
+            const helm = await gear(actor, "Helm", [change("resource", "dr", 2)], { slots: ["head"] });
+            await gear(actor, "Runed Helm", [
               { ...change("resource", "dr", 4), levelGate: 10 },
               { ...change("resource", "dr", 3), conditions: [{ label: "vs Fire" }] },
-            ], { isArmor: true });
-            assert.equal(actor.system.drEffective, 2, "the Plate's +4 needs Level 10, so the Helm's +2 counts");
-            assert.deepEqual([...supersededArmorIds(actor.items, { lvl: 1 })], [actor.items.getName("Runed Plate").id]);
+            ], { slots: ["head"] });
+            assert.equal(actor.system.drEffective, 2, "the Runed Helm's +4 needs Level 10, so the Helm's +2 counts");
+            assert.deepEqual([...supersededArmorIds(actor.items, { lvl: 1 }, actor.system)], [actor.items.getName("Runed Helm").id]);
             assert.isTrue(actor.system.conditionalModifiers.some((m) => m.target === "dr" && m.value === "3"),
-              "the losing Plate's conditional row still reaches the roll dialog");
+              "the losing piece's conditional row still reaches the roll dialog");
 
             await actor.update({ "system.attributes.level.value": 10 });
-            assert.equal(actor.system.drEffective, 4, "at Level 10 the Plate wins");
-            assert.deepEqual([...supersededArmorIds(actor.items, { lvl: 10 })], [helm.id]);
+            assert.equal(actor.system.drEffective, 4, "at Level 10 the Runed Helm wins");
+            assert.deepEqual([...supersededArmorIds(actor.items, { lvl: 10 }, actor.system)], [helm.id]);
           } finally {
             await deleteTestActor(actor);
           }

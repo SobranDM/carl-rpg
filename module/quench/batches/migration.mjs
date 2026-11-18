@@ -4,7 +4,7 @@ import {
   refreshedItemUpdate, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID, zeroCharacterBaseDr,
   CHARGEN_DONE_MIGRATION_ID, madeBeforeChargen, markChargenDone, refreshSourceFor,
   RENAMED_MIGRATION_IDS, currentMigrationIds, MOB_ATTACKS_MIGRATION_ID,
-  MOB_SIZE_MIGRATION_ID, saveMobSizes,
+  MOB_SIZE_MIGRATION_ID, saveMobSizes, GEAR_SLOTS_MIGRATION_ID,
 } from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
@@ -70,7 +70,7 @@ export default function register(quench) {
           assert.includeMembers(MIGRATIONS.map((m) => m.id), renamed, "every old id maps to a migration");
           // Migrations added after the renaming never had an old id.
           const added = MIGRATIONS.map((m) => m.id).filter((id) => !renamed.includes(id));
-          assert.sameMembers(added, [MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID]);
+          assert.sameMembers(added, [MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID, GEAR_SLOTS_MIGRATION_ID]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
           assert.sameMembers(ids(p.run), added, "nothing runs twice - only what's been added since");
           assert.sameMembers(currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),

@@ -512,7 +512,8 @@ async function gearWrites(state) {
   const choice = combatChoice(state);
   const stuff = state.stuff ?? {};
   const gear = {};
-  if (stuff.clothing) gear.clothing = gearData(stuff.clothing, { equipped: true });
+  // The starting outfit is worn (a Torso piece; docs/gear-slots.md).
+  if (stuff.clothing) gear.clothing = gearData(stuff.clothing, { equipped: true, slots: ["torso"] });
   if (state.combat.type === "weapon") {
     gear.weapon = gearData(stuff.weapon || state.combat.weaponName || choice.skill, { weaponSkill: choice.skill });
   }
@@ -602,6 +603,10 @@ export async function applyChargen(actor, state) {
   }
   if (made.weapon && actor.system.gearSlots.mainHand !== made.weapon.id) {
     await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, made.weapon);
+  }
+  // The outfit is worn on the Torso (docs/gear-slots.md), in the doll.
+  if (made.clothing && !actor.system.gearSlots.torso) {
+    await assignItemToSlot(actor, { slotType: "gear", slotKey: "torso" }, made.clothing);
   }
 
   // Hotlist: Heal, the attack Spell and its potions, each in the first free

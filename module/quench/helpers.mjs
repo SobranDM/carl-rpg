@@ -126,6 +126,12 @@ export async function createTestVehicle(label = "vehicle", data = {}) {
  * @returns {Promise<Item>}
  */
 export async function createTestItem(actor, type, label = type, data = {}) {
+  // Test gear fits any slot unless the test says where it goes
+  // (docs/gear-slots.md: gear with no slot can't be worn). Tests of the
+  // slot rules set `system.slots` themselves.
+  if (type === "item" && data.system?.slots === undefined && !data.system?.consumable?.kind) {
+    data = { ...data, system: { ...(data.system ?? {}), slots: Object.keys(CONFIG.CARLRPG.wearSlots) } };
+  }
   const [item] = await actor.createEmbeddedDocuments("Item", [{
     name: `Quench ${label} ${foundry.utils.randomID()}`,
     type,

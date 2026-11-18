@@ -559,44 +559,145 @@
     opacity: 1;
   }
 
-  // Character-actor picker (module/apps/gm-toolbox.mjs's #promptActorPicker)
-  // shared by Rest/2-Hour Tick/Party Level Up - a live filter + running
-  // counter + scroll-capped, collapsible "Other Characters" section so a
-  // large roster stays manageable in a fixed-size dialog.
+  // The GM Toolbox's "who does this apply to" picker (module/apps/
+  // actor-picker.mjs; docs/release-0.7.0.md §5): the filter, Select All on
+  // its own row with the count, then the groups - Logged in, Not logged in
+  // (collapsed, with a hint), Pets - each row naming who plays it.
+  .carl-actor-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    p {
+      margin: 0;
+    }
+  }
+
   .carl-actor-picker-filter {
     width: 100%;
     box-sizing: border-box;
   }
 
   .carl-actor-picker-select-all {
-    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--carl-border-soft);
   }
 
   .carl-actor-picker-count {
+    margin-left: auto;
     font-size: 11px;
     opacity: 0.75;
     font-weight: normal;
   }
 
   .carl-actor-picker-list {
-    max-height: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 260px;
     overflow-y: auto;
     padding-right: 2px;
   }
 
-  .carl-actor-picker-other {
-    margin-top: 4px;
+  .carl-actor-picker-heading {
+    margin: 0 0 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    cursor: default;
+  }
 
-    summary {
-      cursor: pointer;
-      font-size: 11px;
-      opacity: 0.85;
-      padding: 2px 0;
+  details.carl-actor-picker-group > summary.carl-actor-picker-heading {
+    cursor: pointer;
+  }
+
+  .carl-actor-picker-hint {
+    margin: 0 0 4px;
+    font-size: 11px;
+    font-style: italic;
+    opacity: 0.75;
+  }
+
+  .carl-actor-picker-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 6px;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .carl-actor-picker-who {
+    margin-left: auto;
+    font-size: 11px;
+    opacity: 0.7;
+  }
+
+  // The Rest dialog's length, the book's words for it, and Advance time
+  // (gm-toolbox.mjs #onRest; docs/release-0.7.0.md §6).
+  .carl-rest-length {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 6px 8px 8px;
+  }
+
+  .carl-rest-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 14px;
+  }
+
+  .carl-rest-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .carl-rest-rule {
+    margin: 0;
+    padding: 6px 8px;
+    border-left: 3px solid var(--carl-accent);
+    background: var(--carl-panel-bg);
+    font-size: 12px;
+
+    &[hidden] {
+      display: none;
     }
 
-    .carl-actor-picker-option {
-      margin-left: 4px;
+    p {
+      margin: 0 0 2px;
     }
+
+    cite {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+  }
+
+  .carl-advance-time {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--carl-border-soft);
+  }
+
+  .carl-advance-time-hint {
+    flex: 0 0 100%;
+    font-size: 11px;
+    opacity: 0.75;
   }
 }
 

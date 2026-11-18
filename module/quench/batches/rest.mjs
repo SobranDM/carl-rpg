@@ -1,7 +1,8 @@
 import { restorePerRound, shortRestUpdates } from "../../helpers/rest.mjs";
 import { ownerIds, withOwners } from "../../helpers/ownership.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
-import { createTestCharacter, deleteTestActor } from "../helpers.mjs";
+import { createTestCharacter, deleteTestActor, pressDialog, useQuenchTimeout, waitFor, withDialog } from "../helpers.mjs";
+import CarlToolbox from "../../apps/gm-toolbox.mjs";
 
 export default function register(quench) {
   quench.registerBatch(
@@ -77,6 +78,49 @@ export default function register(quench) {
           assert.deepEqual(withOwners(given, ["a"]), { default: NONE, b: OWNER, a: OWNER });
           assert.deepEqual(given, { default: NONE, b: OWNER }, "the original is left alone");
           assert.deepEqual(withOwners(undefined, ["a"]), { a: OWNER });
+        });
+      });
+
+      // docs/release-0.7.0.md §6: one Rest dialog - the length with the
+      // book's words for it, who rests, and Advance time.
+      describe("the GM Toolbox's Rest dialog", function () {
+        useQuenchTimeout(this);
+
+        it("shows the picked length's rule text; applies it to who's ticked; Advance time can be left off", async function () {
+          const pc = await createTestCharacter("rest dialog");
+          const toolbox = foundry.applications.instances.get("carl-toolbox") ?? new CarlToolbox();
+          const wasOpen = toolbox.rendered;
+          try {
+            await pc.update({ "system.hb.value": 1, "system.mana.value": 0 });
+            await toolbox.render({ force: true });
+            await waitFor(() => toolbox.element?.querySelector('[data-action="rest"]'), { message: "no Rest button" });
+            const before = game.time.worldTime;
+            await withDialog(async () => toolbox.element.querySelector('[data-action="rest"]').click(), async (dialog) => {
+              const root = dialog.element;
+              const rule = (kind) => root.querySelector(`[data-rest-rule="${kind}"]`);
+              assert.isFalse(rule("short").hidden, "Short is picked first");
+              assert.isTrue(rule("long").hidden);
+              assert.equal(rule("short").querySelector("p").textContent.trim(), game.i18n.localize("CARLRPG.Toolbox.Rest.Rule.short"));
+
+              const long = root.querySelector('input[name="carl-rest-kind"][value="long"]');
+              long.checked = true;
+              long.dispatchEvent(new Event("change"));
+              assert.isFalse(rule("long").hidden, "the picked length's words");
+              assert.isTrue(rule("short").hidden);
+              assert.include(root.querySelector("[data-advance-time-hint]").textContent,
+                game.i18n.format("CARLRPG.Toolbox.HoursCount", { n: 8 }));
+
+              root.querySelector("[data-advance-time]").checked = false;
+              for (const box of root.querySelectorAll("input[data-actor-id]")) box.checked = box.dataset.actorId === pc.id;
+              pressDialog(dialog, "roll");
+            }, "carl-pick-actors");
+            await waitFor(() => pc.system.hb.value === pc.system.hb.effectiveMax, { message: "the Long Rest never applied" });
+            assert.equal(pc.system.mana.value, pc.system.mana.max, "a Long Rest restores Mana in full");
+            assert.equal(game.time.worldTime, before, "Advance time unticked: the clock didn't move");
+          } finally {
+            if (!wasOpen && toolbox.rendered) await toolbox.close();
+            await deleteTestActor(pc);
+          }
         });
       });
     },

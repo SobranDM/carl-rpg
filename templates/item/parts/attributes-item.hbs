@@ -18,15 +18,12 @@
           <label class="resource-label">{{localize "CARLRPG.Item.Weight"}}</label>
           <input type="text" class="carl-w-tiny" name="system.weight" value="{{system.weight}}" data-dtype="Number" />
         </div>
+        {{#unless gear.isConsumable}}
         <label class="carl-check-field">
           <input type="checkbox" name="system.equipped" {{checked system.equipped}} />
           {{localize "CARLRPG.Item.Equipped"}}
         </label>
-        {{!-- Worn armor: only the best equipped piece adds its DR (p.225). --}}
-        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Item.ArmorHint'}}">
-          <input type="checkbox" name="system.isArmor" {{checked system.isArmor}} />
-          {{localize "CARLRPG.Item.Armor"}}
-        </label>
+        {{/unless}}
         {{!-- A weapon: the Attack Skill it's wielded with (module/helpers/weapons.mjs). --}}
         <div>
           <label class="resource-label" data-tooltip="{{localize 'CARLRPG.Weapon.SkillHint'}}">{{localize "CARLRPG.Weapon.Skill"}}</label>
@@ -37,6 +34,36 @@
           </datalist>
         </div>
       </div>
+      {{!-- Where it's worn (Gear Slots, p.98-99; module/helpers/gear.mjs):
+            toggle pills, several for "Accessory or Head". A weapon is
+            always Held. A consumable is never worn. --}}
+      {{#unless gear.isConsumable}}
+      <div class="carl-worn-on">
+        <span class="resource-label">{{localize "CARLRPG.Gear.WornOn"}}</span>
+        <div class="carl-worn-on-pills">
+          {{#each gear.wearSlots as |slot|}}
+          <button type="button" class="carl-worn-pill{{#if slot.on}} is-on{{/if}}" data-action="toggleWornSlot" data-slot="{{slot.key}}"
+            aria-pressed="{{#if slot.on}}true{{else}}false{{/if}}" {{#if slot.locked}}disabled data-tooltip="{{localize 'CARLRPG.Gear.HeldByWeapon'}}"{{/if}}>
+            {{#if slot.on}}<i class="fas fa-check"></i>{{/if}}{{slot.label}}</button>
+          {{/each}}
+        </div>
+        {{#if gear.held}}
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Gear.TwoHandedHint'}}">
+          <input type="checkbox" name="system.twoHanded" {{checked system.twoHanded}} />
+          {{localize "CARLRPG.Gear.TwoHanded"}}
+        </label>
+        {{/if}}
+        {{#if gear.accessory}}
+        <label class="carl-check-field">
+          {{localize "CARLRPG.Gear.AccessoryKind"}}
+          <select name="system.accessoryKind">
+            {{selectOptions config.accessoryKinds selected=system.accessoryKind localize=true}}
+          </select>
+        </label>
+        {{/if}}
+        {{#unless gear.wearable}}<p class="carl-hint">{{localize "CARLRPG.Gear.NotWearable"}}</p>{{/unless}}
+      </div>
+      {{/unless}}
     </div>
 
     {{#if gear.showBonuses}}

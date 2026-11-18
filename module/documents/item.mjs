@@ -6,9 +6,15 @@ import { useConsumable } from "../helpers/consumables.mjs";
 import { isPet } from "../helpers/actor-kinds.mjs";
 import { describePetCommand, petFight } from "../helpers/pet-command.mjs";
 import { refuseOutsideHotlist } from "../helpers/hotlist.mjs";
-import { hotlistWithout } from "../helpers/equip-slots.mjs";
+import { freeSlotFor, hotlistWithout, isItemWorn, placeInFreeSlot, takeOutOfSlots } from "../helpers/equip-slots.mjs";
 import { refuseWhileSwapping } from "../helpers/swap-lock.mjs";
 import { canAct, combatantInFight, gearRecord, spendAction } from "../helpers/actions.mjs";
+import { HANDS, accessoryKindOf, canWear, fitsSlot, isConsumable, isTwoHanded, slotsOf } from "../helpers/gear.mjs";
+
+/** "Head, Accessory": where a piece of gear is worn, for a warning. */
+function slotsOfProbe(item) {
+  return slotsOf(item).map((s) => game.i18n.localize(CONFIG.CARLRPG.wearSlots[s] ?? s)).join(", ");
+}
 
 /**
  * Extend the basic Item document.
@@ -82,8 +88,38 @@ export class CarlRPGItem extends Item {
    */
   async _preUpdate(changed, options, user) {
     if ((await super._preUpdate(changed, options, user)) === false) return false;
+    // Where it's worn changed while it's worn: off whatever it no longer fits.
+    const slotFields = ["system.slots", "system.twoHanded", "system.accessoryKind"].some((p) => foundry.utils.hasProperty(changed, p));
+    if (this.type === "item" && slotFields && !options.carlMigration && this.actor?.type === "character" && isItemWorn(this.actor, this.id)) {
+      await this.#refitWorn(changed, options);
+    }
     const equipped = foundry.utils.getProperty(changed, "system.equipped");
     if (this.type !== "item" || !this.actor || equipped === undefined || equipped === this.system.equipped) return;
+    // The Equipped box (or a macro) - not the doll, a swap, an undo or a
+    // migration, which place the item themselves (docs/gear-slots.md).
+    const byBox = !options.carlMigration && !options.carlInAction && !options.carlSwap && !options.carlUndo;
+    // Its slots may be set in this same update.
+    const probe = byBox && equipped
+      ? { id: this.id, name: this.name, type: this.type, actor: this.actor,
+        system: foundry.utils.mergeObject(this.toObject(), changed, { inplace: false }).system }
+      : null;
+    // Gear with no slot can't be worn until one is set; a consumable never is.
+    if (probe && !canWear(probe)) {
+      const key = isConsumable(probe) ? "CARLRPG.Gear.ConsumableNotWorn" : "CARLRPG.Gear.NoSlot";
+      ui.notifications?.warn(game.i18n.format(key, { item: this.name }));
+      if (this.sheet?.rendered) this.sheet.render();
+      return false;
+    }
+    // On a Character it goes in its first free slot - or not at all: no
+    // second helmet worn beside the first (p.98).
+    const placing = !!probe && this.actor.type === "character" && !isItemWorn(this.actor, this.id);
+    const boxSlot = placing ? freeSlotFor(this.actor, probe) : null;
+    if (placing && !boxSlot) {
+      const where = slotsOfProbe(probe);
+      ui.notifications?.warn(game.i18n.format("CARLRPG.Gear.NoFreeSlot", { item: this.name, slots: where }));
+      if (this.sheet?.rendered) this.sheet.render();
+      return false;
+    }
     if (!options.carlSwap && !options.carlUndo && refuseWhileSwapping(this.actor)) {
       // The box was ticked in the form but nothing was saved: redraw it.
       if (this.sheet?.rendered) this.sheet.render();
@@ -105,9 +141,53 @@ export class CarlRPGItem extends Item {
         undo: [gearRecord(this.actor)],
       });
     }
+    if (boxSlot) await placeInFreeSlot(this.actor, boxSlot, probe);
+    // Unticked on a Character: out of its slot too.
+    if (!equipped && byBox && this.actor.type === "character") await takeOutOfSlots(this.actor, this);
     if (equipped) {
       const hotlist = hotlistWithout(this.actor, this.id);
       if (hotlist) await this.actor.update({ "system.hotlist": hotlist });
+    }
+  }
+
+  /**
+   * Its slots, Two-handed or Belt/Cape changed while it's worn on a
+   * Character (docs/gear-slots.md): out of any doll slot it no longer fits,
+   * a second Belt or Cape out of the Accessories, and a now two-handed item
+   * in a hand takes the other hand - or comes off if that's full. Taken off
+   * everywhere, it's unequipped in this same update.
+   * @param {object} changed
+   * @param {object} options
+   */
+  async #refitWorn(changed, options) {
+    const actor = this.actor;
+    const probe = { id: this.id, name: this.name, type: this.type, actor,
+      system: foundry.utils.mergeObject(this.toObject(), changed, { inplace: false }).system };
+    const gearSlots = { ...actor.system.gearSlots };
+    for (const [key, id] of Object.entries(gearSlots)) {
+      if (id === this.id && !fitsSlot(probe, { slotType: "gear", slotKey: key })) gearSlots[key] = "";
+    }
+    if (isTwoHanded(probe) && HANDS.some((hand) => gearSlots[hand] === this.id)) {
+      const other = HANDS.find((hand) => gearSlots[hand] !== this.id);
+      if (other && gearSlots[other] && actor.items.get(gearSlots[other])) {
+        for (const hand of HANDS) if (gearSlots[hand] === this.id) gearSlots[hand] = "";
+      } else if (other) gearSlots[other] = this.id;
+    }
+    let accessories = actor.system.accessories ?? [];
+    if (accessories.includes(this.id)) {
+      const kind = accessoryKindOf(probe);
+      const clash = kind && accessories.some((id) => id !== this.id && accessoryKindOf(actor.items.get(id)) === kind);
+      if (!fitsSlot(probe, { slotType: "accessory", slotKey: "0" }) || clash) accessories = accessories.filter((id) => id !== this.id);
+    }
+    const moved = JSON.stringify(gearSlots) !== JSON.stringify(actor.system.gearSlots)
+      || accessories.length !== (actor.system.accessories ?? []).length;
+    if (!moved) return;
+    await actor.update({ "system.gearSlots": gearSlots, "system.accessories": accessories });
+    if (!isItemWorn(actor, this.id)) {
+      foundry.utils.setProperty(changed, "system.equipped", false);
+      // Not a Retrieve: the sheet edit took it off.
+      options.carlInAction = true;
+      ui.notifications?.info(game.i18n.format("CARLRPG.Gear.TakenOff", { item: this.name }));
     }
   }
 

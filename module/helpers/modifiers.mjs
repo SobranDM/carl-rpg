@@ -34,6 +34,7 @@
 import { getRankDamageDie } from "./rules.mjs";
 import { CARLRPG } from "./config.mjs";
 import { deityBenefitApplies } from "./worship.mjs";
+import { drGroupOf, givesBonuses } from "./gear.mjs";
 
 const RANKED_TYPES = new Set(["skill", "spell", "damageEffect"]);
 
@@ -138,7 +139,7 @@ function collectItemChanges(item) {
   if (sys.isToggled && !sys.active) return [];
   // "Only gear in your Gear Slots grants its benefits" (p.98) - an owned
   // but unequipped gear item contributes nothing.
-  if (item.type === "item" && !sys.equipped) return [];
+  if (item.type === "item" && !givesBonuses(item)) return [];
   const sourceItemRank = sys.rank ?? 0;
   const out = [];
   // A Damage Effect is never an always-on modifier - "choose one available
@@ -248,7 +249,7 @@ export function collectItemTargetEffects(item, { isCrit = false, isAmazingSucces
  */
 export function attackTargetEffects(actor, skillItem, { damageEffectItem = null, isCrit = false, isAmazingSuccess = null } = {}) {
   const options = { isCrit, isAmazingSuccess, skillName: skillItem?.name ?? null };
-  const gear = (actor?.items ?? []).filter((i) => i.type === "item" && i.system.equipped && (i.system.targetEffects ?? []).length);
+  const gear = (actor?.items ?? []).filter((i) => i.type === "item" && givesBonuses(i) && (i.system.targetEffects ?? []).length);
   return [skillItem, damageEffectItem, ...gear]
     .filter(Boolean)
     .flatMap((item) => collectItemTargetEffects(item, options));
@@ -698,30 +699,40 @@ function armorDr(item, rollData) {
 }
 
 /**
- * Worn armor doesn't stack: "your entire ensemble only grants you a single
- * DR bonus" (p.225). Of the equipped gear marked as armor (system.isArmor),
- * only the piece adding the most DR counts (the first, on a tie); the ids of
- * the rest, whose armor DR bonuses (isArmorDrBonus) are skipped. Their other
- * changes still apply, and so does DR from a Race, Class, Skill, Spell or
- * Buff.
+ * Worn gear's DR stacks across slot types - gloves with boots with a torso
+ * piece - but not within one: "Armor on hands, feet, arms, and legs each
+ * provides a single DR value... you don't get extra bonuses for each limb"
+ * (p.225), so a creature with extra limbs can't stack a second pair of
+ * gloves (ruled 2026-11-17, docs/gear-slots.md). Per slot type (gear.mjs
+ * drGroupOf: the doll slot, both hands as one, else its slot), only the
+ * equipped piece adding the most DR counts (the first, on a tie); these are
+ * the ids of the rest, whose DR bonuses (isArmorDrBonus) are skipped.
+ * Their other changes still apply, and so does DR from a Race, Class,
+ * Skill, Spell or Buff. Accessories each count.
  * @param {Item[]} items
  * @param {object} rollData
+ * @param {object} [actorSystem]  The wearer's system data (its doll slots).
  * @returns {Set<string>}
  */
-export function supersededArmorIds(items, rollData) {
-  let best = null;
-  let bestDr = -Infinity;
-  const worn = [];
+export function supersededArmorIds(items, rollData, actorSystem = null) {
+  const best = new Map();
+  const superseded = new Set();
   for (const item of items) {
-    if (item.type !== "item" || !item.system.isArmor || !item.system.equipped) continue;
-    worn.push(item.id);
+    if (item.type !== "item" || !givesBonuses(item)) continue;
+    // Gear with a DR bonus competes even when it gives none right now (a
+    // Level-gated one): it loses to the piece that does.
+    if (!(item.system.changes ?? []).some(isArmorDrBonus)) continue;
     const dr = armorDr(item, rollData);
-    if (dr > bestDr) {
-      best = item.id;
-      bestDr = dr;
-    }
+    const group = drGroupOf(item, actorSystem);
+    if (group === null) continue;
+    const current = best.get(group);
+    if (!current) best.set(group, { id: item.id, dr });
+    else if (dr > current.dr) {
+      superseded.add(current.id);
+      best.set(group, { id: item.id, dr });
+    } else superseded.add(item.id);
   }
-  return new Set(worn.filter((id) => id !== best));
+  return superseded;
 }
 
 /** Records a ChangeEntry's optional `capMax` (an effective-value ceiling) into the caps bag, keeping the most restrictive (lowest) value per key. */
@@ -804,8 +815,8 @@ export function aggregateActorBonuses(actorSystem) {
   // below its worship Tier and not while worship is suspended (pp.163,
   // 312) - module/helpers/worship.mjs. Only a Character has a deity.
   const deity = actorSystem.deity;
-  // Only the best piece of worn armor adds its DR (p.225).
-  const superseded = supersededArmorIds(items, ctx.rollData);
+  // Within one slot type, only the best piece of worn gear adds its DR (p.225).
+  const superseded = supersededArmorIds(items, ctx.rollData, actorSystem);
   for (const item of items) {
     if (deity && !deityBenefitApplies(item, deity)) continue;
     for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {

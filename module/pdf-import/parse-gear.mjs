@@ -9,6 +9,7 @@
 import { bodySize, escapeHtml, isHeading, joinText, titleCase } from "./page-text.mjs";
 import { changeEntry, toBlocks } from "./shared.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
+import { parseGearSlotLine, slotsFromName } from "../helpers/gear-text.mjs";
 
 const SLOT_RE = /^Gear Slot:\s*(.*)$/;
 const STAT_WORDS = {
@@ -88,6 +89,23 @@ export function bulletToChanges(text, label) {
   return [];
 }
 
+/**
+ * Where an entry is worn (docs/gear-slots.md): its "Gear Slot:" line, else
+ * its name (gear.mjs); a Belt or Cape by name.
+ * @param {string} slot  The "Gear Slot:" value, or "".
+ * @param {string} name
+ * @returns {object}  `slots`, and `twoHanded` / `accessoryKind` when set.
+ */
+function gearSlotData(slot, name) {
+  const fromLine = parseGearSlotLine(slot);
+  const fromName = slotsFromName(name);
+  const slots = fromLine?.slots ?? fromName?.slots ?? [];
+  const out = { slots };
+  if (fromLine?.twoHanded) out.twoHanded = true;
+  if (fromName?.accessoryKind && slots.includes("accessory")) out.accessoryKind = fromName.accessoryKind;
+  return out;
+}
+
 function toGearItem(entry) {
   const name = titleCase(entry.name);
   let slot = "";
@@ -126,7 +144,7 @@ function toGearItem(entry) {
       name,
       type: "item",
       img: "icons/svg/item-bag.svg",
-      system: { description: html.join(""), changes },
+      system: { description: html.join(""), changes, ...gearSlotData(slot, name) },
     },
   };
 }

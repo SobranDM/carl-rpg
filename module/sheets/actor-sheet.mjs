@@ -9,6 +9,7 @@ import CrawlerCreation from "../apps/crawler-creation.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import {
   assignItemToSlot,
+  slotRefusal,
   clearSlot,
   isItemWorn,
   resolveSlotValue,
@@ -948,6 +949,30 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   }
 
   /* -------------------------------------------- */
+
+  /**
+   * Dragging gear off a Character's own sheet: the Equipment Doll lights the
+   * slots it can go in and dims the rest (docs/gear-slots.md;
+   * equip-slots.mjs slotRefusal), until the drag ends.
+   * @override
+   */
+  _onDragStart(event) {
+    super._onDragStart(event);
+    if (this.actor.type !== "character") return;
+    const row = event.target.closest?.("[data-item-id]");
+    const item = this.actor.items.get(row?.dataset.itemId);
+    const panel = this.element.querySelector(".carl-equip-panel");
+    if (item?.type !== "item" || !panel) return;
+    panel.classList.add("is-dragging");
+    for (const slot of panel.querySelectorAll(".carl-equip-slot[data-slot-type]")) {
+      slot.classList.toggle("is-fit", !slotRefusal(this.actor, slot.dataset, item));
+    }
+    const clear = () => {
+      panel.classList.remove("is-dragging");
+      for (const slot of panel.querySelectorAll(".is-fit")) slot.classList.remove("is-fit");
+    };
+    document.addEventListener("dragend", clear, { once: true });
+  }
 
   /** A Mob's Resistances button: open or close the grid under its Defenses. */
   static #onToggleMobResistances(event) {
