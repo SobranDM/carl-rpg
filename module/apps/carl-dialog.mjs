@@ -34,15 +34,25 @@ function wrapButton(button) {
  * @param {Array} [config.buttons]
  * @param {Function} [config.onRender]
  * @param {object} [config.position]  Window position/size, e.g. {width: 720}.
+ * @param {boolean} [config.trusted]  Pass the content to Foundry as an element,
+ *   which it doesn't clean. A string is cleaned (foundry.utils.cleanHTML),
+ *   and that strips URL schemes off its list - e.g. the blob: thumbnails of
+ *   the Rulebook import's maps. Only for our own templates, with anything
+ *   from outside escaped by Handlebars.
  * @returns {Promise<*>} The chosen button's callback result (its action if it
  *   has no callback), or null if cancelled/closed or the callback returned
  *   null/undefined.
  */
 export async function showCarlDialog({
-  title, content, template, context = {}, buttons, onRender, rejectClose = false, classes = [], position,
+  title, content, template, context = {}, buttons, onRender, rejectClose = false, classes = [], position, trusted = false,
 } = {}) {
   if (template) {
     content = await foundry.applications.handlebars.renderTemplate(template, context);
+  }
+  if (trusted && typeof content === "string") {
+    const div = document.createElement("div");
+    div.innerHTML = content;
+    content = div;
   }
   return DialogV2.wait({
     window: { title },

@@ -11,7 +11,17 @@ import {
 import { parseAchievements } from "../../pdf-import/parse-achievements.mjs";
 import { bulletToChanges, parseGear } from "../../pdf-import/parse-gear.mjs";
 import { parseMobs } from "../../pdf-import/parse-mobs.mjs";
-import { importBook } from "../../pdf-import/importer.mjs";
+import { findBookPack, importBook, matchCandidates } from "../../pdf-import/importer.mjs";
+import {
+  DEBUFF_KEYS,
+  debuffKeyFor,
+  HAND_TO_HAND_SKILLS,
+  parseDebuffText,
+  splitArmorPiercing,
+} from "../../pdf-import/debuff-text.mjs";
+import { buildMatcher, normalizeName, TIERS } from "../../pdf-import/compendium-match.mjs";
+import { FINGERPRINT_VERSION, importState, importStamp, writtenFields } from "../../pdf-import/fingerprint.mjs";
+import { findSections, floorNumber, sectionFolders } from "../../pdf-import/sections.mjs";
 import { imageDraws, imageToRGBA, imageTransform, orientRGBA, pickMapDraw } from "../../pdf-import/maps.mjs";
 import {
   imagePpis,
@@ -21,8 +31,9 @@ import {
   samplePages,
 } from "../../pdf-import/quality.mjs";
 import { parseSizeText } from "../../helpers/size-text.mjs";
-import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
-import { useQuenchTimeout } from "../helpers.mjs";
+import { legacyAttackItems, mobAttacksOf } from "../../helpers/mob-attacks.mjs";
+import { pressDialog, useQuenchTimeout, withDialog } from "../helpers.mjs";
+import { chooseContent } from "../../pdf-import/import-dialog.mjs";
 
 // Every block below is made up in the books' layout. No rulebook text is
 // committed here: the books are not ours to redistribute.
@@ -186,6 +197,96 @@ const LOOT_PAGE = page([
   ["• +1 to all Skill or Stat Checks"],
 ]);
 
+/** A Mob whose Attacks carry Table 11 Debuffs and Armor-Piercing (made up). */
+const DEBUFF_MOB_PAGE = page([
+  ["TEST STABBY MONSTERS", 16],
+  ["Test Stabber", 12],
+  ["Mob; Small (2), Humanoid"],
+  ["Level Surprise Evade Move DR", 10],
+  ["3 11+F 12+F 20+S 0", 10],
+  ["Stab: 12+F to hit, 1d4+1 Piercing, 5ft range, Armor-", 10],
+  ["Piercing", 10],
+  ["On an Evade Major Fail or worse, the crawler gains the", 10],
+  ["Poison Debuff.", 10],
+  ["Kick 11+F to hit, 1d6 Bludgeoning, 5ft range", 10],
+  ["Any hit crawler gains the Staggered and Woozy Debuffs.", 10],
+  ["Glare: 13+F to hit, 1d4 Psychic, 30ft range", 10],
+  ["Any hit crawler must make an Int Stat Check. On Fail, they", 10],
+  ["gain the Woozy Debuff.", 10],
+]);
+
+const DEBUFF_GEAR_PAGE = page([
+  ["APPENDIX 9: TEST GEAR", 32],
+  ["TEST KNUCKLES OF BONKING", 16],
+  ["Gear Slot: Hands"],
+  ["Knuckles for testing."],
+  ["• On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff"],
+  ["• On a Critical Hit with any Test Poke Attack you make, the target gains the Blinded Debuff"],
+  ["• AS: Target gains Burned"],
+]);
+
+/** A minimal stat block (made up): its name, class line and Level. */
+function mobRows(name, level) {
+  return [
+    [name, 12],
+    ["Mob; Small (2), Fiend"],
+    ["Level Surprise Evade Move DR", 10],
+    [`${level} 10+F 10+F 20+S 0`, 10],
+  ];
+}
+
+/**
+ * A made-up book in the Core Rulebook's layout: a contents page, a Mob
+ * before any Floor, chapter openers with the Floor's title (one drawn only
+ * as a text item), mixed-case section headings with "Floor: N" under them,
+ * and an appendix.
+ */
+const CORE_STYLE_BOOK = [
+  page(
+    [
+      ["CHAPTER 7: THE TEST CITY ........................ 330", 16],
+      ["Neighborhood: Fake Town ......................... 332", 12],
+      ["Quest: Fake Errand .............................. 340", 12],
+      ["Neighborhood: Fake Dots ......................... 350", 20],
+    ],
+    { page: 1 },
+  ),
+  page([["EXAMPLE MOBS", 16], ...mobRows("Test Sample", 1)], { page: 2 }),
+  page([["Chapter 7", 41], ["The Third Floor: The Test City", 32]], { page: 3 }),
+  page([["Neighborhood: Testville", 32], ["Floor: 3 – Theme: Placeholders", 15], ...mobRows("Test Imp", 4)], {
+    page: 4,
+  }),
+  page([["Quest: Find the Test", 32], ["Floor: 3 – Theme: More placeholders", 15], ...mobRows("Test Seeker", 5)], {
+    page: 5,
+  }),
+  {
+    ...page([["CHAPTER 8CHAPTER 8", 90.9]], { page: 6 }),
+    // The Floor's title drawn where no line holds it.
+    items: [{ str: "The Fourth Floor: The TEST TANGLE", x: 100, y: 120, size: 32, angle: 0, width: 300 }],
+  },
+  page([["RIVAL TESTERS", 20], ...mobRows("Test Rival", 6)], { page: 7 }),
+  page([["Neighborhood: Backyard Test", 32], ["(Land Quadrant)", 32], ...mobRows("Test Ant", 7)], { page: 8 }),
+  page([["Appendix 1: Test Gear", 32], ...mobRows("Test Mascot", 2)], { page: 9 }),
+];
+
+/**
+ * A made-up book in the Starter Set Gamemaster's Toolkit's layout: Floor
+ * titles with no name, capitalised section headings (one wrapping onto
+ * three lines), and an appendix of Mobs listed by Floor.
+ */
+const TOOLKIT_STYLE_BOOK = [
+  page([["First Floor Tests 136", 13], ["ADVERSARIES", 20], ...mobRows("Test Rat", 1)], { page: 1 }),
+  page([["The First Floor", 25]], { page: 2 }),
+  page([["NEIGHBORHOOD: TEST BOGS", 20], ...mobRows("Test Bogling", 5), ...mobRows("Test Bog Brute", 2), ...mobRows("Test Bog Ace", 2)], {
+    page: 3,
+  }),
+  page([["QUEST:", 20], ["PASSIVE (TESTING)", 20], ["PERCEPTION", 20], ...mobRows("Test Watcher", 3)], { page: 4 }),
+  page([["The Second Floor", 25], ["THE ANNOUNCEMENT", 20], ...mobRows("Test Herald", 6)], { page: 5 }),
+  page([["Threat Appendix", 25], ["RIVAL CRAWLERS", 20], ...mobRows("Test Bruiser", 3), ["FIRST FLOOR MOBS", 20], ...mobRows("Test Bogling Again", 5)], {
+    page: 6,
+  }),
+];
+
 /** A pdf.js-like text item at (x, y). */
 function textItem(str, x = 60, y = 400) {
   return { str, transform: [10, 0, 0, 10, x, y], width: str.length * 5, fontName: "f1" };
@@ -221,7 +322,7 @@ export default function register(quench) {
   quench.registerBatch(
     "carl-rpg.pdf-import",
     (context) => {
-      const { describe, it, assert, after } = context;
+      const { describe, it, assert, before, after } = context;
 
       describe("page-text", function () {
         it("finds the gutter at the leftmost right-column start", function () {
@@ -583,19 +684,310 @@ export default function register(quench) {
         });
       });
 
+      describe("structured Debuffs (debuff-text)", function () {
+        const mob = (text) => parseDebuffText(text, { context: "mob" });
+        const summary = (r) => r.effects.map((e) => `${e.trigger}:${e.debuffKey}`);
+
+        it("reads a Mob Attack's Debuffs and when they land", function () {
+          assert.deepEqual(summary(mob("On an Evade Major Fail or worse, the target gains the Poison Debuff.")), [
+            "majorFail:poisoned",
+          ]);
+          assert.deepEqual(summary(mob("On an Evade Major Fail or Worse, the crawler gains the Burning Debuff.")), [
+            "majorFail:burned",
+          ]);
+          assert.deepEqual(summary(mob("Any hit crawler gains the Shocked and Take Down Debuffs.")), [
+            "hit:shocked",
+            "hit:takeDown",
+          ]);
+          assert.deepEqual(summary(mob("Any crawler who fails to Evade gains The Taint Debuff for a bit.")), ["hit:theTaint"]);
+          assert.deepEqual(
+            summary(mob("On an Evade Critical Fail, the crawler gains the Long-Term Minor Injury Debuff.")),
+            ["criticalFail:longTermMinorInjury"],
+          );
+          assert.deepEqual(
+            summary(
+              mob(
+                "Any hit crawler gains the Held Debuff. On an Evade Major Fail or worse, the crawler also gains the Stunned, Woozy, and Sore as Shit Debuffs.",
+              ),
+            ),
+            ["hit:held", "majorFail:stunned", "majorFail:woozy", "majorFail:soreAsShit"],
+          );
+          assert.deepEqual(summary(mob("(test form only) On hit, target gains a Major Injury Debuff (ouch).")), [
+            "hit:majorInjury",
+          ]);
+        });
+
+        it("leaves other Debuffs, and gated ones, as text only", function () {
+          const cases = [
+            [
+              "On an Evade Major Fail or worse, the crawler gains the Gooey Test Debuff: Take 1d6+F Acid and gain the Held Debuff.",
+              "custom",
+            ],
+            ["Any hit crawler gains the Blinded Debuff: Roll with Disadvantage on everything until healed.", "redefined"],
+            ["Any hit crawler must make a Str Stat Check. On a Fail, they gain the Held Debuff.", "check"],
+            ["The target must make a free Dex Stat Check vs Difficulty 12 or gains the Stunned Debuff.", "check"],
+            ["Any hit crawler gains the Muted or Queasy Debuff (the goblin's choice).", "choice"],
+            [
+              "On an Evade Major Fail or worse, the crawler gains one of the following Debuffs: Woozy, Stunned, or Blood Trail.",
+              "choice",
+            ],
+            ["Any crawler who loses 4+ HB slots gains the Muted Debuff.", "hb"],
+            ["If the test goblin moved this round, any hit crawler gains the Take Down Debuff.", "if"],
+            ["The goblin cackles, and the crawler gains the Woozy Debuff.", "trigger"],
+          ];
+          for (const [text, reason] of cases) {
+            const read = mob(text);
+            assert.isEmpty(read.effects, text);
+            assert.equal(read.textOnly[0]?.reason, reason, text);
+          }
+          assert.isEmpty(mob("This attack automatically hits any crawler with the Held Debuff.").effects);
+          // A second Attack's line run into this one's effect isn't this one's.
+          assert.deepEqual(
+            summary(
+              mob(
+                "Any hit crawler gains the Muted Debuff. Kick 14+F to hit, 1d6 Bludgeoning, 5ft range On an Evade Major Fail or worse, the crawler gains the Blood Trail Debuff.",
+              ),
+            ),
+            ["hit:muted"],
+          );
+        });
+
+        it("reads gear's Amazing Success and Critical Hit Debuffs, with their Skills", function () {
+          const gear = (text) => parseDebuffText(text, { context: "gear" }).effects[0];
+          const fist = gear(
+            "On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff",
+          );
+          assert.include(fist, { debuffKey: "woozy", amazingSuccessOnly: true, critOnly: false });
+          assert.deepEqual(fist.skills, HAND_TO_HAND_SKILLS);
+          const any = gear("On an Amazing Success with any Attack you make, the target gains the Queasy Debuff");
+          assert.include(any, { debuffKey: "queasy", amazingSuccessOnly: true });
+          assert.deepEqual(any.skills, [], "any Attack");
+          const crit = gear("On a Critical Hit with any Test Poke Attack you make, the target gains the Blinded Debuff");
+          assert.include(crit, { debuffKey: "blinded", critOnly: true, amazingSuccessOnly: false });
+          assert.deepEqual(crit.skills, ["Test Poke"]);
+          assert.include(gear("AS: Target gains Burned"), { debuffKey: "burned", amazingSuccessOnly: true });
+        });
+
+        it("reads a Spell Upgrade's Debuffs", function () {
+          const spell = (text) => parseDebuffText(text, { context: "spell" });
+          assert.include(spell("+1d3 base damage, and the target gains the Shocked Debuff.").effects[0], {
+            debuffKey: "shocked",
+            critOnly: false,
+            amazingSuccessOnly: false,
+          });
+          assert.include(
+            spell("+10ft Cone, and on a Critical Hit, the affected creatures gain the Muted Debuff.").effects[0],
+            { debuffKey: "muted", critOnly: true },
+          );
+          assert.isEmpty(spell("You heal 1d4 slots and mend a Minor Injury Debuff.").effects);
+          assert.equal(
+            spell("Those who lose 2 or more Health Bar slots to this test gain the Queasy Debuff.").textOnly[0]
+              ?.reason,
+            "hb",
+          );
+        });
+
+        it("maps every Table 11 Debuff, by name and variant, to a configured key", function () {
+          for (const key of DEBUFF_KEYS) assert.property(CONFIG.CARLRPG.debuffs, key);
+          for (const [key, def] of Object.entries(CONFIG.CARLRPG.debuffs)) {
+            assert.equal(debuffKeyFor(game.i18n.localize(def.label)), key, def.label);
+          }
+          assert.equal(debuffKeyFor("Poison"), "poisoned");
+          assert.equal(debuffKeyFor("the Taint"), "theTaint");
+          assert.equal(debuffKeyFor("Long Term Major Injury"), "longTermMajorInjury");
+          assert.isNull(debuffKeyFor("Swallowed"));
+        });
+
+        it("reads Armor-Piercing off an Attack's range", function () {
+          assert.deepEqual(splitArmorPiercing("5ft, Armor-Piercing"), { range: "5ft", armorPiercing: true });
+          assert.deepEqual(splitArmorPiercing("10ft, Armor Piercing"), { range: "10ft", armorPiercing: true });
+          assert.deepEqual(splitArmorPiercing("30ft"), { range: "30ft", armorPiercing: false });
+        });
+
+        it("puts them on parsed Mob Attacks and their Attack items", function () {
+          const [stabber] = parseMobs([DEBUFF_MOB_PAGE]);
+          const [stab, kick, glare] = stabber.data.system.attacks;
+          const triggers = (attack) => attack.targetEffects.map((te) => `${te.trigger}:${te.debuffKey}`);
+          assert.include(stab, { name: "Stab", range: "5ft", armorPiercing: true });
+          assert.deepEqual(triggers(stab), ["majorFail:poisoned"]);
+          assert.include(kick, { name: "Kick", toHit: "11+F", damage: "1d6" }, "a to-hit line missing its colon");
+          assert.deepEqual(triggers(kick), ["hit:staggered", "hit:woozy"]);
+          assert.isEmpty(glare.targetEffects, "behind a Stat Check: text only");
+          assert.include(glare.effect, "Woozy Debuff", "and still in the text");
+
+          const items = legacyAttackItems([stab, { ...kick, targetEffects: [{ debuffKey: "notADebuff", trigger: "hit" }] }]);
+          assert.isTrue(items[0].system.armorPiercing);
+          assert.deepEqual(
+            items[0].system.targetEffects.map((te) => te.debuffKey),
+            ["poisoned"],
+          );
+          assert.isEmpty(items[1].system.targetEffects, "an unknown Debuff key is dropped");
+        });
+
+        it("puts them on parsed gear", function () {
+          const [knuckles] = parseGear([DEBUFF_GEAR_PAGE]);
+          const effects = knuckles.data.system.targetEffects;
+          assert.deepEqual(
+            effects.map((te) => `${te.debuffKey}:${te.amazingSuccessOnly}:${te.critOnly}:${te.skills.join("/")}`),
+            [
+              `woozy:true:false:${HAND_TO_HAND_SKILLS.join("/")}`,
+              "blinded:false:true:Test Poke",
+              "burned:true:false:",
+            ],
+          );
+        });
+      });
+
+      describe("compendium copies (compendium-match)", function () {
+        it("matches names whatever their apostrophes, dashes, case and parentheticals", function () {
+          assert.equal(normalizeName("Test’s  Smite"), normalizeName("test's smite"));
+          assert.equal(normalizeName("Test‑Can Lid"), "test-can lid");
+          assert.equal(normalizeName("Scroll of Test (Rank 3)"), "scroll of test");
+        });
+
+        it("takes the best source first, then the system packs' order, and only the right type", function () {
+          const sources = [
+            { name: "Test Bolt", type: "spell", tier: TIERS.other, source: "module" },
+            { name: "Test Bolt", type: "spell", tier: TIERS.world, source: "world" },
+            { name: "Test Bolt", type: "spell", tier: TIERS.rulebook, source: "other book" },
+            { name: "Test Bolt", type: "item", tier: TIERS.system, order: 0, source: "system item" },
+            { name: "Test Bolt", type: "spell", tier: TIERS.system, order: 2, source: "system gear pack" },
+            { name: "test bolt", type: "spell", tier: TIERS.system, order: 0, source: "system spells pack" },
+          ];
+          const best = (list, types = ["spell"]) => buildMatcher(list)("Test Bolt", types)?.source ?? null;
+          assert.equal(best(sources), "system spells pack");
+          assert.equal(best(sources.slice(0, 5)), "system gear pack");
+          assert.equal(best(sources.slice(0, 3)), "other book");
+          assert.equal(best(sources.slice(0, 2)), "world");
+          assert.equal(best(sources.slice(0, 1)), "module");
+          assert.equal(best(sources, ["item"]), "system item");
+          assert.isNull(best(sources, ["skill"]));
+        });
+      });
+
+      describe("Floor and section headings (sections)", function () {
+        const labels = { floor: (n) => `Floor ${n}`, other: "Not on a Floor" };
+        const filed = (book) =>
+          Object.fromEntries(
+            parseMobs(book).map((m) => [m.name, sectionFolders(m.section, labels).map((f) => f.name).join(" / ")]),
+          );
+
+        it("reads Core-style chapter openers and section headings, not the contents page", function () {
+          assert.deepEqual(filed(CORE_STYLE_BOOK), {
+            "Test Sample": "Not on a Floor",
+            "Test Imp": "Floor 3: The Test City / Neighborhood: Testville",
+            "Test Seeker": "Floor 3: The Test City / Quest: Find the Test",
+            "Test Rival": "Floor 4: The Test Tangle",
+            "Test Ant": "Floor 4: The Test Tangle / Neighborhood: Backyard Test (Land Quadrant)",
+            "Test Mascot": "Not on a Floor",
+          });
+          const sectionAt = findSections(CORE_STYLE_BOOK);
+          assert.include(sectionAt(1, 3), { floor: null, kind: "" }, "a contents line is no heading");
+        });
+
+        it("reads Toolkit-style Floor titles, capitalised and wrapped headings, and Floor lists", function () {
+          assert.deepEqual(filed(TOOLKIT_STYLE_BOOK), {
+            "Test Rat": "Not on a Floor",
+            "Test Bogling": "Floor 1 / Neighborhood: Test Bogs",
+            "Test Bog Brute": "Floor 1 / Neighborhood: Test Bogs",
+            "Test Bog Ace": "Floor 1 / Neighborhood: Test Bogs",
+            "Test Watcher": "Floor 1 / Quest: Passive (Testing) Perception",
+            "Test Herald": "Floor 2",
+            "Test Bruiser": "Not on a Floor",
+            "Test Bogling Again": "Floor 1",
+          });
+        });
+
+        it("reads a Floor's number in words or digits", function () {
+          assert.equal(floorNumber("Third"), 3);
+          assert.equal(floorNumber("FOURTH"), 4);
+          assert.equal(floorNumber("12th"), 12);
+          assert.isNull(floorNumber("Ground"));
+        });
+      });
+
+      describe("import fingerprint", function () {
+        it("covers only what the import wrote", function () {
+          const data = { name: "X", type: "item", folder: "f", flags: { a: 1 }, system: { a: 1, b: { c: [1, 2] } } };
+          assert.deepEqual(writtenFields(data), ["name", "system.a", "system.b.c", "type"]);
+        });
+
+        it("tells untouched, edited, older and foreign documents apart", function () {
+          const source = { name: "X", type: "item", system: { a: 1, b: 2 } };
+          const flag = importStamp(source, { name: "X", type: "item", system: { a: 1 } });
+          assert.equal(flag.v, FINGERPRINT_VERSION);
+          assert.equal(importState(source, flag), "untouched");
+          assert.equal(importState({ ...source, system: { a: 1, b: 9 } }, flag), "untouched", "a field it didn't write");
+          assert.equal(importState({ ...source, system: { a: 5, b: 2 } }, flag), "edited");
+          assert.equal(importState({ ...source, system: { a: 5 } }, { hash: "old" }), "untouched", "pre-0.7.0: once");
+          assert.equal(importState(source, undefined), "notImported");
+        });
+      });
+
+      describe("the import dialog", function () {
+        useQuenchTimeout(this);
+
+        it("selects all or no maps at once", async function () {
+          const found = { gear: [{}], spells: [], mobs: [], achievements: [] };
+          const maps = [
+            { page: 3, name: "Test Map A", likely: true, thumb: URL.createObjectURL(new Blob(["a"], { type: "image/png" })) },
+            { page: 7, name: "Test Map B", likely: false, thumb: URL.createObjectURL(new Blob(["b"], { type: "image/png" })) },
+          ];
+          const boxes = (dialog) => [...dialog.element.querySelectorAll('.carl-pdf-import-map input[type="checkbox"]')];
+          const choice = await withDialog(() => chooseContent("Quench Test Book", found, maps), async (dialog) => {
+            // The blob: thumbnails survive into the dialog (Foundry's HTML
+            // cleaning would strip them from string content).
+            const srcs = [...dialog.element.querySelectorAll(".carl-pdf-import-map img")].map((i) => i.getAttribute("src"));
+            assert.deepEqual(srcs, maps.map((m) => m.thumb), "the thumbnails' blob: URLs are kept");
+            assert.deepEqual(boxes(dialog).map((b) => b.checked), [true, false], "likely maps start checked");
+            dialog.element.querySelector('[data-map-select="all"]').click();
+            assert.isTrue(boxes(dialog).every((b) => b.checked), "Select all");
+            dialog.element.querySelector('[data-map-select="none"]').click();
+            assert.isTrue(boxes(dialog).every((b) => !b.checked), "Select none");
+            pressDialog(dialog, "import");
+          }, "carl-pdf-import-dialog");
+          for (const m of maps) URL.revokeObjectURL(m.thumb);
+          assert.isFalse(Object.values(choice.map ?? {}).some(Boolean), "no maps chosen");
+          assert.isTrue(choice.kind?.gear, "the content choice is untouched");
+        });
+      });
+
       describe("importBook", function () {
         useQuenchTimeout(this);
         const title = "Quench PDF Import Test Book";
-
-        after(async function () {
-          for (const folder of game.folders.filter((f) => f.name === title)) {
-            const docs = folder.contents;
-            if (docs.length) await docs[0].constructor.deleteDocuments(docs.map((d) => d.id));
-            await folder.delete();
-          }
+        const otherTitle = "Quench PDF Import Other Book";
+        const book = "quench-pdf-import-test-book";
+        const otherBook = "quench-pdf-import-other-book";
+        const worldItems = [];
+        const docsOf = async (b, type) => (await findBookPack(b, type)?.getDocuments()) ?? [];
+        const docNamed = async (b, type, name) => (await docsOf(b, type)).find((d) => d.name === name);
+        const parsedItem = (name, type, description = "<p>parsed</p>") => ({
+          name,
+          page: 2,
+          data: { name, type, img: "icons/svg/item-bag.svg", system: { description } },
         });
+        const none = { gear: [], spells: [], mobs: [], achievements: [] };
 
-        it("creates documents in book folders, then updates them on re-import", async function () {
+        async function cleanUp() {
+          for (const b of [book, otherBook]) {
+            for (const type of ["Actor", "Item", "JournalEntry"]) {
+              const pack = findBookPack(b, type);
+              if (!pack) continue;
+              if (pack.locked) await pack.configure({ locked: false });
+              await pack.deleteCompendium();
+            }
+            for (const folder of game.folders.filter(
+              (f) => f.type === "Compendium" && f.getFlag("carl-rpg", "pdfImport")?.book === b,
+            ))
+              await folder.delete();
+          }
+          for (const folder of game.folders.filter((f) => [title, otherTitle].includes(f.name))) await folder.delete();
+          for (const item of worldItems.splice(0)) if (game.items.get(item.id)) await item.delete();
+        }
+        before(cleanUp);
+        after(cleanUp);
+
+        it("imports into world compendiums named after the book, then updates them", async function () {
           const found = {
             gear: parseGear([GEAR_PAGE]),
             spells: [],
@@ -604,57 +996,251 @@ export default function register(quench) {
           };
           const kinds = ["gear", "mobs", "achievements"];
           const first = await importBook({ title, found, kinds, maps: [] });
-          assert.deepEqual(first.items, { created: 1, updated: 0, skipped: [] });
+          assert.include(first.items, { created: 1, updated: 0 });
+          assert.isEmpty(first.items.skipped);
           assert.deepEqual(first.mobs, { created: 2, updated: 0, skipped: [] });
           assert.deepEqual(first.achievements, { created: 1, updated: 0, skipped: [] });
 
-          const blob = game.actors.find((a) => a.name === "Test Blob" && a.folder?.name === title);
+          for (const type of ["Actor", "Item", "JournalEntry"]) {
+            const pack = findBookPack(book, type);
+            assert.ok(pack, `a ${type} compendium`);
+            assert.equal(pack.metadata.packageType, "world");
+            assert.include(pack.metadata.label, title);
+          }
+          assert.isFalse(
+            game.folders.some((f) => f.name === title && ["Actor", "Item", "JournalEntry"].includes(f.type)),
+            "no world folders",
+          );
+          assert.isFalse(game.actors.some((a) => a.getFlag("carl-rpg", "pdfImport")?.book === book), "nothing in the world");
+          assert.isFalse(
+            game.packs.get("carl-rpg.gear").index.some((e) => e.name === "Test Widget of Never-Ending Doom"),
+            "the system's packs are untouched",
+          );
+
+          const itemPack = findBookPack(book, "Item");
+          const widget = await docNamed(book, "Item", "Test Widget of Never-Ending Doom");
+          assert.equal(itemPack.folders.get(widget._source.folder)?.name, game.i18n.localize("CARLRPG.PdfImport.Kind.gear"));
+          const blob = await docNamed(book, "Actor", "Test Blob");
           assert.equal(blob.system.hb.max, 3);
-          assert.equal(blob.system.stats.con.value, 6);
-          assert.equal(blob.flags["carl-rpg"].pdfImport.book, "quench-pdf-import-test-book");
+          assert.equal(blob.flags["carl-rpg"].pdfImport.book, book);
+          assert.equal(blob.flags["carl-rpg"].pdfImport.v, FINGERPRINT_VERSION);
           const printed = found.mobs.find((m) => m.name === "Test Blob").data.system.attacks;
-          assert.isAbove(printed.length, 0);
           assert.lengthOf(mobAttacksOf(blob), printed.length, "its Attacks are items");
-          assert.equal(mobAttacksOf(blob)[0].name, printed[0].name);
           assert.lengthOf(blob.system.attacks, 0, "and not the old list");
           // A Boss's token is linked on create (a unique creature); a plain Mob
-          // keeps the unlinked default. The second import below still counts
-          // both as unedited, so the link isn't part of the fingerprint.
-          const queen = game.actors.find((a) => a.name === "Test Blob Queen" && a.folder?.name === title);
+          // keeps the unlinked default. The re-import below still counts both
+          // as unedited, so the link isn't part of the fingerprint.
+          const queen = await docNamed(book, "Actor", "Test Blob Queen");
           assert.isTrue(queen.prototypeToken.actorLink, "a Boss imports linked");
           assert.isFalse(blob.prototypeToken.actorLink, "a Mob imports unlinked");
+          const [journal] = await docsOf(book, "JournalEntry");
+          assert.equal(journal.pages.size, 1);
 
           const second = await importBook({ title, found, kinds, maps: [] });
-          assert.deepEqual(second.items, { created: 0, updated: 1, skipped: [] });
+          assert.include(second.items, { created: 0, updated: 1 });
           assert.deepEqual(second.mobs, { created: 0, updated: 2, skipped: [] });
           assert.deepEqual(second.achievements, { created: 0, updated: 1, skipped: [] });
-          assert.lengthOf(mobAttacksOf(blob), printed.length, "a re-import doesn't double them");
-
-          // The GM's work on an Attack survives a re-import; Attacks deleted are made again.
-          await mobAttacksOf(blob)[0].update({ "system.targetEffects": [{ debuffKey: "poisoned", trigger: "majorFail" }] });
-          await importBook({ title, found, kinds, maps: [] });
-          assert.equal(mobAttacksOf(blob)[0].system.targetEffects[0]?.trigger, "majorFail", "never replaced");
-          await blob.deleteEmbeddedDocuments("Item", mobAttacksOf(blob).map((a) => a.id));
-          await importBook({ title, found, kinds, maps: [] });
-          assert.lengthOf(mobAttacksOf(blob), printed.length, "made again once deleted");
+          assert.lengthOf(mobAttacksOf(await docNamed(book, "Actor", "Test Blob")), printed.length, "not doubled");
         });
 
-        it("leaves a document the GM edited alone on re-import", async function () {
-          const found = {
-            gear: parseGear([GEAR_PAGE]),
-            spells: [],
-            mobs: parseMobs([MOB_PAGE]),
-            achievements: [],
-          };
-          const kinds = ["gear", "mobs"];
-          await importBook({ title, found, kinds, maps: [] });
-          const blob = game.actors.find((a) => a.name === "Test Blob" && a.folder?.name === title);
+        it("refreshes the Attacks the GM didn't edit, keeps the ones they did, and remakes deleted ones", async function () {
+          const found = { ...none, mobs: parseMobs([DEBUFF_MOB_PAGE]) };
+          await importBook({ title, found, kinds: ["mobs"], maps: [] });
+          let stabber = await docNamed(book, "Actor", "Test Stabber");
+          const [stab, kick] = mobAttacksOf(stabber);
+          assert.isTrue(stab.system.armorPiercing);
+          assert.deepEqual(
+            stab.system.targetEffects.map((te) => `${te.trigger}:${te.debuffKey}`),
+            ["majorFail:poisoned"],
+          );
+          assert.deepEqual(
+            kick.system.targetEffects.map((te) => `${te.trigger}:${te.debuffKey}`),
+            ["hit:staggered", "hit:woozy"],
+          );
+          const stabId = stab.id;
+          // The GM edits Kick, and adds an Attack of their own.
+          await kick.update({ "system.targetEffects": [{ debuffKey: "held", trigger: "majorFail" }] });
+          await stabber.createEmbeddedDocuments("Item", [{ name: "GM Bite", type: "mobAttack", system: { damage: "1d4" } }]);
+
+          // A later parse changes every Attack.
+          const reprint = parseMobs([DEBUFF_MOB_PAGE]);
+          for (const attack of reprint[0].data.system.attacks) attack.damage = "2d6";
+          const again = await importBook({ title, found: { ...none, mobs: reprint }, kinds: ["mobs"], maps: [] });
+          assert.equal(again.mobs.updated, 1);
+          stabber = await docNamed(book, "Actor", "Test Stabber");
+          const byName = Object.fromEntries(mobAttacksOf(stabber).map((a) => [a.name, a]));
+          assert.equal(byName.Stab.id, stabId, "updated in place");
+          assert.equal(byName.Stab.system.damage, "2d6", "an unedited Attack takes the new parse");
+          assert.equal(byName.Glare.system.damage, "2d6");
+          assert.equal(byName.Kick.system.damage, "1d6", "the GM's edited Attack is kept");
+          assert.equal(byName.Kick.system.targetEffects[0]?.debuffKey, "held");
+          assert.ok(byName["GM Bite"], "an Attack the GM added stays");
+          assert.lengthOf(mobAttacksOf(stabber), 4);
+
+          await stabber.deleteEmbeddedDocuments("Item", [stabId]);
+          await importBook({ title, found: { ...none, mobs: reprint }, kinds: ["mobs"], maps: [] });
+          stabber = await docNamed(book, "Actor", "Test Stabber");
+          assert.ok(mobAttacksOf(stabber).find((a) => a.name === "Stab"), "made again once deleted");
+          assert.lengthOf(mobAttacksOf(stabber), 4);
+        });
+
+        it("skips a document the GM edited, not one a newer parse writes more fields on", async function () {
+          const found = { ...none, gear: parseGear([GEAR_PAGE]), mobs: parseMobs([MOB_PAGE]) };
+          const older = parseMobs([MOB_PAGE]);
+          for (const m of older) delete m.data.system.move;
+          await importBook({ title, found: { ...found, mobs: older }, kinds: ["gear", "mobs"], maps: [] });
+          const blob = await docNamed(book, "Actor", "Test Blob");
           await blob.update({ "system.stats.con.value": 9 });
 
-          const again = await importBook({ title, found, kinds, maps: [] });
+          const again = await importBook({ title, found, kinds: ["gear", "mobs"], maps: [] });
           assert.deepEqual(again.mobs.skipped, ["Test Blob"]);
-          assert.equal(again.mobs.updated, 1, "the unedited Mob still updates");
-          assert.equal(blob.system.stats.con.value, 9, "the GM's edit survives");
+          assert.equal(again.mobs.updated, 1, "the unedited Mob still updates, though the parse now writes Move");
+          assert.equal((await docNamed(book, "Actor", "Test Blob")).system.stats.con.value, 9, "the GM's edit survives");
+        });
+
+        it("treats a pre-0.7.0 import as untouched once, and leaves the GM's own documents alone", async function () {
+          const pack = findBookPack(book, "Item");
+          await Item.implementation.createDocuments(
+            [
+              {
+                name: "Test Old Import",
+                type: "item",
+                system: { description: "<p>changed since</p>" },
+                flags: { "carl-rpg": { pdfImport: { book, page: 2, hash: "oldhash" } } },
+              },
+              { name: "Test GM Item", type: "item", system: { description: "<p>mine</p>" } },
+            ],
+            { pack: pack.collection },
+          );
+          const gear = [parsedItem("Test Old Import", "item", "<p>new</p>"), parsedItem("Test GM Item", "item")];
+          const first = await importBook({ title, found: { ...none, gear }, kinds: ["gear"], maps: [] });
+          assert.equal(first.items.updated, 1);
+          assert.deepEqual(first.items.skipped, ["Test GM Item"]);
+          const old = await docNamed(book, "Item", "Test Old Import");
+          assert.equal(old.system.description, "<p>new</p>");
+          assert.equal(old.flags["carl-rpg"].pdfImport.v, FINGERPRINT_VERSION, "re-baselined");
+          assert.equal((await docNamed(book, "Item", "Test GM Item")).system.description, "<p>mine</p>");
+
+          await old.update({ "system.description": "<p>the GM's</p>" });
+          const second = await importBook({ title, found: { ...none, gear }, kinds: ["gear"], maps: [] });
+          assert.sameMembers(second.items.skipped, ["Test Old Import", "Test GM Item"], "only once");
+        });
+
+        it("prefers compendium copies: the system's packs, then another book's, then world Items", async function () {
+          // Another book's compendium has one; the world has it and a system Spell too.
+          await importBook({
+            title: otherTitle,
+            found: { ...none, gear: [parsedItem("Quench Test Ranked", "item", "<p>other book</p>")] },
+            kinds: ["gear"],
+            maps: [],
+          });
+          worldItems.push(
+            ...(await Item.implementation.createDocuments([
+              { name: "Fear", type: "spell", system: { description: "<p>world copy</p>" } },
+              { name: "Quench Test Ranked", type: "item", system: { description: "<p>world copy</p>" } },
+              { name: "Quench Test Copyable", type: "item", system: { description: "<p>world copy</p>" } },
+              {
+                name: "Quench Test Own",
+                type: "item",
+                system: { description: "<p>this book's old import</p>" },
+                flags: { "carl-rpg": { pdfImport: { book } } },
+              },
+            ])),
+          );
+
+          const sources = await matchCandidates(book);
+          assert.isFalse(sources.some((s) => s.name === "Quench Test Own"), "never this book's own import");
+          assert.isFalse(sources.some((s) => s.source === findBookPack(book, "Item").collection), "or its compendium");
+
+          const result = await importBook({
+            title,
+            found: {
+              ...none,
+              spells: [parsedItem("Fear", "spell")],
+              gear: [
+                parsedItem("Quench Test Ranked", "item"),
+                parsedItem("Quench Test Copyable", "item"),
+                parsedItem("Quench Test Own", "item"),
+              ],
+            },
+            kinds: ["gear", "spells"],
+            maps: [],
+          });
+          assert.include(result.items.matched, { spells: 1, gear: 2 });
+
+          const source = async (name) => (await docNamed(book, "Item", name))?._stats?.compendiumSource ?? "";
+          assert.match(await source("Fear"), /^Compendium\.carl-rpg\.skills-and-spells\./, "the system's Spell");
+          const fear = await docNamed(book, "Item", "Fear");
+          assert.notInclude(fear.system.description, "world copy");
+          assert.isTrue(
+            fear.system.upgrades.some((u) => (u.targetEffects ?? []).length),
+            "with the pack's authored upgrade Debuffs",
+          );
+          assert.equal(
+            findBookPack(book, "Item").folders.get(fear._source.folder)?.name,
+            game.i18n.localize("CARLRPG.PdfImport.Kind.spells"),
+          );
+          assert.include(await source("Quench Test Ranked"), findBookPack(otherBook, "Item").collection, "another book's");
+          const copyable = worldItems.find((i) => i.name === "Quench Test Copyable");
+          assert.equal(await source("Quench Test Copyable"), copyable.uuid, "a world Item");
+          assert.equal(
+            (await docNamed(book, "Item", "Quench Test Own")).system.description,
+            "<p>parsed</p>",
+            "not its own old import",
+          );
+        });
+
+        it("files Mobs by Floor, then Neighborhood or Quest, by Level, and files unedited ones on re-import", async function () {
+          const found = { ...none, mobs: parseMobs(TOOLKIT_STYLE_BOOK) };
+          await importBook({ title, found, kinds: ["mobs"], maps: [] });
+          const pack = findBookPack(book, "Actor");
+          const pathOf = (doc) => {
+            const names = [];
+            for (let id = doc._source.folder; id; id = pack.folders.get(id)?._source.folder) {
+              names.unshift(pack.folders.get(id)?.name);
+            }
+            return names.join(" / ");
+          };
+          const named = async () => Object.fromEntries((await docsOf(book, "Actor")).map((d) => [d.name, d]));
+          const floor = (n) => game.i18n.format("CARLRPG.PdfImport.FloorFolder", { n });
+          const other = game.i18n.localize("CARLRPG.PdfImport.OtherMobs");
+          let mobs = await named();
+          assert.equal(pathOf(mobs["Test Bogling"]), `${floor(1)} / Neighborhood: Test Bogs`);
+          assert.equal(pathOf(mobs["Test Watcher"]), `${floor(1)} / Quest: Passive (Testing) Perception`);
+          assert.equal(pathOf(mobs["Test Herald"]), floor(2));
+          assert.equal(pathOf(mobs["Test Bogling Again"]), floor(1));
+          assert.equal(pathOf(mobs["Test Bruiser"]), other);
+          const [ace, brute, bogling] = ["Test Bog Ace", "Test Bog Brute", "Test Bogling"].map((n) => mobs[n].sort);
+          assert.isBelow(ace, brute, "same Level: by name");
+          assert.isBelow(brute, bogling, "by Level");
+          const top = (name) => pack.folders.find((f) => f.name === name && !f._source.folder);
+          assert.isBelow(top(floor(1)).sort, top(floor(2)).sort, "Floors in the book's order");
+          assert.isBelow(top(floor(2)).sort, top(other).sort);
+
+          // As an earlier import left them: an unedited Mob is filed on
+          // re-import; one the GM edited stays where it is.
+          await mobs["Test Herald"].update({ folder: null });
+          await mobs["Test Bruiser"].update({ folder: null, "system.level": 9 });
+          const again = await importBook({ title, found, kinds: ["mobs"], maps: [] });
+          assert.deepEqual(again.mobs.skipped, ["Test Bruiser"]);
+          mobs = await named();
+          assert.equal(pathOf(mobs["Test Herald"]), floor(2));
+          assert.equal(pathOf(mobs["Test Bruiser"]), "");
+          assert.lengthOf(
+            pack.folders.filter((f) => f.name === floor(1)),
+            1,
+            "folders are found again, not made twice",
+          );
+        });
+
+        it("never matches Mobs across books by name", async function () {
+          const higher = parseMobs([DEBUFF_MOB_PAGE]);
+          higher[0].data.system.level = 65;
+          const other = await importBook({ title: otherTitle, found: { ...none, mobs: higher }, kinds: ["mobs"], maps: [] });
+          assert.equal(other.mobs.created, 1, "its own Mob, not the other book's");
+          assert.notEqual(findBookPack(otherBook, "Actor").collection, findBookPack(book, "Actor").collection);
+          assert.equal((await docNamed(otherBook, "Actor", "Test Stabber")).system.level, 65);
+          assert.equal((await docNamed(book, "Actor", "Test Stabber")).system.level, 3);
         });
       });
     },

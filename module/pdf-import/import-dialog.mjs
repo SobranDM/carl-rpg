@@ -57,7 +57,7 @@ async function resolveMaps(pdfDoc, pdfjs, candidates, progress) {
   return maps;
 }
 
-async function chooseContent(title, found, maps) {
+export async function chooseContent(title, found, maps) {
   const kinds = KINDS.map((key) => ({
     key,
     label: game.i18n.localize(`CARLRPG.PdfImport.Kind.${key}`),
@@ -68,6 +68,18 @@ async function chooseContent(title, found, maps) {
     template: "systems/carl-rpg/templates/dialog/pdf-import-results.hbs",
     context: { title, kinds, maps },
     position: { width: 720 },
+    classes: ["carl-pdf-import-dialog"],
+    // The map thumbnails are blob: URLs, which Foundry's HTML cleaning strips.
+    trusted: true,
+    // Select all / no maps at once (e.g. a re-import that shouldn't make the
+    // map Scenes again).
+    onRender: (event, dialog) => {
+      const root = dialog?.element ?? event?.target?.element;
+      root?.querySelectorAll("[data-map-select]").forEach((button) => button.addEventListener("click", () => {
+        const on = button.dataset.mapSelect === "all";
+        for (const box of root.querySelectorAll('.carl-pdf-import-map input[type="checkbox"]')) box.checked = on;
+      }));
+    },
     buttons: [
       {
         action: "import",
@@ -92,9 +104,13 @@ function summarize(results) {
         created: r.created,
         updated: r.updated,
       });
-      return r.skipped?.length
-        ? `${line} ${game.i18n.format("CARLRPG.PdfImport.SummarySkipped", { skipped: r.skipped.length })}`
-        : line;
+      const parts = [line];
+      // Written as a compendium's copy (a gear bonus's matched Skill isn't one).
+      const { spells = 0, consumables = 0, gear = 0 } = r.matched ?? {};
+      const copies = spells + consumables + gear;
+      if (copies) parts.push(game.i18n.format("CARLRPG.PdfImport.SummaryCopied", { copied: copies }));
+      if (r.skipped?.length) parts.push(game.i18n.format("CARLRPG.PdfImport.SummarySkipped", { skipped: r.skipped.length }));
+      return parts.join(" ");
     })
     .join(", ");
 }

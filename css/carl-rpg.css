@@ -3079,6 +3079,16 @@
   align-items: center;
   gap: 4px;
 }
+.carl-rpg .carl-pdf-import .carl-pdf-import-map-select {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+.carl-rpg .carl-pdf-import .carl-pdf-import-map-select button {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0 10px;
+}
 .carl-rpg .carl-pdf-import .carl-pdf-import-maps {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

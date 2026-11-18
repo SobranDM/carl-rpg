@@ -6,6 +6,7 @@
  * "Mana Cost:" line; section intros on the same pages are dropped.
  */
 
+import { itemTargetEffects } from "./debuff-text.mjs";
 import { joinText, titleCase } from "./page-text.mjs";
 import { findDamageType } from "../helpers/damage-types.mjs";
 
@@ -187,11 +188,13 @@ function toItem(rawName, page, s) {
         isPassive: !keywords.includes("attack"),
         advancementGate: keywords.includes("attack") ? "normal" : "magic-only",
         baseDamage: { dice, stat: dice ? (dmgStat ?? governingStat) : "", damageType: dmgType },
-        upgrades: s.upgrades.map((u) => ({
-          rankThreshold: u.rank,
-          description: joinText(u.text),
-          changes: [],
-        })),
+        upgrades: s.upgrades.map((u) => {
+          const description = joinText(u.text);
+          // "the target gains the Woozy Debuff", "on a Critical Hit, ...
+          // gain the Paralyzed Debuff" (debuff-text.mjs). A Spell with a
+          // compendium copy takes the copy's instead (importer.mjs).
+          return { rankThreshold: u.rank, description, changes: [], targetEffects: itemTargetEffects(description, "spell") };
+        }),
         manaCost: Number.isFinite(manaCost) ? manaCost : 0,
         range: f.Range ?? "",
         duration: f.Duration ?? "",

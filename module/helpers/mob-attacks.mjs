@@ -4,15 +4,18 @@
  * Mobs used to carry (`system.attacks`) into them.
  *
  * The old list (name, to-hit, damage, damage type, range, effect) is
- * converted by one function with three callers:
- *  - a Mob created with a list (the PDF importer, a macro, a Mob from an old
- *    compendium, a test) - module/data/mob.mjs's _preCreate;
+ * converted by one function (legacyAttackItems) with three callers:
+ *  - a Mob created with a list (a macro, a Mob from an old compendium, a
+ *    test) - module/data/mob.mjs's _preCreate;
  *  - the 0.7.0 world migration (module/helpers/migration.mjs);
- *  - and nothing else writes the list any more.
+ *  - the PDF importer, which makes and refreshes an imported Mob's Attacks
+ *    (module/pdf-import/importer.mjs syncAttacks).
  * Area is guessed from the text as before (module/helpers/area.mjs); the
  * printed effect becomes the description. Whether its effect is a Debuff,
- * and when it lands, can't be read reliably from prose: the migration lists
- * the Mobs to check.
+ * and when it lands, isn't guessed here: the migration lists the Mobs to
+ * check. A list that already carries them keeps them (the PDF importer reads
+ * Table 11 Debuffs and Armor-Piercing from the text,
+ * module/pdf-import/debuff-text.mjs).
  */
 import { isAreaMobAttack } from "./area.mjs";
 
@@ -20,7 +23,7 @@ const SCOPE = "carl-rpg";
 export const MOB_ATTACK_TYPE = "mobAttack";
 
 /** The flag a converted Attack carries: its index in the old list. */
-const LEGACY_FLAG = "legacyAttack";
+export const LEGACY_FLAG = "legacyAttack";
 
 /**
  * A Mob's Attacks, in their sheet order.
@@ -142,6 +145,10 @@ export function legacyAttackItems(attacks, { startSort = 0, indexes = null } = {
     const text = [attack?.range, attack?.effect, attack?.damage].join(" ");
     const isArea = isAreaMobAttack(attack ?? {});
     const effect = String(attack?.effect ?? "").trim();
+    const triggers = CONFIG.CARLRPG.mobAttackTriggers ?? {};
+    const targetEffects = (Array.isArray(attack?.targetEffects) ? attack.targetEffects : []).filter(
+      (te) => Object.hasOwn(CONFIG.CARLRPG.debuffs, te?.debuffKey ?? "") && Object.hasOwn(triggers, te?.trigger ?? "hit"),
+    );
     return [{
       _id: foundry.utils.randomID(),
       name: String(attack?.name ?? "").trim() || game.i18n.localize("CARLRPG.MobAttack.Unnamed"),
@@ -155,6 +162,8 @@ export function legacyAttackItems(attacks, { startSort = 0, indexes = null } = {
         range: String(attack?.range ?? ""),
         isArea,
         splash: isArea && /\bsplash\b/i.test(text),
+        armorPiercing: !!attack?.armorPiercing,
+        targetEffects,
         description: effect ? `<p>${esc(effect)}</p>` : "",
       },
       flags: { [SCOPE]: { [LEGACY_FLAG]: index } },
@@ -179,24 +188,6 @@ export async function convertLegacyAttacks(actor, { attacks = actor.system?.atta
   const items = legacyAttackItems(attacks, { startSort, indexes });
   if (items.length) await actor.createEmbeddedDocuments("Item", items, { keepId: true, carlMigration: true });
   await actor.update({ "system.attacks": [] }, { carlMigration: true });
-  return items.length;
-}
-
-/**
- * Give an imported Mob its printed Attacks (the PDF importer), unless it
- * already has Attacks from an import: a re-import never replaces them, so
- * the Debuffs, triggers and Area the GM set on them survive. To take a
- * book's changed Attacks, delete the Mob's (or the Mob) and import again.
- * @param {Actor} actor
- * @param {object[]} attacks  The printed list, as parsed.
- * @returns {Promise<number>}  How many Attacks were made.
- */
-export async function ensureListedAttacks(actor, attacks) {
-  const listed = actor.items.some((i) => i.type === MOB_ATTACK_TYPE && Number.isInteger(i.getFlag(SCOPE, LEGACY_FLAG)));
-  if (listed || !attacks?.length) return 0;
-  const startSort = Math.max(0, ...actor.items.map((i) => i.sort ?? 0));
-  const items = legacyAttackItems(attacks, { startSort });
-  await actor.createEmbeddedDocuments("Item", items, { keepId: true });
   return items.length;
 }
 

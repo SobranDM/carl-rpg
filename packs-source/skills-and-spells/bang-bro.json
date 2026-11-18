@@ -32,7 +32,8 @@
           {
             "debuffKey": "burned",
             "stacks": 1,
-            "critOnly": true
+            "critOnly": false,
+            "amazingSuccessOnly": true
           }
         ]
       },
@@ -44,7 +45,8 @@
           {
             "debuffKey": "shocked",
             "stacks": 1,
-            "critOnly": true
+            "critOnly": false,
+            "amazingSuccessOnly": true
           }
         ]
       }

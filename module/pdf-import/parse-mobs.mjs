@@ -17,8 +17,10 @@
  * so they aren't imported.
  */
 
+import { mobAttackTargetEffects, splitArmorPiercing } from "./debuff-text.mjs";
 import { bodySize, escapeHtml, isHeading, joinText } from "./page-text.mjs";
 import { findDamageType } from "../helpers/damage-types.mjs";
+import { findSections } from "./sections.mjs";
 import { parseSizeText } from "../helpers/size-text.mjs";
 
 // kind, size name, size number, a size range's upper number, type.
@@ -38,6 +40,9 @@ const DICE_RE = /\d*d\d+(?:\s*[+−-]\s*(?:\d+|F\b))*/;
 // below", "None", "Auto".
 const ATTACK_RE =
   /^([^:]{1,60}):\s*(\d+(?:\s*\+\s*(?:F|\d+))*\s*to hit|\d+(?:\s*\+\s*(?:F|\d+))+(?=\s*,)|See below|None|Auto)\b,?\s*(.*)$/i;
+// The colon is sometimes missing in print ("Bite 14+F to hit, ..."): then
+// only with "to hit".
+const ATTACK_NO_COLON_RE = /^([A-Z][A-Za-z'’ -]{1,40}?)\s+(\d+(?:\s*\+\s*(?:F|\d+))*\s*to hit)\b,?\s*(.*)$/;
 const NOTES_RE = /^Notes:\s*(.*)$/;
 const NOTE_TITLE_RE = /^([A-Z][\w’'!?,()&. -]{1,40})—/;
 const EFFECT_START_RE = /^(On an?y? |Any |Make a |If |Each |\(Secret!?\))/;
@@ -54,9 +59,11 @@ const BOSS_TIER_BY_NAME = { "kibril atheras darkoak": "neighborhood" };
 const STAT_KEYS = { str: "str", int: "int", con: "con", dex: "dex", cha: "cha" };
 /**
  * @param {object[]} pages  From scan.mjs readPages.
- * @returns {{name: string, page: number, data: object}[]}
+ * @returns {{name: string, page: number, data: object, section: object}[]}  section: its Floor and
+ *   Neighborhood or Quest (sections.mjs).
  */
 export function parseMobs(pages) {
+  const sectionAt = findSections(pages);
   // A block can run onto the next page, which has no class line of its own.
   const lines = [];
   let prevHadBlock = false;
@@ -66,7 +73,7 @@ export function parseMobs(pages) {
     prevHadBlock = hasBlock;
     if (!keep) continue;
     const body = bodySize(page.lines);
-    for (const line of page.lines) lines.push({ ...line, heading: isHeading(line, body) });
+    page.lines.forEach((line, at) => lines.push({ ...line, at, heading: isHeading(line, body) }));
   }
 
   const anchors = [];
@@ -110,7 +117,9 @@ export function parseMobs(pages) {
       }
     }
     const name = joinText(lines.slice(nameAt, at).map((l) => l.text));
-    return toMob(name, lines[at], lines.slice(at + 1, end), flavor);
+    const mob = toMob(name, lines[at], lines.slice(at + 1, end), flavor);
+    // Where in the dungeon it's found (sections.mjs): files it on import.
+    return mob && { ...mob, section: sectionAt(lines[at].page, lines[at].at) };
   });
   // A Vehicle block is null (toMob).
   return mobs.filter(Boolean);
@@ -177,7 +186,7 @@ function toMob(rawName, classLine, body, flavor) {
       notes.push((note = [m[1]]));
       continue;
     }
-    if ((m = text.match(ATTACK_RE))) {
+    if ((m = text.match(ATTACK_RE) ?? text.match(ATTACK_NO_COLON_RE))) {
       blockSize ??= body[i].size;
       note = null;
       system.attacks.push((attack = { name: m[1].trim(), toHit: m[2], main: [m[3]], effect: [] }));
@@ -250,13 +259,20 @@ function finishAttack({ name, toHit, main, effect }) {
   const dice = damagePart.match(DICE_RE)?.[0]?.replace(/\s+/g, "").replace(/−/g, "-") ?? "";
   // "Psionic", a line-broken "Bludgeon-" etc. map onto the book's types.
   const damageType = findDamageType(damagePart);
+  // "5ft range, Armor-Piercing": ignores DR (p.95; docs/rules-fixes.md C).
+  const { range, armorPiercing } = splitArmorPiercing(rangeText.replace(/\s+range\b/i, "").trim());
+  const effectText = joinText([...extraEffect, ...effect]);
   return {
     name,
     // "None", "Auto", "See below": no to-hit to roll against.
     toHit: /^\d/.test(toHit) ? toHit.replace(/\s*to hit/i, "").replace(/\s+/g, "") : "",
     damage: dice,
     damageType,
-    range: rangeText.replace(/\s+range\b/i, "").trim(),
-    effect: joinText([...extraEffect, ...effect]),
+    range,
+    armorPiercing,
+    effect: effectText,
+    // Table 11's Debuffs, with when they land; any other stays in the
+    // effect text only (debuff-text.mjs).
+    targetEffects: mobAttackTargetEffects(effectText),
   };
 }

@@ -2,10 +2,12 @@
  * Gear entries: an all-caps heading, an optional "Gear Slot:" line, prose,
  * and a bullet list of benefits (Core Rulebook Appendix 1: Iconic Gear, and
  * the loot lists in other books). Simple bullets ("+1 Dexterity", "+3 Double
- * Tap Skill", "Resistance to Poison and Ice damage") become ChangeEntries;
- * everything else stays readable in the description.
+ * Tap Skill", "Resistance to Poison and Ice damage") become ChangeEntries,
+ * and "On an Amazing Success ... the target gains the X Debuff" an On-hit
+ * Debuff; everything stays readable in the description.
  */
 
+import { itemTargetEffects } from "./debuff-text.mjs";
 import { bodySize, escapeHtml, isHeading, joinText, titleCase } from "./page-text.mjs";
 import { changeEntry, toBlocks } from "./shared.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -123,6 +125,7 @@ function toGearItem(entry) {
   const html = [];
   if (slot) html.push(`<p><strong>Gear Slot:</strong> ${escapeHtml(slot)}</p>`);
   const changes = [];
+  const targetEffects = [];
   let list = [];
   const flushList = () => {
     if (list.length)
@@ -135,6 +138,9 @@ function toGearItem(entry) {
       const bullet = text.replace(/^•\s*/, "");
       list.push(bullet);
       changes.push(...bulletToChanges(bullet, name));
+      // "On an Amazing Success with any Hand-to-Hand Attack you make, the
+      // target gains the Stunned Debuff" (debuff-text.mjs).
+      targetEffects.push(...itemTargetEffects(bullet, "gear"));
     } else {
       flushList();
       html.push(`<p>${escapeHtml(text)}</p>`);
@@ -149,7 +155,7 @@ function toGearItem(entry) {
       name,
       type: "item",
       img: "icons/svg/item-bag.svg",
-      system: { description: html.join(""), changes, ...gearSlotData(slot, name) },
+      system: { description: html.join(""), changes, targetEffects, ...gearSlotData(slot, name) },
     },
   };
 }
