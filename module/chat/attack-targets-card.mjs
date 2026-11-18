@@ -38,8 +38,8 @@ import { isHitDegree } from "../helpers/rules.mjs";
 import { activeRows, rowOutcome, rowEvadeDifficulty, rowResolved } from "../helpers/attack-targets.mjs";
 import { resolveTargetEffectLabel } from "../helpers/conditions.mjs";
 import { landDebuffs } from "../helpers/land-debuffs.mjs";
-import { updateCardMessage } from "../helpers/chat-socket.mjs";
-import { appendCardSection, esc } from "./chat-card.mjs";
+import { askGM, registerAskHandler, updateCardMessage } from "../helpers/chat-socket.mjs";
+import { esc } from "./chat-card.mjs";
 import { applyDamageToActor } from "./damage-card.mjs";
 import { userOwnsUuid } from "./evade-link-card.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
@@ -57,7 +57,7 @@ import {
 import {
   checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, trackPerCard, versusNum,
 } from "./status-rows.mjs";
-import { interveneRow } from "./check-revision.mjs";
+import { interveneRow, withCardQueue } from "./check-revision.mjs";
 import { rerollRow } from "./ai-favor-reroll.mjs";
 
 export { resolveRowTarget };
@@ -380,6 +380,24 @@ export function decorateTargetRows(message, html) {
 
   const pending = rows.some((row) => !rowResolved(row, flags.isArea));
   if (!game.user.isGM || !pending) html.querySelector(".carl-apply-all-row")?.remove();
+  drawDigest(html, rows);
+}
+
+/**
+ * The GM's digest of what applying the rows did, row by row (each row keeps
+ * its own lines - noteDigest - so two rows applied at once both show). GM
+ * only: drawn after chat-listener.mjs has taken out `.carl-gm-only`.
+ * @param {HTMLElement} html
+ * @param {object[]} rows
+ */
+function drawDigest(html, rows) {
+  html.querySelector(".carl-row-digest")?.remove();
+  const lines = rows.flatMap((row) => (Array.isArray(row.digest) ? row.digest : []));
+  if (!game.user.isGM || !lines.length) return;
+  html.querySelector(".carl-chat-card")?.insertAdjacentHTML("beforeend", `<div class="carl-gm-digest carl-gm-only carl-row-digest">
+    <div class="carl-gm-digest-title">${game.i18n.localize("CARLRPG.Damage.DigestTitle")}</div>
+    <ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>
+  </div>`);
 }
 
 /** The row a clicked button belongs to (with any local, not-yet-arrived result). */
@@ -538,36 +556,72 @@ async function onRowBash(event, message, button) {
  * halves the damage before DR (helpers/shield-block.mjs) - its Debuffs still
  * land - and a Major or Critical Fail costs the Shield DR now.
  *
- * The row is read again from the card (with this client's own marks) just
- * before it's applied, and skipped if it's applied already; then marked
- * applied and applied here, at once - no round trip to the GM. What's
- * applied is the row as the card has it now, not the `row` passed in.
+ * Applied on the active GM's client (applyRowNow), whoever clicked: there,
+ * in the card's queue, the row is read again, refused if it's applied
+ * already, and otherwise marked applied and applied in one step - so the
+ * GM's Apply All and a player's own Apply can't both apply it. Nothing in it
+ * prompts anyone. A row already applied as this client sees it isn't sent.
+ * With no GM online, or none answering in time, nothing is applied (askGM
+ * warns).
  * @param {ChatMessage} message
  * @param {object} row  The row (only its id is trusted).
- * @returns {Promise<string[]>} GM digest lines.
+ * @returns {Promise<string[]>} GM digest lines (kept on the row - noteDigest).
  */
 export async function applyRow(message, row) {
   const stored = message.getFlag(SCOPE, "targetRows")?.[row.id];
   if (!stored || stored.replaced || withLocal(message, stored).applied) return [];
   // A ram's recoil isn't applied before its target has had its Evade.
   if (recoilWaiting(stored, message.flags[SCOPE])) return [];
-  // A Near Miss on a vehicle's occupant lands on the vehicle (p.72).
-  const target = await resolveRowTarget(stored.redirectUuid ? { uuid: stored.redirectUuid } : stored);
-  if (!target) return [];
-  // Read again after the wait: applied meanwhile (by this client, or as
-  // the card now says), it isn't applied again.
-  const flags = message.flags[SCOPE];
-  const current = flags.targetRows?.[row.id] ?? stored;
-  if (current.replaced || withLocal(message, current).applied) return [];
-  row = current;
-  markLocal(message, row.id, { applied: true });
-  await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: { [row.id]: { applied: true } } } } });
+  const answer = await askGM(APPLY, { cardId: message.id, rowId: row.id });
+  // Shown as applied here until the GM's write of the row arrives.
+  if (answer?.applied) markLocal(message, row.id, { applied: true });
+  return Array.isArray(answer?.lines) ? answer.lines : [];
+}
 
+const APPLY = "attackRowApply";
+
+/**
+ * The GM's side of a row's Apply (applyRow), in the card's queue: the row
+ * as the card has it now - gone, Taunted away, already applied, its ram's
+ * recoil still waiting, or not the asker's to apply: refused. Otherwise
+ * marked applied, then its damage and effects applied, before the next
+ * write to the card.
+ * @param {{cardId: string, rowId: string}} data
+ * @param {User} user  Who asked.
+ * @returns {Promise<{applied: boolean, lines: string[]}>}
+ */
+export function applyRowNow({ cardId, rowId } = {}, user = game.user) {
+  return withCardQueue(cardId, async () => {
+    const refused = { applied: false, lines: [] };
+    const message = game.messages.get(cardId);
+    const flags = message?.flags?.[SCOPE];
+    const row = flags?.targetRows?.[rowId];
+    if (!row || row.replaced || row.applied || recoilWaiting(row, flags)) return refused;
+    if (!user.isGM && !rowActor(row.redirectUuid ?? row.uuid)?.testUserPermission(user, "OWNER")) return refused;
+    // A Near Miss on a vehicle's occupant lands on the vehicle (p.72).
+    const target = await resolveRowTarget(row.redirectUuid ? { uuid: row.redirectUuid } : row);
+    if (!target) return refused;
+    await message.update({ flags: { [SCOPE]: { targetRows: { [rowId]: { applied: true } } } } });
+    return { applied: true, lines: await applyRowDamage(message, row, target) };
+  });
+}
+// Registered at load: chat-socket.mjs is a leaf, evaluated before this module.
+registerAskHandler(APPLY, applyRowNow);
+
+/**
+ * A claimed row's damage and effects (applyRowNow), and its digest lines.
+ * @param {ChatMessage} message
+ * @param {object} row  The row as the card had it when it was marked applied.
+ * @param {{actor: Actor}} target
+ * @returns {Promise<string[]>}
+ */
+async function applyRowDamage(message, row, target) {
+  const flags = message.flags[SCOPE];
   // A ram's recoil only happens if the ram connected: not when the target
   // it was aimed at Evaded it (module/helpers/vehicle-ram.mjs).
   if (row.role === "recoil" && flags.ram) {
     const primary = flags.targetRows?.[flags.ram.primaryRowId];
-    if (primary?.evade?.success) return [game.i18n.format("CARLRPG.Vehicle.Ram.NoRecoil", { vehicle: esc(target.actor.name) })];
+    if (primary?.evade?.success) return noteDigest(message, row.id, [game.i18n.format("CARLRPG.Vehicle.Ram.NoRecoil", { vehicle: esc(target.actor.name) })]);
   }
 
   const outcome = rowOutcome(row, {
@@ -587,7 +641,7 @@ export async function applyRow(message, row) {
   // and the rammer loses Move - even when the recoil rounds down to nothing.
   if (flags.ram && row.hit) lines.push(...await afterRamRowApplied(message, row, target.actor, outcome.damage));
   if (outcome.effects) lines.push(...(await landDebuffs(target.actor, flags.targetEffects, row, flags.damageByType)).lines);
-  return lines;
+  return noteDigest(message, row.id, lines);
 }
 
 /**
@@ -605,14 +659,17 @@ async function shieldDamageLines(actor, block) {
   return [game.i18n.format(key, { name: esc(actor.name), shield: esc(hurt.name), amount: hurt.amount, dr: hurt.dr })];
 }
 
-/** Append GM digest lines to the Attack card. */
-async function appendDigest(message, lines) {
-  if (!lines.length) return;
-  const html = `<div class="carl-gm-digest carl-gm-only">
-    <div class="carl-gm-digest-title">${game.i18n.localize("CARLRPG.Damage.DigestTitle")}</div>
-    <ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>
-  </div>`;
-  await updateCardMessage(message, { content: appendCardSection(message, html) });
+/**
+ * Keep a row's GM digest lines on the row (drawDigest shows them): a write
+ * to that row alone, which merges with another row's at the same time.
+ * @param {ChatMessage} message
+ * @param {string} rowId
+ * @param {string[]} lines
+ * @returns {Promise<string[]>}  The lines.
+ */
+async function noteDigest(message, rowId, lines) {
+  if (lines.length) await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: { [rowId]: { digest: lines } } } } });
+  return lines;
 }
 
 async function onRowApply(event, message, button) {
@@ -620,10 +677,7 @@ async function onRowApply(event, message, button) {
   const row = clickedRow(message, button);
   if (!row || row.evade?.pending || row.block?.pending || rowResolved(row, message.getFlag(SCOPE, "isArea"))) return;
   if (!userOwnsUuid(row.redirectUuid ?? row.uuid)) return;
-  await guarded(message, row.id, async () => {
-    const lines = await applyRow(message, row);
-    await appendDigest(message, lines);
-  });
+  await guarded(message, row.id, () => applyRow(message, row));
 }
 
 async function onApplyAll(event, message) {
@@ -638,10 +692,11 @@ async function onApplyAll(event, message) {
 /**
  * Apply every row still to be applied (the GM's Apply All), one at a time.
  * Each row is read again from the card (and this client's own marks) just
- * before it's applied: one applied meanwhile - a player's own Apply that
- * has reached the card - is skipped, not applied twice.
+ * before it's sent, and again by the GM's client when it's applied
+ * (applyRowNow): one applied meanwhile - a player's own Apply - is skipped,
+ * not applied twice.
  * @param {ChatMessage} message
- * @returns {Promise<string[]>}  The digest lines (appended to the card).
+ * @returns {Promise<string[]>}  The digest lines (each kept on its row).
  */
 export async function applyAllRows(message) {
   const lines = [];
@@ -651,7 +706,6 @@ export async function applyAllRows(message) {
     if (!row || row.replaced || rowResolved(withLocal(message, row), message.getFlag(SCOPE, "isArea"))) continue;
     lines.push(...await applyRow(message, row));
   }
-  await appendDigest(message, lines);
   return lines;
 }
 

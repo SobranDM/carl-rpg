@@ -255,9 +255,19 @@ export default function register(quench) {
             assert.isTrue(card().querySelector(".carl-change-row").open, "a new row opens");
 
             // + Healing: shown though empty.
-            card().querySelector('.carl-add-bar [data-action="revealPart"]').click();
+            card().querySelector('.carl-add-bar [data-reveal^="heal-"]').click();
             await rerendered(sheet, () => card()?.querySelector(".carl-upgrade-heal"), "Healing never showed");
-            assert.notExists(card().querySelector('.carl-add-bar [data-action="revealPart"]'), "its add button goes");
+            assert.notExists(card().querySelector('.carl-add-bar [data-reveal^="heal-"]'), "its add button goes");
+
+            // + Vehicle (a Skill's driving perks): shown though empty, saved.
+            assert.notExists(card().querySelector(".carl-upgrade-vehicle"));
+            card().querySelector('.carl-add-bar [data-reveal^="vehicle-"]').click();
+            await rerendered(sheet, () => card()?.querySelector(".carl-upgrade-vehicle"), "Vehicle never showed");
+            assert.notExists(card().querySelector('.carl-add-bar [data-reveal^="vehicle-"]'), "its add button goes");
+            const attackOk = card().querySelector('.carl-upgrade-vehicle input[name="system.upgrades.0.vehicleAttackOk"]');
+            attackOk.checked = true;
+            attackOk.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => item.system.upgrades[0].vehicleAttackOk === true, { message: "the Vehicle box never saved" });
 
             // + Damage type: one blank pick, stored.
             card().querySelector('.carl-add-bar [data-action="addDamageType"]').click();

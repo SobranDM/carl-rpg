@@ -54,14 +54,15 @@ export default function register(quench) {
       describe("which Attacks need a weapon", function () {
         useQuenchTimeout(this);
 
-        it("a crawler's Weapon Skill does; hand-to-hand, Improvised Weapons, natural attacks and Spells don't", async function () {
+        it("a crawler's Weapon Skill does; hand-to-hand, Needs no weapon Skills and Spells don't", async function () {
           const actor = await createTestCharacter("needs");
           const pet = await createTestPet("needs");
           try {
             assert.isTrue(needsWeapon(actor, await attack(actor, "Longsword")));
             assert.isFalse(needsWeapon(actor, await attack(actor, "Pugilism", { isHandToHand: true })));
-            assert.isFalse(needsWeapon(actor, await attack(actor, "Improvised Weapons")));
-            assert.isFalse(needsWeapon(actor, await attack(actor, "BITE")), "by name, any case");
+            assert.isFalse(needsWeapon(actor, await attack(actor, "Improvised Weapons", { noWeapon: true })));
+            assert.isFalse(needsWeapon(actor, await attack(actor, "Tail Swipe", { noWeapon: true })), "a homebrew one, by its box");
+            assert.isTrue(needsWeapon(actor, await attack(actor, "Bite")), "the name alone does nothing");
             const spell = await createTestItem(actor, "spell", "zap", { system: { castingKeywords: ["attack"] } });
             assert.isFalse(needsWeapon(actor, spell));
             assert.isFalse(needsWeapon(actor, await createTestItem(actor, "skill", "sneak", { system: { category: "utility" } })));
@@ -80,7 +81,7 @@ export default function register(quench) {
             assert.isFalse(isWeaponFor(await weapon(actor, "axe", "Axe"), sword));
             assert.isFalse(isWeaponFor(await createTestItem(actor, "item", "rock"), sword), "not a weapon");
             // A blank Weapon Skill slugifies to "unknown", as does a Skill
-            // named with no Latin letters or digits - still not a weapon.
+            // named with no letters or digits - still not a weapon.
             const symbols = await attack(actor, "???");
             assert.isFalse(isWeaponFor(await weapon(actor, "shield", ""), symbols), "blank never matches");
             assert.isFalse(isWeaponFor(await weapon(actor, "potion", "   "), symbols), "whitespace is blank");
@@ -153,6 +154,21 @@ export default function register(quench) {
             assert.isTrue(warnings.some((w) => w.includes(sword.name)), "a warning names the Skill");
           } finally {
             ui.notifications.warn = original;
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a homebrew Tail Swipe with Needs no weapon attacks with nothing in hand or Hotlist", async function () {
+          const actor = await createTestCharacter("tail swipe");
+          try {
+            const swipe = await attack(actor, "Tail Swipe", { noWeapon: true });
+            assert.deepEqual(attackReadiness(actor, swipe), { ready: true, weapon: null, swap: null });
+            assert.include(attackChoices(actor).map((c) => c.skill.id), swipe.id, "offered by Attack!");
+            await withDialog(() => CarlDice.rollAttack(actor, swipe), (d) => {
+              assert.exists(d.element, "the Attack dialog opens");
+              pressDialog(d, "cancel");
+            }, "carl-roll-dialog");
+          } finally {
             await deleteTestActor(actor);
           }
         });

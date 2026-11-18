@@ -46,7 +46,9 @@ export default class CarlRPGActorBase extends foundry.abstract.TypeDataModel {
       max: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
     });
 
-    schema.biography = new fields.StringField({ required: true, blank: true });
+    // Rich text: also listed in system.json's htmlFields for every Actor type
+    // built on this, which is what has the server sanitize it.
+    schema.biography = new fields.HTMLField({ required: true, blank: true });
 
     // Persisted sheet UI state for the merged Abilities tab's whole-section
     // drawers (Skills+DamageEffects, Spells) - real schema fields rather than

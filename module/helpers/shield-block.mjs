@@ -26,7 +26,7 @@
 import CarlDice, { extractNaturalD20 } from "../dice/dice.mjs";
 import { rerollFormula } from "./ai-favor.mjs";
 import { isInHand, isShield } from "./gear.mjs";
-import { buildItemSkillEntry, shieldDrState, slugifySkillName } from "./modifiers.mjs";
+import { buildItemSkillEntry, effectiveRank, shieldDrState, slugifySkillName } from "./modifiers.mjs";
 import { passiveContext } from "./actions.mjs";
 
 /** The Skill's name, as the compendium has it. */
@@ -64,7 +64,9 @@ export function shieldBlockSkill(actor) {
 export function shieldBlockRank(actor) {
   const item = shieldBlockSkill(actor);
   if (!item) return 0;
-  return actor.system?.skills?.[slugifySkillName(SHIELD_BLOCK)]?.rank ?? item.system.rank ?? 0;
+  // The live Rank of this very item (gear "+N" included; a duplicate's
+  // bag entry never stands in for it).
+  return effectiveRank(item);
 }
 
 /**

@@ -25,6 +25,7 @@
 import { currentPhase, isPhased, phasedCombatFor } from "./combat-phases.mjs";
 import { isCrawler, isMinion, isPet, isVehicle } from "./actor-kinds.mjs";
 import { queueOn } from "./actor-queue.mjs";
+import { tellUser } from "./chat-socket.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -223,17 +224,22 @@ export async function spendAction(actor, kind, label, { tag = null, id = null, u
  * @param {Actor} actor
  * @param {"attack"|"move"|"other"} kind
  * @param {string} label
- * @param {{tag?: string|null, undo?: object[]}} [options]
+ * @param {{tag?: string|null, undo?: object[], user?: User|null}} [options]
+ *   user: who asked for it (a player whose op this client is applying) -
+ *   the warning goes to them; null: this client.
  * @returns {Promise<{paid: boolean, id: string|null, fight: object|null}>}
+ *   Not paid: the asker has been told why.
  */
-export async function payAction(actor, kind, label, { tag = null, undo = [] } = {}) {
+export async function payAction(actor, kind, label, { tag = null, undo = [], user = null } = {}) {
   const fight = combatantInFight(actor);
   if (!fight) return { paid: true, id: null, fight: null };
   if (!canAct(actor, kind, { warn: false })) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Actions.NoneLeft", { name: actor.name }));
+    tellUser(user, "CARLRPG.Actions.NoneLeft", { name: actor.name });
     return { paid: false, id: null, fight };
   }
   const id = await spendAction(actor, kind, label, { tag, undo });
+  // Refused by the spend itself (a race): it warned this client; tell the asker too.
+  if (!id && user && !user.isSelf) tellUser(user, "CARLRPG.Actions.NoneLeft", { name: actor.name });
   return { paid: !!id, id, fight };
 }
 
@@ -609,8 +615,9 @@ async function applyNow(combatId, op, data, user) {
       if (!owns) return false;
       const pool = payingPool(combat, combatant, data.kind, data.pool ?? null);
       if (!pool) {
-        // Checked before the roll on the roller's client; only a race lands here.
-        ui.notifications.warn(game.i18n.format("CARLRPG.Actions.NoneLeft", { name: combatant.name }));
+        // Checked before the roll on the roller's client; only a race lands
+        // here. Told to whoever asked (on their client).
+        tellUser(user, "CARLRPG.Actions.NoneLeft", { name: combatant.name });
         return false;
       }
       rec.spent.push({

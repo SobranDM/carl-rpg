@@ -36,15 +36,16 @@ import { createCardMessage, esc } from "./chat-card.mjs";
 import {
   checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, versusNum,
 } from "./status-rows.mjs";
-import { rerollFormula } from "../helpers/ai-favor.mjs";
+import { aiRerollAllowed, rerollFormula, spendAiFavor } from "../helpers/ai-favor.mjs";
+import { askGM, registerAskHandler, tellUser } from "../helpers/chat-socket.mjs";
 import { queueOn } from "../helpers/actor-queue.mjs";
 import { mobAttackRow } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
-import { slugifySkillName } from "../helpers/modifiers.mjs";
+import { ownedSkill } from "../helpers/modifiers.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 import { currentPhase } from "../helpers/combat-phases.mjs";
 import { declaredAttacks } from "../helpers/declarations.mjs";
-import { canAct, evadeIsFree, hasSpent, payAction, refundAction } from "../helpers/actions.mjs";
+import { canAct, evadeIsFree, hasSpent, payAction, refundAction, takeAction, undoHandlers } from "../helpers/actions.mjs";
 import {
   BLOCK_TAG, bashOffered, blockNotes, keptBlockRoll, rollBlockAgain, rollShieldBash, shieldBlocker,
 } from "../helpers/shield-block.mjs";
@@ -97,12 +98,9 @@ function reactors(state) {
   });
 }
 
-/** An owned Skill by name, and its Rank. */
+/** An owned Skill by name (by slug: any case), and its live Rank. */
 function skillOf(actor, name) {
-  const item = actor.items.find((i) => i.type === "skill" && i.name === name);
-  if (!item) return null;
-  const rank = actor.system.skills?.[slugifySkillName(name)]?.rank ?? item.system.rank ?? 0;
-  return { item, rank };
+  return ownedSkill(actor, name);
 }
 
 /** The roll data a Check sends to the GM. */
@@ -195,10 +193,23 @@ async function rollFreeEvades(state, hits, { advantage = "normal" } = {}) {
  */
 async function grantEvadeAdvantage(state, hit, check) {
   if (!GREAT.includes(check?.degree)) return;
-  const combat = game.combats.get(state.combatId);
-  const combatant = combat?.combatants.find((c) => (c.token?.uuid ?? c.actor?.uuid) === hit.targetUuid);
-  const mobUuid = state.attacks[hit.attackId]?.mobUuid;
+  const { combatant, mobUuid } = evaderAndMob(state, hit);
   if (combatant && mobUuid) await combatant.setFlag(SCOPE, "advantageVsUuid", mobUuid);
+}
+
+/** A great Evade rerolled down (AI Favor): the Advantage it gave goes. */
+async function takeEvadeAdvantage(state, hit) {
+  const { combatant, mobUuid } = evaderAndMob(state, hit);
+  if (combatant && mobUuid && combatant.getFlag(SCOPE, "advantageVsUuid") === mobUuid) {
+    await combatant.unsetFlag(SCOPE, "advantageVsUuid");
+  }
+}
+
+/** A hit's target's combatant, and the Mob whose Attack it is. */
+function evaderAndMob(state, hit) {
+  const combat = game.combats.get(state.combatId);
+  const combatant = hit ? combat?.combatants.find((c) => (c.token?.uuid ?? c.actor?.uuid) === hit.targetUuid) : null;
+  return { combatant: combatant ?? null, mobUuid: state.attacks?.[hit?.attackId]?.mobUuid ?? null };
 }
 
 /* -------------------------------------------- */
@@ -229,18 +240,61 @@ export async function writeState(message, state) {
 }
 
 /**
- * Send an operation to the active GM's client (or apply it, on that client).
+ * Send an operation to the active GM's client (or apply it, on that client)
+ * and wait for its answer (helpers/chat-socket.mjs askGM - the payload names
+ * the card as `cardId`).
  * @param {ChatMessage} message
  * @param {string} op
  * @param {object} data
+ * @returns {Promise<boolean|null>}  Whether the card changed; null: no
+ *   answer (no GM online, or none in time).
  */
 async function sendOp(message, op, data) {
   if (game.users.activeGM?.isSelf) return applyOp(message.id, op, data, game.user);
-  if (!game.users.activeGM) {
-    ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
-    return;
-  }
-  game.socket.emit(SOCKET, { type: OP, cardId: message.id, op, data });
+  const answer = await askGM(OP, { cardId: message.id, op, data });
+  return typeof answer?.ok === "boolean" ? answer.ok : null;
+}
+
+// The GM's side of sendOp: `user` is the server-supplied sender.
+registerAskHandler(OP, async ({ cardId, op, data } = {}, user) => ({ ok: await applyOp(cardId, op, data ?? {}, user) }));
+
+/**
+ * Send an op rolled on this client with what undoing its roll needs
+ * (rollForOp): kept with the Action it spends (payFor), or - the GM's
+ * client refused it - taken back here at once.
+ * @param {ChatMessage} message
+ * @param {string} op
+ * @param {object} data
+ * @param {object[]} undo
+ * @returns {Promise<boolean|null>}  As sendOp.
+ */
+async function sendRolledOp(message, op, data, undo) {
+  const ok = await sendOp(message, op, { ...data, undo });
+  if (ok === false && undo.length) await undoHandlers.rollback?.(undo);
+  return ok;
+}
+
+/**
+ * Roll on this client for an op inside an Action scope that pays nothing -
+ * the GM's client pays as it applies the op (payFor) - collecting the undo
+ * records the roll notes (helpers/actions.mjs noteUndo): the roller's
+ * one-shot Debuffs it used up, the Skill's advancement mark, its cooldown.
+ * (A Mob's Debuff a Taunt used up is noted for the Mob, so isn't among them.)
+ * @template T
+ * @param {Actor} actor
+ * @param {string} label
+ * @param {() => Promise<T>} roll
+ * @returns {Promise<{result: T|null, undo: object[]}>}
+ */
+export async function rollForOp(actor, label, roll) {
+  let undo = [];
+  const result = await takeAction(actor, "other", label, async (ctx) => {
+    ctx.free();
+    const out = await roll();
+    undo = [...(ctx.scope?.undo ?? [])];
+    return out;
+  }, { optional: true });
+  return { result: result ?? null, undo };
 }
 
 /** Register the GM side of the socket. Call once from `ready`. */
@@ -264,10 +318,13 @@ export function applyOp(cardId, op, data, user) {
   return withCard(cardId, async () => {
     const message = game.messages.get(cardId);
     const current = message?.getFlag(SCOPE, "reaction");
-    if (!current || current.locked) return false;
+    // Who asked, the undo records their roll sent (payFor), and whether
+    // they've been told why it was refused.
+    const asked = { messageId: cardId, before: current, user, undo: data?.undo ?? [], told: false };
+    if (!current || current.locked) return refused(asked);
     const state = foundry.utils.deepClone(current);
     // What an Action spent by this op undoes to (payFor).
-    opBefore.set(state, { messageId: cardId, before: current });
+    opBefore.set(state, asked);
     const owns = (uuid) => user.isGM || !!actorFor(uuid)?.testUserPermission(user, "OWNER");
     let changed = false;
     try {
@@ -277,15 +334,15 @@ export function applyOp(cardId, op, data, user) {
         case "catch": changed = await opCatch(state, data, owns); break;
         case "evade": changed = await opEvade(state, data, owns); break;
         case "intervene": changed = await opIntervene(state, data, owns); break;
-        case "reroll": changed = await opReroll(state, data, owns); break;
+        case "reroll": changed = await opReroll(state, data, owns, user); break;
         case "block": changed = await opBlock(state, data, owns); break;
         case "bash": changed = opBash(state, data, owns); break;
       }
     } catch (err) {
       console.error(`CarlRPG | Reaction card: "${op}" failed`, err);
-      return false;
+      return refused(asked);
     }
-    if (!changed) return false;
+    if (!changed) return refused(asked);
     // An op that gave someone's Evade Action back can't be undone: putting
     // the card back would restore an Evade whose Action is already refunded.
     // An extra count on `rev` makes its undo record stale.
@@ -296,6 +353,17 @@ export function applyOp(cardId, op, data, user) {
     await writeState(message, state);
     return true;
   });
+}
+
+/**
+ * An op refused: its asker - another user - is told, unless payFor already
+ * told them why (no Action left). Their client takes its roll back.
+ * @param {{user: User, told: boolean}} asked
+ * @returns {false}
+ */
+function refused(asked) {
+  if (!asked.told && asked.user && !asked.user.isSelf) tellUser(asked.user, "CARLRPG.Reaction.Refused");
+  return false;
 }
 
 /** A Check record from what a client sent (its own fields only). */
@@ -605,36 +673,39 @@ async function opIntervene(state, { byUuid, byName, ref, value }, owns) {
   return true;
 }
 
-async function opReroll(state, { ref, naturalRoll, total, roll, breakdown }, owns) {
+async function opReroll(state, { ref, naturalRoll, total, roll, breakdown }, owns, user) {
   const entry = checkList(state).find((c) => sameRef(c.ref, ref));
   if (!entry || !owns(entry.ownerUuid)) return false;
   if (!rerollableChecks(state, entry.ownerUuid).some((c) => sameRef(c.ref, ref))) return false;
   const actor = actorFor(entry.ownerUuid);
-  const favor = actor?.system.details?.aiFavor ?? 0;
-  if (actor?.type !== "character" || favor < 1) return false;
-  await actor.update({ "system.details.aiFavor": favor - 1 });
+  if (!aiRerollAllowed(entry.check, actor, user) || !(await spendAiFavor(actor))) return false;
   const check = checkAt(state, ref);
   const wasSuccess = check.success;
+  const wasDegree = check.degree;
   check.aiRerolled = { natural: check.natural, base: check.base, breakdown: check.breakdown, roll: check.roll };
   Object.assign(check, {
     natural: naturalRoll ?? null, base: Number(total) || 0, roll: roll ?? null,
     breakdown: String(breakdown ?? ""),
   });
   gradeCheck(check);
-  await afterCheckChanged(state, entry, check, wasSuccess);
+  await afterCheckChanged(state, entry, check, wasSuccess, wasDegree);
   return true;
 }
 
 /**
  * After an Intervene or reroll: a Taunt that became a Success pulls its
- * Mob's Attacks still landing now; a great Evade earns its Advantage.
+ * Mob's Attacks still landing now; a great Evade earns its Advantage, and
+ * one rerolled down loses it. (A successful Taunt that has pulled Attacks
+ * can't be rerolled - rerollableChecks.)
  */
-async function afterCheckChanged(state, entry, check, wasSuccess) {
+async function afterCheckChanged(state, entry, check, wasSuccess, wasDegree = null) {
   if (entry.ref.type === "taunt") {
     if (!wasSuccess && check.success) await pullTaunt(state, state.taunts[entry.ref.tauntId]);
   } else if (entry.ref.which !== "block") {
     // An Evade's Advantage; a Shield Block gives none.
-    await grantEvadeAdvantage(state, state.hits[entry.ref.hitId], check);
+    const hit = state.hits[entry.ref.hitId];
+    if (GREAT.includes(check.degree)) await grantEvadeAdvantage(state, hit, check);
+    else if (GREAT.includes(wasDegree)) await takeEvadeAdvantage(state, hit);
   }
 }
 
@@ -662,16 +733,36 @@ async function payFor(state, uuid, labelKey, { tag = null } = {}) {
   if (tag === "evade" ? (evadeIsFree(actor) || hasSpent(actor, tag)) : (tag && hasSpent(actor, tag))) return free;
   // Undoing it puts the card back as it was before this op - if nothing
   // has changed on it since (helpers/action-undo.mjs).
+  // The roll's own undo records (rollForOp: Debuffs it used up, a mark, a
+  // cooldown) come first: the card's record, which can refuse, runs first.
   const card = opBefore.get(state);
-  const undo = card ? [{
+  const undo = card ? [...rollRecords(card.undo, actor), {
     t: "reaction", messageId: card.messageId, before: foundry.utils.deepClone(card.before), rev: (card.before.rev ?? 0) + 1,
   }] : [];
-  const { paid, id, fight } = await payAction(actor, "other", game.i18n.localize(labelKey), { tag, undo });
-  if (!paid) return false;
+  // Refused: payAction has told the asker why.
+  const { paid, id, fight } = await payAction(actor, "other", game.i18n.localize(labelKey), { tag, undo, user: card?.user ?? null });
+  if (!paid) {
+    if (card) card.told = true;
+    return false;
+  }
   if (!fight || !id) return free;
   const spent = { combatantId: fight.combatant.id, id };
   (state.spentActions ??= []).push(spent);
   return { spent };
+}
+
+/**
+ * The undo records a roller's client sent with its op (rollForOp) that an
+ * undo of its Action may run: Debuffs used up and fields put back
+ * ("conditions", "set"), on the actor who acts or its own items only.
+ * @param {object[]|undefined} records
+ * @param {Actor} actor
+ * @returns {object[]}
+ */
+function rollRecords(records, actor) {
+  if (!Array.isArray(records)) return [];
+  const own = (uuid) => typeof uuid === "string" && (uuid === actor.uuid || uuid.startsWith(`${actor.uuid}.Item.`));
+  return records.filter((r) => ["conditions", "set"].includes(r?.t) && own(r.uuid)).map((r) => foundry.utils.deepClone(r));
 }
 
 function sameRef(a, b) {
@@ -735,8 +826,8 @@ function helpersFor(state, ref) {
 
 /** This viewer's crawler who could AI Reroll this Check: its own, with AI Favor. */
 function rerollerFor(state, ref) {
-  return reactors(state).find((r) => r.actor.type === "character" && (r.actor.system.details?.aiFavor ?? 0) >= 1
-    && rerollableChecks(state, r.uuid).some((c) => sameRef(c.ref, ref))) ?? null;
+  return reactors(state).find((r) => rerollableChecks(state, r.uuid)
+    .some((c) => sameRef(c.ref, ref) && aiRerollAllowed(c.check, r.actor))) ?? null;
 }
 
 async function onTaunt(message, state) {
@@ -767,12 +858,25 @@ async function onTaunt(message, state) {
     });
     if (!anyway) return;
   }
+  await rollTaunt(message, { taunter, item, rank, mob, mobUuid });
+}
+
+/**
+ * Roll a Taunt against the chosen Mob here and send it to the GM's client,
+ * with what undoing it needs (rollForOp) - taken back here if it's refused.
+ * @param {ChatMessage} message  The Reaction card.
+ * @param {{taunter: {uuid: string, name: string, actor: Actor}, item: Item, rank: number, mob: Actor, mobUuid: string}} args
+ * @param {{skipDialog?: boolean}} [options]
+ * @returns {Promise<boolean|null>}  As sendOp; null too if not rolled.
+ */
+export async function rollTaunt(message, { taunter, item, rank, mob, mobUuid }, { skipDialog = false } = {}) {
   const statKey = item.system.opposedStat || "int";
   const difficulty = 10 + (mob.system.stats?.[statKey]?.mod ?? 0) + game.settings.get(SCOPE, "currentFloor");
-  const result = await CarlDice.rollOpposedSkillCheck(taunter.actor, item, { difficulty, opponent: mob, post: false });
-  if (!result) return;
+  const { result, undo } = await rollForOp(taunter.actor, game.i18n.localize("CARLRPG.Reaction.Op.taunt"),
+    () => CarlDice.rollOpposedSkillCheck(taunter.actor, item, { difficulty, opponent: mob, post: false, skipDialog }));
+  if (!result) return null;
   showDice(result.roll);
-  await sendOp(message, "taunt", { byUuid: taunter.uuid, byName: taunter.name, mobUuid, rank, check: checkPayload(result) });
+  return sendRolledOp(message, "taunt", { byUuid: taunter.uuid, byName: taunter.name, mobUuid, rank, check: checkPayload(result) }, undo);
 }
 
 async function onCatch(message, state) {
@@ -796,22 +900,27 @@ async function onEvade(message, state, uuid) {
   const hits = evadableHitsFor(state, evader.uuid);
   const checks = {};
   let preset = null;
-  for (const hit of hits) {
-    const result = await CarlDice.rollEvadeCheck(evader.actor, {
-      difficulty: hit.row.difficulty, post: false, isAction: !preset, preset,
-    });
-    if (!result) {
-      if (!preset) return; // the dialog was cancelled
-      continue;
+  // The "next Action" Debuffs the first Check uses up come back if its Action is undone (rollForOp).
+  const { undo } = await rollForOp(evader.actor, game.i18n.localize("CARLRPG.Roll.Evade"), async () => {
+    for (const hit of hits) {
+      const result = await CarlDice.rollEvadeCheck(evader.actor, {
+        difficulty: hit.row.difficulty, post: false, isAction: !preset, preset,
+      });
+      if (!result) {
+        if (!preset) return null; // the dialog was cancelled
+        continue;
+      }
+      if (!preset) {
+        const { difficulty, ...rest } = result.options ?? {};
+        preset = rest;
+      }
+      showDice(result.roll);
+      checks[hit.id] = checkPayload(result);
     }
-    if (!preset) {
-      const { difficulty, ...rest } = result.options ?? {};
-      preset = rest;
-    }
-    showDice(result.roll);
-    checks[hit.id] = checkPayload(result);
-  }
-  await sendOp(message, "evade", { uuid: evader.uuid, checks, preset: presetData(preset) });
+    return true;
+  });
+  if (!preset) return;
+  await sendRolledOp(message, "evade", { uuid: evader.uuid, checks, preset: presetData(preset) }, undo);
 }
 
 /** A row's Intervene: pick who (if several), roll their d6, send it. */
@@ -822,8 +931,9 @@ async function onIntervene(message, state, ref) {
   const owner = checkList(state).find((c) => sameRef(c.ref, ref));
   const roll = await new Roll("1d6").evaluate();
   showDice(roll);
-  ui.notifications.info(game.i18n.format("CARLRPG.Reaction.Intervened", { name: helper.name, value: roll.total, target: owner?.ownerName ?? "?" }));
-  await sendOp(message, "intervene", { byUuid: helper.uuid, byName: helper.name, ref, value: roll.total });
+  // Said once the GM's client has taken it (refused, the GM's client says why).
+  const ok = await sendOp(message, "intervene", { byUuid: helper.uuid, byName: helper.name, ref, value: roll.total });
+  if (ok) ui.notifications.info(game.i18n.format("CARLRPG.Reaction.Intervened", { name: helper.name, value: roll.total, target: owner?.ownerName ?? "?" }));
 }
 
 /**
@@ -857,8 +967,11 @@ async function onBlock(message, state, uuid) {
   if (!who) return;
   if (!hasSpent(who.actor, BLOCK_TAG) && !canAct(who.actor, "other")) return;
   const [first, ...rest] = who.hits;
-  // The to-hit already carries the Mob's own Debuff rows (mobAttackRow), so no opponent here.
-  const result = await CarlDice.rollOpposedSkillCheck(who.actor, who.blocker.skill, { difficulty: first.row.difficulty, post: false });
+  // The to-hit already carries the Mob's own Debuff rows (mobAttackRow), so
+  // no opponent here. Its Debuffs used up, mark and cooldown come back if
+  // its Action is undone (rollForOp).
+  const { result, undo } = await rollForOp(who.actor, game.i18n.localize("CARLRPG.ShieldBlock.Name"),
+    () => CarlDice.rollOpposedSkillCheck(who.actor, who.blocker.skill, { difficulty: first.row.difficulty, post: false }));
   if (!result) return;
   showDice(result.roll);
   const checks = { [first.id]: checkPayload(result) };
@@ -868,7 +981,7 @@ async function onBlock(message, state, uuid) {
     showDice(again.roll);
     checks[hit.id] = checkPayload(again);
   }
-  await sendOp(message, "block", { uuid: who.uuid, checks });
+  await sendRolledOp(message, "block", { uuid: who.uuid, checks }, undo);
 }
 
 /** A row's Shield Bash: the free Attack at the Mob, then the block marked as used. */

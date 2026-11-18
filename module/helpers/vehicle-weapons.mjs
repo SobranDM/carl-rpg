@@ -15,7 +15,7 @@
  */
 import CarlDice from "../dice/dice.mjs";
 import { rollsLikeCrawler } from "./actor-kinds.mjs";
-import { buildItemSkillEntry } from "./modifiers.mjs";
+import { buildItemSkillEntry, ownedRank } from "./modifiers.mjs";
 import { findOwnedSkillLike } from "./race-class-grants.mjs";
 import { vehicleOccupants } from "./vehicle-state.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
@@ -31,7 +31,9 @@ import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 export function buildWeaponFire(vehicle, index, gunner) {
   const weapon = vehicle.system.attacks?.[index];
   if (!weapon) return null;
-  const rank = weapon.skill ? (findOwnedSkillLike(gunner, weapon.skill)?.system.rank ?? 0) : 0;
+  // The gunner's Rank as their rolls read it: worn gear's "+N" included.
+  const owned = weapon.skill ? findOwnedSkillLike(gunner, weapon.skill) : null;
+  const rank = owned ? ownedRank(gunner, owned) : 0;
   const data = {
     _id: foundry.utils.randomID(),
     name: game.i18n.format("CARLRPG.Vehicle.WeaponName", { weapon: weapon.name || "?", vehicle: vehicle.name }),

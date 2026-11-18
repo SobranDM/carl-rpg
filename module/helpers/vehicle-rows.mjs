@@ -6,19 +6,24 @@
  * way. They never consume a condition (`conditionId: null`).
  *  - The driver: "you'll roll with Disadvantage while you're the vehicle's
  *    driver unless it's to drive, use mounted-only weapons (like a lance), or
- *    use one of your vehicle's built-in weapons." Driving Rank 5 (Chopper
+ *    use one of your vehicle's built-in weapons." A mounted weapon is a
+ *    Skill with its Mounted box ticked (Lance). An unlocked "No Disadvantage
+ *    on Attacks" tier of the driver's driving Skill (Driving Rank 5, Chopper
  *    Pilot Rank 10) lifts it from Attacks. A parked vehicle isn't driven.
- *  - Driving the vehicle: Advantage from a previous Amazing Success ("on your
- *    next Skill Check to operate this vehicle"), and the Rank 15 stunt
- *    Advantage (offered unticked - it's for crazy stunts only).
+ *  - Driving the vehicle (a Check with the Skill the vehicle names): Advantage
+ *    from a previous Amazing Success ("on your next Skill Check to operate
+ *    this vehicle"), and an unlocked stunt-Advantage tier (Rank 15; offered
+ *    unticked - it's for crazy stunts only).
  *  - Any occupant's Evade: "an Evade Buff equal to the vehicle's Move ÷ 10,
- *    except from straight ahead or behind". Driving Rank 10's "Advantage to
- *    Evade Attacks against your vehicle" goes to the driver's own Evade
- *    (vehicles themselves don't Evade).
+ *    except from straight ahead or behind". An unlocked Evade-Advantage tier
+ *    (Driving Rank 10's "Advantage to Evade Attacks against your vehicle")
+ *    goes to the driver's own Evade (vehicles themselves don't Evade).
+ * The driver's perks are their own driving Skill's tiers (vehicle-state.mjs
+ * driverPerks).
  */
 import { isVehicle } from "./actor-kinds.mjs";
-import { slugifySkillName } from "./modifiers.mjs";
-import { driverRank, vehicleSeatOf, vehicleStatus } from "./vehicle-state.mjs";
+import { sameSkillName } from "./modifiers.mjs";
+import { driverPerks, vehicleSeatOf, vehicleStatus } from "./vehicle-state.mjs";
 
 /**
  * @param {Actor} actor  The one rolling (or, in "difficulty" mode, a Mob
@@ -35,9 +40,8 @@ export function collectVehicleRows(actor, rollKind, { skillItem = null, builtIn 
   const vehicle = seat.vehicle;
   const sys = vehicle.system;
   const status = vehicleStatus(vehicle);
-  const skill = CONFIG.CARLRPG.vehicleDriveSkills[sys.driveSkill];
   const driving = seat.role === "driver" && !sys.parked;
-  const rank = driverRank(actor, sys.driveSkill);
+  const perks = driving ? driverPerks(actor, vehicle) : null;
 
   const rows = [];
   const add = (id, kind, value, key, defaultOn = true) => rows.push({
@@ -49,28 +53,27 @@ export function collectVehicleRows(actor, rollKind, { skillItem = null, builtIn 
     defaultOn,
     consume: false,
     situational: true,
-    label: game.i18n.format(`CARLRPG.Vehicle.Rows.${key}`, { vehicle: vehicle.name, value }),
+    label: game.i18n.format(`CARLRPG.Vehicle.Rows.${key}`, { vehicle: vehicle.name, value, skill: perks?.item?.name ?? sys.driveSkill }),
   });
 
   if (rollKind === "evade") {
     if (status.evadeBuff > 0) add("evade-buff", "penalty", status.evadeBuff, "EvadeBuff");
     if (mode === "roll" && driving) {
       add("driving", "disadvantage", 0, "Driving");
-      if (skill?.evadeAdvantageRank && rank >= skill.evadeAdvantageRank) add("driving-evade", "advantage", 0, "DrivingEvade");
+      if (perks.evadeAdvantage) add("driving-evade", "advantage", 0, "DrivingEvade");
     }
     return rows;
   }
   if (mode !== "roll" || !driving) return rows;
 
-  const slug = skillItem ? slugifySkillName(skillItem.name) : null;
-  if (slug && skill && slug === slugifySkillName(skill.skillName)) {
+  if (skillItem && sameSkillName(skillItem.name, sys.driveSkill)) {
     if (sys.nextCheckAdvantage) add("amazing", "advantage", 0, "Amazing");
-    if (skill.stuntRank && rank >= skill.stuntRank) add("stunt", "advantage", 0, "Stunt", false);
+    if (perks.stuntAdvantage) add("stunt", "advantage", 0, "Stunt", false);
     return rows;
   }
   if (rollKind === "attack") {
-    const mountedOnly = !!slug && CONFIG.CARLRPG.mountedOnlySkills.some((n) => slugifySkillName(n) === slug);
-    if (builtIn || mountedOnly || (skill && rank >= skill.attackRank)) return rows;
+    const mounted = skillItem?.system?.mounted === true;
+    if (builtIn || mounted || perks.attackOk) return rows;
   }
   add("driving", "disadvantage", 0, "Driving");
   return rows;

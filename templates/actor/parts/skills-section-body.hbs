@@ -1,8 +1,8 @@
 {{!-- Skills + nested Damage Effects list - the content of the Skills
       drawer on the merged Abilities tab. Damage Effects nest under every
       matching parent Skill (see actor-sheet.mjs#_prepareItems); a Damage
-      Effect matching no owned Skill falls back to the "Unassigned" list
-      below. --}}
+      Effect matching no owned Skill or Spell (spells-section-body.hbs
+      nests a Spell's) falls back to the "Unassigned" list below. --}}
 <ol class="items-list carl-skills-list">
   <li class="item flexrow items-header">
     <div class="item-name carl-sort-header" data-action="sortList" data-list="skills" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.skills.name}}"></i></div>

@@ -16,6 +16,13 @@
   {{#each spells as |item id|}}
   <li class="item flexrow" data-item-id="{{item._id}}">
     <div class="item-name">
+      {{#if item.damageEffects.length}}
+      <a class="item-control carl-drawer-caret carl-drawer-caret-lg{{#unless item.system.damageEffectsExpanded}} collapsed{{/unless}}"
+        data-action="toggleDrawer" data-scope="item" data-path="system.damageEffectsExpanded"
+        title="{{localize 'CARLRPG.DamageEffect.ToggleNested'}}">
+        <i class="fas fa-caret-down"></i>
+      </a>
+      {{/if}}
       <div class="item-image">
         <a class="rollable" data-action="roll" data-roll-type="item">
           <img src="{{item.img}}" title="{{item.name}}" width="24" height="24" />
@@ -74,5 +81,16 @@
       </div>
     </div>
   </li>
+  {{!-- Its Damage Effects (parentSkills names it), as under a Skill
+        (skills-section-body.hbs; actor-sheet.mjs#_prepareItems). --}}
+  {{#if item.damageEffects.length}}
+  <li class="carl-nested-drawer{{#unless item.system.damageEffectsExpanded}} collapsed{{/unless}}">
+    <ol class="items-list carl-nested-damage-effects">
+      {{#each item.damageEffects as |de|}}
+        {{> "systems/carl-rpg/templates/actor/parts/damage-effect-row.hbs" item=de hideParents=true locked=../../locked}}
+      {{/each}}
+    </ol>
+  </li>
+  {{/if}}
   {{/each}}
 </ol>

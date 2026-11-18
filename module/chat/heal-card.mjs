@@ -21,8 +21,9 @@ import { removeConditionFromActor } from "../helpers/conditions.mjs";
 import { findConditionWithMechanic, conditionLabel } from "../helpers/debuff-effects.mjs";
 import { shortRestUpdates, conditionsAfterRest, hbCeiling, restoreUpTo } from "../helpers/rest.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
-import { updateCardMessage } from "../helpers/chat-socket.mjs";
+import { askGM, registerAskHandler, updateCardMessage } from "../helpers/chat-socket.mjs";
 import { isVehicle } from "../helpers/actor-kinds.mjs";
+import { queueOn } from "../helpers/actor-queue.mjs";
 
 const SCOPE = "carl-rpg";
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/heal-footer.hbs";
@@ -63,14 +64,14 @@ async function resolveHealActor(uuid) {
   return doc instanceof Actor ? doc : (doc.actor ?? null);
 }
 
-/** Whether this user owns the actor behind a token/actor uuid (a GM always does). */
-function ownsUuid(uuid) {
-  if (game.user.isGM) return true;
+/** Whether a user (this one by default) owns the actor behind a token/actor uuid (a GM always does). */
+function ownsUuid(uuid, user = game.user) {
+  if (user.isGM) return true;
   if (!uuid) return false;
   try {
     const doc = fromUuidSync(uuid);
     const actor = doc instanceof Actor ? doc : doc?.actor;
-    return !!actor?.isOwner;
+    return !!actor?.testUserPermission(user, "OWNER");
   } catch (e) {
     return false;
   }
@@ -120,9 +121,9 @@ export function healDoneFor(message) {
 // still running does nothing.
 const applying = new Set();
 
-// Rows this client has applied, by message.id:rowId, until the card's own
-// flag says so: a player's mark reaches the card through the GM a moment
-// later, and a click before then mustn't heal again.
+// Rows healed for this client, by message.id:rowId, until the card's own
+// flag says so: the GM's mark reaches this client a moment after its answer,
+// and a click before then mustn't even be sent.
 const appliedHere = new Set();
 
 /** Whether a row is applied, as this client knows it (the card, or its own mark not yet arrived). */
@@ -133,12 +134,15 @@ function rowApplied(message, row) {
 }
 
 /**
- * Apply the snapshotted healing to each recipient this user can update,
- * marking each row so it can't double-apply on a later re-render. Each
- * row's state is read again from the card just before it's healed: one
- * applied meanwhile (by another user, once their mark has reached the card)
- * is skipped. A recipient that can't be healed now (a vehicle, The Taint)
- * isn't marked, so its Apply stays live.
+ * Apply the snapshotted healing to each recipient this user can update.
+ * The vehicle and Taint refusals are checked here first (a recipient that
+ * can't be healed now isn't sent, so its Apply stays live); the rest is
+ * done on the active GM's client (healNow), whoever clicked: there, in the
+ * card's queue, the rows are read again, and the ones not applied yet are
+ * healed and marked in one step - so the GM and a recipient's owner
+ * clicking at once heal each recipient once. Nothing in it prompts anyone.
+ * With no GM online, or none answering in time, nothing is healed (askGM
+ * warns).
  * @param {PointerEvent} event
  * @param {ChatMessage} message
  */
@@ -149,10 +153,6 @@ export async function onApplyHeal(event, message) {
   if (!rows.length) return;
   applying.add(message.id);
   try {
-    const full = message.getFlag(SCOPE, "healFull") ?? false;
-    // A card from before Heal Critter's plain full heal: full always rested.
-    const rest = message.getFlag(SCOPE, "healRest") ?? full;
-    const amount = message.getFlag(SCOPE, "healAmount") ?? 0;
     const ready = [];
     for (const row of rows) {
       const actor = await resolveHealActor(row.uuid);
@@ -162,29 +162,65 @@ export async function onApplyHeal(event, message) {
       }
       const refusal = healRefusal(actor);
       if (refusal) ui.notifications.warn(refusal);
-      else ready.push({ row, actor });
+      else ready.push(row);
     }
+    if (!ready.length) return;
 
-    // Read again now, after the waits: applied meanwhile, it's skipped.
-    const current = new Map(healRows(message).map((row) => [row.id, row]));
-    const done = ready.filter(({ row }) => current.has(row.id) && !rowApplied(message, current.get(row.id)));
-    if (!done.length) return;
-    for (const { row } of done) appliedHere.add(`${message.id}:${row.id}`);
-
-    const all = [...current.values()];
-    const appliedIds = new Set([...all.filter((r) => r.applied).map((r) => r.id), ...done.map(({ row }) => row.id)]);
-    const updates = all.some((r) => r.legacy)
-      ? { healApplied: true }
-      : {
-        healRecipients: Object.fromEntries(done.map(({ row }) => [row.id, { applied: true }])),
-        ...(all.every((r) => appliedIds.has(r.id)) ? { healApplied: true } : {}),
-      };
-    await updateCardMessage(message, { flags: { [SCOPE]: updates } });
-    for (const { actor } of done) await healActor(actor, { full, rest, amount });
+    const answer = await askGM(HEAL, { cardId: message.id, rowIds: ready.map((row) => row.id) });
+    for (const healed of Array.isArray(answer?.healed) ? answer.healed : []) {
+      // Shown as applied here until the GM's write of the row arrives.
+      appliedHere.add(`${message.id}:${healed.id}`);
+      ui.notifications.info(game.i18n.format("CARLRPG.Heal.AppliedNotice", { name: healed.name }));
+    }
   } finally {
     applying.delete(message.id);
   }
 }
+
+const HEAL = "healApply";
+// Heals, one at a time per Heal card (the GM's client).
+const healQueues = new Map();
+
+/**
+ * The GM's side of a Heal's Apply (onApplyHeal), in the card's queue: the
+ * asked rows as the card has them now - each not applied yet, that `user`
+ * may heal, and that can be healed now - healed, then marked applied,
+ * before the next Apply on the card.
+ * @param {{cardId: string, rowIds: string[]}} data
+ * @param {User} user  Who asked.
+ * @returns {Promise<{healed: {id: string, name: string}[]}>}
+ */
+export function healNow({ cardId, rowIds } = {}, user = game.user) {
+  return queueOn(healQueues, cardId, async () => {
+    const message = game.messages.get(cardId);
+    if (!message || message.getFlag(SCOPE, "healApplied")) return { healed: [] };
+    const wanted = new Set(Array.isArray(rowIds) ? rowIds : []);
+    const all = healRows(message);
+    const full = message.getFlag(SCOPE, "healFull") ?? false;
+    // A card from before Heal Critter's plain full heal: full always rested.
+    const rest = message.getFlag(SCOPE, "healRest") ?? full;
+    const amount = message.getFlag(SCOPE, "healAmount") ?? 0;
+    const healed = [];
+    for (const row of all.filter((r) => wanted.has(r.id) && !r.applied && ownsUuid(r.uuid, user))) {
+      const actor = await resolveHealActor(row.uuid);
+      if (!actor || healRefusal(actor)) continue;
+      await healActor(actor, { full, rest, amount });
+      healed.push({ id: row.id, name: actor.name });
+    }
+    if (!healed.length) return { healed };
+    const appliedIds = new Set([...all.filter((r) => r.applied), ...healed].map((r) => r.id));
+    const updates = all.some((r) => r.legacy)
+      ? { healApplied: true }
+      : {
+        healRecipients: Object.fromEntries(healed.map((r) => [r.id, { applied: true }])),
+        ...(all.every((r) => appliedIds.has(r.id)) ? { healApplied: true } : {}),
+      };
+    await message.update({ flags: { [SCOPE]: updates } });
+    return { healed };
+  });
+}
+// Registered at load: chat-socket.mjs is a leaf, evaluated before this module.
+registerAskHandler(HEAL, healNow);
 
 /**
  * Why an actor can't be healed now, or null: a vehicle (repaired by a GM
@@ -202,7 +238,8 @@ function healRefusal(actor) {
 }
 
 /**
- * Heal one actor (healRefusal already checked).
+ * Heal one actor (healRefusal already checked). The asker is told
+ * (onApplyHeal), not whichever client does it.
  * @param {Actor} actor
  * @param {{full: boolean, rest: boolean, amount: number}} heal
  * @returns {Promise<boolean>}  Whether it was healed.
@@ -228,7 +265,6 @@ async function healActor(actor, { full, rest, amount }) {
     updates = { "system.hb.value": restoreUpTo(sys.hb?.value ?? 0, amount, effectiveMax) };
   }
   await actor.update(updates);
-  ui.notifications.info(game.i18n.format("CARLRPG.Heal.AppliedNotice", { name: actor.name }));
   return true;
 }
 

@@ -433,7 +433,7 @@ export default function register(quench) {
           let combat;
           try {
             const unarmed = await createTestItem(actor, "skill", "Unarmed Combat", {
-              name: "Unarmed Combat", system: { category: "attack", rank: 1, isHandToHand: true },
+              name: "Unarmed Combat", system: { category: "attack", rank: 1, isHandToHand: true, noDamageEffects: true },
             });
             const pugilism = await createTestItem(actor, "skill", "Pugilism", {
               name: "Pugilism", system: { category: "attack", rank: 3, isHandToHand: true },

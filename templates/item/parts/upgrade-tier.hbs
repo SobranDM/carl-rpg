@@ -6,8 +6,9 @@
       ORIGINAL index in the full system.upgrades array - every field's name
       path and deleteArrayItem's data-index need it), `damageTypeEntries`
       (#groupUpgradesByRank: its damage types as `{value, dtIndex}`, dtIndex
-      the ORIGINAL index), `showHeal` / `showDamageTypes` / `showShield` (in
-      use, or added from the add bar; Shield slots only on a Spell, `isSpell`),
+      the ORIGINAL index), `showHeal` / `showDamageTypes` / `showShield` /
+      `showVehicle` (in use, or added from the add bar; Shield slots only on a
+      Spell, `isSpell`; Vehicle - driving perks - only on a Skill, `isSkill`),
       `unlocked`, `isAttackFlavored` (also shows its Armor-Piercing box), plus `config`/
       `item`/`actorSkillNames` passed through. Inside the
       `{{#each damageTypeEntries}}` loop anything from this scope needs
@@ -113,6 +114,34 @@
     </div>
     {{/if}}
 
+    {{#if showVehicle}}
+    {{!-- A driving Skill's perks from this Rank, while its owner drives a
+          vehicle that names this Skill (vehicle-state.mjs driverPerks). --}}
+    <div class="carl-tier-part carl-upgrade-vehicle">
+      <span class="carl-tier-part-title">{{localize "CARLRPG.Ranked.Vehicle.Title"}}</span>
+      <div class="carl-field-grid">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Ranked.Vehicle.Move"}}</label>
+          <input type="text" class="carl-w-tiny" name="{{concat 'system.upgrades.' uIndex '.vehicleMove'}}"
+            value="{{upgrade.vehicleMove}}" data-dtype="Number" />
+        </div>
+        <label class="carl-check-field">
+          <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.vehicleAttackOk'}}" {{checked upgrade.vehicleAttackOk}} />
+          {{localize "CARLRPG.Ranked.Vehicle.AttackOk"}}
+        </label>
+        <label class="carl-check-field">
+          <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.vehicleEvadeAdvantage'}}" {{checked upgrade.vehicleEvadeAdvantage}} />
+          {{localize "CARLRPG.Ranked.Vehicle.EvadeAdvantage"}}
+        </label>
+        <label class="carl-check-field">
+          <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.vehicleStuntAdvantage'}}" {{checked upgrade.vehicleStuntAdvantage}} />
+          {{localize "CARLRPG.Ranked.Vehicle.StuntAdvantage"}}
+        </label>
+      </div>
+      <span class="carl-hint">{{localize "CARLRPG.Ranked.Vehicle.Hint"}}</span>
+    </div>
+    {{/if}}
+
     {{#if isAttackFlavored}}
     <label class="carl-check-field carl-upgrade-armor-piercing" data-tooltip="{{localize 'CARLRPG.ArmorPiercing.Hint'}}">
       <input type="checkbox" name="{{concat 'system.upgrades.' uIndex '.armorPiercing'}}" {{checked upgrade.armorPiercing}} />
@@ -140,6 +169,10 @@
       {{#if isSpell}}{{#unless showShield}}
       <button type="button" data-action="revealPart" data-reveal="{{concat 'shield-' upgrade.id}}">
         <i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.AddShieldSlots"}}</button>
+      {{/unless}}{{/if}}
+      {{#if isSkill}}{{#unless showVehicle}}
+      <button type="button" data-action="revealPart" data-reveal="{{concat 'vehicle-' upgrade.id}}">
+        <i class="fas fa-plus"></i> {{localize "CARLRPG.ItemSheet.AddVehicle"}}</button>
       {{/unless}}{{/if}}
     </div>
   </div>

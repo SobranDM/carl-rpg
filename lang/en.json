@@ -162,6 +162,14 @@
         "Body": "Each Mob's Attacks are now items on its sheet, with an Area box and the Debuffs they give. These Mobs have Attacks to check: one guessed to be an Area Attack, or one whose effect names a Debuff - set the Debuff, and when it lands, on the Attack:",
         "Line": "{name}: {attacks}"
       },
+      "Failures": {
+        "Title": "Some data couldn't be updated",
+        "Body": "The update to this version couldn't change these documents. Everything else was updated. Check each one by hand (the browser console has the details):",
+        "Line": "{where} ({step}): {message}",
+        "WholeStep": "The whole step",
+        "NotWritten": "Foundry refused the change (it failed validation, or a module stopped it).",
+        "MissingPack": "The system compendium {pack} is missing, so this step couldn't read what it needs."
+      },
       "BaseDr": {
         "Title": "Base DR is now 0",
         "Body": "A crawler's DR now comes only from its Race, Class, gear, Skills, Spells and Buffs. These Characters had a base DR typed in, which is now 0. If it came from something not automated yet, add it back as a DR bonus on that item:",
@@ -254,10 +262,7 @@
       "Cargo": "Cargo",
       "CargoHint": "Extra people in a cargo area, e.g. an 18-wheeler's \"(+50 in cargo)\".",
       "DriveSkill": "Driven with",
-      "DriveSkills": {
-        "driving": "Driving",
-        "chopperPilot": "Chopper Pilot"
-      },
+      "DriveSkillHint": "The Skill that drives it, by name: Driving, Chopper Pilot or a homebrew one. What the driver's Ranks in it give is set on that Skill's Upgrade tiers (Vehicle).",
       "SlotValue": "Slot value",
       "SlotValueHint": "Each Health Bar slot holds the vehicle's Size. Set this only for an odd vehicle.",
       "Roles": {
@@ -338,6 +343,7 @@
       "NotHealed": "Vehicles are repaired (edit the Health Bar), not healed.",
       "OnlyCargo": "A vehicle carries gear only.",
       "NoDriver": "No driver",
+      "NoDriveSkill": "{vehicle} has no driving Skill - name one on its Details tab.",
       "MobDriver": "{name} doesn't roll - set this round's result on the Details tab.",
       "NotYourVehicle": "Only the GM or whoever plays the driver can do that.",
       "Parked": "Parked",
@@ -390,9 +396,9 @@
       "Rows": {
         "NoteTitle": "Vehicle",
         "Driving": "Driving {vehicle} (p.72)",
-        "DrivingEvade": "Driving Rank 10",
+        "DrivingEvade": "{skill}: Advantage to Evade",
         "Amazing": "Amazing Success (last Driving Check)",
-        "Stunt": "Crazy stunt (Rank 15)",
+        "Stunt": "Crazy stunt ({skill})",
         "EvadeBuff": "In {vehicle} (Move ÷ 10)",
         "HeadOn": "Head-on or from behind ({vehicle})"
       },
@@ -617,6 +623,12 @@
       "Import": "Import",
       "GMOnly": "Only the GM can import a rulebook.",
       "Reading": "Reading {title}...",
+      "Identifying": "Reading the PDF's title page...",
+      "UnknownBook": "This PDF isn't one the importer reads. It takes the Dungeon Crawler Carl RPG Core Rulebook and the Starter Set's Game Master's Campaign Toolkit, recognised by the title on their cover, whatever the file is called. Other books, including the Starter Set's Crawlers & Customization booklet, can't be imported.",
+      "Books": {
+        "core": "Core Rulebook",
+        "toolkit": "Game Master's Campaign Toolkit"
+      },
       "ReadingPage": "Reading {title}: page {done} of {total}",
       "CheckingMaps": "Looking for maps: {n} of {total}",
       "ResultsHint": "Found in {title}. Mobs, items and achievements go into compendiums named after the book (spells and gear a compendium already has are copied from it), maps into a Scenes folder; importing the same book again updates those documents instead of copying them, except ones you've edited since.",
@@ -905,7 +917,15 @@
       "Category": "Category",
       "AttackType": "Attack Type",
       "HandToHand": "Hand-to-Hand",
-      "HandToHandHint": "A hand-to-hand Combat Skill (p.179). Unarmed Combat drops off the Combat tab's Attacks once one of these outranks it.",
+      "HandToHandHint": "A hand-to-hand Combat Skill (p.179): needs no weapon. One with No Damage Effects (Unarmed Combat) drops off the Combat tab's Attacks once another of these outranks it.",
+      "NoWeapon": "Needs no weapon",
+      "NoWeaponHint": "This Attack needs no weapon in hand or in the Hotlist: Improvised Weapons (p.178) and natural attacks like Bite. Hand-to-Hand Skills need none either.",
+      "NoDamageEffects": "No Damage Effects",
+      "NoDamageEffectsHint": "This Attack can't choose a Damage Effect (Unarmed Combat, p.179). A Hand-to-Hand one drops off the Combat tab's Attacks once another Hand-to-Hand Skill outranks it.",
+      "CommandsPets": "Commands pets",
+      "CommandsPetsHint": "Command Pet rolls this Skill (Animal Handling, p.232); with several, the highest Rank. With none, it rolls Animal Handling, untrained if the crawler hasn't got it.",
+      "Mounted": "Mounted weapon",
+      "MountedHint": "A mounted-only weapon (Lance): a vehicle's driver attacks with it without the driving Disadvantage (p.72).",
       "Range": "Range",
       "AiFavor": "AI Favor",
       "Cooldown": "Cooldown",
@@ -1034,6 +1054,14 @@
       "HealsHint": "Who it can be cast on. A heal with nothing targeted heals its caster, if it can.",
       "HealToFullBase": "Heals to full",
       "HealToFullBaseHint": "At any Rank, heals the target's whole Health Bar with no dice (Heal Critter). An Upgrade's Heal to Full also grants a Short Rest.",
+      "Vehicle": {
+        "Title": "Vehicle",
+        "Move": "+ft Move",
+        "AttackOk": "No Disadvantage on Attacks",
+        "EvadeAdvantage": "Advantage to Evade",
+        "StuntAdvantage": "Advantage on crazy stunts",
+        "Hint": "From this Rank, while its owner drives a vehicle that names this Skill (its Details tab's \"Driven with\")."
+      },
       "Upgrades": "Upgrades",
       "AddUpgrade": "Add Upgrade",
       "RemoveUpgrade": "Remove Upgrade",
@@ -1110,6 +1138,10 @@
       "OnAmazing": "on an Amazing Success",
       "NoAmazing": "Only on an Amazing Success, and no target was one: it lands on no one.",
       "OnlyWithHint": "Blank: any Attack. One \"On an Amazing Success\" effect per weapon (p.223).",
+      "HandToHandOnly": "With any Hand-to-Hand Attack",
+      "HandToHandOnlyHint": "Lands with an Attack whose Skill has the Hand-to-Hand box, homebrew ones included. With Skills named above too, it lands with any of them or any Hand-to-Hand Attack.",
+      "OnlyHandToHand": "Only with Hand-to-Hand Attacks",
+      "OnlyWithOrHandToHand": "Only with: {skills} or any Hand-to-Hand Attack",
       "AddSkill": "Add a Skill",
       "RemoveSkill": "Remove this Skill",
       "Trigger": { "hit": "On a hit", "crit": "Critical Hit", "amazing": "Amazing Success", "both": "Crit + Amazing" },
@@ -1147,6 +1179,7 @@
       "AddDamageType": "Damage type",
       "AddHealing": "Healing",
       "AddShieldSlots": "Shield slots",
+      "AddVehicle": "Vehicle",
       "Count": { "Bonus": "{n} Bonus", "Bonuses": "{n} Bonuses", "Debuff": "{n} Debuff", "Debuffs": "{n} Debuffs" },
       "ManaChip": "{n} Mana",
       "RankChip": "Rank {n}",
@@ -2063,6 +2096,7 @@
       "WhichMob": "Which Mob",
       "WhichAttack": "Which Attack",
       "Intervened": "{name} Intervenes: +{value} to {target}'s Check.",
+      "Refused": "That didn't go through: the Reaction card changed (or was locked) before it got there. Nothing was spent.",
       "LockWarning": "{names} haven't Evaded the Attacks still landing on them - they'll take the hits. Lock the results anyway?"
     },
     "Resolve": {

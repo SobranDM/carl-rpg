@@ -64,6 +64,21 @@ export default function register(quench) {
           assert.lengthOf(attackTargetEffects(actor, skillOf("Dagger"), { isAmazingSuccess: false }), 0);
         });
 
+        it("\"With any Hand-to-Hand Attack\" fits any Skill with the Hand-to-Hand box, homebrew included - not a Longsword", function () {
+          const actor = { items: [gearOf("Brass Knuckles", true, [entry({ debuffKey: "woozy", handToHandOnly: true })])] };
+          const elbow = { ...skillOf("Flying Elbow"), system: { ...skillOf("Flying Elbow").system, isHandToHand: true } };
+          assert.deepEqual(attackTargetEffects(actor, elbow, { isAmazingSuccess: false }).map((t) => t.debuffKey), ["woozy"],
+            "a homebrew hand-to-hand Skill");
+          assert.lengthOf(attackTargetEffects(actor, skillOf("Longsword"), { isAmazingSuccess: false }), 0, "a Weapon Skill");
+          assert.lengthOf(attackTargetEffects(actor, skillOf("Pugilism"), { isAmazingSuccess: false }), 0,
+            "a book name without the box doesn't count");
+          // With Skills named too, either fits.
+          const both = { items: [gearOf("Spiked Club", true, [entry({ debuffKey: "woozy", handToHandOnly: true, skills: ["Club"] })])] };
+          assert.lengthOf(attackTargetEffects(both, skillOf("Club"), { isAmazingSuccess: false }), 1, "a listed Skill");
+          assert.lengthOf(attackTargetEffects(both, elbow, { isAmazingSuccess: false }), 1, "any hand-to-hand one");
+          assert.lengthOf(attackTargetEffects(both, skillOf("Longsword"), { isAmazingSuccess: false }), 0);
+        });
+
         it("the Skill's, its Damage Effect's and gear's together", function () {
           const actor = { items: [gearOf("Ring", true, [entry({ debuffKey: "burned" })])] };
           const found = attackTargetEffects(actor, skillOf("Pugilism", [entry({ debuffKey: "staggered" })]), {
@@ -250,6 +265,22 @@ export default function register(quench) {
             assert.include(chips, game.i18n.format("CARLRPG.ItemSheet.WeaponChip", { skill: "Longsword" }));
             assert.include(chips, game.i18n.localize("CARLRPG.Item.Equipped"));
             assert.include(chips, "×2");
+            await sheet.close();
+          } finally {
+            await item.delete();
+          }
+        });
+
+        it("a gear Debuff's With any Hand-to-Hand Attack box is drawn ticked, and its row says so", async function () {
+          const item = await worldItem("knuckles", { system: { targetEffects: [entry({ debuffKey: "woozy", handToHandOnly: true })] } });
+          try {
+            const sheet = await openSheet(item);
+            await rerendered(sheet, (el) => el.querySelector(".carl-gear-debuffs .carl-target-effect-row"), "the section never drew");
+            const row = sheet.element.querySelector(".carl-gear-debuffs .carl-target-effect-row");
+            const box = row.querySelector('input[name="system.targetEffects.0.handToHandOnly"]');
+            assert.exists(box);
+            assert.isTrue(box.checked);
+            assert.include(row.querySelector("summary").textContent, game.i18n.localize("CARLRPG.OnHitDebuff.OnlyHandToHand"));
             await sheet.close();
           } finally {
             await item.delete();

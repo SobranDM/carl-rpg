@@ -27,7 +27,8 @@ import CarlDice, { checkSubtitle, interventionRolls, withManaCostSubtitle } from
 import { degreeBadge, getDegreeOfSuccess } from "../helpers/rules.mjs";
 import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { canAct, payAction } from "../helpers/actions.mjs";
-import { rerollOpen } from "../helpers/ai-favor.mjs";
+import { aiRerollAllowed, spendAiFavor } from "../helpers/ai-favor.mjs";
+import { tellUser } from "../helpers/chat-socket.mjs";
 import { resolveOccupant } from "../helpers/vehicle-state.mjs";
 import { queueOn } from "../helpers/actor-queue.mjs";
 import { canDrive, drivingOpen, reviseDriving, upgradeReady } from "../helpers/vehicle-driving.mjs";
@@ -110,13 +111,8 @@ export function rerollSources(message, user = game.user) {
   const flags = message.flags[SCOPE];
   const sources = [];
   const spec = flags.aiReroll;
-  if (rerollOpen(spec)) {
-    const actor = actorOf(spec.actorUuid);
-    const favor = actor?.system.details?.aiFavor ?? 0;
-    if (actor?.type === "character" && favor >= 1 && (user.isGM || actor.testUserPermission(user, "OWNER"))) {
-      sources.push({ key: "favor", actor, favor });
-    }
-  }
+  const actor = spec ? actorOf(spec.actorUuid) : null;
+  if (aiRerollAllowed(spec, actor, user)) sources.push({ key: "favor", actor, favor: actor.system.details?.aiFavor ?? 0 });
   if (flags.driving) {
     const vehicle = resolveOccupant(flags.driving.vehicleUuid);
     if (vehicle && canDrive(vehicle, user) && upgradeReady(vehicle, "fuzzyDice")) sources.push({ key: "fuzzyDice", vehicle });
@@ -345,8 +341,8 @@ export function registerCheckRevisionSocket() {
 }
 
 // Revisions, one at a time per queue: a card, or - a row's Evade - the
-// Attack card it shares its state with. A Taunt's redirect and undoing a
-// row's Evade share it (withCardQueue).
+// Attack card it shares its state with. A row's Apply, a Taunt's redirect
+// and undoing a row's Evade share it (withCardQueue).
 const queues = new Map();
 
 /**
@@ -373,11 +369,33 @@ export function withCardQueue(cardId, task) {
  * @returns {Promise<boolean>}  Whether the card changed.
  */
 export function applyRevision(cardId, op, data, user) {
-  const task = () => reviseNow(cardId, op, data, user).catch((err) => {
-    console.error(`CarlRPG | revising a card: "${op}" failed`, err);
-    return false;
-  });
+  const task = async () => {
+    let result = false;
+    try {
+      result = await reviseNow(cardId, op, data, user);
+    } catch (err) {
+      console.error(`CarlRPG | revising a card: "${op}" failed`, err);
+    }
+    if (result !== true) tellRefused(user, op, result);
+    return result === true;
+  };
   return queueOn(queues, cardId, task);
+}
+
+// reviseNow's "refused, and the asker has been told why" (payAction's warning).
+const TOLD = "told";
+
+/**
+ * Tell another user their Intervene or reroll was refused on the GM's
+ * client (the card closed, or changed, before it got there) - unless they've
+ * been told already. Undoing a d6 is reported by its undo.
+ * @param {User} user
+ * @param {string} op
+ * @param {*} result  reviseNow's.
+ */
+function tellRefused(user, op, result) {
+  if (result === TOLD || op === "unintervene" || !user || user.isSelf) return;
+  tellUser(user, op === "reroll" ? "CARLRPG.Reroll.Closed" : "CARLRPG.Intervene.Closed");
 }
 
 async function reviseNow(cardId, op, data, user) {
@@ -424,8 +442,8 @@ async function reviseNow(cardId, op, data, user) {
 
   const parts = await KINDS[kind].revise(message, { interventions, reroll });
   if (!parts) {
-    ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
-    return false;
+    tellUser(user, "CARLRPG.Reroll.Missing");
+    return TOLD;
   }
   // Re-checked now its new parts are ready: something done meanwhile (a
   // row applied) closes it. Undoing a d6 was checked by its undo.
@@ -435,13 +453,13 @@ async function reviseNow(cardId, op, data, user) {
   if (pay) {
     const roller = actorOf(spec.actorUuid);
     const label = game.i18n.format("CARLRPG.Actions.Label.Intervene", { name: roller?.name ?? "?" });
-    const { paid } = await payAction(pay.actor, "other", label, { undo: [{ t: "intervene", messageId: cardId, id: pay.entry.id }] });
-    if (!paid) return false;
+    const { paid } = await payAction(pay.actor, "other", label, { undo: [{ t: "intervene", messageId: cardId, id: pay.entry.id }], user });
+    if (!paid) return TOLD;
   }
   // What a reroll costs: 1 AI Favor (p.61), or the vehicle's Fuzzy Dice for
   // this Floor (p.73).
   if (source?.key === "favor") {
-    await source.actor.update({ "system.details.aiFavor": Math.max(0, (source.actor.system.details?.aiFavor ?? 0) - 1) });
+    if (!(await spendAiFavor(source.actor))) return false;
   } else if (source?.key === "fuzzyDice") {
     if (!await updateVehicle(source.vehicle, { "system.upgrades.fuzzyDice.usedFloor": game.settings.get(SCOPE, "currentFloor") })) return false;
   }
@@ -497,8 +515,8 @@ async function reviseRowNow(message, op, data, user) {
   }
   const revised = await reviseRow(message, rowId, which, { interventions, reroll });
   if (!revised) {
-    ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
-    return false;
+    tellUser(user, "CARLRPG.Reroll.Missing");
+    return TOLD;
   }
   // Re-checked now: something done meanwhile (the row applied) closes it.
   if (op !== "unintervene" && !rowCheckOpen(message, rowId, which)) return false;
@@ -506,13 +524,11 @@ async function reviseRowNow(message, op, data, user) {
     const roller = actorOf(check.actorUuid);
     const label = game.i18n.format("CARLRPG.Actions.Label.Intervene", { name: roller?.name ?? "?" });
     const { paid } = await payAction(pay.actor, "other", label, {
-      undo: [{ t: "intervene", messageId: message.id, id: pay.entry.id, rowId, which }],
+      undo: [{ t: "intervene", messageId: message.id, id: pay.entry.id, rowId, which }], user,
     });
-    if (!paid) return false;
+    if (!paid) return TOLD;
   }
-  if (source?.key === "favor") {
-    await source.actor.update({ "system.details.aiFavor": Math.max(0, (source.actor.system.details?.aiFavor ?? 0) - 1) });
-  }
+  if (source?.key === "favor" && !(await spendAiFavor(source.actor))) return false;
   await revised.write();
   return true;
 }

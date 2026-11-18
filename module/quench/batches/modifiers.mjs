@@ -59,8 +59,10 @@ export default function register(quench) {
           assert.equal(slugifySkillName(null), "unknown");
         });
 
-        it("strips non a-z0-9 characters (accents included)", function () {
-          assert.equal(slugifySkillName("Über!!"), "ber");
+        it("drops accents and punctuation, keeps letters in any script", function () {
+          assert.equal(slugifySkillName("Über!!"), "uber");
+          assert.equal(slugifySkillName("Épée"), "epee");
+          assert.equal(slugifySkillName("Таунт"), "таунт");
         });
       });
 

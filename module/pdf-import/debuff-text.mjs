@@ -74,19 +74,6 @@ const VARIANTS = {
 export const DEBUFF_KEYS = [...new Set([...Object.values(TABLE_11), ...Object.values(VARIANTS)])];
 
 /**
- * The hand-to-hand Combat Skills (p.179), for "with any Hand-to-Hand
- * Attack": the gear entry's "Only with" list (matched by name,
- * modifiers.mjs collectItemTargetEffects). A homebrew one isn't listed.
- */
-export const HAND_TO_HAND_SKILLS = [
-  "Foot Soldier",
-  "Noggin Nocker",
-  "Pugilism",
-  "Unarmed Combat",
-  "Wrasslin'",
-];
-
-/**
  * A Debuff's key from its printed name, or null when Table 11 has no such
  * Debuff.
  * @param {string} name  "Poison", "the Blood Trail", "The Taint", "Long-Term Minor Injury"...
@@ -149,6 +136,7 @@ const NAME_LIST_RE = /^(.{1,80}?)\s+Debuffs?\b(\s*:)?/;
  * @property {boolean} [critOnly]  Gear and Spells: a Critical Hit only.
  * @property {boolean} [amazingSuccessOnly]  Gear and Spells: an Amazing Success only.
  * @property {string[]} [skills]   Gear: the Attack Skills it comes with (blank: any).
+ * @property {boolean} [handToHandOnly]  Gear: with any Hand-to-Hand Attack.
  */
 
 /**
@@ -228,11 +216,11 @@ function readSentence(sentence, context, effects, textOnly) {
     moment.amazingSuccessOnly = !!shorthand || /\bAmazing Success\b/i.test(lead);
     if (context === "gear") {
       const only = lead.match(/\bwith any (?:(.+?) )?Attacks?\b/i);
-      moment.skills = !only?.[1]
-        ? []
-        : /^hand[\s‑-]to[\s‑-]hand$/i.test(only[1].trim())
-          ? [...HAND_TO_HAND_SKILLS]
-          : [only[1].trim()];
+      // "with any Hand-to-Hand Attack": the entry's Hand-to-Hand box - any
+      // Skill with the Skill's Hand-to-Hand box, homebrew ones included
+      // (modifiers.mjs collectItemTargetEffects) - not a list of names.
+      moment.handToHandOnly = !!only?.[1] && /^hand[\s‑-]to[\s‑-]hand$/i.test(only[1].trim());
+      moment.skills = !only?.[1] || moment.handToHandOnly ? [] : [only[1].trim()];
     }
   }
 
@@ -329,6 +317,6 @@ export function itemTargetEffects(text, context) {
     critOnly: !!e.critOnly,
     amazingSuccessOnly: !!e.amazingSuccessOnly,
     label: "",
-    ...(context === "gear" ? { skills: e.skills ?? [] } : {}),
+    ...(context === "gear" ? { skills: e.skills ?? [], handToHandOnly: !!e.handToHandOnly } : {}),
   }));
 }

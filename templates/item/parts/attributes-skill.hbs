@@ -26,7 +26,23 @@
           <input type="checkbox" name="system.isHandToHand" {{checked system.isHandToHand}} />
           {{localize "CARLRPG.Skill.HandToHand"}}
         </label>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.NoWeaponHint'}}">
+          <input type="checkbox" name="system.noWeapon" {{checked system.noWeapon}} />
+          {{localize "CARLRPG.Skill.NoWeapon"}}
+        </label>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.NoDamageEffectsHint'}}">
+          <input type="checkbox" name="system.noDamageEffects" {{checked system.noDamageEffects}} />
+          {{localize "CARLRPG.Skill.NoDamageEffects"}}
+        </label>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.MountedHint'}}">
+          <input type="checkbox" name="system.mounted" {{checked system.mounted}} />
+          {{localize "CARLRPG.Skill.Mounted"}}
+        </label>
         {{/if}}
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.CommandsPetsHint'}}">
+          <input type="checkbox" name="system.commandsPets" {{checked system.commandsPets}} />
+          {{localize "CARLRPG.Skill.CommandsPets"}}
+        </label>
         <div>
           <label class="resource-label">{{localize "CARLRPG.Skill.Range"}}</label>
           <input type="text" class="carl-w-short" name="system.range" value="{{system.range}}" placeholder="5 ft" />

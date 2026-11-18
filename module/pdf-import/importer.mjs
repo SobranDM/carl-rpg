@@ -7,6 +7,11 @@
  * named after the book. Maps stay world Scenes, in a Scenes folder named
  * after the book, so they're ready to play.
  *
+ * A book is known by its fixed id (books.mjs: "core", "toolkit"), read from
+ * its title page; its compendiums, folders and flags carry that id. Stored
+ * ids are always read through books.mjs bookIdOf, so an earlier development
+ * import, keyed by a slug of its file name, is found and updated too.
+ *
  * A Spell or piece of gear that a compendium already has is written as that
  * copy instead of the parse (compendium-match.mjs). Importing the same book
  * again updates its documents rather than making copies, except ones the GM
@@ -23,6 +28,7 @@ import { buildMatcher, MATCH_TYPES, matchKind, SYSTEM_PACKS, TIERS } from "./com
 import { importStamp, importState } from "./fingerprint.mjs";
 import { canvasToBlob, mapImageCanvas, mapSceneData, uploadMap } from "./maps.mjs";
 import { getPdfJs } from "./pdf-loader.mjs";
+import { bookIdOf } from "./books.mjs";
 import { slugify } from "./scan.mjs";
 import { sectionFolders } from "./sections.mjs";
 import { LEGACY_FLAG, legacyAttackItems, MOB_ATTACK_TYPE } from "../helpers/mob-attacks.mjs";
@@ -36,27 +42,45 @@ const PACK_KINDS = { Actor: "mobs", Item: "items", JournalEntry: "achievements" 
 /** The flags every imported document carries (its stamp is added after the write). */
 const importFlags = (book, page) => ({ [SCOPE]: { [FLAG]: { book, ...(page ? { page } : {}) } } });
 
-async function getFolder(type, name) {
-  return (
-    game.folders.find((f) => f.type === type && f.name === name && !f.folder) ??
-    Folder.implementation.create({ name, type })
-  );
+/** The book id an import flag names (books.mjs bookIdOf). */
+const bookOfFlag = (flag) => bookIdOf(flag?.book);
+
+/**
+ * The book's top-level Scenes folder: by its flag, else by the book's title,
+ * else (an earlier import's, which had no flag) by a name whose slug the
+ * book was once keyed by. Flagged when found without one, so a GM may
+ * rename it; made if missing.
+ */
+async function sceneFolder(book, title) {
+  const top = game.folders.filter((f) => f.type === "Scene" && !f.folder);
+  const found =
+    top.find((f) => bookOfFlag(f.getFlag(SCOPE, FLAG)) === book) ??
+    top.find((f) => f.name === title) ??
+    top.find((f) => !f.getFlag(SCOPE, FLAG) && slugify(f.name) !== book && bookIdOf(slugify(f.name)) === book);
+  if (found) {
+    if (!found.getFlag(SCOPE, FLAG)) await found.setFlag(SCOPE, FLAG, { book });
+    return found;
+  }
+  return Folder.implementation.create({ name: title, type: "Scene", flags: importFlags(book) });
 }
 
 /**
  * A book's world compendium for one document type, if it has one: by the
- * flag the import gave it, else by its name.
- * @param {string} book  The book's slug.
+ * flag the import gave it, else by its name - each read as a book id
+ * (books.mjs bookIdOf), so an earlier import's file-name key still counts.
+ * @param {string} book  The book's id.
  * @param {"Actor"|"Item"|"JournalEntry"} documentName
  * @returns {CompendiumCollection|null}
  */
 export function findBookPack(book, documentName) {
+  // No book, no pack (an unflagged pack's undefined would match).
+  if (!book) return null;
   const world = game.packs.filter((p) => p.metadata.packageType === "world" && p.documentName === documentName);
-  return (
-    world.find((p) => p.metadata.flags?.[SCOPE]?.[FLAG]?.book === book) ??
-    world.find((p) => p.metadata.name === packName(book, documentName)) ??
-    null
-  );
+  const named = (p) => {
+    const m = p.metadata.name.match(/^pdf-import-(.+)-([a-z]+)$/);
+    return !!m && m[2] === PACK_KINDS[documentName] && bookIdOf(m[1]) === book;
+  };
+  return world.find((p) => bookOfFlag(p.metadata.flags?.[SCOPE]?.[FLAG]) === book) ?? world.find(named) ?? null;
 }
 
 function packName(book, documentName) {
@@ -80,7 +104,7 @@ async function bookPack(book, title, documentName) {
   });
   // Grouped in the Compendiums sidebar under the book's name.
   const folder =
-    game.folders.find((f) => f.type === "Compendium" && f.getFlag(SCOPE, FLAG)?.book === book) ??
+    game.folders.find((f) => f.type === "Compendium" && bookOfFlag(f.getFlag(SCOPE, FLAG)) === book) ??
     (await Folder.implementation.create({ name: title, type: "Compendium", flags: importFlags(book) }));
   await pack.configure({ folder: folder.id });
   return pack;
@@ -341,16 +365,16 @@ function withAttacksApart(doc) {
  * Where a parsed Spell, gear or Skill name may come from instead (Q2),
  * best first (compendium-match.mjs). Never this book's own compendiums or
  * its earlier world-folder import.
- * @param {string} book
+ * @param {string|null} [book]  The book's id; none (CrawlerForge): nothing is left out.
  * @returns {Promise<import("./compendium-match.mjs").MatchCandidate[]>}
  */
 export async function matchCandidates(book) {
   const out = [];
-  const own = findBookPack(book, "Item")?.collection;
+  const own = book ? findBookPack(book, "Item")?.collection : null;
   for (const pack of game.packs) {
     if (pack.documentName !== "Item") continue;
     const ofBook = pack.metadata.flags?.[SCOPE]?.[FLAG]?.book;
-    if (ofBook === book || pack.collection === own) continue;
+    if (book && (bookIdOf(ofBook) === book || pack.collection === own)) continue;
     const system = SYSTEM_PACKS.indexOf(pack.collection);
     // Another book's import (by its flag, else its name, as findBookPack),
     // else anything else (a module's, the GM's own).
@@ -358,7 +382,7 @@ export async function matchCandidates(book) {
     const tier = system >= 0 ? TIERS.system : rulebook ? TIERS.rulebook : TIERS.other;
     let index;
     try {
-      index = await pack.getIndex({ fields: ["type", "system.consumable.kind", "system.weaponSkill", "system.category", "system.isHandToHand"] });
+      index = await pack.getIndex({ fields: ["type", "system.consumable.kind", "system.weaponSkill", "system.category", "system.isHandToHand", "system.noWeapon"] });
     } catch (err) {
       console.warn(`CarlRPG | rulebook import: couldn't read ${pack.collection}`, err);
       continue;
@@ -375,12 +399,13 @@ export async function matchCandidates(book) {
         weaponSkill: entry.system?.weaponSkill ?? "",
         category: entry.system?.category ?? "",
         handToHand: !!entry.system?.isHandToHand,
+        noWeapon: !!entry.system?.noWeapon,
         ref: entry.uuid ?? pack.getUuid(entry._id),
       });
     }
   }
   for (const item of game.items) {
-    if (item.getFlag(SCOPE, FLAG)?.book === book) continue;
+    if (book && bookOfFlag(item.getFlag(SCOPE, FLAG)) === book) continue;
     out.push({
       name: item.name,
       type: item.type,
@@ -390,6 +415,7 @@ export async function matchCandidates(book) {
       weaponSkill: item.system?.weaponSkill ?? "",
       category: item.system?.category ?? "",
       handToHand: !!item.system?.isHandToHand,
+      noWeapon: !!item.system?.noWeapon,
       ref: item.uuid,
     });
   }
@@ -445,7 +471,8 @@ function withSkillNames(entry, match, matched) {
 async function importAchievements(pack, pages, book) {
   const name = game.i18n.localize("CARLRPG.PdfImport.Achievements");
   const options = { pack: pack.collection };
-  let entry = (await pack.getDocuments()).find((e) => e.name === name && e.getFlag(SCOPE, FLAG));
+  // By its flag, not its name: a GM may have renamed it, or play in another language.
+  let entry = (await pack.getDocuments()).find((e) => bookOfFlag(e.getFlag(SCOPE, FLAG)) === book);
   entry ??= await JournalEntry.implementation.create({ name, flags: importFlags(book) }, options);
   const existing = new Map(entry.pages.map((p) => [p.name, p]));
   const creates = [];
@@ -475,7 +502,7 @@ async function importAchievements(pack, pages, book) {
   return { created: creates.length, updated: updates.length, skipped };
 }
 
-async function importMaps(folder, maps, { pdfDoc, bookSlug, onProgress }) {
+async function importMaps(folder, maps, { pdfDoc, book, onProgress }) {
   let created = 0;
   let updated = 0;
   const { OPS } = await getPdfJs();
@@ -493,7 +520,7 @@ async function importMaps(folder, maps, { pdfDoc, bookSlug, onProgress }) {
     const slug = slugify(map.name);
     const path = await uploadMap(
       blob,
-      bookSlug,
+      book,
       `${slug.endsWith(`p-${map.page}`) ? slug : `${slug}-p${map.page}`}.webp`,
     );
     if (!path) continue;
@@ -521,6 +548,7 @@ async function importMaps(folder, maps, { pdfDoc, bookSlug, onProgress }) {
 
 /**
  * @param {object} options
+ * @param {string} options.book       The book's id (books.mjs BOOKS, or a test's own).
  * @param {string} options.title      Book title (compendium and folder name).
  * @param {object} options.found      From scan.mjs parseBook, maps already resolved.
  * @param {string[]} options.kinds    Which of gear/spells/mobs/achievements to import.
@@ -532,8 +560,7 @@ async function importMaps(folder, maps, { pdfDoc, bookSlug, onProgress }) {
  *   made one of the same name); matched: items written as a compendium's
  *   copy, by kind.
  */
-export async function importBook({ title, found, kinds, maps, pdfDoc, onProgress }) {
-  const book = slugify(title);
+export async function importBook({ book, title, found, kinds, maps, pdfDoc, onProgress }) {
   const results = {};
   const step = (key) => onProgress?.(game.i18n.localize(`CARLRPG.PdfImport.Kind.${key}`), 0);
 
@@ -577,9 +604,9 @@ export async function importBook({ title, found, kinds, maps, pdfDoc, onProgress
   }
   if (maps.length) {
     const label = game.i18n.localize("CARLRPG.PdfImport.Kind.maps");
-    results.maps = await importMaps(await getFolder("Scene", title), maps, {
+    results.maps = await importMaps(await sceneFolder(book, title), maps, {
       pdfDoc,
-      bookSlug: book,
+      book,
       onProgress: (n, total) => onProgress?.(`${label} ${n + 1}/${total}`, n / total),
     });
   }

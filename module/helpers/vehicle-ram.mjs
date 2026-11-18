@@ -18,7 +18,6 @@
  * protect." The book gives no Evade against it.
  */
 import CarlDice, { checkSubtitle } from "../dice/dice.mjs";
-import { CARLRPG } from "./config.mjs";
 import { degreeBadge } from "./rules.mjs";
 import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
@@ -75,8 +74,13 @@ export async function rollRam(vehicle, { skipDialog = false } = {}) {
 
   const floor = game.settings.get(SCOPE, "currentFloor");
   const primary = targets[0];
-  const skillCfg = CARLRPG.vehicleDriveSkills[vehicle.system.driveSkill];
-  const { skill, trained } = await skillOrUntrainedCopy(driver, skillCfg.skillName, { system: { governingStat: "dex" } });
+  // The Skill the vehicle names (Driving, Chopper Pilot or homebrew).
+  const driveSkill = vehicle.system.driveSkill.trim();
+  if (!driveSkill) {
+    ui.notifications.warn(loc("NoDriveSkill"));
+    return null;
+  }
+  const { skill, trained } = await skillOrUntrainedCopy(driver, driveSkill, { system: { governingStat: "dex" } });
   const check = await CarlDice.rollOpposedSkillCheck(driver, skill, {
     difficulty: crawlerAttackDifficulty(primary.actor, floor).difficulty,
     opponent: null, skipDialog, post: false, markUse: trained,

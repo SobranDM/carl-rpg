@@ -16,6 +16,7 @@ import {
   createTestItem,
   createTestPet,
   deleteTestActor,
+  dropOnSheet,
   makeDragEvent,
   settle,
   useQuenchTimeout,
@@ -220,6 +221,53 @@ export default function register(quench) {
             assert.isFalse(actor.items.get(potion.id).system.equipped);
           } finally {
             await deleteTestActor(actor);
+          }
+        });
+
+        it("a potion dropped on the Main Hand is refused and stays in the Hotlist", async function () {
+          const actor = await createTestCharacter("potion hand");
+          try {
+            const potion = await createTestItem(actor, "item", "Potion", { system: { consumable: { kind: "potion" } } });
+            assert.isFalse(fitsSlot(potion, { slotType: "gear", slotKey: "mainHand" }), "not even in a hand");
+            await placeInHotlist(actor, 0, potion);
+            assert.equal(actor.system.hotlist[0], potion.id, "test setup: in the Hotlist");
+            const sheet = actor.sheet;
+            await sheet.render({ force: true });
+            const hand = () => sheet.element?.querySelector('.carl-equip-panel [data-slot-type="gear"][data-slot-key="mainHand"]');
+            await waitFor(hand, { message: "no Main Hand slot" });
+            await dropOnSheet(sheet, hand(), potion.toDragData());
+            assert.equal(actor.system.gearSlots.mainHand, "", "not in the hand");
+            assert.isFalse(actor.items.get(potion.id).system.equipped);
+            assert.equal(actor.system.hotlist[0], potion.id, "still in the Hotlist");
+            await sheet.close();
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("equipped gear dragged from another actor arrives unequipped, and gives nothing", async function () {
+          const giver = await createTestCharacter("helm giver");
+          const taker = await createTestCharacter("helm taker");
+          try {
+            const theirs = await gearOn(giver, "Great Helm", ["head"], { changes: [change("dr", 3)] });
+            await assignItemToSlot(giver, { slotType: "gear", slotKey: "head" }, theirs);
+            assert.isTrue(giver.items.get(theirs.id).system.equipped, "test setup: worn by the giver");
+            const mine = await gearOn(taker, "Iron Helm", ["head"], { changes: [change("dr", 1)] });
+            await assignItemToSlot(taker, { slotType: "gear", slotKey: "head" }, mine);
+            assert.equal(taker.system.drEffective, 1, "test setup");
+            const sheet = taker.sheet;
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            await dropOnSheet(sheet, sheet.element, giver.items.get(theirs.id).toDragData());
+            const copy = taker.items.find((i) => i.name === "Great Helm");
+            assert.exists(copy, "the copy arrived");
+            assert.isFalse(copy.system.equipped, "in no slot: not equipped");
+            assert.equal(taker.system.gearSlots.head, mine.id, "the doll still shows the taker's own");
+            assert.equal(taker.system.drEffective, 1, "only the helmet on the head counts");
+            await sheet.close();
+          } finally {
+            await deleteTestActor(giver);
+            await deleteTestActor(taker);
           }
         });
 

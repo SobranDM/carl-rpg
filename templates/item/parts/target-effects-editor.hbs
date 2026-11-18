@@ -10,8 +10,9 @@
       `gear=true` (a gear item, module/data/item.mjs) adds each entry's "Only
       with" Attack Skills - pills (each posted as a hidden field, so a
       submit keeps them) and an input that adds one on change (item-sheet.mjs
-      #wireOnlyWith), suggesting `onlyWithNames` - and `addTemplate` (JSON)
-      for a new entry's defaults.
+      #wireOnlyWith), suggesting `onlyWithNames`; its "With any Hand-to-Hand
+      Attack" box (handToHandOnly); and `addTemplate` (JSON) for a new
+      entry's defaults.
       Same context-depth rules as changes-editor.hbs: `path`/`config` from
       inside {{#each targetEffects}} need one `../`. --}}
 <div class="carl-target-effects-editor">
@@ -70,6 +71,10 @@
               aria-label="{{localize 'CARLRPG.OnHitDebuff.AddSkill'}}" />
           </div>
           <p class="carl-hint">{{localize "CARLRPG.OnHitDebuff.OnlyWithHint"}}</p>
+          <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.OnHitDebuff.HandToHandOnlyHint'}}">
+            <input type="checkbox" name="{{concat ../path '.' teIndex '.handToHandOnly'}}" {{checked te.handToHandOnly}} />
+            {{localize "CARLRPG.OnHitDebuff.HandToHandOnly"}}
+          </label>
         </div>
         {{/if}}
         <div class="carl-edit-row-grow">

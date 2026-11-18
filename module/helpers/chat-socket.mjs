@@ -18,8 +18,8 @@ const SOCKET = "system.carl-rpg";
 const ASK = "askGM";
 const ANSWER = "gmAnswer";
 const NOTICE = "userNotice";
-/** How long a question waits for the GM's answer before giving up. */
-const ASK_TIMEOUT_MS = 30000;
+/** How long a question waits for the GM's answer before giving up (a test may shorten it). */
+export const askTiming = { timeoutMs: 30000 };
 
 /** What the GM runs for askGM, by name (registerAskHandler). */
 const askHandlers = new Map();
@@ -74,7 +74,7 @@ export async function askGM(name, data, { local = false } = {}) {
       waiting.delete(token);
       ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.GMNoAnswer"));
       resolve(null);
-    }, ASK_TIMEOUT_MS);
+    }, askTiming.timeoutMs);
     waiting.set(token, (value) => {
       clearTimeout(timer);
       waiting.delete(token);

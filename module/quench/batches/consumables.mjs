@@ -586,6 +586,21 @@ export default function register(quench) {
           }
         });
 
+        it("two quick uses of a Scroll (a double-click) cast it once", async function () {
+          const actor = await createTestCharacter("double click");
+          try {
+            const scroll = await consumableItem(actor, "Scroll of Hole", { kind: "scroll", spell: { uuid: HOLE, rank: 10 } }, { quantity: 2 });
+            const results = await quietly(() => Promise.all([
+              useConsumable(actor, scroll, { skipDialog: true }),
+              useConsumable(actor, scroll, { skipDialog: true }),
+            ]));
+            assert.equal(results.filter(Boolean).length, 1, "one cast, the second click refused");
+            assert.equal(actor.items.get(scroll.id)?.system.quantity, 1, "one scroll used, not two");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
         it("a healing Scroll heals without Mana; a Scroll whose Spell can't be found is kept", async function () {
           const actor = await createTestCharacter("healer", { system: { mana: { value: 9 } } });
           try {

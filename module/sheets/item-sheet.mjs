@@ -29,6 +29,11 @@ const SINGLE_PAGE_TYPES = ['mobAttack', 'item'];
 
 const RANKED_TYPES = ['skill', 'spell', 'damageEffect'];
 
+/** Does this Upgrade tier set any driving perk (module/data/shared/upgrade-tier.mjs)? */
+function hasVehiclePerk(upgrade) {
+  return !!(Number(upgrade.vehicleMove) || upgrade.vehicleAttackOk || upgrade.vehicleEvadeAdvantage || upgrade.vehicleStuntAdvantage);
+}
+
 /**
  * Extend the basic ItemSheet with some very simple modifications
  * @extends {ItemSheetV2}
@@ -60,7 +65,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   /**
    * Optional parts of an Upgrade tier shown from its add bar before they
    * hold anything (upgrade-tier.hbs): "heal-<upgradeId>", "dt-<upgradeId>",
-   * "shield-<upgradeId>".
+   * "shield-<upgradeId>", "vehicle-<upgradeId>".
    * @type {Set<string>}
    */
   #revealed = new Set();
@@ -143,8 +148,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       return { tabs: [{ id: 'attributes', label: 'CARLRPG.Tab.Main' }], initial: 'attributes' };
     }
     if (group === 'primary' && RANKED_TYPES.includes(this.item?.type)) {
-      // Each Rank tab says whether its Upgrades apply at the current Rank.
-      const rank = Number(this.item.system.rank) || 0;
+      // Each Rank tab says whether its Upgrades apply at the current Rank -
+      // the live one (gear's "+1 Rank" counts), as the tab content shows.
+      const rank = effectiveRank(this.item);
       const tier = (n) => ({
         id: `rank${n}`,
         label: `CARLRPG.Ranked.Rank${n}`,
@@ -234,6 +240,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     context.isRanked = RANKED_TYPES.includes(item.type);
     // Only a Spell's Upgrade cards offer Shield slots (upgrade-tier.hbs).
     context.isSpell = item.type === "spell";
+    // Only a Skill's Upgrade cards offer the Vehicle part (driving perks).
+    context.isSkill = item.type === "skill";
     // A Pet's Ranks are the current Floor (data/ranked-item-base.mjs) and
     // never advance - show that Rank read-only instead of the stored one.
     context.petRank = item.system.rankIsFloor ? item.system.rank : null;
@@ -341,8 +349,11 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       // A Spell's Shield slots from this Rank (only a Spell's sheet offers it).
       const showShield = Number(upgrade.shieldSlots) > 0 || this.#revealed.has(`shield-${upgrade.id}`);
       if (showShield) this.#revealed.add(`shield-${upgrade.id}`);
+      // A driving Skill's vehicle perks from this Rank (only a Skill's sheet offers it).
+      const showVehicle = hasVehiclePerk(upgrade) || this.#revealed.has(`vehicle-${upgrade.id}`);
+      if (showVehicle) this.#revealed.add(`vehicle-${upgrade.id}`);
       (buckets[key] ?? buckets.rank5).push({
-        upgrade, index, damageTypeEntries, showHeal, showShield, showDamageTypes: damageTypeEntries.length > 0,
+        upgrade, index, damageTypeEntries, showHeal, showShield, showVehicle, showDamageTypes: damageTypeEntries.length > 0,
       });
     });
     return buckets;
@@ -360,7 +371,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   #upgradeOverview(context, rank) {
     const i18n = game.i18n;
     const count = (n, one, many) => (n ? i18n.format(n === 1 ? one : many, { n }) : null);
-    const sumUp = ({ upgrade, damageTypeEntries, showHeal, showShield }) => {
+    const sumUp = ({ upgrade, damageTypeEntries, showHeal, showShield, showVehicle }) => {
       const line = String(upgrade.description ?? "").split(/\r?\n/).map((s) => s.trim()).find(Boolean);
       if (line) return line;
       const parts = [
@@ -369,6 +380,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         damageTypeEntries.some((e) => e.value) ? i18n.localize("CARLRPG.Ranked.DamageTypeSplit") : null,
         showHeal ? i18n.localize("CARLRPG.ItemSheet.Group.Healing") : null,
         showShield ? i18n.localize("CARLRPG.Spell.ShieldSlots") : null,
+        showVehicle ? i18n.localize("CARLRPG.Ranked.Vehicle.Title") : null,
         upgrade.armorPiercing ? i18n.localize("CARLRPG.ArmorPiercing.Label") : null,
       ].filter(Boolean);
       return parts.join(" · ") || i18n.localize("CARLRPG.ItemSheet.EmptyUpgrade");
@@ -495,7 +507,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       onlyWithNames: [...new Set([...weaponSkillNames, ...ownedAttacks])].sort(),
       debuffTemplate: JSON.stringify({
         debuffKey: "", stacks: 1, critOnly: false, amazingSuccessOnly: !!weaponSkill, label: "",
-        skills: weaponSkill ? [weaponSkill] : [],
+        skills: weaponSkill ? [weaponSkill] : [], handToHandOnly: false,
       }),
     };
   }
@@ -750,7 +762,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       targetType: 'skillRank',
       target: skillName,
       mode: 'add',
-      value: String(grant.amount),
+      value: String(Number(grant.amount) || 1),
       label: grant.category
         ? game.i18n.format('CARLRPG.SkillChoice.ResolvedLabel', { category: grant.category })
         : '',

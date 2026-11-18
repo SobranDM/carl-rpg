@@ -42,9 +42,9 @@ import { actorFor, attackDetails, attackLine, reactionCardFor, withCard, writeSt
 import { headerProgress, rememberOpenRows, statusChip, statusRow, statusSection } from "../chat/status-rows.mjs";
 import { rowOutcome } from "./attack-targets.mjs";
 import { vehicleSeatOf } from "./vehicle-state.mjs";
-import { decidingEvade, hitList, unevadedNames } from "./reaction-state.mjs";
+import { decidingEvade, hitList, nearMissOnVehicle, unevadedNames } from "./reaction-state.mjs";
 import { setPhase } from "./combat-phases.mjs";
-import { slugifySkillName } from "./modifiers.mjs";
+import { ownedSkill } from "./modifiers.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG = "reactionDamage";
@@ -173,13 +173,10 @@ export function buildDamageState(combat, state, { shields = {} } = {}) {
     let applyUuid = hit.targetUuid;
     // "A Near Miss targeting an occupant hits the vehicle" (p.72) - not an
     // Area Attack, which catches the vehicle on its own row.
-    if (status === "pending" && !attack.isArea && evade?.degree === "nearMissFail") {
-      const target = actorFor(hit.targetUuid);
-      const seat = target ? vehicleSeatOf(target) : null;
-      if (seat) {
-        applyUuid = seat.vehicle.uuid;
-        tags.push({ key: "CARLRPG.Resolve.HitsVehicle", data: { vehicle: seat.vehicle.name } });
-      }
+    const vehicle = status === "pending" ? nearMissVehicle(attack, hit) : null;
+    if (vehicle) {
+      applyUuid = vehicle.uuid;
+      tags.push({ key: "CARLRPG.Resolve.HitsVehicle", data: { vehicle: vehicle.name } });
     }
     // A Shield Block (p.198): half before DR - on whoever it was aimed at,
     // not a vehicle a Near Miss moved it to - and what it cost the Shield.
@@ -231,14 +228,13 @@ export function catcherDr(actor) {
 }
 
 /**
- * A crawler's Catcher Rank (p.187), 0 without the Skill.
+ * A crawler's Catcher Rank (p.187), live (gear "+1 Catcher" included), 0
+ * without the Skill item - gear alone doesn't give it.
  * @param {Actor|null} actor
  * @returns {number}
  */
 export function catcherRank(actor) {
-  if (!actor) return 0;
-  const item = actor.items?.find((i) => i.type === "skill" && i.name === "Catcher");
-  return actor.system?.skills?.[slugifySkillName("Catcher")]?.rank ?? item?.system.rank ?? 0;
+  return ownedSkill(actor, "Catcher")?.rank ?? 0;
 }
 
 /**
@@ -254,6 +250,20 @@ export function rowDebuffs(row, attack) {
 }
 
 /**
+ * The vehicle a Near Miss on a seated crawler lands on (p.72) - where they
+ * sit now - or null. Not for an Area Attack, which catches the vehicle on
+ * its own row.
+ * @param {object|undefined} attack
+ * @param {object} hit
+ * @returns {Actor|null}
+ */
+function nearMissVehicle(attack, hit) {
+  if (!attack || !nearMissOnVehicle(attack, hit, true)) return null;
+  const target = actorFor(hit.targetUuid);
+  return (target ? vehicleSeatOf(target) : null)?.vehicle ?? null;
+}
+
+/**
  * The Shields a failed Shield Block costs DR (p.198: "-1 DR penalty on a
  * Major Fail; -2 on a Critical Fail"), written once the Reaction card is
  * locked - no Intervene, reroll or undo can change the block after. GM.
@@ -265,6 +275,8 @@ export async function damageBlockingShields(state) {
   for (const hit of hitList(state)) {
     const loss = shieldLossFor(hit.block?.degree);
     if (!loss) continue;
+    // A Near Miss that went to their vehicle: the block didn't happen (p.72).
+    if (nearMissVehicle(state.attacks?.[hit.attackId], hit)) continue;
     const hurt = await damageShield(actorFor(hit.targetUuid), hit.block.shieldId, loss);
     if (hurt) out[hit.id] = hurt;
   }

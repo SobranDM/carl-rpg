@@ -1,4 +1,5 @@
 import { CarlRPGItemSheet } from "../../sheets/item-sheet.mjs";
+import { effectiveRank } from "../../helpers/modifiers.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -162,6 +163,33 @@ export default function register(quench) {
             Hooks.off("dropItemSheetData", hookId);
             await target.delete();
             await dropped.delete();
+          }
+        });
+      });
+      describe("Rank tabs' lock icons", function () {
+        useQuenchTimeout(this);
+
+        it("follow the Skill's live Rank: Rank 4 + a '+1 Rank' feature opens the Rank 5 tab", async function () {
+          const actor = await createTestCharacter("rank tabs");
+          try {
+            const name = `Quench Tab Skill ${foundry.utils.randomID()}`;
+            const skill = await createTestItem(actor, "skill", name, { name, system: { rank: 4 } });
+            const icon = (sheet, id) => sheet.element.querySelector(`nav.tabs [data-tab="${id}"] i`);
+            let sheet = await openSheet(skill);
+            assert.isTrue(icon(sheet, "rank5").classList.contains("fa-lock"), "Rank 4: locked");
+            await sheet.close();
+
+            await createTestItem(actor, "feature", "rank charm", {
+              system: { changes: [{ targetType: "skillRank", target: name, mode: "add", value: "1" }] },
+            });
+            assert.equal(skill.system.rank, 4, "test setup: its own Rank is unchanged");
+            assert.equal(effectiveRank(skill), 5, "test setup: the feature makes its live Rank 5");
+            sheet = await openSheet(skill);
+            assert.isTrue(icon(sheet, "rank5").classList.contains("fa-lock-open"), "live Rank 5: open");
+            assert.isTrue(icon(sheet, "rank10").classList.contains("fa-lock"), "Rank 10 still locked");
+            await sheet.close();
+          } finally {
+            await deleteTestActor(actor);
           }
         });
       });

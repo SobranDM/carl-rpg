@@ -5,7 +5,7 @@ import { PVE_INITIATIVE } from "../../documents/combat.mjs";
 import { isCrawler, isMinion, isPet, rollsLikeCrawler, diesAtZeroHb } from "../../helpers/actor-kinds.mjs";
 import { petLevelAfter, bondedPets } from "../../helpers/pets.mjs";
 import {
-  canCommandPet, commandStateForDegree, commandDifficulty, commandPet, describePetCommand, petFight,
+  canCommandPet, commandSkillFor, commandStateForDegree, commandDifficulty, commandPet, describePetCommand, petFight,
 } from "../../helpers/pet-command.mjs";
 import { baseBudget } from "../../helpers/actions.mjs";
 import { crawlerAttackDifficulty, mobAttackRow, rowEvadeDifficulty } from "../../helpers/attack-targets.mjs";
@@ -344,6 +344,52 @@ export default function register(quench) {
           });
         });
 
+        it("rolls the crawler's Commands pets Skill - a homebrew Beast Mastery, the highest Rank of them - not Animal Handling by name", async function () {
+          await withSetting("currentFloor", 1, async () => {
+            const owner = await createTestCharacter("beast master");
+            const pet = await createTestPet("beast", { system: { ownerId: owner.id } });
+            // Created together: the results don't come back in input order, so
+            // each is found by name afterwards.
+            await owner.createEmbeddedDocuments("Item", [
+              { name: "Animal Handling", type: "skill", system: { rank: 1, governingStat: "cha", category: "utility" } },
+              { name: "Beast Mastery", type: "skill", system: { rank: 10, governingStat: "cha", category: "utility", commandsPets: true } },
+              { name: "Pet Whispering", type: "skill", system: { rank: 2, governingStat: "cha", category: "utility", commandsPets: true } },
+            ]);
+            const named = (name) => owner.items.find((i) => i.name === name);
+            const [handling, mastery, whisper] = ["Animal Handling", "Beast Mastery", "Pet Whispering"].map(named);
+            const combat = await startedCombat(owner);
+            try {
+              const picked = await commandSkillFor(owner);
+              assert.equal(picked.skill.id, mastery.id, "the highest Rank with the box");
+              assert.isTrue(picked.trained);
+              // d20 10 + Rank 10 + CHA +2 = 22 vs 12: Amazing Success.
+              const state = await withPinnedDice(PIN_D20_MID, () => commandPet(pet, { skipDialog: true }));
+              assert.equal(state, "free");
+              assert.isTrue(owner.items.get(mastery.id).system.marked, "Beast Mastery was rolled");
+              assert.isFalse(owner.items.get(handling.id).system.marked, "not Animal Handling");
+              assert.isFalse(owner.items.get(whisper.id).system.marked);
+            } finally {
+              await deleteTestCombat(combat);
+              await deleteTestActor(pet);
+              await deleteTestActor(owner);
+            }
+          });
+        });
+
+        it("with no Commands pets Skill, falls back to Animal Handling by name", async function () {
+          const owner = await createTestCharacter("fallback");
+          try {
+            const [handling] = await owner.createEmbeddedDocuments("Item", [
+              { name: "Animal Handling", type: "skill", system: { rank: 2, category: "utility" } },
+            ]);
+            const picked = await commandSkillFor(owner);
+            assert.equal(picked.skill.id, handling.id);
+            assert.isTrue(picked.trained);
+          } finally {
+            await deleteTestActor(owner);
+          }
+        });
+
         it("an untrained crawler rolls with Disadvantage and nothing is created or marked; staying out can retry", async function () {
           await withSetting("currentFloor", 4, async () => {
             const owner = await createTestCharacter("untrained");
@@ -516,6 +562,32 @@ export default function register(quench) {
             pet.reset();
             assert.equal(pet.system.hb.value, 6, "kept after another prepare");
           } finally {
+            await deleteTestActor(pet);
+          }
+        });
+
+        // Core's modifyTokenAttribute clamps a bar edit to hb.max, the base.
+        it("the token bar fills it to 6 too, and shows 6 as its max", async function () {
+          const pet = await createTestPet("bonus slots bar", { system: { size: 3, attributes: { level: { value: 3 } } } });
+          const scene = await Scene.create({ name: `Quench pet bar ${foundry.utils.randomID()}` });
+          try {
+            await createTestItem(pet, "item", "sturdy collar", {
+              system: { equipped: true, changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "1" }] },
+            });
+            assert.equal(pet.system.hb.effectiveMax, 6, "test setup: 5 base + 1");
+            await pet.update({ "system.hb.value": 5 });
+            await pet.modifyTokenAttribute("hb", 1, true, true);
+            assert.equal(pet.system.hb.value, 6, "+1 from the bar at 5/6");
+            await pet.modifyTokenAttribute("hb", 9, false, true);
+            assert.equal(pet.system.hb.value, 6, "an absolute 9 clamps to the effective max");
+            assert.equal(pet._source.system.hb.value, 6, "stored");
+
+            const [token] = await scene.createEmbeddedDocuments("Token", [{ actorId: pet.id, actorLink: true, bar1: { attribute: "hb" } }]);
+            const bar = token.getBarAttribute("bar1");
+            assert.equal(bar.value, 6);
+            assert.equal(bar.max, 6, "the bar's max is hb.effectiveMax");
+          } finally {
+            await scene.delete();
             await deleteTestActor(pet);
           }
         });

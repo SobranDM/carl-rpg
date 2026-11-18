@@ -132,11 +132,14 @@ export async function createTestItem(actor, type, label = type, data = {}) {
   if (type === "item" && data.system?.slots === undefined && !data.system?.consumable?.kind) {
     data = { ...data, system: { ...(data.system ?? {}), slots: Object.keys(CONFIG.CARLRPG.wearSlots) } };
   }
+  // `system.equipped: true` here is a test's shortcut for worn gear (or, in
+  // the migration tests, gear equipped the old way): kept, where a real
+  // copy arriving on a Character starts unequipped (CarlRPGItem#_preCreate).
   const [item] = await actor.createEmbeddedDocuments("Item", [{
     name: `Quench ${label} ${foundry.utils.randomID()}`,
     type,
     ...data,
-  }]);
+  }], { carlKeepEquipped: true });
   return item;
 }
 

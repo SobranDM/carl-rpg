@@ -60,7 +60,9 @@ export function defineTargetEffectsField(options = {}) {
 /**
  * A gear item's On-hit Debuffs (module/data/item.mjs; docs/skill-item-
  * sheets.md): the same entries, plus "Only with" - the Attack Skills they
- * come with (blank: any Attack the holder or wearer makes). Read by
+ * come with (blank: any Attack the holder or wearer makes) - and "With any
+ * Hand-to-Hand Attack" (handToHandOnly: an Attack whose Skill has the
+ * Hand-to-Hand box; with Skills named too, either fits). Read by
  * modifiers.mjs's collectItemTargetEffects / attackTargetEffects.
  * @returns {foundry.data.fields.ArrayField}
  */
@@ -69,6 +71,7 @@ export function defineGearTargetEffectsField() {
   return new fields.ArrayField(new fields.SchemaField({
     ...defineTargetEffectSchema(),
     skills: new fields.ArrayField(new fields.StringField({ required: true, blank: true }), { required: true, initial: [] }),
+    handToHandOnly: new fields.BooleanField({ required: true, initial: false }),
   }), { required: false, initial: [] });
 }
 
@@ -161,6 +164,24 @@ export function defineUpgradeTierSchema() {
      * own base shieldSlots if no unlocked tier overrides it.
      */
     shieldSlots: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
+    /**
+     * Skills that drive a vehicle (a vehicle's system.driveSkill names one -
+     * Driving, Chopper Pilot or homebrew; p.72-73, p.187, p.190). Once
+     * unlocked at the driver's live Rank, while they drive a vehicle with
+     * this Skill (module/helpers/vehicle-state.mjs driverPerks):
+     *  - vehicleMove: +ft to its Move ("Your vehicle has +5ft Move"; summed
+     *    over the unlocked tiers);
+     *  - vehicleAttackOk: no driving Disadvantage on Attacks ("You no longer
+     *    suffer Disadvantage when attacking while Driving");
+     *  - vehicleEvadeAdvantage: Advantage on the driver's Evade ("Roll with
+     *    Advantage to Evade Attacks against your vehicle");
+     *  - vehicleStuntAdvantage: the crazy-stunt Advantage, offered unticked
+     *    on Checks with this Skill.
+     */
+    vehicleMove: new fields.NumberField({ ...requiredInteger, initial: 0 }),
+    vehicleAttackOk: new fields.BooleanField({ required: true, initial: false }),
+    vehicleEvadeAdvantage: new fields.BooleanField({ required: true, initial: false }),
+    vehicleStuntAdvantage: new fields.BooleanField({ required: true, initial: false }),
   };
 }
 

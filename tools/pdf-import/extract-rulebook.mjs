@@ -12,8 +12,11 @@
  * and gear bonus Skills match the system's own packs (packs-source/) - the
  * importer's other match sources exist only in a Foundry world.
  *
- * Like the importer, it refuses a book's low-quality (LQ) edition
- * (module/pdf-import/quality.mjs) and exits with code 2.
+ * Like the importer, it reads which book it is from the title page
+ * (module/pdf-import/books.mjs) - never from the file name - and refuses any
+ * PDF that isn't the Core Rulebook or the Game Master's Campaign Toolkit
+ * (exit code 3), and a book's low-quality (LQ) edition
+ * (module/pdf-import/quality.mjs; exit code 2).
  *
  * Usage:
  *   node tools/pdf-import/extract-rulebook.mjs <rulebook.pdf> [outDir] [--maps]
@@ -33,12 +36,8 @@ import { buildMatcher, MATCH_TYPES, matchKind, SYSTEM_PACKS, TIERS } from "../..
 import { parseDebuffText } from "../../module/pdf-import/debuff-text.mjs";
 import { sectionFolders } from "../../module/pdf-import/sections.mjs";
 import { checkImageQuality } from "../../module/pdf-import/quality.mjs";
-import {
-  bookTitleFromFilename,
-  parseBook,
-  readPages,
-  slugify,
-} from "../../module/pdf-import/scan.mjs";
+import { identifyBook, readTitlePages } from "../../module/pdf-import/books.mjs";
+import { parseBook, readPages, slugify } from "../../module/pdf-import/scan.mjs";
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -199,15 +198,22 @@ async function main() {
     console.error("Usage: node tools/pdf-import/extract-rulebook.mjs <rulebook.pdf> [outDir] [--maps]");
     process.exit(1);
   }
-  const book = bookTitleFromFilename(path.basename(pdf));
-  const outDir = path.resolve(outArg ?? path.join(ROOT, "pdf_local", slugify(book)));
-
   const pdfjs = await import("../../module/vendor/pdfjs/pdf.mjs");
   const pdfDoc = await pdfjs.getDocument({
     data: new Uint8Array(fs.readFileSync(pdf)),
     isEvalSupported: false,
     verbosity: 0,
   }).promise;
+
+  // Which book, from its title page (books.mjs). Nothing read is printed.
+  const known = identifyBook(await readTitlePages(pdfDoc));
+  if (!known) {
+    console.error(localize("CARLRPG.PdfImport.UnknownBook"));
+    process.exit(3);
+  }
+  const book = localize(known.title);
+  console.log(`book: ${known.id} (${book})`);
+  const outDir = path.resolve(outArg ?? path.join(ROOT, "pdf_local", known.id));
 
   const quality = await checkImageQuality(pdfDoc, pdfjs.OPS);
   console.log(`image quality: median ${quality.ppi === null ? "n/a" : Math.round(quality.ppi)} ppi over ${quality.images} pictures`);

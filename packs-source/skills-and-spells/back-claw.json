@@ -110,6 +110,7 @@
     ],
     "category": "attack",
     "attackType": "melee",
+    "noWeapon": true,
     "range": "",
     "aiFavor": 0,
     "cooldown": "",

@@ -94,6 +94,24 @@ export default function register(quench) {
           }
         });
 
+        it("a taken item arrives unequipped (in no doll slot, it'd still give its bonuses)", async function () {
+          const box = await createTestLootBox();
+          const actor = await createTestCharacter("looter");
+          try {
+            const item = await createTestItem(box, "item", "worn loot", {
+              system: { equipped: true, slots: ["head"], changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }] },
+            });
+            assert.isTrue(item.system.equipped, "test setup: equipped in the box");
+            await takeLootItem(item, actor);
+            await waitFor(() => actor.items.getName(item.name));
+            assert.isFalse(actor.items.getName(item.name).system.equipped);
+            assert.equal(actor.system.drEffective, 0);
+          } finally {
+            await deleteTestActor(box);
+            await deleteTestActor(actor);
+          }
+        });
+
         it("renders the sheet with a Generate button for the GM", async function () {
           const box = await createTestLootBox();
           const sheet = box.sheet;

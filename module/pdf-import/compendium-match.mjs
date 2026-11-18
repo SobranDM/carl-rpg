@@ -52,16 +52,30 @@ export function normalizeName(name) {
  * @property {string} [weaponSkill]  A weapon's Weapon Skill (gear).
  * @property {string} [category]  A Skill's category ("attack", "utility"...).
  * @property {boolean} [handToHand]  A Hand-to-Hand Attack Skill (needs no weapon).
+ * @property {boolean} [noWeapon]  An Attack Skill with the Needs no weapon box.
  * @property {*} [ref]       Whatever the caller needs to fetch it.
  */
+
+/** Item types that may also be matched by Skill slug (buildMatcher's `slug`). */
+const SLUG_TYPES = ["skill", "spell", "damageEffect"];
 
 /**
  * Index candidates for lookups by normalised name and type, best first.
  * @param {MatchCandidate[]} candidates
+ * @param {object} [options]
+ * @param {(name: string) => string} [options.slug]  The system's Skill slug
+ *   (modifiers.mjs slugifySkillName, passed in so this stays pure): a Skill,
+ *   Spell or Damage Effect not found by name is then looked up by it, as
+ *   play-time Skill checks match names ("Hand to Hand" is "Hand-to-Hand").
  * @returns {(name: string, types: string[]) => MatchCandidate|null}
  */
-export function buildMatcher(candidates) {
+export function buildMatcher(candidates, { slug = null } = {}) {
   const byName = new Map();
+  const bySlug = new Map();
+  const slugOf = (name) => {
+    const key = slug ? slug(normalizeName(name)) : "";
+    return key && key !== "unknown" ? key : "";
+  };
   const ranked = candidates
     .map((c, i) => ({ c, i }))
     .sort((a, b) => a.c.tier - b.c.tier || (a.c.order ?? 0) - (b.c.order ?? 0) || a.i - b.i);
@@ -70,9 +84,17 @@ export function buildMatcher(candidates) {
     if (!key) continue;
     if (!byName.has(key)) byName.set(key, []);
     byName.get(key).push(c);
+    const skillKey = SLUG_TYPES.includes(c.type) ? slugOf(c.name) : "";
+    if (!skillKey) continue;
+    if (!bySlug.has(skillKey)) bySlug.set(skillKey, []);
+    bySlug.get(skillKey).push(c);
   }
-  return (name, types) =>
-    (byName.get(normalizeName(name)) ?? []).find((c) => types.includes(c.type)) ?? null;
+  return (name, types) => {
+    const found = (byName.get(normalizeName(name)) ?? []).find((c) => types.includes(c.type));
+    if (found || !slug || !types.some((t) => SLUG_TYPES.includes(t))) return found ?? null;
+    const key = slugOf(name);
+    return (key && (bySlug.get(key) ?? []).find((c) => types.includes(c.type))) || null;
+  };
 }
 
 /** Which Item types a parsed document may be matched to. */

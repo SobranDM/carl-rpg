@@ -21,7 +21,6 @@
  * Intervene: it keeps its `checkId`, and the vehicle's round follows.
  */
 import CarlDice, { checkSubtitle, interventionRolls } from "../dice/dice.mjs";
-import { CARLRPG } from "./config.mjs";
 import { degreeBadge, getDegreeOfSuccess, isHitDegree } from "./rules.mjs";
 import { rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
@@ -93,8 +92,13 @@ export async function rollDrivingCheck(vehicle, { mode = "table6", skipDialog = 
     ui.notifications.warn(loc("NotYourVehicle"));
     return null;
   }
-  const skillCfg = CARLRPG.vehicleDriveSkills[vehicle.system.driveSkill];
-  const { skill, trained } = await skillOrUntrainedCopy(driver, skillCfg.skillName, { system: { governingStat: "dex" } });
+  // The Skill the vehicle names (Driving, Chopper Pilot or homebrew).
+  const driveSkill = vehicle.system.driveSkill.trim();
+  if (!driveSkill) {
+    ui.notifications.warn(loc("NoDriveSkill"));
+    return null;
+  }
+  const { skill, trained } = await skillOrUntrainedCopy(driver, driveSkill, { system: { governingStat: "dex" } });
   const floor = game.settings.get("carl-rpg", "currentFloor");
   const status = vehicleStatus(vehicle);
   // Unopposed: 10 + Floor x 2 (p.59). Stopping in time: 10 + Move ÷ 5.

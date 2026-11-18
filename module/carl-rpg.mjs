@@ -1,5 +1,6 @@
 import { CarlRPGActor } from './documents/actor.mjs';
 import { CarlRPGItem } from './documents/item.mjs';
+import { CarlRPGTokenDocument } from './documents/token.mjs';
 import { CarlRPGCombat, CarlRPGCombatant } from './documents/combat.mjs';
 import { CarlRPGCombatTracker } from './apps/combat-tracker.mjs';
 import { reactionHandlers, registerPhaseSettings } from './helpers/combat-phases.mjs';
@@ -85,9 +86,13 @@ Hooks.once('init', function () {
     // slot count until some unrelated update forced a fresh
     // prepareDerivedData pass. Mobs are almost always unlinked tokens
     // (absent from game.actors entirely), hence the separate scene sweep.
+    // reset(), not prepareData(): it starts again from the stored data. A
+    // second prepareData() pass starts from the last one's derived values,
+    // so an HB clamped by a lower Floor stayed clamped when the Floor went
+    // back up, and the next write saved the lost slot.
     onChange: () => {
       for (const actor of game.actors) {
-        actor.prepareData();
+        actor.reset();
         if (actor.sheet?.rendered) actor.sheet.render();
       }
       for (const scene of game.scenes) {
@@ -95,7 +100,7 @@ Hooks.once('init', function () {
           if (tokenDoc.actorLink) continue;
           const actor = tokenDoc.actor;
           if (!actor) continue;
-          actor.prepareData();
+          actor.reset();
           if (actor.sheet?.rendered) actor.sheet.render();
         }
       }
@@ -175,6 +180,8 @@ Hooks.once('init', function () {
   registerActionUndo();
 
   CONFIG.Actor.documentClass = CarlRPGActor;
+  // Token bars on HB show hb.effectiveMax (documents/token.mjs).
+  CONFIG.Token.documentClass = CarlRPGTokenDocument;
   Object.assign(CONFIG.Actor.dataModels, {
     character: models.CarlRPGCharacter,
     mob: models.CarlRPGMob,

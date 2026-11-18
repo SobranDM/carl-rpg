@@ -508,7 +508,9 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
   const c = state.crawler;
   const warnings = [...state.warnings];
   const report = newReport();
-  const match = buildMatcher(candidates);
+  // Skills and Spells also by the system's Skill slug, as play-time checks
+  // match them ("Hand to Hand" is the pack's "Hand-to-Hand").
+  const match = buildMatcher(candidates, { slug: slugifySkillName });
   const level = Number(c.level) || 1;
 
   const stats = {};
@@ -569,7 +571,9 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
   const chargenKind = SPECIES_IS_RACE ? null : kind === "human" ? "human" : kind === "animal" ? "animal" : null;
   if (kind && !SPECIES_IS_RACE && !chargenKind) report.notes.push({ key: "Species", data: { species: String(c.species) } });
 
-  // Skills and Spells.
+  // Skills and Spells. Their names are keyed by the system's Skill slug
+  // (modifiers.mjs slugifySkillName), as play-time checks match them, so
+  // "Hand to Hand" here and a weapon's "Hand-to-Hand" are one Skill.
   const skills = [];
   const skillNames = new Map();
   (c.skills ?? []).forEach((skill, index) => {
@@ -588,7 +592,7 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
       const fallback = isSpell ? buildSpellItem(skill) : buildSkillItem(skill);
       fallback.flags[SCOPE][FLAG] = { key, id: definition.id, notInRulebook: true };
       skills.push({ key, name: found.name, type: found.type, copy: { ref: found.ref, rank }, fallback });
-      skillNames.set(normalizeName(skill.name), { name: found.name, type: found.type, category: found.category || null, handToHand: !!found.handToHand, definition });
+      skillNames.set(slugifySkillName(skill.name), { name: found.name, type: found.type, category: found.category || null, handToHand: !!found.handToHand, noWeapon: !!found.noWeapon, definition });
       return;
     }
     const data = isSpell ? buildSpellItem(skill, report) : buildSkillItem(skill, report);
@@ -596,7 +600,7 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
     if (definition.interrupt && !isSpell) report.unmappedFields.push({ owner: skill.name, key: "Interrupt", data: {} });
     report.invented.push({ name: skill.name, type: data.type });
     skills.push({ key, name: skill.name, type: data.type, data });
-    skillNames.set(normalizeName(skill.name), { name: skill.name, type: data.type, category: data.system.category, definition });
+    skillNames.set(slugifySkillName(skill.name), { name: skill.name, type: data.type, category: data.system.category, definition });
   });
 
   // A Skill the Race/Class grants that the export doesn't list: made at the
@@ -626,7 +630,6 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
     }
   }
   for (const [slug, grant] of grants) {
-    const id = normalizeName(grant.name);
     const key = `granted:${slug}`;
     const rank = Math.max(0, grant.rank);
     const found = match(grant.name, SKILL_LIKE_TYPES);
@@ -639,12 +642,12 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
         data: { name: grant.name, type: "skill", system: { rank, category: "utility" }, flags: { [SCOPE]: { [FLAG]: { key, notInRulebook: true } } } },
       });
     }
-    skillNames.set(id, { name: found?.name ?? grant.name, type: found?.type ?? "skill", category: found?.category || null, handToHand: !!found?.handToHand, definition: {} });
+    skillNames.set(slug, { name: found?.name ?? grant.name, type: found?.type ?? "skill", category: found?.category || null, handToHand: !!found?.handToHand, noWeapon: !!found?.noWeapon, definition: {} });
   }
 
   // Gear.
   const attackSkill = (name) => {
-    const s = skillNames.get(normalizeName(name));
+    const s = skillNames.get(slugifySkillName(name));
     if (!s || s.type !== "skill") return null;
     const attack = s.category === "attack" || s.definition?.category === "attack";
     return attack ? s : null;
@@ -664,7 +667,7 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
     if (skill) {
       // A weapon: its Weapon Skill, and the Gear compendium's item for it
       // if there is one (chargen.mjs weaponData), keeping this name.
-      armed.add(normalizeName(skill.name));
+      armed.add(slugifySkillName(skill.name));
       report.weapons.push({ name: item.name, skill: skill.name });
       entry = {
         key, name: item.name, weapon: { skill: skill.name, twoHanded: item.slot === "hands" },
@@ -675,10 +678,10 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
       const found = match(item.name, ["item"]) ?? (alias?.consumable ? alias : null);
       if (found) {
         report.gearMatched.push({ name: item.name, as: found.name, source: found.source ?? "", consumable: !!found.consumable });
-        if (found.weaponSkill && !skillNames.has(normalizeName(found.weaponSkill))) {
+        if (found.weaponSkill && !skillNames.has(slugifySkillName(found.weaponSkill))) {
           report.notes.push({ key: "NoWeaponSkill", data: { name: item.name, skill: found.weaponSkill } });
         }
-        if (found.weaponSkill) armed.add(normalizeName(found.weaponSkill));
+        if (found.weaponSkill) armed.add(slugifySkillName(found.weaponSkill));
         entry = { key, name: item.name, copy: { ref: found.ref, name: item.name }, quantity, notes, changes: mapped.changes, flags, exportSlot: item.slot ?? null };
       } else {
         report.gearUnmatched.push(item.name);
@@ -716,16 +719,16 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
     }
   });
 
-  // An Attack Skill that needs a weapon (weapons.mjs needsWeapon) the export has none for.
-  const weaponless = new Set((CARLRPG.weaponlessAttackSkills ?? []).map(normalizeName));
+  // An Attack Skill that needs a weapon (weapons.mjs needsWeapon: not
+  // hand-to-hand, no Needs no weapon box) the export has none for.
   for (const entry of skills) {
-    const s = skillNames.get(normalizeName(entry.name));
+    const s = skillNames.get(slugifySkillName(entry.name));
     const def = s?.definition ?? {};
     const attack = entry.data ? entry.data.system.category === "attack" : (s?.category ?? def.category) === "attack";
     const handToHand = entry.data ? entry.data.system.isHandToHand : (s?.handToHand || def.attack?.weaponCategory === "handToHand");
-    if (entry.type !== "skill" || !attack || handToHand) continue;
-    const id = normalizeName(entry.name);
-    if (!armed.has(id) && !weaponless.has(id)) report.weaponsWithoutItem.push(entry.name);
+    const noWeapon = entry.data ? entry.data.system.noWeapon : s?.noWeapon;
+    if (entry.type !== "skill" || !attack || handToHand || noWeapon) continue;
+    if (!armed.has(slugifySkillName(entry.name))) report.weaponsWithoutItem.push(entry.name);
   }
 
   report.background = backgroundTableMisses(c, tables);

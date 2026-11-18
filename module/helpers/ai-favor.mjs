@@ -79,6 +79,35 @@ export function rerollOpen(spec) {
 }
 
 /**
+ * Whether this user could spend this crawler's AI Favor to reroll this
+ * Check now (p.61): "Once per Check" - a failure or a success alike - never
+ * a Natural 1; the crawler's owner (or the GM), with AI Favor left. Whether
+ * the Check is still open to change is the caller's.
+ * @param {{natural?: number|null, used?: boolean, aiRerolled?: object|null}|null} check
+ *   A card's `aiReroll` spec (`used`) or a row's or Reaction card's Check (`aiRerolled`).
+ * @param {Actor|null} actor  Who rolled it.
+ * @param {User} [user]
+ * @returns {boolean}
+ */
+export function aiRerollAllowed(check, actor, user = game.user) {
+  if (!check || check.aiRerolled || !rerollOpen(check)) return false;
+  if (actor?.type !== "character" || (actor.system.details?.aiFavor ?? 0) < 1) return false;
+  return !!user && (user.isGM || actor.testUserPermission(user, "OWNER"));
+}
+
+/**
+ * Spend 1 AI Favor for a reroll.
+ * @param {Actor} actor
+ * @returns {Promise<boolean>}  False: none left.
+ */
+export async function spendAiFavor(actor) {
+  const favor = actor?.system.details?.aiFavor ?? 0;
+  if (favor < 1) return false;
+  await actor.update({ "system.details.aiFavor": favor - 1 });
+  return true;
+}
+
+/**
  * The kept die for one d20 expression from a pair of raw dice - shared by
  * an Attack's per-target rows (module/dice/dice.mjs).
  * @param {string} formula  "1d20" | "2d20kh" | "2d20kl"

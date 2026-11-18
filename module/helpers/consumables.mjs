@@ -200,11 +200,13 @@ export async function useConsumable(actor, item, { skipDialog = false } = {}) {
   // healing potion the Heal Interrupt - spent once it's actually used. A
   // Scroll of an Attack Spell is an Attack, which AI Favor's Action can't pay
   // for (p.61); its cast is part of it, not another Action.
-  const actionKind = kind === "scroll" && (await scrollIsAttack(item)) ? "attack" : "other";
-  const label = game.i18n.format("CARLRPG.Actions.Label.UseItem", { item: item.name });
-  return takeAction(actor, actionKind, label, async (ctx) => {
-    inUse.add(item.uuid);
-    try {
+  // In use from here, before the first await: a second click while this one
+  // waits (on the Scroll's Spell, or its turn) is refused, not queued.
+  inUse.add(item.uuid);
+  try {
+    const actionKind = kind === "scroll" && (await scrollIsAttack(item)) ? "attack" : "other";
+    const label = game.i18n.format("CARLRPG.Actions.Label.UseItem", { item: item.name });
+    return await takeAction(actor, actionKind, label, async (ctx) => {
       if (kind === "scroll") return await useScroll(actor, item, { skipDialog, within: ctx });
       if (kind === "spellbook") {
         // A Spell learned can't simply be unlearned: no undo (helpers/action-undo.mjs).
@@ -213,10 +215,10 @@ export async function useConsumable(actor, item, { skipDialog = false } = {}) {
         return learned;
       }
       return await drinkOrUse(actor, item, { skipDialog });
-    } finally {
-      inUse.delete(item.uuid);
-    }
-  });
+    });
+  } finally {
+    inUse.delete(item.uuid);
+  }
 }
 
 /** Whether a Scroll casts an Attack Spell. */

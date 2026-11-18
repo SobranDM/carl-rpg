@@ -27,6 +27,7 @@ import { degreeBadge } from "./rules.mjs";
 import { isMinion, isPet } from "./actor-kinds.mjs";
 import { petOwner } from "./pets.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
+import { effectiveRank } from "./modifiers.mjs";
 import { createCardMessage, createRollMessage, esc } from "../chat/chat-card.mjs";
 
 /** Results that settle the Pet for the rest of the fight - only "staying out" can be retried. */
@@ -108,17 +109,26 @@ export function describePetCommand(pet) {
 }
 
 /**
- * The crawler's Animal Handling Skill, or an unsaved untrained copy.
+ * The Skill the crawler commands its Pet with: its own Skill with the
+ * Commands pets box (Animal Handling in the book, or a GM's homebrew one) -
+ * the highest live Rank of them. With none, Animal Handling by name, or an
+ * unsaved untrained copy.
  * @param {Actor} owner
  * @returns {Promise<{skill: Item, trained: boolean}>}
  */
-function animalHandlingFor(owner) {
+export function commandSkillFor(owner) {
+  const boxed = owner.items.filter((i) => i.type === "skill" && i.system?.commandsPets);
+  if (boxed.length) {
+    const best = boxed.reduce((a, b) => (effectiveRank(b) > effectiveRank(a) ? b : a));
+    return Promise.resolve({ skill: best, trained: true });
+  }
   return skillOrUntrainedCopy(owner, "Animal Handling", { img: "icons/svg/pawprint.svg", system: { governingStat: "cha" } });
 }
 
 /**
  * Roll Command Pet for a Pet in the running combat: its crawler's Animal
- * Handling against the Pet's INT, posted as one card and stored on the Pet.
+ * Handling (commandSkillFor: its Skill with the Commands pets box) against
+ * the Pet's INT, posted as one card and stored on the Pet.
  * @param {Actor} pet
  * @param {{skipDialog?: boolean}} [options]
  * @returns {Promise<string|null>}  The new command state, or null if not rolled.
@@ -148,7 +158,7 @@ export async function commandPet(pet, { skipDialog = false } = {}) {
 
 /** commandPet's Check and its result, inside the crawler's Action. */
 async function rollCommand(owner, pet, combat, { skipDialog }) {
-  const { skill, trained } = await animalHandlingFor(owner);
+  const { skill, trained } = await commandSkillFor(owner);
   const difficulty = commandDifficulty(pet);
   const result = await CarlDice.rollOpposedSkillCheck(owner, skill, {
     difficulty, opponent: null, skipDialog, post: false, markUse: trained,

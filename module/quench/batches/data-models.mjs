@@ -468,6 +468,69 @@ export default function register(quench) {
             await deleteTestActor(actor);
           }
         });
+
+        it("amount can't be stored as null (a cleared Amount isn't a +0 grant)", async function () {
+          const amountField = CONFIG.Item.dataModels.race.schema.getField("skillChoiceGrants").element.fields.amount;
+          assert.isFalse(amountField.nullable);
+          const actor = await createTestCharacter();
+          try {
+            const race = await createTestItem(actor, "race", "race", {
+              system: { skillChoiceGrants: [{ category: "crafting", amount: null }] },
+            });
+            assert.equal(race.system.skillChoiceGrants[0].amount, 1, "created with null: the initial 1");
+            await race.update({ "system.skillChoiceGrants": [{ category: "crafting", amount: 3 }] });
+            await race.update({ "system.skillChoiceGrants": [{ category: "crafting", amount: null }] });
+            assert.equal(race._source.system.skillChoiceGrants[0].amount, 1, "updated to null: the initial 1");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("system.json htmlFields: the server sanitizes every rich text field", function () {
+        useQuenchTimeout(this);
+        const { ArrayField, HTMLField, SchemaField } = foundry.data.fields;
+        // The paths of a schema's HTMLFields, as htmlFields names them: an
+        // array's entries without an index.
+        const htmlPaths = (field, path = []) => {
+          if (field instanceof HTMLField) return [path.join(".")];
+          if (field instanceof SchemaField) return Object.entries(field.fields).flatMap(([key, f]) => htmlPaths(f, [...path, key]));
+          if (field instanceof ArrayField) return htmlPaths(field.element, path);
+          return [];
+        };
+        const manifest = async () => (await fetch(foundry.utils.getRoute(`systems/${game.system.id}/system.json`))).json();
+
+        it("each type declares its description or biography, and every other HTMLField it has", async function () {
+          const { documentTypes } = await manifest();
+          for (const documentName of ["Actor", "Item"]) {
+            for (const [type, model] of Object.entries(CONFIG[documentName].dataModels)) {
+              const declared = documentTypes[documentName]?.[type]?.htmlFields ?? [];
+              const main = documentName === "Actor" && type !== "lootBox" ? "biography" : "description";
+              assert.include(declared, main, `${documentName}.${type}: ${main}`);
+              for (const path of htmlPaths(model.schema)) {
+                assert.include(declared, path, `${documentName}.${type}: ${path} is an HTMLField`);
+              }
+            }
+          }
+        });
+
+        // Needs a world relaunch after system.json changes: the server reads
+        // htmlFields when it opens the world's databases.
+        it("a script in an Item's description or an Actor's biography isn't stored", async function () {
+          const evil = '<p>kept</p><script>window.carlQuenchXss = 1</script><img src="x" onerror="window.carlQuenchXss = 1">';
+          const item = await Item.create({ name: `Quench xss ${foundry.utils.randomID()}`, type: "feature", system: { description: evil } });
+          const pet = await Actor.create({ name: `Quench xss ${foundry.utils.randomID()}`, type: "pet", system: { biography: evil } });
+          try {
+            for (const stored of [item._source.system.description, pet._source.system.biography]) {
+              assert.include(stored, "<p>kept</p>");
+              assert.notInclude(stored, "<script");
+              assert.notInclude(stored, "onerror");
+            }
+          } finally {
+            await item.delete();
+            await deleteTestActor(pet);
+          }
+        });
       });
 
       describe("helpers/equip-slots.mjs (Inventory Hotlist/Equipped slots)", function () {

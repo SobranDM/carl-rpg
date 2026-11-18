@@ -12,7 +12,7 @@
  */
 import { slugifySkillName } from "./modifiers.mjs";
 import { cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem } from "./race-class-grants.mjs";
-import { assignItemToSlot } from "./equip-slots.mjs";
+import { assignItemToSlot, slotHolds } from "./equip-slots.mjs";
 import { isInHotlist, toggleHotlist } from "./hotlist.mjs";
 import { headedSectionsToHtml, STORY_SECTIONS } from "./rich-text.mjs";
 import { createCardMessage, esc } from "../chat/chat-card.mjs";
@@ -540,8 +540,9 @@ async function gearWrites(state) {
   const choice = combatChoice(state);
   const stuff = state.stuff ?? {};
   const gear = {};
-  // The starting outfit is worn (a Torso piece; docs/gear-slots.md).
-  if (stuff.clothing) gear.clothing = gearData(stuff.clothing, { equipped: true, slots: ["torso"] });
+  // The starting outfit is worn (a Torso piece; docs/gear-slots.md) -
+  // equipped when applyChargen puts it in the slot.
+  if (stuff.clothing) gear.clothing = gearData(stuff.clothing, { slots: ["torso"] });
   if (state.combat.type === "weapon") {
     gear.weapon = await weaponData(stuff.weapon || state.combat.weaponName || choice.skill, choice.skill);
   }
@@ -632,8 +633,9 @@ export async function applyChargen(actor, state) {
   if (made.weapon && actor.system.gearSlots.mainHand !== made.weapon.id) {
     await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, made.weapon);
   }
-  // The outfit is worn on the Torso (docs/gear-slots.md), in the doll.
-  if (made.clothing && !actor.system.gearSlots.torso) {
+  // The outfit is worn on the Torso (docs/gear-slots.md), in the doll - if
+  // it's free (a deleted item's id counts as free).
+  if (made.clothing && !slotHolds(actor, actor.system.gearSlots.torso)) {
     await assignItemToSlot(actor, { slotType: "gear", slotKey: "torso" }, made.clothing);
   }
 

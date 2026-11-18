@@ -194,7 +194,9 @@ export default function register(quench) {
               assert.equal(weapon._stats.compendiumSource, basic.uuid);
               assert.isFalse(weapon.system.twoHanded);
             }
-            assert.isTrue(actor.items.some((i) => i.name === "Jogging attire" && i.system.equipped), "clothes worn");
+            const clothes = actor.items.find((i) => i.name === "Jogging attire");
+            assert.equal(actor.system.gearSlots.torso, clothes?.id, "the clothes on the Torso");
+            assert.isTrue(clothes?.system.equipped, "clothes worn");
             assert.isTrue(actor.items.some((i) => i.name === "Lighter"));
 
             assert.deepEqual(STAT_ORDER.map((k) => actor.system.stats[k].value), [6, 5, 4, 3, 2]);
@@ -236,6 +238,19 @@ export default function register(quench) {
           } finally {
             await deleteTestActor(caster);
             await deleteTestActor(brawler);
+          }
+        });
+
+        it("the outfit goes on a Torso holding only a deleted item's id", async function () {
+          const actor = await createTestCharacter("chargen torso");
+          try {
+            await actor.update({ "system.gearSlots.torso": "goneGoneGoneGone" });
+            await quietly(() => applyChargen(actor, humanState(actor)));
+            const clothes = actor.items.find((i) => i.name === "Jogging attire");
+            assert.equal(actor.system.gearSlots.torso, clothes?.id);
+            assert.isTrue(clothes?.system.equipped);
+          } finally {
+            await deleteTestActor(actor);
           }
         });
 

@@ -7,10 +7,10 @@
  *
  * Move is worked out when read (vehicleStatus), because it depends on other
  * documents that don't re-prepare the vehicle when they change: the
- * driver's Driving Rank, the combat round, the clock (Nitrous).
+ * driver's driving Skill, the combat round, the clock (Nitrous).
  */
 import { isVehicle } from "./actor-kinds.mjs";
-import { slugifySkillName } from "./modifiers.mjs";
+import { ownedSkill, unlockedTiers } from "./modifiers.mjs";
 import { sweepableActors } from "./expiry.mjs";
 
 /**
@@ -122,16 +122,26 @@ export function vehicleFight(vehicle) {
 }
 
 /**
- * The driver's Rank in this vehicle's driving Skill (Driving or Chopper
- * Pilot), 0 if untrained.
+ * What the driver's own Skill that drives this vehicle (its
+ * system.driveSkill, by name - Driving, Chopper Pilot or homebrew) gives
+ * them: its live Rank (effectiveRank) and its Upgrade tiers unlocked there
+ * (module/data/shared/upgrade-tier.mjs): +ft Move (summed), Attacks free of
+ * the driving Disadvantage, Advantage on Evades and on crazy stunts. An
+ * untrained driver (no such Skill) gets none.
  * @param {Actor|null} driver
- * @param {string} driveSkill  A CONFIG.CARLRPG.vehicleDriveSkills key.
- * @returns {number}
+ * @param {Actor} vehicle
+ * @returns {{item: Item|null, rank: number, move: number, attackOk: boolean, evadeAdvantage: boolean, stuntAdvantage: boolean}}
  */
-export function driverRank(driver, driveSkill) {
-  const name = CONFIG.CARLRPG.vehicleDriveSkills[driveSkill]?.skillName;
-  if (!driver || !name) return 0;
-  return driver.system?.skills?.[slugifySkillName(name)]?.rank ?? 0;
+export function driverPerks(driver, vehicle) {
+  const owned = driver ? ownedSkill(driver, vehicle?.system?.driveSkill ?? "") : null;
+  const perks = { item: owned?.item ?? null, rank: owned?.rank ?? 0, move: 0, attackOk: false, evadeAdvantage: false, stuntAdvantage: false };
+  for (const tier of unlockedTiers(owned?.item ?? null)) {
+    perks.move += Number(tier.vehicleMove) || 0;
+    perks.attackOk ||= !!tier.vehicleAttackOk;
+    perks.evadeAdvantage ||= !!tier.vehicleEvadeAdvantage;
+    perks.stuntAdvantage ||= !!tier.vehicleStuntAdvantage;
+  }
+  return perks;
 }
 
 /**
@@ -186,8 +196,8 @@ export function actorSizeValue(actor) {
 
 /**
  * Everything about a vehicle's motion right now (p.72-73):
- *  - maxMove: base Move, +5ft per driving-Skill Rank threshold its driver
- *    has reached, doubled while Nitrous runs.
+ *  - maxMove: base Move, plus the driver's driving-Skill tiers' +ft Move
+ *    (driverPerks), doubled while Nitrous runs.
  *  - currentMove: 0 when parked; otherwise this round's Table 6 result
  *    (full Move when no Check was made this round), times any ram loss.
  *  - attackDifficulty: "10 + the Vehicle's current Move ÷ 5" - no Floor -
@@ -200,12 +210,11 @@ export function actorSizeValue(actor) {
 export function vehicleStatus(vehicle) {
   const sys = vehicle.system;
   const driver = vehicleDriver(vehicle);
-  const skill = CONFIG.CARLRPG.vehicleDriveSkills[sys.driveSkill];
-  const rank = driverRank(driver, sys.driveSkill);
-  const driveBonus = (skill?.moveRanks ?? []).filter((r) => rank >= r).length * 5;
+  const perks = driverPerks(driver, vehicle);
+  const driveBonus = perks.move;
   const nitrousEndsAt = sys.upgrades.nitrous.endsAt;
   const nitrousActive = nitrousEndsAt !== null && nitrousEndsAt !== undefined && nitrousEndsAt > game.time.worldTime;
-  const maxMove = (sys.move + driveBonus) * (nitrousActive ? 2 : 1);
+  const maxMove = Math.max(0, sys.move + driveBonus) * (nitrousActive ? 2 : 1);
 
   const fight = vehicleFight(vehicle);
   const stamp = sys.round;
@@ -217,7 +226,7 @@ export function vehicleStatus(vehicle) {
 
   return {
     driver,
-    driverRank: rank,
+    driverRank: perks.rank,
     driveBonus,
     nitrousActive,
     nitrousRemaining: nitrousActive ? Math.ceil(nitrousEndsAt - game.time.worldTime) : 0,

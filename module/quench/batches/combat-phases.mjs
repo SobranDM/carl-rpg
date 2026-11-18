@@ -686,6 +686,26 @@ export default function register(quench) {
           assert.equal(pc1.system.details.aiFavor, 2);
         });
 
+        it("AI Reroll takes a successful Evade too (p.61) - its Advantage goes if it drops - but never a Natural 1", async function () {
+          await pc1.update({ "system.details.aiFavor": 2 });
+          await declareOn(pc1);
+          await declareOn(pc1);
+          const card = await startReaction();
+          const [great, ones] = hitList(state(card));
+          await op(card, "evade", { uuid: pc1.uuid, checks: { [great.id]: rolled(25, 20, 16), [ones.id]: rolled(3, 1, 16) }, preset });
+          assert.isTrue(state(card).hits[great.id].evade.success, "a success to start with");
+          assert.equal(of(pc1).getFlag("carl-rpg", "advantageVsUuid"), mob.uuid, "a Natural 20 Evade's Advantage");
+          const ref = (hit) => ({ type: "hit", hitId: hit.id, which: "evade" });
+          assert.isTrue(await op(card, "reroll", { ref: ref(great), naturalRoll: 5, total: 10, roll: null, breakdown: "" }), "a success can be rerolled");
+          const rerolled = state(card).hits[great.id].evade;
+          assert.isFalse(rerolled.success, "the new roll stands");
+          assert.equal(rerolled.aiRerolled.natural, 20);
+          assert.equal(pc1.system.details.aiFavor, 1);
+          assert.notEqual(of(pc1).getFlag("carl-rpg", "advantageVsUuid"), mob.uuid, "the Advantage went with it");
+          assert.isFalse(await op(card, "reroll", { ref: ref(ones), naturalRoll: 18, total: 20, roll: null, breakdown: "" }), "not a Natural 1");
+          assert.equal(pc1.system.details.aiFavor, 1);
+        });
+
         it("Lock Results posts the Damage card unrolled; its button rolls and applies the damage", async function () {
           await declareOn(pc1);
           await declareOn(pc2);

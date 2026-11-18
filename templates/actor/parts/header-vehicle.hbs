@@ -16,7 +16,7 @@
     <div class="carl-pet-summary">
       {{#if system.model}}<span class="carl-vehicle-model">{{system.model}}</span>{{/if}}
       <span class="carl-pet-chip">{{localize (lookup config.sizes system.size)}}</span>
-      <span class="carl-pet-chip">{{localize vehicle.driveSkillLabel}}</span>
+      {{#if system.driveSkill}}<span class="carl-pet-chip">{{system.driveSkill}}</span>{{/if}}
       <span class="carl-pet-chip {{#if vehicle.full}}warn{{/if}}" title="{{localize 'CARLRPG.Vehicle.OccupantsHint'}}">
         <i class="fas fa-users"></i> {{vehicle.status.occupantCount}} / {{vehicle.status.capacity}}
       </span>

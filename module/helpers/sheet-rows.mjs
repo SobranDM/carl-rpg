@@ -73,7 +73,7 @@ export function debuffTrigger(te) {
 
 /**
  * A Debuff's summary.
- * @param {object} te  A target effect (optionally with `skills`, gear's "Only with").
+ * @param {object} te  A target effect (optionally with `skills` and `handToHandOnly`, gear's "Only with").
  * @returns {{trigger: {key: string, label: string}, what: string, notes: string[]}}
  */
 export function debuffSummary(te) {
@@ -82,7 +82,11 @@ export function debuffSummary(te) {
   const notes = [];
   if (te?.label) notes.push(te.label);
   const skills = (te?.skills ?? []).filter(Boolean);
-  if (skills.length) notes.push(t("CARLRPG.OnHitDebuff.OnlyWith", { skills: skills.join(", ") }));
+  if (te?.handToHandOnly) {
+    notes.push(skills.length
+      ? t("CARLRPG.OnHitDebuff.OnlyWithOrHandToHand", { skills: skills.join(", ") })
+      : t("CARLRPG.OnHitDebuff.OnlyHandToHand"));
+  } else if (skills.length) notes.push(t("CARLRPG.OnHitDebuff.OnlyWith", { skills: skills.join(", ") }));
   return { trigger: debuffTrigger(te), what: `${name} ×${te?.stacks || 1}`, notes };
 }
 

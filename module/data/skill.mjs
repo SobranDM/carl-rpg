@@ -31,6 +31,25 @@ export default class CarlRPGSkill extends CarlRPGRankedItemBase {
     // (module/helpers/hand-to-hand.mjs).
     schema.isHandToHand = new fields.BooleanField({ required: true, initial: false });
 
+    // What a Skill does, set on the Skill itself - never read from its name,
+    // so a GM's homebrew Skill works the same way as the book's:
+    //  - noWeapon: an Attack that needs no weapon besides hand-to-hand ones
+    //    (Improvised Weapons, p.178; Bite, Back Claw, Slice Attack -
+    //    module/helpers/weapons.mjs needsWeapon);
+    //  - noDamageEffects: an Attack that "Cannot choose a Damage Effect"
+    //    (Unarmed Combat, p.179 - module/helpers/hand-to-hand.mjs);
+    //  - commandsPets: the Skill Command Pet rolls (Animal Handling, p.232 -
+    //    module/helpers/pet-command.mjs).
+    schema.noWeapon = new fields.BooleanField({ required: true, initial: false });
+    schema.noDamageEffects = new fields.BooleanField({ required: true, initial: false });
+    schema.commandsPets = new fields.BooleanField({ required: true, initial: false });
+
+    // A mounted-only weapon (Lance, p.182): a vehicle's driver attacks with
+    // it without the driving Disadvantage ("unless it's to ... use
+    // mounted-only weapons (like a lance)", p.72 - module/helpers/
+    // vehicle-rows.mjs). Not enforced: nothing stops using it unmounted.
+    schema.mounted = new fields.BooleanField({ required: true, initial: false });
+
     // Only relevant to low-damage weapons that grant AI Favor when not maximized.
     schema.aiFavor = new fields.NumberField({ ...requiredInteger, required: false, initial: 0, min: 0 });
 

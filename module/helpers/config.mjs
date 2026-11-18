@@ -112,9 +112,6 @@ CARLRPG.sizes = {
   8: "CARLRPG.Size.Gargantuan",
 };
 
-/** Attack Skills that "Cannot choose a Damage Effect" (Unarmed Combat, p.179). */
-CARLRPG.noDamageEffectSkills = ["Unarmed Combat"];
-
 /**
  * The rulebook's Weapon Skills (pp.177-179): an Attack with one needs a
  * matching weapon in hand or in the Hotlist (module/helpers/weapons.mjs).
@@ -125,13 +122,6 @@ CARLRPG.weaponSkills = [
   "Axe", "Bow", "Club", "Crossbow", "Dagger", "Handgun", "Javelin", "Lance", "Longsword",
   "Polearm", "Quarterstaff", "Rapier", "Shotgun", "Shuriken", "Slingshot", "Warhammer",
 ];
-
-/**
- * Attack Skills that need no weapon, besides hand-to-hand ones (the
- * Skill's Hand-to-Hand box): Improvised Weapons ("pick up something" - any
- * object to hand, p.178) and natural attacks (the Animals and Pets Skills).
- */
-CARLRPG.weaponlessAttackSkills = ["Improvised Weapons", "Bite", "Back Claw", "Slice Attack"];
 
 /**
  * Worn gear slots - the Inventory's Equipment Doll (items-list.hbs). Each
@@ -432,32 +422,25 @@ CARLRPG.petLevelStepCap = 15;
 /**
  * Vehicles (p.72-73) - see module/data/vehicle.mjs and docs/companions-and-vehicles.md.
  *  - vehiclePresets: Table 7 (Move, Size, DR, Occupancy, cargo), plus the
- *    Skill that drives it: Chopper Pilot for two wheels, Driving for "three
- *    or more wheels or tracks" (a skateboard has four).
- *  - vehicleDriveSkills: each driving Skill's Ranks - which lifts the
- *    driver's Disadvantage on Attacks (Driving 5, Chopper Pilot 10), which
- *    add "+5ft Move", Driving 10's Advantage to Evade, and the Rank 15 stunt
- *    Advantage.
+ *    name of the Skill that drives it: Chopper Pilot for two wheels, Driving
+ *    for "three or more wheels or tracks" (a skateboard has four). Any Skill
+ *    can drive a vehicle; what its Ranks give the driver are its own Upgrade
+ *    tiers' vehicle fields (module/data/shared/upgrade-tier.mjs).
  *  - drivingOutcomes: Table 6, per Degree - this round's Move (a factor of
  *    full Move, or feet lost), HB slots of damage (10% = 1 slot, 30% = 3,
  *    ignoring DR), Advantage on the next operating Check, the Critical Hit
  *    choice, and the stall.
- *  - mountedOnlySkills: weapons the driver uses without the Driving
- *    Disadvantage ("mounted-only weapons (like a lance)", p.72).
+ *  Mounted-only weapons (a Lance) are marked on the Skill (system.mounted).
  */
 CARLRPG.vehiclePresets = {
-  skateboard: { label: "CARLRPG.Vehicle.Presets.skateboard", move: 30, size: 2, dr: 0, occupancy: 1, cargo: 0, driveSkill: "driving" },
-  bicycle: { label: "CARLRPG.Vehicle.Presets.bicycle", move: 40, size: 3, dr: 0, occupancy: 2, cargo: 0, driveSkill: "chopperPilot" },
-  tank: { label: "CARLRPG.Vehicle.Presets.tank", move: 50, size: 6, dr: 10, occupancy: 4, cargo: 0, driveSkill: "driving" },
-  eighteenWheeler: { label: "CARLRPG.Vehicle.Presets.eighteenWheeler", move: 60, size: 7, dr: 4, occupancy: 4, cargo: 50, driveSkill: "driving" },
-  largeTruck: { label: "CARLRPG.Vehicle.Presets.largeTruck", move: 70, size: 6, dr: 4, occupancy: 3, cargo: 5, driveSkill: "driving" },
-  sedan: { label: "CARLRPG.Vehicle.Presets.sedan", move: 80, size: 5, dr: 3, occupancy: 6, cargo: 0, driveSkill: "driving" },
-  sportscar: { label: "CARLRPG.Vehicle.Presets.sportscar", move: 100, size: 5, dr: 2, occupancy: 2, cargo: 0, driveSkill: "driving" },
-  motorcycle: { label: "CARLRPG.Vehicle.Presets.motorcycle", move: 120, size: 4, dr: 1, occupancy: 2, cargo: 0, driveSkill: "chopperPilot" },
-};
-CARLRPG.vehicleDriveSkills = {
-  driving: { label: "CARLRPG.Vehicle.DriveSkills.driving", skillName: "Driving", attackRank: 5, moveRanks: [10, 15], evadeAdvantageRank: 10, stuntRank: 15 },
-  chopperPilot: { label: "CARLRPG.Vehicle.DriveSkills.chopperPilot", skillName: "Chopper Pilot", attackRank: 10, moveRanks: [5, 15], evadeAdvantageRank: null, stuntRank: 15 },
+  skateboard: { label: "CARLRPG.Vehicle.Presets.skateboard", move: 30, size: 2, dr: 0, occupancy: 1, cargo: 0, driveSkill: "Driving" },
+  bicycle: { label: "CARLRPG.Vehicle.Presets.bicycle", move: 40, size: 3, dr: 0, occupancy: 2, cargo: 0, driveSkill: "Chopper Pilot" },
+  tank: { label: "CARLRPG.Vehicle.Presets.tank", move: 50, size: 6, dr: 10, occupancy: 4, cargo: 0, driveSkill: "Driving" },
+  eighteenWheeler: { label: "CARLRPG.Vehicle.Presets.eighteenWheeler", move: 60, size: 7, dr: 4, occupancy: 4, cargo: 50, driveSkill: "Driving" },
+  largeTruck: { label: "CARLRPG.Vehicle.Presets.largeTruck", move: 70, size: 6, dr: 4, occupancy: 3, cargo: 5, driveSkill: "Driving" },
+  sedan: { label: "CARLRPG.Vehicle.Presets.sedan", move: 80, size: 5, dr: 3, occupancy: 6, cargo: 0, driveSkill: "Driving" },
+  sportscar: { label: "CARLRPG.Vehicle.Presets.sportscar", move: 100, size: 5, dr: 2, occupancy: 2, cargo: 0, driveSkill: "Driving" },
+  motorcycle: { label: "CARLRPG.Vehicle.Presets.motorcycle", move: 120, size: 4, dr: 1, occupancy: 2, cargo: 0, driveSkill: "Chopper Pilot" },
 };
 CARLRPG.vehicleRoles = {
   driver: "CARLRPG.Vehicle.Roles.driver",
@@ -474,7 +457,6 @@ CARLRPG.drivingOutcomes = {
 };
 /** Degrees in order, worst to best - Shock Absorbers step a Fail up one. */
 CARLRPG.degreeOrder = ["criticalFail", "majorFail", "standardFail", "nearMissFail", "standardSuccess", "amazingSuccess", "criticalHit"];
-CARLRPG.mountedOnlySkills = ["Lance"];
 /** Nitrous Oxide: "Double Move for 3 rounds" (p.73). */
 CARLRPG.nitrousRounds = 3;
 

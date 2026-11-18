@@ -30,6 +30,7 @@ import { noteUndo, takeAction } from "../helpers/actions.mjs";
 import { withCardQueue } from "./check-revision.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow, nextRowId } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { ownedSkill } from "../helpers/modifiers.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/taunt-footer.hbs";
 
@@ -165,11 +166,10 @@ export async function tauntAttack(message, { taunter = null, skipDialog = false 
     return null;
   }
 
-  // Matched by name, same convention as every other by-name Skill lookup in
-  // this codebase (module/sheets/actor-sheet.mjs's Damage Effect matching,
-  // rollAttack's damageEffectChoices) - Taunt is a specific named Skill, not
-  // a generic mechanic every actor has access to.
-  const tauntItem = resolved.actor.items.find((i) => i.type === "skill" && i.name === "Taunt");
+  // Matched by slug (modifiers.mjs ownedSkill: any case or punctuation),
+  // the convention every by-name Skill lookup uses - Taunt is a specific
+  // named Skill, not a generic mechanic every actor has access to.
+  const tauntItem = ownedSkill(resolved.actor, "Taunt")?.item;
   if (!tauntItem) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.NoTauntSkill"));
     return null;

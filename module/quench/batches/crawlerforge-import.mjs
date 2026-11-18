@@ -291,6 +291,32 @@ export default function register(quench) {
           assert.include(data.report.weaponsWithoutItem, "Longsword", "a granted Attack Skill with no weapon is reported");
         });
 
+        it("matches Skills by the system's Skill slug: \"Hand to Hand\" is the pack's \"Hand-to-Hand\", and its weapon arms it", function () {
+          const state = foldCrawlerForgeEvents(testExport());
+          state.crawler.skills.push(
+            cfSkill("Test Hand to Hand", 2, { category: "attack", stat: "str", attack: { type: "melee", weaponCategory: "handToHand" } }),
+            cfSkill("Test Long Blade", 1, { category: "attack", stat: "str", attack: { type: "melee", weaponCategory: "blades" } }),
+            cfSkill("Test Tail Swipe", 1, { category: "attack", stat: "str", attack: { type: "melee", weaponCategory: "natural" } }),
+          );
+          state.items.push(cfItem("Test Long-Blade", { slot: "hand" }));
+          const candidates = [
+            ...testCandidates(),
+            { name: "Test Hand-to-Hand", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", category: "attack", handToHand: true, ref: "hth" },
+            { name: "Test Long-Blade", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", category: "attack", ref: "lb" },
+            { name: "Test Hand to Hand", type: "item", tier: TIERS.system, order: 2, source: "carl-rpg.gear", ref: "not-a-skill" },
+            { name: "Test Tail Swipe", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", category: "attack", noWeapon: true, ref: "ts" },
+          ];
+          const data = buildCrawlerForgeActorData(state, { candidates, raceClass: testRaceClass() });
+          const byName = Object.fromEntries(data.skills.map((s) => [s.name, s]));
+          assert.equal(byName["Test Hand-to-Hand"]?.copy.ref, "hth", "copied from the pack, by slug");
+          assert.equal(byName["Test Long-Blade"]?.copy.ref, "lb");
+          const blade = data.items.find((i) => i.name === "Test Long-Blade");
+          assert.deepEqual(blade.weapon, { skill: "Test Long-Blade", twoHanded: false }, "the item named for it is its weapon");
+          assert.notInclude(data.report.weaponsWithoutItem, "Test Long-Blade", "so it isn't reported weaponless");
+          assert.notInclude(data.report.weaponsWithoutItem, "Test Hand-to-Hand", "hand-to-hand needs none");
+          assert.notInclude(data.report.weaponsWithoutItem, "Test Tail Swipe", "nor one with Needs no weapon");
+        });
+
         it("grants: the Rank-10 ceiling caps the gain, as baking does (p.127)", function () {
           const grant = (target, value) => ({ id: "", targetType: "skillRank", target, mode: "add", value: String(value), conditions: [] });
           const raceClass = testRaceClass().map((rc) => (rc.name !== "Human" ? rc : {

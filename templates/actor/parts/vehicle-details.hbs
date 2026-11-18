@@ -40,10 +40,12 @@
         <input type="text" class="carl-w-tiny" name="system.cargo" value="{{system.cargo}}" data-dtype="Number" />
       </div>
       <div>
-        <label class="resource-label">{{localize "CARLRPG.Vehicle.DriveSkill"}}</label>
-        <select class="carl-w-medium" name="system.driveSkill">
-          {{selectOptions vehicle.driveSkillChoices selected=system.driveSkill localize=true}}
-        </select>
+        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.DriveSkillHint'}}">{{localize "CARLRPG.Vehicle.DriveSkill"}}</label>
+        <input type="text" class="carl-w-medium" name="system.driveSkill" value="{{system.driveSkill}}"
+          list="carl-drive-skills-{{actor.id}}" placeholder="Driving" />
+        <datalist id="carl-drive-skills-{{actor.id}}">
+          {{#each vehicle.driveSkillNames as |name|}}<option value="{{name}}"></option>{{/each}}
+        </datalist>
       </div>
       <div>
         <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.SlotValueHint'}}">{{localize "CARLRPG.Vehicle.SlotValue"}}</label>

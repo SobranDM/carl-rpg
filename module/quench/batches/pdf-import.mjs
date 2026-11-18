@@ -15,12 +15,21 @@ import { findBookPack, importBook, matchCandidates } from "../../pdf-import/impo
 import {
   DEBUFF_KEYS,
   debuffKeyFor,
-  HAND_TO_HAND_SKILLS,
+  itemTargetEffects,
   parseDebuffText,
   splitArmorPiercing,
 } from "../../pdf-import/debuff-text.mjs";
 import { buildMatcher, normalizeName, TIERS } from "../../pdf-import/compendium-match.mjs";
-import { FINGERPRINT_VERSION, importState, importStamp, writtenFields } from "../../pdf-import/fingerprint.mjs";
+import {
+  FINGERPRINT_VERSION,
+  fingerprint,
+  importState,
+  importStamp,
+  restamp,
+  writtenFields,
+} from "../../pdf-import/fingerprint.mjs";
+import { BOOKS, bookIdOf, identifyBook, identifyPdf, UnknownBookError } from "../../pdf-import/books.mjs";
+import * as scan from "../../pdf-import/scan.mjs";
 import { findSections, floorNumber, sectionFolders } from "../../pdf-import/sections.mjs";
 import { imageDraws, imageToRGBA, imageTransform, orientRGBA, pickMapDraw } from "../../pdf-import/maps.mjs";
 import {
@@ -781,8 +790,11 @@ export default function register(quench) {
           const fist = gear(
             "On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff",
           );
-          assert.include(fist, { debuffKey: "woozy", amazingSuccessOnly: true, critOnly: false });
-          assert.deepEqual(fist.skills, HAND_TO_HAND_SKILLS);
+          assert.include(fist, { debuffKey: "woozy", amazingSuccessOnly: true, critOnly: false, handToHandOnly: true });
+          assert.deepEqual(fist.skills, [], "the Hand-to-Hand box, not a list of names");
+          const [entry] = itemTargetEffects("On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff", "gear");
+          assert.include(entry, { debuffKey: "woozy", handToHandOnly: true });
+          assert.deepEqual(entry.skills, []);
           const any = gear("On an Amazing Success with any Attack you make, the target gains the Queasy Debuff");
           assert.include(any, { debuffKey: "queasy", amazingSuccessOnly: true });
           assert.deepEqual(any.skills, [], "any Attack");
@@ -852,11 +864,11 @@ export default function register(quench) {
           const [knuckles] = parseGear([DEBUFF_GEAR_PAGE]);
           const effects = knuckles.data.system.targetEffects;
           assert.deepEqual(
-            effects.map((te) => `${te.debuffKey}:${te.amazingSuccessOnly}:${te.critOnly}:${te.skills.join("/")}`),
+            effects.map((te) => `${te.debuffKey}:${te.amazingSuccessOnly}:${te.critOnly}:${te.skills.join("/")}:${te.handToHandOnly}`),
             [
-              `woozy:true:false:${HAND_TO_HAND_SKILLS.join("/")}`,
-              "blinded:false:true:Test Poke",
-              "burned:true:false:",
+              "woozy:true:false::true",
+              "blinded:false:true:Test Poke:false",
+              "burned:true:false::false",
             ],
           );
         });
@@ -945,6 +957,150 @@ export default function register(quench) {
           assert.equal(importState({ ...source, system: { a: 5, b: 2 } }, flag), "edited");
           assert.equal(importState({ ...source, system: { a: 5 } }, { hash: "old" }), "untouched", "pre-0.7.0: once");
           assert.equal(importState(source, undefined), "notImported");
+        });
+
+        // A made-up Skill: a bonus and an Upgrade tier with one of its own.
+        const sent = {
+          name: "Test Skill",
+          type: "skill",
+          system: {
+            changes: [{ targetType: "stat", target: "dex", mode: "add", value: "1" }],
+            upgrades: [{ rankThreshold: 5, changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }] }],
+          },
+        };
+        // As stored: the data model filled in an id.
+        const stored = () => {
+          const source = foundry.utils.deepClone(sent);
+          source.system.changes[0].id = "aaaa";
+          source.system.upgrades[0].changes[0].id = "bbbb";
+          return source;
+        };
+
+        it("v2: follows arrays of objects into their elements, so a key added later isn't an edit", function () {
+          const source = stored();
+          const flag = importStamp(source, sent);
+          assert.equal(FINGERPRINT_VERSION, 2);
+          assert.include(flag.fields, "system.changes.0.value");
+          assert.include(flag.fields, "system.changes.length");
+          assert.include(flag.fields, "system.upgrades.0.changes.0.value");
+          assert.notInclude(flag.fields, "system.changes", "not whole");
+
+          // A later version adds a field to ChangeEntry; its default fills _source.
+          const later = stored();
+          later.system.changes[0].newField = false;
+          later.system.upgrades[0].changes[0].newField = false;
+          assert.equal(importState(later, flag), "untouched", "a new key isn't a GM edit");
+
+          const edited = stored();
+          edited.system.upgrades[0].changes[0].value = "3";
+          assert.equal(importState(edited, flag), "edited");
+          const added = stored();
+          added.system.changes.push({ id: "cccc", targetType: "stat", target: "int", mode: "add", value: "1" });
+          assert.equal(importState(added, flag), "edited", "a bonus the GM added");
+        });
+
+        it("v1: a matching old hash is untouched and re-stamped as v2; a mismatch stays edited", function () {
+          const source = stored();
+          const fields = ["name", "system.changes", "system.upgrades", "type"];
+          const v1 = { v: 1, fields, hash: fingerprint(source, fields) };
+          assert.equal(importState(source, v1), "untouched");
+          const edited = stored();
+          edited.system.changes[0].value = "4";
+          assert.equal(importState(edited, v1), "edited", "a v1 edit isn't forgiven by the version bump");
+
+          const v2 = restamp(source, v1);
+          assert.equal(v2.v, FINGERPRINT_VERSION);
+          assert.include(v2.fields, "system.changes.0.value");
+          assert.notInclude(v2.fields, "system.changes");
+          assert.equal(importState(source, v2), "untouched");
+          const later = stored();
+          later.system.changes[0].newField = false;
+          assert.equal(importState(later, v2), "untouched", "re-stamped: new keys no longer count");
+          assert.isNull(restamp(source, { hash: "old" }), "no fields: nothing to restamp");
+        });
+
+        it("restamp: a migration's write on an untouched document isn't read as an edit", function () {
+          const source = stored();
+          const flag = importStamp(source, sent);
+          const migrated = stored();
+          migrated.system.changes[0].value = "2";
+          migrated.system.changes.push({ id: "dddd", targetType: "resource", target: "dr", mode: "add", value: "1" });
+          assert.equal(importState(migrated, flag), "edited", "without a restamp");
+          const again = restamp(migrated, flag);
+          assert.equal(importState(migrated, again), "untouched");
+          assert.include(again.fields, "system.changes.1.value", "the array is re-read as it is now");
+          const gm = foundry.utils.deepClone(migrated);
+          gm.system.changes[1].value = "5";
+          assert.equal(importState(gm, again), "edited");
+        });
+      });
+
+      describe("which book (books.mjs)", function () {
+        // Made-up title pages in the books' layout (no book text): big,
+        // slightly slanted cover titles, drawn twice like the real ones.
+        const item = (str, size, y, angle = 0) => ({ str, x: 60, y, size, width: str.length * size * 0.5, angle, font: "" });
+        const coreCover = [item("CORE RULEBOOK", 51, 93, 7), item("CORE RULEBOOK", 51, 93, 7), item("TEST EDITION", 30, 53, 7)];
+        const toolkitCover = [item("GAME MASTER’S", 61, 87, 4.5), item("CAMPAIGN TOOLKIT", 49, 40, 4.5)];
+        const otherCover = [item("CRAWLERS &", 80, 85), item("CUSTOMIZATION", 60, 30)];
+        const credits = [item("Test text for the Dungeon Crawler Carl Roleplaying Game.", 10, 600)];
+        /** A pdf.js document stand-in: these pages' text, nothing else (no file, no name). */
+        const fakePdf = (pages) => ({
+          numPages: pages.length,
+          getPage: async (n) => ({
+            getTextContent: async () => ({
+              items: pages[n - 1].map((i) => ({
+                str: i.str,
+                width: i.width,
+                fontName: "",
+                transform: [i.size * Math.cos((i.angle * Math.PI) / 180), i.size * Math.sin((i.angle * Math.PI) / 180),
+                  -i.size * Math.sin((i.angle * Math.PI) / 180), i.size * Math.cos((i.angle * Math.PI) / 180), i.x, i.y],
+              })),
+            }),
+            cleanup: () => {},
+          }),
+        });
+
+        it("reads the book from its title page, with a fixed id", async function () {
+          assert.equal(identifyBook([coreCover, credits]), BOOKS.core);
+          assert.equal(identifyBook([toolkitCover, credits]), BOOKS.toolkit);
+          assert.equal(BOOKS.core.id, "core");
+          assert.equal(BOOKS.toolkit.id, "toolkit");
+          assert.equal((await identifyPdf(fakePdf([coreCover, credits]))).id, "core", "from pdf.js text");
+          assert.equal((await identifyPdf(fakePdf([toolkitCover, [], credits]))).id, "toolkit");
+        });
+
+        it("rejects any other PDF, with a message that echoes nothing from it", async function () {
+          assert.isNull(identifyBook([otherCover, credits]), "the Starter Set's Crawlers booklet");
+          assert.isNull(identifyBook([coreCover]), "another game's Core Rulebook");
+          assert.isNull(identifyBook([credits]));
+          let error = null;
+          try {
+            await identifyPdf(fakePdf([otherCover, credits]));
+          } catch (err) {
+            error = err;
+          }
+          assert.instanceOf(error, UnknownBookError);
+          assert.notInclude(error.message.toUpperCase(), "CUSTOMIZATION", "nothing read from the PDF");
+          assert.notEqual(game.i18n.localize("CARLRPG.PdfImport.UnknownBook"), "CARLRPG.PdfImport.UnknownBook");
+        });
+
+        it("never reads the file name: the same pages are the same book, and the old helper is gone", async function () {
+          // identifyPdf is given only the document; whatever the file was
+          // called, the same title page gives the same id.
+          for (const name of ["Carl RPG.pdf", "renamed-anything.pdf", "Starter Set - Gamemaster's Toolkit.pdf"]) {
+            const pdf = Object.assign(fakePdf([coreCover, credits]), { name });
+            assert.equal((await identifyPdf(pdf)).id, "core", name);
+          }
+          assert.isUndefined(scan.bookTitleFromFilename);
+        });
+
+        it("reads an earlier development import's file-name key as the book's id", function () {
+          assert.equal(bookIdOf("carl-rpg"), "core");
+          assert.equal(bookIdOf("starter-set-gamemaster-s-toolkit"), "toolkit");
+          assert.equal(bookIdOf("gamemasters-toolkit"), "toolkit");
+          assert.equal(bookIdOf("core"), "core");
+          assert.equal(bookIdOf("carlrpg-starter-set-crawlers"), "carlrpg-starter-set-crawlers", "not a book of ours");
+          assert.isUndefined(bookIdOf(undefined));
         });
       });
 
@@ -1108,7 +1264,7 @@ export default function register(quench) {
             achievements: parseAchievements([achievementPage(0)]),
           };
           const kinds = ["gear", "mobs", "achievements"];
-          const first = await importBook({ title, found, kinds, maps: [] });
+          const first = await importBook({ book, title, found, kinds, maps: [] });
           assert.include(first.items, { created: 1, updated: 0 });
           assert.isEmpty(first.items.skipped);
           assert.deepEqual(first.mobs, { created: 2, updated: 0, skipped: [] });
@@ -1149,7 +1305,7 @@ export default function register(quench) {
           const [journal] = await docsOf(book, "JournalEntry");
           assert.equal(journal.pages.size, 1);
 
-          const second = await importBook({ title, found, kinds, maps: [] });
+          const second = await importBook({ book, title, found, kinds, maps: [] });
           assert.include(second.items, { created: 0, updated: 1 });
           assert.deepEqual(second.mobs, { created: 0, updated: 2, skipped: [] });
           assert.deepEqual(second.achievements, { created: 0, updated: 1, skipped: [] });
@@ -1158,7 +1314,7 @@ export default function register(quench) {
 
         it("refreshes the Attacks the GM didn't edit, keeps the ones they did, and remakes deleted ones", async function () {
           const found = { ...none, mobs: parseMobs([DEBUFF_MOB_PAGE]) };
-          await importBook({ title, found, kinds: ["mobs"], maps: [] });
+          await importBook({ book, title, found, kinds: ["mobs"], maps: [] });
           let stabber = await docNamed(book, "Actor", "Test Stabber");
           const [stab, kick] = mobAttacksOf(stabber);
           assert.isTrue(stab.system.armorPiercing);
@@ -1178,7 +1334,7 @@ export default function register(quench) {
           // A later parse changes every Attack.
           const reprint = parseMobs([DEBUFF_MOB_PAGE]);
           for (const attack of reprint[0].data.system.attacks) attack.damage = "2d6";
-          const again = await importBook({ title, found: { ...none, mobs: reprint }, kinds: ["mobs"], maps: [] });
+          const again = await importBook({ book, title, found: { ...none, mobs: reprint }, kinds: ["mobs"], maps: [] });
           assert.equal(again.mobs.updated, 1);
           stabber = await docNamed(book, "Actor", "Test Stabber");
           const byName = Object.fromEntries(mobAttacksOf(stabber).map((a) => [a.name, a]));
@@ -1191,7 +1347,7 @@ export default function register(quench) {
           assert.lengthOf(mobAttacksOf(stabber), 4);
 
           await stabber.deleteEmbeddedDocuments("Item", [stabId]);
-          await importBook({ title, found: { ...none, mobs: reprint }, kinds: ["mobs"], maps: [] });
+          await importBook({ book, title, found: { ...none, mobs: reprint }, kinds: ["mobs"], maps: [] });
           stabber = await docNamed(book, "Actor", "Test Stabber");
           assert.ok(mobAttacksOf(stabber).find((a) => a.name === "Stab"), "made again once deleted");
           assert.lengthOf(mobAttacksOf(stabber), 4);
@@ -1201,11 +1357,11 @@ export default function register(quench) {
           const found = { ...none, gear: parseGear([GEAR_PAGE]), mobs: parseMobs([MOB_PAGE]) };
           const older = parseMobs([MOB_PAGE]);
           for (const m of older) delete m.data.system.move;
-          await importBook({ title, found: { ...found, mobs: older }, kinds: ["gear", "mobs"], maps: [] });
+          await importBook({ book, title, found: { ...found, mobs: older }, kinds: ["gear", "mobs"], maps: [] });
           const blob = await docNamed(book, "Actor", "Test Blob");
           await blob.update({ "system.stats.con.value": 9 });
 
-          const again = await importBook({ title, found, kinds: ["gear", "mobs"], maps: [] });
+          const again = await importBook({ book, title, found, kinds: ["gear", "mobs"], maps: [] });
           assert.deepEqual(again.mobs.skipped, ["Test Blob"]);
           assert.equal(again.mobs.updated, 1, "the unedited Mob still updates, though the parse now writes Move");
           assert.equal((await docNamed(book, "Actor", "Test Blob")).system.stats.con.value, 9, "the GM's edit survives");
@@ -1226,7 +1382,7 @@ export default function register(quench) {
             { pack: pack.collection },
           );
           const gear = [parsedItem("Test Old Import", "item", "<p>new</p>"), parsedItem("Test GM Item", "item")];
-          const first = await importBook({ title, found: { ...none, gear }, kinds: ["gear"], maps: [] });
+          const first = await importBook({ book, title, found: { ...none, gear }, kinds: ["gear"], maps: [] });
           assert.equal(first.items.updated, 1);
           assert.deepEqual(first.items.skipped, ["Test GM Item"]);
           const old = await docNamed(book, "Item", "Test Old Import");
@@ -1235,13 +1391,14 @@ export default function register(quench) {
           assert.equal((await docNamed(book, "Item", "Test GM Item")).system.description, "<p>mine</p>");
 
           await old.update({ "system.description": "<p>the GM's</p>" });
-          const second = await importBook({ title, found: { ...none, gear }, kinds: ["gear"], maps: [] });
+          const second = await importBook({ book, title, found: { ...none, gear }, kinds: ["gear"], maps: [] });
           assert.sameMembers(second.items.skipped, ["Test Old Import", "Test GM Item"], "only once");
         });
 
         it("prefers compendium copies: the system's packs, then another book's, then world Items", async function () {
           // Another book's compendium has one; the world has it and a system Spell too.
           await importBook({
+            book: otherBook,
             title: otherTitle,
             found: { ...none, gear: [parsedItem("Quench Test Ranked", "item", "<p>other book</p>")] },
             kinds: ["gear"],
@@ -1266,6 +1423,7 @@ export default function register(quench) {
           assert.isFalse(sources.some((s) => s.source === findBookPack(book, "Item").collection), "or its compendium");
 
           const result = await importBook({
+            book,
             title,
             found: {
               ...none,
@@ -1305,7 +1463,7 @@ export default function register(quench) {
 
         it("files Mobs by Floor, then Neighborhood or Quest, by Level, and files unedited ones on re-import", async function () {
           const found = { ...none, mobs: parseMobs(TOOLKIT_STYLE_BOOK) };
-          await importBook({ title, found, kinds: ["mobs"], maps: [] });
+          await importBook({ book, title, found, kinds: ["mobs"], maps: [] });
           const pack = findBookPack(book, "Actor");
           const pathOf = (doc) => {
             const names = [];
@@ -1334,7 +1492,7 @@ export default function register(quench) {
           // re-import; one the GM edited stays where it is.
           await mobs["Test Herald"].update({ folder: null });
           await mobs["Test Bruiser"].update({ folder: null, "system.level": 9 });
-          const again = await importBook({ title, found, kinds: ["mobs"], maps: [] });
+          const again = await importBook({ book, title, found, kinds: ["mobs"], maps: [] });
           assert.deepEqual(again.mobs.skipped, ["Test Bruiser"]);
           mobs = await named();
           assert.equal(pathOf(mobs["Test Herald"]), floor(2));
@@ -1349,11 +1507,32 @@ export default function register(quench) {
         it("never matches Mobs across books by name", async function () {
           const higher = parseMobs([DEBUFF_MOB_PAGE]);
           higher[0].data.system.level = 65;
-          const other = await importBook({ title: otherTitle, found: { ...none, mobs: higher }, kinds: ["mobs"], maps: [] });
+          const other = await importBook({ book: otherBook, title: otherTitle, found: { ...none, mobs: higher }, kinds: ["mobs"], maps: [] });
           assert.equal(other.mobs.created, 1, "its own Mob, not the other book's");
           assert.notEqual(findBookPack(otherBook, "Actor").collection, findBookPack(book, "Actor").collection);
           assert.equal((await docNamed(otherBook, "Actor", "Test Stabber")).system.level, 65);
           assert.equal((await docNamed(book, "Actor", "Test Stabber")).system.level, 3);
+        });
+
+        it("with no book given, matches every source (nothing is taken for the book's own)", async function () {
+          for (const noBook of [undefined, null]) {
+            const sources = await matchCandidates(noBook);
+            assert.isTrue(sources.some((s) => s.source === "carl-rpg.skills-and-spells" && s.name === "Fear"), `system packs (${noBook})`);
+            assert.isTrue(sources.some((s) => s.source === findBookPack(book, "Item").collection), "a book's compendium too");
+          }
+          assert.isNull(findBookPack(undefined, "Item"), "no book, no pack");
+        });
+
+        it("finds the achievements journal by its flag, not its name", async function () {
+          const found = { ...none, achievements: parseAchievements([achievementPage(0)]) };
+          await importBook({ book, title, found, kinds: ["achievements"], maps: [] });
+          const [journal] = await docsOf(book, "JournalEntry");
+          await journal.update({ name: "Test Renamed Achievements" });
+          const again = await importBook({ book, title, found, kinds: ["achievements"], maps: [] });
+          assert.equal(again.achievements.created, 0, "its pages are updated, not made again");
+          const journals = await docsOf(book, "JournalEntry");
+          assert.lengthOf(journals, 1, "no second journal");
+          assert.equal(journals[0].name, "Test Renamed Achievements");
         });
       });
     },

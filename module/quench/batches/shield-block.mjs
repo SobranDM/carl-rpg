@@ -18,13 +18,14 @@ import { slotsOf } from "../../helpers/gear.mjs";
 import { shieldDrState } from "../../helpers/modifiers.mjs";
 import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
 import { crawlerKey, hitBlockable, hitEvadable, hitList, hitStatus } from "../../helpers/reaction-state.mjs";
-import { postDamageCard, rollAttackOnCard } from "../../helpers/reaction-resolve.mjs";
+import { damageBlockingShields, postDamageCard, rollAttackOnCard } from "../../helpers/reaction-resolve.mjs";
+import { boardVehicle } from "../../helpers/vehicles.mjs";
 import {
   attackIsMagical, BLOCK_TAG, bashDice, bashOffered, blockableAttack, blockReduction, buildShieldBash, keptBlockRoll, repairShield,
   rollBlockAgain, rollShieldBash, shieldBlocker, shieldLossFor,
 } from "../../helpers/shield-block.mjs";
 import {
-  createTestCharacter, createTestItem, createTestMob, deleteTestActor, deleteTestCombat, PIN_D20_MID, settle, useQuenchTimeout,
+  createTestCharacter, createTestItem, createTestMob, createTestVehicle, deleteTestActor, deleteTestCombat, PIN_D20_MID, settle, useQuenchTimeout,
   waitFor, withFakeTargets, withPinnedDice, withSetting,
 } from "../helpers.mjs";
 
@@ -88,6 +89,34 @@ export default function register(quench) {
           assert.isFalse(hitBlockable(blocked, blocked.hits.h), "once");
           assert.isFalse(hitEvadable(blocked.hits.h), "a blocked hit isn't Evaded too");
           assert.equal(hitStatus(blocked, blocked.hits.h).status, "blocked");
+        });
+
+        it("a Reaction card hit: not a Near Miss on a crawler riding a vehicle - it hits the vehicle (p.72)", function () {
+          const nearMiss = { evade: { success: false, degree: "nearMissFail" } };
+          const riding = oneHit({ hit: { ...nearMiss, row: { hit: true, isCharacter: true, difficulty: 15, vehicleUuid: "Actor.ride" } } });
+          assert.isFalse(hitBlockable(riding, riding.hits.h), "redirected to the vehicle");
+          assert.isTrue(hitBlockable(oneHit({ hit: nearMiss }), oneHit({ hit: nearMiss }).hits.h), "on foot, a Near Miss can still be blocked");
+        });
+
+        it("Lock: a failed block on a hit a Near Miss sent to the vehicle costs the Shield nothing", async function () {
+          const pc = await createTestCharacter("sb-ride");
+          const ride = await createTestVehicle("sb-ride-car", { system: { occupancy: 2 } });
+          try {
+            const shield = await arm(pc);
+            assert.isTrue(await boardVehicle(ride, pc), "seated");
+            const state = (degree) => ({
+              attacks: { a: { id: "a", isArea: false, damage: "10", damageIsMagic: false } },
+              hits: { h: {
+                id: "h", attackId: "a", targetUuid: pc.uuid, row: { hit: true, isCharacter: true, vehicleUuid: ride.uuid },
+                caughtBy: null, free: null, evade: { success: false, degree }, block: { success: false, degree: "criticalFail", shieldId: shield.id },
+              } },
+            });
+            assert.deepEqual(await damageBlockingShields(state("nearMissFail")), {}, "the vehicle took it: no Shield DR lost");
+            assert.exists((await damageBlockingShields(state("standardFail"))).h, "a plain failed Evade: the failed block costs DR");
+          } finally {
+            await deleteTestActor(ride);
+            await deleteTestActor(pc);
+          }
         });
 
         it("the Skill and an unbroken Shield in hand", async function () {

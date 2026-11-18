@@ -14,7 +14,8 @@ import { useConsumable } from "../../helpers/consumables.mjs";
 import { currentPhase } from "../../helpers/combat-phases.mjs";
 import { declaredAttacks, removeDeclaration } from "../../helpers/declarations.mjs";
 import { placeInHotlist, useHotlistSlot } from "../../helpers/hotlist.mjs";
-import { applyOp, reactionCardFor, withCard } from "../../chat/reaction-card.mjs";
+import { applyOp, reactionCardFor, rollTaunt, withCard } from "../../chat/reaction-card.mjs";
+import { runRecords } from "../../helpers/action-undo.mjs";
 import { hitList } from "../../helpers/reaction-state.mjs";
 import {
   createTestCharacter,
@@ -532,6 +533,81 @@ export default function register(quench) {
             ui.notifications.warn = warn;
             await deleteTestActor(ally);
           }
+        });
+
+        it("undoing a Reaction-card Taunt takes back the roll's advancement mark and cooldown", async function () {
+          const ally = await createTestCharacter("undo-mark-ally");
+          try {
+            const tauntSkill = await createTestItem(pc, "skill", "Taunt", { system: { rank: 1, cooldown: "5 minutes", governingStat: "cha" } });
+            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await combat.nextTurn();
+            const card = reactionCardFor(combat);
+            const item = () => pc.items.get(tauntSkill.id);
+            assert.isFalse(!!item().system.marked, "not marked yet");
+            // Rolled as the card's Taunt button rolls it (on the taunter's client), then applied.
+            const taunter = { uuid: pc.uuid, name: pc.name, actor: pc };
+            assert.isTrue(await rollTaunt(card, { taunter, item: item(), rank: 1, mob, mobUuid: mob.uuid }, { skipDialog: true }));
+            assert.lengthOf(spentBy(pc), 1, "the Taunt's Action");
+            assert.isTrue(item().system.marked, "the roll marked Taunt");
+            assert.exists(item().getFlag("carl-rpg", "cooldown"), "and started its cooldown");
+            const kinds = spentBy(pc)[0].undo.map((r) => r.t);
+            assert.equal(kinds.at(-1), "reaction", "the card's record last, so it runs first");
+            await undoLast(pc);
+            assert.lengthOf(spentBy(pc), 0, "the Action is back");
+            assert.lengthOf(Object.keys(card.getFlag("carl-rpg", "reaction").taunts ?? {}), 0, "the Taunt is off the card");
+            assert.isFalse(!!item().system.marked, "the mark is gone");
+            assert.notExists(item().getFlag("carl-rpg", "cooldown"), "and the cooldown");
+          } finally {
+            await deleteTestActor(ally);
+          }
+        });
+
+        it("a Reaction-card op refused on the GM's client tells whoever asked - why, once", async function () {
+          const ally = await createTestCharacter("refused-ally");
+          // Another user's op, applied here: their notices go out on the socket.
+          const asker = { id: "quenchAsker00001", name: "Asker", isGM: true, isSelf: false };
+          const emit = game.socket.emit;
+          const notices = [];
+          game.socket.emit = function (name, payload, ...rest) {
+            if (payload?.type === "userNotice") {
+              notices.push(payload);
+              return undefined;
+            }
+            return emit.call(this, name, payload, ...rest);
+          };
+          try {
+            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await combat.nextTurn();
+            const card = reactionCardFor(combat);
+            assert.isFalse(await applyOp(card.id, "catch", { byUuid: pc.uuid, byName: pc.name, hitId: "gone" }, asker));
+            assert.deepEqual(notices.map((n) => [n.userId, n.key]), [[asker.id, "CARLRPG.Reaction.Refused"]], "told it didn't go through");
+            notices.length = 0;
+            await spendAction(pc, "other", "A");
+            await spendAction(pc, "other", "B");
+            assert.isFalse(await applyOp(card.id, "taunt", { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check }, asker));
+            assert.deepEqual(notices.map((n) => n.key), ["CARLRPG.Actions.NoneLeft"], "told why - and only that");
+            notices.length = 0;
+            assert.isFalse(await applyOp(card.id, "catch", { byUuid: pc.uuid, byName: pc.name, hitId: "gone" }, game.user));
+            assert.lengthOf(notices, 0, "the GM's own op: nothing sent");
+          } finally {
+            game.socket.emit = emit;
+            await deleteTestActor(ally);
+          }
+        });
+
+        it("an undo record of an unknown kind refuses the undo: nothing taken back, no Action refunded", async function () {
+          await spendAction(pc, "other", "Mystery", { undo: [{ t: "mystery" }] });
+          const warn = ui.notifications.warn;
+          const warned = [];
+          ui.notifications.warn = (text) => { warned.push(String(text)); };
+          try {
+            await undoLast(pc);
+          } finally {
+            ui.notifications.warn = warn;
+          }
+          assert.lengthOf(spentBy(pc), 1, "still spent");
+          assert.include(warned, game.i18n.localize("CARLRPG.Actions.Undo.Blocked"), "and the asker is told");
+          assert.equal(await runRecords([{ t: "mystery" }], { stopOnRefusal: true }), "Blocked", "run anyway, it refuses");
         });
 
         it("undo is refused once the Action's card has been acted on", async function () {

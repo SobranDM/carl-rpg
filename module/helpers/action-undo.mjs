@@ -107,6 +107,18 @@ export function undoBlocker(entry, spent = []) {
         if (stillThere && currentPhase(combat) !== "declare") return t("DeclarationOver");
         break;
       }
+      // Always taken back (runRecord).
+      case "mana":
+      case "conditions":
+      case "set":
+      case "seat":
+      case "item":
+        break;
+      // A record this version doesn't know (a newer client's, a typo): it
+      // can't be taken back, so neither is the Action.
+      default:
+        console.warn(`CarlRPG | undoing an Action: unknown undo record "${record?.t}"`, record);
+        return t("Blocked");
     }
   }
   return null;
@@ -304,6 +316,13 @@ async function runRecord(record) {
         await writeState(message, restored);
         return null;
       });
+    case "blocked":
+      // Nothing to take back (undoBlocker refuses its undo; a refused Action's rollback skips it).
+      return;
+    default:
+      // Unknown: refused, so the Action isn't given back for something still done.
+      console.warn(`CarlRPG | undoing an Action: unknown undo record "${record?.t}"`, record);
+      return "Blocked";
   }
 }
 

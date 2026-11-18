@@ -9,8 +9,8 @@
     {{#each entries as |entry|}}
     {{> "systems/carl-rpg/templates/item/parts/upgrade-tier.hbs"
         upgrade=entry.upgrade uIndex=entry.index damageTypeEntries=entry.damageTypeEntries
-        showHeal=entry.showHeal showDamageTypes=entry.showDamageTypes showShield=entry.showShield
-        unlocked=../tierUnlocked isAttackFlavored=../isAttackFlavored isSpell=../isSpell
+        showHeal=entry.showHeal showDamageTypes=entry.showDamageTypes showShield=entry.showShield showVehicle=entry.showVehicle
+        unlocked=../tierUnlocked isAttackFlavored=../isAttackFlavored isSpell=../isSpell isSkill=../isSkill
         config=../config item=../item actorSkillNames=../actorSkillNames}}
     {{else}}
     <p class="carl-hint">{{localize "CARLRPG.ItemSheet.NoUpgradeHere"}}</p>

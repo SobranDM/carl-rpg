@@ -96,15 +96,7 @@ export function parseBook(pages) {
   };
 }
 
-/** "Gamemasters Toolkit_Digital_Low-Res_081226.pdf" -> "Gamemasters Toolkit". */
-export function bookTitleFromFilename(filename) {
-  const base = String(filename)
-    .replace(/\.pdf$/i, "")
-    .replace(/_Digital.*$/i, "")
-    .replace(/[_]+/g, " ")
-    .trim();
-  return base || "Rulebook";
-}
+// Which book a PDF is comes from its title page (books.mjs), never its file name.
 
 export function slugify(text) {
   return String(text)

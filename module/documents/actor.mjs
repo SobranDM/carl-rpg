@@ -104,6 +104,25 @@ export class CarlRPGActor extends Actor {
   }
 
   /**
+   * A token bar edit on a resource with bonus slots (hb) clamps to its
+   * effective max (hb.effectiveMax), not the base max core uses, so gear's
+   * extra HB slots can be filled from the bar. Otherwise core's behavior.
+   * @override
+   */
+  async modifyTokenAttribute(attribute, value, isDelta = false, isBar = true) {
+    const attr = foundry.utils.getProperty(this.system, attribute);
+    if (!isBar || !Number.isFinite(attr?.effectiveMax)) {
+      return super.modifyTokenAttribute(attribute, value, isDelta, isBar);
+    }
+    const current = attr.value;
+    const update = isDelta ? current + value : value;
+    if (update === current) return this;
+    const updates = { [`system.${attribute}.value`]: Math.clamp(update, 0, attr.effectiveMax) };
+    const allowed = Hooks.call("modifyTokenAttribute", { attribute, value, isDelta, isBar }, updates, this);
+    return allowed !== false ? this.update(updates) : this;
+  }
+
+  /**
    * "When a crawler gains a Level, they also get 3 Stat points to assign"
    * (Crawler Advancement, p.169) - grant `3 x levelDelta` into the same
    * `bankedStatPoints` field module/apps/spend-stat-points-dialog.mjs

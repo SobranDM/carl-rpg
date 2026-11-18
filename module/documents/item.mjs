@@ -39,6 +39,13 @@ export class CarlRPGItem extends Item {
    * Stats already include the grants (`carlPreBaked`, CrawlerForge). Items
    * created inside a whole new actor (a duplicate) never reach this and
    * keep it.
+   *
+   * Gear arriving on a Character (dragged from another actor or the Items
+   * sidebar, taken from a Loot Box) starts unequipped: it's in no doll
+   * slot, and equipped there it would still give its bonuses - a second
+   * helmet's beside the first. A drop on a slot puts it on after. Kept
+   * when the caller places it itself (`carlKeepEquipped`) or an undo puts
+   * it back (`carlUndo`).
    * @override
    */
   async _preCreate(data, options, user) {
@@ -46,6 +53,10 @@ export class CarlRPGItem extends Item {
     if (allowed === false) return false;
     if (this.type === "spell" && this.parent && (this.system.rank ?? 0) < 1) {
       this.updateSource({ "system.rank": 1 });
+    }
+    if (this.type === "item" && this.parent?.type === "character" && this.system.equipped
+      && !options.carlKeepEquipped && !options.carlUndo) {
+      this.updateSource({ "system.equipped": false });
     }
     const raceOrClass = this.type === "race" || this.type === "class";
     if (raceOrClass && !options.carlPreBaked && this.getFlag("carl-rpg", "bakedGrantIds")?.length) {

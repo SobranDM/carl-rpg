@@ -21,7 +21,7 @@ import { isAreaItem } from "../helpers/area.mjs";
 import { mobAttackFor } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
-import { ownedRank, effectiveRank, slugifySkillName, attackTargetEffects, attackIsArmorPiercing, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
+import { ownedRank, effectiveRank, slugifySkillName, sameSkillName, damageEffectFits, attackTargetEffects, attackIsArmorPiercing, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -368,7 +368,7 @@ function buildManaCostChoices(spellItem) {
  * favoredClasses). A Spell lists Class CATEGORIES ("Mage", "Cleric"...),
  * which a Class item carries as `classTypes` - "Boring Ol' Mage" is a Mage
  * - so the match is against those (and the Class's own name, for a Spell
- * that names one). A Spell with no favoredClasses charges everyone the
+ * that names one), by slug: any case or punctuation. A Spell with no favoredClasses charges everyone the
  * same, and a caster with no Class yet isn't an "other Class", so pays no
  * surcharge either.
  * @param {Item} spellItem
@@ -382,7 +382,7 @@ export function applyFavoredClassSurcharge(spellItem, actor, manaCost) {
   const classItem = actor.system.classItem;
   if (!classItem) return manaCost;
   const categories = [...(classItem.system?.classTypes ?? []), classItem.name];
-  return categories.some((c) => favored.includes(c)) ? manaCost : manaCost + 1;
+  return categories.some((c) => favored.some((f) => sameSkillName(f, c))) ? manaCost : manaCost + 1;
 }
 
 /**
@@ -833,7 +833,7 @@ export default class CarlDice {
     const skillSys = skillItem.system;
     const cast = resolveCastContext(actor, skillItem, castAs);
     const { skillEntry } = cast;
-    const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
+    const rank = castAs ? (skillEntry?.rank ?? skillSys.rank ?? 0) : ownedRank(actor, skillItem);
 
     if (skillSys.isPassive) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.PassiveNoCheck", { name: skillItem.name }));
@@ -1039,7 +1039,7 @@ export default class CarlDice {
     // passed in (a macro).
     if (!takesDamageEffects(skillItem)) damageEffectItem = null;
     const skillEntry = castAs ? castAs.skillEntry : sys.skills?.[slugifySkillName(skillItem.name)];
-    const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
+    const rank = castAs ? (skillEntry?.rank ?? skillSys.rank ?? 0) : ownedRank(actor, skillItem);
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
 
@@ -1094,7 +1094,7 @@ export default class CarlDice {
 
     const rollData = actor.getRollData();
 
-    // Candidates are matched by name against parentSkills, same rule the
+    // Candidates are matched by slug against parentSkills (damageEffectFits), same rule the
     // actor sheet uses to list a Skill's Damage Effects (module/sheets/
     // actor-sheet.mjs) - not id/uuid, and not gated by item type, since
     // parentSkills can list Spells too. Rank-0 (untrained) ones are excluded
@@ -1102,7 +1102,7 @@ export default class CarlDice {
     // untrained.
     // Unarmed Combat "Cannot choose a Damage Effect" (p.179).
     const rankedDamageEffectCandidates = castAs || !takesDamageEffects(skillItem) ? [] : (damageEffectItem ? [damageEffectItem] : actor.items
-      .filter((i) => i.type === "damageEffect" && (i.system.parentSkills ?? []).includes(skillItem.name)))
+      .filter((i) => i.type === "damageEffect" && damageEffectFits(i, skillItem)))
       .filter((de) => ownedRank(actor, de) > 0);
 
     // Omitted entirely (dropdown-wise) when a Damage Effect was already
@@ -1970,8 +1970,7 @@ export default class CarlDice {
       return null;
     }
 
-    const parentNames = damageEffectItem.system.parentSkills ?? [];
-    const candidates = actor.items.filter((i) => (i.type === "skill" || i.type === "spell") && parentNames.includes(i.name));
+    const candidates = actor.items.filter((i) => (i.type === "skill" || i.type === "spell") && damageEffectFits(damageEffectItem, i));
     if (!candidates.length) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectNoParentSkill", { name: damageEffectItem.name }));
       return null;
@@ -2354,8 +2353,7 @@ export default class CarlDice {
   } = {}) {
     const sys = actor.system;
     const skillSys = skillItem.system;
-    const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
-    const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
+    const rank = ownedRank(actor, skillItem);
 
     if (skillSys.isPassive) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.PassiveNoCheck", { name: skillItem.name }));

@@ -7,7 +7,11 @@ import {
   MOB_SIZE_MIGRATION_ID, saveMobSizes, GEAR_SLOTS_MIGRATION_ID, WEAPON_SKILL_GUESS_ID, loadWeaponSkillSources,
   guessWeaponSkill, guessActorWeaponSkills, guessItemWeaponSkills, looksLikeWeapon, postWeaponSkillNotice,
   gearSlotUpdate, inferActorGear, BASE_MULTIPLIER_MIGRATION_ID, baseMultiplierUpdate,
+  migratePack, migrationFailure, whisperMigrationFailures, unequipMisfits,
+  SKILL_SETTING_BOXES_ID, skillSettingBoxUpdate, handToHandOnlyUpdate, isBookHandToHandList, applySkillSettingBoxesOn,
+  VEHICLE_SKILL_MIGRATION_ID, driveSkillName, vehicleSkillUpdate, fixVehicleSkillsOn, saveDriveSkills,
 } from "../../helpers/migration.mjs";
+import { FINGERPRINT_VERSION, importStamp, importState } from "../../pdf-import/fingerprint.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
 } from "../../helpers/companion-migration.mjs";
@@ -72,11 +76,118 @@ export default function register(quench) {
           assert.includeMembers(MIGRATIONS.map((m) => m.id), renamed, "every old id maps to a migration");
           // Migrations added after the renaming never had an old id.
           const added = MIGRATIONS.map((m) => m.id).filter((id) => !renamed.includes(id));
-          assert.sameMembers(added, [BASE_MULTIPLIER_MIGRATION_ID, WEAPON_SKILL_GUESS_ID, MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID, GEAR_SLOTS_MIGRATION_ID]);
+          assert.sameMembers(added, [BASE_MULTIPLIER_MIGRATION_ID, WEAPON_SKILL_GUESS_ID, MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID, GEAR_SLOTS_MIGRATION_ID,
+            SKILL_SETTING_BOXES_ID, VEHICLE_SKILL_MIGRATION_ID]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
           assert.sameMembers(ids(p.run), added, "nothing runs twice - only what's been added since");
           assert.sameMembers(currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),
             [...renamed, "some-later-fix"], "read as the new ids, without duplicates");
+        });
+
+        it("the list (declared last in its module) names a defined id and step for each", function () {
+          assert.isAbove(MIGRATIONS.length, 0);
+          for (const m of MIGRATIONS) {
+            assert.isString(m.id, "every id was declared before the list read it");
+            assert.isNotEmpty(m.id);
+            assert.isFunction(m.run, m.id);
+          }
+          assert.lengthOf(new Set(ids(MIGRATIONS)), MIGRATIONS.length, "no id twice");
+          for (const [old, now] of Object.entries(RENAMED_MIGRATION_IDS)) assert.isString(now, old);
+        });
+      });
+
+      describe("Per-document failures", function () {
+        useQuenchTimeout(this);
+
+        it("one failing document doesn't stop the rest of a compendium; it's reported, and an untouched rulebook import stays untouched", async function () {
+          const pack = await foundry.documents.collections.CompendiumCollection.createCompendium({
+            type: "Item",
+            label: "Quench Migration Failures",
+            name: `quench-migration-failures-${foundry.utils.randomID().toLowerCase()}`,
+          });
+          const cls = Item.implementation;
+          const ownStatic = Object.hasOwn(cls, "updateDocuments");
+          const original = cls.updateDocuments;
+          let message = null;
+          try {
+            const skill = (name) => ({ name, type: "skill", system: { category: "attack", isHandToHand: false } });
+            const [bad, good, imported] = await cls.createDocuments(
+              [skill("Pugilism"), skill("Wrasslin'"), skill("Unarmed Combat")], { pack: pack.collection });
+            // As a rulebook import stamps it (fingerprint.mjs), the box among what it wrote.
+            const written = { name: imported.name, type: "skill", system: { category: "attack", isHandToHand: false } };
+            await imported.update({ "flags.carl-rpg.pdfImport": { book: "quench-test", ...importStamp(imported._source, written) } });
+            assert.equal(importState(imported._source, imported.flags["carl-rpg"].pdfImport), "untouched", "test setup");
+
+            // The server refuses one document.
+            cls.updateDocuments = async function (updates, options) {
+              if (updates.some((u) => u._id === bad.id)) throw new Error("Quench test refusal");
+              return original.call(this, updates, options);
+            };
+            const failures = [];
+            const ticked = await migratePack(pack, (where, err) => failures.push(migrationFailure("0.7.0-hand-to-hand-box", where, err)));
+            restore();
+
+            assert.equal(ticked, 2, "the other two were still ticked");
+            const docs = new Map((await pack.getDocuments()).map((d) => [d.id, d]));
+            assert.isFalse(docs.get(bad.id).system.isHandToHand);
+            assert.isTrue(docs.get(good.id).system.isHandToHand);
+            assert.isTrue(docs.get(imported.id).system.isHandToHand);
+            assert.lengthOf(failures, 1);
+            assert.include(failures[0].where, bad.name);
+            assert.equal(failures[0].message, "Quench test refusal");
+
+            const flag = docs.get(imported.id).flags["carl-rpg"].pdfImport;
+            assert.equal(flag.v, FINGERPRINT_VERSION, "re-stamped");
+            assert.equal(importState(docs.get(imported.id)._source, flag), "untouched", "the migration's write isn't a GM edit");
+
+            message = await whisperMigrationFailures(failures);
+            const text = message.content.replace(/<[^>]+>/g, " ");
+            assert.include(text, bad.name);
+            assert.include(text, "Quench test refusal");
+            assert.isTrue(message.whisper.length > 0, "whispered to the GM");
+          } finally {
+            restore();
+            await message?.delete();
+            await pack.deleteCompendium();
+          }
+          function restore() {
+            if (ownStatic) cls.updateDocuments = original;
+            else delete cls.updateDocuments;
+          }
+        });
+
+        it("a missing system pack is reported, not read as nothing to do", async function () {
+          const packs = game.packs;
+          const ownGet = Object.hasOwn(packs, "get");
+          const get = packs.get;
+          packs.get = function (id) {
+            return id === "carl-rpg.gear" ? undefined : get.call(this, id);
+          };
+          try {
+            const sources = await loadWeaponSkillSources();
+            assert.deepEqual(sources.missing, ["carl-rpg.gear"]);
+          } finally {
+            if (ownGet) packs.get = get;
+            else delete packs.get;
+          }
+          assert.deepEqual((await loadWeaponSkillSources()).missing, [], "both there");
+        });
+
+        it("a consumable held in a hand comes out of it quietly: unequipped, not listed", async function () {
+          const actor = await createTestCharacter("consumable hand");
+          try {
+            const potion = await createTestItem(actor, "item", "Potion", { system: { consumable: { kind: "potion" } } });
+            // As an old world could have it: equipped, in the Main Hand.
+            await potion.update({ "system.equipped": true }, { carlMigration: true });
+            await actor.update({ "system.gearSlots.mainHand": potion.id }, { carlMigration: true });
+            assert.equal(actor.system.gearSlots.mainHand, potion.id, "test setup");
+            const off = await unequipMisfits(actor);
+            assert.notInclude(off, potion.name, "not on the GM's taken-off list");
+            assert.equal(actor.system.gearSlots.mainHand, "", "out of the hand");
+            assert.isFalse(actor.items.get(potion.id).system.equipped);
+          } finally {
+            await deleteTestActor(actor);
+          }
         });
       });
 
@@ -145,6 +256,80 @@ export default function register(quench) {
             assert.equal(await tickHandToHandOn(actor), 0, "idempotent");
           } finally {
             await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("0.7.0: Skill setting boxes", function () {
+        useQuenchTimeout(this);
+
+        it("ticks each named copy's box once, by name in any case - not homebrew; a second run does nothing", async function () {
+          const actor = await createTestCharacter("setting boxes");
+          try {
+            const boxes = {
+              "Improvised Weapons": "noWeapon", "BITE": "noWeapon", "Back Claw": "noWeapon", "slice attack": "noWeapon",
+              "Unarmed Combat": "noDamageEffects",
+            };
+            const made = {};
+            for (const name of Object.keys(boxes)) made[name] = await attackSkill(actor, name);
+            const handling = await createTestItem(actor, "skill", "Animal Handling", {
+              name: "Animal Handling", system: { category: "utility", rank: 3 },
+            });
+            const swipe = await attackSkill(actor, "Tail Swipe");
+            for (const [name, box] of Object.entries(boxes)) {
+              assert.deepEqual(skillSettingBoxUpdate(made[name]), { _id: made[name].id, [`system.${box}`]: true }, name);
+            }
+            assert.isNull(skillSettingBoxUpdate(swipe), "homebrew left for its owner to tick");
+
+            assert.equal(await applySkillSettingBoxesOn(actor), 6);
+            for (const [name, box] of Object.entries(boxes)) assert.isTrue(actor.items.get(made[name].id).system[box], name);
+            assert.isFalse(actor.items.get(made["Unarmed Combat"].id).system.noWeapon, "only its own box");
+            assert.isTrue(actor.items.get(handling.id).system.commandsPets);
+            assert.equal(actor.items.get(handling.id).system.rank, 3, "nothing else changed");
+            assert.isFalse(actor.items.get(swipe.id).system.noWeapon);
+
+            assert.equal(await applySkillSettingBoxesOn(actor), 0, "idempotent");
+            assert.isTrue(MIGRATIONS.some((m) => m.id === SKILL_SETTING_BOXES_ID));
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("gives gear Debuffs listing exactly the five hand-to-hand Skills the Hand-to-Hand box - not a partial list", async function () {
+          const actor = await createTestCharacter("h2h debuffs");
+          try {
+            const five = ["Foot Soldier", "Noggin Nocker", "Pugilism", "Unarmed Combat", "Wrasslin'"];
+            const te = (skills) => ({ debuffKey: "woozy", stacks: 1, critOnly: false, amazingSuccessOnly: true, label: "", skills });
+            const knuckles = await createTestItem(actor, "item", "knuckles", {
+              system: { targetEffects: [te([...five].reverse()), te(["Longsword"])] },
+            });
+            const partial = await createTestItem(actor, "item", "partial", { system: { targetEffects: [te(five.slice(0, 4))] } });
+            const extra = await createTestItem(actor, "item", "extra", { system: { targetEffects: [te([...five, "Longsword"])] } });
+
+            assert.isTrue(isBookHandToHandList(five.map((n) => n.toUpperCase())), "any order, any case");
+            assert.isNull(handToHandOnlyUpdate(partial), "four of the five");
+            assert.isNull(handToHandOnlyUpdate(extra), "the five and another");
+
+            assert.equal(await applySkillSettingBoxesOn(actor), 1);
+            const [converted, sword] = actor.items.get(knuckles.id).system.targetEffects;
+            assert.isTrue(converted.handToHandOnly);
+            assert.isEmpty(converted.skills, "the list cleared");
+            assert.include(converted, { debuffKey: "woozy", amazingSuccessOnly: true }, "the rest kept");
+            assert.deepEqual(sword.skills, ["Longsword"]);
+            assert.isFalse(sword.handToHandOnly);
+            assert.deepEqual(actor.items.get(partial.id).system.targetEffects[0].skills, five.slice(0, 4));
+            assert.isFalse(actor.items.get(partial.id).system.targetEffects[0].handToHandOnly);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("ticks a named copy in the Items directory too", async function () {
+          const bite = await Item.implementation.create({ name: "Bite", type: "skill", system: { category: "attack" } });
+          try {
+            assert.deepEqual(skillSettingBoxUpdate(bite), { _id: bite.id, "system.noWeapon": true });
+          } finally {
+            await bite.delete();
           }
         });
       });
@@ -526,7 +711,7 @@ export default function register(quench) {
             const set = await gear(actor, "Longsword", { weaponSkill: "Rapier" });
             const odd = await gear(actor, "Mystery Stick");
             const tonic = await gear(actor, "Longsword", { consumable: { kind: "other" } });
-            // Names with no Latin letters or digits all slug alike: never a match.
+            // CJK names: each its own slug, matching nothing in the packs.
             await attackSkill(actor, "斧");
             const unlatin = await gear(actor, "剣");
             for (const item of [set, odd, tonic, unlatin]) assert.isNull(guessWeaponSkill(item, sources), item.name);
@@ -549,6 +734,8 @@ export default function register(quench) {
             // This crawler's own Rapier is hand-to-hand (homebrew).
             await attackSkill(actor, "Rapier", { isHandToHand: true });
             const noSources = { ...sources, gear: new Map() };
+            await attackSkill(actor, "Tail Swipe", { noWeapon: true });
+            assert.isNull(guessWeaponSkill(await gear(actor, "Tail Swipe"), noSources), "a homebrew Skill with Needs no weapon");
             assert.isNull(guessWeaponSkill(await gear(actor, "Pugilism"), sources), "hand-to-hand");
             assert.isNull(guessWeaponSkill(await gear(actor, "Improvised Weapons"), sources), "weaponless");
             assert.isNull(guessWeaponSkill(bite, sources), "a natural attack, unowned");
@@ -842,6 +1029,69 @@ export default function register(quench) {
           } finally {
             await deleteTestActor(mob);
             await deleteTestActor(pc);
+          }
+        });
+      });
+
+      describe("0.7.0: vehicle Skills set on the items", function () {
+        useQuenchTimeout(this);
+
+        it("is a 0.7.0 migration", function () {
+          const step = MIGRATIONS.find((m) => m.id === VEHICLE_SKILL_MIGRATION_ID);
+          assert.exists(step);
+          assert.equal(step.version, "0.7.0");
+        });
+
+        it("a vehicle's old driving-Skill key becomes the Skill's name, saved", async function () {
+          assert.equal(driveSkillName("driving"), "Driving");
+          assert.equal(driveSkillName("chopperPilot"), "Chopper Pilot");
+          assert.equal(driveSkillName("Mech Pilot"), "Mech Pilot", "a name is kept");
+          assert.isUndefined(driveSkillName(undefined));
+          const vehicle = await Actor.create({ name: "Quench old drive key", type: "vehicle", system: { driveSkill: "chopperPilot" } });
+          const pc = await createTestCharacter("drive key pc");
+          try {
+            assert.equal(vehicle.system.driveSkill, "Chopper Pilot", "read as the name on load");
+            assert.equal(await saveDriveSkills([vehicle, pc]), 1, "only the vehicle");
+            assert.equal(vehicle._source.system.driveSkill, "Chopper Pilot");
+          } finally {
+            await deleteTestActor(vehicle);
+            await deleteTestActor(pc);
+          }
+        });
+
+        it("merges the perks into Driving's and Chopper Pilot's tiers by Rank, ticks Lance; homebrew is left alone; once", async function () {
+          const actor = await createTestCharacter("vehicle skills");
+          const tier = (rankThreshold, extra = {}) => ({ rankThreshold, description: `Rank ${rankThreshold} text`, ...extra });
+          const bonus = { targetType: "resource", target: "move", mode: "add", value: "1" };
+          try {
+            const driving = await attackSkill(actor, "Driving", {
+              category: "utility", rank: 7,
+              upgrades: [tier(5), tier(10, { changes: [bonus] }), tier(15)],
+            });
+            // A copy missing its Rank 15 tier gets a bare one.
+            const chopper = await attackSkill(actor, "Chopper Pilot", { category: "utility", upgrades: [tier(5), tier(10)] });
+            const lance = await attackSkill(actor, "Lance");
+            const mech = await attackSkill(actor, "Mech Pilot", { category: "utility", upgrades: [tier(5)] });
+            const ids = actor.items.get(driving.id).system.upgrades.map((u) => u.id);
+            assert.isNull(vehicleSkillUpdate(mech), "homebrew");
+
+            assert.equal(await fixVehicleSkillsOn(actor), 3);
+            const perks = (item) => actor.items.get(item.id).system.upgrades
+              .map((u) => [u.rankThreshold, u.vehicleMove, u.vehicleAttackOk, u.vehicleEvadeAdvantage, u.vehicleStuntAdvantage])
+              .sort((a, b) => a[0] - b[0]);
+            assert.deepEqual(perks(driving), [[5, 0, true, false, false], [10, 5, false, true, false], [15, 5, false, false, true]]);
+            assert.deepEqual(perks(chopper), [[5, 5, false, false, false], [10, 0, true, false, false], [15, 5, false, false, true]]);
+            const after = actor.items.get(driving.id).system;
+            assert.deepEqual(after.upgrades.map((u) => u.id), ids, "the same tiers");
+            assert.equal(after.upgrades[1].description, "Rank 10 text", "their text kept");
+            assert.equal(after.upgrades[1].changes[0]?.target, "move", "their Bonuses kept");
+            assert.equal(after.rank, 7);
+            assert.isTrue(actor.items.get(lance.id).system.mounted);
+            assert.isFalse(actor.items.get(mech.id).system.mounted);
+
+            assert.equal(await fixVehicleSkillsOn(actor), 0, "idempotent");
+          } finally {
+            await deleteTestActor(actor);
           }
         });
       });

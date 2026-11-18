@@ -60,6 +60,10 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
     // upgrades detail drawer open (toggled by clicking the Spell's name)?
     schema.detailsExpanded = new fields.BooleanField({ required: true, initial: false });
 
+    // Persisted sheet UI state: is this Spell's nested Damage Effects drawer
+    // open (spells-section-body.hbs)? Same as skill.mjs's.
+    schema.damageEffectsExpanded = new fields.BooleanField({ required: true, initial: false });
+
     return schema;
   }
 

@@ -3,8 +3,9 @@ import { resolveEvadeDifficulty, canActOnUuidFlag } from "../../chat/evade-link-
 import { isCardLocked, canActTaunt, tauntAttack, tauntRedirectNow } from "../../chat/taunt-card.mjs";
 import { canApplyDamage, onApplyDamage } from "../../chat/damage-card.mjs";
 import { canApplyTargetEffects, onApplyTargetEffects } from "../../chat/target-effects-card.mjs";
-import { canApplyHeal, onApplyHeal } from "../../chat/heal-card.mjs";
-import { applyAllRows, applyRow } from "../../chat/attack-targets-card.mjs";
+import { canApplyHeal, healNow, onApplyHeal } from "../../chat/heal-card.mjs";
+import { applyAllRows, applyRow, applyRowNow, decorateTargetRows } from "../../chat/attack-targets-card.mjs";
+import { askTiming } from "../../helpers/chat-socket.mjs";
 import {
   createTestCharacter, createTestItem, createTestMob, deleteTestActor, PIN_D20_MID, pressDialog, settle, useQuenchTimeout, withDialog,
   withFakeTargets, withPinnedDice, withSetting,
@@ -198,6 +199,32 @@ export default function register(quench) {
           }
         });
 
+        it("two rows applied at once both keep their GM digest (kept per row, not in the content)", async function () {
+          const a = await createTestCharacter("digest-a");
+          const b = await createTestCharacter("digest-b");
+          let message;
+          try {
+            message = await attackCard(2, a, b);
+            const rows = () => message.getFlag("carl-rpg", "targetRows");
+            // Two Applies at once (two players' clicks, each on their own row).
+            const [linesA, linesB] = await Promise.all([applyRow(message, rows().t0), applyRow(message, rows().t1)]);
+            await settle();
+            assert.isNotEmpty(linesA);
+            assert.isNotEmpty(linesB);
+            assert.deepEqual(rows().t0.digest, linesA, "A's digest is on its row");
+            assert.deepEqual(rows().t1.digest, linesB, "B's digest is on its row");
+            // Drawn for the GM from the rows.
+            const html = document.createElement("div");
+            html.innerHTML = '<div class="carl-chat-card"><div class="carl-target-rows"></div></div>';
+            decorateTargetRows(message, html);
+            assert.lengthOf(html.querySelectorAll(".carl-gm-digest li"), linesA.length + linesB.length, "both shown");
+          } finally {
+            await message?.delete();
+            await deleteTestActor(a);
+            await deleteTestActor(b);
+          }
+        });
+
         it("a Heal skips a recipient already applied on the card, and a second Apply heals no one", async function () {
           const a = await createTestCharacter("heal-once-a", { system: { hb: { value: 3, max: 10 } } });
           const b = await createTestCharacter("heal-once-b", { system: { hb: { value: 3, max: 10 } } });
@@ -219,6 +246,93 @@ export default function register(quench) {
             await message?.delete();
             await deleteTestActor(a);
             await deleteTestActor(b);
+          }
+        });
+
+        it("a row's own Apply and a player's relayed one at the same moment apply it once", async function () {
+          const a = await createTestCharacter("apply-race-a");
+          let message;
+          try {
+            message = await attackCard(2, a);
+            const row = message.getFlag("carl-rpg", "targetRows").t0;
+            // This client's Apply, and a player's arriving at the GM's client.
+            const [, relayed] = await Promise.all([applyRow(message, row), applyRowNow({ cardId: message.id, rowId: "t0" }, game.user)]);
+            await settle();
+            assert.equal(a.system.hb.value, 10 - 2, "damaged once");
+            assert.isTrue(message.getFlag("carl-rpg", "targetRows").t0.applied);
+            assert.isFalse((await applyRowNow({ cardId: message.id, rowId: "t0" }, game.user)).applied, "and refused after");
+            assert.isBoolean(relayed.applied);
+          } finally {
+            await message?.delete();
+            await deleteTestActor(a);
+          }
+        });
+
+        it("the GM's Heal and a player's at the same moment heal each recipient once", async function () {
+          const a = await createTestCharacter("heal-race-a", { system: { hb: { value: 3, max: 10 } } });
+          const b = await createTestCharacter("heal-race-b", { system: { hb: { value: 3, max: 10 } } });
+          let message;
+          try {
+            message = await ChatMessage.create({
+              content: "<div></div>",
+              flags: { "carl-rpg": { healAmount: 5, healRecipients: { r0: { uuid: a.uuid, name: a.name }, r1: { uuid: b.uuid, name: b.name } } } },
+            });
+            // The GM clicks Apply (it reads both rows as unapplied); a
+            // player's Apply for both reaches the GM's client at once.
+            await Promise.all([
+              onApplyHeal(fakeEvent, message),
+              healNow({ cardId: message.id, rowIds: ["r0", "r1"] }, game.user),
+            ]);
+            await settle();
+            assert.equal(a.system.hb.value, 8, "A healed once");
+            assert.equal(b.system.hb.value, 8, "B healed once");
+            assert.isTrue(message.getFlag("carl-rpg", "healApplied"));
+          } finally {
+            await message?.delete();
+            await deleteTestActor(a);
+            await deleteTestActor(b);
+          }
+        });
+
+        it("no GM answering (or none online): nothing is applied or healed, and the asker is warned", async function () {
+          const a = await createTestCharacter("no-answer-a", { system: { hb: { value: 3, max: 10 } } });
+          let attack;
+          let heal;
+          const warned = [];
+          const saved = { warn: ui.notifications.warn, emit: game.socket.emit, timeout: askTiming.timeoutMs };
+          const asIfGM = (gm) => Object.defineProperty(game.users, "activeGM", { configurable: true, get: () => gm });
+          try {
+            attack = await attackCard(2, a);
+            heal = await ChatMessage.create({
+              content: "<div></div>",
+              flags: { "carl-rpg": { healAmount: 5, healRecipients: { r0: { uuid: a.uuid, name: a.name } } } },
+            });
+            ui.notifications.warn = (text) => { warned.push(String(text)); };
+            // Another GM is active, and never answers.
+            game.socket.emit = () => {};
+            askTiming.timeoutMs = 50;
+            asIfGM({ id: "quenchNoAnswer", isSelf: false });
+            assert.deepEqual(await applyRow(attack, attack.getFlag("carl-rpg", "targetRows").t0), []);
+            await onApplyHeal(fakeEvent, heal);
+            // No GM online at all.
+            asIfGM(null);
+            assert.deepEqual(await applyRow(attack, attack.getFlag("carl-rpg", "targetRows").t0), []);
+            delete game.users.activeGM;
+            await settle();
+            assert.equal(a.system.hb.value, 3, "neither damaged nor healed");
+            assert.notOk(attack.getFlag("carl-rpg", "targetRows").t0.applied, "the row isn't marked");
+            assert.notOk(heal.getFlag("carl-rpg", "healRecipients").r0.applied, "nor the heal");
+            const noAnswer = game.i18n.localize("CARLRPG.Chat.GMNoAnswer");
+            assert.lengthOf(warned.filter((w) => w === noAnswer), 2, "told the GM didn't answer, for each");
+            assert.include(warned, game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
+          } finally {
+            delete game.users.activeGM;
+            ui.notifications.warn = saved.warn;
+            game.socket.emit = saved.emit;
+            askTiming.timeoutMs = saved.timeout;
+            await attack?.delete();
+            await heal?.delete();
+            await deleteTestActor(a);
           }
         });
       });

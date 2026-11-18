@@ -3,16 +3,16 @@
  * matching weapon: one in hand (the Main or Off Hand), or one in the
  * Hotlist, which is swapped into the Main Hand for free as part of the
  * Attack Action ("Drawing or swapping a weapon from a Hotlist is free as
- * part of that Action", p.64; p.98). Hand-to-hand Skills, Improvised
- * Weapons and natural attacks need none (CONFIG.CARLRPG.
- * weaponlessAttackSkills). A gear item names the Skill it's wielded with in
- * its Weapon Skill field (system.weaponSkill).
+ * part of that Action", p.64; p.98). Hand-to-hand Skills, and Skills with
+ * the Needs no weapon box (system.noWeapon: Improvised Weapons and natural
+ * attacks in the book, or a GM's homebrew one), need none. A gear item
+ * names the Skill it's wielded with in its Weapon Skill field
+ * (system.weaponSkill).
  *
  * Only Characters are checked: a Pet fights with what it is, a Mob with its
  * printed Attacks, and Spells and Scroll casts need no weapon.
  */
 import { isCrawler } from "./actor-kinds.mjs";
-import { slugifySkillName } from "./modifiers.mjs";
 import { isHandToHand, withoutOutclassedUnarmed } from "./hand-to-hand.mjs";
 import { isTwoHanded, isWeaponFor } from "./gear.mjs";
 
@@ -27,9 +27,7 @@ export { isWeaponFor };
  */
 export function needsWeapon(actor, skill) {
   if (!isCrawler(actor) || skill?.type !== "skill" || skill.system?.category !== "attack") return false;
-  if (isHandToHand(skill)) return false;
-  const slug = slugifySkillName(skill.name);
-  return !(CONFIG.CARLRPG.weaponlessAttackSkills ?? []).some((name) => slugifySkillName(name) === slug);
+  return !isHandToHand(skill) && !skill.system?.noWeapon;
 }
 
 /**

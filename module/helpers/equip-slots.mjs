@@ -15,7 +15,7 @@
 
 import { refuseWhileSwapping } from "./swap-lock.mjs";
 import { noteGear, takeAction } from "./actions.mjs";
-import { HANDS, WEAR_SLOT_OF_GEAR_SLOT, accessoryKindOf, canWear, fitsSlot, isTwoHanded, slotsOf } from "./gear.mjs";
+import { HANDS, WEAR_SLOT_OF_GEAR_SLOT, accessoryKindOf, canWear, fitsSlot, isConsumable, isTwoHanded, slotsOf } from "./gear.mjs";
 
 /** A stored value that looks like a Foundry document id, not free text. */
 const ID_PATTERN = /^[a-zA-Z0-9]{16}$/;
@@ -183,7 +183,9 @@ export async function takeOutOfSlots(actor, item) {
  */
 export function slotRefusal(actor, { slotType, slotKey }, item) {
   const i18n = game.i18n;
-  // Anything can be held in a hand (fitsSlot).
+  // A consumable is never worn, not even in a hand (docs/gear-slots.md).
+  if (isConsumable(item)) return i18n.format("CARLRPG.Gear.ConsumableNotWorn", { item: item.name });
+  // Anything else can be held in a hand (fitsSlot).
   if (!canWear(item) && !fitsSlot(item, { slotType, slotKey })) return i18n.format("CARLRPG.Gear.NoSlot", { item: item.name });
   if (!fitsSlot(item, { slotType, slotKey })) {
     const where = slotsOf(item).map((s) => i18n.localize(CONFIG.CARLRPG.wearSlots[s] ?? s)).join(", ");

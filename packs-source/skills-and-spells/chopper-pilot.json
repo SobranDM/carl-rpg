@@ -31,7 +31,8 @@
         "id": "0TfGNdAIcIcSopFr",
         "changes": [],
         "targetEffects": [],
-        "shieldSlots": 0
+        "shieldSlots": 0,
+        "vehicleMove": 5
       },
       {
         "rankThreshold": 10,
@@ -46,7 +47,8 @@
         "id": "h2jjrLxywOsCmE7C",
         "changes": [],
         "targetEffects": [],
-        "shieldSlots": 0
+        "shieldSlots": 0,
+        "vehicleAttackOk": true
       },
       {
         "rankThreshold": 15,
@@ -61,7 +63,9 @@
         "id": "LzJU5e3Pq9rZdjnF",
         "changes": [],
         "targetEffects": [],
-        "shieldSlots": 0
+        "shieldSlots": 0,
+        "vehicleMove": 5,
+        "vehicleStuntAdvantage": true
       }
     ],
     "category": "utility",

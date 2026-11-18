@@ -10,7 +10,8 @@ import { importBook } from "./importer.mjs";
 import { canvasToBlob, mapImageCanvas } from "./maps.mjs";
 import { closePdfDocument, loadPdfDocument } from "./pdf-loader.mjs";
 import { checkImageQuality, LowQualityPdfError } from "./quality.mjs";
-import { bookTitleFromFilename, parseBook, readPages } from "./scan.mjs";
+import { identifyPdf, UnknownBookError } from "./books.mjs";
+import { parseBook, readPages } from "./scan.mjs";
 
 const KINDS = ["gear", "spells", "mobs", "achievements"];
 // A thumbnail's longest side, in pixels.
@@ -137,8 +138,9 @@ export async function openRulebookImporter() {
   const file = await pickFile();
   if (!file) return;
 
-  const title = bookTitleFromFilename(file.name);
-  let progress = ui.notifications.info(game.i18n.format("CARLRPG.PdfImport.Reading", { title }), {
+  // Named by its title page once that's read (books.mjs), never by the file name.
+  let title = "";
+  let progress = ui.notifications.info(game.i18n.localize("CARLRPG.PdfImport.Identifying"), {
     progress: true,
   });
   // Filled by resolveMaps as it goes, so the finally revokes every thumbnail.
@@ -148,6 +150,9 @@ export async function openRulebookImporter() {
     const loaded = await loadPdfDocument(file);
     const pdfjs = loaded.pdfjs;
     pdfDoc = loaded.pdfDoc;
+    // Only the Core Rulebook and the Toolkit are supported (books.mjs).
+    const book = await identifyPdf(pdfDoc);
+    title = game.i18n.localize(book.title);
     // Only the full-quality edition is supported (quality.mjs).
     progress.update({ message: game.i18n.format("CARLRPG.PdfImport.CheckingQuality", { title }) });
     const quality = await checkImageQuality(pdfDoc, pdfjs.OPS);
@@ -173,6 +178,7 @@ export async function openRulebookImporter() {
       progress: true,
     });
     const results = await importBook({
+      book: book.id,
       title,
       found,
       kinds,
@@ -187,6 +193,10 @@ export async function openRulebookImporter() {
     const skipped = skippedNotice(results);
     if (skipped) ui.notifications.warn(skipped, { permanent: true });
   } catch (err) {
+    if (err instanceof UnknownBookError) {
+      ui.notifications.error("CARLRPG.PdfImport.UnknownBook", { localize: true, permanent: true });
+      return;
+    }
     if (err instanceof LowQualityPdfError) {
       ui.notifications.error(
         game.i18n.format("CARLRPG.PdfImport.LowQuality", { title, ppi: Math.round(err.ppi) }),

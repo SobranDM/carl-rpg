@@ -30,6 +30,8 @@
  * total; Intervene d6s add to it (p.82).
  */
 import { getDegreeOfSuccess, isHitDegree } from "./rules.mjs";
+import { rerollOpen } from "./ai-favor.mjs";
+import { attackIsMagical, blockableAttack } from "./shield-block.mjs";
 
 /** A hit's Checks, by key: free and paid Evades, and a Shield Block. */
 const HIT_CHECKS = Object.freeze(["free", "evade", "block"]);
@@ -141,9 +143,12 @@ export function hitEvadable(hit) {
  * Caught ("You can't use Evade, Shield Block... to negate damage dealt to
  * you this way", Catcher p.191), not an Area Attack, with damage, not
  * Evaded (a failed Evade can be followed by a block) and not blocked yet;
- * physical - or, `magicOk` (Rank 5), magical too. An Attack is physical
- * when its damage isn't magical (`damageIsMagic` false - Bludgeoning,
- * Piercing, Slashing or untyped, dice.mjs); unknown counts as magical.
+ * physical - or, `magicOk` (Rank 5), magical too (shield-block.mjs
+ * blockableAttack). An Attack is physical when its damage isn't magical
+ * (`damageIsMagic` false - Bludgeoning, Piercing, Slashing or untyped,
+ * dice.mjs); unknown counts as magical. Not a Near Miss on a crawler riding
+ * a vehicle either: that hits the vehicle (p.72), as on an Attack card's
+ * row (attack-targets-card.mjs rowBlockable).
  * @param {object} state
  * @param {object} hit
  * @param {{magicOk?: boolean}} [options]
@@ -151,10 +156,26 @@ export function hitEvadable(hit) {
  */
 export function hitBlockable(state, hit, { magicOk = false } = {}) {
   const attack = state?.attacks?.[hit?.attackId];
-  if (!attack || attack.isArea || !String(attack.damage ?? "").trim()) return false;
+  if (!attack) return false;
   if (!hit.row?.hit || !hit.row?.isCharacter || hit.caughtBy || hit.block) return false;
   if (hit.evade?.success || hit.free?.success) return false;
-  return magicOk || attack.damageIsMagic === false;
+  if (nearMissOnVehicle(attack, hit, !!hit.row?.vehicleUuid)) return false;
+  const facts = { isArea: !!attack.isArea, hasDamage: !!String(attack.damage ?? "").trim(), magical: attackIsMagical(attack) };
+  return blockableAttack(facts, magicOk ? 5 : 0);
+}
+
+/**
+ * Whether a hit is a Near Miss that lands on the vehicle its target rides
+ * (p.72): a single-target Attack whose deciding Evade was a Near Miss Fail,
+ * on someone `seated` - the Reaction card goes by the vehicle the row was
+ * resolved with, Resolution by where they sit at Lock (reaction-resolve.mjs).
+ * @param {object} attack  The hit's Attack.
+ * @param {object} hit
+ * @param {boolean} seated
+ * @returns {boolean}
+ */
+export function nearMissOnVehicle(attack, hit, seated) {
+  return !!seated && !attack?.isArea && decidingEvade(hit)?.degree === "nearMissFail";
 }
 
 /**
@@ -323,15 +344,20 @@ export function intervenableChecks(state, intervenerUuid) {
 }
 
 /**
- * The Checks an AI Favor reroll could replace for one crawler: their own
- * failed Checks, not a Natural 1 (p.61), not already rerolled, still open.
+ * The Checks an AI Favor reroll could replace for one crawler: their own,
+ * failed or not ("Once per Check, reroll a d20 before the GM announces the
+ * result", p.61), not a Natural 1, not already rerolled, still open. Not a
+ * successful Taunt that has pulled Attacks: they've moved, and a reroll
+ * doesn't move them back. (Who may spend the AI Favor: ai-favor.mjs
+ * aiRerollAllowed.)
  * @param {object} state
  * @param {string} ownerUuid
  * @returns {object[]}
  */
 export function rerollableChecks(state, ownerUuid) {
-  return checkList(state).filter((c) => c.ownerUuid === ownerUuid && !c.check.success
-    && c.check.natural !== 1 && !c.check.aiRerolled && checkOpen(state, c.ref));
+  return checkList(state).filter((c) => c.ownerUuid === ownerUuid
+    && rerollOpen({ natural: c.check.natural, used: !!c.check.aiRerolled }) && checkOpen(state, c.ref)
+    && !(c.ref.type === "taunt" && c.check.success && (state.taunts?.[c.ref.tauntId]?.pulled?.length ?? 0) > 0));
 }
 
 /**

@@ -2,6 +2,9 @@ import CarlRPGActorBase from "./actor-base.mjs";
 import { ownerIds, withOwners } from "../helpers/ownership.mjs";
 import { deriveDefenses } from "./shared/derive-creature.mjs";
 
+/** The driving Skill keys a vehicle stored before 0.7.0, and the Skills they named. */
+export const LEGACY_DRIVE_SKILLS = Object.freeze({ driving: "Driving", chopperPilot: "Chopper Pilot" });
+
 /**
  * Vehicle actor (Vehicles, p.72-73; docs/companions-and-vehicles.md). An
  * object, not a creature: "They do not have Actions but simply move
@@ -19,6 +22,17 @@ import { deriveDefenses } from "./shared/derive-creature.mjs";
  * re-prepare this actor when they change.
  */
 export default class CarlRPGVehicle extends CarlRPGActorBase {
+  /** @override */
+  static migrateData(source) {
+    // Before 0.7.0 the driving Skill was a key: read it as the Skill's name,
+    // in memory on every load (world vehicles, tokens, compendiums). The
+    // 0.7.0 migration saves it (migration.mjs migrateVehicleSkillSettings).
+    if (typeof source.driveSkill === "string" && Object.hasOwn(LEGACY_DRIVE_SKILLS, source.driveSkill)) {
+      source.driveSkill = LEGACY_DRIVE_SKILLS[source.driveSkill];
+    }
+    return super.migrateData(source);
+  }
+
   static defineSchema() {
     const fields = foundry.data.fields;
     const requiredInteger = { required: true, nullable: false, integer: true };
@@ -37,7 +51,11 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
     schema.occupancy = new fields.NumberField({ ...requiredInteger, initial: 5, min: 1 });
     // Extra entities in a cargo area - Table 7's "(+50 in cargo)".
     schema.cargo = new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 });
-    schema.driveSkill = choice(Object.keys(CONFIG.CARLRPG.vehicleDriveSkills), "driving");
+    // The name of the Skill that drives it (Driving, Chopper Pilot, or a
+    // homebrew one), matched by slug against the driver's own Skills. What
+    // the driver's Ranks give are that Skill's Upgrade tiers' vehicle fields
+    // (module/helpers/vehicle-state.mjs driverPerks).
+    schema.driveSkill = new fields.StringField({ required: true, blank: true, initial: "Driving" });
     // An odd vehicle whose slots don't hold its Size (the book's Ship shows 6s).
     schema.hbSlotValueOverride = new fields.NumberField({ ...nullableInteger, min: 1 });
 

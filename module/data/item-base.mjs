@@ -6,7 +6,9 @@ export default class CarlRPGItemBase extends foundry.abstract.TypeDataModel {
     const fields = foundry.data.fields;
     const schema = {};
 
-    schema.description = new fields.StringField({ required: true, blank: true });
+    // Rich text: also listed in system.json's htmlFields for every Item type,
+    // which is what has the server sanitize it.
+    schema.description = new fields.HTMLField({ required: true, blank: true });
 
     // Always-active-while-owned bonuses (gear, features). Skills/Spells/Damage
     // Effects instead gate their bonuses behind Rank via `upgrades` (see

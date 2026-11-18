@@ -38,25 +38,82 @@ import { drGroupOf, givesBonuses, isWeaponFor } from "./gear.mjs";
 
 const RANKED_TYPES = new Set(["skill", "spell", "damageEffect"]);
 
-/** Turn a display name into a stable, arbitrary-skill-friendly bag key. */
-export function slugifySkillName(name) {
-  const slug = String(name ?? "")
+/**
+ * A name's slug: accents dropped ("Épée" is "epee"), any run of characters
+ * that aren't letters or digits (in any script) one dash, lowercased. An
+ * ASCII name slugs as it always has; one in another script keeps its
+ * letters ("Таунт" is "таунт"). "" for a name with no letters or digits.
+ * @param {*} name
+ * @returns {string}
+ */
+function nameSlug(name) {
+  return String(name ?? "")
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/(^-+|-+$)/g, "");
-  return slug || "unknown";
+}
+
+/** Turn a display name into a stable, arbitrary-skill-friendly bag key. */
+export function slugifySkillName(name) {
+  return nameSlug(name) || "unknown";
 }
 
 /**
- * An owned Skill, Spell or Damage Effect's Rank as rolls read it: the
- * actor's prepared skills entry (bonuses included), else the item's own.
+ * Do two names name the same Skill (same slug)? A name with no letters or
+ * digits (blank, "???") matches nothing - slugifySkillName makes those all
+ * "unknown".
+ * @param {*} a
+ * @param {*} b
+ * @returns {boolean}
+ */
+export function sameSkillName(a, b) {
+  const slug = nameSlug(a);
+  return !!slug && slug === nameSlug(b);
+}
+
+/**
+ * An owned Skill, Spell or Damage Effect's Rank as rolls read it: its live
+ * Rank (effectiveRank). `actor` is the item's own; kept for the callers.
  * @param {Actor} actor
  * @param {Item} item
  * @returns {number}
  */
 export function ownedRank(actor, item) {
-  return actor.system.skills?.[slugifySkillName(item.name)]?.rank ?? item.system.rank ?? 0;
+  return effectiveRank(item);
+}
+
+/**
+ * The actor's own Skill (or, with `types`, Spell/Damage Effect) of this
+ * name, matched by slug, and its live Rank (effectiveRank). With two of the
+ * same name, the one the skill bag counts (seedSkillFromItem). Null without
+ * a real owned item - a "+1 Catcher" on gear doesn't give the Skill.
+ * @param {Actor|null} actor
+ * @param {string} name
+ * @param {string[]} [types]
+ * @returns {{item: Item, rank: number}|null}
+ */
+export function ownedSkill(actor, name, types = ["skill"]) {
+  if (!actor?.items || !nameSlug(name)) return null;
+  const counted = actor.items.get(actor.system?.skills?.[slugifySkillName(name)]?.itemId ?? "");
+  const item = counted && types.includes(counted.type) && sameSkillName(counted.name, name)
+    ? counted
+    : actor.items.find((i) => types.includes(i.type) && sameSkillName(i.name, name));
+  return item ? { item, rank: effectiveRank(item) } : null;
+}
+
+/**
+ * Is this Damage Effect attached to this Skill or Spell (its parentSkills
+ * names it, by slug)?
+ * @param {Item|object} damageEffect
+ * @param {Item|object} parentItem
+ * @returns {boolean}
+ */
+export function damageEffectFits(damageEffect, parentItem) {
+  if (parentItem?.type !== "skill" && parentItem?.type !== "spell") return false;
+  return (damageEffect?.system?.parentSkills ?? []).some((name) => sameSkillName(name, parentItem.name));
 }
 
 /**
@@ -79,6 +136,19 @@ export function effectiveRank(item) {
   if (!actor || !item.id || !actor.items?.has(item.id)) return own;
   const entry = actor.system?.skills?.[slugifySkillName(item.name)];
   return entry && entry.itemId === item.id && Number.isFinite(entry.rank) ? entry.rank : own;
+}
+
+/**
+ * A Skill, Spell or Damage Effect's Upgrade tiers unlocked at its live Rank
+ * (effectiveRank) - unlike system.unlockedUpgrades, which reads its own Rank.
+ * @param {Item|null} item
+ * @returns {object[]}
+ */
+export function unlockedTiers(item) {
+  const upgrades = item?.system?.upgrades;
+  if (!Array.isArray(upgrades) || !upgrades.length) return [];
+  const rank = effectiveRank(item);
+  return upgrades.filter((u) => rank >= u.rankThreshold);
 }
 
 function emptySkillEntry(name) {
@@ -234,16 +304,20 @@ function collectItemChanges(item, rank = item.system.rank ?? 0) {
  * (module/chat/target-effects-card.mjs) to offer.
  *
  * A gear item's entries (module/data/item.mjs) may name the Attack Skills
- * they come with (`skills`, "Only with": blank means any Attack); with
- * `skillName` given, an entry naming others is left out.
+ * they come with (`skills`, "Only with": blank means any Attack), and/or
+ * come with any Hand-to-Hand Attack (`handToHandOnly`: the Skill's
+ * Hand-to-Hand box, homebrew Skills included). With both, either fits.
+ * With `skillName` given, an entry the Attack's Skill doesn't fit is left
+ * out; `handToHand` says whether that Skill is hand-to-hand (undefined:
+ * not known, so the box isn't checked - as with no `skillName`).
  *
  * @param {Item} item
- * @param {{isCrit?: boolean, isAmazingSuccess?: boolean|null, skillName?: string|null}} [options]
+ * @param {{isCrit?: boolean, isAmazingSuccess?: boolean|null, skillName?: string|null, handToHand?: boolean}} [options]
  *   isAmazingSuccess null: keep Amazing-Success-only entries, marked
  *   `amazingSuccessOnly`, for each target to decide (attackTargetEffects).
  * @returns {Array<{id: string, debuffKey: string, stacks: number, label: string, sourceLabel: string, amazingSuccessOnly: boolean}>}
  */
-export function collectItemTargetEffects(item, { isCrit = false, isAmazingSuccess = false, skillName = null } = {}) {
+export function collectItemTargetEffects(item, { isCrit = false, isAmazingSuccess = false, skillName = null, handToHand = undefined } = {}) {
   const sys = item.system;
   const sourceItemRank = effectiveRank(item);
   const out = [];
@@ -253,7 +327,10 @@ export function collectItemTargetEffects(item, { isCrit = false, isAmazingSucces
     if (te.critOnly && !isCrit) return;
     if (te.amazingSuccessOnly && isAmazingSuccess === false) return;
     const only = (te.skills ?? []).map((s) => String(s ?? "").trim()).filter(Boolean);
-    if (skillSlug && only.length && !only.some((s) => slugifySkillName(s) === skillSlug)) return;
+    const named = only.length > 0 && !!skillSlug && only.some((s) => slugifySkillName(s) === skillSlug);
+    if (te.handToHandOnly && handToHand !== undefined) {
+      if (!handToHand && !named) return;
+    } else if (skillSlug && only.length && !named) return;
     out.push({
       id: te.id,
       debuffKey: te.debuffKey,
@@ -288,7 +365,10 @@ export function collectItemTargetEffects(item, { isCrit = false, isAmazingSucces
  * @returns {object[]}  collectItemTargetEffects's entries.
  */
 export function attackTargetEffects(actor, skillItem, { damageEffectItem = null, isCrit = false, isAmazingSuccess = null } = {}) {
-  const options = { isCrit, isAmazingSuccess, skillName: skillItem?.name ?? null };
+  // Hand-to-hand: the Skill's own box (hand-to-hand.mjs isHandToHand, not
+  // imported - it imports this module).
+  const handToHand = skillItem ? skillItem.type === "skill" && !!skillItem.system?.isHandToHand : undefined;
+  const options = { isCrit, isAmazingSuccess, skillName: skillItem?.name ?? null, handToHand };
   const gear = (actor?.items ?? []).filter((i) => i.type === "item" && givesBonuses(i) && (i.system.targetEffects ?? []).length);
   return [skillItem, damageEffectItem, ...gear]
     .filter(Boolean)
@@ -424,7 +504,22 @@ export function buildItemSkillEntry(actorSystem, item) {
   return { skillEntry: skills[key], conditionalModifiers: ctx.conditionalModifiers };
 }
 
+/**
+ * Seed an owned Skill/Spell/Damage Effect's skill-bag entry. Two of the same
+ * name (by slug) share one entry, which counts only one of them: the higher
+ * Rank, the first on a tie - never both, so a duplicate doesn't roll its
+ * base dice twice or mix Ranks. Every seed runs before any change applies,
+ * so a held entry's Rank here is still its item's own.
+ * @param {object} skills
+ * @param {Item} item
+ */
 function seedSkillFromItem(skills, item) {
+  const key = slugifySkillName(item.name);
+  const held = skills[key];
+  if (held?.itemId && held.itemId !== item.id) {
+    if ((Number(item.system.rank) || 0) <= (Number(held.rank) || 0)) return;
+    skills[key] = emptySkillEntry(item.name);
+  }
   const entry = getOrCreateSkill(skills, item.name);
   entry.itemId = item.id;
   entry.itemType = item.type;
@@ -437,6 +532,22 @@ function seedSkillFromItem(skills, item) {
     entry.baseDamage = foundry.utils.deepClone(item.system.baseDamage);
     entry.damage.baseDice.push({ formula: item.system.baseDamage.dice, label: item.name, mode: "add" });
   }
+}
+
+/**
+ * For a duplicate the skill bag doesn't count (seedSkillFromItem), a test
+ * for its changes to its own name (Rank, damage), which would land on the
+ * counted copy's entry - skipped. Null for any other item.
+ * @param {object} skills  The seeded skill bag.
+ * @param {Item} item
+ * @returns {((change: object) => boolean)|null}
+ */
+function uncountedSelfChange(skills, item) {
+  if (!RANKED_TYPES.has(item.type)) return null;
+  const key = slugifySkillName(item.name);
+  if (!skills[key] || skills[key].itemId === item.id) return null;
+  return (change) => (change.targetType === "skillRank" || change.targetType === "skillDamage")
+    && slugifySkillName(change.target) === key;
 }
 
 /**
@@ -938,7 +1049,9 @@ function previewLiveRanks(items, actorSystem) {
   const rankChange = (change) => change.targetType === "skillRank";
   for (const item of items) {
     if (deity && !deityBenefitApplies(item, deity)) continue;
+    const skipSelf = uncountedSelfChange(ctx.skills, item);
     for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
+      if (skipSelf?.(change)) continue;
       if (rankChange(change)) applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }
   }
@@ -1002,7 +1115,9 @@ export function aggregateActorBonuses(actorSystem) {
   for (const item of items) {
     if (deity && !deityBenefitApplies(item, deity)) continue;
     const rank = liveRanks.get(item.id) ?? item.system.rank ?? 0;
+    const skipSelf = uncountedSelfChange(skills, item);
     for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item, rank)) {
+      if (skipSelf?.(change)) continue;
       if (superseded.has(item.id) && isArmorDrBonus(change)) continue;
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }

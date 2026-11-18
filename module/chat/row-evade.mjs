@@ -24,7 +24,7 @@
  * undone d6, a worse reroll).
  */
 import { gradeCheck, makeCheck } from "../helpers/reaction-state.mjs";
-import { fightStamp } from "../helpers/ai-favor.mjs";
+import { aiRerollAllowed, fightStamp } from "../helpers/ai-favor.mjs";
 import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
@@ -266,11 +266,9 @@ export function rowInterveners(attack, rowId, which, user = game.user) {
 export function rowRerollSources(attack, rowId, which, user = game.user) {
   if (!rowCheckOpen(attack, rowId, which)) return [];
   const check = rowCheck(rowAt(attack, rowId), which);
-  if (check.aiRerolled || check.natural === 1) return [];
   const actor = actorOf(check.actorUuid);
-  const favor = actor?.system.details?.aiFavor ?? 0;
-  if (actor?.type !== "character" || favor < 1 || !(user.isGM || actor.testUserPermission(user, "OWNER"))) return [];
-  return [{ key: "favor", actor, favor }];
+  if (!aiRerollAllowed(check, actor, user)) return [];
+  return [{ key: "favor", actor, favor: actor.system.details?.aiFavor ?? 0 }];
 }
 
 /**

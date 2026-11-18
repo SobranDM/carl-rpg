@@ -31,6 +31,7 @@ import {
 } from "../helpers/hotlist.mjs";
 import { rollRam } from "../helpers/vehicle-ram.mjs";
 import { fireVehicleWeapon } from "../helpers/vehicle-weapons.mjs";
+import { damageEffectFits } from "../helpers/modifiers.mjs";
 import { petOwner } from "../helpers/pets.mjs";
 import { commandPet, describePetCommand, petFight } from "../helpers/pet-command.mjs";
 import { showCarlDialog } from "../apps/carl-dialog.mjs";
@@ -691,7 +692,6 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       status,
       driver,
       full,
-      driveSkillLabel: cfg.vehicleDriveSkills[sys.driveSkill]?.label ?? "",
       occupants,
       boarder,
       canBoard: !!boarder && !full,
@@ -710,7 +710,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
         .filter((key) => sys.upgrades[key].installed)
         .map((key) => ({ label: `CARLRPG.Vehicle.Upgrades.${key}`, available: sys.upgrades[key].usedFloor !== floor })),
       presetChoices: Object.fromEntries(Object.entries(cfg.vehiclePresets).map(([k, p]) => [k, p.label])),
-      driveSkillChoices: Object.fromEntries(Object.entries(cfg.vehicleDriveSkills).map(([k, s]) => [k, s.label])),
+      // "Driven with" suggestions: Table 7's Skills and those its occupants have.
+      driveSkillNames: [...new Set([
+        ...Object.values(cfg.vehiclePresets).map((p) => p.driveSkill),
+        ...vehicleOccupants(vehicle).flatMap((o) => (o.actor?.items ?? []).filter((i) => i.type === "skill").map((i) => i.name)),
+      ])].filter(Boolean).sort((a, b) => a.localeCompare(b)),
       degreeChoices: cfg.degreesOfSuccess,
     };
   }
@@ -860,15 +864,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // intentionally renders under EVERY owned Skill it matches (not
     // partitioned) - matches the "select at the moment of the attack roll"
     // mechanic and damage-effect.mjs's own many-to-one parentSkills model.
-    const skillNameSet = new Set(skills.map((s) => s.name));
-    for (const skill of skills) {
-      skill.damageEffects = damageEffects.filter((de) =>
-        (de.system.parentSkills ?? []).includes(skill.name),
-      );
+    // Matched by slug (modifiers.mjs damageEffectFits), as a roll offers
+    // them - a Spell's nest under the Spell (spells-section-body.hbs).
+    const matched = new Set();
+    for (const parent of [...skills, ...spells]) {
+      parent.damageEffects = damageEffects.filter((de) => damageEffectFits(de, parent));
+      for (const de of parent.damageEffects) matched.add(de);
     }
-    context.unmatchedDamageEffects = damageEffects.filter(
-      (de) => !(de.system.parentSkills ?? []).some((name) => skillNameSet.has(name)),
-    );
+    context.unmatchedDamageEffects = damageEffects.filter((de) => !matched.has(de));
   }
 
   /**

@@ -9,7 +9,7 @@
  *  - `system.accessoryKind`: Belt or Cape (one of each at most, p.99);
  *  - a weapon by its Weapon Skill, a consumable by its kind - never worn.
  * The Equipment Doll's slots (CONFIG.CARLRPG.gearSlots) map onto these:
- * Main and Off Hand are Held. Any gear can be held in a hand (ruled
+ * Main and Off Hand are Held. Any gear but a consumable can be held in a hand (ruled
  * 2026-11-17, the one exception: you "hold things in your hands", p.98),
  * but only gear marked Held gives its bonuses there (givesBonuses).
  * Also the 0.7.0 migration's guesses (guessGearSlots) and the importers'
@@ -97,8 +97,9 @@ export function accessoryKindOf(item) {
  * @returns {boolean}
  */
 export function fitsSlot(item, { slotType, slotKey }) {
-  if (!isGear(item)) return false;
-  // Anything can be held (p.98) - it just gives nothing there unless Held.
+  // A consumable is used from the Hotlist, never worn - not even in a hand.
+  if (!isGear(item) || isConsumable(item)) return false;
+  // Anything else can be held (p.98) - it just gives nothing there unless Held.
   if (slotType === "gear" && HANDS.includes(slotKey)) return true;
   const slots = slotsOf(item);
   if (slotType === "accessory") return slots.includes("accessory");
@@ -141,7 +142,7 @@ export function heldOrWearable(item) {
 export function isWeaponFor(item, skill) {
   if (!isGear(item)) return false;
   // Blank means "not a weapon". Checked before slugifying, which turns a
-  // blank name into "unknown" - the slug of any name with no Latin letters
+  // blank name into "unknown" - the slug of any name with no letters
   // or digits, too.
   const weaponSkill = String(item.system?.weaponSkill ?? "").trim();
   return !!weaponSkill && slugifySkillName(weaponSkill) === slugifySkillName(skill?.name ?? "");
