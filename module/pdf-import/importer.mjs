@@ -358,7 +358,7 @@ export async function matchCandidates(book) {
     const tier = system >= 0 ? TIERS.system : rulebook ? TIERS.rulebook : TIERS.other;
     let index;
     try {
-      index = await pack.getIndex({ fields: ["type", "system.consumable.kind"] });
+      index = await pack.getIndex({ fields: ["type", "system.consumable.kind", "system.weaponSkill", "system.category", "system.isHandToHand"] });
     } catch (err) {
       console.warn(`CarlRPG | rulebook import: couldn't read ${pack.collection}`, err);
       continue;
@@ -372,6 +372,9 @@ export async function matchCandidates(book) {
         order: Math.max(system, 0),
         source: pack.collection,
         consumable: !!entry.system?.consumable?.kind,
+        weaponSkill: entry.system?.weaponSkill ?? "",
+        category: entry.system?.category ?? "",
+        handToHand: !!entry.system?.isHandToHand,
         ref: entry.uuid ?? pack.getUuid(entry._id),
       });
     }
@@ -384,6 +387,9 @@ export async function matchCandidates(book) {
       tier: TIERS.world,
       source: "world",
       consumable: !!item.system?.consumable?.kind,
+      weaponSkill: item.system?.weaponSkill ?? "",
+      category: item.system?.category ?? "",
+      handToHand: !!item.system?.isHandToHand,
       ref: item.uuid,
     });
   }

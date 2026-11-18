@@ -49,6 +49,9 @@ export function normalizeName(name) {
  * @property {number} [order]  Within a tier (the system packs' order).
  * @property {string} [source] Where it is (a pack id, "world").
  * @property {boolean} [consumable]  A usable item (system.consumable.kind set).
+ * @property {string} [weaponSkill]  A weapon's Weapon Skill (gear).
+ * @property {string} [category]  A Skill's category ("attack", "utility"...).
+ * @property {boolean} [handToHand]  A Hand-to-Hand Attack Skill (needs no weapon).
  * @property {*} [ref]       Whatever the caller needs to fetch it.
  */
 

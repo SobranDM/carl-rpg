@@ -547,7 +547,58 @@
     "CrawlerForge": {
       "Import": "Import CrawlerForge",
       "Imported": "Imported {name} from CrawlerForge.",
-      "Failed": "CrawlerForge import failed: {error}"
+      "Failed": "CrawlerForge import failed: {error}",
+      "NotInRulebook": "Not in rulebook",
+      "NotInRulebookHint": "Imported from CrawlerForge, which made this up: it isn't in our compendiums or the rulebook. Keep it, edit it or swap it for a rulebook one.",
+      "Report": {
+        "Title": "CrawlerForge import: {name}",
+        "AllMatched": "Everything matched our compendiums and was placed.",
+        "NotInRulebook": "Not in the rulebook (imported as written, marked \"Not in rulebook\")",
+        "NotInRulebookShort": "not in the rulebook",
+        "Granted": "Granted by the Race or Class, not in the export (made at that Rank)",
+        "GrantedLine": "{name} {rank} ({from})",
+        "Copied": "Copied from our compendiums",
+        "GearMatched": "Gear from our compendiums",
+        "AsLine": "{name} (as {as})",
+        "Weapons": "Weapons given their Weapon Skill",
+        "WeaponLine": "{name}: {skill}",
+        "NoWeapon": "Attack Skills with no weapon in the export (can't attack until one is given that Weapon Skill)",
+        "GearUnmatched": "Gear not in our compendiums (imported as written)",
+        "NearMiss": "close to {names}; not matched",
+        "Unplaced": "Gear not worn",
+        "UnplacedReason": {
+          "noExportSlot": "{name}: equipped in CrawlerForge with no slot",
+          "unknownSlot": "{name}: CrawlerForge slot \"{slot}\" isn't one of ours",
+          "noSlot": "{name}: can't be worn (no slot, or a consumable)",
+          "full": "{name}: no free slot for it (CrawlerForge slot \"{slot}\")"
+        },
+        "HotlistDropped": "Left out of the Hotlist",
+        "HotlistReason": {
+          "full": "{name}: past the Hotlist's last slot",
+          "refused": "{name}: can't go in a Hotlist",
+          "duplicate": "{name}: already in the Hotlist"
+        },
+        "Unmapped": "Effects and fields with no match here (in the description or Upgrade text only)",
+        "RankN": "Rank {rank}",
+        "Background": "Background text not in the book's tables",
+        "Notes": "Notes",
+        "Field": {
+          "ManaCost": "Mana cost \"{value}\" isn't a number (set to 1)",
+          "CheckType": "check type \"{value}\"",
+          "Interrupt": "Interrupt (a Skill has no Interrupt keyword)"
+        },
+        "Note": {
+          "Campaign": "CrawlerForge campaign \"{campaign}\" isn't kept (no field for it here).",
+          "RaceNotFound": "Race \"{name}\" isn't in our Classes & Races compendium.",
+          "ClassNotFound": "Class \"{name}\" isn't in our Classes & Races compendium.",
+          "Species": "Species \"{species}\" isn't a kind of crawler we know (human or animal).",
+          "NoWeaponSkill": "{name} is a {skill} weapon; the crawler has no {skill} Skill.",
+          "OurBonuses": "{name}: our compendium item's bonuses kept; CrawlerForge's effects for it left off.",
+          "Moved": "{name}: worn in {to}, not CrawlerForge's slot \"{slot}\".",
+          "CopyFailed": "{name}: its compendium copy couldn't be read, so CrawlerForge's own version was used (check it).",
+          "TableUnread": "The {table} table couldn't be read, so that background text wasn't checked."
+        }
+      }
     },
     "PdfImport": {
       "Title": "Import Rulebook PDF",

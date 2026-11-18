@@ -483,7 +483,7 @@ async function manaPotionData() {
  * @param {string} skill  Its Weapon Skill.
  * @returns {Promise<object>}
  */
-async function weaponData(name, skill) {
+export async function weaponData(name, skill) {
   const pack = game.packs.get(GEAR_PACK);
   const index = (await pack?.getIndex({ fields: ["system.weaponSkill"] })) ?? [];
   const lower = (s) => String(s ?? "").trim().toLowerCase();

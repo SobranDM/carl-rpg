@@ -412,6 +412,10 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     if (sys.marked) {
       chips.push({ label: t("CARLRPG.Ranked.Marked"), tone: "gold", icon: "fas fa-bookmark", tooltip: t("CARLRPG.ItemSheet.MarkedHint") });
     }
+    // A CrawlerForge import's own invention (helpers/crawlerforge-import.mjs).
+    if (item.getFlag("carl-rpg", "crawlerforge")?.notInRulebook) {
+      chips.push({ label: t("CARLRPG.CrawlerForge.NotInRulebook"), tone: "gold", icon: "fas fa-triangle-exclamation", tooltip: t("CARLRPG.CrawlerForge.NotInRulebookHint") });
+    }
     return chips;
   }
 

@@ -49,13 +49,13 @@ export const SKILL_LIKE_TYPES = ["skill", "spell", "damageEffect"];
 // advancement ceiling. Only applies when the actor already has some Ranks
 // in the Skill; a from-scratch grant ("you gain it at that Rank listed")
 // has no such cap.
-const SKILL_RANK_GRANT_CAP = 10;
+export const SKILL_RANK_GRANT_CAP = 10;
 
 function bakedGrantIds(item) {
   return item.getFlag("carl-rpg", "bakedGrantIds") ?? [];
 }
 
-function isEligibleNow(change, actorLevel) {
+export function isEligibleNow(change, actorLevel) {
   if (!BAKEABLE_TARGET_TYPES.has(change.targetType)) return false;
   // Roll-time conditional changes are never a permanent grant - leave them
   // to the normal live-bonus/conditional-modifier path untouched.
