@@ -22,6 +22,7 @@
  * "a pet or minion" is any `pet` actor.
  */
 import { isPet, isVehicle } from "./actor-kinds.mjs";
+import { effectiveRank } from "./modifiers.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 
 export const HEALS_MODES = Object.freeze(["self", "others", "pets", "anyone"]);
@@ -38,13 +39,14 @@ export function healsMode(item) {
 }
 
 /**
- * Does an Upgrade tier unlocked at the item's Rank heal every target?
+ * Does an Upgrade tier unlocked at the item's live Rank (modifiers.mjs
+ * effectiveRank) heal every target?
  * @param {Item|{system: object}} item
  * @returns {boolean}
  */
 export function healsAllTargets(item) {
   const sys = item?.system ?? {};
-  const rank = sys.rank ?? 0;
+  const rank = effectiveRank(item);
   return (sys.upgrades ?? []).some((u) => u.healAllTargets && rank >= u.rankThreshold);
 }
 

@@ -12,7 +12,10 @@
  *  - the Reaction card has changed since, or is locked;
  *  - a row's Evade has been applied, its injury added, or Intervened on;
  *  - a declaration's Declaration Phase is over.
- * The GM can still add an Action from the tracker.
+ * The Reaction card and a row's Evade are checked again in their card's
+ * queue when the undo's turn comes: changed meanwhile, the undo stops there
+ * and the Action isn't given back (the asker is told). The GM can still add
+ * an Action from the tracker.
  *
  * Run on the active GM's client, which can write everything involved,
  * outside the Actions queue (a declaration and the Reaction card have
@@ -23,8 +26,9 @@ import { currentPhase } from "./combat-phases.mjs";
 import { declaredAttacks, removeDeclaration } from "./declarations.mjs";
 import { isCardLocked } from "../chat/taunt-card.mjs";
 import { withCard, writeState } from "../chat/reaction-card.mjs";
-import { applyRevision, interventionsOf, interveneOpen } from "../chat/check-revision.mjs";
+import { applyRevision, interventionsOf, interveneOpen, withCardQueue } from "../chat/check-revision.mjs";
 import { clearRowEvade, recoilSettledBy, rowAt, rowCheck, rowInterveneOpen } from "../chat/row-evade.mjs";
+import { tellUser } from "./chat-socket.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -86,15 +90,8 @@ export function undoBlocker(entry, spent = []) {
         break;
       }
       case "rowEvade": {
-        // A row's paid Evade or Shield Block (`which`, module/chat/
-        // row-evade.mjs). Gone, or replaced by a later one: only the Action
-        // comes back.
-        const attack = game.messages.get(record.messageId);
-        const row = rowAt(attack, record.rowId);
-        const check = rowCheck(row, record.which ?? "evade");
-        if (!check || check.id !== record.checkId) break;
-        if (row.applied || row.injuryAdded || recoilSettledBy(attack, record.rowId)) return t("CardUsed");
-        if (check.interventions?.length) return t("InterveneFirst");
+        const reason = rowEvadeBlocker(record);
+        if (reason) return t(reason);
         break;
       }
       case "reaction": {
@@ -112,6 +109,23 @@ export function undoBlocker(entry, spent = []) {
       }
     }
   }
+  return null;
+}
+
+/**
+ * Why a row's paid Evade or Shield Block (`which`, module/chat/row-evade.mjs)
+ * can't be taken back, as an Undo lang key, or null. Gone, or replaced by a
+ * later one: null - only the Action comes back.
+ * @param {object} record  A "rowEvade" undo record.
+ * @returns {string|null}
+ */
+function rowEvadeBlocker(record) {
+  const attack = game.messages.get(record.messageId);
+  const row = rowAt(attack, record.rowId);
+  const check = rowCheck(row, record.which ?? "evade");
+  if (!check || check.id !== record.checkId) return null;
+  if (row.applied || row.injuryAdded || recoilSettledBy(attack, record.rowId)) return "CardUsed";
+  if (check.interventions?.length) return "InterveneFirst";
   return null;
 }
 
@@ -147,7 +161,14 @@ export async function undoSpent(combatId, combatantId, entryId, user) {
   }
   undoing.add(entryId);
   try {
-    await runRecords(entry.undo ?? []);
+    // All or nothing: a part that can no longer be taken back when its turn
+    // comes (the Reaction card changed while the undo waited in its queue)
+    // stops the undo there, and the Action stays spent.
+    const failed = await runRecords(entry.undo ?? [], { stopOnRefusal: true });
+    if (failed) {
+      tellUser(user, `CARLRPG.Actions.Undo.${failed}`);
+      return false;
+    }
     await applyActionOp(combatId, "refund", { combatantId, entryId }, user);
     return true;
   } finally {
@@ -157,19 +178,37 @@ export async function undoSpent(combatId, combatantId, entryId, user) {
 
 /**
  * Take back what an Action did, last thing first. One record failing
- * (a document since deleted) doesn't stop the rest.
+ * (a document since deleted) doesn't stop the rest. A record that refuses
+ * - its part can't be taken back now - is reported, and with
+ * `stopOnRefusal` nothing after it runs. (A part that can refuse - a
+ * Reaction-card op, a row's Evade or Shield Block, an Intervene - is noted
+ * last on its Action, so it runs first: a refusal leaves the rest undone.)
  * @param {object[]} records
+ * @param {{stopOnRefusal?: boolean}} [options]
+ * @returns {Promise<string|null>}  The first refusal, as an Undo lang key
+ *   ("ReactionChanged"...), or null.
  */
-export async function runRecords(records) {
+export async function runRecords(records, { stopOnRefusal = false } = {}) {
+  let refused = null;
   for (const record of [...(records ?? [])].reverse()) {
+    let reason = null;
     try {
-      await runRecord(record);
+      reason = await runRecord(record);
     } catch (err) {
       console.error(`CarlRPG | undoing an Action: "${record.t}" failed`, err);
     }
+    if (!reason) continue;
+    refused ??= reason;
+    if (stopOnRefusal) break;
   }
+  return refused;
 }
 
+/**
+ * Take back one part of an Action.
+ * @param {object} record
+ * @returns {Promise<string|null|undefined>}  An Undo lang key if it refused.
+ */
 async function runRecord(record) {
   switch (record.t) {
     case "message":
@@ -225,17 +264,25 @@ async function runRecord(record) {
       else if (record.data) await actor.createEmbeddedDocuments("Item", [record.data], { keepId: true, carlUndo: true });
       return;
     }
-    case "intervene":
+    case "intervene": {
       // The d6 off the card (or its row), and it re-graded without it.
       await applyRevision(record.messageId, "unintervene", record.rowId
         ? { id: record.id, rowId: record.rowId, which: record.which }
         : { id: record.id }, game.user);
-      return;
-    case "rowEvade": {
-      const message = game.messages.get(record.messageId);
-      if (message) await clearRowEvade(message, record.rowId, record.checkId, record.which ?? "evade");
-      return;
+      // Refused (its card couldn't be re-graded): the d6 is still on it.
+      return interventionStillOn(record) ? "Failed" : null;
     }
+    case "rowEvade":
+      // In the Attack card's queue (after any Intervene or reroll on it),
+      // checked again: a row applied since the undo was asked refuses it.
+      return withCardQueue(record.messageId, async () => {
+        const message = game.messages.get(record.messageId);
+        if (!message) return null;
+        const reason = rowEvadeBlocker(record);
+        if (reason) return reason;
+        await clearRowEvade(message, record.rowId, record.checkId, record.which ?? "evade");
+        return null;
+      });
     case "declaration": {
       const combat = game.combats.get(record.combatId);
       // Withdrawing it gives back its Debuffs - and its Action (the same one).
@@ -243,14 +290,29 @@ async function runRecord(record) {
       return;
     }
     case "reaction":
-      await withCard(record.messageId, async () => {
+      // Checked again in the card's queue: an op that landed while this
+      // waited (another crawler's Intervene) changes `rev`, and the card
+      // can't be put back without losing it - refused.
+      return withCard(record.messageId, async () => {
         const message = game.messages.get(record.messageId);
         const current = message?.getFlag(SCOPE, "reaction");
-        if (!current || current.locked || (current.rev ?? 0) !== record.rev) return;
+        if (!current) return null; // the card is gone, and its Actions with it
+        if (current.locked) return "ReactionLocked";
+        if ((current.rev ?? 0) !== record.rev) return "ReactionChanged";
         const restored = foundry.utils.deepClone(record.before);
         restored.rev = current.rev ?? 0; // counts on from here (writeState)
         await writeState(message, restored);
+        return null;
       });
-      return;
   }
+}
+
+/** Whether an Intervene's d6 is still on its card (or row). */
+function interventionStillOn(record) {
+  const message = game.messages.get(record.messageId);
+  if (!message) return false;
+  const list = record.rowId
+    ? (rowCheck(rowAt(message, record.rowId), record.which)?.interventions ?? [])
+    : interventionsOf(message);
+  return list.some((i) => i.id === record.id);
 }

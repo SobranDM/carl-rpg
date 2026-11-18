@@ -6,7 +6,7 @@ import {
   RENAMED_MIGRATION_IDS, currentMigrationIds, MOB_ATTACKS_MIGRATION_ID,
   MOB_SIZE_MIGRATION_ID, saveMobSizes, GEAR_SLOTS_MIGRATION_ID, WEAPON_SKILL_GUESS_ID, loadWeaponSkillSources,
   guessWeaponSkill, guessActorWeaponSkills, guessItemWeaponSkills, looksLikeWeapon, postWeaponSkillNotice,
-  gearSlotUpdate, inferActorGear,
+  gearSlotUpdate, inferActorGear, BASE_MULTIPLIER_MIGRATION_ID, baseMultiplierUpdate,
 } from "../../helpers/migration.mjs";
 import {
   blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
@@ -72,11 +72,41 @@ export default function register(quench) {
           assert.includeMembers(MIGRATIONS.map((m) => m.id), renamed, "every old id maps to a migration");
           // Migrations added after the renaming never had an old id.
           const added = MIGRATIONS.map((m) => m.id).filter((id) => !renamed.includes(id));
-          assert.sameMembers(added, [WEAPON_SKILL_GUESS_ID, MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID, GEAR_SLOTS_MIGRATION_ID]);
+          assert.sameMembers(added, [BASE_MULTIPLIER_MIGRATION_ID, WEAPON_SKILL_GUESS_ID, MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID, GEAR_SLOTS_MIGRATION_ID]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
           assert.sameMembers(ids(p.run), added, "nothing runs twice - only what's been added since");
           assert.sameMembers(currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),
             [...renamed, "some-later-fix"], "read as the new ids, without duplicates");
+        });
+      });
+
+      describe("0.7.0: base-dice multipliers", function () {
+        useQuenchTimeout(this);
+
+        it("moves old Powerful Strike / Magic Missile multipliers to base, own and Upgrade; leaves others alone", async function () {
+          const actor = await createTestCharacter("base-mult");
+          try {
+            const mult = (value, kind = "multiplier") => ({ targetType: "skillDamage", target: "", mode: "multiply", value, damageDiceKind: kind });
+            const strike = await createTestItem(actor, "damageEffect", "Powerful Strike", {
+              name: "Powerful Strike", system: { changes: [mult("@rank")] },
+            });
+            const missile = await createTestItem(actor, "spell", "Magic Missile", {
+              name: "Magic Missile", system: { upgrades: [{ rankThreshold: 15, description: "", changes: [mult("3")] }] },
+            });
+            const smush = await createTestItem(actor, "damageEffect", "Smush", {
+              name: "Smush", system: { changes: [mult("2")] },
+            });
+            const u1 = baseMultiplierUpdate(strike);
+            assert.equal(u1?.["system.changes"][0].damageDiceKind, "base");
+            const u2 = baseMultiplierUpdate(missile);
+            assert.equal(u2?.["system.upgrades"][0].changes[0].damageDiceKind, "base", "an Upgrade tier's too");
+            assert.isNull(baseMultiplierUpdate(smush), "x total effects keep \"multiplier\"");
+            await strike.update({ "system.changes": u1["system.changes"] });
+            assert.isNull(baseMultiplierUpdate(actor.items.get(strike.id)), "already base: nothing to do");
+            assert.isTrue(MIGRATIONS.some((m) => m.id === BASE_MULTIPLIER_MIGRATION_ID));
+          } finally {
+            await deleteTestActor(actor);
+          }
         });
       });
 

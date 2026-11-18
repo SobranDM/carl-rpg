@@ -660,6 +660,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  line-height: normal;
+  white-space: normal;
+}
+.carl-dialog .carl-dialog-condition input[type=checkbox] {
+  flex: 0 0 auto;
 }
 .carl-dialog .carl-dialog-condition[hidden] {
   display: none;
@@ -682,6 +687,13 @@
 .carl-dialog .carl-dialog-condition-source {
   opacity: 0.7;
   font-size: 11px;
+}
+.carl-dialog .carl-dialog-difficulty {
+  flex-wrap: wrap;
+}
+.carl-dialog .carl-dialog-difficulty .carl-dialog-difficulty-basis {
+  flex: 0 0 100%;
+  margin: 2px 0 0;
 }
 .carl-dialog .carl-dialog-preset {
   align-items: center;
@@ -1298,7 +1310,9 @@
 }
 .carl-chat-card .carl-status-section-acts {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 4px;
   padding: 3px 6px 5px;
 }
 .carl-chat-card .carl-status-row {

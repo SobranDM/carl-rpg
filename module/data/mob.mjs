@@ -167,9 +167,10 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     const floor = game.settings.get("carl-rpg", "currentFloor");
     this.hbSlotsRule = tier ? tier.hbSlotsBase + floor : Math.min(this.level, 10);
     this.hb.max = this.hbSlotsOverride ?? this.hbSlotsRule;
-    if (this.hb.value > this.hb.max) this.hb.value = this.hb.max;
 
     deriveResourceCaps(this);
+    // Against the effective max, so bonus slots from gear can be filled.
+    if (this.hb.value > this.hb.effectiveMax) this.hb.value = this.hb.effectiveMax;
   }
 
   getRollData() {

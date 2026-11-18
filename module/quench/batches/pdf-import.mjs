@@ -33,7 +33,31 @@ import {
 import { parseSizeText } from "../../helpers/size-text.mjs";
 import { legacyAttackItems, mobAttacksOf } from "../../helpers/mob-attacks.mjs";
 import { pressDialog, useQuenchTimeout, withDialog } from "../helpers.mjs";
-import { chooseContent } from "../../pdf-import/import-dialog.mjs";
+import { chooseContent, resolveMaps } from "../../pdf-import/import-dialog.mjs";
+import { closePdfDocument, getPdfJs, loadPdfDocument } from "../../pdf-import/pdf-loader.mjs";
+
+/**
+ * A one-page PDF with a correct cross-reference table, as a File - for
+ * opening and closing a real pdf.js document.
+ */
+function tinyPdfFile() {
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] >>",
+  ];
+  let body = "%PDF-1.4\n";
+  const offsets = objects.map((obj, i) => {
+    const at = body.length;
+    body += `${i + 1} 0 obj\n${obj}\nendobj\n`;
+    return at;
+  });
+  const xref = body.length;
+  body += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const at of offsets) body += `${String(at).padStart(10, "0")} 00000 n \n`;
+  body += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return new File([body], "quench-tiny.pdf", { type: "application/pdf" });
+}
 
 // Every block below is made up in the books' layout. No rulebook text is
 // committed here: the books are not ours to redistribute.
@@ -949,6 +973,95 @@ export default function register(quench) {
           for (const m of maps) URL.revokeObjectURL(m.thumb);
           assert.isFalse(Object.values(choice.map ?? {}).some(Boolean), "no maps chosen");
           assert.isTrue(choice.kind?.gear, "the content choice is untouched");
+        });
+
+        it("keeps every map thumbnail made before a later page fails, so each can be revoked", async function () {
+          const page = {
+            view: [0, 0, 612, 792],
+            getOperatorList: async () => opList([
+              ["save"],
+              ["transform", [560, 0, 0, 700, 20, 40]],
+              ["paintImageXObject", ["img_map", 2, 2]],
+              ["restore"],
+            ]),
+            objs: { get: (id, done) => done({ width: 2, height: 2, kind: 3, data: new Uint8Array(16).fill(200) }) },
+            commonObjs: { get: () => {} },
+            cleanup() {},
+          };
+          const pdfDoc = {
+            getPage: async (n) => {
+              if (n === 1) return page;
+              throw new Error("Quench: page unreadable");
+            },
+          };
+          const candidates = [{ page: 1, name: "Test Map A" }, { page: 2, name: "Test Map B" }];
+          const maps = [];
+          let error = null;
+          try {
+            await resolveMaps(pdfDoc, { OPS }, candidates, { update() {} }, maps);
+          } catch (err) {
+            error = err;
+          } finally {
+            for (const m of maps) URL.revokeObjectURL(m.thumb);
+          }
+          assert.equal(error?.message, "Quench: page unreadable");
+          assert.lengthOf(maps, 1, "the first map's thumbnail is in the caller's array");
+          assert.match(maps[0].thumb, /^blob:/);
+        });
+      });
+
+      describe("opening and closing the PDF (pdf-loader)", function () {
+        useQuenchTimeout(this);
+
+        it("closes a document through its loading task (pdf.js 6 documents have no destroy)", async function () {
+          let destroyed = 0;
+          const pdfDoc = { loadingTask: { destroy: async () => { destroyed += 1; } } };
+          await closePdfDocument(pdfDoc);
+          assert.equal(destroyed, 1);
+        });
+
+        it("never throws or rejects: nothing open, or a close that fails", async function () {
+          await closePdfDocument(null);
+          await closePdfDocument({});
+          const warn = console.warn;
+          console.warn = () => {};
+          try {
+            await closePdfDocument({ loadingTask: { destroy: async () => { throw new Error("Quench: close failed"); } } });
+          } finally {
+            console.warn = warn;
+          }
+        });
+
+        it("opens and closes a real document, ending its worker", async function () {
+          const { pdfDoc } = await loadPdfDocument(tinyPdfFile());
+          assert.equal(pdfDoc.numPages, 1);
+          assert.notTypeOf(pdfDoc.destroy, "function", "why the old pdfDoc.destroy() threw");
+          await closePdfDocument(pdfDoc);
+          assert.isTrue(pdfDoc.loadingTask.destroyed);
+        });
+
+        it("a file pdf.js can't open is rejected, and its loading task destroyed", async function () {
+          const pdfjs = await getPdfJs();
+          // The loading task's class isn't exported: reach its prototype through one.
+          const probe = pdfjs.getDocument({ data: new Uint8Array([0]) });
+          const proto = Object.getPrototypeOf(probe);
+          await probe.destroy().catch(() => {});
+          const original = proto.destroy;
+          let destroyed = 0;
+          proto.destroy = function (...args) {
+            destroyed += 1;
+            return original.apply(this, args);
+          };
+          let error = null;
+          try {
+            await loadPdfDocument(new File([new Uint8Array([1, 2, 3, 4])], "quench-garbage.pdf"));
+          } catch (err) {
+            error = err;
+          } finally {
+            proto.destroy = original;
+          }
+          assert.exists(error, "a garbage file is rejected");
+          assert.equal(destroyed, 1, "its worker was ended");
         });
       });
 

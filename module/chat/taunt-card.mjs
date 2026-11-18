@@ -8,7 +8,9 @@
  * Success, redirects that specific already-rolled Attack onto themselves.
  *
  * The redirect itself is just overwriting the Attack ChatMessage's own
- * targetUuids flag via updateCardMessage: once redirected, the SAME card's
+ * targetUuids flag (and swapping its target rows) - written by the card's
+ * writer in the card's queue (tauntRedirectNow), checked there against the
+ * card as it is then: once redirected, the SAME card's
  * existing "Apply Damage"/"Apply to Target(s)"/"Roll Evade" buttons (already
  * wired via module/chat/chat-listener.mjs's registry) act on the new target
  * automatically - no new apply-side code needed here at all. The Taunt roll
@@ -23,7 +25,9 @@ import CarlDice from "../dice/dice.mjs";
 import { degreeBadge, isHitDegree } from "../helpers/rules.mjs";
 import { resolveActingActor } from "../helpers/token-resolution.mjs";
 import { createRollMessage } from "./chat-card.mjs";
-import { updateCardMessage } from "../helpers/chat-socket.mjs";
+import { askGM, registerAskHandler } from "../helpers/chat-socket.mjs";
+import { noteUndo, takeAction } from "../helpers/actions.mjs";
+import { withCardQueue } from "./check-revision.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow, nextRowId } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 
@@ -116,31 +120,49 @@ export function canActTaunt() {
  * @param {PointerEvent} event
  * @param {ChatMessage} message  The original Attack chat message.
  */
-async function onTauntAttack(event, message) {
+function onTauntAttack(event, message) {
   event.preventDefault();
+  return tauntAttack(message);
+}
+
+/**
+ * Taunt an Attack card's Attack (onTauntAttack). In a phased fight this is
+ * the Taunt Interrupt Action - 1 Action, as on the Reaction card
+ * (docs/action-tracking.md) - spent once the roll is made, whatever it
+ * rolled. The roll is made here; the redirect is written by the card's
+ * writer, in its queue (tauntRedirectNow), and refused there if the Attack
+ * was settled or its rows changed while the dialog was open. The roll
+ * stands either way.
+ * @param {ChatMessage} message  The Attack card.
+ * @param {{taunter?: {actor: Actor, token: TokenDocument|null}, skipDialog?: boolean}} [options]
+ *   taunter: who Taunts (default: the acting user's token/actor) - preset by tests.
+ * @returns {Promise<"redirected"|"failed"|"refused"|"unanswered"|null>}  What
+ *   came of it; null if no Taunt was made.
+ */
+export async function tauntAttack(message, { taunter = null, skipDialog = false } = {}) {
   if (isCardLocked(message)) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.AlreadyResolved"));
-    return;
+    return null;
   }
   if (message.getFlag("carl-rpg", "isArea")) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.NotArea"));
-    return;
+    return null;
   }
 
-  const resolved = resolveActingActor();
-  if (!resolved) return;
+  const resolved = taunter ?? resolveActingActor();
+  if (!resolved) return null;
   const taunterUuid = resolved.token?.uuid ?? resolved.actor.uuid;
 
   const targetUuids = message.getFlag("carl-rpg", "targetUuids") ?? [];
   if (targetUuids.includes(taunterUuid)) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.CannotTauntSelf"));
-    return;
+    return null;
   }
 
   const attackerActor = await resolveAttackerActor(message);
   if (!attackerActor) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.NoAttacker"));
-    return;
+    return null;
   }
 
   // Matched by name, same convention as every other by-name Skill lookup in
@@ -150,59 +172,140 @@ async function onTauntAttack(event, message) {
   const tauntItem = resolved.actor.items.find((i) => i.type === "skill" && i.name === "Taunt");
   if (!tauntItem) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.NoTauntSkill"));
-    return;
+    return null;
   }
 
   const statKey = tauntItem.system.opposedStat || "int";
   const statMod = attackerActor.system.stats?.[statKey]?.mod ?? 0;
   const floor = game.settings.get("carl-rpg", "currentFloor");
   const difficulty = 10 + statMod + floor;
+  // The rows the redirect would replace, as they are before the dialog: if
+  // they change meanwhile, the redirect is refused (tauntRedirectNow).
+  const seen = activeRows(message.getFlag("carl-rpg", "targetRows")).map((row) => row.id);
 
-  // The attacking Mob's own Debuffs lower this Difficulty too (p.96) -
-  // rollOpposedSkillCheck offers them as dialog rows via `opponent`.
-  const rollData = await CarlDice.rollOpposedSkillCheck(resolved.actor, tauntItem, {
-    difficulty, opponent: attackerActor, skipDialog: false, post: false,
+  return takeAction(resolved.actor, "other", game.i18n.localize("CARLRPG.Reaction.Op.taunt"), async () => {
+    // The attacking Mob's own Debuffs lower this Difficulty too (p.96) -
+    // rollOpposedSkillCheck offers them as dialog rows via `opponent`.
+    const rollData = await CarlDice.rollOpposedSkillCheck(resolved.actor, tauntItem, {
+      difficulty, opponent: attackerActor, skipDialog, post: false,
+    });
+    if (!rollData) return null; // Dialog cancelled - nothing to record, no Action spent.
+    const { roll, breakdown, degree, debuffNote } = rollData;
+    const success = isHitDegree(degree);
+
+    const answer = await askGM(TAUNT, { cardId: message.id, taunterUuid, success, seen },
+      { local: message.canUserModify(game.user, "update") });
+    const outcome = answer?.outcome ?? null;
+
+    // Posted once the card's writer has answered, so it says what happened.
+    let subtitle = "CARLRPG.Taunt.Fail";
+    if (outcome === "redirected") subtitle = "CARLRPG.Taunt.Success";
+    else if (success) subtitle = outcome === "refused" ? "CARLRPG.Taunt.SuccessTooLate" : "CARLRPG.Taunt.SuccessUnanswered";
+    await createRollMessage({
+      rolls: [roll],
+      rollMeta: [{ label: tauntItem.name, detail: `vs. ${attackerActor.name}`, breakdown }],
+      title: game.i18n.format("CARLRPG.Taunt.RollTitle", { name: resolved.actor.name }),
+      img: resolved.actor.img,
+      subtitle: game.i18n.localize(subtitle),
+      badge: degreeBadge(degree),
+      body: debuffNote ?? "",
+      actor: resolved.actor,
+      token: resolved.token,
+    });
+    // Undone (helpers/action-undo.mjs): the roll card goes (chat-card.mjs
+    // notes it), and the Taunt button it used comes back. A redirect can't
+    // be taken back - that Taunt's undo is refused.
+    if (outcome === "redirected") noteUndo(resolved.actor, { t: "blocked", reason: "TauntRedirected" });
+    else if (answer?.marked) noteUndo(resolved.actor, { t: "set", uuid: message.uuid, data: { "flags.carl-rpg.tauntedBy": null } });
+
+    const name = resolved.actor.name;
+    if (outcome === "redirected") ui.notifications.info(game.i18n.format("CARLRPG.Taunt.RedirectedNotice", { name }));
+    else if (outcome === "failed") ui.notifications.info(game.i18n.format("CARLRPG.Taunt.FailedNotice", { name }));
+    else if (outcome === "refused") ui.notifications.warn(game.i18n.format("CARLRPG.Taunt.TooLate", { name }));
+    // Unanswered (no GM, or none in time - askGM said so): the roll was
+    // still made, so the Action is still spent.
+    return outcome ?? "unanswered";
   });
-  if (!rollData) return; // Dialog cancelled - nothing to record.
-  const { roll, breakdown, degree, debuffNote } = rollData;
-  const success = isHitDegree(degree);
+}
 
-  await createRollMessage({
-    rolls: [roll],
-    rollMeta: [{ label: tauntItem.name, detail: `vs. ${attackerActor.name}`, breakdown }],
-    title: game.i18n.format("CARLRPG.Taunt.RollTitle", { name: resolved.actor.name }),
-    img: resolved.actor.img,
-    subtitle: game.i18n.localize(success ? "CARLRPG.Taunt.Success" : "CARLRPG.Taunt.Fail"),
-    badge: degreeBadge(degree),
-    body: debuffNote ?? "",
-    actor: resolved.actor,
-    token: resolved.token,
-  });
+const TAUNT = "tauntRedirect";
 
-  // tauntedBy is this button's own one-shot doneFlag (set on ANY outcome,
-  // not just Success) - the Interrupt Action is spent either way, mirroring
-  // Roll Evade's evadeRolled locking regardless of the Evade's own outcome.
-  // On Success the Attack's target rows are swapped for one taunter row
-  // (old rows are marked replaced - flag subtrees can't be deleted by a
-  // merge update).
-  const flags = { tauntedBy: taunterUuid };
-  if (success) {
-    flags.targetUuids = [taunterUuid];
-    const rows = message.getFlag("carl-rpg", "targetRows");
+/**
+ * The writer's side of a Taunt from an Attack card, in the card's queue
+ * (the one its rows' Applies are claimed in): checked against the card as
+ * it is now, and written in one step.
+ *  - `tauntedBy` - the Taunt button's one-shot doneFlag, set on any
+ *    outcome - names the first Taunt made (`marked`: this one set it).
+ *  - On a Success the Attack's target rows are swapped for one taunter row
+ *    (old rows are marked replaced - flag subtrees can't be deleted by a
+ *    merge update), its id allocated here - unless the card is locked now
+ *    (a row Evaded, blocked or applied), or its rows aren't the ones the
+ *    taunter saw (another Taunt took it): then refused.
+ * @param {{cardId: string, taunterUuid: string, success: boolean, seen: string[]}} data
+ * @param {User} user  Who asked.
+ * @returns {Promise<{outcome: "redirected"|"failed"|"refused", marked: boolean}|null>}
+ */
+export function tauntRedirectNow({ cardId, taunterUuid, success, seen } = {}, user = game.user) {
+  return withCardQueue(cardId, async () => {
+    const message = game.messages.get(cardId);
+    const taunter = taunterFrom(taunterUuid);
+    if (!message || !taunter) return null;
+    if (!user.isGM && !taunter.actor.testUserPermission(user, "OWNER")) return null;
+    const flags = message.flags["carl-rpg"] ?? {};
+    const marked = !flags.tauntedBy;
+    const mark = async () => {
+      if (marked) await message.update({ flags: { "carl-rpg": { tauntedBy: taunterUuid } } });
+    };
+    if (!success) {
+      await mark();
+      return { outcome: "failed", marked };
+    }
+    if (redirectRefused(message, taunterUuid, seen)) {
+      await mark();
+      return { outcome: "refused", marked };
+    }
+    const update = { tauntedBy: taunterUuid, targetUuids: [taunterUuid] };
+    const rows = flags.targetRows;
     if (rows) {
-      const row = taunterRow(message, resolved);
-      flags.targetRows = Object.fromEntries([
+      const row = taunterRow(message, taunter);
+      update.targetRows = Object.fromEntries([
         ...Object.keys(rows).map((id) => [id, { replaced: true }]),
         [row.id, row],
       ]);
     }
-  }
-  await updateCardMessage(message, { flags: { "carl-rpg": flags } });
+    await message.update({ flags: { "carl-rpg": update } });
+    return { outcome: "redirected", marked };
+  });
+}
+// Registered at load: chat-socket.mjs is a leaf, evaluated before this module.
+registerAskHandler(TAUNT, tauntRedirectNow);
 
-  ui.notifications.info(game.i18n.format(
-    success ? "CARLRPG.Taunt.RedirectedNotice" : "CARLRPG.Taunt.FailedNotice",
-    { name: resolved.actor.name }
-  ));
+/**
+ * Whether a successful Taunt can't take the Attack now: it's settled (a
+ * row Evaded, blocked or applied), an Area Attack, already aimed at the
+ * taunter, or its rows aren't those the taunter saw before rolling.
+ * @param {ChatMessage} message
+ * @param {string} taunterUuid
+ * @param {string[]} seen  The active row ids before the dialog.
+ * @returns {boolean}
+ */
+function redirectRefused(message, taunterUuid, seen) {
+  if (isCardLocked(message) || message.getFlag("carl-rpg", "isArea")) return true;
+  if ((message.getFlag("carl-rpg", "targetUuids") ?? []).includes(taunterUuid)) return true;
+  const now = activeRows(message.getFlag("carl-rpg", "targetRows")).map((row) => row.id);
+  return !Array.isArray(seen) || now.length !== seen.length || now.some((id, i) => id !== seen[i]);
+}
+
+/** The taunter from its token or actor uuid, as resolveActingActor gives it. */
+function taunterFrom(uuid) {
+  let doc = null;
+  try {
+    doc = uuid ? fromUuidSync(uuid) : null;
+  } catch {
+    return null;
+  }
+  if (doc instanceof Actor) return { actor: doc, token: null };
+  return doc?.actor ? { actor: doc.actor, token: doc } : null;
 }
 
 /**

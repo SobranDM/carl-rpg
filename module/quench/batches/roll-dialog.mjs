@@ -83,7 +83,7 @@ export default function register(quench) {
           }
         });
 
-        it("has no Roll label, a help icon citing p.59, formula-free presets, and room for its labels", async function () {
+        it("has no Roll label, no preset dropdown or modifier, a help icon citing p.59, and the Difficulty's source as a hint", async function () {
           const difficultyPresets = buildDifficultyPresets({
             floor: 3, selected: "unopposed", opposed: { name: "Mordecai", stat: "DEX", mod: 2 },
           });
@@ -98,11 +98,10 @@ export default function register(quench) {
             assert.include(help?.dataset.tooltipHtml ?? "", "p.59");
             assert.equal(help?.getAttribute("tabindex"), "0", "reachable from the keyboard");
             assert.include(help?.getAttribute("aria-label") ?? "", "10 + 2 x Floor", "the formulas, without hovering");
-            const labels = [...el.querySelectorAll('select[name="difficultyPreset"] option')].map((o) => o.textContent);
-            assert.include(labels, game.i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: 16 }));
-            assert.include(labels, game.i18n.format("CARLRPG.Dialog.Preset.Stat", { value: 13 }));
-            assert.include(labels, game.i18n.format("CARLRPG.Dialog.Preset.Opposed", { name: "Mordecai", stat: "DEX", value: 15 }));
-            assert.isTrue(labels.every((l) => !l.includes("Floor") && !l.includes("Mod")), "no formulas");
+            assert.isNull(el.querySelector('select[name="difficultyPreset"]'), "no Difficulty type dropdown");
+            assert.isNull(el.querySelector('input[name="modifier"]'), "no situational modifier (ruled 2026-11-18)");
+            assert.equal(el.querySelector(".carl-dialog-difficulty-basis")?.textContent.trim(),
+              game.i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: 16 }), "the hint names the formula used");
             assert.isAtLeast(dialog.position.width, 480);
             press(dialog, "cancel");
           });

@@ -1,6 +1,7 @@
 /**
- * Roll-options dialog: Advantage/Disadvantage, an optional Difficulty, a
- * freetext situational modifier, and one checkbox per applicable
+ * Roll-options dialog: Advantage/Disadvantage, an optional Difficulty
+ * (pre-filled from p.59's formulas; a GM's situational call goes into it -
+ * there's no separate modifier, ruled 2026-11-18), and one checkbox per applicable
  * ChangeEntry.conditions toggle (see module/helpers/modifiers.mjs -
  * conditions are NEVER auto-evaluated; this dialog is the only place they
  * get applied, based on what the player/GM checks per the fiction).
@@ -167,7 +168,9 @@ export async function promptRollOptions(options = {}) {
     difficulty: args.difficulty, showDifficulty: args.showDifficulty, defaultAdvantage: args.defaultAdvantage,
     conditions: args.conditionalModifiers, damageEffectChoices: args.damageEffectChoices,
     manaCostChoices: args.manaCostChoices, debuffRows: args.debuffRows, showRollMode: args.showRollMode,
-    difficultyLabel: args.difficultyLabel, difficultyPresets: args.difficultyPresets,
+    difficultyLabel: args.difficultyLabel,
+    // Where the pre-filled Difficulty came from ("Unopposed: 16"), or nothing.
+    difficultyBasis: difficultyBasisOf(args.difficultyPresets),
     areaTargets: args.areaTargets, isArea: args.isArea, weaponNote: args.weaponNote,
     // In a fight: whether this roll spends one of the roller's Actions.
     showUsesAction: args.usesAction !== null, usesAction: !!args.usesAction,
@@ -287,7 +290,7 @@ function readKeptFields(root) {
   const kept = {};
   const advantage = root.querySelector('select[name="advantage"]');
   if (advantage) kept.advantage = advantage.value;
-  for (const name of ["difficulty", "modifier"]) {
+  for (const name of ["difficulty"]) {
     const field = root.querySelector(`input[name="${name}"]`);
     if (field) kept[name] = field.value;
   }
@@ -300,27 +303,30 @@ function restoreKeptFields(root, kept) {
     const advantage = root.querySelector('select[name="advantage"]');
     if (advantage) advantage.value = kept.advantage;
   }
-  for (const name of ["difficulty", "modifier"]) {
+  for (const name of ["difficulty"]) {
     const field = root.querySelector(`input[name="${name}"]`);
     if (field && kept[name] !== undefined) field.value = kept[name];
   }
 }
 
 /**
- * Dialog wiring: a Difficulty preset fills the number field; the Area Attack
- * checkbox shows/hides the Splash target list.
+ * The pre-filled Difficulty's source, for the hint under the field: the
+ * selected preset's label ("Unopposed: 16", "Opposed vs. Goblin's CHA: 15",
+ * "Set Difficulty: 14"), or "" when there's none (Custom, or no presets).
+ * @param {{label: string, value: number|null, selected?: boolean}[]} [presets]
+ * @returns {string}
+ */
+export function difficultyBasisOf(presets = []) {
+  const picked = (presets ?? []).find((p) => p.selected);
+  return picked && picked.value !== null && picked.value !== undefined ? picked.label : "";
+}
+
+/**
+ * Dialog wiring: the Area Attack checkbox shows/hides the Splash target list.
  * @param {HTMLElement} root
  */
 function wireRollOptions(root) {
   if (!(root instanceof HTMLElement)) return;
-  const preset = root.querySelector("[data-carl-difficulty-preset]");
-  const field = root.querySelector('input[name="difficulty"]');
-  if (preset && field) {
-    preset.addEventListener("change", () => {
-      const value = preset.selectedOptions[0]?.dataset.value;
-      if (value !== undefined && value !== "") field.value = value;
-    });
-  }
   const area = root.querySelector("[data-carl-area-toggle]");
   const splash = root.querySelector(".carl-splash-targets");
   if (area && splash) area.addEventListener("change", () => { splash.style.display = area.checked ? "" : "none"; });

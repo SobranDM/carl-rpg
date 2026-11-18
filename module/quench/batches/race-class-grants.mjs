@@ -1,5 +1,10 @@
-import { bakeItemGrants, recheckLevelGatedGrants } from "../../helpers/race-class-grants.mjs";
+import { bakeItemGrants, cappedGrantRank, recheckLevelGatedGrants } from "../../helpers/race-class-grants.mjs";
 import { createTestCharacter, createTestItem, deleteTestActor, settle, useQuenchTimeout, waitFor } from "../helpers.mjs";
+
+/** The Race/Class's record of baked grant ids. */
+const bakedIds = (item) => item.getFlag("carl-rpg", "bakedGrantIds") ?? [];
+/** A unique Skill name no compendium has, so a grant makes a bare Skill. */
+const uniqueSkill = () => `Quench Grant Skill ${foundry.utils.randomID()}`;
 
 export default function register(quench) {
   quench.registerBatch(
@@ -80,6 +85,126 @@ export default function register(quench) {
             assert.equal(created.system.rank, 8);
           } finally {
             await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("Rank-10 grant ceiling caps the gain, not the Rank (p.127)", function () {
+        useQuenchTimeout(this);
+
+        it("cappedGrantRank: never lowers, stops a gain at 10, leaves a new Skill and a reduction alone", function () {
+          assert.equal(cappedGrantRank(12, 14), 12, "Rank 12 plus 2 stays 12");
+          assert.equal(cappedGrantRank(8, 11), 10, "Rank 8 plus 3 stops at 10");
+          assert.equal(cappedGrantRank(10, 12), 10);
+          assert.equal(cappedGrantRank(0, 12), 12, "a new Skill is made at the granted Rank");
+          assert.equal(cappedGrantRank(6, 4), 4, "a drawback still lowers it");
+        });
+
+        for (const [rank, grant, expected] of [[12, 2, 12], [8, 3, 10]]) {
+          it(`a Skill at Rank ${rank} granted +${grant} ends at ${expected}`, async function () {
+            const actor = await createTestCharacter();
+            try {
+              const name = uniqueSkill();
+              await createTestItem(actor, "skill", name, { name, system: { rank, category: "utility" } });
+              const race = await createTestItem(actor, "race", "race", {
+                system: { changes: [{ targetType: "skillRank", target: name, mode: "add", value: String(grant) }] },
+              });
+              // Wait for the bake to finish (its record is written last), not for the Rank to move.
+              await waitFor(() => bakedIds(race).length === 1, { message: "the grant never baked" });
+              assert.equal(actor.items.find((i) => i.name === name).system.rank, expected);
+            } finally {
+              await deleteTestActor(actor);
+            }
+          });
+        }
+
+        it("a Skill the actor doesn't have, granted +12, is made at Rank 12", async function () {
+          const actor = await createTestCharacter();
+          try {
+            const name = uniqueSkill();
+            await createTestItem(actor, "race", "race", {
+              system: { changes: [{ targetType: "skillRank", target: name, mode: "add", value: "12" }] },
+            });
+            await waitFor(() => !!actor.items.find((i) => i.name === name));
+            assert.equal(actor.items.find((i) => i.name === name).system.rank, 12);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("baked grants belong to the actor they were baked on", function () {
+        useQuenchTimeout(this);
+
+        /** A Character with a Race (+2 STR, +3 to a new Skill) fully baked on it. */
+        async function bakedOnA() {
+          const actor = await createTestCharacter("grants A");
+          const skill = uniqueSkill();
+          const race = await createTestItem(actor, "race", "race", {
+            system: { changes: [
+              { targetType: "stat", target: "str", mode: "add", value: "2" },
+              { targetType: "skillRank", target: skill, mode: "add", value: "3" },
+            ] },
+          });
+          await waitFor(() => bakedIds(race).length === 2, { message: "the Race never baked on A" });
+          assert.equal(actor.system.stats.str.value, 5);
+          return { actor, race, skill };
+        }
+
+        /** B got the Race's bumps, and its copy records them. */
+        async function assertBakedOnB(b, skill) {
+          await waitFor(() => b.system.stats.str.value === 5 && !!b.items.find((i) => i.name === skill), {
+            message: "the copied Race never baked on B",
+          });
+          assert.equal(b.items.find((i) => i.name === skill).system.rank, 3);
+          const copy = b.items.find((i) => i.type === "race");
+          await waitFor(() => bakedIds(copy).length === 2, { message: "B's copy has no record of baking" });
+        }
+
+        it("a Race baked on A, copied onto B, bakes on B", async function () {
+          const { actor: a, race, skill } = await bakedOnA();
+          const b = await createTestCharacter("grants B");
+          try {
+            // As a drop does (actor-sheet.mjs _onDropItem): the item's data, flags and all.
+            await b.createEmbeddedDocuments("Item", [game.items.fromCompendium(race, { clearFolder: true })]);
+            await assertBakedOnB(b, skill);
+            assert.equal(a.system.stats.str.value, 5, "A is untouched");
+          } finally {
+            await deleteTestActor(a);
+            await deleteTestActor(b);
+          }
+        });
+
+        it("a Race from A dragged to the Items sidebar, then onto B, bakes on B", async function () {
+          const { actor: a, race, skill } = await bakedOnA();
+          const b = await createTestCharacter("grants B");
+          let world = null;
+          try {
+            world = await Item.create(race.toObject());
+            await b.createEmbeddedDocuments("Item", [game.items.fromCompendium(world, { clearFolder: true })]);
+            await assertBakedOnB(b, skill);
+          } finally {
+            await world?.delete();
+            await deleteTestActor(a);
+            await deleteTestActor(b);
+          }
+        });
+
+        it("a duplicated actor keeps its Race's record and doesn't bake again", async function () {
+          const { actor: a } = await bakedOnA();
+          let dup = null;
+          try {
+            // As the sidebar's Duplicate does. Its items are embedded in the
+            // new actor's own creation, so Item _preCreate never runs on them.
+            dup = await a.clone({ name: `${a.name} (Copy)` }, { save: true });
+            await settle(300);
+            await recheckLevelGatedGrants(dup);
+            await settle();
+            assert.equal(dup.system.stats.str.value, 5, "the duplicate's Stats already include the grant");
+            assert.lengthOf(bakedIds(dup.items.find((i) => i.type === "race")), 2);
+          } finally {
+            await deleteTestActor(a);
+            await deleteTestActor(dup);
           }
         });
       });

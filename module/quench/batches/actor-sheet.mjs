@@ -749,6 +749,125 @@ export default function register(quench) {
           }
         });
       });
+      describe("a cleared number input keeps the stored value", function () {
+        useQuenchTimeout(this);
+
+        // A blank Level used to save as 1, so typing 20 back banked 57 Stat
+        // Points and wiped the grind hours (CarlRPGActor#_preUpdate).
+        it("a blank Level keeps 20, and retyping 20 levels up nothing", async function () {
+          const actor = await createTestCharacter("blank level", {
+            system: { attributes: { level: { value: 20 } }, bankedStatPoints: 0, grindLevelHours: 5 },
+          });
+          const sheet = actor.sheet;
+          try {
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            const level = () => sheet.element.querySelector('input[name="system.attributes.level.value"]');
+            level().value = "";
+            await sheet.submit();
+            assert.equal(actor.system.attributes.level.value, 20, "the blank didn't save");
+            assert.equal(level().value, "20", "the input shows the stored Level again");
+
+            level().value = "20";
+            await sheet.submit();
+            assert.equal(actor.system.bankedStatPoints, 0, "no Stat Points banked");
+            assert.equal(actor.system.grindLevelHours, 5, "the grind hours kept");
+
+            level().value = "1";
+            await sheet.submit();
+            assert.equal(actor.system.attributes.level.value, 1, "typing 1 still saves 1");
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("the active Race and Class", function () {
+        useQuenchTimeout(this);
+
+        const openSheet = async (actor) => {
+          const sheet = actor.sheet;
+          await sheet.render({ force: true });
+          await waitFor(() => sheet.rendered);
+          return sheet;
+        };
+        const worldItem = (type, label) =>
+          Item.create({ name: `Quench ${label} ${foundry.utils.randomID()}`, type });
+        const active = (actor, key) => actor.items.get(actor.system[key])?.name;
+
+        it("deleting the active Class clears it, and the next Class dropped is active", async function () {
+          const actor = await createTestCharacter("class swap");
+          const first = await worldItem("class", "first");
+          const second = await worldItem("class", "second");
+          try {
+            const sheet = await openSheet(actor);
+            await dropOn(sheet, sheet.element, first.toDragData());
+            await waitFor(() => active(actor, "class") === first.name, { message: "the first Class never became active" });
+            await actor.items.get(actor.system.class).delete();
+            await waitFor(() => actor.system.class === "", { message: "the deleted Class stayed active" });
+            await dropOn(sheet, sheet.element, second.toDragData());
+            await waitFor(() => active(actor, "class") === second.name, { message: "the new Class never became active" });
+            await sheet.close();
+          } finally {
+            await deleteTestActor(actor);
+            await first.delete();
+            await second.delete();
+          }
+        });
+
+        it("a Race id whose item is gone counts as none on a drop", async function () {
+          const actor = await createTestCharacter("dangling race");
+          const race = await worldItem("race", "dropped");
+          try {
+            await actor.update({ "system.race": foundry.utils.randomID() });
+            const sheet = await openSheet(actor);
+            await dropOn(sheet, sheet.element, race.toDragData());
+            await waitFor(() => active(actor, "race") === race.name, { message: "the dropped Race never became active" });
+            await sheet.close();
+          } finally {
+            await deleteTestActor(actor);
+            await race.delete();
+          }
+        });
+      });
+
+      describe("Skill and Spell drawers enrich their descriptions", function () {
+        useQuenchTimeout(this);
+
+        it("a Mob Skill's open drawer hides a GM Secret from a non-owner and draws an @UUID link", async function () {
+          const mob = await createTestMob("drawer");
+          const sheet = mob.sheet;
+          let skill;
+          try {
+            skill = await createTestItem(mob, "skill", "drawer", {
+              system: {
+                detailsExpanded: true,
+                description: `<p>Everyone sees this.</p><section class="secret" id="secret-quench"><p>GM only</p></section>`
+                  + `<p>@UUID[${mob.uuid}]{The Mob}</p>`,
+              },
+            });
+            const drawer = () => sheet.element
+              .querySelector(`li.item[data-item-id="${skill.id}"] + li.carl-nested-drawer .carl-skill-description`);
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            assert.exists(drawer()?.querySelector("section.secret"), "the owner sees the Secret");
+            assert.exists(drawer()?.querySelector("a.content-link"), "the link is drawn");
+
+            Object.defineProperty(skill, "isOwner", { get: () => false, configurable: true });
+            await sheet.render();
+            assert.include(drawer()?.textContent ?? "", "Everyone sees this.");
+            assert.notExists(drawer()?.querySelector("section.secret"), "no Secret for a non-owner");
+            assert.notInclude(drawer()?.textContent ?? "", "GM only");
+            assert.exists(drawer()?.querySelector("a.content-link"), "the link is drawn for a non-owner too");
+            assert.notInclude(drawer()?.textContent ?? "", "@UUID");
+          } finally {
+            if (skill) delete skill.isOwner;
+            await sheet.close();
+            await deleteTestActor(mob);
+          }
+        });
+      });
     },
     { displayName: "CarlRPG: Actor Sheet" },
   );

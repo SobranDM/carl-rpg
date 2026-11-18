@@ -497,6 +497,29 @@ export default function register(quench) {
           }
         });
       });
+      describe("bonus Health Bar slots", function () {
+        useQuenchTimeout(this);
+
+        // The HB clamp used to run against the base slot count, before gear's
+        // "hb.max" bonus was added in (derive-creature.mjs deriveResourceCaps).
+        it("a Pet with +1 hb.max from gear heals to 6 and keeps it", async function () {
+          const pet = await createTestPet("bonus slots", { system: { size: 3, attributes: { level: { value: 3 } } } });
+          try {
+            assert.equal(pet.system.hb.max, 5, "test setup: Size 3, Level 3 is 5 slots");
+            await createTestItem(pet, "item", "sturdy collar", {
+              system: { equipped: true, changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "1" }] },
+            });
+            assert.equal(pet.system.hb.bonusMax, 1, "test setup: the gear's bonus applies");
+            assert.equal(pet.system.hb.effectiveMax, 6);
+            await pet.update({ "system.hb.value": 6 });
+            assert.equal(pet.system.hb.value, 6);
+            pet.reset();
+            assert.equal(pet.system.hb.value, 6, "kept after another prepare");
+          } finally {
+            await deleteTestActor(pet);
+          }
+        });
+      });
     },
     { displayName: "CarlRPG: Pets" },
   );

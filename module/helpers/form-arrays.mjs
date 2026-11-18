@@ -45,3 +45,30 @@ export function mergeSubmitted(stored, submitted, whole = false) {
   }
   return submitted;
 }
+
+/**
+ * A cleared number input submits null (FormDataExtended), and a number field
+ * that can't be null cleans that to its initial value - a blank Level saved
+ * as 1, so typing the real Level back counted as a level-up. Such a null is
+ * dropped from the submission instead, keeping the stored value, and the
+ * input shows that value again. Any number typed (1 included) still saves;
+ * a nullable field (an HB slot override) still takes the null.
+ * @param {object} flat  The form's flat data (formData.object), changed in place.
+ * @param {foundry.abstract.DataModel} system  The document's system model.
+ * @param {HTMLFormElement} [form]
+ */
+export function keepStoredForBlankNumbers(flat, system, form) {
+  const schema = system?.schema;
+  if (!schema || !flat) return;
+  const source = system._source;
+  for (const [key, value] of Object.entries(flat)) {
+    if (value !== null || !key.startsWith("system.")) continue;
+    const path = key.slice("system.".length);
+    const field = schema.getField(path, { source });
+    if (!(field instanceof foundry.data.fields.NumberField) || field.nullable) continue;
+    delete flat[key];
+    const stored = foundry.utils.getProperty(source, path);
+    const input = form?.elements?.namedItem?.(key);
+    if (input instanceof HTMLInputElement && Number.isFinite(stored)) input.value = String(stored);
+  }
+}

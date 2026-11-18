@@ -152,7 +152,6 @@ export default class CarlRPGPet extends CarlRPGActorBase {
     const level = this.attributes.level.value;
     this.hbSlotsRule = CarlRPGPet.hbSlotsFor({ size: this.size, level, isMount: this.isMount });
     this.hb.max = this.hbSlotsOverride ?? this.hbSlotsRule;
-    if (this.hb.value > this.hb.max) this.hb.value = this.hb.max;
 
     // Move 60ft (a Special Ability, p.231) replaces the base Move.
     this.moveEffective = this.specialAbilities.move60 ? Math.max(60, this.move) : this.move;
@@ -174,6 +173,8 @@ export default class CarlRPGPet extends CarlRPGActorBase {
     this.intWarning = this.earthBorn && this.stats.int.value >= 2;
 
     deriveResourceCaps(this);
+    // Against the effective max, so bonus slots from gear can be filled.
+    if (this.hb.value > this.hb.effectiveMax) this.hb.value = this.hb.effectiveMax;
   }
 
   /**

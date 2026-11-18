@@ -10,11 +10,14 @@
  *  - `hits.<id>`     One Attack on one defender (a declaration's target row):
  *    who it's aimed at now and first, whether it was Caught or Taunted, its
  *    free and paid Evade Checks, and a Shield Block (`block`: its Check, the
- *    Shield and Rank it was made with, the Action it spent - helpers/
- *    shield-block.mjs). A block isn't an Evade: the hit still lands (p.198).
+ *    Shield and Rank it was made with - helpers/shield-block.mjs). A block
+ *    isn't an Evade: the hit still lands (p.198).
  *  - `crawlers.<key>` Who has used their Evade: its dialog's choices
  *    (`evadePreset`, for Attacks that land on them later) and the Action it
- *    spent (`evadeSpent`, given back if it ends up covering nothing).
+ *    spent (`evadeSpent`, given back if it ends up covering nothing). And
+ *    their Shield Block, the same way: `blocked`, what its first Check
+ *    added to the d20 (`blockRoll`, helpers/shield-block.mjs keptBlockRoll)
+ *    and the Action (`blockSpent`) - one covers every Attack they can block.
  *  - `taunts.<id>`   Each Taunt Check and the Attacks it pulled.
  *  - `locked`        once Lock Results runs.
  * There are no stages (docs/reaction-card-redesign.md): Taunt, Catch, Evade,
@@ -443,6 +446,17 @@ export function sectionCounts(state, section) {
 export function idleEvaders(state) {
   return Object.values(state?.crawlers ?? {}).filter((crawler) => crawler.evaded
     && !hitList(state).some((hit) => hit.targetUuid === crawler.uuid && hit.evade));
+}
+
+/**
+ * The crawlers whose Shield Block no longer covers any Attack (every hit it
+ * blocked has moved away): their Action comes back, as an idle Evade's does.
+ * @param {object} state
+ * @returns {object[]}  Their `crawlers` entries.
+ */
+export function idleBlockers(state) {
+  return Object.values(state?.crawlers ?? {}).filter((crawler) => crawler.blocked
+    && !hitList(state).some((hit) => hit.targetUuid === crawler.uuid && hit.block));
 }
 
 /**

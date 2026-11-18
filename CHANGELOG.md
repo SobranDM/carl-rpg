@@ -16,15 +16,15 @@
   - **The Damage card:** the GM rolls each Attack once, and Area, Splash, Major Fail and Natural 1 damage are worked out for you.
 - **Action tracking** implemented (pp.61, 64, 80-81): Action bubbles in the tracker, spent automatically, with an AI Favor Action. Click a spent bubble to undo what it did, and the GM can adjust Actions from the tracker's right-click menu.
 - **Intervene** implemented (p.82): other crawlers in the fight can add +1d6 to a roll with one click.
-- **Shield Block** implemented (p.198). Damage halving, shield damage on failure, Spell blocking and Shield Bash automated. A Repair button on the shield fixes the damage.
+- **Shield Block** implemented (p.198). One Action rolls a separate Check against every Attack you can block that round, as Evade does. Damage halving, shield damage on failure, Spell blocking and Shield Bash automated. A Repair button on the shield fixes the damage.
 - **Armor-Piercing and Anti-Piercing** implemented (p.95, p.225).
 - **Taunt range and Catcher DR** automated (p.200, p.187). After a successful Taunt, the GM can also redirect that Mob's Area Attacks.
 - **Defenses and movement** automated: bonuses and Debuffs that change Move, Step, Evade and DR now apply on their own.
 - **Armor stacks by slot** (p.225): the best piece in each slot counts. Before, only one piece of armor counted at all.
 - **The roll dialog:**
   - **Off-Stat rolls** (p.58): pick another Stat for a Skill; the card says which.
+  - **The Difficulty is filled in for you** from the book's formulas (p.59): Unopposed, Stat Check, or Opposed against your target. A hint says which. The GM adjusts it for circumstances; the separate situational modifier is gone.
   - **Damage Effects** are buttons that default to None.
-  - **A help icon** explains the Difficulty presets.
   - **Cancel** no longer rolls anyway.
 - **AI Favor rerolls** update the original card in place, and Evades rolled from an Attack card stay on that card.
 - **Combat rounds move the clock** 10 seconds each (p.62). Healing at the end of a round now ends Dying and other "until healed" Debuffs.
@@ -43,7 +43,8 @@
   - **Rich text:** Clubs, Sponsors, Important Kills and Story are now rich-text boxes; your old entries are carried over.
   - **Potions Used:** a counter for permanent potions (p.218).
 - **Base DR is always 0;** DR now comes from your Race, Class, gear and abilities. Any base DR typed on a Character is cleared, and the GM gets a list of the old values. **Add any you still want as a bonus on an item.**
-- **Adding a Race sets your Size.**
+- **Adding a Race sets your Size.** A Race or Class dragged from another Character now gives its bonuses, and replacing your Race or Class makes the new one active.
+- **Clearing a number on a sheet** no longer resets it (a blank Level no longer drops you to Level 1).
 
 ### Pets and vehicles
 
@@ -88,6 +89,11 @@
   - Races, Classes and Skills now carry their DR, Move, Step and Evade bonuses. Copies you already own are refreshed, so hand edits to those bonuses are overwritten.
   - Oakhide is a Spell you switch on.
   - Bang Bro triggers on an Amazing Success.
+  - Powerful Strike multiplies only your base damage dice, then adds your modifiers (p.180). Choke Out and Smush multiply the whole hit.
+  - Skullcracker's conditional Rank damage die is added, and conditional base dice double on a Critical Hit.
+  - Untrained (Rank 0) Skills no longer advance from use on the Third Floor and deeper (p.58).
+  - Gear that adds Ranks to a Skill unlocks its Upgrades while you wear it.
+  - A Race or Class grant that would take a Skill past 10 stops at 10 without lowering a higher Rank (p.127).
 
 ### GM Toolbox
 

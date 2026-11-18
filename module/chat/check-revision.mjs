@@ -345,8 +345,24 @@ export function registerCheckRevisionSocket() {
 }
 
 // Revisions, one at a time per queue: a card, or - a row's Evade - the
-// Attack card it shares its state with.
+// Attack card it shares its state with. A Taunt's redirect and undoing a
+// row's Evade share it (withCardQueue).
 const queues = new Map();
+
+/**
+ * Run `task` in a card's write queue (the writer's client - the active GM's,
+ * or with none online the one client that can write the card): after every
+ * revision and write on it already queued, before the next. Never call it -
+ * or applyRevision - from inside a task on the same card: the queue would
+ * wait on itself.
+ * @template T
+ * @param {string} cardId
+ * @param {() => Promise<T>} task
+ * @returns {Promise<T>}
+ */
+export function withCardQueue(cardId, task) {
+  return queueOn(queues, cardId, task);
+}
 
 /**
  * Apply one revision to a card, after any earlier one.

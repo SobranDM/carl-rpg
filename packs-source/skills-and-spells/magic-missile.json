@@ -64,7 +64,7 @@
             "target": "Magic Missile",
             "mode": "multiply",
             "value": "3",
-            "damageDiceKind": "multiplier"
+            "damageDiceKind": "base"
           }
         ]
       }

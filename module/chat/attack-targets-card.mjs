@@ -23,8 +23,11 @@
  *
  * Shield Block (p.198; helpers/shield-block.mjs): a target's owner whose
  * crawler has the Skill and a Shield in hand can block a physical, non-Area
- * Attack on its row (magical too from Rank 5) - an Action of its own, a
- * Check against what its Evade would roll against. On Success the row's
+ * Attack on its row (magical too from Rank 5) - a Check against what its
+ * Evade would roll against. Like a row's Evade, one Shield Block Action
+ * covers every Attack this round (the 2026-11-18 ruling; shield-block.mjs
+ * BLOCK_TAG): the first block pays, later ones that round - on other cards,
+ * or after the Reaction card's - are free. On Success the row's
  * Apply halves the damage before DR (Rank 15: less the STR Mod); a Major or
  * Critical Fail costs the Shield DR when the row is applied. A Natural 20
  * at Rank 10 offers a free Shield Bash at the attacker.
@@ -41,10 +44,11 @@ import { applyDamageToActor } from "./damage-card.mjs";
 import { userOwnsUuid } from "./evade-link-card.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { afterRamRowApplied } from "../helpers/vehicle-ram.mjs";
-import { evadeIsFree, noteUndo, takeAction } from "../helpers/actions.mjs";
+import { evadeIsFree, hasSpent, noteUndo, takeAction } from "../helpers/actions.mjs";
 import { blockedDamage } from "../helpers/damage-pipeline.mjs";
 import {
-  attackIsMagical, bashOffered, blockableAttack, blockNotes, blockReduction, damageShield, rollShieldBash, shieldBlocker, shieldLossFor,
+  attackIsMagical, BLOCK_TAG, bashOffered, blockableAttack, blockNotes, blockReduction, damageShield, rollShieldBash, shieldBlocker,
+  shieldLossFor,
 } from "../helpers/shield-block.mjs";
 import {
   addRowInjury, decidingRowCheck, recordRowBlock, recordRowEvade, resolveRowTarget, rowInjury, rowInterveneOpen, rowInterveners,
@@ -468,10 +472,11 @@ function onRowBlock(event, message, button) {
 }
 
 /**
- * Roll a row's Shield Block (p.198): one Action (an Interrupt) for this one
- * Attack, a Shield Block Skill Check against what the row's Evade would roll
- * against (the Mob's to-hit; another crawler's Attack total, p.87). The
- * Check is written to the row; the row's Apply uses it.
+ * Roll a row's Shield Block (p.198): a Shield Block Skill Check against what
+ * the row's Evade would roll against (the Mob's to-hit; another crawler's
+ * Attack total, p.87). The Check is written to the row; the row's Apply
+ * uses it. The Shield Block Action (an Interrupt) in a fight - one covers
+ * every Attack on them this round, as a row's Evade does (BLOCK_TAG).
  * @param {ChatMessage} message  The Attack card.
  * @param {string} rowId
  * @param {{skipDialog?: boolean}} [options]
@@ -492,17 +497,21 @@ export async function blockRow(message, rowId, { skipDialog = false } = {}) {
     if (!target.actor.isOwner && !game.user.isGM) return;
     const blocker = shieldBlocker(target.actor);
     if (!blocker) return;
-    // Its own Action for this one Attack - never the round's Evade Action.
-    await takeAction(target.actor, "other", game.i18n.localize("CARLRPG.ShieldBlock.Name"), async () => {
+    // The round's Shield Block Action - never its Evade Action. Already
+    // spent this round: this one is free.
+    const pays = !hasSpent(target.actor, BLOCK_TAG);
+    await takeAction(target.actor, "other", game.i18n.localize("CARLRPG.ShieldBlock.Name"), async (ctx) => {
+      if (!pays) ctx.free();
+      else if (!ctx.require()) return null;
       const difficulty = rowEvadeDifficulty(row, flags);
       const result = await CarlDice.rollOpposedSkillCheck(target.actor, blocker.skill, { difficulty, skipDialog, post: false });
       if (!result) return null;
       markLocal(message, row.id, { blocked: true });
       const check = await recordRowBlock(message, row, target, result, { shield: blocker.shield, rank: blocker.rank });
-      // Undone: the row back to before this block.
-      noteUndo(target.actor, { t: "rowEvade", which: "block", messageId: message.id, rowId: row.id, checkId: check.id });
+      // Undone: the row back to before this block (a free one has no Action to undo).
+      if (pays) noteUndo(target.actor, { t: "rowEvade", which: "block", messageId: message.id, rowId: row.id, checkId: check.id });
       return true;
-    });
+    }, { tag: BLOCK_TAG, optional: true });
   });
 }
 
@@ -527,20 +536,30 @@ async function onRowBash(event, message, button) {
  * helpers/attack-targets.mjs's rowOutcome) through the damage pipeline, and
  * the Attack's on-hit effects unless the target Evaded. A Shield Block on it
  * halves the damage before DR (helpers/shield-block.mjs) - its Debuffs still
- * land - and a Major or Critical Fail costs the Shield DR now. The row is
- * marked applied first, so a second click can't apply it twice.
+ * land - and a Major or Critical Fail costs the Shield DR now.
+ *
+ * The row is read again from the card (with this client's own marks) just
+ * before it's applied, and skipped if it's applied already; then marked
+ * applied and applied here, at once - no round trip to the GM. What's
+ * applied is the row as the card has it now, not the `row` passed in.
  * @param {ChatMessage} message
- * @param {object} row
+ * @param {object} row  The row (only its id is trusted).
  * @returns {Promise<string[]>} GM digest lines.
  */
 export async function applyRow(message, row) {
-  const flags = message.flags[SCOPE];
-  if (withLocal(message, row).applied) return [];
+  const stored = message.getFlag(SCOPE, "targetRows")?.[row.id];
+  if (!stored || stored.replaced || withLocal(message, stored).applied) return [];
   // A ram's recoil isn't applied before its target has had its Evade.
-  if (recoilWaiting(row, flags)) return [];
+  if (recoilWaiting(stored, message.flags[SCOPE])) return [];
   // A Near Miss on a vehicle's occupant lands on the vehicle (p.72).
-  const target = await resolveRowTarget(row.redirectUuid ? { uuid: row.redirectUuid } : row);
+  const target = await resolveRowTarget(stored.redirectUuid ? { uuid: stored.redirectUuid } : stored);
   if (!target) return [];
+  // Read again after the wait: applied meanwhile (by this client, or as
+  // the card now says), it isn't applied again.
+  const flags = message.flags[SCOPE];
+  const current = flags.targetRows?.[row.id] ?? stored;
+  if (current.replaced || withLocal(message, current).applied) return [];
+  row = current;
   markLocal(message, row.id, { applied: true });
   await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: { [row.id]: { applied: true } } } } });
 
@@ -611,15 +630,29 @@ async function onApplyAll(event, message) {
   event.preventDefault();
   if (!game.user.isGM) return;
   await guarded(message, "all", async () => {
-    const lines = [];
-    const isArea = message.getFlag(SCOPE, "isArea");
-    for (const row of activeRows(message.getFlag(SCOPE, "targetRows"))) {
-      if (rowResolved(row, isArea)) continue;
-      lines.push(...await applyRow(message, row));
-    }
-    await appendDigest(message, lines);
+    await applyAllRows(message);
     ui.notifications.info(game.i18n.localize("CARLRPG.Targets.AppliedAll"));
   });
+}
+
+/**
+ * Apply every row still to be applied (the GM's Apply All), one at a time.
+ * Each row is read again from the card (and this client's own marks) just
+ * before it's applied: one applied meanwhile - a player's own Apply that
+ * has reached the card - is skipped, not applied twice.
+ * @param {ChatMessage} message
+ * @returns {Promise<string[]>}  The digest lines (appended to the card).
+ */
+export async function applyAllRows(message) {
+  const lines = [];
+  const ids = activeRows(message.getFlag(SCOPE, "targetRows")).map((row) => row.id);
+  for (const id of ids) {
+    const row = message.getFlag(SCOPE, "targetRows")?.[id];
+    if (!row || row.replaced || rowResolved(withLocal(message, row), message.getFlag(SCOPE, "isArea"))) continue;
+    lines.push(...await applyRow(message, row));
+  }
+  await appendDigest(message, lines);
+  return lines;
 }
 
 /** A row's id and Check ("free"/"evade") from its icon. */

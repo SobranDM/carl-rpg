@@ -120,16 +120,32 @@ export function healDoneFor(message) {
 // still running does nothing.
 const applying = new Set();
 
+// Rows this client has applied, by message.id:rowId, until the card's own
+// flag says so: a player's mark reaches the card through the GM a moment
+// later, and a click before then mustn't heal again.
+const appliedHere = new Set();
+
+/** Whether a row is applied, as this client knows it (the card, or its own mark not yet arrived). */
+function rowApplied(message, row) {
+  const key = `${message.id}:${row.id}`;
+  if (row.applied) appliedHere.delete(key);
+  return row.applied || appliedHere.has(key);
+}
+
 /**
  * Apply the snapshotted healing to each recipient this user can update,
- * marking each row so it can't double-apply on a later re-render.
+ * marking each row so it can't double-apply on a later re-render. Each
+ * row's state is read again from the card just before it's healed: one
+ * applied meanwhile (by another user, once their mark has reached the card)
+ * is skipped. A recipient that can't be healed now (a vehicle, The Taint)
+ * isn't marked, so its Apply stays live.
  * @param {PointerEvent} event
  * @param {ChatMessage} message
  */
 export async function onApplyHeal(event, message) {
   event.preventDefault();
   if (applying.has(message.id)) return;
-  const rows = healRows(message).filter((row) => !row.applied && ownsUuid(row.uuid));
+  const rows = healRows(message).filter((row) => !rowApplied(message, row) && ownsUuid(row.uuid));
   if (!rows.length) return;
   applying.add(message.id);
   try {
@@ -137,53 +153,61 @@ export async function onApplyHeal(event, message) {
     // A card from before Heal Critter's plain full heal: full always rested.
     const rest = message.getFlag(SCOPE, "healRest") ?? full;
     const amount = message.getFlag(SCOPE, "healAmount") ?? 0;
-    const done = [];
+    const ready = [];
     for (const row of rows) {
       const actor = await resolveHealActor(row.uuid);
       if (!actor) {
         ui.notifications.warn(game.i18n.localize("CARLRPG.Heal.NoActor"));
         continue;
       }
-      if (await healActor(actor, { full, rest, amount })) done.push(row);
+      const refusal = healRefusal(actor);
+      if (refusal) ui.notifications.warn(refusal);
+      else ready.push({ row, actor });
     }
-    if (!done.length) return;
 
-    const all = healRows(message);
-    const appliedIds = new Set([...all.filter((r) => r.applied).map((r) => r.id), ...done.map((r) => r.id)]);
+    // Read again now, after the waits: applied meanwhile, it's skipped.
+    const current = new Map(healRows(message).map((row) => [row.id, row]));
+    const done = ready.filter(({ row }) => current.has(row.id) && !rowApplied(message, current.get(row.id)));
+    if (!done.length) return;
+    for (const { row } of done) appliedHere.add(`${message.id}:${row.id}`);
+
+    const all = [...current.values()];
+    const appliedIds = new Set([...all.filter((r) => r.applied).map((r) => r.id), ...done.map(({ row }) => row.id)]);
     const updates = all.some((r) => r.legacy)
       ? { healApplied: true }
       : {
-        healRecipients: Object.fromEntries(done.map((r) => [r.id, { applied: true }])),
+        healRecipients: Object.fromEntries(done.map(({ row }) => [row.id, { applied: true }])),
         ...(all.every((r) => appliedIds.has(r.id)) ? { healApplied: true } : {}),
       };
     await updateCardMessage(message, { flags: { [SCOPE]: updates } });
+    for (const { actor } of done) await healActor(actor, { full, rest, amount });
   } finally {
     applying.delete(message.id);
   }
 }
 
 /**
- * Heal one actor. Refused (with a warning) for a vehicle, or a creature The
- * Taint stops being healed - the button stays live for it.
+ * Why an actor can't be healed now, or null: a vehicle (repaired by a GM
+ * edit of its Health Bar, not healed), or a creature The Taint stops being
+ * healed ("You can't be healed", Table 11 - the button stays live, so the
+ * heal can still be applied once it's gone).
+ * @param {Actor} actor
+ * @returns {string|null}  A localized warning.
+ */
+function healRefusal(actor) {
+  if (isVehicle(actor)) return game.i18n.localize("CARLRPG.Vehicle.NotHealed");
+  const taint = findConditionWithMechanic(actor.system, "noHealing");
+  if (taint) return game.i18n.format("CARLRPG.Heal.BlockedByDebuff", { name: actor.name, debuff: conditionLabel(taint) });
+  return null;
+}
+
+/**
+ * Heal one actor (healRefusal already checked).
  * @param {Actor} actor
  * @param {{full: boolean, rest: boolean, amount: number}} heal
  * @returns {Promise<boolean>}  Whether it was healed.
  */
 async function healActor(actor, { full, rest, amount }) {
-  // Vehicles are repaired (a GM edit of their Health Bar), not healed.
-  if (isVehicle(actor)) {
-    ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.NotHealed"));
-    return false;
-  }
-
-  // "You can't be healed" (The Taint, Table 11). The button stays live, so
-  // the heal can still be applied once the Taint is gone.
-  const taint = findConditionWithMechanic(actor.system, "noHealing");
-  if (taint) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Heal.BlockedByDebuff", { name: actor.name, debuff: conditionLabel(taint) }));
-    return false;
-  }
-
   const sys = actor.system;
   const effectiveMax = hbCeiling(sys);
   let updates;

@@ -243,7 +243,7 @@ export default function register(quench) {
               assert.deepEqual(radios.map((r) => r.value), [fists.id, grapple.id, sword.id], "highest Rank first, a tie alphabetical");
               assert.isTrue(radios[0].checked, "and picked from the start");
               assert.isFalse(dialog.element.querySelector('button[data-action="roll"]').disabled, "ready to roll");
-              assert.exists(dialog.element.querySelector('input[name="modifier"]'), "its options already show");
+              assert.exists(dialog.element.querySelector('select[name="advantage"]'), "its options already show");
 
               const swordRadio = radios.find((r) => r.value === sword.id);
               swordRadio.checked = true;

@@ -40,7 +40,7 @@ import {
 } from "../helpers/worship.mjs";
 import { evadeModifier } from "../helpers/rules.mjs";
 import { describeDefenses } from "../helpers/bonus-sources.mjs";
-import { mergeSubmitted } from '../helpers/form-arrays.mjs';
+import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-arrays.mjs';
 import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
 import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
 
@@ -290,6 +290,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @override
    */
   _processFormData(event, form, formData) {
+    // A cleared number input (Level, a Stat, Gold) keeps the stored value
+    // rather than resetting to its initial (form-arrays.mjs).
+    keepStoredForBlankNumbers(formData.object, this.actor.system, form);
     const data = super._processFormData(event, form, formData);
     const submitted = data.system;
     if (!submitted || typeof submitted !== "object") return data;
@@ -490,6 +493,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       { relativeTo: actor, secrets: actor.isOwner, rollData: context.rollData },
     );
     context.biographyHTML = await enrich(actor.system.biography);
+    context.drawerHTML = await this.#prepareDrawerDescriptions(context);
     if (context.isMob) {
       context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);
       this.#prepareMobContext(context);
@@ -500,6 +504,24 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     }
 
     return context;
+  }
+
+  /**
+   * The Skill and Spell detail drawers' descriptions (skills-section-body.hbs,
+   * spells-section-body.hbs), enriched as the Item sheet does: links and
+   * inline rolls drawn, GM Secret blocks only for an owner. Only open
+   * drawers - opening one is an update, which re-renders the sheet.
+   * @param {object} context
+   * @returns {Promise<Record<string, string>>}  HTML by item id.
+   */
+  async #prepareDrawerDescriptions(context) {
+    const open = [...(context.skills ?? []), ...(context.spells ?? [])]
+      .filter((item) => item.system.detailsExpanded && item.system.description);
+    const html = await Promise.all(open.map((item) => foundry.applications.ux.TextEditor.implementation.enrichHTML(
+      item.system.description,
+      { relativeTo: item, secrets: item.isOwner, rollData: item.getRollData() },
+    )));
+    return Object.fromEntries(open.map((item, i) => [item.id, html[i]]));
   }
 
   /**
@@ -1618,12 +1640,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // replace an already-active Class/Race - a second drop just sits there
     // unlinked until the player/GM manually updates system.class/race (or
     // removes the old item first), matching this project's "surface state,
-    // don't gate" pattern elsewhere.
-    if (created && this.actor.type === "character") {
-      if (created.type === "class" && !this.actor.system.class) {
-        await this.actor.update({ "system.class": created.id });
-      } else if (created.type === "race" && !this.actor.system.race) {
-        await this.actor.update({ "system.race": created.id });
+    // don't gate" pattern elsewhere. An id whose item is gone (deleted
+    // before CarlRPGActor cleared it) counts as none.
+    if (created && this.actor.type === "character" && (created.type === "class" || created.type === "race")) {
+      const key = created.type;
+      if (!this.actor.items.has(this.actor.system[key])) {
+        await this.actor.update({ [`system.${key}`]: created.id });
       }
     }
     if (created && slot) await assignItemToSlot(this.actor, slot, created);

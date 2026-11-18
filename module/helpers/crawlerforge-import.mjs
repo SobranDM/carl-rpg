@@ -29,7 +29,9 @@
  * stat/skillRank grants for display, but are created with every grant that
  * applies at the crawler's Level already in their `bakedGrantIds` flag -
  * otherwise item._onCreate would bake them a second time on top of a base
- * that already includes them. A level-gated grant not reached yet is left
+ * that already includes them. They're created with `carlPreBaked`, so
+ * item._preCreate keeps that flag rather than emptying it as it does for
+ * a Race/Class copied onto an actor. A level-gated grant not reached yet is left
  * to bake on the Level-up. A Skill a Race/Class grants that the export
  * doesn't list is made at the granted Rank.
  *
@@ -43,7 +45,7 @@
  */
 
 import { CARLRPG } from "./config.mjs";
-import { SKILL_LIKE_TYPES, SKILL_RANK_GRANT_CAP, cleanSkillLikeCopy, isEligibleNow } from "./race-class-grants.mjs";
+import { SKILL_LIKE_TYPES, cappedGrantRank, cleanSkillLikeCopy, isEligibleNow } from "./race-class-grants.mjs";
 import { slugifySkillName } from "./modifiers.mjs";
 import { changeEntry } from "../pdf-import/shared.mjs";
 import { escapeHtml } from "../pdf-import/page-text.mjs";
@@ -616,9 +618,9 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
       const entry = grants.get(slug) ?? { name: change.target, rank: 0, from: new Set() };
       // As baking does (race-class-grants.mjs bakeSkillRankGrant): the
       // first grant makes it at its Rank; a further one adds, up to 10
-      // ("If you have that Skill, add the bonus, up to 10", p.127).
-      const next = entry.rank + (Number(change.value) || 0);
-      entry.rank = entry.rank > 0 ? Math.min(next, SKILL_RANK_GRANT_CAP) : next;
+      // ("If you have that Skill, add the bonus, up to 10", p.127), never
+      // lowering a Rank already above 10 (cappedGrantRank).
+      entry.rank = cappedGrantRank(entry.rank, entry.rank + (Number(change.value) || 0));
       entry.from.add(item.name);
       grants.set(slug, entry);
     }
@@ -875,13 +877,14 @@ export async function importCrawlerForgeCrawler(exportJson) {
     flags: { [SCOPE]: { chargen } },
   }, { inplace: false }));
   // An export with its own Size keeps it: the Race mustn't reset it
-  // (helpers/size.mjs). Without one, the Race's Size applies.
+  // (helpers/size.mjs). Without one, the Race's Size applies. The Race and
+  // Class keep their pre-baked grants (carlPreBaked, item._preCreate).
   const created = await actor.createEmbeddedDocuments("Item", [
     ...skills,
     ...(data.race ? [data.race] : []),
     ...(data.class ? [data.class] : []),
     ...gear,
-  ], { carlKeepSize: data.actor.system.details?.size !== undefined });
+  ], { carlKeepSize: data.actor.system.details?.size !== undefined, carlPreBaked: true });
   // Matched back by key: created documents don't come back in order.
   const byKey = new Map(created.map((i) => [i.getFlag(SCOPE, FLAG)?.key, i]));
 

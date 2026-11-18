@@ -21,7 +21,7 @@ import { isAreaItem } from "../helpers/area.mjs";
 import { mobAttackFor } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { getDegreeOfSuccess, degreeBadge, isHitDegree, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
-import { ownedRank, slugifySkillName, attackTargetEffects, attackIsArmorPiercing, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
+import { ownedRank, effectiveRank, slugifySkillName, attackTargetEffects, attackIsArmorPiercing, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -110,15 +110,15 @@ function applyCheckedConditionalModifiers(partsOrResolver, conditionalModifiers,
  * Upgrade tier that overrides/splits their own default damage-type pool
  * (module/data/shared/upgrade-tier.mjs's `damageTypes`, docs/known-gaps.md
  * 1.3/1.7 - e.g. Magic Missile Rank 10: "the missiles deal Force and Fire
- * damage"). Gated by the item's own `system.rank`, same convention as
- * collectItemTargetEffects (module/helpers/modifiers.mjs).
+ * damage"). Gated by the item's live Rank (effectiveRank), same convention
+ * as collectItemTargetEffects (module/helpers/modifiers.mjs).
  * @param {Item|null} item
  * @returns {string[]} Non-blank damage-type keys, highest-unlocked tier wins; empty = no override.
  */
 function resolveDamageTypeSplit(item) {
   if (!item) return [];
   const unlocked = (item.system?.upgrades ?? [])
-    .filter((u) => (item.system.rank ?? 0) >= u.rankThreshold)
+    .filter((u) => effectiveRank(item) >= u.rankThreshold)
     .filter((u) => (u.damageTypes ?? []).some(Boolean))
     .sort((a, b) => b.rankThreshold - a.rankThreshold);
   return (unlocked[0]?.damageTypes ?? []).filter(Boolean);
@@ -187,8 +187,21 @@ export function doubleDiceCount(formula) {
  * type-tracking, so this groups into multiple instances rather than
  * retrofitting type-tagging into one shared instance.
  *
- * @returns {{groups: Map<string, RollParts>, skillDefaultType: string, splitTypes: string[]}}
- *   groups is keyed by resolved damage type ("" = no type declared at all).
+ * Multipliers come in two kinds (modifiers.mjs skillDamageKind):
+ *  - "base" scales the base damage dice result only, after a Critical Hit
+ *    doubles them: "Multiply your base damage dice result by your Rank in
+ *    this Skill, then add your modifiers and buffs" (Powerful Strike,
+ *    p.180) - Pugilism 1d6+STR at Rank 5, a 3 and STR 4: 3x5+4 = 19.
+ *  - any other kind scales the total damage, every type and every
+ *    addition: "deals x2 the total damage" (Choke Out, Smush). An Amazing
+ *    Success's +Floor is part of that total too - the caller scales it by
+ *    the returned `totalFactor` (p.79: a "total damage" multiplier also
+ *    takes in a Critical Hit's extra dice, which it does here).
+ * A multiplier with its own damageType scales only that type's terms.
+ *
+ * @returns {{groups: Map<string, RollParts>, skillDefaultType: string, splitTypes: string[], totalFactor: number}}
+ *   groups is keyed by resolved damage type ("" = no type declared at all);
+ *   totalFactor is the untyped total-damage multiplier (1 = none).
  */
 function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageEffectEntry, isCrit, rollData, conditionalModifiers, checked }) {
   /** @type {Map<string, RollParts>} */
@@ -202,11 +215,37 @@ function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageE
   const skillDefaultType = skillEntry?.baseDamage?.damageType || "";
   const effectDefaultType = damageEffectEntry?.baseDamage?.damageType || skillDefaultType;
 
+  // The ticked damage boxes (already narrowed to this Attack's Skill and
+  // Damage Effect). Each carries its kind resolved as an unconditional
+  // change's is (modifiers.mjs): a Rank damage die already turned into its
+  // die, a multiplier's factor.
+  const ticked = (conditionalModifiers ?? []).filter((cm) => checked?.has(cm.id) && cm.targetType === "skillDamage");
+
+  // Every multiplier, each with the default type of the item it came from.
+  const multipliers = [
+    ...(skillEntry?.damage?.multipliers ?? []).map((m) => ({ ...m, defaultType: skillDefaultType })),
+    ...(damageEffectEntry?.damage?.multipliers ?? []).map((m) => ({ ...m, defaultType: effectDefaultType })),
+    ...ticked.filter((cm) => cm.mode === "multiply")
+      .map((cm) => ({ factor: cm.factor ?? cm.value, label: cm.label, kind: cm.damageDiceKind, damageType: cm.damageType || "" })),
+  ].map((m) => ({ ...m, factor: Number(m.factor) }))
+    .filter((m) => Number.isFinite(m.factor) && m.factor !== 1);
+  const baseMultipliers = multipliers.filter((m) => m.kind === "base");
+  const totalMultipliers = multipliers.filter((m) => m.kind !== "base");
+
+  /** A base dice term: doubled on a Critical Hit, then scaled by "base" multipliers. */
+  function addBaseTerm(formula, label, type) {
+    const rolled = isCrit ? doubleDiceCount(formula) : formula;
+    const scaling = baseMultipliers.filter((m) => !m.damageType || m.damageType === type);
+    const factor = scaling.reduce((product, m) => product * m.factor, 1);
+    if (factor === 1) return getGroup(type).add(rolled, label);
+    const names = scaling.map((m) => m.label).filter(Boolean).join(", ");
+    const scaled = /^[\w@.]+$/.test(String(rolled).trim()) ? `${rolled}*${factor}` : `(${rolled})*${factor}`;
+    getGroup(type).add(scaled, `${label} ×${factor}${names ? ` (${names})` : ""}`);
+  }
+
   function addDamageTerms(damage, defaultType) {
     if (!damage) return;
-    for (const term of damage.baseDice) {
-      getGroup(term.damageType || defaultType).add(isCrit ? doubleDiceCount(term.formula) : term.formula, term.label);
-    }
+    for (const term of damage.baseDice) addBaseTerm(term.formula, term.label, term.damageType || defaultType);
     for (const term of damage.rankDice) getGroup(term.damageType || defaultType).add(term.formula, term.label);
     for (const term of damage.flatBonuses) getGroup(term.damageType || defaultType).add(term.formula, term.label);
   }
@@ -221,27 +260,38 @@ function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageE
 
   addDamageTerms(damageEffectEntry?.damage, effectDefaultType);
 
-  // A checked skillDamage modifier can carry its own damageType override the
-  // same way an unconditional change can (module/helpers/modifiers.mjs
-  // copies it onto the conditionalModifiers entry) - route each into its
-  // own resolved group, falling back to the skill's default-type pool.
-  applyCheckedConditionalModifiers(
-    (cm) => getGroup(cm.damageType || skillDefaultType),
-    conditionalModifiers, checked, ["skillDamage"]
-  );
-
-  if (skillEntry?.damage) {
-    for (const m of skillEntry.damage.multipliers) getGroup(m.damageType || skillDefaultType).multiply(m.factor, m.label);
-    for (const o of skillEntry.damage.overrides) getGroup(o.damageType || skillDefaultType).override(o.formula, o.label);
+  // A ticked term can carry its own damageType override the same way an
+  // unconditional change can - routed into its own resolved group, falling
+  // back to the skill's default-type pool. A base one doubles on a Critical
+  // Hit (p.79) like any base die; a Rank damage die never does.
+  for (const cm of ticked) {
+    const type = cm.damageType || skillDefaultType;
+    if (cm.mode === "multiply") continue;
+    if (cm.mode === "override") getGroup(type).override(cm.value, cm.label);
+    else if (cm.mode === "subtract") {
+      const n = Number(cm.value);
+      getGroup(type).add(Number.isFinite(n) ? -n : `-(${cm.value})`, cm.label);
+    } else if (cm.damageDiceKind === "base") addBaseTerm(cm.value, cm.label, type);
+    else getGroup(type).add(cm.value, cm.label);
   }
-  if (damageEffectEntry?.damage) {
-    for (const m of damageEffectEntry.damage.multipliers) getGroup(m.damageType || effectDefaultType).multiply(m.factor, m.label);
-    for (const o of damageEffectEntry.damage.overrides) getGroup(o.damageType || effectDefaultType).override(o.formula, o.label);
+
+  for (const o of skillEntry?.damage?.overrides ?? []) getGroup(o.damageType || skillDefaultType).override(o.formula, o.label);
+  for (const o of damageEffectEntry?.damage?.overrides ?? []) getGroup(o.damageType || effectDefaultType).override(o.formula, o.label);
+
+  // The total damage: every group that has something in it (an empty one
+  // would only add a stray 0 row).
+  let totalFactor = 1;
+  for (const m of totalMultipliers) {
+    for (const [type, parts] of groups) {
+      if (parts.isEmpty || (m.damageType && m.damageType !== type)) continue;
+      parts.multiply(m.factor, m.label);
+    }
+    if (!m.damageType) totalFactor *= m.factor;
   }
 
   const splitTypes = resolveDamageTypeSplit(skillItem);
 
-  return { groups, skillDefaultType, splitTypes };
+  return { groups, skillDefaultType, splitTypes, totalFactor };
 }
 
 /**
@@ -250,9 +300,9 @@ function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageE
  * (post multi-type split, pre-resistance-pipeline - the resistance pipeline
  * itself runs later, at "Apply Damage" click time, against the target's
  * then-current resistances/dr; see module/chat/damage-card.mjs).
- * @returns {{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>}}
+ * @returns {{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>, totalFactor: number}}
  */
-async function evaluateDamageGroups({ groups, skillDefaultType, splitTypes }) {
+async function evaluateDamageGroups({ groups, skillDefaultType, splitTypes, totalFactor = 1 }) {
   const rolls = [];
   const rollMeta = [];
   const damageByType = {};
@@ -279,7 +329,19 @@ async function evaluateDamageGroups({ groups, skillDefaultType, splitTypes }) {
     }
   }
 
-  return { rolls, rollMeta, damageByType };
+  return { rolls, rollMeta, damageByType, totalFactor };
+}
+
+/**
+ * Note an Attack's "total damage" multiplier (Choke Out x2) on its target
+ * rows, so each row's Amazing Success +Floor is scaled with the rest of the
+ * damage (module/helpers/attack-targets.mjs rowOutcome). 1 leaves them be.
+ * @param {object[]} rows
+ * @param {number} factor
+ */
+function setRowDamageFactor(rows, factor) {
+  if (factor === 1) return;
+  for (const row of rows) row.damageFactor = factor;
 }
 
 /**
@@ -431,6 +493,25 @@ function buildSkillCheckPresets(skillItem) {
 /** Add each Debuff penalty (Minor Injury -2, Woozy's lost DEX Mod, ...) as its own labeled roll term. */
 function addDebuffPenalties(parts, penalties) {
   for (const p of penalties) parts.add(p.value, p.label);
+}
+
+/**
+ * A Check's Debuff rows once its dialog has said whether it's an Action.
+ * Queasy is "If your next Action requires a roll, it's made with
+ * Disadvantage. At the end of the next Action you take" (Table 11, p.96;
+ * Staggered's end, p.97): a Check that isn't one - the "Uses an Action" box
+ * unticked, a Check the GM calls for - neither takes that Disadvantage nor
+ * ends them. With no box offered (outside a fight, or part of another
+ * Action) a Check counts as an Action, as before.
+ * @param {object[]} rows  The rows collected for the dialog (as an Action).
+ * @param {boolean|null} usesAction  The dialog's box; null when not offered.
+ * @returns {{rows: object[], isAction: boolean}}
+ */
+function checkActionRows(rows, usesAction) {
+  const isAction = usesAction !== false;
+  if (isAction) return { rows, isAction };
+  const actionOnly = (r) => r.kind === "disadvantage" && CARLRPG.debuffs[r.key]?.mechanics?.disadvantage === "nextAction";
+  return { rows: rows.filter((r) => !actionOnly(r)), isAction };
 }
 
 /**
@@ -691,9 +772,11 @@ export default class CarlDice {
       if (!prompted) return null;
       options = prompted;
     }
-    if (!settleAction(ctx, skipDialog ? !!usesActionDefault : !!options.usesAction)) return null;
+    const usesAction = skipDialog ? usesActionDefault : options.usesAction;
+    if (!settleAction(ctx, !!usesAction)) return null;
+    const actionRows = checkActionRows(debuffRows, usesAction);
 
-    const debuffEffect = resolveRollerRows(debuffRows, options.checkedDebuffs);
+    const debuffEffect = resolveRollerRows(actionRows.rows, options.checkedDebuffs);
     const parts = new RollParts(actor.getRollData());
     parts.add(resolveD20Formula(false, options.advantage, debuffEffect), game.i18n.localize("CARLRPG.Roll.Die"));
     parts.add(stat.mod ?? 0, game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey));
@@ -704,7 +787,7 @@ export default class CarlDice {
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, options.difficulty);
 
-    await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied));
+    await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied, { isAction: actionRows.isAction }));
 
     const body = buildDebuffNote(debuffEffect.applied);
     const message = await createRollMessage({
@@ -787,13 +870,15 @@ export default class CarlDice {
       if (!prompted) return null;
       options = prompted;
     }
-    if (!settleAction(ctx, skipDialog ? !!usesActionDefault : !!options.usesAction)) return null;
+    const usesAction = skipDialog ? usesActionDefault : options.usesAction;
+    if (!settleAction(ctx, !!usesAction)) return null;
+    const actionRows = checkActionRows(debuffRows, usesAction);
 
     const untrained = rank === 0;
     // The Stat picked in the dialog (Off-Stat, p.58), else the Skill's own.
     const statKey = chosenStat(options, skillSys.governingStat);
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
-    const debuffEffect = resolveRollerRows(debuffRows, options.checkedDebuffs);
+    const debuffEffect = resolveRollerRows(actionRows.rows, options.checkedDebuffs);
 
     const parts = new RollParts(rollData);
     parts.add(resolveD20Formula(untrained, options.advantage, debuffEffect), game.i18n.localize("CARLRPG.Roll.Die"));
@@ -807,7 +892,7 @@ export default class CarlDice {
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, options.difficulty);
 
-    await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied));
+    await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied, { isAction: actionRows.isAction }));
     if (cast.markUse) await CarlDice.markForAdvancement(skillItem);
 
     const chosenManaCost = cast.payMana ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
@@ -1047,7 +1132,7 @@ export default class CarlDice {
 
     // Area Attack (p.83) - pre-ticked in the dialog when the Skill/Spell (or
     // the Damage Effect passed in) reads as one (module/helpers/area.mjs).
-    const detectedArea = isAreaItem(skillItem, rank) || isAreaItem(damageEffectItem);
+    const detectedArea = isAreaItem(skillItem, rank) || isAreaItem(damageEffectItem, effectiveRank(damageEffectItem));
 
     // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
     // anything is spent - the Skill before its dialog when that's shown
@@ -1272,6 +1357,9 @@ export default class CarlDice {
     let damageRaw = null;
     let damageRollMeta = [];
     let damageRollData = [];
+    // A "total damage" multiplier (Choke Out x2) - already in damageByType;
+    // it scales an Amazing Success's +Floor too (buildDamageRollParts).
+    let damageFactor = 1;
     // Rolled for any targeted non-area Attack, even one that missed
     // everyone, so a Taunt redirect onto someone it does hit has damage to
     // apply (module/chat/taunt-card.mjs). The card hides the damage until
@@ -1289,6 +1377,8 @@ export default class CarlDice {
       damageRaw = foundry.utils.deepClone(damage.damageByType);
       damageRollMeta = damage.rollMeta;
       damageRollData = damage.rolls.map((r) => r.toJSON());
+      damageFactor = damage.totalFactor ?? 1;
+      setRowDamageFactor(targetRowList, damageFactor);
       // "Success by 10 or more (Amazing Success): the crawler's Attack
       // deals extra damage equal to their current Floor Number" (Degrees
       // of Success table, p.79) - distinct from Critical Hit (which
@@ -1298,7 +1388,7 @@ export default class CarlDice {
       // With targets, each row adds it for its own Amazing Success instead
       // (module/helpers/attack-targets.mjs's rowOutcome).
       if (isAmazingSuccess && !targetRowList.length) {
-        damageByType[""] = (damageByType[""] ?? 0) + floor;
+        damageByType[""] = (damageByType[""] ?? 0) + floor * damageFactor;
       }
       // Every Debuff it carries: the Skill's, its Damage Effect's, held or
       // worn gear's (modifiers.mjs attackTargetEffects). With targets, an
@@ -1310,7 +1400,7 @@ export default class CarlDice {
     }
 
     const hasDamage = Object.values(damageByType).some((v) => v);
-    const flags = { attackDice: { extraD20: extraD20Rolls.length, damageRaw, damageRollMeta, damageRolls: damageRollData } };
+    const flags = { attackDice: { extraD20: extraD20Rolls.length, damageRaw, damageRollMeta, damageRolls: damageRollData, damageFactor } };
     const footerParts = [];
     if (markChoicePending) {
       flags.markChoiceSkillUuid = markChoicePending.skillItem.uuid;
@@ -1399,7 +1489,8 @@ export default class CarlDice {
    * @param {Item} skillItem
    * @param {{damageEffectItem?: Item|null, isCrit?: boolean, isAmazingSuccess?: boolean, conditionalModifiers?: object[], checked?: Set<string>, skillEntry?: object|null}} [options]
    *   skillEntry: use this instead of the actor's own (a Scroll's cast).
-   * @returns {Promise<{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>, targetEffects: object[]}>}
+   * @returns {Promise<{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>, totalFactor: number, targetEffects: object[]}>}
+   *   totalFactor: the untyped "total damage" multiplier already in damageByType (1 = none).
    */
   static async rollAttackDamage(actor, skillItem, {
     damageEffectItem = null, isCrit = false, isAmazingSuccess = false, conditionalModifiers = [], checked = new Set(),
@@ -1417,6 +1508,7 @@ export default class CarlDice {
       rolls: evaluated.rolls,
       rollMeta: evaluated.rollMeta.map((meta) => ({ ...meta, rowClass: "carl-damage-roll" })),
       damageByType: evaluated.damageByType,
+      totalFactor: evaluated.totalFactor,
       targetEffects: attackTargetEffects(actor, skillItem, { damageEffectItem, isCrit, isAmazingSuccess }),
     };
   }
@@ -1510,6 +1602,7 @@ export default class CarlDice {
 
     let damageRaw = reroll ? null : dice.damageRaw;
     let damageRollMeta = reroll ? [] : (dice.damageRollMeta ?? []);
+    let damageFactor = reroll ? 1 : (dice.damageFactor ?? 1);
     let targetEffects = [];
     // As at the roll: damage for any targeted single-target Attack, else
     // only on a hit.
@@ -1526,7 +1619,9 @@ export default class CarlDice {
         damageRolls = damage.rolls;
         damageRollMeta = damage.rollMeta;
         damageRaw = foundry.utils.deepClone(damage.damageByType);
+        damageFactor = damage.totalFactor ?? 1;
       }
+      setRowDamageFactor(targetRowList, damageFactor);
       // The on-hit effects follow the Degree (some only on an Amazing Success).
       targetEffects = attackTargetEffects(actor, skillItem, {
         damageEffectItem, isCrit: naturalRoll === 20,
@@ -1536,7 +1631,7 @@ export default class CarlDice {
     const damageByType = needsDamage ? foundry.utils.deepClone(damageRaw ?? {}) : {};
     // Amazing Success's +Floor: per row with targets (rowOutcome), else here.
     if (needsDamage && damageRaw && isAmazingSuccess && !targetRowList.length) {
-      damageByType[""] = (damageByType[""] ?? 0) + (flags.floor ?? game.settings.get("carl-rpg", "currentFloor"));
+      damageByType[""] = (damageByType[""] ?? 0) + (flags.floor ?? game.settings.get("carl-rpg", "currentFloor")) * damageFactor;
     }
     const hasDamage = Object.values(damageByType).some((v) => v);
 
@@ -1554,7 +1649,7 @@ export default class CarlDice {
       aiReroll: spec,
       interventions,
       attackDice: {
-        extraD20: extraD20Rolls.length, damageRaw, damageRollMeta, damageRolls: damageRolls.map((r) => r.toJSON()),
+        extraD20: extraD20Rolls.length, damageRaw, damageRollMeta, damageRolls: damageRolls.map((r) => r.toJSON()), damageFactor,
       },
     };
     const unset = [];
@@ -1921,9 +2016,10 @@ export default class CarlDice {
    * only clicking that button does, mirroring rollAttack's
    * roll-now/apply-on-click shape for target effects above.
    *
-   * Upgrade-tier gating uses the item's own `system.rank`, matching
-   * `collectItemTargetEffects`'s convention (module/helpers/modifiers.mjs),
-   * not the actor's skills-bag rank.
+   * Upgrade-tier gating uses the item's live Rank (effectiveRank - its own
+   * plus worn gear's and Buffs' "+N"), matching
+   * `collectItemTargetEffects`'s convention (module/helpers/modifiers.mjs);
+   * a Scroll's Spell keeps the scroll's Rank.
    *
    * Who it heals is decided now, before anything is spent (module/helpers/
    * heal-targets.mjs): the targeted token(s) its "Heals" allows, or the
@@ -1947,7 +2043,7 @@ export default class CarlDice {
     // castAs: a Scroll's cast (module/helpers/scroll-cast.mjs) - its Rank is
     // the scroll's (already on the item), no Mana, no use-mark.
     const skillSys = skillItem.system;
-    const rank = skillSys.rank ?? 0;
+    const rank = effectiveRank(skillItem);
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
 
@@ -2069,7 +2165,7 @@ export default class CarlDice {
 
     if (turningOn) {
       if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
-      if (isBlockedUntrainedSpell(skillItem, skillSys.rank ?? 0)) return null;
+      if (isBlockedUntrainedSpell(skillItem, effectiveRank(skillItem))) return null;
       // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
       // anything is spent.
       cooldown = await passCooldown(skillItem);
@@ -2488,6 +2584,13 @@ export default class CarlDice {
     if (item.system.advancementGate === "magic-only") return false;
     if (item.system.advancementGate === "passive-until-5" && (item.system.rank ?? 0) >= 5) return false;
     if (item.type === "spell" && item.system.castingKeywords?.includes("passive")) return false;
+    // "You can attempt to use Skills untrained on the Third Floor and lower,
+    // but you won't gain any new Skills this way like you would on the
+    // Tutorial Floors" (p.58): an untrained use marks only on Floors 1-2.
+    // The item's own Rank - a "+1" from gear doesn't make the Skill one the
+    // crawler has learned, and its Advancement Check against Rank 0 would
+    // always succeed.
+    if ((item.system.rank ?? 0) === 0 && game.settings.get("carl-rpg", "currentFloor") >= 3) return false;
     return true;
   }
 }

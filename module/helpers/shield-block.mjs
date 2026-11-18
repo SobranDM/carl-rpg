@@ -14,7 +14,8 @@
  * STR Mod.
  *
  * The rules in one place: who can block (the Skill and a Shield in hand),
- * against what (physical, not Area - magical too from Rank 5), what a
+ * against what (physical, not Area - magical too from Rank 5), one Action
+ * for every Attack it can block (BLOCK_TAG), what a
  * block does to the damage (damage-pipeline.mjs blockedDamage) and to the
  * Shield, and the Shield Bash. The Upgrades have no fields of their own,
  * so they're read from the Skill's Rank, as Catcher's are
@@ -22,13 +23,25 @@
  * module/chat/reaction-card.mjs (phased fights) and module/chat/
  * attack-targets-card.mjs (an Attack card's rows).
  */
-import CarlDice from "../dice/dice.mjs";
+import CarlDice, { extractNaturalD20 } from "../dice/dice.mjs";
+import { rerollFormula } from "./ai-favor.mjs";
 import { isInHand, isShield } from "./gear.mjs";
 import { buildItemSkillEntry, shieldDrState, slugifySkillName } from "./modifiers.mjs";
 import { passiveContext } from "./actions.mjs";
 
 /** The Skill's name, as the compendium has it. */
 export const SHIELD_BLOCK = "Shield Block";
+
+/**
+ * A Shield Block Action's tag (helpers/actions.mjs hasSpent): one Action
+ * rolls against every Attack it can block this round (the 2026-11-18
+ * ruling, worded like Evade, p.81), so a later block the same round - on
+ * the Reaction card or an Attack card's row - is free, as a later Evade is.
+ */
+export const BLOCK_TAG = "shieldBlock";
+
+/** The d20 expressions a Check can have been rolled with (dice.mjs d20Formula). */
+const D20_FORMULAS = Object.freeze(["1d20", "2d20kh", "2d20kl"]);
 
 /** The Shield's DR lost on a bad Shield Block, by Degree (p.198). */
 const SHIELD_LOSS = Object.freeze({ majorFail: 1, criticalFail: 2 });
@@ -98,6 +111,36 @@ export function attackIsMagical(attack) {
 export function blockableAttack({ isArea = false, hasDamage = true, magical = false } = {}, rank = 0) {
   if (isArea || !hasDamage) return false;
   return !magical || rank >= 5;
+}
+
+/**
+ * What one Shield Block Action keeps from its first Check for the rest of
+ * its Checks: the d20 expression (any Advantage) and everything the dialog
+ * added to it. Null when it isn't a d20 Check this can roll again.
+ * @param {{formula?: string|null, natural?: number|null, total?: number}} check
+ * @returns {{formula: string, rest: number}|null}
+ */
+export function keptBlockRoll({ formula, natural, total } = {}) {
+  if (!D20_FORMULAS.includes(formula) || natural === null || natural === undefined) return null;
+  const rest = Number(total) - Number(natural);
+  return Number.isFinite(rest) ? { formula, rest: Math.trunc(rest) } : null;
+}
+
+/**
+ * Another Check of the same Shield Block Action (one Action, "a separate
+ * Shield Block Skill Check ... for each of the Attacks", p.198): the d20
+ * again with the rest of the first Check's total, against this Attack's
+ * to-hit - no dialog, and nothing the first one used up is used again.
+ * @param {{formula: string, rest: number}} kept  keptBlockRoll
+ * @param {number|null} difficulty
+ * @returns {Promise<{roll: Roll, total: number, naturalRoll: number|null, formula: string, difficulty: number|null, breakdown: string}>}
+ */
+export async function rollBlockAgain(kept, difficulty) {
+  const roll = await new Roll(rerollFormula({ formula: kept.formula, natural: 0, total: kept.rest })).evaluate();
+  return {
+    roll, total: roll.total, naturalRoll: extractNaturalD20(roll), formula: kept.formula, difficulty,
+    breakdown: game.i18n.format("CARLRPG.ShieldBlock.Again", { formula: roll.formula, total: roll.total }),
+  };
 }
 
 /**

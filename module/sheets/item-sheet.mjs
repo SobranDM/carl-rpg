@@ -4,9 +4,9 @@ import { onAddArrayItem, onDeleteArrayItem } from '../helpers/array-editor.mjs';
 import CarlDice from '../dice/dice.mjs';
 import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
 import { needsWeapon } from '../helpers/weapons.mjs';
-import { mergeSubmitted } from '../helpers/form-arrays.mjs';
+import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-arrays.mjs';
 import { isConsumable, isShield, isTwoHanded, isWeapon, slotsOf } from '../helpers/gear.mjs';
-import { shieldDrState } from '../helpers/modifiers.mjs';
+import { effectiveRank, shieldDrState } from '../helpers/modifiers.mjs';
 import { repairShield } from '../helpers/shield-block.mjs';
 
 const ATTRIBUTES_TEMPLATES = {
@@ -109,6 +109,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
    * @override
    */
   _processFormData(event, form, formData) {
+    // A cleared number input keeps the stored value (form-arrays.mjs).
+    keepStoredForBlankNumbers(formData.object, this.item.system, form);
     const data = super._processFormData(event, form, formData);
     if (data.system && typeof data.system === "object") {
       data.system = mergeSubmitted(this.item.system.toObject(), data.system);
@@ -248,8 +250,10 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       : item.type === "damageEffect"; // always attack-flavored, no heal concept
     if (context.isRanked) {
       Object.assign(context, this.#groupUpgradesByRank(itemData.system.upgrades));
-      // The live Rank (a Pet's is the Floor) decides what's unlocked.
-      context.liveRank = Number(item.system.rank) || 0;
+      // The live Rank decides what's unlocked: on an actor, the effective
+      // Rank with worn gear's and Buffs' "+N Skill" (ruled 2026-11-18; a
+      // Pet's is the Floor); elsewhere the item's own.
+      context.liveRank = effectiveRank(item);
       context.upgradeOverview = this.#upgradeOverview(context, context.liveRank);
       context.headerChips = this.#headerChips(item, context);
       context.damageSummary = this.#damageSummary(item.system.baseDamage);

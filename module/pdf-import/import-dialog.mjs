@@ -8,7 +8,7 @@
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { importBook } from "./importer.mjs";
 import { canvasToBlob, mapImageCanvas } from "./maps.mjs";
-import { loadPdfDocument } from "./pdf-loader.mjs";
+import { closePdfDocument, loadPdfDocument } from "./pdf-loader.mjs";
 import { checkImageQuality, LowQualityPdfError } from "./quality.mjs";
 import { bookTitleFromFilename, parseBook, readPages } from "./scan.mjs";
 
@@ -36,9 +36,12 @@ async function pickFile() {
 /**
  * Find each candidate page's map image and make a thumbnail of it - of the
  * embedded image the import will save (maps.mjs), not of the page.
+ * Each map goes into `maps` as soon as its thumbnail's blob: URL exists, so
+ * a caller holding that array can revoke them even if a later page throws.
+ * @param {object[]} [maps]  Where to put them.
+ * @returns {Promise<object[]>}  `maps`.
  */
-async function resolveMaps(pdfDoc, pdfjs, candidates, progress) {
-  const maps = [];
+export async function resolveMaps(pdfDoc, pdfjs, candidates, progress, maps = []) {
   for (const [n, candidate] of candidates.entries()) {
     progress.update({
       pct: n / candidates.length,
@@ -138,7 +141,8 @@ export async function openRulebookImporter() {
   let progress = ui.notifications.info(game.i18n.format("CARLRPG.PdfImport.Reading", { title }), {
     progress: true,
   });
-  let maps = [];
+  // Filled by resolveMaps as it goes, so the finally revokes every thumbnail.
+  const maps = [];
   let pdfDoc = null;
   try {
     const loaded = await loadPdfDocument(file);
@@ -156,7 +160,7 @@ export async function openRulebookImporter() {
         }),
     });
     const found = parseBook(pages);
-    maps = await resolveMaps(pdfDoc, pdfjs, found.maps, progress);
+    await resolveMaps(pdfDoc, pdfjs, found.maps, progress, maps);
     progress.update({ pct: 1 });
 
     const choice = await chooseContent(title, found, maps);
@@ -196,7 +200,7 @@ export async function openRulebookImporter() {
     progress?.update?.({ pct: 1 });
     for (const map of maps) URL.revokeObjectURL(map.thumb);
     // Each document has its own pdf.js worker holding the whole book: end it.
-    pdfDoc?.destroy().catch((err) => console.warn("CarlRPG | closing the rulebook PDF failed", err));
+    closePdfDocument(pdfDoc);
   }
 }
 

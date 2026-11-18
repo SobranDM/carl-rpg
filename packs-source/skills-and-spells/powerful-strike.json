@@ -12,7 +12,7 @@
         "target": "Powerful Strike",
         "mode": "multiply",
         "value": "@rank",
-        "damageDiceKind": "multiplier"
+        "damageDiceKind": "base"
       }
     ],
     "governingStat": "",

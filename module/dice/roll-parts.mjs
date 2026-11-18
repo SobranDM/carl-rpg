@@ -13,13 +13,16 @@
  * are all flat adds (pre-summed before RollParts ever sees them). Carl
  * RPG's structured ChangeEntry modifier engine (module/helpers/modifiers.mjs)
  * also produces "multiply"/"override" changes directly (e.g. Dagger Rank 15
- * "attacks targeting the back of a foe deal x2 damage", Powerful Strike
- * "Multiply your base damage dice result by your Rank"). Per the rules text,
- * these scale the ALREADY-ROLLED additive subtotal, not fresh dice - so they
- * don't need their own Roll term; they're applied arithmetically after the
- * additive Roll evaluates, and the breakdown records each one's actual
- * computed result (e.g. "x2 (Attacking from Behind) -> 14") rather than a
- * bare "x2", per this system's tooltip convention.
+ * "attacks targeting the back of a foe deal x2 damage", Choke Out "deals x2
+ * the total damage"). Per the rules text, these scale the ALREADY-ROLLED
+ * additive subtotal, not fresh dice - so they don't need their own Roll
+ * term; they're applied arithmetically after the additive Roll evaluates,
+ * and the breakdown records each one's actual computed result (e.g. "x2
+ * (Attacking from Behind) -> 14") rather than a bare "x2", per this
+ * system's tooltip convention. A multiplier of the base damage dice only
+ * (Powerful Strike, "Multiply your base damage dice result by your Rank...
+ * then add your modifiers", p.180) isn't one of these: it's part of that
+ * dice term's own formula (module/dice/dice.mjs buildDamageRollParts).
  */
 
 /** Coerce "+1" / "-2" strings to numbers for roll assembly. */

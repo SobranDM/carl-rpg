@@ -35,6 +35,7 @@ import { collectVehicleRows } from "./vehicle-rows.mjs";
  * @property {number|null} difficulty  What this target's Evade rolls against (or the Attack rolled against).
  * @property {boolean} hit         Whether the Attack lands on this target unless it Evades.
  * @property {boolean} amazing     Amazing Success against this target: +Floor damage (p.79).
+ * @property {number} [damageFactor]  The Attack's "total damage" multiplier, which scales that +Floor too.
  * @property {boolean} freeEvade   A Disadvantaged Mob Attack's free Evade (p.96).
  * @property {boolean} freeUsed
  * @property {{degree: string, success: boolean}|null} evade
@@ -300,7 +301,9 @@ export function rowOutcome(row, { damageByType, isArea, floor }) {
   if (evaded) factor *= 0.5;
   if (degree === "criticalFail") factor *= 2;
   const base = { ...(damageByType ?? {}) };
-  if (row.amazing) base[""] = (base[""] ?? 0) + floor;
+  // A "total damage" multiplier (Choke Out x2) the card's damage already
+  // carries scales the +Floor as well (CarlDice.rollAttack).
+  if (row.amazing) base[""] = (base[""] ?? 0) + floor * (Number(row.damageFactor) || 1);
   const damage = scaleDamageByType(base, factor, degree === "majorFail" ? floor : 0);
   return { damage, effects: !evaded };
 }

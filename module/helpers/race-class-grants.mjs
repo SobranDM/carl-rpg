@@ -22,6 +22,13 @@
  * hook re-checking every owned Race/Class item whenever Level changes, for
  * a level-gated grant that wasn't eligible yet - never re-applies the same
  * grant twice.
+ *
+ * That record describes the actor the item was baked on, not the item: a
+ * Race/Class created on an actor as its own document (dragged from another
+ * actor, the Items sidebar or a compendium) starts with it emptied
+ * (documents/item.mjs _preCreate), so it bakes on its new owner. Items
+ * that arrive inside a whole actor (a duplicate, an actor import) skip
+ * Item _preCreate and keep it - that actor's Stats came along too.
  */
 
 import { applyScalarChange, slugifySkillName } from "./modifiers.mjs";
@@ -50,6 +57,21 @@ export const SKILL_LIKE_TYPES = ["skill", "spell", "damageEffect"];
 // in the Skill; a from-scratch grant ("you gain it at that Rank listed")
 // has no such cap.
 export const SKILL_RANK_GRANT_CAP = 10;
+
+/**
+ * A Skill's Rank after a grant, with the p.127 ceiling: a gain to a Skill
+ * already held stops at 10 ("you stop at 10, and the remaining bonus is
+ * wasted") but never lowers a Rank already above 10. A from-scratch grant
+ * (Rank 0) and a reduction aren't capped. Shared with the CrawlerForge
+ * importer's granted-Skill planning, so the two can't drift.
+ * @param {number} current  The Rank before the grant.
+ * @param {number} next     The Rank the grant alone would give.
+ * @returns {number}
+ */
+export function cappedGrantRank(current, next) {
+  if (current <= 0 || next <= current) return next;
+  return Math.max(current, Math.min(next, SKILL_RANK_GRANT_CAP));
+}
 
 function bakedGrantIds(item) {
   return item.getFlag("carl-rpg", "bakedGrantIds") ?? [];
@@ -188,12 +210,12 @@ async function bakeSkillRankGrant(actor, change) {
   const existing = findOwnedSkillLike(actor, name);
   if (existing) {
     const current = existing.system.rank ?? 0;
-    let next = applyScalarChange(current, change.mode, delta);
     // The Rank-10 grant ceiling ("If you have that Skill, add the bonus, up
     // to 10", p.127) only applies when the actor already has some Ranks in
     // it - a Skill owned at Rank 0 (added but never invested in) is treated
-    // as the from-scratch case below, no cap.
-    if (current > 0) next = Math.min(next, SKILL_RANK_GRANT_CAP);
+    // as the from-scratch case below, no cap - and caps the gain, never
+    // lowering a Rank already above 10 (cappedGrantRank).
+    const next = cappedGrantRank(current, applyScalarChange(current, change.mode, delta));
     await existing.update({ "system.rank": next });
     return;
   }

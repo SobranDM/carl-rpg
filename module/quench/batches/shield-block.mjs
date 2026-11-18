@@ -4,23 +4,24 @@
  * magical too from Rank 5; never a Caught hit), what a block does (half the
  * damage before DR, the STR Mod off too at Rank 15, its Debuffs still
  * land), what a bad block costs the Shield (Major Fail -1 DR, Critical Fail
- * -2, broken at 0, Repair), one Action per Attack, and the Rank 10 Shield
- * Bash. On the Reaction card (phased) and an Attack card's rows.
+ * -2, broken at 0, Repair), one Action for every Attack it can block (the
+ * 2026-11-18 ruling, as Evade), and the Rank 10 Shield Bash. On the
+ * Reaction card (phased) and an Attack card's rows.
  */
 import CarlDice from "../../dice/dice.mjs";
 import { applyRow, blockRow, rowBlockable } from "../../chat/attack-targets-card.mjs";
 import { applyOp, reactionCardFor } from "../../chat/reaction-card.mjs";
-import { actionRecord } from "../../helpers/actions.mjs";
+import { actionRecord, undoAction } from "../../helpers/actions.mjs";
 import { computeDamageApplication, blockedDamage } from "../../helpers/damage-pipeline.mjs";
 import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
 import { slotsOf } from "../../helpers/gear.mjs";
 import { shieldDrState } from "../../helpers/modifiers.mjs";
 import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
-import { hitBlockable, hitEvadable, hitList, hitStatus } from "../../helpers/reaction-state.mjs";
+import { crawlerKey, hitBlockable, hitEvadable, hitList, hitStatus } from "../../helpers/reaction-state.mjs";
 import { postDamageCard, rollAttackOnCard } from "../../helpers/reaction-resolve.mjs";
 import {
-  attackIsMagical, bashDice, bashOffered, blockableAttack, blockReduction, buildShieldBash, repairShield, rollShieldBash,
-  shieldBlocker, shieldLossFor,
+  attackIsMagical, BLOCK_TAG, bashDice, bashOffered, blockableAttack, blockReduction, buildShieldBash, keptBlockRoll, repairShield,
+  rollBlockAgain, rollShieldBash, shieldBlocker, shieldLossFor,
 } from "../../helpers/shield-block.mjs";
 import {
   createTestCharacter, createTestItem, createTestMob, deleteTestActor, deleteTestCombat, PIN_D20_MID, settle, useQuenchTimeout,
@@ -106,6 +107,16 @@ export default function register(quench) {
           } finally {
             await deleteTestActor(pc);
           }
+        });
+
+        it("one block's later Checks: the d20 again with the rest of the first one's total", async function () {
+          assert.deepEqual(keptBlockRoll({ formula: "2d20kh", natural: 14, total: 21 }), { formula: "2d20kh", rest: 7 });
+          assert.isNull(keptBlockRoll({ formula: "1d20 + 5", natural: 14, total: 21 }), "only a bare d20 expression");
+          assert.isNull(keptBlockRoll({ formula: "1d20", natural: null, total: 21 }));
+          const again = await withPinnedDice(PIN_D20_MID, () => rollBlockAgain({ formula: "1d20", rest: 7 }, 16));
+          assert.equal(again.total, again.naturalRoll + 7);
+          assert.equal(again.formula, "1d20", "the d20 part, as an AI Reroll needs it");
+          assert.equal(again.difficulty, 16, "against its own Attack's to-hit");
         });
 
         it("no Skill, no block", async function () {
@@ -223,7 +234,13 @@ export default function register(quench) {
         const op = (card, name, data) => applyOp(card.id, name, data, game.user);
         const hits = (card) => hitList(state(card));
         const spent = (actor) => actionRecord(combat, combat.combatants.find((c) => c.actor === actor).id).spent.length;
-        const block = (card, actor, hit, check) => op(card, "block", { uuid: actor.uuid, hitId: hit.id, check });
+        // One Shield Block Action: a Check per hit (`check`, or one each from an array).
+        const block = (card, actor, list, check) => op(card, "block", {
+          uuid: actor.uuid, checks: Object.fromEntries(list.map((hit, i) => [hit.id, Array.isArray(check) ? check[i] : check])),
+        });
+        const blockOn = (card, hit) => state(card).hits[hit.id].block ?? null;
+        const blocker = (card, actor) => state(card).crawlers[crawlerKey(actor.uuid)] ?? {};
+        const tags = (actor) => actionRecord(combat, combat.combatants.find((c) => c.actor === actor).id).spent.map((e) => e.tag);
         const resolve = async (card) => {
           const damage = await postDamageCard(combat, state(card));
           const data = () => damage.getFlag("carl-rpg", "reactionDamage");
@@ -232,61 +249,141 @@ export default function register(quench) {
           return data;
         };
 
-        it("one Action per Attack: three Attacks, three Checks - the third refused with two Actions", async function () {
+        it("one Action covers every Attack it can block: three Attacks, three Checks, one Action", async function () {
           await arm(pc1);
           await begin();
           await declareOn(pc1);
           await declareOn(pc1);
           await declareOn(pc1);
           const card = await startReaction();
-          const [h1, h2, h3] = hits(card);
-          assert.isTrue(await block(card, pc1, h1, rolled(20, 15, h1.row.difficulty)));
+          const list = hits(card);
+          assert.isTrue(await block(card, pc1, list, [rolled(20, 15, 16), rolled(5, 2, 16), rolled(18, 13, 16)]));
+          assert.equal(spent(pc1), 1, "one Action");
+          assert.deepEqual(tags(pc1), [BLOCK_TAG]);
+          assert.deepEqual(list.map((h) => blockOn(card, h)?.total), [20, 5, 18], "a separate Check against each");
+          assert.deepEqual(list.map((h) => hitStatus(state(card), state(card).hits[h.id]).status), ["blocked", "hit", "blocked"]);
+          assert.isTrue(blocker(card, pc1).blocked);
+          assert.deepEqual(blocker(card, pc1).blockRoll, { formula: "1d20", rest: 5 }, "kept for later Attacks");
+          assert.isFalse(await block(card, pc1, list, rolled(20, 15, 16)), "nothing left to block");
           assert.equal(spent(pc1), 1);
-          assert.isTrue(await block(card, pc1, h2, rolled(20, 15, h2.row.difficulty)));
-          assert.equal(spent(pc1), 2, "a second Action, not covered like an Evade");
-          assert.isFalse(await block(card, pc1, h3, rolled(20, 15, h3.row.difficulty)), "no Action left");
-          assert.isNull(state(card).hits[h3.id].block ?? null);
-          assert.isFalse(await block(card, pc1, h1, rolled(20, 15, h1.row.difficulty)), "each Attack once");
         });
 
-        it("no Shield, magic below Rank 5, an Area Attack: refused", async function () {
+        it("skips what it can't block: Area, magic below Rank 5, a Caught hit; no Shield, no block", async function () {
           await createTestItem(pc2, "skill", "Shield Block", { name: "Shield Block", system: { rank: 3 } });
           await arm(pc1, { rank: 3 });
+          await createTestItem(pc1, "skill", "Catcher", { name: "Catcher", system: { rank: 1 } });
           await begin();
+          await declareOn(pc1);
+          await declareOn(pc1, 1);
+          await declareOn(pc1, 2);
           await declareOn(pc2);
+          const card = await startReaction();
+          const [maul, flame, slam, onPc2] = hits(card);
+          assert.isFalse(await block(card, pc2, [onPc2], rolled(20, 15, 16)), "no Shield");
+          assert.isTrue(await op(card, "catch", { byUuid: pc1.uuid, byName: pc1.name, hitId: onPc2.id }));
+          assert.equal(state(card).hits[onPc2.id].targetUuid, pc1.uuid);
+          const all = hits(card).filter((h) => h.targetUuid === pc1.uuid);
+          assert.lengthOf(all, 4);
+          assert.isTrue(await block(card, pc1, all, rolled(20, 15, 16)));
+          assert.isOk(blockOn(card, maul), "the physical one");
+          assert.isNull(blockOn(card, flame), "Fire below Rank 5");
+          assert.isNull(blockOn(card, slam), "Area");
+          assert.isNull(blockOn(card, onPc2), "Caught (Catcher, p.191)");
+          assert.equal(spent(pc1), 2, "the Catch and one block");
+        });
+
+        it("only magic left below Rank 5: refused, no Action", async function () {
+          await arm(pc1, { rank: 3 });
+          await begin();
           await declareOn(pc1, 1);
           await declareOn(pc1, 2);
           const card = await startReaction();
-          const [onPc2, flame, slam] = hits(card);
-          assert.isFalse(await block(card, pc2, onPc2, rolled(20, 15, 16)), "no Shield");
-          assert.isFalse(await block(card, pc1, flame, rolled(20, 15, 16)), "Fire below Rank 5");
-          assert.isFalse(await block(card, pc1, slam, rolled(20, 15, 16)), "Area");
+          assert.isFalse(await block(card, pc1, hits(card), rolled(20, 15, 16)));
           assert.equal(spent(pc1), 0);
         });
 
-        it("Rank 5: magical damage too", async function () {
+        it("Rank 5: magical damage too, in the same Action", async function () {
           await arm(pc1, { rank: 5 });
           await begin();
+          await declareOn(pc1);
           await declareOn(pc1, 1);
           const card = await startReaction();
-          assert.isTrue(await block(card, pc1, hits(card)[0], rolled(20, 15, 16)));
+          assert.isTrue(await block(card, pc1, hits(card), rolled(20, 15, 16)));
+          assert.isTrue(hits(card).every((h) => !!h.block));
+          assert.equal(spent(pc1), 1);
         });
 
-        it("a Caught hit can't be blocked; Catching a blocked one drops the block and gives its Action back", async function () {
+        it("an Attack Taunted onto them later is blocked with the same block, at no further Action", async function () {
           await arm(pc1);
-          await arm(pc2);
+          await begin();
+          await declareOn(pc1);
+          await declareOn(pc2);
+          const card = await startReaction();
+          const [own, onPc2] = hits(card);
+          assert.isTrue(await block(card, pc1, [own], rolled(20, 15, 16)));
+          assert.isTrue(await op(card, "taunt", { byUuid: pc1.uuid, byName: pc1.name, mobUuid: mob.uuid, rank: 1, check: rolled(25, 15, 20) }));
+          const pulled = state(card).hits[onPc2.id];
+          assert.equal(pulled.targetUuid, pc1.uuid, "Taunted onto them");
+          assert.isOk(pulled.block, "blocked on arrival");
+          assert.isTrue(pulled.block.auto);
+          assert.equal(pulled.block.total, pulled.block.natural + 5, "the first Check's numbers, the d20 again");
+          assert.equal(spent(pc1), 2, "the block and the Taunt - nothing for the new Attack");
+          assert.deepEqual(tags(pc1).filter((t) => t === BLOCK_TAG), [BLOCK_TAG]);
+        });
+
+        it("undo gives the one Action back and clears every block it made", async function () {
+          await arm(pc1);
+          await begin();
+          await declareOn(pc1);
+          await declareOn(pc1);
+          const card = await startReaction();
+          const list = hits(card);
+          assert.isTrue(await block(card, pc1, list, rolled(20, 15, 16)));
+          const combatant = combat.combatants.find((c) => c.actor === pc1);
+          await undoAction(combat, combatant.id, actionRecord(combat, combatant.id).spent[0].id);
+          await settle(100);
+          assert.equal(spent(pc1), 0, "the Action is back");
+          assert.isTrue(list.every((h) => blockOn(card, h) === null), "no blocks left");
+          assert.isNotOk(blocker(card, pc1).blocked);
+          assert.isTrue(await block(card, pc1, list, rolled(20, 15, 16)), "and it can block again");
+          assert.equal(spent(pc1), 1);
+        });
+
+        it("a Catch moving a blocked hit drops that block; the Action comes back once it blocks nothing", async function () {
+          await arm(pc1);
           await createTestItem(pc2, "skill", "Catcher", { name: "Catcher", system: { rank: 1 } });
           await begin();
           await declareOn(pc1);
+          await declareOn(pc1);
           const card = await startReaction();
-          const hit = hits(card)[0];
-          assert.isTrue(await block(card, pc1, hit, rolled(20, 15, 16)));
-          assert.equal(spent(pc1), 1);
-          assert.isTrue(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: hit.id }));
+          const [h1, h2] = hits(card);
+          assert.isTrue(await block(card, pc1, [h1, h2], rolled(20, 15, 16)));
+          assert.isTrue(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: h1.id }));
           await settle(100);
-          assert.isNull(state(card).hits[hit.id].block);
-          assert.equal(spent(pc1), 0, "the block's Action came back");
-          assert.isFalse(await block(card, pc2, state(card).hits[hit.id], rolled(20, 15, 16)), "the Catcher can't block it");
+          assert.isNull(blockOn(card, h1), "the Caught one's block is gone");
+          assert.isOk(blockOn(card, h2), "the other stays");
+          assert.equal(spent(pc1), 1, "still covers one");
+          assert.isFalse(await block(card, pc2, [state(card).hits[h1.id]], rolled(20, 15, 16)), "the Catcher can't block it");
+          assert.isTrue(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: h2.id }));
+          await settle(100);
+          assert.equal(spent(pc1), 0, "blocks nothing now: its Action came back");
+          assert.isNotOk(blocker(card, pc1).blocked);
+        });
+
+        it("a Taunt pulling every blocked hit away gives the Action back", async function () {
+          await arm(pc1);
+          await begin();
+          await declareOn(pc1);
+          await declareOn(pc1);
+          const card = await startReaction();
+          const list = hits(card);
+          assert.isTrue(await block(card, pc1, list, rolled(20, 15, 16)));
+          assert.isTrue(await op(card, "taunt", { byUuid: pc2.uuid, byName: pc2.name, mobUuid: mob.uuid, rank: 1, check: rolled(25, 15, 20) }));
+          await settle(100);
+          assert.isTrue(list.every((h) => state(card).hits[h.id].targetUuid === pc2.uuid), "Taunted away");
+          assert.isTrue(list.every((h) => blockOn(card, h) === null));
+          assert.equal(spent(pc1), 0);
+          assert.isNotOk(blocker(card, pc1).blocked);
         });
 
         it("a successful block: half before DR, and its Debuffs still land", async function () {
@@ -296,7 +393,7 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           const hit = hits(card)[0];
-          assert.isTrue(await block(card, pc1, hit, rolled(25, 15, hit.row.difficulty)));
+          assert.isTrue(await block(card, pc1, [hit], rolled(25, 15, hit.row.difficulty)));
           assert.equal(hitStatus(state(card), state(card).hits[hit.id]).status, "blocked");
           const data = await resolve(card);
           const row = Object.values(data().rows)[0];
@@ -314,23 +411,24 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           const hit = hits(card)[0];
-          await block(card, pc1, hit, rolled(40, 15, hit.row.difficulty));
+          await block(card, pc1, [hit], rolled(40, 15, hit.row.difficulty));
           const data = await resolve(card);
           const row = Object.values(data().rows)[0];
           assert.equal(row.block.reduction, Math.max(0, str));
           assert.equal(row.result.final, Math.max(0, 15 - Math.max(0, str) - dr));
         });
 
-        it("a Major Fail costs the Shield 1 DR, a Critical Fail 2 - at Lock Results; at 0 it breaks", async function () {
+        it("a Major Fail costs the Shield 1 DR, a Critical Fail 2 - stacked in one block, at Lock Results; at 0 it breaks", async function () {
           const shield = await arm(pc1, { dr: 3 });
           await begin();
           await declareOn(pc1);
           await declareOn(pc1);
           const card = await startReaction();
           const [h1, h2] = hits(card);
-          await block(card, pc1, h1, rolled(4, 4, 16)); // fails by 12: Major Fail
+          // Fails by 12: a Major Fail; a Natural 1: a Critical Fail - one Action.
+          await block(card, pc1, [h1, h2], [rolled(4, 4, 16), rolled(1, 1, 16)]);
+          assert.equal(spent(pc1), 1);
           assert.equal(pc1.items.get(shield.id).system.shieldDamage, 0, "not before Lock Results");
-          await block(card, pc1, h2, rolled(1, 1, 16)); // Natural 1: Critical Fail
           const data = await resolve(card);
           assert.equal(pc1.items.get(shield.id).system.shieldDamage, 3);
           assert.isTrue(shieldDrState(pc1.items.get(shield.id)).broken, "3 DR gone: broken");
@@ -346,8 +444,7 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           const [h1, h2] = hits(card);
-          await block(card, pc1, h1, rolled(30, 20, 16));
-          await block(card, pc1, h2, rolled(30, 19, 16));
+          await block(card, pc1, [h1, h2], [rolled(30, 20, 16), rolled(30, 19, 16)]);
           const b1 = state(card).hits[h1.id].block;
           assert.isTrue(bashOffered(b1, b1.rank));
           assert.isFalse(bashOffered(state(card).hits[h2.id].block, 10), "a 19 isn't a Critical Hit");
@@ -431,6 +528,34 @@ export default function register(quench) {
             assert.isFalse(rowBlockable(row, message.flags["carl-rpg"]), "once");
           } finally {
             await message?.delete();
+            await deleteTestActor(pc);
+          }
+        });
+
+        it("in a phased fight: one Shield Block Action covers every card's row this round, as a row's Evade does", async function () {
+          const pc = await createTestCharacter("sb-row-fight");
+          const mob = await createTestMob("sb-row-mob");
+          const messages = [];
+          let combat;
+          try {
+            await arm(pc);
+            combat = await Combat.create({});
+            await combat.createEmbeddedDocuments("Combatant", [mob, pc].map((a) => ({ actorId: a.id })));
+            await combat.startCombat();
+            const spentTags = () => actionRecord(combat, combat.combatants.find((c) => c.actor === pc).id).spent.map((e) => e.tag);
+            messages.push(await card(pc), await card(pc));
+            for (const message of messages) {
+              await withPinnedDice(PIN_D20_MID, () => blockRow(message, "t0", { skipDialog: true }));
+              await waitFor(() => !!message.getFlag("carl-rpg", "targetRows").t0.checks?.block, { message: "no block on the row" });
+            }
+            assert.deepEqual(spentTags(), [BLOCK_TAG], "the first card paid; the second was free");
+          } finally {
+            await settle(150);
+            for (const m of messages) await m.delete();
+            const notices = game.messages.filter((m) => combat && m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id).map((m) => m.id);
+            if (notices.length) await ChatMessage.deleteDocuments(notices);
+            await deleteTestCombat(combat);
+            await deleteTestActor(mob);
             await deleteTestActor(pc);
           }
         });

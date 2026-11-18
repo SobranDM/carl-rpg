@@ -67,28 +67,21 @@
   </div>
   {{/if}}
   {{#if showDifficulty}}
-  {{#if difficultyPresets.length}}
-  {{!-- p.59's Difficulty formulas at the current Floor; picking one fills the
-        number below (module/dice/roll-prompt.mjs wires the change). --}}
-  <div class="form-group">
-    <label>{{localize "CARLRPG.Dialog.DifficultyPreset"}}</label>
+  {{!-- Pre-filled from p.59's formulas at the current Floor (the roll's own:
+        Unopposed, Stat Check, Opposed vs a targeted creature, or one passed
+        in); the hint says which. A GM's situational call goes straight into
+        this number (ruled 2026-11-18: no separate modifier). --}}
+  <div class="form-group carl-dialog-difficulty">
+    <label>{{#if difficultyLabel}}{{difficultyLabel}}{{else}}{{localize "CARLRPG.Dialog.Difficulty"}}{{/if}}</label>
     <div class="form-fields carl-dialog-preset">
-      <select name="difficultyPreset" data-carl-difficulty-preset>
-        {{#each difficultyPresets as |preset|}}
-        <option value="{{preset.key}}" data-value="{{preset.value}}" {{#if preset.selected}}selected{{/if}}>{{preset.label}}</option>
-        {{/each}}
-      </select>
+      <input type="number" name="difficulty" value="{{difficulty}}" placeholder="{{localize 'CARLRPG.Dialog.DifficultyPlaceholder'}}" />
+      {{#if difficultyBasis}}
       <i class="fa-solid fa-circle-question carl-dialog-help" tabindex="0" role="img"
         data-tooltip-html="{{localize 'CARLRPG.Dialog.DifficultyPresetHelp'}}" data-tooltip-direction="UP"
         aria-label="{{localize 'CARLRPG.Dialog.DifficultyPresetHelpLabel'}}: {{difficultyHelpText}}"></i>
+      {{/if}}
     </div>
-  </div>
-  {{/if}}
-  <div class="form-group">
-    <label>{{#if difficultyLabel}}{{difficultyLabel}}{{else}}{{localize "CARLRPG.Dialog.Difficulty"}}{{/if}}</label>
-    <div class="form-fields">
-      <input type="number" name="difficulty" value="{{difficulty}}" placeholder="{{localize 'CARLRPG.Dialog.DifficultyPlaceholder'}}" />
-    </div>
+    {{#if difficultyBasis}}<p class="carl-dialog-hint carl-dialog-difficulty-basis">{{difficultyBasis}}</p>{{/if}}
   </div>
   {{/if}}
   {{#if areaTargets.length}}
@@ -154,19 +147,16 @@
     </div>
   </div>
   {{/if}}
-  <div class="form-group">
-    <label>{{localize "CARLRPG.Dialog.SituationalModifier"}}</label>
-    <div class="form-fields">
-      <input type="number" name="modifier" value="0" autofocus />
-    </div>
-  </div>
   {{#if showUsesAction}}
   {{!-- In a fight (helpers/actions.mjs): a Check the GM calls for "generally
         doesn't require a crawler to spend an Action" (p.85). --}}
   <div class="form-group carl-dialog-uses-action">
     <label>{{localize "CARLRPG.Dialog.UsesAction"}}</label>
-    <div class="form-fields">
-      <label><input type="checkbox" name="usesAction" {{#if usesAction}}checked{{/if}} /> {{localize "CARLRPG.Dialog.UsesActionHint"}}</label>
+    <div class="form-fields carl-dialog-conditions-list">
+      <label class="carl-dialog-condition">
+        <input type="checkbox" name="usesAction" {{#if usesAction}}checked{{/if}} />
+        <span>{{localize "CARLRPG.Dialog.UsesActionHint"}}</span>
+      </label>
     </div>
   </div>
   {{/if}}

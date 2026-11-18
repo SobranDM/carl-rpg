@@ -23,7 +23,7 @@ export async function onAddArrayItem(event, target, document) {
   } catch (e) {
     template = {};
   }
-  const current = foundry.utils.getProperty(document, path) ?? [];
+  const current = storedArray(document, path);
   await writeArrayField(document, path, [...current, template]);
 }
 
@@ -37,8 +37,20 @@ export async function onDeleteArrayItem(event, target, document) {
   const path = target.dataset.path;
   const index = Number(target.dataset.index);
   if (!path || !Number.isInteger(index)) return;
-  const current = foundry.utils.getProperty(document, path) ?? [];
+  const current = storedArray(document, path);
   await writeArrayField(document, path, current.filter((_, i) => i !== index));
+}
+
+/**
+ * The array as stored, not as prepared: data prep can drop entries from
+ * the prepared copy (a blank Favored Class / Class Type / Parent Skill row,
+ * see module/data/spell.mjs), and the sheets index rows by the stored one.
+ * @param {Actor|Item} document
+ * @param {string} path
+ * @returns {Array}
+ */
+function storedArray(document, path) {
+  return foundry.utils.getProperty(document._source ?? document, path) ?? [];
 }
 
 /**
@@ -74,7 +86,7 @@ async function writeArrayField(document, path, updatedArray) {
     return;
   }
   const [, topField] = match;
-  const currentTopValue = foundry.utils.getProperty(document, `system.${topField}`);
+  const currentTopValue = foundry.utils.getProperty(document._source ?? document, `system.${topField}`);
   const clone = { [topField]: foundry.utils.deepClone(currentTopValue) };
   foundry.utils.setProperty(clone, path.slice('system.'.length), updatedArray);
   await document.update({ [`system.${topField}`]: clone[topField] });

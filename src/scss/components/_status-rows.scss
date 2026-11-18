@@ -97,7 +97,9 @@
 
   .carl-status-section-acts {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 4px;
     padding: 3px 6px 5px;
   }
 

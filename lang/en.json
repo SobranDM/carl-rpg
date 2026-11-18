@@ -1202,7 +1202,8 @@
     },
     "Chat": {
       "Description": "Description",
-      "NoGMOnline": "No GM is currently connected to apply this action."
+      "NoGMOnline": "No GM is currently connected to apply this action.",
+      "GMNoAnswer": "The GM's client didn't answer in time, so nothing was done here. Check the card before trying again."
     },
     "TargetEffects": {
       "WillApply": "On hit, apply:",
@@ -1276,7 +1277,11 @@
     },
     "ShieldBlock": {
       "Name": "Shield Block",
-      "Button": "Shield Block: an Action for this Attack - half damage on a Success (p.198)",
+      "Button": "Shield Block: half damage on a Success (p.198). One Action covers every Attack on you this round.",
+      "SectionButton": "Shield Block ({count})",
+      "SectionHint": "One Action: a separate Shield Block Check against each Attack on you that you can block - half damage on a Success (p.198).",
+      "Used": "Shield Block used",
+      "Again": "Same Check again: {formula} = {total}",
       "Bash": "Shield Bash",
       "BashButton": "Shield Bash: a free Attack at the attacker (Natural 20, Rank 10)",
       "DamageSource": "{name} (Shield damage)",
@@ -1284,7 +1289,8 @@
         "success": "Shield Block - half damage",
         "failed": "Shield Block failed",
         "loss": "{shield} -{amount} DR",
-        "bashed": "Shield Bash made"
+        "bashed": "Shield Bash made",
+        "auto": "Rolled with their Shield Block"
       },
       "Tag": {
         "half": "Shield Block - half",
@@ -1548,13 +1554,16 @@
       "RollTitle": "{name}'s Taunt",
       "Success": "Success — the Attack now targets you!",
       "Fail": "Fail — the Attack is unchanged.",
+      "SuccessTooLate": "Success — but too late: the Attack was settled meanwhile and is unchanged.",
+      "SuccessUnanswered": "Success — the GM didn't confirm the redirect: check the Attack card.",
       "RedirectedNotice": "{name} taunts the attack onto themselves.",
       "FailedNotice": "{name}'s Taunt fails — the attack is unchanged.",
       "AlreadyResolved": "This Attack has already been resolved and can no longer be redirected.",
       "CannotTauntSelf": "You're already the target of this Attack.",
       "NoAttacker": "Could not find the attacking Mob for this card.",
       "NoTauntSkill": "You don't have the Taunt Skill.",
-      "NotArea": "An Area Attack hits everyone in the area - it can't be Taunted onto one crawler."
+      "NotArea": "An Area Attack hits everyone in the area - it can't be Taunted onto one crawler.",
+      "TooLate": "{name}'s Taunt succeeded, but the Attack was settled or changed meanwhile (a target Evaded, blocked or took the damage, or another Taunt took it), so it isn't redirected. The Taunt still stands."
     },
     "Roll": {
       "Formula": "Formula",
@@ -1740,10 +1749,10 @@
       "EvadeDice": "Evade Dice (e.g. 1d4)"
     },
     "DamageDiceKind": {
-      "Base": "Base (doubles on Crit)",
+      "Base": "Base (doubles on Crit; with Multiply, scales the base dice only)",
       "RankDie": "Rank Die (Table 37, never doubles)",
       "Flat": "Flat (never doubles)",
-      "Multiplier": "Multiplier (never doubles)"
+      "Multiplier": "Multiplier (scales the total damage)"
     },
     "SkillCategory": {
       "Attack": "Attack",
@@ -1992,7 +2001,9 @@
         "GearChanged": "Gear has been moved by a later Action since. Undo that one first.",
         "InterveneFirst": "Someone has Intervened on that Action's card. Their Intervene has to be undone first.",
         "DeclarationOver": "The Declaration Phase is over, so that declared Attack can't be withdrawn.",
-        "Learned": "A Spell learned from a Spellbook can't be unlearned. The GM can add an Action from the Combat Tracker instead."
+        "Learned": "A Spell learned from a Spellbook can't be unlearned. The GM can add an Action from the Combat Tracker instead.",
+        "TauntRedirected": "That Taunt pulled an Attack onto its taunter, which can't be taken back. The GM can add an Action from the Combat Tracker instead.",
+        "Failed": "Something changed while that Action was being undone, so none of it was taken back and the Action stays spent. Try again, or the GM can add an Action from the Combat Tracker."
       }
     },
     "Reaction": {

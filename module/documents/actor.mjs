@@ -222,6 +222,23 @@ export class CarlRPGActor extends Actor {
   }
 
   /**
+   * Deleting the active Race or Class item, however it's done, clears
+   * system.race / system.class, so the next one dropped becomes active
+   * (actor-sheet.mjs _onDropItem). The deleting user does it.
+   * @override
+   */
+  _onDeleteDescendantDocuments(parent, collection, documents, ids, options, userId) {
+    super._onDeleteDescendantDocuments(parent, collection, documents, ids, options, userId);
+    if (collection !== "items" || game.user.id !== userId || this.type !== "character") return;
+    const cleared = {};
+    for (const key of ["class", "race"]) {
+      if (this.system[key] && ids.includes(this.system[key])) cleared[`system.${key}`] = "";
+    }
+    if (foundry.utils.isEmpty(cleared)) return;
+    this.update(cleared).catch((err) => console.error("CarlRPG | clearing the active Race/Class failed", err));
+  }
+
+  /**
    * Active GM only: a changed Role or Taunt/Catcher pick grants its Skills,
    * a newly picked crawler's players can run the Pet, and a changed Command
    * Pet result updates the token's status icon.

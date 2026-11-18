@@ -65,7 +65,13 @@ export function defineChangeEntrySchema() {
      *   base       - "+1d4 base damage" style Upgrade text; doubles on crit.
      *   rankDie    - references the Table 37 Rank->die lookup; never doubles.
      *   flat       - a flat numeric add (not dice); never doubles.
-     *   multiplier - a post-roll multiplier (e.g. "x2 damage"); never doubles.
+     *   multiplier - multiplies the TOTAL damage (every type, and a row's
+     *                Amazing Success +Floor): Choke Out / Smush "x2 the total
+     *                damage". On a multiply change, "base" instead scales only
+     *                the base dice (Powerful Strike, p.180: "Multiply your base
+     *                damage dice result by your Rank..., then add your
+     *                modifiers"). The 0.7.0-base-multipliers migration moves
+     *                old copies of those to "base".
      */
     damageDiceKind: new fields.StringField({
       required: false, blank: true, initial: "",

@@ -1,9 +1,14 @@
+import CarlDice from "../../dice/dice.mjs";
 import { resolveEvadeDifficulty, canActOnUuidFlag } from "../../chat/evade-link-card.mjs";
-import { isCardLocked, canActTaunt } from "../../chat/taunt-card.mjs";
+import { isCardLocked, canActTaunt, tauntAttack, tauntRedirectNow } from "../../chat/taunt-card.mjs";
 import { canApplyDamage, onApplyDamage } from "../../chat/damage-card.mjs";
 import { canApplyTargetEffects, onApplyTargetEffects } from "../../chat/target-effects-card.mjs";
 import { canApplyHeal, onApplyHeal } from "../../chat/heal-card.mjs";
-import { createTestCharacter, deleteTestActor, settle, useQuenchTimeout } from "../helpers.mjs";
+import { applyAllRows, applyRow } from "../../chat/attack-targets-card.mjs";
+import {
+  createTestCharacter, createTestItem, createTestMob, deleteTestActor, PIN_D20_MID, pressDialog, settle, useQuenchTimeout, withDialog,
+  withFakeTargets, withPinnedDice, withSetting,
+} from "../helpers.mjs";
 
 const fakeEvent = { preventDefault() {} };
 
@@ -15,7 +20,7 @@ export default function register(quench) {
   quench.registerBatch(
     "carl-rpg.chat-cards",
     (context) => {
-      const { describe, it, assert } = context;
+      const { describe, it, assert, beforeEach, afterEach } = context;
 
       describe("resolveEvadeDifficulty (Considerate Play/PvP, p.87)", function () {
         useQuenchTimeout(this);
@@ -114,6 +119,177 @@ export default function register(quench) {
           } finally {
             await deleteTestActor(actor);
             if (message) await message.delete();
+          }
+        });
+      });
+
+      describe("Applied once: the row's current state is read just before applying", function () {
+        useQuenchTimeout(this);
+
+        const rowFor = (id, actor) => ({
+          id, uuid: actor.uuid, name: actor.name, isCharacter: true, zone: "full", difficulty: 13,
+          hit: true, amazing: false, freeEvade: false, freeUsed: false, evade: null, applied: false, replaced: false,
+        });
+        const attackCard = (slots, ...actors) => ChatMessage.create({
+          content: '<div class="carl-chat-card"></div>',
+          flags: { "carl-rpg": {
+            floor: 1, damageIsMagic: true, damageByType: { "": actors[0].system.hb.slotValue * slots },
+            targetUuids: actors.map((a) => a.uuid),
+            targetRows: Object.fromEntries(actors.map((a, i) => [`t${i}`, rowFor(`t${i}`, a)])),
+          } },
+        });
+
+        it("Apply All skips a row applied after it started (a player's own Apply) - no double damage", async function () {
+          const a = await createTestCharacter("apply-all-a");
+          const b = await createTestCharacter("apply-all-b");
+          let message;
+          try {
+            message = await attackCard(2, a, b);
+            const startB = b.system.hb.value;
+            // A's damage lands; before Apply All reaches B, B's owner applies
+            // B's row - the card now says so.
+            let fired = false;
+            const update = a.update;
+            a.update = async function (...args) {
+              const result = await update.apply(this, args);
+              if (!fired) {
+                fired = true;
+                await message.update({ "flags.carl-rpg.targetRows.t1.applied": true });
+              }
+              return result;
+            };
+            try {
+              await applyAllRows(message);
+            } finally {
+              delete a.update;
+            }
+            await settle();
+            assert.isTrue(fired, "B's row was marked applied mid-way");
+            assert.equal(a.system.hb.value, 10 - 2, "A was applied");
+            assert.equal(b.system.hb.value, startB, "B's row wasn't applied again by Apply All");
+          } finally {
+            await message?.delete();
+            await deleteTestActor(a);
+            await deleteTestActor(b);
+          }
+        });
+
+        it("a row already applied isn't applied again - by a second click, or one already under way", async function () {
+          const a = await createTestCharacter("apply-twice-a");
+          const b = await createTestCharacter("apply-twice-b");
+          let message;
+          try {
+            message = await attackCard(2, a, b);
+            const rows = () => message.getFlag("carl-rpg", "targetRows");
+            // Two clicks on A's row at once on this client: the second sees the first's mark.
+            await Promise.all([applyRow(message, rows().t0), applyRow(message, rows().t0)]);
+            // B's row, already applied on the card (someone else's Apply that has arrived).
+            const startB = b.system.hb.value;
+            await message.update({ "flags.carl-rpg.targetRows.t1.applied": true });
+            await applyRow(message, { id: "t1" });
+            await applyAllRows(message);
+            await settle();
+            assert.equal(a.system.hb.value, 10 - 2, "A was applied once");
+            assert.equal(b.system.hb.value, startB, "B's applied row wasn't applied again");
+          } finally {
+            await message?.delete();
+            await deleteTestActor(a);
+            await deleteTestActor(b);
+          }
+        });
+
+        it("a Heal skips a recipient already applied on the card, and a second Apply heals no one", async function () {
+          const a = await createTestCharacter("heal-once-a", { system: { hb: { value: 3, max: 10 } } });
+          const b = await createTestCharacter("heal-once-b", { system: { hb: { value: 3, max: 10 } } });
+          let message;
+          try {
+            message = await ChatMessage.create({
+              content: "<div></div>",
+              flags: { "carl-rpg": { healAmount: 5, healRecipients: {
+                r0: { uuid: a.uuid, name: a.name }, r1: { uuid: b.uuid, name: b.name, applied: true },
+              } } },
+            });
+            await onApplyHeal(fakeEvent, message);
+            await onApplyHeal(fakeEvent, message);
+            await settle();
+            assert.equal(a.system.hb.value, 8, "A healed once");
+            assert.equal(b.system.hb.value, 3, "B's row was already applied (by B's owner)");
+            assert.isTrue(message.getFlag("carl-rpg", "healApplied"), "both rows are applied");
+          } finally {
+            await message?.delete();
+            await deleteTestActor(a);
+            await deleteTestActor(b);
+          }
+        });
+      });
+
+      describe("Taunt from an Attack card (taunt-card.mjs)", function () {
+        useQuenchTimeout(this);
+
+        const bite = { name: "Bite", toHit: "14", damage: "3", damageType: "", range: "", effect: "" };
+        let mob;
+        let wren;
+        let chase;
+        let card;
+        beforeEach(async function () {
+          mob = await createTestMob("taunt-mob", { system: { attacks: [bite] } });
+          wren = await createTestCharacter("taunt-wren");
+          chase = await createTestCharacter("taunt-chase");
+          // Named exactly "Taunt": tauntAttack finds the Skill by name.
+          await createTestItem(chase, "skill", "Taunt", { name: "Taunt", system: { rank: 10 } });
+          card = await withFakeTargets([{ actor: wren }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+        });
+        afterEach(async function () {
+          await card?.delete();
+          for (const actor of [mob, wren, chase]) await deleteTestActor(actor);
+        });
+
+        const rows = () => card.getFlag("carl-rpg", "targetRows");
+        const asChase = () => ({ actor: chase, token: null });
+        // A d20 pinned to 10 + Rank 10 against 10 + the Mob's Mod + Floor 1: a Success.
+        const rolledToSucceed = (fn) => withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, fn));
+
+        it("succeeds: the Attack moves onto the taunter", async function () {
+          assert.exists(rows()?.t0, "the Attack card has Wren's row");
+          const result = await rolledToSucceed(() => tauntAttack(card, { taunter: asChase(), skipDialog: true }));
+          assert.equal(result, "redirected");
+          assert.isTrue(rows().t0.replaced);
+          assert.equal(rows().t1?.uuid, chase.uuid);
+          assert.deepEqual(card.getFlag("carl-rpg", "targetUuids"), [chase.uuid]);
+        });
+
+        it("a row applied while the Taunt dialog is open refuses the redirect; the roll stands", async function () {
+          const result = await rolledToSucceed(() => withDialog(
+            () => tauntAttack(card, { taunter: asChase() }),
+            async (dialog) => {
+              // Wren fails to get out of the way and takes the hit meanwhile.
+              await applyRow(card, rows().t0);
+              pressDialog(dialog, "roll");
+            },
+            "carl-roll-dialog",
+          ));
+          assert.isTrue(rows().t0.applied, "Wren took the hit");
+          assert.equal(result, "refused");
+          assert.notOk(rows().t0.replaced, "Wren's applied row stays");
+          assert.notExists(rows().t1, "no taunter row");
+          assert.deepEqual(card.getFlag("carl-rpg", "targetUuids"), [wren.uuid]);
+          assert.equal(card.getFlag("carl-rpg", "tauntedBy"), chase.uuid, "the Taunt was made");
+        });
+
+        it("two Taunts landing at once: one takes the Attack, with its own row id", async function () {
+          const pip = await createTestCharacter("taunt-pip");
+          try {
+            const seen = ["t0"];
+            const outcomes = await Promise.all([
+              tauntRedirectNow({ cardId: card.id, taunterUuid: chase.uuid, success: true, seen }, game.user),
+              tauntRedirectNow({ cardId: card.id, taunterUuid: pip.uuid, success: true, seen }, game.user),
+            ]);
+            assert.sameMembers(outcomes.map((o) => o?.outcome), ["redirected", "refused"]);
+            const active = Object.values(rows()).filter((r) => !r.replaced);
+            assert.lengthOf(active, 1, "one taunter row");
+            assert.equal(active[0].uuid, chase.uuid, "the first one's");
+          } finally {
+            await deleteTestActor(pip);
           }
         });
       });

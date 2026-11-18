@@ -60,9 +60,10 @@
   <li class="carl-nested-drawer{{#unless skill.system.detailsExpanded}} collapsed{{/unless}}">
     <div class="carl-skill-details">
       <div class="carl-skill-details-inner">
-        {{#if skill.system.description}}
-        <div class="carl-skill-description">{{{skill.system.description}}}</div>
-        {{/if}}
+        {{!-- Enriched, open drawers only (actor-sheet.mjs #prepareDrawerDescriptions). --}}
+        {{#with (lookup @root.drawerHTML skill._id) as |descriptionHTML|}}
+        <div class="carl-skill-description">{{{descriptionHTML}}}</div>
+        {{/with}}
         {{#each skill.system.upgrades as |upgrade|}}
         <div class="carl-skill-upgrade">
           <strong>{{localize "CARLRPG.Ranked.Rank"}} {{upgrade.rankThreshold}}</strong>

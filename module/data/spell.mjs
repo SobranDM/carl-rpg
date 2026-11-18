@@ -21,8 +21,12 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
     );
 
     // Classes that DON'T pay the +1 Mana surcharge for casting this Spell.
+    // Blank entries are allowed in the source - the sheet's Add makes an
+    // empty row to type into, and a cleared row must still save - and are
+    // dropped from the prepared list (prepareBaseData), which is what
+    // everything else reads.
     schema.favoredClasses = new fields.ArrayField(
-      new fields.StringField({ required: true, blank: false }),
+      new fields.StringField({ required: true, blank: true }),
       { required: false, initial: [] },
     );
 
@@ -57,5 +61,11 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
     schema.detailsExpanded = new fields.BooleanField({ required: true, initial: false });
 
     return schema;
+  }
+
+  /** A blank Favored Class row (see the schema) favours no one. */
+  prepareBaseData() {
+    super.prepareBaseData();
+    this.favoredClasses = (this.favoredClasses ?? []).filter((name) => name);
   }
 }

@@ -518,6 +518,14 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    // Core gives a form-group's labels one input-height line; a hint that
+    // wraps (the "Uses an Action" row) would stack its lines on the box.
+    line-height: normal;
+    white-space: normal;
+
+    input[type="checkbox"] {
+      flex: 0 0 auto;
+    }
 
     // Woozy's "no DEX Mod" row while another Stat is picked (roll-prompt.mjs).
     &[hidden] {
@@ -551,8 +559,18 @@
     font-size: 11px;
   }
 
-  // Roll dialog (templates/dialog/roll-options.hbs): the Difficulty preset's
-  // help icon. (The Damage Effect radios reuse .carl-dialog-conditions-list.)
+  // Roll dialog (templates/dialog/roll-options.hbs): the Difficulty's help
+  // icon, and the hint under it naming where the number came from. (The
+  // Damage Effect radios reuse .carl-dialog-conditions-list.)
+  .carl-dialog-difficulty {
+    flex-wrap: wrap;
+
+    .carl-dialog-difficulty-basis {
+      flex: 0 0 100%;
+      margin: 2px 0 0;
+    }
+  }
+
   .carl-dialog-preset {
     align-items: center;
 

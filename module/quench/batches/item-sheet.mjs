@@ -165,6 +165,58 @@ export default function register(quench) {
           }
         });
       });
+      describe("string lists: Favored Classes, Class Types, Parent Skills", function () {
+        useQuenchTimeout(this);
+
+        const LISTS = [["spell", "favoredClasses"], ["class", "classTypes"], ["damageEffect", "parentSkills"]];
+        const addLink = (sheet, path) => sheet.element.querySelector(`[data-action="addArrayItem"][data-path="${path}"]`);
+        const row = (sheet, path, index) => sheet.element.querySelector(`input[name="${path}.${index}"]`);
+        const type = (input, value) => {
+          input.value = value;
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+        };
+
+        it("Add makes an empty row to type into, and the typed entry saves", async function () {
+          for (const [itemType, key] of LISTS) {
+            const item = await worldItem(itemType, key);
+            const path = `system.${key}`;
+            try {
+              const sheet = await openSheet(item);
+              addLink(sheet, path).click();
+              await waitFor(() => row(sheet, path, 0), { message: `${itemType}: Add made no row` });
+              type(row(sheet, path, 0), "Mage");
+              await waitFor(() => item._source.system[key][0] === "Mage", { message: `${itemType}: the entry never saved` });
+
+              addLink(sheet, path).click();
+              await waitFor(() => row(sheet, path, 1), { message: `${itemType}: a second Add made no row` });
+              assert.deepEqual(item._source.system[key], ["Mage", ""], `${itemType}: the empty row is stored`);
+              assert.deepEqual(item.system[key], ["Mage"], `${itemType}: an empty row isn't read as an entry`);
+              await sheet.close();
+            } finally {
+              await item.delete();
+            }
+          }
+        });
+
+        it("a cleared entry doesn't block a later save", async function () {
+          for (const [itemType, key] of LISTS) {
+            const item = await worldItem(itemType, key, { system: { [key]: ["Mage"] } });
+            const path = `system.${key}`;
+            try {
+              const sheet = await openSheet(item);
+              type(row(sheet, path, 0), "");
+              await waitFor(() => item._source.system[key][0] === "", { message: `${itemType}: the cleared entry never saved` });
+              const renamed = `${item.name} renamed`;
+              type(sheet.element.querySelector('input[name="name"]'), renamed);
+              await waitFor(() => item.name === renamed, { message: `${itemType}: a later edit never saved` });
+              assert.deepEqual(item.system[key], [], `${itemType}: the cleared entry isn't read`);
+              await sheet.close();
+            } finally {
+              await item.delete();
+            }
+          }
+        });
+      });
     },
     { displayName: "CarlRPG: Item Sheet" },
   );

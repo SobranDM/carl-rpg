@@ -31,6 +31,14 @@ export class CarlRPGItem extends Item {
    * a Spell once they've learned it - so a Spell added to an actor at Rank 0
    * (every compendium Spell is authored that way, including the starting
    * Heal) arrives at Rank 1. A Rank set on purpose afterwards is left alone.
+   *
+   * A Race/Class's record of baked grants (helpers/race-class-grants.mjs)
+   * says what's already in the Stats of the actor it was baked on, so a
+   * copy - dragged from another actor, the Items sidebar or a compendium -
+   * starts without it and bakes on its new owner. Kept for an import whose
+   * Stats already include the grants (`carlPreBaked`, CrawlerForge). Items
+   * created inside a whole new actor (a duplicate) never reach this and
+   * keep it.
    * @override
    */
   async _preCreate(data, options, user) {
@@ -38,6 +46,10 @@ export class CarlRPGItem extends Item {
     if (allowed === false) return false;
     if (this.type === "spell" && this.parent && (this.system.rank ?? 0) < 1) {
       this.updateSource({ "system.rank": 1 });
+    }
+    const raceOrClass = this.type === "race" || this.type === "class";
+    if (raceOrClass && !options.carlPreBaked && this.getFlag("carl-rpg", "bakedGrantIds")?.length) {
+      this.updateSource({ "flags.carl-rpg.bakedGrantIds": [] });
     }
   }
 

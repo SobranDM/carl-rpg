@@ -14,7 +14,7 @@ import { useConsumable } from "../../helpers/consumables.mjs";
 import { currentPhase } from "../../helpers/combat-phases.mjs";
 import { declaredAttacks, removeDeclaration } from "../../helpers/declarations.mjs";
 import { placeInHotlist, useHotlistSlot } from "../../helpers/hotlist.mjs";
-import { applyOp, reactionCardFor } from "../../chat/reaction-card.mjs";
+import { applyOp, reactionCardFor, withCard } from "../../chat/reaction-card.mjs";
 import { hitList } from "../../helpers/reaction-state.mjs";
 import {
   createTestCharacter,
@@ -493,6 +493,43 @@ export default function register(quench) {
             assert.lengthOf(taunts(), 1, "refused: the card changed since");
             assert.lengthOf(spentBy(pc), 1);
           } finally {
+            await deleteTestActor(ally);
+          }
+        });
+
+        it("an undo whose Reaction card changes while it waits takes nothing back, Action included, and says why", async function () {
+          const ally = await createTestCharacter("undo-wait-ally");
+          const warn = ui.notifications.warn;
+          const warned = [];
+          let release = () => {};
+          try {
+            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await combat.nextTurn();
+            const card = reactionCardFor(combat);
+            const taunts = () => Object.keys(card.getFlag("carl-rpg", "reaction").taunts ?? {});
+            assert.isTrue(await applyOp(card.id, "taunt", {
+              byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check: { ...check, total: 5, naturalRoll: 3 },
+            }, game.user));
+            const [tauntId] = taunts();
+            // Hold the card's queue, so what follows waits in it, in order:
+            // the ally's Intervene, then the undo - checked (and passed)
+            // before the Intervene has changed anything.
+            const gate = new Promise((resolve) => { release = resolve; });
+            const held = withCard(card.id, () => gate);
+            const intervened = applyOp(card.id, "intervene", {
+              byUuid: ally.uuid, byName: ally.name, ref: { type: "taunt", tauntId }, value: 1,
+            }, game.user);
+            ui.notifications.warn = (text) => { warned.push(String(text)); };
+            const undone = undoLast(pc);
+            release();
+            await Promise.all([held, intervened, undone]);
+            await settle();
+            assert.lengthOf(taunts(), 1, "the Taunt stays on the card");
+            assert.lengthOf(spentBy(pc), 1, "and its Action stays spent - no free Taunt");
+            assert.include(warned, game.i18n.localize("CARLRPG.Actions.Undo.ReactionChanged"), "the asker is told why");
+          } finally {
+            release();
+            ui.notifications.warn = warn;
             await deleteTestActor(ally);
           }
         });

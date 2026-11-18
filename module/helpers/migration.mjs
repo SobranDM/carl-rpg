@@ -71,6 +71,9 @@ export const GEAR_SLOTS_MIGRATION_ID = "0.7.0-gear-slots";
 /** 0.7.0: a blank Weapon Skill guessed from the item's name (migrateWeaponSkillGuesses). */
 export const WEAPON_SKILL_GUESS_ID = "0.7.0-weapon-skill-guess";
 
+/** Powerful Strike / Magic Missile multipliers moved to "base" (migrateBaseMultipliers). */
+export const BASE_MULTIPLIER_MIGRATION_ID = "0.7.0-base-multipliers";
+
 /**
  * The migrations, oldest first. `id` never changes once released; `version`
  * is the release whose data it brings a world up to (for messages). A run
@@ -86,6 +89,7 @@ export const MIGRATIONS = [
   // still gets them.
   { id: DEITY_TIER_MIGRATION_ID, version: "0.7.0", run: migrateDeityTiers },
   { id: COMPENDIUM_REFRESH_ID, version: "0.7.0", run: migrateCompendiumCopies },
+  { id: BASE_MULTIPLIER_MIGRATION_ID, version: "0.7.0", run: migrateBaseMultipliers },
   { id: BASE_DR_MIGRATION_ID, version: "0.7.0", run: migrateCharacterBaseDr },
   { id: CHARGEN_DONE_MIGRATION_ID, version: "0.7.0", run: migrateChargenDone },
   // Before the gear slots (a guessed weapon is then Held) and the notice
@@ -280,6 +284,90 @@ async function migrateHandToHandSkills() {
 
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
     await attempt(`compendium ${pack.collection}`, () => migratePack(pack));
+  }
+  return { changed, errors };
+}
+
+/* -------------------------------------------------- */
+/*  0.7.0: base-dice multipliers                      */
+/* -------------------------------------------------- */
+
+/**
+ * Items whose multiplier scales only the base damage dice, not the total
+ * (Powerful Strike, p.180: "Multiply your base damage dice result by your
+ * Rank in this Skill, then add your modifiers and buffs"; Magic Missile
+ * Rank 15: "base damage x3"). 0.7.0 split the old "multiplier" dice kind in
+ * two - "multiplier" now means x total (Choke Out, Smush) and "base" on a
+ * multiply change means x base dice - so these copies' old "multiplier"
+ * would multiply more than the book says.
+ */
+const BASE_MULTIPLIER_ITEMS = new Set(["powerful-strike", "magic-missile"]);
+
+/**
+ * A copy of Powerful Strike or Magic Missile with "multiplier" changes, as
+ * an update moving them to "base" (its own changes and every Upgrade
+ * tier's; arrays written whole). Null when there's nothing to change.
+ * @param {Item} item
+ * @returns {object|null}
+ */
+export function baseMultiplierUpdate(item) {
+  if (!["skill", "spell", "damageEffect"].includes(item?.type)) return null;
+  if (!BASE_MULTIPLIER_ITEMS.has(slugifySkillName(item.name))) return null;
+  const source = item._source?.system ?? item.system;
+  let changed = false;
+  const fix = (changes) => (changes ?? []).map((c) => {
+    if (c?.damageDiceKind !== "multiplier") return c;
+    changed = true;
+    return { ...c, damageDiceKind: "base" };
+  });
+  const changes = fix(source.changes);
+  const upgrades = (source.upgrades ?? []).map((u) => ({ ...u, changes: fix(u.changes) }));
+  if (!changed) return null;
+  return { _id: item.id, "system.changes": changes, "system.upgrades": upgrades };
+}
+
+/** Fix an Actor's own copies (a world or compendium Actor). */
+async function fixBaseMultipliersOn(actor) {
+  const updates = actor.items.map(baseMultiplierUpdate).filter(Boolean);
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { render: false });
+  return updates.length;
+}
+
+/**
+ * Powerful Strike and Magic Missile copies made before 0.7.0 - on world
+ * Actors, in the Items directory and in world compendiums - get their
+ * multiplier marked "base", as the pack's own copies are.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+async function migrateBaseMultipliers() {
+  let changed = 0;
+  let errors = 0;
+  const attempt = async (label, fn) => {
+    try {
+      changed += await fn();
+    } catch (err) {
+      console.error(`carl-rpg | 0.7.0 migration: couldn't update ${label}`, err);
+      errors += 1;
+    }
+  };
+  for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => fixBaseMultipliersOn(actor));
+  await attempt("the Items directory", async () => {
+    const updates = game.items.map(baseMultiplierUpdate).filter(Boolean);
+    if (updates.length) await Item.implementation.updateDocuments(updates, { render: false });
+    return updates.length;
+  });
+  for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
+    await attempt(`compendium ${pack.collection}`, () => withUnlockedPack(pack, async () => {
+      const documents = await pack.getDocuments();
+      if (pack.documentName === "Actor") {
+        let n = 0;
+        for (const actor of documents) n += await fixBaseMultipliersOn(actor);
+        return n;
+      }
+      const updates = documents.map(baseMultiplierUpdate).filter(Boolean);
+      if (updates.length) await Item.implementation.updateDocuments(updates, { pack: pack.collection, render: false });
+      return updates.length;
+    }));
   }
   return { changed, errors };
 }

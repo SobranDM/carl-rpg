@@ -291,6 +291,24 @@ export default function register(quench) {
           assert.include(data.report.weaponsWithoutItem, "Longsword", "a granted Attack Skill with no weapon is reported");
         });
 
+        it("grants: the Rank-10 ceiling caps the gain, as baking does (p.127)", function () {
+          const grant = (target, value) => ({ id: "", targetType: "skillRank", target, mode: "add", value: String(value), conditions: [] });
+          const raceClass = testRaceClass().map((rc) => (rc.name !== "Human" ? rc : {
+            ...rc,
+            system: { changes: [
+              ...rc.system.changes,
+              grant("Test High", 12), grant("Test High", 2),
+              grant("Test Eight", 8), grant("Test Eight", 3),
+              grant("Test Twelve", 12),
+            ] },
+          }));
+          const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), { raceClass });
+          const rank = (name) => data.skills.find((s) => s.name === name)?.data.system.rank;
+          assert.equal(rank("Test High"), 12, "Rank 12 plus 2 stays 12");
+          assert.equal(rank("Test Eight"), 10, "Rank 8 plus 3 stops at 10");
+          assert.equal(rank("Test Twelve"), 12, "a new Skill granted 12 is made at 12");
+        });
+
         it("a compendium copy keeps a fallback of its own type, from the export", function () {
           const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), {
             candidates: testCandidates(), raceClass: testRaceClass(),
@@ -370,6 +388,10 @@ export default function register(quench) {
             assert.equal(system.raceItem?.name, "Gutter Sprite");
             assert.equal(system.classItem?.name, "Dumpster Sommelier");
             assert.deepEqual(system.classItem.system.classTypes, ["Bard", "Rogue"]);
+            // Kept through item._preCreate (carlPreBaked), which empties it on a plain copy.
+            for (const item of [system.raceItem, system.classItem]) {
+              assert.isNotEmpty(item.getFlag("carl-rpg", "bakedGrantIds"), `${item.name} keeps its pre-baked record`);
+            }
 
             const skills = actor.items.filter((i) => i.type === "skill");
             // The export's 5, plus the 5 its Race/Class grant that it doesn't list.

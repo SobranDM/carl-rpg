@@ -59,6 +59,28 @@ export function ownedRank(actor, item) {
   return actor.system.skills?.[slugifySkillName(item.name)]?.rank ?? item.system.rank ?? 0;
 }
 
+/**
+ * A Skill, Spell or Damage Effect's live Rank - the one its Upgrade tiers
+ * unlock at: its own Rank plus the "+N to a Skill" bonuses active right now
+ * (worn gear, Buffs), as the actor's skill bag has it (aggregateActorBonuses
+ * gates tiers on the same Rank). A "+N" gear bonus unlocks the Skill's
+ * Upgrades only while the Rank stays there - unequipped, it's gone on the
+ * next prepare (ruled 2026-11-18). Advancement and Rank caps read the
+ * item's own system.rank instead. An item that isn't one of the actor's own
+ * (a Scroll's Spell, cast at the scroll's Rank - p.99), or isn't ranked,
+ * keeps its own Rank.
+ * @param {Item|null} item
+ * @returns {number}
+ */
+export function effectiveRank(item) {
+  const own = Number(item?.system?.rank) || 0;
+  if (!RANKED_TYPES.has(item?.type)) return own;
+  const actor = item.actor;
+  if (!actor || !item.id || !actor.items?.has(item.id)) return own;
+  const entry = actor.system?.skills?.[slugifySkillName(item.name)];
+  return entry && entry.itemId === item.id && Number.isFinite(entry.rank) ? entry.rank : own;
+}
+
 function emptySkillEntry(name) {
   return {
     key: slugifySkillName(name),
@@ -107,6 +129,20 @@ function isDiceFormula(value) {
 }
 
 /**
+ * A skillDamage ChangeEntry's kind: its author-declared damageDiceKind, else
+ * "base" for dice and "flat" for anything else. With mode "multiply",
+ * "base" multiplies the base damage dice result ("Multiply your base damage
+ * dice result by your Rank in this Skill, then add your modifiers and
+ * buffs" - Powerful Strike, p.180); any other kind multiplies the total
+ * damage ("deals x2 the total damage" - Choke Out, Smush).
+ * @param {object} change
+ * @returns {string}
+ */
+function skillDamageKind(change) {
+  return change.damageDiceKind || (isDiceFormula(change.value) ? "base" : "flat");
+}
+
+/**
  * Resolve a ChangeEntry.value formula against rollData. Numeric results are
  * returned as numbers; dice/unresolvable formulas are returned as-is
  * (strings) for the roll builder to consume later.
@@ -129,8 +165,12 @@ function resolveValue(formula, rollData) {
  * Collect every currently-active ChangeEntry from one embedded item: its
  * universal `changes` (item-base, always active while owned) plus, for
  * Rank-gated items, every `upgrades[].changes` whose rankThreshold is met.
+ * @param {Item} item
+ * @param {number} [rank]  The Rank tiers unlock at, and `@rank`/a Rank
+ *   damage die read: the item's live Rank (aggregateActorBonuses passes
+ *   it - see effectiveRank); defaults to its own.
  */
-function collectItemChanges(item) {
+function collectItemChanges(item, rank = item.system.rank ?? 0) {
   const sys = item.system;
   // Toggled spells (docs/known-gaps.md 1.4, e.g. a timed weapon-enchantment
   // spell) contribute nothing while switched off - unlike every other item
@@ -140,7 +180,7 @@ function collectItemChanges(item) {
   // "Only gear in your Gear Slots grants its benefits" (p.98) - an owned
   // but unequipped gear item contributes nothing.
   if (item.type === "item" && !givesBonuses(item)) return [];
-  const sourceItemRank = sys.rank ?? 0;
+  const sourceItemRank = rank;
   const out = [];
   // A Damage Effect is never an always-on modifier - "choose one available
   // Damage Effect before you make the Attack Skill Check... if the Attack
@@ -181,8 +221,8 @@ function collectItemChanges(item) {
  * module/data/shared/upgrade-tier.mjs) from one item - its base list (any
  * Rank, module/data/ranked-item-base.mjs) and its unlocked Upgrade tiers -
  * i.e. "on hit, the target gains Debuff X". Tiers are Rank-gated exactly like
- * collectItemChanges above (only tiers whose rankThreshold the item's own
- * current Rank meets); additionally gated per-entry via `critOnly` (natural
+ * collectItemChanges above (only tiers whose rankThreshold the item's live
+ * Rank meets - effectiveRank); additionally gated per-entry via `critOnly` (natural
  * 20) and/or `amazingSuccessOnly` (Degree of Success "Amazing Success") -
  * the book's own "AS: Effect" weapon-enchant convention (Crafting p.223)
  * is explicit these are mutually exclusive triggers on a Critical Hit.
@@ -205,7 +245,7 @@ function collectItemChanges(item) {
  */
 export function collectItemTargetEffects(item, { isCrit = false, isAmazingSuccess = false, skillName = null } = {}) {
   const sys = item.system;
-  const sourceItemRank = sys.rank ?? 0;
+  const sourceItemRank = effectiveRank(item);
   const out = [];
   const skillSlug = skillName ? slugifySkillName(skillName) : null;
   const take = (te, sourceLabel) => {
@@ -257,8 +297,8 @@ export function attackTargetEffects(actor, skillItem, { damageEffectItem = null,
 
 /**
  * Is this Skill, Spell or Damage Effect's damage Armor-Piercing at its Rank:
- * its own box, or an unlocked Upgrade tier's (gated on the item's own Rank,
- * as collectItemTargetEffects gates its Debuffs)?
+ * its own box, or an unlocked Upgrade tier's (gated on the item's live Rank,
+ * effectiveRank, as collectItemTargetEffects gates its Debuffs)?
  * @param {Item|null} item
  * @returns {boolean}
  */
@@ -266,7 +306,7 @@ export function itemIsArmorPiercing(item) {
   const sys = item?.system;
   if (!sys) return false;
   if (sys.armorPiercing) return true;
-  const rank = sys.rank ?? 0;
+  const rank = effectiveRank(item);
   return (Array.isArray(sys.upgrades) ? sys.upgrades : []).some((u) => u.armorPiercing && rank >= u.rankThreshold);
 }
 
@@ -337,7 +377,7 @@ export function computeActiveShieldSlots(items) {
     if (item.type !== "spell" || !item.system.isToggled || !item.system.active) continue;
     const sys = item.system;
     if (!sys.shieldSlots) continue;
-    const rank = sys.rank ?? 0;
+    const rank = effectiveRank(item);
     const unlocked = (sys.upgrades ?? [])
       .filter((u) => rank >= u.rankThreshold && u.shieldSlots)
       .sort((a, b) => b.rankThreshold - a.rankThreshold);
@@ -443,7 +483,7 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
   const scopedRollData = { ...rollData, rank: sourceItemRank };
 
   if (hasConditions) {
-    conditionalModifiers.push({
+    const entry = {
       id: change.id,
       targetType: change.targetType,
       target: change.target,
@@ -455,7 +495,17 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       sourceItemId,
       sourceItemRank,
       conditions: change.conditions,
-    });
+    };
+    // A damage term resolves its kind the way the unconditional one below
+    // does, so a ticked box rolls the same thing: a Rank damage die from
+    // its own item's Rank (Skullcracker Rank 10: "add 1 Rank damage die"),
+    // a multiplier's factor (`@rank` included).
+    if (change.targetType === "skillDamage") {
+      entry.damageDiceKind = skillDamageKind(change);
+      if (change.mode === "multiply") entry.factor = resolveValue(change.value, scopedRollData);
+      else if (entry.damageDiceKind === "rankDie") entry.value = getRankDamageDie(sourceItemRank);
+    }
+    conditionalModifiers.push(entry);
     return;
   }
 
@@ -487,7 +537,7 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
     }
     case "skillDamage": {
       const entry = getOrCreateSkill(skills, change.target);
-      const kind = change.damageDiceKind || (isDiceFormula(change.value) ? "base" : "flat");
+      const kind = skillDamageKind(change);
       // "Add 1 Rank damage die" (Table 37) refers to the die's OWN Rank
       // (the item this Upgrade belongs to), not the target skill's Rank -
       // this is what makes cross-skill grants like "your Pugilism strikes
@@ -500,7 +550,9 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       // module/dice/dice.mjs's buildDamageRollParts at roll time, not here.
       const term = { formula: resolvedFormula, label, mode: change.mode, damageType: change.damageType || "" };
       if (change.mode === "multiply") {
-        entry.damage.multipliers.push({ ...term, factor: resolveValue(change.value, scopedRollData) });
+        // "base": scales the base damage dice only (Powerful Strike); any
+        // other kind, the total damage (Choke Out) - buildDamageRollParts.
+        entry.damage.multipliers.push({ ...term, kind, factor: resolveValue(change.value, scopedRollData) });
       } else if (change.mode === "override") {
         entry.damage.overrides.push(term);
       } else {
@@ -867,6 +919,43 @@ function makeAggregationContext(actorSystem) {
 }
 
 /**
+ * Each owned Skill/Spell/Damage Effect's live Rank (effectiveRank), for
+ * aggregateActorBonuses to unlock Upgrade tiers at: its own Rank plus every
+ * unconditional "skillRank" change - worn gear's "+1 Dagger", a Buff's,
+ * another item's - as the main pass would apply them, with tiers here
+ * gated at each item's own Rank. A "+N" that a tier only grants once
+ * another bonus has unlocked it doesn't chain into this.
+ * @param {Item[]} items
+ * @param {object} actorSystem
+ * @returns {Map<string, number>}  By item id.
+ */
+function previewLiveRanks(items, actorSystem) {
+  const ctx = makeAggregationContext(actorSystem);
+  for (const item of items) {
+    if (RANKED_TYPES.has(item.type)) seedSkillFromItem(ctx.skills, item);
+  }
+  const deity = actorSystem.deity;
+  const rankChange = (change) => change.targetType === "skillRank";
+  for (const item of items) {
+    if (deity && !deityBenefitApplies(item, deity)) continue;
+    for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
+      if (rankChange(change)) applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
+    }
+  }
+  for (const condition of actorSystem.conditions ?? []) {
+    for (const change of condition.changes ?? []) {
+      if (rankChange(change)) applyOneChange(change, condition.label || condition.source || "", null, 0, ctx, "condition");
+    }
+  }
+  const ranks = new Map();
+  for (const item of items) {
+    const entry = RANKED_TYPES.has(item.type) ? ctx.skills[slugifySkillName(item.name)] : null;
+    if (entry?.itemId === item.id && Number.isFinite(entry.rank)) ranks.set(item.id, entry.rank);
+  }
+  return ranks;
+}
+
+/**
  * Aggregate every embedded item's structured changes into:
  *  - actorSystem.skills            dynamic bag keyed by slugified skill name
  *  - actorSystem.bonuses           dotted-key bag for stat/resource/rollMode/custom targets
@@ -906,11 +995,14 @@ export function aggregateActorBonuses(actorSystem) {
   // below its worship Tier and not while worship is suspended (pp.163,
   // 312) - module/helpers/worship.mjs. Only a Character has a deity.
   const deity = actorSystem.deity;
+  // Upgrade tiers unlock at each Skill's live Rank (effectiveRank).
+  const liveRanks = previewLiveRanks(items, actorSystem);
   // Within one slot type, only the best piece of worn gear adds its DR (p.225).
   const superseded = supersededArmorIds(items, ctx.rollData, actorSystem);
   for (const item of items) {
     if (deity && !deityBenefitApplies(item, deity)) continue;
-    for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
+    const rank = liveRanks.get(item.id) ?? item.system.rank ?? 0;
+    for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item, rank)) {
       if (superseded.has(item.id) && isArmorDrBonus(change)) continue;
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }

@@ -32,6 +32,7 @@ import registerChatCards from "./batches/chat-cards.mjs";
 import registerDebuffEffectsPure from "./batches/debuff-effects-pure.mjs";
 import registerDebuffAutomation from "./batches/debuff-automation.mjs";
 import registerRulesFixes from "./batches/rules-fixes.mjs";
+import registerReviewFixes from "./batches/review-fixes.mjs";
 import registerTableBatch from "./batches/table-batch.mjs";
 import registerFavorImmunity from "./batches/favor-immunity.mjs";
 import registerConsumables from "./batches/consumables.mjs";
@@ -85,6 +86,7 @@ const BATCH_REGISTRARS = [
   registerDebuffEffectsPure,
   registerDebuffAutomation,
   registerRulesFixes,
+  registerReviewFixes,
   registerTableBatch,
   registerFavorImmunity,
   registerConsumables,
