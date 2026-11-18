@@ -1,0 +1,204 @@
+{{!-- The Create Crawler wizard (module/apps/crawler-creation.mjs): one page
+      per character creation step ("Crawlers & Customization", Starter Set
+      pp.4-19). Every field submits on change and the page redraws. --}}
+<div class="carl-chargen-body">
+  <header class="carl-chargen-steps">
+    <span class="carl-chargen-step-count">{{localize "CARLRPG.Chargen.StepOf" number=stepNumber count=stepCount}}</span>
+    <h2>{{stepLabel}}</h2>
+  </header>
+
+  {{#if (eq step "crawler")}}
+  <section class="carl-chargen-page">
+    <p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.crawler"}}</p>
+    <div class="carl-chargen-grid">
+      <label>{{localize "Name"}}</label>
+      <input type="text" name="name" value="{{state.name}}" />
+      <label>{{localize "CARLRPG.Actor.Pronouns"}}</label>
+      <input type="text" name="pronouns" value="{{state.pronouns}}" />
+      <label>{{localize "CARLRPG.Actor.CrawlerNumber"}}</label>
+      <div class="carl-chargen-inline">
+        <input type="text" name="crawlerNumber" value="{{state.crawlerNumber}}" />
+        <button type="button" data-action="randomNumber"><i class="fas fa-dice"></i> {{localize "CARLRPG.Chargen.Random"}}</button>
+      </div>
+      {{#if methods.animals}}
+      <label>{{localize "CARLRPG.Chargen.Kind"}}</label>
+      <select name="kind">{{selectOptions kindChoices selected=state.kind localize=true}}</select>
+      {{#if isAnimal}}
+      <label>{{localize "CARLRPG.Actor.Size"}}</label>
+      <select name="size" data-dtype="Number">{{selectOptions sizeChoices selected=state.size}}</select>
+      {{/if}}
+      {{/if}}
+    </div>
+    {{#if isAnimal}}<p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.animal"}}</p>{{/if}}
+  </section>
+  {{/if}}
+
+  {{#if (eq step "backgrounds")}}
+  <section class="carl-chargen-page">
+    <p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.backgrounds"}}</p>
+    <div class="carl-chargen-stages">
+      {{#each stages as |stage|}}
+      <fieldset class="carl-chargen-stage">
+        <legend>{{stage.label}} <span class="carl-hint">{{localize "CARLRPG.Chargen.AtRank" rank=stage.rank}}</span></legend>
+        <div class="carl-chargen-inline">
+          <select name="stage.{{stage.key}}.background" {{#unless stage.canChoose}}disabled{{/unless}}>
+            {{selectOptions stage.choices selected=stage.background}}
+          </select>
+          {{#if stage.canRoll}}
+          <button type="button" data-action="rollBackground" data-stage="{{stage.key}}"><i class="fas fa-dice"></i> {{localize "CARLRPG.Chargen.Roll"}}</button>
+          {{/if}}
+        </div>
+        {{!-- Always three rows, so the card doesn't grow when a background is picked. --}}
+        <ul class="carl-chargen-skills">
+          {{#each stage.placeholders}}
+          <li class="carl-chargen-skill-placeholder" aria-hidden="true">-</li>
+          {{/each}}
+          {{#each stage.skills as |skill|}}
+          <li class="{{#if skill.taken}}carl-chargen-taken{{/if}}" {{#if skill.taken}}title="{{localize 'CARLRPG.Chargen.TakenElsewhere'}}"{{/if}}>
+            <label>
+              <input type="checkbox" name="stage.{{stage.key}}.skill.{{skill.index}}" {{checked skill.chosen}} {{disabled skill.disabled}} />
+              {{skill.name}}{{#if skill.stat}} <span class="carl-hint">({{skill.stat}})</span>{{/if}}
+            </label>
+          </li>
+          {{/each}}
+        </ul>
+      </fieldset>
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
+
+  {{#if (eq step "combat")}}
+  <section class="carl-chargen-page">
+    <p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.combat" skill=baseCombat}}</p>
+    <div class="carl-chargen-grid">
+      <label>{{localize "CARLRPG.Chargen.Combat.Type"}}</label>
+      <select name="combat.type">{{selectOptions combatTypes selected=state.combat.type localize=true}}</select>
+      {{#if (eq state.combat.type "weapon")}}
+      <label>{{localize "CARLRPG.Chargen.Combat.Weapon"}}</label>
+      <select name="combat.weapon">{{selectOptions weaponChoices selected=state.combat.weapon}}</select>
+      <label>{{localize "CARLRPG.Chargen.Combat.WeaponName"}}</label>
+      <input type="text" name="combat.weaponName" value="{{state.combat.weaponName}}" placeholder="{{localize 'CARLRPG.Chargen.Combat.WeaponNameHint'}}" />
+      {{/if}}
+      {{#if (eq state.combat.type "spell")}}
+      <label>{{localize "CARLRPG.Chargen.Combat.Spell"}}</label>
+      <select name="combat.spell">{{selectOptions spellChoices selected=state.combat.spell}}</select>
+      {{/if}}
+      {{#if (eq state.combat.type "handToHand")}}
+      <label>{{localize "CARLRPG.Chargen.Combat.HandToHand"}}</label>
+      <select name="combat.handToHand">{{selectOptions handToHandChoices selected=state.combat.handToHand}}</select>
+      {{/if}}
+      {{#if (eq state.combat.type "strike")}}
+      <label>{{localize "CARLRPG.Chargen.Combat.Strike"}}</label>
+      <select name="combat.strike">{{selectOptions strikeChoices selected=state.combat.strike}}</select>
+      {{/if}}
+    </div>
+    {{#if (eq state.combat.type "spell")}}<p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.spell" min=spellMinInt}}</p>{{/if}}
+    {{#if (eq state.combat.type "handToHand")}}<p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.handToHand"}}</p>{{/if}}
+  </section>
+  {{/if}}
+
+  {{#if (eq step "stats")}}
+  <section class="carl-chargen-page">
+    <p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.stats"}}</p>
+    {{#if (and methods.statArray methods.statRoll)}}
+    <div class="carl-chargen-inline">
+      <label>{{localize "CARLRPG.Chargen.StatMethod"}}</label>
+      <select name="statMethod" {{#if state.rolledStats}}disabled{{/if}}>{{selectOptions statMethodChoices selected=state.statMethod localize=true}}</select>
+    </div>
+    {{/if}}
+    <table class="carl-chargen-stats">
+      <tbody>
+        {{#each statRows as |row|}}
+        <tr>
+          <th>{{row.label}}</th>
+          <td>
+            {{#if (eq @root.state.statMethod "array")}}
+            <select name="array.{{row.key}}">{{selectOptions @root.arrayChoices selected=row.arrayValue}}</select>
+            {{else}}
+            <strong>{{#if row.rolled}}{{row.rolled}}{{else}}-{{/if}}</strong>
+            {{/if}}
+          </td>
+          <td class="carl-hint">{{#if row.mod}}{{localize "CARLRPG.Chargen.Mod" mod=row.mod}}{{/if}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    {{#if (eq state.statMethod "roll")}}
+    {{#unless state.rolledStats}}
+    <button type="button" data-action="rollStats"><i class="fas fa-dice"></i> {{localize "CARLRPG.Chargen.RollStats"}}</button>
+    {{/unless}}
+    {{/if}}
+    {{#if derived}}
+    <p class="carl-hint">{{localize "CARLRPG.Chargen.Derived" hb=derived.hbSlot mana=derived.mana evade=derived.evade}}</p>
+    {{/if}}
+  </section>
+  {{/if}}
+
+  {{#if (eq step "past")}}
+  <section class="carl-chargen-page">
+    <p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.past"}}</p>
+    {{#each past as |entry|}}
+    <fieldset class="carl-chargen-past">
+      <legend>{{entry.label}}</legend>
+      <div class="carl-chargen-inline">
+        <select name="pastPick.{{entry.key}}">{{selectOptions entry.choices selected=""}}</select>
+        <button type="button" data-action="rollPast" data-past="{{entry.key}}"><i class="fas fa-dice"></i> {{localize "CARLRPG.Chargen.Roll"}}</button>
+      </div>
+      <textarea name="past.{{entry.key}}" rows="2" placeholder="{{localize 'CARLRPG.Chargen.OwnWords'}}">{{entry.value}}</textarea>
+    </fieldset>
+    {{/each}}
+  </section>
+  {{/if}}
+
+  {{#if (eq step "stuff")}}
+  <section class="carl-chargen-page">
+    <p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.stuff"}}</p>
+    <div class="carl-chargen-inline carl-chargen-sets">
+      {{#each startingSets as |set|}}
+      <button type="button" data-action="startingSet" data-set="{{set.key}}">{{set.label}}</button>
+      {{/each}}
+    </div>
+    <div class="carl-chargen-grid">
+      <label>{{localize "CARLRPG.Chargen.Stuff.clothing"}}</label>
+      <input type="text" name="stuff.clothing" value="{{state.stuff.clothing}}" />
+      {{#if showWeaponStuff}}
+      <label>{{localize "CARLRPG.Chargen.Stuff.weapon"}}</label>
+      <input type="text" name="stuff.weapon" value="{{state.stuff.weapon}}" placeholder="{{#if state.combat.weaponName}}{{state.combat.weaponName}}{{else}}{{state.combat.weapon}}{{/if}}" />
+      {{/if}}
+      <label>{{localize "CARLRPG.Chargen.Stuff.item"}}</label>
+      <input type="text" name="stuff.item" value="{{state.stuff.item}}" />
+      <label>{{localize "CARLRPG.Chargen.Stuff.weird"}}</label>
+      <input type="text" name="stuff.weird" value="{{state.stuff.weird}}" />
+    </div>
+  </section>
+  {{/if}}
+
+  {{#if (eq step "review")}}
+  <section class="carl-chargen-page">
+    <p class="carl-hint">{{localize "CARLRPG.Chargen.Hint.review"}}</p>
+    <h3>{{state.name}}</h3>
+    <ul class="carl-chargen-review">
+      {{#each review.stats as |stat|}}<li>{{stat.label}}: <strong>{{stat.value}}</strong></li>{{/each}}
+    </ul>
+    <ul class="carl-chargen-review">
+      {{#each review.skills as |skill|}}<li>{{skill.name}} <strong>{{skill.rank}}</strong></li>{{/each}}
+    </ul>
+  </section>
+  {{/if}}
+
+  {{!-- Always there (hidden when empty): typing in a text box updates it
+        in place rather than redrawing the page. --}}
+  <ul class="carl-chargen-problems" {{#unless problems.length}}hidden{{/unless}}>
+    {{#each problems as |problem|}}<li><i class="fas fa-exclamation-triangle"></i> {{problem}}</li>{{/each}}
+  </ul>
+
+  <footer class="carl-chargen-nav">
+    <button type="button" data-action="back" {{disabled isFirst}}><i class="fas fa-arrow-left"></i> {{localize "CARLRPG.Chargen.Back"}}</button>
+    {{#if isLast}}
+    <button type="button" data-action="create" {{disabled (or problems.length busy)}}><i class="fas fa-check"></i> {{localize "CARLRPG.Chargen.Create"}}</button>
+    {{else}}
+    <button type="button" data-action="next" {{disabled problems.length}}>{{localize "CARLRPG.Chargen.Next"}} <i class="fas fa-arrow-right"></i></button>
+    {{/if}}
+  </footer>
+</div>

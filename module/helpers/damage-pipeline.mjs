@@ -184,9 +184,12 @@ export function reduceViaShield(rawTotal, shield) {
  * @param {boolean} [isMagic]  Whether the attacking Skill/Spell's damage is
  *   magical (module/dice/dice.mjs's damageIsMagic flag). Defaults true so an
  *   omitted/unspecified flag never lets Shield intercept damage it shouldn't.
- * @param {{ignoreDr?: boolean}} [options]  ignoreDr: "Damage from Debuffs
- *   bypasses DR, but other Resistances and Immunities still apply" (p.96) -
- *   set by the end-of-round Debuff damage (module/helpers/round-end.mjs).
+ * @param {{ignoreDr?: boolean, extraDr?: number, armorPiercing?: boolean}} [options]
+ *   ignoreDr: "Damage from Debuffs bypasses DR, but other Resistances and
+ *   Immunities still apply" (p.96) - set by the end-of-round Debuff damage
+ *   (module/helpers/round-end.mjs). armorPiercing: "Armor-Piercing damage
+ *   (ignores DR)" - only DR from Anti-Piercing gear applies (p.95, p.225;
+ *   the target's drAntiPiercing), and no hit-only extraDr.
  * @returns {{
  *   perType: Array<{type: string, raw: number, afterDr: number, state: ResistanceState, final: number}>,
  *   totalFinalDamage: number,
@@ -196,13 +199,16 @@ export function reduceViaShield(rawTotal, shield) {
  *   shieldAbsorbed: number,
  * }}
  */
-export function computeDamageApplication(damageByType, target, isMagic = true, { ignoreDr = false } = {}) {
+export function computeDamageApplication(damageByType, target, isMagic = true, { ignoreDr = false, extraDr = 0, armorPiercing = false } = {}) {
   const sys = target?.system ?? {};
   // drEffective/resistancesEffective (module/data/character.mjs,mob.mjs) fold
   // in any Race/Class/feature-granted DR bonus or Resistance/Immunity
   // override on top of the flat GM-set base - fall back to the raw base
   // fields for a plain data object that never went through prepareDerivedData.
-  const dr = ignoreDr ? 0 : (Number(sys.drEffective ?? sys.dr) || 0);
+  // extraDr: DR for this hit only (a Catcher's Upgrades, p.187).
+  let dr = (Number(sys.drEffective ?? sys.dr) || 0) + (Number(extraDr) || 0);
+  if (armorPiercing) dr = Math.max(0, Number(sys.drAntiPiercing) || 0);
+  if (ignoreDr) dr = 0;
   const resistances = sys.resistancesEffective ?? sys.resistances ?? {};
   const slotValue = sys.hb?.slotValue ?? 0;
 
@@ -237,6 +243,26 @@ export function computeDamageApplication(damageByType, target, isMagic = true, {
     perType, totalFinalDamage, slotsLost, slotValue,
     shieldSlotsLost: shieldResult.slotsLost, shieldAbsorbed: shieldResult.absorbed,
   };
+}
+
+/**
+ * A successful Shield Block (p.198): "take half the damage before applying
+ * your DR" - the hit's whole damage halved (rounded down), less a flat
+ * reduction (Rank 15: "Further reduce the damage you would take by your STR
+ * Mod" - "After halving 30 damage down to 15, your STR Mod of 5 reduces it
+ * to 10"), then shared back across its damage types in proportion, so DR,
+ * Resistances and Immunities still meet each type's share.
+ * @param {Record<string, number>} damageByType  This target's damage (after
+ *   Splash, Amazing Success and Evade scaling - attack-targets.mjs rowOutcome).
+ * @param {number} [reduction]  Taken off after halving (the STR Mod).
+ * @returns {Record<string, number>}  Only the nonzero types.
+ */
+export function blockedDamage(damageByType, reduction = 0) {
+  const total = Object.values(damageByType ?? {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  const left = Math.max(0, Math.floor(total / 2) - Math.max(0, Math.floor(Number(reduction) || 0)));
+  const out = splitDamageProportionally(left, damageByType);
+  for (const type of Object.keys(out)) if (!out[type]) delete out[type];
+  return out;
 }
 
 /**

@@ -231,10 +231,13 @@ export function resolveDifficultyRows(base, rows, checked = null) {
 export function describeRow(row, mode) {
   const i18n = game.i18n;
   let text;
+  // A bonus (an occupant's Evade Buff, module/helpers/vehicle-rows.mjs)
+  // reads "+4", not "4".
+  const signed = row.value > 0 ? `+${row.value}` : String(row.value);
   if (row.kind === "penalty") {
     text = mode === "difficulty"
-      ? i18n.format("CARLRPG.DebuffRow.Difficulty", { value: row.value })
-      : String(row.value);
+      ? i18n.format("CARLRPG.DebuffRow.Difficulty", { value: signed })
+      : signed;
   } else if (row.kind === "noDex") {
     text = i18n.format(mode === "difficulty" ? "CARLRPG.DebuffRow.NoDexDifficulty" : "CARLRPG.DebuffRow.NoDex", { value: row.value });
   } else if (row.kind === "disadvantage") {
@@ -275,8 +278,15 @@ export function conditionLabel(condition) {
 export function buildDebuffNote(appliedRows) {
   if (!appliedRows?.length) return "";
   const esc = foundry.utils.escapeHTML;
-  const parts = appliedRows.map((r) => `${esc(r.label)} (${esc(r.detail)})`);
-  return `<p class="carl-debuff-note"><i class="fas fa-skull-crossbones"></i> ${game.i18n.localize("CARLRPG.DebuffRow.NoteTitle")}: ${parts.join("; ")}</p>`;
+  const line = (rows, icon, titleKey) => {
+    if (!rows.length) return "";
+    const parts = rows.map((r) => `${esc(r.label)} (${esc(r.detail)})`);
+    return `<p class="carl-debuff-note"><i class="fas ${icon}"></i> ${game.i18n.localize(titleKey)}: ${parts.join("; ")}</p>`;
+  };
+  // Riding in a vehicle (module/helpers/vehicle-rows.mjs) isn't a Debuff -
+  // it gets its own line.
+  return line(appliedRows.filter((r) => !r.situational), "fa-skull-crossbones", "CARLRPG.DebuffRow.NoteTitle")
+    + line(appliedRows.filter((r) => r.situational), "fa-car", "CARLRPG.Vehicle.Rows.NoteTitle");
 }
 
 /**

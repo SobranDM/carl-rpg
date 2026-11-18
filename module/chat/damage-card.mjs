@@ -131,11 +131,32 @@ function formatDamageDigestLine(actor, result) {
  * @param {Actor} actor
  * @param {Record<string, number>} damageByType
  * @param {boolean} isMagic
+ * @param {{noShield?: boolean, armorPiercing?: boolean}} [options]  noShield: a Shield pool can't take
+ *   this hit - a Catcher's caught damage ("You can't use Evade, Shield Block,
+ *   and other Skills or Spells to negate damage dealt to you this way",
+ *   p.191). The pipeline only lets Shield absorb non-magic damage, so this
+ *   runs it as if magic. armorPiercing: only Anti-Piercing gear's DR applies
+ *   (damage-pipeline.mjs).
  * @returns {Promise<string[]>} GM digest lines.
  */
-export async function applyDamageToActor(actor, damageByType, isMagic) {
+export async function applyDamageToActor(actor, damageByType, isMagic, { noShield = false, armorPiercing = false } = {}) {
+  return (await applyDamageWithResult(actor, damageByType, isMagic, { noShield, armorPiercing })).lines;
+}
+
+/**
+ * applyDamageToActor, also returning the pipeline's numbers (damage after
+ * DR and Resistances, HB and Shield slots lost) and whether the hit only
+ * ticked a Dying countdown - for a card that shows them (module/helpers/
+ * reaction-resolve.mjs).
+ * @param {Actor} actor
+ * @param {Record<string, number>} damageByType
+ * @param {boolean} isMagic
+ * @param {{noShield?: boolean, extraDr?: number, armorPiercing?: boolean}} [options]
+ * @returns {Promise<{lines: string[], result: object, dying: boolean}>}
+ */
+export async function applyDamageWithResult(actor, damageByType, isMagic, { noShield = false, extraDr = 0, armorPiercing = false } = {}) {
   const lines = [];
-  const result = computeDamageApplication(damageByType, actor, isMagic);
+  const result = computeDamageApplication(damageByType, actor, isMagic || noShield, { extraDr, armorPiercing });
 
   const dying = (actor.system.conditions ?? []).find((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown);
   if (dying) {
@@ -148,7 +169,7 @@ export async function applyDamageToActor(actor, damageByType, isMagic) {
         name: foundry.utils.escapeHTML(actor.name), rounds: left - 1,
       }));
     }
-    return lines;
+    return { lines, result, dying: true };
   }
 
   lines.push(formatDamageDigestLine(actor, result));
@@ -172,7 +193,7 @@ export async function applyDamageToActor(actor, damageByType, isMagic) {
       lines.push(game.i18n.format("CARLRPG.Damage.DebuffEnded", { name: actor.name, debuffs: ended.join(", ") }));
     }
   }
-  return lines;
+  return { lines, result, dying: false };
 }
 
 /**
@@ -195,6 +216,7 @@ export async function onApplyDamage(event, message) {
   // computeDamageApplication's own default, so an older chat card missing
   // this flag (from before this phase) never lets Shield intercept damage.
   const isMagic = message.getFlag("carl-rpg", "damageIsMagic") ?? true;
+  const armorPiercing = !!message.getFlag("carl-rpg", "armorPiercing");
   if (!Object.values(damageByType).some((v) => v)) return;
 
   const actors = new Map();
@@ -209,7 +231,7 @@ export async function onApplyDamage(event, message) {
 
   const digestLines = [];
   for (const actor of actors.values()) {
-    digestLines.push(...await applyDamageToActor(actor, damageByType, isMagic));
+    digestLines.push(...await applyDamageToActor(actor, damageByType, isMagic, { armorPiercing }));
   }
 
   // GM-only visibility of this digest is enforced generically by

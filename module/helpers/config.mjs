@@ -113,54 +113,77 @@ CARLRPG.sizes = {
 };
 
 /**
- * Worn gear slots in the Inventory tab's Equipped section (items-list.hbs).
- * Each slot holds an owned Item's id; `icon` is the empty-slot placeholder
- * (game-icons.net art, see assets/gear-slots/CREDITS.md).
- * Listed in grid order: the template places each one by its key as a CSS
- * grid-area (see _crawler-pages.scss's .carl-gear-grid).
+ * The rulebook's Weapon Skills (pp.177-179): an Attack with one needs a
+ * matching weapon in hand or in the Hotlist (module/helpers/weapons.mjs).
+ * The suggestions for a gear item's Weapon Skill field; homebrew names
+ * work too.
+ */
+CARLRPG.weaponSkills = [
+  "Axe", "Bow", "Club", "Crossbow", "Dagger", "Handgun", "Javelin", "Lance", "Longsword",
+  "Polearm", "Quarterstaff", "Rapier", "Shotgun", "Shuriken", "Slingshot", "Warhammer",
+];
+
+/**
+ * Worn gear slots - the Inventory's Equipment Doll (items-list.hbs). Each
+ * holds an owned Item's id (system.gearSlots.<key>, helpers/equip-slots.mjs);
+ * `icon` is the empty-slot art (game-icons.net, assets/gear-slots/
+ * CREDITS.md). The doll places each slot by its key as a CSS grid-area
+ * (_crawler-pages.scss's .carl-gear-grid), so this order is only the
+ * order other lists use.
  */
 CARLRPG.gearSlots = {
-  head: { label: "CARLRPG.GearSlot.Head", icon: gearIcon("head") },
-  arms: { label: "CARLRPG.GearSlot.Arms", icon: gearIcon("arms") },
-  torso: { label: "CARLRPG.GearSlot.Torso", icon: gearIcon("torso") },
-  gloves: { label: "CARLRPG.GearSlot.Gloves", icon: gearIcon("gloves") },
   mainHand: { label: "CARLRPG.GearSlot.MainHand", icon: gearIcon("mainHand") },
-  legs: { label: "CARLRPG.GearSlot.Legs", icon: gearIcon("legs") },
   offHand: { label: "CARLRPG.GearSlot.OffHand", icon: gearIcon("offHand") },
+  head: { label: "CARLRPG.GearSlot.Head", icon: gearIcon("head") },
+  torso: { label: "CARLRPG.GearSlot.Torso", icon: gearIcon("torso") },
+  arms: { label: "CARLRPG.GearSlot.Arms", icon: gearIcon("arms") },
+  gloves: { label: "CARLRPG.GearSlot.Gloves", icon: gearIcon("gloves") },
+  legs: { label: "CARLRPG.GearSlot.Legs", icon: gearIcon("legs") },
   feet: { label: "CARLRPG.GearSlot.Feet", icon: gearIcon("feet") },
 };
 
-/** Empty accessory slot placeholder, same art set as CARLRPG.gearSlots. */
+/**
+ * Where a piece of gear can be worn (its `system.slots`; module/helpers/
+ * gear.mjs; Gear Slots, p.98-99). The Equipment Doll's Main and Off Hand are
+ * both Held; Accessories are the doll's ten Accessory slots. Keys as
+ * gear-text.mjs WEAR_SLOT_KEYS (the PDF parsers can't read CONFIG).
+ */
+CARLRPG.wearSlots = {
+  head: "CARLRPG.WearSlot.head",
+  torso: "CARLRPG.WearSlot.torso",
+  arms: "CARLRPG.WearSlot.arms",
+  held: "CARLRPG.WearSlot.held",
+  gloves: "CARLRPG.WearSlot.gloves",
+  legs: "CARLRPG.WearSlot.legs",
+  feet: "CARLRPG.WearSlot.feet",
+  accessory: "CARLRPG.WearSlot.accessory",
+};
+
+/** An Accessory's kind: a crawler wears at most one Belt and one Cape (p.99). */
+CARLRPG.accessoryKinds = {
+  "": "CARLRPG.AccessoryKind.other",
+  belt: "CARLRPG.AccessoryKind.belt",
+  cape: "CARLRPG.AccessoryKind.cape",
+};
+
+/** Empty accessory slot art, the same set as CARLRPG.gearSlots. */
 CARLRPG.accessoryIcon = gearIcon("accessory");
 
 function gearIcon(name) {
   return `systems/carl-rpg/assets/gear-slots/${name}.svg`;
 }
 
-/** The crawler's story notes on the Description tab. */
-CARLRPG.storyFields = {
-  pastTrauma: "CARLRPG.Actor.PastTrauma",
-  looseEnds: "CARLRPG.Actor.LooseEnds",
-  regrets: "CARLRPG.Actor.Regrets",
-  notes: "CARLRPG.Actor.Notes",
-};
-
 /**
  * Fixed slot counts for the Character's free-text list fields, matching the
  * printed/Roll20 sheet ("Accessories (Max 10)", "External Buffs (Max 3)"...).
- * The sheet always renders exactly this many inputs per list.
+ * The sheet always renders exactly this many inputs per list. (The Details
+ * tab's notes are rich text boxes instead - data/character.mjs.)
  * @type {Object<string, number>}
  */
 CARLRPG.characterListSlots = {
   externalBuffs: 3,
   hotlist: 10,
   accessories: 10,
-  importantKills: 10,
-  clubs: 5,
-  deity: 5,
-  sponsors: 3,
-  "personalSpace.notes": 7,
-  "pet.attacks": 2,
 };
 
 /** Modifier application modes, mirroring Foundry core's ActiveEffect/DataField#applyChange type enum. */
@@ -261,27 +284,32 @@ CARLRPG.changeTargetTypes = {
 
 /**
  * The fixed, known set of ChangeEntry.target values for targetType
- * "resource" - the only two resource-bonus keys actually consumed anywhere
- * (see character.mjs/mob.mjs#prepareDerivedData). Unlike Skill Rank/Skill
- * Damage targets (arbitrary homebrew skill names with no master list), this
- * is a genuinely closed, enumerable set, so it gets a real dropdown.
+ * "resource" - the resource-bonus keys consumed by prepareDerivedData
+ * (data/shared/derive-creature.mjs). Unlike Skill Rank/Skill Damage targets
+ * (arbitrary homebrew skill names with no master list), this is a genuinely
+ * closed, enumerable set, so it gets a real dropdown. Move and Step are a
+ * Character's (system.details.move/step, in feet).
  */
 CARLRPG.resourceTargets = {
   "hb.max": "CARLRPG.ResourceTarget.HbMax",
   "mana.max": "CARLRPG.ResourceTarget.ManaMax",
   dr: "CARLRPG.ResourceTarget.Dr",
+  move: "CARLRPG.ResourceTarget.Move",
+  step: "CARLRPG.ResourceTarget.Step",
 };
 
 /**
  * The fixed, known set of ChangeEntry.target values for targetType
- * "rollMode" - "evadeBonus" is the only roll-time convention key actually
- * consumed anywhere (CarlDice.rollEvadeCheck reads sys.bonuses.evadeBonus
- * directly), so this is also a genuinely closed set, unlike "custom" (kept
- * free text - it's deliberately the escape hatch for anything not covered
- * by the other five categories).
+ * "rollMode", read by CarlDice.rollEvadeCheck - a genuinely closed set,
+ * unlike "custom" (kept free text - it's deliberately the escape hatch for
+ * anything not covered by the other categories):
+ *  - evadeBonus: a number added to Evade (sys.bonuses.evadeBonus);
+ *  - evadeDice: a dice formula added to Evade Checks ("Add 1d4 to Evade
+ *    Checks", Elf (High)) - collected as a list (sys.evadeDice), not summed.
  */
 CARLRPG.rollModeTargets = {
   evadeBonus: "CARLRPG.RollModeTarget.EvadeBonus",
+  evadeDice: "CARLRPG.RollModeTarget.EvadeDice",
 };
 
 CARLRPG.skillCategories = {
@@ -316,6 +344,16 @@ CARLRPG.castingKeywords = {
   heal: "CARLRPG.CastingKeyword.Heal",
 };
 
+// Who a heal can take (ranked-item-base.mjs `heals`; helpers/heal-targets.mjs).
+// "" goes by the Range: "Self only" is Self, anything else Anyone.
+CARLRPG.healsChoices = {
+  "": "CARLRPG.Heals.ByRange",
+  self: "CARLRPG.Heals.self",
+  others: "CARLRPG.Heals.others",
+  pets: "CARLRPG.Heals.pets",
+  anyone: "CARLRPG.Heals.anyone",
+};
+
 CARLRPG.mobTiers = {
   neighborhood: "CARLRPG.MobTier.Neighborhood",
   borough: "CARLRPG.MobTier.Borough",
@@ -335,6 +373,92 @@ CARLRPG.mobTiers = {
  */
 CARLRPG.mobBaseStat = 1;
 CARLRPG.mobStatPointsPerLevel = 3;
+
+/**
+ * Pets (p.228-232) - see module/data/pet.mjs and docs/companions-and-vehicles.md.
+ *  - petBaseStats: "Pet, Level 1" (p.231); every Mod is +1.
+ *  - petAttitudes: the taming ladder (p.230).
+ *  - petRoles / petSpecialAbilityAllowance: chosen once Bonded (p.231) -
+ *    Tank picks one Special Ability, Utility two, Aggressive none.
+ *  - petAltMoves / petAltMoveFeet: the "swim or burrow with Move of 30ft, or
+ *    flight or jump with Move 50ft" Special Ability.
+ *  - petStartingSkills: every Pet's Slice Attack; petRoleSkills: Aggressive's
+ *    "Gain the Back Claw and Bite Skills (Rank = Floor)".
+ *  - petCommandStates: the Command Pet results (p.232, module/helpers/
+ *    pet-command.mjs), each with the token status that shows it.
+ *  - petLevelStepCap: Pets "level up twice as fast as crawlers do until they
+ *    reach level 15".
+ */
+CARLRPG.petBaseStats = { str: 2, dex: 2, con: 2, int: 1, cha: 1 };
+CARLRPG.petAttitudes = {
+  hostile: "CARLRPG.Pet.Attitudes.hostile",
+  calm: "CARLRPG.Pet.Attitudes.calm",
+  friendly: "CARLRPG.Pet.Attitudes.friendly",
+  bonded: "CARLRPG.Pet.Attitudes.bonded",
+};
+CARLRPG.petRoles = {
+  tank: "CARLRPG.Pet.Roles.tank",
+  aggressive: "CARLRPG.Pet.Roles.aggressive",
+  utility: "CARLRPG.Pet.Roles.utility",
+};
+CARLRPG.petSpecialAbilityAllowance = { tank: 1, aggressive: 0, utility: 2 };
+CARLRPG.petAltMoves = {
+  swim: "CARLRPG.Pet.AltMoves.swim",
+  burrow: "CARLRPG.Pet.AltMoves.burrow",
+  flight: "CARLRPG.Pet.AltMoves.flight",
+  jump: "CARLRPG.Pet.AltMoves.jump",
+};
+CARLRPG.petAltMoveFeet = { swim: 30, burrow: 30, flight: 50, jump: 50 };
+CARLRPG.petStartingSkills = ["Slice Attack"];
+CARLRPG.petRoleSkills = { aggressive: ["Back Claw", "Bite"] };
+CARLRPG.petCommandStates = {
+  free: { label: "CARLRPG.Pet.Command.States.free", status: "carlPetFree", img: "icons/svg/upgrade.svg" },
+  restricted: { label: "CARLRPG.Pet.Command.States.restricted", status: "carlPetRestricted", img: "icons/svg/target.svg" },
+  stayingOut: { label: "CARLRPG.Pet.Command.States.stayingOut", status: "carlPetStayingOut", img: "icons/svg/downgrade.svg" },
+  hiding: { label: "CARLRPG.Pet.Command.States.hiding", status: "carlPetHiding", img: "icons/svg/invisible.svg" },
+};
+CARLRPG.petLevelStepCap = 15;
+
+/**
+ * Vehicles (p.72-73) - see module/data/vehicle.mjs and docs/companions-and-vehicles.md.
+ *  - vehiclePresets: Table 7 (Move, Size, DR, Occupancy, cargo), plus the
+ *    name of the Skill that drives it: Chopper Pilot for two wheels, Driving
+ *    for "three or more wheels or tracks" (a skateboard has four). Any Skill
+ *    can drive a vehicle; what its Ranks give the driver are its own Upgrade
+ *    tiers' vehicle fields (module/data/shared/upgrade-tier.mjs).
+ *  - drivingOutcomes: Table 6, per Degree - this round's Move (a factor of
+ *    full Move, or feet lost), HB slots of damage (10% = 1 slot, 30% = 3,
+ *    ignoring DR), Advantage on the next operating Check, the Critical Hit
+ *    choice, and the stall.
+ *  Mounted-only weapons (a Lance) are marked on the Skill (system.mounted).
+ */
+CARLRPG.vehiclePresets = {
+  skateboard: { label: "CARLRPG.Vehicle.Presets.skateboard", move: 30, size: 2, dr: 0, occupancy: 1, cargo: 0, driveSkill: "Driving" },
+  bicycle: { label: "CARLRPG.Vehicle.Presets.bicycle", move: 40, size: 3, dr: 0, occupancy: 2, cargo: 0, driveSkill: "Chopper Pilot" },
+  tank: { label: "CARLRPG.Vehicle.Presets.tank", move: 50, size: 6, dr: 10, occupancy: 4, cargo: 0, driveSkill: "Driving" },
+  eighteenWheeler: { label: "CARLRPG.Vehicle.Presets.eighteenWheeler", move: 60, size: 7, dr: 4, occupancy: 4, cargo: 50, driveSkill: "Driving" },
+  largeTruck: { label: "CARLRPG.Vehicle.Presets.largeTruck", move: 70, size: 6, dr: 4, occupancy: 3, cargo: 5, driveSkill: "Driving" },
+  sedan: { label: "CARLRPG.Vehicle.Presets.sedan", move: 80, size: 5, dr: 3, occupancy: 6, cargo: 0, driveSkill: "Driving" },
+  sportscar: { label: "CARLRPG.Vehicle.Presets.sportscar", move: 100, size: 5, dr: 2, occupancy: 2, cargo: 0, driveSkill: "Driving" },
+  motorcycle: { label: "CARLRPG.Vehicle.Presets.motorcycle", move: 120, size: 4, dr: 1, occupancy: 2, cargo: 0, driveSkill: "Chopper Pilot" },
+};
+CARLRPG.vehicleRoles = {
+  driver: "CARLRPG.Vehicle.Roles.driver",
+  passenger: "CARLRPG.Vehicle.Roles.passenger",
+};
+CARLRPG.drivingOutcomes = {
+  criticalHit: { factor: 1, delta: 0, damageSlots: 0, advantageNext: false, critChoice: true, stall: false },
+  amazingSuccess: { factor: 1, delta: 0, damageSlots: 0, advantageNext: true, critChoice: false, stall: false },
+  standardSuccess: { factor: 1, delta: 0, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
+  nearMissFail: { factor: 1, delta: -5, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
+  standardFail: { factor: 0.5, delta: 0, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
+  majorFail: { factor: 0.5, delta: 0, damageSlots: 1, advantageNext: false, critChoice: false, stall: false },
+  criticalFail: { factor: 0, delta: 0, damageSlots: 3, advantageNext: false, critChoice: false, stall: true },
+};
+/** Degrees in order, worst to best - Shock Absorbers step a Fail up one. */
+CARLRPG.degreeOrder = ["criticalFail", "majorFail", "standardFail", "nearMissFail", "standardSuccess", "amazingSuccess", "criticalHit"];
+/** Nitrous Oxide: "Double Move for 3 rounds" (p.73). */
+CARLRPG.nitrousRounds = 3;
 
 /**
  * Table 50: Boss Severity (p.270). Every Boss tier shares the same base of 5
@@ -422,11 +546,26 @@ CARLRPG.lootBoxTiers = {
   },
 };
 
-/** Boon tiers (Crawler Advancement, p. 168's Acolyte/Devotee/Zealot pattern). */
+/**
+ * Church tiers (Acolyte/Devotee/Zealot, pp.163-164): a crawler's worship
+ * Tier (system.deity.tier) and the Tier a deity's benefit `feature` needs.
+ */
 CARLRPG.featureTiers = {
   acolyte: "CARLRPG.FeatureTier.Acolyte",
   devotee: "CARLRPG.FeatureTier.Devotee",
   zealot: "CARLRPG.FeatureTier.Zealot",
+};
+
+/**
+ * Required tithe (percent of looted gold) by worship Tier: 5% as an
+ * Acolyte (p.163), 10% as a Devotee and 20% as a Zealot (p.164). Penance
+ * doubles it, a second offense quadruples it (p.312) - see
+ * module/helpers/worship.mjs.
+ */
+CARLRPG.titheByTier = {
+  acolyte: 5,
+  devotee: 10,
+  zealot: 20,
 };
 
 /**
@@ -468,6 +607,11 @@ CARLRPG.featureTiers = {
  *      noHealing: true      Healing can't be applied.
  *      noSpells: true       Can't cast Spells.
  *      noActions: true      Can't take any Actions (rolls are blocked).
+ *      halveMove: true      Move halved (once, however many stacks).
+ *      noMove: true         Can't take Move Actions.
+ *      noStep: true         Can't take a 10ft Step.
+ *                           (These three only change what the Combat tab
+ *                           shows - data/shared/derive-creature.mjs.)
  *      alsoApplies: [key]   Applying this debuff also applies these.
  *
  * On a Mob, every d20-shaped penalty becomes a change to the Mob's static
@@ -477,6 +621,25 @@ CARLRPG.featureTiers = {
  * module/helpers/debuff-effects.mjs for both halves.
  * @type {Object}
  */
+/**
+ * When a Mob Attack's Debuff lands (module/data/mob-attack.mjs): "Some
+ * attacks have additional effects... often when crawlers fail spectacularly
+ * at Evading an Attack" (p.267) - "On an Evade Major Fail or worse, the
+ * target gains the Burning Debuff."
+ */
+CARLRPG.mobAttackTriggers = {
+  hit: "CARLRPG.MobAttack.Trigger.hit",
+  majorFail: "CARLRPG.MobAttack.Trigger.majorFail",
+  criticalFail: "CARLRPG.MobAttack.Trigger.criticalFail",
+};
+
+/** A Mob Attack's kind, for its chip on the sheet (module/helpers/mob-attacks.mjs attackKind). */
+CARLRPG.mobAttackKinds = {
+  melee: "CARLRPG.MobAttack.Kind.melee",
+  ranged: "CARLRPG.MobAttack.Kind.ranged",
+  area: "CARLRPG.MobAttack.Kind.area",
+};
+
 CARLRPG.debuffs = {
   blinded: {
     label: "CARLRPG.Debuff.Blinded.Label",
@@ -532,14 +695,14 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.Fatigued.MobEffect",
     durationType: "until-condition",
     stackable: true,
-    mechanics: { penalty: 1, endsOnRest: 'long' },
+    mechanics: { penalty: 1, endsOnRest: 'long', halveMove: true },
   },
   held: {
     label: "CARLRPG.Debuff.Held.Label",
     effect: "CARLRPG.Debuff.Held.Effect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { attackersGainAdvantage: true },
+    mechanics: { attackersGainAdvantage: true, noMove: true, noStep: true },
   },
   longTermMajorInjury: {
     label: "CARLRPG.Debuff.LongTermMajorInjury.Label",
@@ -647,7 +810,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.Staggered.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { disadvantage: "nextAttack", endsAfterAction: true },
+    mechanics: { disadvantage: "nextAttack", endsAfterAction: true, noStep: true },
   },
   stiffLegs: {
     label: "CARLRPG.Debuff.StiffLegs.Label",
@@ -655,7 +818,7 @@ CARLRPG.debuffs = {
     durationType: "real-minutes",
     durationValue: 5,
     stackable: false,
-    mechanics: { endsWithCombat: true },
+    mechanics: { endsWithCombat: true, noStep: true },
   },
   stunned: {
     label: "CARLRPG.Debuff.Stunned.Label",
@@ -679,7 +842,7 @@ CARLRPG.debuffs = {
     durationType: "rounds",
     durationValue: 2,
     stackable: false,
-    mechanics: { disadvantage: "attack", endsOnHbLoss: true },
+    mechanics: { disadvantage: "attack", endsOnHbLoss: true, noMove: true, noStep: true },
   },
   theTaint: {
     label: "CARLRPG.Debuff.TheTaint.Label",

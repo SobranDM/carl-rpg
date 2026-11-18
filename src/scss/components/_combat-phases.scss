@@ -1,0 +1,362 @@
+// The phased PvE round: the Combat Tracker's phase bar and grouped list
+// (module/apps/combat-tracker.mjs) and the phase notices in chat (module/
+// helpers/combat-phases.mjs). Neither lives inside a .carl-rpg element, so -
+// like _chat.scss - these selectors are top-level and re-declare the palette.
+@use '../utils/palette';
+
+.carl-phase-bar {
+  @include palette.variables;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid var(--carl-border-soft);
+
+  &.carl-phase-bar-empty {
+    display: none;
+  }
+
+  .carl-surprise-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-12);
+    cursor: pointer;
+
+    input {
+      margin: 0;
+    }
+  }
+
+  .carl-phase-surprise {
+    text-align: center;
+    font-weight: 700;
+    font-size: var(--font-size-12);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--carl-gold);
+  }
+
+  .carl-phase-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+    margin: 0;
+  }
+
+  .carl-phase-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3px 2px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    font-size: var(--font-size-11);
+    line-height: 1.2;
+    text-align: center;
+    color: var(--carl-text-muted);
+    background: var(--carl-input-bg);
+
+    .carl-phase-num {
+      font-weight: 700;
+    }
+
+    &.done {
+      opacity: 0.55;
+    }
+
+    &.active {
+      color: var(--carl-header-text);
+      background: var(--carl-accent);
+      border-color: var(--carl-accent);
+      font-weight: 700;
+      opacity: 1;
+    }
+  }
+}
+
+.carl-phase-bar {
+  .carl-declared-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--font-size-12);
+  }
+
+  .carl-declared-title {
+    font-weight: 700;
+    font-size: var(--font-size-11);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-declared-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    span {
+      flex: 1;
+    }
+  }
+
+  .carl-declared-empty {
+    font-style: italic;
+    color: var(--carl-text-muted);
+  }
+}
+
+// The GM's Declare HUD (module/apps/declare-hud.mjs): floats at the bottom
+// of the column beside the sidebar, over the chat notifications (v14 shows
+// them there when the sidebar isn't on Chat) rather than pushing them up.
+// The column is its anchor only while it's there.
+#ui-right-column-1:has(> #carl-declare-hud) {
+  position: relative;
+}
+
+#carl-declare-hud {
+  @include palette.variables;
+  pointer-events: auto;
+  // Out of the column's flow: anchored to its bottom-right corner (above
+  // the column's own 14px bottom padding, where the chat input sits).
+  position: absolute;
+  right: 0;
+  bottom: 14px;
+  z-index: 1;
+  width: 260px;
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 6px;
+  background: var(--carl-bg-solid);
+  color: var(--carl-text);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+
+  .carl-declare-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 6px 8px 8px;
+  }
+
+  .carl-declare-title {
+    font-weight: 700;
+    font-size: var(--font-size-12);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--carl-header-text);
+    background: var(--carl-header-bg);
+    border-radius: 3px;
+    padding: 2px 6px;
+  }
+
+  .carl-declare-targets {
+    font-size: var(--font-size-12);
+
+    &.none {
+      font-style: italic;
+      color: var(--carl-text-muted);
+    }
+  }
+
+  .carl-declare-mob {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--carl-border-soft);
+  }
+
+  .carl-declare-mob-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+
+    img {
+      width: 24px;
+      height: 24px;
+      border: none;
+      object-fit: contain;
+    }
+  }
+
+  .carl-declare-attacks {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    button {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      height: auto;
+      padding: 3px 6px;
+      line-height: 1.2;
+      text-align: left;
+    }
+  }
+
+  .carl-declare-attack-name {
+    font-weight: 700;
+  }
+
+  .carl-declare-attack-stats {
+    font-size: var(--font-size-11);
+    color: var(--carl-text-muted);
+  }
+
+  .carl-declare-empty {
+    margin: 0;
+    font-style: italic;
+    font-size: var(--font-size-12);
+    color: var(--carl-text-muted);
+  }
+
+  .carl-declare-done {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    font-size: var(--font-size-12);
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .fa-check {
+        color: #2ecc40;
+      }
+
+      span {
+        flex: 1;
+      }
+
+      button {
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+        padding: 0;
+      }
+    }
+  }
+}
+
+.combat-tracker.carl-grouped {
+  .carl-combat-group {
+    @include palette.variables;
+    padding: 4px 8px 2px;
+    font-size: var(--font-size-11);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--carl-text-muted);
+    border-bottom: 1px solid var(--carl-border-soft);
+  }
+}
+
+.chat-message:has(.carl-phase-notice) {
+  @include palette.variables;
+  border-color: var(--carl-accent);
+}
+
+.carl-phase-notice {
+  text-align: center;
+
+  strong {
+    display: block;
+    font-size: var(--font-size-14);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .carl-phase-notice-step {
+    display: block;
+    font-weight: 700;
+    color: var(--carl-accent-dim);
+  }
+
+  p {
+    margin: 4px 0 0;
+    font-size: var(--font-size-12);
+  }
+}
+
+// The Reaction card and the Damage card (module/chat/reaction-card.mjs,
+// module/helpers/reaction-resolve.mjs). Inside a .carl-chat-card, so the
+// palette is already declared on the message (_chat.scss).
+.carl-reaction {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-12);
+
+  // A Mob Attack's printed range and effect.
+  .carl-attack-range {
+    font-size: var(--font-size-11);
+    color: var(--carl-text-muted);
+  }
+
+  .carl-attack-effect {
+    font-size: var(--font-size-11);
+    font-style: italic;
+  }
+
+  // The GM's "Pull Area Attacks too" on a successful Taunt.
+  .carl-pull-area {
+    width: 100%;
+    margin-top: 2px;
+    font-size: var(--font-size-11);
+    line-height: 1.6;
+  }
+}
+
+// Action bubbles on the Combat Tracker (helpers/actions.mjs).
+.combat-tracker .carl-action-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  margin: 1px 0 2px;
+
+  .carl-action-bubble {
+    flex: 0 0 auto;
+    width: 12px;
+    height: 12px;
+    min-height: 0;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+
+    &.action { background: #2ecc40; }
+    &.move { background: #f1c40f; }
+    &.favor { background: #ffd700; box-shadow: 0 0 3px #ffd700; }
+
+    &.spent {
+      background: #c0392b;
+      box-shadow: none;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 1;
+    }
+  }
+
+  .carl-action-favor {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    min-height: 0;
+    padding: 0;
+    line-height: 14px;
+    font-size: 9px;
+    color: #ffd700;
+    background: none;
+    border: 1px dashed #ffd700;
+    border-radius: 50%;
+  }
+}

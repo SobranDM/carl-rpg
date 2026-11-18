@@ -24,6 +24,9 @@ import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helper
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 import { queueForActor } from "../helpers/actor-queue.mjs";
 import { dropExpiredConditions } from "../helpers/expiry.mjs";
+import { actorPickerContent, advanceTimeField, pickerGroups, wireActorPicker } from "./actor-picker.mjs";
+import { postPartyCheck } from "../chat/party-check-card.mjs";
+import { startNewScene } from "../helpers/cooldowns.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -43,10 +46,27 @@ async function advanceWorldTime(seconds) {
 }
 
 
+/**
+ * A card's line saying whether the world clock moved (Rest, Mend).
+ * @param {boolean} advanced
+ * @param {number} hours
+ * @returns {string}
+ */
+function clockLine(advanced, hours) {
+  const text = advanced
+    ? game.i18n.format("CARLRPG.Toolbox.ClockAdvanced", { hours })
+    : game.i18n.localize("CARLRPG.Toolbox.ClockNotAdvanced");
+  return `<p class="carl-clock-line"><i class="fas fa-clock"></i> ${esc(text)}</p>`;
+}
+
+/**
+ * The rest lengths (Resting, p.94): their hours, the card's title, and the
+ * book's own words for each (shown in the Rest dialog as it's picked).
+ */
 const REST_CONFIG = {
-  short: { seconds: 2 * 3600, titleKey: "CARLRPG.Toolbox.Rest.ShortTitle" },
-  long: { seconds: 8 * 3600, titleKey: "CARLRPG.Toolbox.Rest.LongTitle" },
-  fullDay: { seconds: 30 * 3600, titleKey: "CARLRPG.Toolbox.Rest.FullDayTitle" },
+  short: { hours: 2, titleKey: "CARLRPG.Toolbox.Rest.ShortTitle" },
+  long: { hours: 8, titleKey: "CARLRPG.Toolbox.Rest.LongTitle" },
+  fullDay: { hours: 30, titleKey: "CARLRPG.Toolbox.Rest.FullDayTitle" },
 };
 
 function formatElapsed(ms) {
@@ -84,11 +104,11 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       mend: CarlToolbox.#onMend,
       floorIncrement: CarlToolbox.#onFloorIncrement,
       floorDecrement: CarlToolbox.#onFloorDecrement,
-      shortRest: CarlToolbox.#onShortRest,
-      longRest: CarlToolbox.#onLongRest,
-      fullDayRest: CarlToolbox.#onFullDayRest,
+      rest: CarlToolbox.#onRest,
       grind: CarlToolbox.#onGrind,
       rollLoot: CarlToolbox.#onRollLoot,
+      partyCheck: CarlToolbox.#onPartyCheck,
+      newScene: CarlToolbox.#onNewScene,
     },
   };
 
@@ -387,20 +407,8 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     this.render();
   }
 
-  static async #onShortRest(event, target) {
-    if (!game.user.isGM) return;
-    return CarlToolbox.#onRest("short");
-  }
 
-  static async #onLongRest(event, target) {
-    if (!game.user.isGM) return;
-    return CarlToolbox.#onRest("long");
-  }
 
-  static async #onFullDayRest(event, target) {
-    if (!game.user.isGM) return;
-    return CarlToolbox.#onRest("fullDay");
-  }
 
   /**
    * Hourly mending (p.95): "For every full hour spent outside of combat or
@@ -414,15 +422,18 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       content: `<div class="carl-dialog-body"><div class="form-group">
         <label>${game.i18n.localize("CARLRPG.Toolbox.MendHours")}</label>
         <input type="number" name="hours" value="1" min="1" />
-      </div><p class="hint">${game.i18n.localize("CARLRPG.Toolbox.MendHint")}</p></div>`,
+      </div><p class="hint">${game.i18n.localize("CARLRPG.Toolbox.MendHint")}</p>
+      ${advanceTimeField(game.i18n.localize("CARLRPG.Toolbox.TheHours"))}</div>`,
       buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
     });
     const hours = Math.floor(Number(input?.hours) || 0);
     if (hours < 1) return;
+    const advance = input?.advanceTime !== false;
 
     const actors = await CarlToolbox.#promptActorPicker({
       titleKey: "CARLRPG.Toolbox.MendTitle",
       promptKey: "CARLRPG.Toolbox.MendPickerPrompt",
+      includePets: true,
     });
     if (!actors) return;
 
@@ -431,45 +442,83 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     // out before the mending does - so a temporary +HB Buff can't leave
     // them healed past their real maximum - then recover. The clock moves
     // last.
-    const endsAt = game.time.worldTime + hours * 3600;
+    // Unticked, the time is counted elsewhere: nothing runs out here.
+    const endsAt = game.time.worldTime + (advance ? hours * 3600 : 0);
     for (const actor of actors) {
       await queueForActor(actor.uuid, async () => {
         await dropExpiredConditions(actor, endsAt);
         await actor.update(mendingUpdates(actor, hours));
       });
     }
-    await advanceWorldTime(hours * 3600);
+    if (advance) await advanceWorldTime(hours * 3600);
 
     await createCardMessage({
       title: game.i18n.localize("CARLRPG.Toolbox.MendTitle"),
       subtitle: game.i18n.format("CARLRPG.Toolbox.MendSubtitle", { hours, hb: hours, mana: 5 * hours }),
-      body: actors.length
+      body: (actors.length
         ? `<ul>${actors.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>`
-        : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoCharactersPicked")}</p>`,
+        : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoCharactersPicked")}</p>`) + clockLine(advance, hours),
     });
   }
 
   /**
-   * In-world Rest: shows a picker of Character actors (see
-   * #promptActorPicker for the Character-only scoping rationale), then
-   * advances Foundry's own game.time (unrelated to the wall-clock Play
-   * Timer above) and applies the documented recovery formulas (Playing the
-   * Game, p. 94) to only the actors the GM selected - not every party
-   * member necessarily rests at the same time (one might be on watch, etc).
+   * One Rest dialog (docs/release-0.7.0.md §6): the length (Short, Long,
+   * Full Day) with the book's own words for the one picked (Resting, p.94),
+   * who rests (the picker, Pets included - not every party member rests at
+   * once), and Advance time, ticked. Applies the recovery (helpers/rest.mjs)
+   * to the picked actors, then moves Foundry's world clock if ticked.
    */
-  static async #onRest(kind) {
+  static async #onRest(event, target) {
     if (!game.user.isGM) return;
-    const config = REST_CONFIG[kind];
+    const i18n = game.i18n;
+    const options = Object.entries(REST_CONFIG).map(([kind, rest], i) => `<label class="carl-rest-option">
+        <input type="radio" name="carl-rest-kind" value="${kind}" data-hours="${rest.hours}" ${i === 0 ? "checked" : ""} />
+        ${esc(i18n.localize(`CARLRPG.Toolbox.Rest.Kind.${kind}`))}
+      </label>`).join("");
+    const rules = Object.keys(REST_CONFIG).map((kind, i) => `<blockquote class="carl-rest-rule" data-rest-rule="${kind}" ${i === 0 ? "" : "hidden"}>
+        <p>${esc(i18n.localize(`CARLRPG.Toolbox.Rest.Rule.${kind}`))}</p>
+        <cite>${esc(i18n.localize("CARLRPG.Toolbox.Rest.Source"))}</cite>
+      </blockquote>`).join("");
+    const before = `<fieldset class="carl-rest-length">
+        <legend>${esc(i18n.localize("CARLRPG.Toolbox.Rest.Length"))}</legend>
+        <div class="carl-rest-options">${options}</div>
+        ${rules}
+      </fieldset>`;
 
-    const selectedActors = await CarlToolbox.#promptActorPicker({
-      titleKey: config.titleKey,
+    const picked = await CarlToolbox.#pickActors({
+      titleKey: "CARLRPG.Toolbox.Rest.Title",
       promptKey: "CARLRPG.Toolbox.Rest.PickerPrompt",
       confirmLabelKey: "CARLRPG.Toolbox.Rest.Confirm",
+      includePets: true,
+      before,
+      after: advanceTimeField(i18n.format("CARLRPG.Toolbox.HoursCount", { n: REST_CONFIG.short.hours })),
+      read: (form) => ({
+        kind: form.querySelector('input[name="carl-rest-kind"]:checked')?.value ?? "short",
+        advance: !!form.querySelector("[data-advance-time]")?.checked,
+      }),
+      // The picked length's words, and the hours in the Advance time hint.
+      onRender: (root) => {
+        const hint = root.querySelector("[data-advance-time-hint]");
+        for (const radio of root.querySelectorAll('input[name="carl-rest-kind"]')) {
+          radio.addEventListener("change", () => {
+            for (const rule of root.querySelectorAll("[data-rest-rule]")) rule.hidden = rule.dataset.restRule !== radio.value;
+            if (hint) {
+              hint.textContent = i18n.format("CARLRPG.Toolbox.AdvanceTimeHint", {
+                hours: i18n.format("CARLRPG.Toolbox.HoursCount", { n: radio.dataset.hours }),
+              });
+            }
+          });
+        }
+      },
     });
-    if (!selectedActors) return; // Cancelled: no time advance, no updates.
+    if (!picked) return; // Cancelled: no time advance, no updates.
+    const { actors: selectedActors, data } = picked;
+    const kind = REST_CONFIG[data.kind] ? data.kind : "short";
+    const config = REST_CONFIG[kind];
+    const seconds = config.hours * 3600;
 
     // Expired effects, then recovery, then the clock - see #onMend.
-    const endsAt = game.time.worldTime + config.seconds;
+    const endsAt = game.time.worldTime + (data.advance ? seconds : 0);
     for (const actor of selectedActors) {
       await queueForActor(actor.uuid, async () => {
         await dropExpiredConditions(actor, endsAt);
@@ -486,158 +535,83 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         await actor.update(updates);
       });
     }
-    await advanceWorldTime(config.seconds);
+    if (data.advance) await advanceWorldTime(seconds);
 
     await createCardMessage({
       title: game.i18n.localize(config.titleKey),
-      body: selectedActors.length
+      body: (selectedActors.length
         ? `<p>${game.i18n.format("CARLRPG.Toolbox.RestApplied", { count: selectedActors.length })}</p>
-           <ul>${selectedActors.map((a) => `<li>${a.name}</li>`).join("")}</ul>`
-        : `<p>${game.i18n.localize("CARLRPG.Toolbox.RestAppliedNone")}</p>`,
+           <ul>${selectedActors.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>`
+        : `<p>${game.i18n.localize("CARLRPG.Toolbox.RestAppliedNone")}</p>`) + clockLine(data.advance, config.hours),
     });
   }
 
   /**
-   * Generic Character-actor picker shared by every toolbox action that
-   * shouldn't silently apply to every Character in the world (Rest, the
-   * 2-Hour Tick, Party Level Up) - not every Character actor is
-   * necessarily part of "the party, right now" (an absent player's PC, a
-   * retired character, a GM-run henchman, etc).
-   *
-   * SCOPING DECISION: only `type: "character"` actors are ever listed,
-   * never Mobs - Mobs in this ruleset are monsters/NPCs, not party members
-   * these bulk actions apply to.
-   *
-   * Default-checked: any Character actor owned (OWNER level) by a
-   * currently-active, non-GM user - i.e. someone actually logged in to
-   * play them right now. Everyone else starts unchecked, in a collapsed
-   * "Other Characters" section, since the GM must deliberately opt those
-   * in. Also provides a live name filter (auto-expanding "Other
-   * Characters" on a match) and a running "N/Total selected" counter, so a
-   * large roster stays manageable.
+   * The shared "who does this apply to" picker (module/apps/actor-picker.mjs:
+   * Logged in, ticked; Not logged in, collapsed; Pets where the action takes
+   * them; Select All on its own row).
    * @param {object} options
    * @param {string} options.titleKey  i18n key for the dialog title.
    * @param {string} options.promptKey  i18n key for the intro line.
    * @param {string} [options.confirmLabelKey]  i18n key for the confirm button.
+   * @param {boolean} [options.includePets]  List Pets too (Rest, Mend).
    * @returns {Promise<Actor[]|null>} Selected actors, or null if cancelled/none exist.
    */
-  static async #promptActorPicker({ titleKey, promptKey, confirmLabelKey = "CARLRPG.Toolbox.ActorPicker.Confirm" }) {
-    const actors = game.actors
-      .filter((a) => a.type === "character")
-      .sort((a, b) => a.name.localeCompare(b.name));
+  static async #promptActorPicker(options) {
+    return (await CarlToolbox.#pickActors(options))?.actors ?? null;
+  }
+
+  /**
+   * The picker with extra controls in the same dialog (the Rest dialog):
+   * `before` / `after` HTML around it, `read(form)` for their values,
+   * `onRender(root)` to wire them.
+   * @param {object} options  As #promptActorPicker, plus before, after, read, onRender.
+   * @returns {Promise<{actors: Actor[], data: object}|null>}
+   */
+  static async #pickActors({
+    titleKey, promptKey, confirmLabelKey = "CARLRPG.Toolbox.ActorPicker.Confirm", includePets = false,
+    before = "", after = "", read = () => ({}), onRender = null,
+  }) {
+    const groups = pickerGroups({ includePets });
+    const actors = [...groups.active, ...groups.other, ...groups.pets];
     if (!actors.length) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoCharacters"));
       return null;
     }
-
-    const isOwnedByActivePlayer = (actor) => game.users.some(
-      (u) => u.active && !u.isGM && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
-    );
-    const active = actors.filter(isOwnedByActivePlayer);
-    const other = actors.filter((a) => !isOwnedByActivePlayer(a));
-
-    // data-actor-id (read directly off the DOM by the confirm button below),
-    // not just a `name="actors.<id>"` for FormDataExtended to expand - see
-    // the confirm button's own callback for why.
-    const row = (a, checked) => `<label class="carl-dialog-condition carl-actor-picker-option" data-actor-name="${foundry.utils.escapeHTML(a.name.toLowerCase())}">
-        <input type="checkbox" data-actor-id="${a.id}" ${checked ? "checked" : ""} />
-        ${foundry.utils.escapeHTML(a.name)}
-      </label>`;
-
-    const activeRows = active.map((a) => row(a, true)).join("");
-    const otherRows = other.map((a) => row(a, false)).join("");
-    const otherSection = other.length
-      ? `<details class="carl-actor-picker-other">
-          <summary>${game.i18n.format("CARLRPG.Toolbox.ActorPicker.OtherCharacters", { count: other.length })}</summary>
-          ${otherRows}
-        </details>`
-      : "";
-
-    const content = `<div class="carl-dialog-body carl-actor-picker">
-      <p>${game.i18n.localize(promptKey)}</p>
-      <input type="search" class="carl-actor-picker-filter" placeholder="${game.i18n.localize("CARLRPG.Toolbox.ActorPicker.FilterPlaceholder")}" />
-      <div class="form-group carl-dialog-conditions">
-        <label class="carl-dialog-condition carl-actor-picker-select-all">
-          <input type="checkbox" data-picker-select-all />
-          <strong>${game.i18n.localize("CARLRPG.Toolbox.ActorPicker.SelectAll")}</strong>
-          <span class="carl-actor-picker-count" data-picker-count></span>
-        </label>
-        <div class="form-fields carl-dialog-conditions-list carl-actor-picker-list">${activeRows}${otherSection}</div>
-      </div>
-    </div>`;
-
     const result = await showCarlDialog({
       title: game.i18n.localize(titleKey),
-      content,
+      classes: ["carl-pick-actors"],
+      content: actorPickerContent(groups, game.i18n.localize(promptKey), { before, after }),
       // A dedicated button rather than the shared rollButton(): reads each
-      // checkbox's .checked directly off the live DOM instead of going
-      // through FormDataExtended's dotted-name-to-nested-object expansion
-      // (button.form's own FormData) - confirmed via manual testing that
-      // path was silently losing every checked actor (both a single manual
-      // check and Select All), even with no players logged in at all.
-      // Reading .checked straight off each <input> sidesteps whatever in
-      // that expansion was going wrong, with no dotted-path magic involved.
+      // checkbox's .checked straight off the live DOM - FormDataExtended's
+      // dotted-name expansion was found to lose every checked actor.
       buttons: [
         {
           action: "roll",
           icon: "fa-solid fa-dice-d20",
           label: confirmLabelKey,
           default: true,
-          callback: (event, button) => ({
-            selectedIds: [...(button.form ?? button.closest("form")).querySelectorAll("input[data-actor-id]")]
-              .filter((el) => el.checked)
-              .map((el) => el.dataset.actorId),
-          }),
+          callback: (event, button) => {
+            const form = button.form ?? button.closest("form");
+            return {
+              selectedIds: [...form.querySelectorAll("input[data-actor-id]")]
+                .filter((el) => el.checked)
+                .map((el) => el.dataset.actorId),
+              data: read(form),
+            };
+          },
         },
         cancelButton(),
       ],
-      // Wires the picker's interactive bits up after the dialog's DOM
-      // exists: Select All (de)selects every row and stays in sync with
-      // individual toggles; the running counter updates on any change; the
-      // name filter hides non-matching rows and auto-expands "Other
-      // Characters" so a match hidden inside the collapsed <details> isn't
-      // invisible.
       onRender: (event, dialog) => {
-        const root = dialog.element;
-        const selectAll = root.querySelector("[data-picker-select-all]");
-        const countEl = root.querySelector("[data-picker-count]");
-        const filterInput = root.querySelector(".carl-actor-picker-filter");
-        const getRows = () => [...root.querySelectorAll(".carl-actor-picker-option")];
-        const getBoxes = () => getRows().map((r) => r.querySelector('input[type="checkbox"]'));
-
-        const updateCount = () => {
-          if (!countEl) return;
-          const boxes = getBoxes();
-          countEl.textContent = game.i18n.format("CARLRPG.Toolbox.ActorPicker.SelectedCount", {
-            count: boxes.filter((b) => b.checked).length,
-            total: boxes.length,
-          });
-        };
-        const syncSelectAll = () => {
-          const boxes = getBoxes();
-          if (selectAll) selectAll.checked = boxes.length > 0 && boxes.every((b) => b.checked);
-          updateCount();
-        };
-
-        syncSelectAll();
-        selectAll?.addEventListener("change", () => {
-          for (const box of getBoxes()) box.checked = selectAll.checked;
-          updateCount();
-        });
-        for (const box of getBoxes()) box.addEventListener("change", syncSelectAll);
-
-        filterInput?.addEventListener("input", () => {
-          const needle = filterInput.value.trim().toLowerCase();
-          for (const rowEl of getRows()) rowEl.hidden = !(!needle || rowEl.dataset.actorName.includes(needle));
-          const details = root.querySelector(".carl-actor-picker-other");
-          if (details && needle) details.open = true;
-        });
+        wireActorPicker(dialog.element);
+        onRender?.(dialog.element);
       },
     });
     if (!result) return null;
 
     const selectedIds = new Set(result.selectedIds ?? []);
-    return actors.filter((a) => selectedIds.has(a.id));
+    return { actors: actors.filter((a) => selectedIds.has(a.id)), data: result.data ?? {} };
   }
 
   /**
@@ -662,6 +636,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
           <select name="actorId">${actorOptions}</select></div>
         <div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.GrindHours")}</label>
           <input type="number" name="hours" value="1" min="1" /></div>
+        ${advanceTimeField(game.i18n.localize("CARLRPG.Toolbox.TheHours"))}
       </div>`,
       buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
     });
@@ -687,6 +662,82 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     await grindAndOfferSurplus(actor, item, hours);
     // The same hours also count toward the next Level (p.171).
     await addGrindLevelHours(actor, hours);
+    // Grinding takes that long (docs/release-0.7.0.md §6).
+    if (actorResult.advanceTime !== false) await advanceWorldTime(hours * 3600);
+  }
+
+  /**
+   * Party Skill Check (p.59): the Skill's name, the Difficulty (Unopposed,
+   * 10 + Floor x 2, to start) and who rolls (the picker), then the card each
+   * crawler's player rolls from (module/chat/party-check-card.mjs).
+   */
+  static async #onPartyCheck(event, target) {
+    if (!game.user.isGM) return;
+    const i18n = game.i18n;
+    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const names = await CarlToolbox.#skillNames();
+    const before = `<div class="carl-party-check-setup">
+        <div class="form-group">
+          <label>${esc(i18n.localize("CARLRPG.PartyCheck.Skill"))}</label>
+          <input type="text" name="carl-party-skill" list="carl-party-skill-names" />
+          <datalist id="carl-party-skill-names">${names.map((n) => `<option value="${esc(n)}"></option>`).join("")}</datalist>
+        </div>
+        <div class="form-group">
+          <label>${esc(i18n.localize("CARLRPG.Dialog.Difficulty"))}</label>
+          <input type="number" name="carl-party-difficulty" value="${10 + 2 * floor}" />
+        </div>
+        <p class="carl-dialog-hint">${esc(i18n.localize("CARLRPG.PartyCheck.Rule"))}</p>
+      </div>`;
+    const picked = await CarlToolbox.#pickActors({
+      titleKey: "CARLRPG.PartyCheck.DialogTitle",
+      promptKey: "CARLRPG.PartyCheck.PickerPrompt",
+      confirmLabelKey: "CARLRPG.PartyCheck.Confirm",
+      before,
+      read: (form) => ({
+        skill: form.querySelector('input[name="carl-party-skill"]')?.value ?? "",
+        difficulty: form.querySelector('input[name="carl-party-difficulty"]')?.value ?? "",
+      }),
+    });
+    if (!picked) return;
+    const skill = String(picked.data.skill ?? "").trim();
+    const difficulty = Number(picked.data.difficulty);
+    if (!skill || !Number.isFinite(difficulty) || picked.data.difficulty === "") {
+      ui.notifications.warn(i18n.localize("CARLRPG.PartyCheck.NeedSkill"));
+      return;
+    }
+    if (!picked.actors.length) {
+      ui.notifications.warn(i18n.localize("CARLRPG.Toolbox.NoCharactersPicked"));
+      return;
+    }
+    await postPartyCheck({ skill, difficulty, actors: picked.actors });
+  }
+
+  /**
+   * New scene (ruling Q4): every "Once per scene" cooldown ends, for every
+   * actor (module/helpers/cooldowns.mjs startNewScene).
+   */
+  static async #onNewScene(event, target) {
+    if (!game.user.isGM) return;
+    await startNewScene();
+    ui.notifications.info(game.i18n.localize("CARLRPG.Toolbox.NewSceneDone"));
+  }
+
+  /** Skill names for the Party Skill Check's suggestions: the compendiums' and the crawlers' own. */
+  static async #skillNames() {
+    const names = new Set();
+    for (const pack of game.packs) {
+      if (pack.documentName !== "Item") continue;
+      try {
+        const index = await pack.getIndex({ fields: ["type"] });
+        for (const entry of index) if (entry.type === "skill") names.add(entry.name);
+      } catch (e) {
+        // An unreadable pack just adds no names.
+      }
+    }
+    for (const actor of game.actors.filter((a) => a.type === "character")) {
+      for (const item of actor.items) if (item.type === "skill") names.add(item.name);
+    }
+    return [...names].sort((a, b) => a.localeCompare(b));
   }
 
   /**

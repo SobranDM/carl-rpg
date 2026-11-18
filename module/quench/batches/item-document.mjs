@@ -126,7 +126,7 @@ export default function register(quench) {
             // createTestItem's data param overrides the auto-generated
             // "Quench <label> <id>" name - an exact name match is required
             // here since rollDamageEffect matches parentSkills by name.
-            await createTestItem(actor, "skill", "Pugilism", { name: "Pugilism", system: { category: "attack", rank: 5 } });
+            await createTestItem(actor, "skill", "Pugilism", { name: "Pugilism", system: { category: "attack", rank: 5, isHandToHand: true } });
             const de = await createTestItem(actor, "damageEffect", "Powerful Strike", {
               system: { rank: 0, parentSkills: ["Pugilism"] },
             });

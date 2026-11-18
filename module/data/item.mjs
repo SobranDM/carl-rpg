@@ -1,5 +1,6 @@
 import CarlRPGItemBase from "./item-base.mjs";
 import { defineChangesField } from "./shared/change-entry.mjs";
+import { defineGearTargetEffectsField } from "./shared/upgrade-tier.mjs";
 
 export default class CarlRPGItem extends CarlRPGItemBase {
 
@@ -11,6 +12,45 @@ export default class CarlRPGItem extends CarlRPGItemBase {
     schema.quantity = new fields.NumberField({ ...requiredInteger, initial: 1, min: 0 });
     schema.weight = new fields.NumberField({ required: true, nullable: false, initial: 0, min: 0 });
     schema.equipped = new fields.BooleanField({ required: true, initial: false });
+    // A weapon: the Attack Skill it's wielded with (e.g. "Longsword"). An
+    // Attack with that Skill needs it in hand or in the Hotlist
+    // (module/helpers/weapons.mjs). Blank for anything that isn't a weapon.
+    schema.weaponSkill = new fields.StringField({ required: true, blank: true, initial: "" });
+    // Where it can be worn (Gear Slots, p.98-99; module/helpers/gear.mjs):
+    // one or more of CONFIG.CARLRPG.wearSlots ("Accessory or Head"; all for
+    // "Any"). Empty: it can't be worn until one is set (a Weapon Skill
+    // always makes it Held). DR from worn gear stacks across slot types,
+    // but only the best piece within one counts (modifiers.mjs
+    // supersededArmorIds; p.225). The old "Armor" box is gone with that.
+    schema.slots = new fields.ArrayField(
+      new fields.StringField({ required: true, blank: false, choices: () => Object.keys(CONFIG.CARLRPG.wearSlots) }),
+      { required: true, initial: [] },
+    );
+    // Held in both hands ("Limitation: Two-Handed", p.98).
+    schema.twoHanded = new fields.BooleanField({ required: true, initial: false });
+    // An Accessory's kind: one Belt and one Cape at most (p.99).
+    schema.accessoryKind = new fields.StringField({
+      required: true, blank: true, initial: "", choices: () => Object.keys(CONFIG.CARLRPG.accessoryKinds),
+    });
+    // On-hit Debuffs it gives its holder's or wearer's Attacks while
+    // equipped ("AS: Target gains Burned", p.116; p.223), optionally only
+    // with listed Attack Skills (modifiers.mjs attackTargetEffects).
+    schema.targetEffects = defineGearTargetEffectsField();
+    // A weapon whose Attacks are Armor-Piercing: they ignore DR, except DR
+    // from gear marked Anti-Piercing (modifiers.mjs attackIsArmorPiercing).
+    schema.armorPiercing = new fields.BooleanField({ required: true, initial: false });
+    // Anti-Piercing (p.95): "The DR of a piece of armor with this quality
+    // applies against Armor-Piercing damage" - this piece's DR still counts
+    // against an Armor-Piercing hit (modifiers.mjs, drAntiPiercing).
+    schema.antiPiercing = new fields.BooleanField({ required: true, initial: false });
+    // A Shield (p.98: "If you carry a Shield, that uses up a Holding slot"):
+    // always Held, like a weapon (gear.mjs slotsOf). Held in a hand, it lets
+    // a crawler with the Shield Block Skill use it (helpers/shield-block.mjs).
+    schema.shield = new fields.BooleanField({ required: true, initial: false });
+    // The DR a Shield Block has cost it: "-1 DR penalty on a Major Fail; -2
+    // on a Critical Fail. It breaks at 0 DR" (p.198). Taken off its armor DR
+    // (modifiers.mjs armorDr); a Repair clears it.
+    schema.shieldDamage = new fields.NumberField({ required: true, nullable: false, integer: true, initial: 0, min: 0 });
 
     // A usable, single-use item (Item Rules, p.99): Potions, Scrolls,
     // Spellbooks and other consumables like Bandages. Blank kind = ordinary

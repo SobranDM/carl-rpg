@@ -1,0 +1,37 @@
+{
+  "_id": "1dVqUlLWaLomxsAM",
+  "name": "Javelin",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/weapons/polearms/javelin-simple.webp",
+  "system": {
+    "description": "<p>A basic javelin. Its Attacks use the Javelin Skill, which sets their damage, range and Stat.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Javelin",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": false
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!1dVqUlLWaLomxsAM"
+}

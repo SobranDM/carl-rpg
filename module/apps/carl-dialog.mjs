@@ -6,6 +6,24 @@
 
 const { DialogV2 } = foundry.applications.api;
 
+/** What a button callback's null/undefined becomes, so DialogV2 doesn't swap in its action. */
+const NO_RESULT = Symbol("carl-dialog.no-result");
+
+/**
+ * DialogV2 resolves `callback() ?? button.action`, so a callback that
+ * returns null/undefined (Cancel; a file picker with no file) would resolve
+ * with the action string - truthy, and taken as a real answer. Each callback
+ * is wrapped so that comes back as null. Buttons with no callback still
+ * resolve with their action.
+ * @param {object} button
+ * @returns {object}
+ */
+function wrapButton(button) {
+  if (typeof button.callback !== "function") return button;
+  const callback = button.callback;
+  return { ...button, callback: async (...args) => (await callback(...args)) ?? NO_RESULT };
+}
+
 /**
  * Show a themed system dialog and await its result.
  * @param {object} config
@@ -16,23 +34,35 @@ const { DialogV2 } = foundry.applications.api;
  * @param {Array} [config.buttons]
  * @param {Function} [config.onRender]
  * @param {object} [config.position]  Window position/size, e.g. {width: 720}.
- * @returns {Promise<*>} The chosen button's callback result, or null if cancelled/closed.
+ * @param {boolean} [config.trusted]  Pass the content to Foundry as an element,
+ *   which it doesn't clean. A string is cleaned (foundry.utils.cleanHTML),
+ *   and that strips URL schemes off its list - e.g. the blob: thumbnails of
+ *   the Rulebook import's maps. Only for our own templates, with anything
+ *   from outside escaped by Handlebars.
+ * @returns {Promise<*>} The chosen button's callback result (its action if it
+ *   has no callback), or null if cancelled/closed or the callback returned
+ *   null/undefined.
  */
 export async function showCarlDialog({
-  title, content, template, context = {}, buttons, onRender, rejectClose = false, classes = [], position,
+  title, content, template, context = {}, buttons, onRender, rejectClose = false, classes = [], position, trusted = false,
 } = {}) {
   if (template) {
     content = await foundry.applications.handlebars.renderTemplate(template, context);
+  }
+  if (trusted && typeof content === "string") {
+    const div = document.createElement("div");
+    div.innerHTML = content;
+    content = div;
   }
   return DialogV2.wait({
     window: { title },
     ...(position ? { position } : {}),
     classes: ["carl-rpg", "carl-dialog", ...classes],
     content,
-    buttons: buttons ?? [rollButton()],
+    buttons: (buttons ?? [rollButton()]).map(wrapButton),
     rejectClose,
     render: onRender,
-  }).catch(() => null);
+  }).then((result) => (result === NO_RESULT ? null : result)).catch(() => null);
 }
 
 /**
@@ -45,16 +75,26 @@ export async function showCarlDialog({
  * caller (promptRollOptions's `result.conditions?.[cm.id]`) expects.
  */
 export function rollButton({ label = "CARLRPG.Dialog.Roll" } = {}) {
+  return formButton({ action: "roll", icon: "fa-solid fa-dice-d20", label });
+}
+
+/**
+ * A default button that resolves with the dialog's form data, expanded
+ * (see rollButton) - e.g. the sheet's Resistances dialog's Save.
+ * @param {{action: string, icon: string, label: string}} options
+ * @returns {object}
+ */
+export function formButton({ action, icon, label }) {
   return {
-    action: "roll",
-    icon: "fa-solid fa-dice-d20",
+    action,
+    icon,
     label,
     default: true,
     callback: (event, button) => foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(button.form).object),
   };
 }
 
-/** Standard cancel button. */
+/** Standard cancel button: showCarlDialog resolves null. */
 export function cancelButton({ label = "CARLRPG.Dialog.Cancel" } = {}) {
   return { action: "cancel", icon: "fa-solid fa-xmark", label, callback: () => null };
 }

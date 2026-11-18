@@ -66,6 +66,7 @@
     ],
     "category": "utility",
     "attackType": "",
+    "commandsPets": true,
     "range": "",
     "aiFavor": 0,
     "cooldown": "",

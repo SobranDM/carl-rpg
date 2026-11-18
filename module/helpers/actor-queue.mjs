@@ -19,8 +19,26 @@ const queues = new Map();
  * @returns {Promise<T>}
  */
 export function queueForActor(key, task) {
-  const previous = queues.get(key) ?? Promise.resolve();
-  const next = previous.then(task, task);
-  queues.set(key, next.catch(() => {}));
+  return queueOn(queues, key, task);
+}
+
+/**
+ * Run `task` after every earlier task queued in `queues` under `key`: a
+ * Promise chain per key. The key is dropped once its last task settles, so
+ * a key per document (an actor, a card, a combat) doesn't stay for the rest
+ * of the session.
+ * @template T
+ * @param {Map<string, Promise<void>>} queues
+ * @param {string} key
+ * @param {() => Promise<T>|T} task
+ * @returns {Promise<T>}
+ */
+export function queueOn(queues, key, task) {
+  const next = (queues.get(key) ?? Promise.resolve()).then(task, task);
+  const settled = next.catch(() => {});
+  queues.set(key, settled);
+  settled.then(() => {
+    if (queues.get(key) === settled) queues.delete(key);
+  });
   return next;
 }

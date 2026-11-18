@@ -1,15 +1,148 @@
 @use "../utils/variables" as *;
 
-// Character-only Pet tab (pet.hbs), the Inventory
-// tab's Hotlist/Equipped drop slots (items-list.hbs), the Description
-// tab's character lists and story notes (description.hbs), and the shared
-// fixed-length free-text list partial (text-slots.hbs), plus the header's
-// second details row (header.hbs).
+// Character-only Pet tab (pet.hbs), the Inventory tab's Equipment Doll
+// (items-list.hbs), the Description tab's rich text notes (details.hbs),
+// and the shared fixed-length free-text list partial (text-slots.hbs).
 @mixin styles {
-  .carl-details-row {
-    align-items: center;
+  // Inventory tab: item list on the left, the Equipment Doll on the right.
+  // Core gives every .scrollable a stable scrollbar gutter, which left an
+  // empty strip to the right of the doll when nothing scrolls.
+  .tab.scrollable[data-tab="items"] {
+    scrollbar-gutter: auto;
+  }
+
+  .carl-inventory-layout {
+    display: flex;
     gap: $padding-md;
-    margin-bottom: 4px;
+    align-items: flex-start;
+
+    > .items-list {
+      flex: 1 1 auto;
+      min-width: 0;
+      // As tall as the doll beside it: a short list still has room to drop
+      // a worn item onto (to take it off).
+      align-self: stretch;
+    }
+  }
+
+  .carl-equip-panel {
+    flex: 0 0 240px;
+    // Never wider than that: a long item name is cut off in its slot, not
+    // allowed to widen the doll.
+    min-width: 0;
+
+    fieldset {
+      margin: 0 0 $padding-md;
+    }
+  }
+
+  // A drop slot: dashed when empty, a solid panel when filled.
+  // Dragging gear: the slots it fits light up, the rest dim
+  // (actor-sheet.mjs _onDragStart; docs/gear-slots.md).
+  .carl-equip-panel.is-dragging {
+    .carl-equip-slot[data-slot-type]:not(.is-fit) {
+      opacity: 0.35;
+    }
+
+    .carl-equip-slot.is-fit {
+      outline: 2px solid var(--carl-accent);
+      outline-offset: -2px;
+    }
+  }
+
+  .carl-equip-slot {
+    border: 1px dashed var(--carl-border-soft);
+    border-radius: 3px;
+    color: var(--carl-text-muted);
+
+    &.filled {
+      border-style: solid;
+      background: var(--carl-panel-bg);
+      color: var(--color-text-primary);
+    }
+
+    .carl-equip-slot-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  // Head / Arms Torso Gloves / Main Hand Legs Off Hand / Feet. minmax(0, 1fr):
+  // a plain 1fr column won't shrink below its widest content, and since the
+  // slots are square, one long item name would make every square bigger.
+  .carl-gear-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-areas:
+      ". head ."
+      "arms torso gloves"
+      "mainHand legs offHand"
+      ". feet .";
+    gap: 4px;
+  }
+
+  .carl-gear-slot {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    aspect-ratio: 1;
+    padding: 2px;
+    font-size: var(--font-size-11);
+    text-align: center;
+
+    // Monochrome slot art, tinted by the text color via a mask. The
+    // template sets mask-image inline: a url() in this stylesheet (or in a
+    // custom property used here) would resolve against css/, not the page.
+    .carl-gear-icon {
+      width: 60%;
+      aspect-ratio: 1;
+      background-color: currentColor;
+      opacity: 0.6;
+      mask-position: center;
+      mask-size: contain;
+      mask-repeat: no-repeat;
+    }
+
+    img {
+      width: 32px;
+      height: 32px;
+      border: none;
+    }
+
+    .carl-equip-slot-name {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .carl-slot-clear {
+      position: absolute;
+      top: 1px;
+      right: 3px;
+    }
+
+    // Edit, beside the (x): a worn item isn't in the Inventory list.
+    .carl-slot-edit {
+      position: absolute;
+      top: 1px;
+      left: 3px;
+    }
+  }
+
+  .carl-accessories-label {
+    margin: $padding-md 0 4px;
+  }
+
+  .carl-accessory-slots {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
   }
 
   .carl-sheet-columns {
@@ -49,147 +182,6 @@
     }
   }
 
-  // Inventory tab: item list on the left, Hotlist + Equipped on the right.
-  .carl-inventory-layout {
-    display: flex;
-    gap: $padding-md;
-    align-items: flex-start;
-
-    > .items-list {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-  }
-
-  .carl-equip-panel {
-    flex: 0 0 240px;
-
-    fieldset {
-      margin: 0 0 $padding-md;
-    }
-  }
-
-  // Shared drop-slot look: dashed when empty, solid panel when filled.
-  .carl-equip-slot {
-    border: 1px dashed var(--carl-border-soft);
-    border-radius: 3px;
-    color: var(--carl-text-muted);
-
-    &.filled {
-      border-style: solid;
-      background: var(--carl-panel-bg);
-      color: var(--color-text-primary);
-    }
-
-    .carl-equip-slot-name {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  .carl-hotlist-slots {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .carl-hotlist-slot {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 26px;
-    padding: 0 4px;
-
-    .carl-hotlist-index {
-      flex: 0 0 1.5em;
-      text-align: right;
-    }
-
-    img {
-      flex: 0 0 20px;
-      border: none;
-    }
-
-    .carl-equip-slot-name {
-      flex: 1;
-    }
-
-    // Use a potion/scroll straight from the Hotlist (module/helpers/consumables.mjs).
-    .carl-slot-use {
-      flex: 0 0 auto;
-      color: var(--carl-accent);
-    }
-  }
-
-  // Head / Arms Torso Gloves / Main Hand Legs Off Hand / Feet.
-  .carl-gear-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-areas:
-      ". head ."
-      "arms torso gloves"
-      "mainHand legs offHand"
-      ". feet .";
-    gap: 4px;
-  }
-
-  .carl-gear-slot {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    aspect-ratio: 1;
-    padding: 2px;
-    font-size: var(--font-size-11);
-    text-align: center;
-
-    // Monochrome slot art, tinted by the text color via a mask. The
-    // template sets mask-image inline: a url() in this stylesheet (or in a
-    // custom property used here) would resolve against css/, not the page.
-    .carl-gear-icon {
-      width: 60%;
-      aspect-ratio: 1;
-      background-color: currentColor;
-      opacity: 0.6;
-      mask-position: center;
-      mask-size: contain;
-      mask-repeat: no-repeat;
-    }
-
-    img {
-      width: 32px;
-      height: 32px;
-      border: none;
-    }
-
-    .carl-equip-slot-name {
-      max-width: 100%;
-    }
-
-    .carl-slot-clear {
-      position: absolute;
-      top: 1px;
-      right: 3px;
-    }
-  }
-
-  .carl-accessories-label {
-    margin: $padding-md 0 4px;
-  }
-
-  .carl-accessory-slots {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-  }
-
   .carl-sheet-line {
     display: flex;
     align-items: center;
@@ -207,6 +199,89 @@
     }
   }
 
+  // Character Details tab (details.hbs): rich text boxes two to a row,
+  // the long-form ones (Important Kills, Story, Biography) full width.
+  .carl-details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px $padding-md;
+
+    .carl-details-box {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      margin: 0;
+
+      &.wide {
+        grid-column: 1 / -1;
+      }
+
+      prose-mirror {
+        min-height: 90px;
+      }
+
+      &.wide prose-mirror {
+        min-height: 140px;
+      }
+    }
+
+    // Pronouns, Crawler# and Potions used.
+    .carl-crawler-box {
+      gap: 2px;
+
+      .carl-sheet-line > span:first-child {
+        flex: 0 0 6.5em;
+      }
+
+      select {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    // "Potions Used", then Stat and Skill indented under it, their counts
+    // and limits on the right.
+    .carl-potions-used {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .carl-potion-count {
+      > span:first-child {
+        padding-left: 1em;
+      }
+
+      .carl-potion-values {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: auto;
+        white-space: nowrap;
+
+        input {
+          flex: 0 0 auto;
+          text-align: right;
+        }
+      }
+    }
+
+    // Tier and Size side by side.
+    .carl-personal-space-fields {
+      gap: $padding-md;
+      margin-bottom: 4px;
+
+      .carl-sheet-line {
+        flex: 1;
+        min-width: 0;
+
+        > span {
+          flex: 0 0 auto;
+        }
+      }
+    }
+  }
+
   .carl-sheet-box {
     display: flex;
     flex-direction: column;
@@ -217,24 +292,204 @@
     }
   }
 
-  .carl-companion-hb {
+  // A Character's Inventory tab: Gold above the list (items-list.hbs).
+  .carl-inventory-bar {
     display: flex;
-    align-items: center;
-    gap: 4px;
-    margin: 4px 0;
+    justify-content: flex-end;
+    margin-bottom: 4px;
   }
 
-  .carl-companion-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 2px $padding-md;
+  .carl-gold {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .resource-label {
+      margin: 0;
+    }
+
+    input {
+      text-align: right;
+      font-weight: 700;
+    }
+  }
+
+  // A Character's Benefits tab (benefits.hbs): Race/Class panels (drawers
+  // whose body is the item's benefits text), the Deity block, other perks.
+  .carl-benefit-panel {
+    .carl-drawer-header {
+      gap: 6px;
+    }
+
+    .carl-benefit-img {
+      flex: 0 0 20px;
+      border: none;
+    }
+
+    .carl-benefit-type,
+    .carl-benefit-active {
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    .carl-benefit-active {
+      font-weight: 700;
+      opacity: 1;
+      color: var(--carl-gold);
+    }
+
+    .carl-benefit-controls {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+
+      a {
+        color: var(--carl-header-text);
+
+        &:hover {
+          color: var(--carl-accent);
+        }
+      }
+    }
+
+    .carl-benefit-text {
+      padding: 4px $padding-md;
+      font-size: 12px;
+
+      ul,
+      ol {
+        margin: 2px 0;
+        padding-left: 18px;
+      }
+
+      p {
+        margin: 3px 0;
+      }
+    }
+  }
+
+  .carl-benefits-empty {
+    margin: 4px 0 8px;
+  }
+
+  .carl-deity {
+    margin: 0 0 $padding-md;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
+
+    legend {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-size: 12px;
+    }
+
+    prose-mirror {
+      min-height: 70px;
+      margin-top: 4px;
+    }
+  }
+
+  .carl-deity-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
     margin-bottom: 4px;
 
-    label {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 4px;
+    .resource-label {
+      margin: 0;
+    }
+
+    input[type="text"] {
+      height: 24px;
+    }
+  }
+
+  .carl-deity-name {
+    flex: 1 1 10em;
+    min-width: 8em;
+    font-weight: 700;
+  }
+
+  .carl-deity-tithe {
+    font-weight: 700;
+    color: var(--carl-accent);
+    white-space: nowrap;
+  }
+
+  .carl-deity-add-day {
+    font-size: 11px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .carl-deity-next {
+    font-size: 11px;
+    color: var(--carl-text-muted);
+
+    &.due {
+      font-weight: 700;
+      color: var(--carl-gold);
+    }
+  }
+
+  .carl-deity-boon {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: auto;
+    line-height: 20px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .carl-missed-pips {
+    display: inline-flex;
+    gap: 3px;
+  }
+
+  .carl-missed-pip {
+    width: 14px;
+    height: 14px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 50%;
+    cursor: pointer;
+
+    &.filled {
+      background: var(--carl-accent);
+    }
+  }
+
+  .carl-deity-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 11px;
+    white-space: nowrap;
+
+    input {
+      margin: 0;
+    }
+  }
+
+  .carl-deity-warning {
+    margin: 0 0 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--carl-hazard);
+  }
+
+  .carl-deity-benefits,
+  .carl-perks {
+    .carl-benefit-unreached {
+      opacity: 0.5;
+    }
+
+    .carl-benefits-none {
+      list-style: none;
+      padding: 2px 4px;
     }
   }
 }

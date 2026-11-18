@@ -1,8 +1,13 @@
 import CarlRPGActorBase from "./actor-base.mjs";
-import { getStatMod, staticEvade } from "../helpers/rules.mjs";
-import { aggregateActorBonuses, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
+import { staticEvade } from "../helpers/rules.mjs";
+import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
+import {
+  defineStatsField, deriveStats, deriveDefenses, deriveResourceCaps, creatureRollData,
+} from "./shared/derive-creature.mjs";
 import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effects.mjs";
+import { legacyAttackItems } from "../helpers/mob-attacks.mjs";
+import { parseSize } from "../helpers/size.mjs";
 
 /**
  * Mob actor ("Building a Mob", p.270-272) - a GM-built monster/NPC stat
@@ -12,6 +17,16 @@ import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effe
  * formulas (see prepareDerivedData), not the fields available.
  */
 export default class CarlRPGMob extends CarlRPGActorBase {
+
+  /** @override */
+  static migrateData(source) {
+    // Size was free text before 0.7.0 ("Large (5)", "Huge"): read as its
+    // Table 9 value (p.92), or null if it names none - in memory on every
+    // load, so world Mobs, tokens and compendiums all read it. The 0.7.0
+    // migration saves it (migration.mjs migrateMobSizes).
+    if (typeof source.size === "string") source.size = parseSize(source.size);
+    return super.migrateData(source);
+  }
 
   static defineSchema() {
     const fields = foundry.data.fields;
@@ -24,17 +39,20 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     });
 
     // Plain GM-set number, no XP/leveling-up mechanism (Mobs don't accrue
-    // Levels through play like Characters do - see actor.mjs's _preUpdate,
-    // which only ever fires off system.attributes.level.value, a Character-
-    // only path). Feeds the stat-point budget and HB-slot-count formulas
+    // Levels through play like Characters and Pets do - see actor.mjs's
+    // _preUpdate, which only ever fires off system.attributes.level.value, a
+    // path Mobs don't have). Feeds the stat-point budget and HB-slot-count formulas
     // below - see CONFIG.CARLRPG.mobBaseStat/mobStatPointsPerLevel/
     // bossSeverity (module/helpers/config.mjs).
     schema.level = new fields.NumberField({ ...requiredInteger, initial: 1, min: 1 });
 
-    // Free text, matching race.mjs's own size field exactly (e.g.
-    // "Colossal (7)") - nothing in this codebase reads size as a structured
-    // enum, so a closed dropdown here would just be dead config.
-    schema.size = new fields.StringField({ required: false, blank: true, initial: "" });
+    // Table 9: Creature Size (p.92) - a value 1-8 (Tiny to Gargantuan), as a
+    // Character's, Pet's and Vehicle's; null when not set. It was free text
+    // ("Colossal (7)") before 0.7.0: migrateData reads that as its value.
+    schema.size = new fields.NumberField({
+      required: false, nullable: true, integer: true, initial: null,
+      choices: () => Object.keys(CONFIG.CARLRPG.sizes).map(Number),
+    });
     // Flavor text (e.g. "Humanoid", "Undead"). Named creatureType, not type,
     // to avoid colliding with actor.type/system.type in templates.
     schema.creatureType = new fields.StringField({ required: false, blank: true, initial: "" });
@@ -50,11 +68,19 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // hb.max before this field existed (see carl-rpg.mjs's ready hook).
     schema.hbSlotsOverride = new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 1 });
 
-    // Structured Attacks list, matching the printed stat block's own shape
-    // (name/to-hit formula/damage formula+type/range/on-hit effect prose) -
-    // deliberately not Skill/Spell items, which most Mob attacks in print
-    // never are. A Mob that genuinely needs a real itemized Skill can still
-    // own one; this is the common case, not a replacement for that.
+    // Actions a round (helpers/actions.mjs). An Elite, like a Boss (any
+    // mobTier), gets "1 Action per crawler each round, unless their Stat
+    // Block says otherwise" (p.81); a plain Mob 1 Move + 1 Action (p.270).
+    // actionsPerRound: a stat block's own count, used instead of either.
+    schema.isElite = new fields.BooleanField({ required: true, initial: false });
+    schema.actionsPerRound = new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 0 });
+
+    // The OLD Attacks list (printed text: name, to-hit, damage + type, range,
+    // effect). A Mob's Attacks are `mobAttack` items now (module/data/
+    // mob-attack.mjs; docs/mob-sheet.md). The field stays only so old data
+    // can be read and converted: a Mob created with a list has it turned
+    // into items (_preCreate), and the 0.7.0 migration converts existing
+    // ones (module/helpers/mob-attacks.mjs). Nothing reads it otherwise.
     schema.attacks = new fields.ArrayField(
       new fields.SchemaField({
         name: new fields.StringField({ required: false, blank: true, initial: "" }),
@@ -70,25 +96,13 @@ export default class CarlRPGMob extends CarlRPGActorBase {
       { required: false, initial: [] }
     );
 
-    const statKeys = Object.keys(CONFIG.CARLRPG.stats);
-    const statsSchema = {};
-    for (const stat of statKeys) {
-      statsSchema[stat] = new fields.SchemaField({
-        // See character.mjs: value is the editable base, bonus/effective/mod
-        // are derived-only every pass and must never be written back to
-        // value. initial 1 (not Character's 3) matches "Mobs have a base of
-        // 1 in each stat" (p.270) - a freshly-created Mob starts at the
-        // plain (non-Boss) base; switching mobTier to a Boss tier doesn't
-        // retroactively bump existing values, only the stat-point budget
-        // the Spend Stat Points dialog computes against.
-        value: new fields.NumberField({ ...requiredInteger, initial: 1, min: 1 }),
-        bonus: new fields.NumberField({ ...requiredInteger, initial: 0 }),
-        effective: new fields.NumberField({ ...requiredInteger, initial: 1 }),
-        mod: new fields.NumberField({ ...requiredInteger, initial: 0 }),
-        label: new fields.StringField({ required: true, blank: true }),
-      });
-    }
-    schema.stats = new fields.SchemaField(statsSchema);
+    // Shape shared with Characters and Pets (data/shared/derive-creature.mjs).
+    // initial 1 (not a Character's 3) matches "Mobs have a base of 1 in each
+    // stat" (p.270) - a freshly-created Mob starts at the plain (non-Boss)
+    // base; switching mobTier to a Boss tier doesn't retroactively bump
+    // existing values, only the stat-point budget the Spend Stat Points
+    // dialog computes against.
+    schema.stats = defineStatsField(1);
 
     // Active Debuffs/Buffs (Table 11) - same shape as character.mjs. Needed
     // here too since Mobs are the far more common target of an Attack's
@@ -107,25 +121,9 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // mutates this.stats[*].value directly, only the derived-only bonus/mod.
     aggregateActorBonuses(this);
 
-    for (const key in this.stats) {
-      if (!this.stats[key]) continue;
-      const bonus = this.bonuses?.[`stats.${key}`] ?? 0;
-      const cap = this.caps?.[`stats.${key}`];
-      const effective = cap !== undefined ? Math.min(this.stats[key].value + bonus, cap) : this.stats[key].value + bonus;
-      this.stats[key].bonus = bonus;
-      this.stats[key].effective = effective;
-      this.stats[key].mod = getStatMod(effective);
-      this.stats[key].label = game.i18n.localize(CONFIG.CARLRPG.stats[key]) ?? key;
-    }
-
-    // See CarlRPGCharacter#prepareDerivedData - same DR/Resistance derivation,
-    // kept here too since the schema (actor-base.mjs) is shared and a Mob
-    // could in principle own a feature granting either.
-    this.drBonus = this.bonuses?.dr ?? 0;
-    this.drEffective = this.caps?.dr !== undefined
-      ? Math.min(this.dr + this.drBonus, this.caps.dr)
-      : this.dr + this.drBonus;
-    this.resistancesEffective = { ...this.resistances, ...this.grantedResistances };
+    deriveStats(this);
+    // Shared DR/Resistance derivation - a Mob can own a feature granting either.
+    deriveDefenses(this);
 
     // Surprise/Evade (p.271): "10 + Stat Mod", with +Floor appended live at
     // display time only (see abilities-mob.hbs) - never baked into these
@@ -169,37 +167,30 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     const floor = game.settings.get("carl-rpg", "currentFloor");
     this.hbSlotsRule = tier ? tier.hbSlotsBase + floor : Math.min(this.level, 10);
     this.hb.max = this.hbSlotsOverride ?? this.hbSlotsRule;
-    if (this.hb.value > this.hb.max) this.hb.value = this.hb.max;
 
-    this.hb.slotValue = this.stats.con?.mod ?? 0;
-    this.hb.bonusMax = this.bonuses?.["hb.max"] ?? 0;
-    this.hb.effectiveMax = this.hb.max + this.hb.bonusMax;
-    // "You gain Mana Points equal to your Enhanced Intelligence Stat" (p.110) -
-    // the bonused/effective value, not the raw base .value (see
-    // character.mjs's identical fix - Mobs share the same rule).
-    this.mana.max = (this.stats.int?.effective ?? 0) + (this.bonuses?.["mana.max"] ?? 0);
-
-    // Shield-style pool (docs/known-gaps.md 1.4) - see character.mjs. Mobs
-    // almost never own a toggled shield spell, but the schema is shared via
-    // actor-base.mjs, so this must derive correctly if one somehow does.
-    this.shield.slotValue = this.stats.con?.mod ?? 0;
-    this.shield.effectiveMax = computeActiveShieldSlots(this.parent?.items ? Array.from(this.parent.items) : []);
-    if (this.shield.value > this.shield.effectiveMax) this.shield.value = this.shield.effectiveMax;
+    deriveResourceCaps(this);
+    // Against the effective max, so bonus slots from gear can be filled.
+    if (this.hb.value > this.hb.effectiveMax) this.hb.value = this.hb.effectiveMax;
   }
 
   getRollData() {
-    const data = {};
-    if (this.stats) {
-      data.stats = {};
-      for (let [k, v] of Object.entries(this.stats)) {
-        data.stats[k] = foundry.utils.deepClone(v);
-      }
-    }
-    if (this.skills) data.skills = foundry.utils.deepClone(this.skills);
-    data.lvl = this.level;
-    // Floor is a single world-wide value, owned by the GM Toolbox - never
-    // stored per-actor. See CarlRPGCharacter#getRollData.
-    data.floor = game.settings.get("carl-rpg", "currentFloor");
-    return data;
+    return creatureRollData(this, this.level);
+  }
+
+  /**
+   * A Mob created with the old Attacks list (the PDF importer, a macro, an
+   * old compendium's Mob) gets them as `mobAttack` items instead.
+   * @override
+   */
+  async _preCreate(data, options, user) {
+    const allowed = await super._preCreate(data, options, user);
+    if (allowed === false) return false;
+    const attacks = data.system?.attacks;
+    if (!Array.isArray(attacks) || !attacks.length) return;
+    const startSort = Math.max(0, ...(data.items ?? []).map((i) => i.sort ?? 0));
+    this.parent.updateSource({
+      items: [...(data.items ?? []), ...legacyAttackItems(attacks, { startSort })],
+      system: { attacks: [] },
+    });
   }
 }

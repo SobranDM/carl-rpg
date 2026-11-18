@@ -11,12 +11,40 @@
  * (tools/pdf-import/extract-rulebook.mjs) and the Quench tests share it.
  */
 
-// Running headers, page numbers and the purchase watermark live in the top
+// Running headers, page numbers and the download stamp live in the top
 // and bottom margins; chapter tabs ("FLOOR 3" set one letter per line) in
 // the side margins.
 const MARGIN = 40;
 const SIDE_MARGIN = 36;
-const WATERMARK_RE = /Downloaded by .*Unauthorized distribution prohibited|^©\s?\d{4}/;
+
+/**
+ * The per-page download stamp (DRM) the store prints on every page, one
+ * text item at the bottom: "Downloaded by <account name or Guest User> on
+ * <date>. Unauthorized distribution prohibited." or (older downloads)
+ * "Copyright <publisher>. Unauthorized distribution prohibited. <date>."
+ * Matched by its fixed words only - never by a name or date - and dropped
+ * when the page is read (scan.mjs readPages), so no parser sees it.
+ */
+const DRM_ITEM_RE =
+  /^\s*(?:Downloaded by\b|Copyright\b).{0,120}?Unauthorized distribution prohibited\.?(?:\s*[\d/.-]{6,12})?\s*$/i;
+// The same stamp inside joined text, should a PDF ever split it across items.
+const DRM_TEXT_RE =
+  /(?:Downloaded by\b.{0,120}?|Copyright\b[^.]{0,80}\.\s*)?Unauthorized distribution prohibited\.?(?:\s*[\d/.-]{6,12})?/gi;
+// The book's own copyright line (printed on title and map pages).
+const COPYRIGHT_RE = /^©\s?\d{4}/;
+// Hyphens drawn as other glyphs: U+2011 (non-breaking, all through the
+// Core Rulebook) and U+F6BA (a private-use hyphen some exports use).
+const HYPHEN_RE = /[\u2011\uF6BA]/g;
+
+/** True for a text item that is the download stamp. */
+export function isDrmText(str) {
+  return DRM_ITEM_RE.test(String(str ?? ""));
+}
+
+/** Text with any download stamp taken out. */
+export function stripDrm(text) {
+  return String(text ?? "").replace(DRM_TEXT_RE, "");
+}
 
 /**
  * @param {object} textContent  Result of pdf.js page.getTextContent().
@@ -25,10 +53,10 @@ const WATERMARK_RE = /Downloaded by .*Unauthorized distribution prohibited|^©\s
 export function toTextItems(textContent) {
   const items = [];
   for (const item of textContent.items ?? []) {
-    if (!item.str?.trim()) continue;
+    if (!item.str?.trim() || isDrmText(item.str)) continue;
     const [a, b, c, d, e, f] = item.transform;
     items.push({
-      str: item.str,
+      str: item.str.replace(HYPHEN_RE, "-"),
       x: e,
       y: f,
       width: item.width ?? 0,
@@ -40,9 +68,9 @@ export function toTextItems(textContent) {
   return items;
 }
 
-/** True for text that is page furniture (watermark, copyright line). */
+/** True for text that is page furniture (download stamp, copyright line). */
 export function isBoilerplate(str) {
-  return WATERMARK_RE.test(str.trim());
+  return isDrmText(str) || COPYRIGHT_RE.test(str.trim());
 }
 
 /**
@@ -94,7 +122,7 @@ function joinRow(row) {
     text += item.str;
     prev = item;
   }
-  return text.replace(/\s+/g, " ").trim();
+  return stripDrm(text).replace(/\s+/g, " ").trim();
 }
 
 /** Group items into rows by baseline, top to bottom. */
@@ -173,12 +201,13 @@ export function isHeading(line, body) {
  * @param {string[]} parts
  */
 export function joinText(parts) {
-  return parts.reduce((acc, part) => {
+  const joined = parts.reduce((acc, part) => {
     if (!acc) return part;
     if (/[-‑]$/.test(acc))
       return /^[a-z]/.test(part) ? acc.slice(0, -1) + part : acc.slice(0, -1) + "-" + part;
     return `${acc} ${part}`;
   }, "");
+  return stripDrm(joined);
 }
 
 const SMALL_WORDS = new Set([

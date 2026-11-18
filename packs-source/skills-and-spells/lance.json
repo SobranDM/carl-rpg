@@ -103,6 +103,7 @@
     "category": "attack",
     "attackType": "melee",
     "range": "10 feet",
+    "mounted": true,
     "aiFavor": 0,
     "cooldown": "",
     "limitations": "Must be mounted to use. Cannot be used in conjunction with Attack of Opportunity or Zone of Control Skills."

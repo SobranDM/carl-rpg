@@ -5,6 +5,7 @@
  */
 
 import { buildRollRows } from "./roll-rows.mjs";
+import { noteUndo } from "../helpers/actions.mjs";
 
 const SHELL_TEMPLATE = "systems/carl-rpg/templates/chat/card-shell.hbs";
 
@@ -24,6 +25,20 @@ async function renderShell({
   const { renderTemplate } = foundry.applications.handlebars;
   const rollRows = await buildRollRows(rolls, rollMeta, { isPrivate, extraRows: extraRollRows });
   return renderTemplate(SHELL_TEMPLATE, { title, subtitle, img, badge, body, footer, rollRows, description });
+}
+
+/**
+ * A roll card's content, for a card revised in place (an AI Favor reroll or
+ * an Intervene - module/chat/check-revision.mjs). Same arguments as
+ * createRollMessage's card parts.
+ * @param {object} parts
+ * @param {boolean} [isPrivate]  A blind roll's card hides its numbers.
+ * @returns {Promise<string>}
+ */
+export function renderRollCard({
+  rolls = [], rollMeta = [], extraRollRows = [], title, subtitle, img, badge, body = "", footer, description = "",
+}, isPrivate = false) {
+  return renderShell({ title, subtitle, img, badge, body, footer, rolls, rollMeta, extraRollRows, description, isPrivate });
 }
 
 /**
@@ -48,7 +63,7 @@ async function renderShell({
  */
 export async function createRollMessage({
   rolls = [], rollMeta = [], extraRollRows = [], title, subtitle, img, badge, body = "", footer, description = "",
-  actor, token, flags = {}, whisper, messageMode,
+  actor, token, flags = {}, whisper, messageMode, speaker,
 } = {}) {
   // v14: ChatMessage#applyRollMode/CONST.DICE_ROLL_MODES are deprecated in
   // favor of ChatMessage.applyMode's "public"|"self"|"gm"|"blind" modes.
@@ -56,7 +71,7 @@ export async function createRollMessage({
   const isPrivate = mode === "blind";
   const content = await renderShell({ title, subtitle, img, badge, body, footer, rolls, rollMeta, extraRollRows, description, isPrivate });
   const messageData = {
-    speaker: getCarlSpeaker(actor, token),
+    speaker: speaker ?? getCarlSpeaker(actor, token),
     rolls,
     content,
     sound: CONFIG.sounds.dice,
@@ -64,23 +79,35 @@ export async function createRollMessage({
     flags: { "carl-rpg": { chatCard: true, ...flags } },
   };
   ChatMessage.applyMode(messageData, mode);
-  return ChatMessage.create(messageData);
+  return noted(actor, await ChatMessage.create(messageData));
+}
+
+/**
+ * A card posted as part of an Action goes with it if it's undone
+ * (helpers/actions.mjs noteUndo).
+ * @param {Actor|undefined} actor
+ * @param {ChatMessage|undefined} message
+ * @returns {ChatMessage|undefined}
+ */
+function noted(actor, message) {
+  if (actor && message) noteUndo(actor, { t: "message", id: message.id });
+  return message;
 }
 
 /**
  * Create a non-roll card (item descriptions, GM notices, etc.).
  */
 export async function createCardMessage({
-  title, subtitle, img, badge, body = "", footer, actor, token, flags = {}, whisper,
+  title, subtitle, img, badge, body = "", footer, actor, token, flags = {}, whisper, speaker,
 } = {}) {
   const content = await renderShell({ title, subtitle, img, badge, body, footer });
   const messageData = {
-    speaker: getCarlSpeaker(actor, token),
+    speaker: speaker ?? getCarlSpeaker(actor, token),
     content,
     whisper,
     flags: { "carl-rpg": { chatCard: true, kind: "card", ...flags } },
   };
-  return ChatMessage.create(messageData);
+  return noted(actor, await ChatMessage.create(messageData));
 }
 
 /**

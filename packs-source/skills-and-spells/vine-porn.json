@@ -34,6 +34,7 @@
       {
         "rankThreshold": 10,
         "description": "+1d4 base damage, and this Attack deals Armor-Piercing damage (ignores DR).",
+        "armorPiercing": true,
         "changes": [
           {
             "targetType": "skillDamage",

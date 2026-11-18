@@ -6,12 +6,96 @@
     gap: $padding-lg;
     align-items: flex-start;
     height: 100%;
+    // How far the Defenses' and Hotlist's top borders sit below the tops of
+    // their boxes: a fieldset draws its border through the middle of its
+    // legend, so (legend height - 2px border) / 2. Both legends are pinned to
+    // these metrics (below, and _hotlist.scss); the Attack! button and the
+    // first Stat drop by this much to line up with them.
+    --carl-legend-border-offset: calc((var(--font-size-14) * 1.25 - 2px) / 2);
 
     // Stats take up very little space - a narrow fixed-width column beside
     // the Skills/Spells drawers, reflowing to stacked-above under a narrow
     // sheet width where there's no room for both side by side.
     @media (max-width: 640px) {
       flex-direction: column;
+    }
+  }
+
+  .carl-stats-rest {
+    display: contents;
+  }
+
+  // A Character's Combat tab (it has the Attack! button), side by side: a
+  // grid, so the Attack! button shares a row with the Defenses box and
+  // stretches to its height - from the Defenses top border (the margin) to
+  // its bottom border, however the Defenses row wraps. The rest of the Stats
+  // column and the Hotlist make the second row: the first Stat's top lines
+  // up with the Hotlist's top border, and the Hotlist stretches down to the
+  // Level Grind box's bottom, its slots sharing the extra height.
+  @media (min-width: 641px) {
+    .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) {
+      display: grid;
+      grid-template-columns: 140px minmax(0, 1fr);
+      grid-template-areas:
+        "attack defenses"
+        "stats hotlist";
+      align-content: start;
+      align-items: start;
+      gap: 6px $padding-lg;
+
+      > .carl-stats-column,
+      > .carl-abilities-main {
+        display: contents;
+      }
+
+      .carl-attack-button {
+        grid-area: attack;
+        align-self: stretch;
+        height: auto;
+        margin: var(--carl-legend-border-offset) 0 0;
+      }
+
+      .carl-combat-defenses {
+        grid-area: defenses;
+        margin-bottom: 0;
+      }
+
+      .carl-stats-rest {
+        grid-area: stats;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: var(--carl-legend-border-offset);
+
+        // Its bottom is the Level Grind box's bottom border.
+        > :last-child {
+          margin-bottom: 0;
+        }
+      }
+
+      .carl-hotlist {
+        grid-area: hotlist;
+        align-self: stretch;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0;
+
+        .carl-hotlist-rows {
+          flex: 1 1 auto;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .carl-hotlist-row {
+          flex: 1 1 auto;
+        }
+
+        // The slot fills its taller row, so the slots grow, not the gaps.
+        .carl-hotlist-pick,
+        .carl-hotlist-use {
+          align-self: stretch;
+        }
+      }
     }
   }
 
@@ -73,12 +157,18 @@
 
   .carl-banked-stat-points {
     margin-top: 4px;
+    // A fieldset's default side margins (and min-width: min-content) made
+    // these boxes narrower than the Stat boxes above; same width now. Only
+    // the sides - the height is untouched.
+    margin-inline: 0;
+    min-width: 0;
     border: 1px solid var(--carl-border-soft);
     border-radius: 3px;
     background: var(--carl-panel-bg);
     padding: 4px 6px 6px;
 
     legend {
+      margin-inline: auto;
       font-weight: 700;
       font-size: 10px;
       text-transform: uppercase;
@@ -105,6 +195,162 @@
     margin-bottom: 2px;
     font-weight: 700;
     color: var(--carl-text);
+  }
+
+  // A Character's Attack! button, top of the Stats column: pick an Attack
+  // Skill, then the Attack dialog (CarlDice.chooseAttack).
+  .carl-attack-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    // Side by side, the Combat tab's grid (above) sizes it to the Defenses
+    // box; this is for the narrow, stacked layout.
+    height: 44px;
+    margin: 0 0 3px;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--carl-header-text);
+    background: var(--carl-danger);
+    // A shade lighter than the background; lighter again on hover, so it
+    // still shows against the hover background.
+    border: 1px solid color-mix(in srgb, var(--carl-danger) 60%, var(--carl-accent));
+    border-radius: 4px;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--carl-danger) 80%, var(--carl-accent));
+      border-color: color-mix(in srgb, var(--carl-danger) 35%, var(--carl-accent));
+      box-shadow: 0 0 4px color-mix(in srgb, var(--carl-danger) 60%, transparent);
+    }
+  }
+
+  // "Hours" before the Level Grind's count / Level (stats-column.hbs).
+  .carl-grind-level-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--carl-accent-dim);
+  }
+
+  // A Character's Evade roll, first in the Combat tab's Defenses row.
+  .carl-evade-button {
+    flex: 0 0 auto;
+    width: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 26px;
+    line-height: 1;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .carl-evade-total {
+    color: var(--carl-accent);
+    font-size: 14px;
+  }
+
+  // A Character's Evade, DR, Move, Step and Resistances: one row above the
+  // Hotlist on the Combat tab (abilities.hbs).
+  .carl-combat-defenses {
+    margin-top: 0;
+    margin-bottom: 6px;
+    border-width: 2px;
+
+    // The core defaults, stated so --carl-legend-border-offset holds.
+    legend {
+      font-size: var(--font-size-14);
+      line-height: 1.25;
+      padding-block: 0;
+    }
+  }
+
+  .carl-defenses-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+  }
+
+  .carl-defense-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .resource-label {
+      margin: 0;
+    }
+
+    input {
+      height: 24px;
+      text-align: center;
+    }
+
+    .carl-stat-value {
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    // A Move or Step a Debuff blocks (Held, Terrified...): kept, but struck
+    // through - the tooltip names the Debuff.
+    &.carl-defense-blocked {
+      input,
+      .carl-stat-value {
+        text-decoration: line-through;
+        opacity: 0.6;
+      }
+    }
+  }
+
+  .carl-resistances-button {
+    flex: 0 0 auto;
+    width: auto;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 26px;
+    line-height: 1;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .carl-resistances-summary {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--carl-text-muted);
+  }
+
+  // The read-only Resistances dialog (dialog/resistances.hbs).
+  .carl-resistance-table {
+    width: 100%;
+    margin: 0 0 6px;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 3px 6px;
+      text-align: left;
+    }
+
+    .carl-resistance-state {
+      font-weight: 700;
+    }
+
+    .carl-resistance-immune .carl-resistance-state {
+      color: var(--carl-gold);
+    }
+
+    .carl-resistance-vulnerable .carl-resistance-state {
+      color: var(--carl-hazard);
+    }
   }
 
   .carl-abilities-main {

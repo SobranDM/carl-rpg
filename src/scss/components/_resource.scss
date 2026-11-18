@@ -39,4 +39,46 @@
     font-weight: 700;
     color: var(--carl-accent-dim);
   }
+
+  // A Character's Mana under the Health Bar (mana-bar.hbs): a plain fill
+  // bar - Mana is a number, not slots - and the editable value.
+  .carl-mana-resource {
+    margin-top: 2px;
+
+    .resource-label {
+      margin-bottom: 1px;
+    }
+  }
+
+  .carl-mana-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    input {
+      height: 22px;
+    }
+  }
+
+  .carl-mana-bar {
+    flex: 1;
+    height: 10px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 5px;
+    background: var(--carl-input-bg, rgba(0, 0, 0, 0.08));
+    overflow: hidden;
+  }
+
+  .carl-mana-fill {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #2c5fd6, #5c9bff);
+    transition: width 0.2s ease;
+  }
+
+  .carl-mana-max {
+    flex: 0 0 auto;
+    font-weight: 700;
+    white-space: nowrap;
+  }
 }

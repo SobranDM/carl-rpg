@@ -1,61 +1,74 @@
-{{!-- Mob's Abilities tab ("Building a Mob", p.270-272) - a stat-block-shaped
-      layout (Surprise/Evade/Move/DR reference row, an editable Stat block,
-      a structured Attacks list) instead of the PC-shaped abilities.hbs
-      (banked stat points, class/race-driven bonuses). Skills/Spells stay
-      available below for the rare Mob that needs a real itemized Skill,
-      via the same partials/markup abilities.hbs uses. --}}
+{{!-- A Mob's Combat tab (docs/mob-sheet.md), the Character's shape: the Stats
+      column, then the Defenses (the stat block's Surprise and Evade as
+      "13+F" with today's value, DR, Move, Actions per round, and the
+      Resistances - their grid opens here to edit), then the Attacks.
+      Mobs never roll (p.267), so there's no Evade roll. Then its Spells,
+      whose header edits its Mana (a Mob has no Mana bar). A Mob has no
+      Skills tab (no stat block has Skills); a Skill one has anyway is
+      shown here, so nothing it owns is hidden. --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="abilities">
   <div class="carl-abilities-layout">
     {{> "systems/carl-rpg/templates/actor/parts/stats-column.hbs"}}
 
     <div class="carl-abilities-main">
-      <div class="carl-mob-statblock-row">
-        <div class="carl-mob-statblock-field">
-          <label class="resource-label">{{localize "CARLRPG.Roll.Surprise"}}</label>
-          <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.SurpriseHint'}}">{{system.surpriseBase}}+F</span>
-          {{#if system.surpriseDebuffDelta}}<i class="fas fa-skull-crossbones carl-debuffed-marker" title="{{localize 'CARLRPG.Actor.DebuffedValueHint'}} ({{system.surpriseDebuffDelta}})"></i>{{/if}}
+      <fieldset class="carl-combat-defenses carl-mob-defenses">
+        <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
+        <div class="carl-defenses-row">
+          <span class="carl-defense-field carl-mob-defense" data-tooltip="{{localize 'CARLRPG.Actor.SurpriseHint'}}">
+            <span class="resource-label">{{localize "CARLRPG.Roll.Surprise"}}</span>
+            <span class="carl-stat-value">{{system.surpriseBase}}+F <small class="carl-mob-defense-now" data-tooltip="{{localize 'CARLRPG.Actor.AtFloor' floor=currentFloor}}">({{mobDefenses.surprise}})</small></span>
+            {{#if system.surpriseDebuffDelta}}<i class="fas fa-skull-crossbones carl-debuffed-marker" data-tooltip="{{localize 'CARLRPG.Actor.DebuffedValueHint'}} ({{system.surpriseDebuffDelta}})"></i>{{/if}}
+          </span>
+          <span class="carl-defense-field carl-mob-defense" data-tooltip="{{localize 'CARLRPG.Actor.EvadeHint'}}">
+            <span class="resource-label">{{localize "CARLRPG.Roll.Evade"}}</span>
+            <span class="carl-stat-value">{{system.evadeBase}}+F <small class="carl-mob-defense-now" data-tooltip="{{localize 'CARLRPG.Actor.AtFloor' floor=currentFloor}}">({{mobDefenses.evade}})</small></span>
+            {{#if system.evadeDebuffDelta}}<i class="fas fa-skull-crossbones carl-debuffed-marker" data-tooltip="{{localize 'CARLRPG.Actor.DebuffedValueHint'}} ({{system.evadeDebuffDelta}})"></i>{{/if}}
+          </span>
+          {{!-- The only system.dr input on the sheet (a second one would
+                submit as an array). --}}
+          <label class="carl-defense-field">
+            <span class="resource-label">{{localize "CARLRPG.Actor.DrShort"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
+            {{#if system.drBonus}}<span class="carl-stat-value" data-tooltip="{{localize 'CARLRPG.Actor.EffectiveValue'}}">= {{system.drEffective}}</span>{{/if}}
+          </label>
+          <label class="carl-defense-field">
+            <span class="resource-label">{{localize "CARLRPG.Actor.Move"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.move" value="{{system.move}}" placeholder="20+S" />
+          </label>
+          <label class="carl-defense-field" data-tooltip="{{localize 'CARLRPG.Actor.ActionsPerRoundHint'}}">
+            <span class="resource-label">{{localize "CARLRPG.Actor.ActionsShort"}}</span>
+            <input type="number" class="carl-w-tiny" name="system.actionsPerRound" value="{{system.actionsPerRound}}" min="0"
+              placeholder="{{localize 'CARLRPG.Actor.ActionsAuto'}}" />
+          </label>
+          <button type="button" class="carl-resistances-button{{#if mobDefenses.resistancesOpen}} is-open{{/if}}" data-action="toggleMobResistances"
+            aria-expanded="{{#if mobDefenses.resistancesOpen}}true{{else}}false{{/if}}">
+            {{localize "CARLRPG.Actor.Resistances"}}
+            <span class="carl-resistances-summary">{{#if resistanceSummary}}{{resistanceSummary}}{{else}}{{localize "CARLRPG.Actor.ResistNone"}}{{/if}}</span>
+          </button>
         </div>
-        <div class="carl-mob-statblock-field">
-          <label class="resource-label">{{localize "CARLRPG.Roll.Evade"}}</label>
-          <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EvadeHint'}}">{{system.evadeBase}}+F</span>
-          {{#if system.evadeDebuffDelta}}<i class="fas fa-skull-crossbones carl-debuffed-marker" title="{{localize 'CARLRPG.Actor.DebuffedValueHint'}} ({{system.evadeDebuffDelta}})"></i>{{/if}}
+        {{#if mobDefenses.resistancesOpen}}
+        <div class="carl-mob-resistances">
+          {{> "systems/carl-rpg/templates/actor/parts/resistances-grid.hbs"}}
         </div>
-        <div class="carl-mob-statblock-field">
-          <label for="system.move" class="resource-label">{{localize "CARLRPG.Actor.Move"}}</label>
-          <input type="text" class="carl-w-tiny" name="system.move" value="{{system.move}}" placeholder="20+S" />
-        </div>
-        <div class="carl-mob-statblock-field">
-          <label class="resource-label">{{localize "CARLRPG.Actor.Dr"}}</label>
-          {{!-- Read-only here, not a second `name="system.dr"` input: this
-                part (abilities-mob.hbs) and description.hbs both render into
-                the same <form> at once (every tab's content is rendered
-                simultaneously, only CSS toggles which is visible), so two
-                same-named fields become a RadioNodeList - Foundry's
-                FormDataExtended then submits system.dr as a 2-element ARRAY
-                on ANY sheet edit (not just to this field), which the schema
-                rejects with "dr: must be a number". Description.hbs's own
-                Defenses fieldset is the sole editable copy. --}}
-          <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.DrEditHint'}}">{{system.dr}}{{#if system.drBonus}} (={{system.drEffective}}){{/if}}</span>
-        </div>
-      </div>
+        {{/if}}
+      </fieldset>
 
-      {{#> carlCollapsibleSection sectionId="attacks" expanded=system.uiState.attacksExpanded
-           label=(localize "CARLRPG.Tab.Attacks") toggleScope="actor" togglePath="system.uiState.attacksExpanded"}}
-        {{> "systems/carl-rpg/templates/actor/parts/attacks-list.hbs"}}
+      {{> "systems/carl-rpg/templates/actor/parts/mob-attacks-list.hbs"}}
+
+      {{#> carlCollapsibleSection sectionId="spells" expanded=system.uiState.spellsExpanded
+           label=(localize "CARLRPG.Tab.Spells") toggleScope="actor" togglePath="system.uiState.spellsExpanded"
+           showMana=true manaReadonly=false manaValue=system.mana.value manaMax=system.mana.max}}
+        {{> "systems/carl-rpg/templates/actor/parts/spells-section-body.hbs" spells=spells locked=system.uiState.itemsLocked}}
       {{/carlCollapsibleSection}}
 
+      {{#if (or skills.length unmatchedDamageEffects.length)}}
       {{#> carlCollapsibleSection sectionId="skills" expanded=system.uiState.skillsExpanded
            label=(localize "CARLRPG.Tab.Skills") toggleScope="actor" togglePath="system.uiState.skillsExpanded"
            showLockToggle=true locked=system.uiState.itemsLocked}}
         {{> "systems/carl-rpg/templates/actor/parts/skills-section-body.hbs"
             skills=skills unmatchedDamageEffects=unmatchedDamageEffects config=config locked=system.uiState.itemsLocked}}
       {{/carlCollapsibleSection}}
-
-      {{#> carlCollapsibleSection sectionId="spells" expanded=system.uiState.spellsExpanded
-           label=(localize "CARLRPG.Tab.Spells") toggleScope="actor" togglePath="system.uiState.spellsExpanded"
-           showMana=true manaValue=system.mana.value manaMax=system.mana.max}}
-        {{> "systems/carl-rpg/templates/actor/parts/spells-section-body.hbs" spells=spells locked=system.uiState.itemsLocked}}
-      {{/carlCollapsibleSection}}
+      {{/if}}
     </div>
   </div>
 </section>

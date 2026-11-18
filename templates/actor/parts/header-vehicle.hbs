@@ -1,0 +1,82 @@
+{{!-- Sheet Header (Vehicle, module/data/vehicle.mjs) - the play surface:
+      what it's doing this round and the numbers people look up, all
+      read-only (set once on the Details tab, vehicle-details.hbs), plus the
+      driver's buttons. --}}
+<header class="sheet-header carl-vehicle-header">
+  <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+  <div class="header-fields">
+    <div class="carl-name-row flexrow">
+      <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name" /></h1>
+      <div class="resource flex-group-center carl-name-row-field">
+        <label class="resource-label">{{localize "CARLRPG.Actor.Floor"}}</label>
+        <span class="carl-stat-value">{{currentFloor}}</span>
+      </div>
+    </div>
+
+    <div class="carl-pet-summary">
+      {{#if system.model}}<span class="carl-vehicle-model">{{system.model}}</span>{{/if}}
+      <span class="carl-pet-chip">{{localize (lookup config.sizes system.size)}}</span>
+      {{#if system.driveSkill}}<span class="carl-pet-chip">{{system.driveSkill}}</span>{{/if}}
+      <span class="carl-pet-chip {{#if vehicle.full}}warn{{/if}}" title="{{localize 'CARLRPG.Vehicle.OccupantsHint'}}">
+        <i class="fas fa-users"></i> {{vehicle.status.occupantCount}} / {{vehicle.status.capacity}}
+      </span>
+      {{#if vehicle.driver}}
+      <span class="carl-pet-chip"><i class="fas fa-car-side"></i> {{vehicle.driver.name}}</span>
+      {{else}}
+      <span class="carl-pet-chip warn">{{localize "CARLRPG.Vehicle.NoDriver"}}</span>
+      {{/if}}
+      <span class="carl-pet-chip {{#unless system.parked}}moving{{/unless}}">
+        {{#if system.parked}}{{localize "CARLRPG.Vehicle.Parked"}}{{else}}{{localize "CARLRPG.Vehicle.Moving"}}{{/if}}
+      </span>
+    </div>
+
+    <div class="carl-mob-statblock-row carl-vehicle-statblock">
+      <div class="carl-mob-statblock-field">
+        <label class="resource-label">{{localize "CARLRPG.Vehicle.CurrentMove"}}</label>
+        <span class="carl-stat-value carl-vehicle-move" title="{{vehicle.moveHint}}">{{vehicle.status.currentMove}}</span>
+        {{#if vehicle.roundLabel}}<span class="carl-hint carl-vehicle-round">{{vehicle.roundLabel}}{{#if @root.isGM}} <a data-action="resetVehicleRound" title="{{localize 'CARLRPG.Vehicle.ResetRound'}}"><i class="fas fa-times"></i></a>{{/if}}</span>{{/if}}
+      </div>
+      <div class="carl-mob-statblock-field">
+        <label class="resource-label">{{localize "CARLRPG.Vehicle.Difficulty"}}</label>
+        <span class="carl-stat-value" title="{{localize 'CARLRPG.Vehicle.DifficultyHint'}}">{{vehicle.status.attackDifficulty}}</span>
+        <span class="carl-hint">{{localize "CARLRPG.Vehicle.HeadOn" dc=vehicle.status.headOnDifficulty}}</span>
+      </div>
+      <div class="carl-mob-statblock-field">
+        <label class="resource-label">{{localize "CARLRPG.Actor.Dr"}}</label>
+        <span class="carl-stat-value">{{system.drEffective}}</span>
+      </div>
+      {{#if vehicle.status.nitrousActive}}
+      <div class="carl-mob-statblock-field">
+        <label class="resource-label">{{localize "CARLRPG.Vehicle.Upgrades.nitrous"}}</label>
+        <span class="carl-stat-value">{{vehicle.status.nitrousRemaining}}s</span>
+      </div>
+      {{/if}}
+    </div>
+
+    <div class="carl-vehicle-actions flexrow">
+      {{#if vehicle.canDrive}}
+      <button type="button" data-action="drivingCheck" title="{{localize 'CARLRPG.Vehicle.DrivingCheckHint'}}"><i class="fas fa-dice-d20"></i> {{localize "CARLRPG.Vehicle.DrivingCheck"}}</button>
+      <button type="button" data-action="stopCheck" title="{{localize 'CARLRPG.Vehicle.StopCheckHint'}}" {{#if system.parked}}disabled{{/if}}><i class="fas fa-hand"></i> {{localize "CARLRPG.Vehicle.StopCheck"}}</button>
+      <button type="button" data-action="ramVehicle" title="{{localize 'CARLRPG.Vehicle.Ram.Hint'}}" {{#if system.parked}}disabled{{/if}}><i class="fas fa-car-crash"></i> {{localize "CARLRPG.Vehicle.Ram.Button"}}</button>
+      {{/if}}
+      {{#if vehicle.canControl}}
+      <button type="button" data-action="toggleParked">
+        {{#if system.parked}}<i class="fas fa-play"></i> {{localize "CARLRPG.Vehicle.Drive"}}{{else}}<i class="fas fa-parking"></i> {{localize "CARLRPG.Vehicle.Park"}}{{/if}}
+      </button>
+      {{#if vehicle.nitrousReady}}
+      <button type="button" data-action="activateNitrous" title="{{localize 'CARLRPG.Vehicle.NitrousHint'}}"><i class="fas fa-fire"></i> {{localize "CARLRPG.Vehicle.Upgrades.nitrous"}}</button>
+      {{/if}}
+      {{/if}}
+      {{#if @root.isGM}}
+      {{!-- This round's Table 6 result by hand - for a Mob driver, who
+            doesn't roll. In the header, which refreshes every round. --}}
+      <select class="carl-vehicle-round-override" name="system.round.degree" title="{{localize 'CARLRPG.Vehicle.RoundOverrideHint'}}">
+        <option value="">{{localize "CARLRPG.Vehicle.FullMove"}}</option>
+        {{selectOptions vehicle.degreeChoices selected=vehicle.status.roundDegree localize=true}}
+      </select>
+      {{/if}}
+    </div>
+
+    {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
+  </div>
+</header>

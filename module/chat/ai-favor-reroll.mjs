@@ -1,18 +1,24 @@
 /**
- * The "Reroll (AI Favor)" button on a crawler's Check card (rules and data:
- * module/helpers/ai-favor.mjs). Clicking it spends 1 AI Favor, rolls the d20
- * again with everything else kept, and posts the result as a new card; the
- * old card is marked rerolled and its buttons stop working. Shown only to
- * the crawler's owner (or the GM), while they have AI Favor, on a Check
- * that wasn't a Natural 1 and hasn't been rerolled or acted on yet.
+ * The Reroll button on a crawler's Check card (rules and data: module/
+ * helpers/ai-favor.mjs). One button for every reroll source: a d20 icon
+ * with no text, to save room on the card (the Reaction card's too), its
+ * tooltip naming the source - "AI Reroll", or "Reroll" when it will ask:
+ *  - **AI Favor** (p.61): 1 AI Favor, once per Check, never a Natural 1;
+ *  - **Fuzzy Dice** (p.73): "One Driving Skill Check reroll per Floor".
+ * With one source the click goes straight to it; with several that fit the
+ * roll, a dialog picks one (docs/intervene.md, stage 2 ruling 2). The d20 is
+ * rolled again with everything else kept, and the card is revised in place
+ * (module/chat/check-revision.mjs) - any Intervene d6s stay. The GM spends
+ * the source as it applies the reroll.
+ *
+ * Cards rerolled before rerolls were made in place carry `aiRerolled`:
+ * they're drawn as replaced, and offer nothing.
  */
-import CarlDice, { extractNaturalD20, withManaCostSubtitle } from "../dice/dice.mjs";
-import { getDegreeOfSuccess, degreeBadge, isHitDegree } from "../helpers/rules.mjs";
-import { rerollFormula, rerollOpen } from "../helpers/ai-favor.mjs";
-import { updateCardMessage } from "../helpers/chat-socket.mjs";
-import { createRollMessage } from "./chat-card.mjs";
-import { isCardLocked } from "./taunt-card.mjs";
-import { recordRowEvade, resolveRowTarget } from "./attack-targets-card.mjs";
+import { extractNaturalD20 } from "../dice/dice.mjs";
+import { rerollFormula } from "../helpers/ai-favor.mjs";
+import { esc } from "./chat-card.mjs";
+import { rerollBase, rerollSources, rollIcons, sendRevision } from "./check-revision.mjs";
+import { rowAt, rowCheck, rowRerollSources } from "./row-evade.mjs";
 
 const SCOPE = "carl-rpg";
 const inFlight = new Set();
@@ -20,51 +26,37 @@ const inFlight = new Set();
 /** @returns {Actor|null} The crawler who rolled the Check. */
 function rerollActor(spec) {
   try {
-    const doc = fromUuidSync(spec.actorUuid);
+    const doc = spec?.actorUuid ? fromUuidSync(spec.actorUuid) : null;
     return doc instanceof Actor ? doc : (doc?.actor ?? null);
   } catch (err) {
     return null;
   }
 }
 
-/** The Attack card and row a row-Evade reroll writes to. */
-function rowEvadeTarget(spec) {
-  const attack = game.messages.get(spec.attackMessageId);
-  const row = attack?.flags?.[SCOPE]?.targetRows?.[spec.rowId];
-  return { attack, row };
-}
-
 /**
- * Whether the current user may reroll this card now.
+ * Whether the current user may reroll this card now, by any source.
  * @param {ChatMessage} message
  * @returns {boolean}
  */
 export function canReroll(message) {
-  const flags = message.flags?.[SCOPE] ?? {};
-  const spec = flags.aiReroll;
-  if (!rerollOpen(spec) || flags.aiRerolled) return false;
-  const actor = rerollActor(spec);
-  if (actor?.type !== "character" || !actor.isOwner) return false;
-  if ((actor.system.details?.aiFavor ?? 0) < 1) return false;
-  // "Before the GM announces the result": not once the Attack has been
-  // acted on (a row Evaded or applied, a Taunt, damage applied).
-  if (spec.kind === "attack" && isCardLocked(message)) return false;
-  if (spec.kind === "rowEvade") {
-    const { row } = rowEvadeTarget(spec);
-    if (!row || row.applied || row.replaced) return false;
-    // A failed free Evade was followed by an ordinary one - that's the
-    // result now.
-    if (spec.free && !isHitDegree(spec.degree) && row.evade) return false;
-    // The injury this Evade called for has already been added.
-    if (flags.debuffAdded) return false;
-  }
-  return true;
+  return rerollSources(message).length > 0;
+}
+
+/** One source's name, for the button's tooltip and the picker. */
+function sourceLabel(source) {
+  if (source.key === "fuzzyDice") return game.i18n.format("CARLRPG.Reroll.Source.fuzzyDice", { vehicle: source.vehicle.name });
+  return game.i18n.format("CARLRPG.Reroll.Source.favor", { favor: source.favor });
+}
+
+/** The button's tooltip: the one source the click will use, or "Reroll" when it asks. */
+function buttonHint(sources) {
+  return game.i18n.localize(`CARLRPG.Reroll.Tooltip.${sources.length > 1 ? "choose" : sources[0].key}`);
 }
 
 /**
  * Per-viewer decoration (called from module/chat/chat-listener.mjs): the
- * reroll button on a card that offers one, or the "rerolled" state on a
- * card that's been replaced.
+ * Reroll button on a card that offers one, or the "rerolled" state on a
+ * card an older reroll replaced.
  * @param {ChatMessage} message
  * @param {HTMLElement} html
  */
@@ -83,109 +75,76 @@ export function decorateAiReroll(message, html) {
     else card.append(note);
     return;
   }
-  if (!canReroll(message)) return;
-  let footer = card.querySelector(".carl-chat-footer");
-  if (!footer) {
-    footer = document.createElement("footer");
-    footer.className = "carl-chat-footer";
-    card.append(footer);
-  }
-  const favor = rerollActor(flags.aiReroll)?.system.details?.aiFavor ?? 0;
-  footer.insertAdjacentHTML("beforeend", `<div class="carl-ai-reroll">
-    <button type="button" class="carl-ai-reroll-button" data-action="aiReroll" title="${game.i18n.localize("CARLRPG.Reroll.Hint")}">
-      <i class="fas fa-dice-d20"></i> ${game.i18n.format("CARLRPG.Reroll.Button", { favor })}
-    </button></div>`);
-}
-
-/** A new Roll of the same d20 expression plus the rest of the old total. */
-async function rollAgain(spec) {
-  const roll = await new Roll(rerollFormula(spec)).evaluate();
-  const natural = extractNaturalD20(roll);
-  return { roll, natural, total: roll.total, degree: getDegreeOfSuccess(natural, roll.total, spec.difficulty) };
-}
-
-const rerollNote = () => `<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>`;
-
-/** Stat, Skill, Opposed and sheet Evade Checks: a new card with the new d20. */
-async function rerollCheck(spec, actor) {
-  const { roll, total, degree } = await rollAgain(spec);
-  let body = spec.body ?? "";
-  const flags = { aiReroll: { ...spec, used: true } };
-  if (spec.variant === "evade") {
-    if (degree === "majorFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeMajorFail")}</p>`;
-    else if (degree === "criticalFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeCriticalFail")}</p>`;
-    Object.assign(flags, { evadeDegree: degree, evadeTotal: total });
-  }
-  return createRollMessage({
-    rolls: [roll],
-    rollMeta: [{ label: spec.label, detail: game.i18n.localize("CARLRPG.Reroll.Detail"), breakdown: spec.breakdown }],
-    title: spec.title,
-    subtitle: withManaCostSubtitle(game.i18n.localize(CONFIG.CARLRPG.degreesOfSuccess[degree]), spec.chosenManaCost),
-    img: spec.img,
-    badge: degreeBadge(degree),
-    body: body + rerollNote(),
-    flags,
-    actor,
-  });
-}
-
-/** An Attack row's Evade: the new result replaces the old one on the row. */
-async function rerollRowEvade(spec, target) {
-  const { attack, row } = rowEvadeTarget(spec);
-  const { roll, degree } = await rollAgain(spec);
-  await recordRowEvade(attack, row, target, {
-    roll, breakdown: spec.breakdown, degree, debuffNote: spec.body ?? "", free: !!spec.free, reroll: spec,
-  });
+  const sources = rerollSources(message);
+  if (!sources.length) return;
+  const hint = esc(buttonHint(sources));
+  rollIcons(html)?.insertAdjacentHTML("beforeend", `<button type="button" class="carl-status-icon carl-ai-reroll-button" data-action="aiReroll"
+      data-tooltip="${hint}" aria-label="${hint}"><i class="fas fa-dice-d20" aria-hidden="true"></i></button>`);
 }
 
 /**
- * Spend 1 AI Favor and reroll this card's Check (the button's action).
- * @param {ChatMessage} message
- * @returns {Promise<boolean>} Whether the reroll happened.
+ * Pick one of several reroll sources (radio buttons, the first ticked).
+ * @param {object[]} sources
+ * @returns {Promise<object|null>}
  */
-export async function rerollMessage(message) {
+async function pickSource(sources) {
+  const options = sources.map((s, i) => `<label class="carl-reroll-source">
+      <input type="radio" name="source" value="${esc(s.key)}"${i === 0 ? " checked" : ""}> ${esc(sourceLabel(s))}
+    </label>`).join("");
+  const key = await foundry.applications.api.DialogV2.prompt({
+    window: { title: game.i18n.localize("CARLRPG.Reroll.PickTitle") },
+    classes: ["carl-reroll-pick"],
+    content: `<fieldset><legend>${esc(game.i18n.localize("CARLRPG.Reroll.PickLabel"))}</legend>${options}</fieldset>`,
+    ok: { label: game.i18n.localize("CARLRPG.Reroll.Button"), callback: (event, button) => button.form.elements.source.value },
+    rejectClose: false,
+  });
+  return sources.find((s) => s.key === key) ?? null;
+}
+
+/**
+ * Reroll this card's Check (the button's action): pick the source if
+ * there's a choice, roll the new d20 here (shown), and send it to the GM,
+ * who spends the source and revises the card.
+ * @param {ChatMessage} message
+ * @param {{source?: "favor"|"fuzzyDice"}} [options]  Preset source (tests,
+ *   macros) - skips the picker.
+ * @returns {Promise<boolean>} Whether the reroll went ahead.
+ */
+export async function rerollMessage(message, { source = null } = {}) {
   if (inFlight.has(message.id)) return false;
-  const spec = message.flags[SCOPE]?.aiReroll;
-  const actor = spec ? rerollActor(spec) : null;
-  if (!canReroll(message)) {
+  const flags = message.flags[SCOPE] ?? {};
+  const sources = rerollSources(message);
+  if (!sources.length) {
     // Cards aren't redrawn when AI Favor runs out, so an older card can
     // still show the button.
+    const actor = rerollActor(flags.aiReroll);
     if (actor?.isOwner && (actor.system.details?.aiFavor ?? 0) < 1) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Reroll.NoFavor", { name: actor.name }));
+    } else {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Closed"));
     }
     return false;
   }
 
-  // Everything the reroll needs, checked before any AI Favor is spent.
-  let target = null;
-  // A Scroll's cast (spec.castAs) rebuilds its Spell; anything else needs
-  // the Skill/Spell it rolled.
-  if (spec.kind === "attack" && !spec.castAs && !actor.items.get(spec.skillItemId)) {
+  // An Attack needs the Skill or Spell it rolled (a Scroll's cast rebuilds
+  // its Spell) - checked before anything is spent.
+  const spec = flags.aiReroll;
+  if (spec?.kind === "attack" && !spec.castAs && !rerollActor(spec)?.items.get(spec.skillItemId)) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
     return false;
-  }
-  if (spec.kind === "rowEvade") {
-    const { attack, row } = rowEvadeTarget(spec);
-    target = await resolveRowTarget(row);
-    if (!target) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
-      return false;
-    }
-    if (!attack.canUserModify(game.user, "update") && !game.users.activeGM) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
-      return false;
-    }
   }
 
   inFlight.add(message.id);
   try {
-    const favor = actor.system.details?.aiFavor ?? 0;
-    await actor.update({ "system.details.aiFavor": favor - 1 });
-    await updateCardMessage(message, { flags: { [SCOPE]: { aiRerolled: true, aiReroll: { used: true } } } });
-    if (spec.kind === "attack") await CarlDice.rerollAttack(message);
-    else if (spec.kind === "rowEvade") await rerollRowEvade(spec, target);
-    else await rerollCheck(spec, actor);
-    return true;
+    const chosen = source ? sources.find((s) => s.key === source)
+      : sources.length === 1 ? sources[0] : await pickSource(sources);
+    if (!chosen) return false;
+    const base = rerollBase(message);
+    const roll = await new Roll(rerollFormula(base)).evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(roll, game.user, true);
+    return await sendRevision(message, "reroll", {
+      source: chosen.key, natural: extractNaturalD20(roll), total: roll.total, roll: roll.toJSON(),
+    });
   } finally {
     inFlight.delete(message.id);
   }
@@ -194,6 +153,42 @@ export async function rerollMessage(message) {
 function onAiReroll(event, message) {
   event.preventDefault();
   return rerollMessage(message);
+}
+
+/**
+ * AI Reroll the Evade on an Attack card's row (its d20 icon, module/chat/
+ * attack-targets-card.mjs): the d20 again with the rest of the old total,
+ * sent to the GM, who spends the AI Favor and re-grades the row.
+ * @param {ChatMessage} message  The Attack card.
+ * @param {string} rowId
+ * @param {"free"|"evade"} which
+ * @returns {Promise<boolean>}
+ */
+export async function rerollRow(message, rowId, which) {
+  const key = `${message.id}:${rowId}:${which}`;
+  if (inFlight.has(key)) return false;
+  if (!rowRerollSources(message, rowId, which).length) {
+    ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Closed"));
+    return false;
+  }
+  // The row is written to the Attack card, normally the GM's: with no GM
+  // online, nothing is spent on a reroll that can't land.
+  if (!game.users.activeGM && !message.canUserModify(game.user, "update")) {
+    ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
+    return false;
+  }
+  const check = rowCheck(rowAt(message, rowId), which);
+  inFlight.add(key);
+  try {
+    const roll = await new Roll(rerollFormula({ formula: check.formula, natural: check.natural, total: check.base })).evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(roll, game.user, true);
+    return await sendRevision(message, "reroll", {
+      rowId, which, source: "favor", natural: extractNaturalD20(roll), total: roll.total, roll: roll.toJSON(),
+      breakdown: game.i18n.format("CARLRPG.Reaction.RerollBreakdown", { formula: roll.formula, total: roll.total }),
+    });
+  } finally {
+    inFlight.delete(key);
+  }
 }
 
 /** Registry entry for module/chat/chat-listener.mjs (drawn by decorateAiReroll). */

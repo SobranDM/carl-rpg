@@ -1,0 +1,47 @@
+{
+  "_id": "t9pgLiRgFY1UHY9K",
+  "name": "Hockey Pads",
+  "type": "item",
+  "folder": "Z9Kz5D40Rad0EAD7",
+  "img": "icons/equipment/leg/kneepads.webp",
+  "system": {
+    "description": "<p>Mundane armor worn on the legs: +1 Damage Resistance.</p>",
+    "changes": [
+      {
+        "id": "",
+        "label": "",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "1",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
+      }
+    ],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "slots": [
+      "legs"
+    ]
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!t9pgLiRgFY1UHY9K"
+}

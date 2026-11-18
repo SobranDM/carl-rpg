@@ -7,7 +7,9 @@
  * and pushes conditions identically - one code path, two entry points.
  */
 import { relayRemoveConditions } from "./chat-socket.mjs";
+import { noteUndo } from "./actions.mjs";
 import { conditionLabel } from "./debuff-effects.mjs";
+import { takesConditions } from "./actor-kinds.mjs";
 
 /**
  * Build one `system.conditions` entry from a debuff key, the same shape
@@ -21,14 +23,22 @@ import { conditionLabel } from "./debuff-effects.mjs";
  */
 export function buildConditionEntry(key, { stacks = 1, source = "", label = "" } = {}) {
   const preset = CONFIG.CARLRPG.debuffs[key];
-  const hasTimedDuration = preset?.durationType === "rounds" || preset?.durationType === "real-minutes";
-  return {
+  const entry = {
     key,
     label: label || (preset ? game.i18n.localize(preset.label) : ""),
     stacks,
-    remaining: hasTimedDuration ? (preset.durationValue ?? null) : null,
+    remaining: preset?.durationType === "rounds" ? (preset.durationValue ?? null) : null,
     source,
   };
+  // "Until the end of 10 minutes" (Shit-Faced), "...of 1 hour" (Sore as
+  // Shit), "until the end of the combat or 5 minutes" (Burned...): on the
+  // world clock, ended by the expiry sweep (module/helpers/expiry.mjs). A
+  // combat round moves the clock 10 seconds (p.62), so this holds in a
+  // fight too; "end of the combat" is processCombatEnd's (round-end.mjs).
+  if (preset?.durationType === "real-minutes" && preset.durationValue) {
+    entry.expiresAt = game.time.worldTime + preset.durationValue * 60;
+  }
+  return entry;
 }
 
 // "A 2nd Minor/Major Injury converts to the matching Long-Term version"
@@ -51,6 +61,9 @@ const INJURY_UPGRADES = {
  * @returns {Promise<Actor>}
  */
 export async function addConditionToActor(actor, key, options = {}) {
+  // Vehicles take no Debuffs (Object Immunities, p.584) - and have nowhere
+  // to put them.
+  if (!takesConditions(actor)) return actor;
   const result = await writeConditionToActor(actor, key, options);
 
   // "You're Staggered (see below) and take 1d10+F Poison damage" (Sepsis,
@@ -109,6 +122,9 @@ async function writeConditionToActor(actor, key, options) {
  */
 export async function removeConditionsById(actor, conditionIds) {
   if (!actor || !conditionIds?.length) return;
+  // Used up by an Action of this actor's own: back if it's undone.
+  const used = (actor.system.conditions ?? []).filter((c) => conditionIds.includes(c.id));
+  if (used.length) noteUndo(actor, { t: "conditions", uuid: actor.uuid, removed: foundry.utils.deepClone(used) });
   if (!actor.isOwner) {
     relayRemoveConditions(actor, conditionIds);
     return;

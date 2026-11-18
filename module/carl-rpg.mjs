@@ -1,6 +1,17 @@
 import { CarlRPGActor } from './documents/actor.mjs';
 import { CarlRPGItem } from './documents/item.mjs';
+import { CarlRPGTokenDocument } from './documents/token.mjs';
 import { CarlRPGCombat, CarlRPGCombatant } from './documents/combat.mjs';
+import { CarlRPGCombatTracker } from './apps/combat-tracker.mjs';
+import { reactionHandlers, registerPhaseSettings } from './helpers/combat-phases.mjs';
+import { registerReactionSocket, retireReaction, startReaction } from './chat/reaction-card.mjs';
+import { registerPartyCheckSocket } from './chat/party-check-card.mjs';
+import { finishResolution, lockResults } from './helpers/reaction-resolve.mjs';
+import { registerActionSocket } from './helpers/actions.mjs';
+import { registerActionUndo } from './helpers/action-undo.mjs';
+import { registerCheckRevisionSocket } from './chat/check-revision.mjs';
+import { registerDeclareHud } from './apps/declare-hud.mjs';
+import { registerDeclaredMarks } from './helpers/declared-marks.mjs';
 import { CarlRPGActorSheet } from './sheets/actor-sheet.mjs';
 import { CarlRPGItemSheet } from './sheets/item-sheet.mjs';
 import { CarlRPGLootBoxSheet } from './sheets/loot-box-sheet.mjs';
@@ -10,13 +21,22 @@ import * as models from './data/_module.mjs';
 import CarlDice from './dice/dice.mjs';
 import CarlToolbox from './apps/gm-toolbox.mjs';
 import CarlSpendStatPointsDialog from './apps/spend-stat-points-dialog.mjs';
+import CrawlerCreation from './apps/crawler-creation.mjs';
+import { registerChargenSettings } from './helpers/chargen.mjs';
 import { registerChatListener } from './chat/chat-listener.mjs';
 import { registerChatSocket } from './helpers/chat-socket.mjs';
 import { registerLootBoxSocket } from './helpers/loot-box.mjs';
+import { registerVehicleHooks, registerVehicleSocket } from './helpers/vehicles.mjs';
+import { rollDrivingCheck } from './helpers/vehicle-driving.mjs';
+import { rollRam } from './helpers/vehicle-ram.mjs';
 import { registerExpirySweep } from './helpers/expiry.mjs';
+import { registerCooldowns } from './helpers/cooldowns.mjs';
+import { commandPet } from './helpers/pet-command.mjs';
 import { bakeItemGrants } from './helpers/race-class-grants.mjs';
 import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
 import { openRulebookImporter, RulebookImportMenu } from './pdf-import/import-dialog.mjs';
+import { migrateWorld, registerMigrationSetting } from './helpers/migration.mjs';
+import { changeLineHtml, debuffLineHtml } from './helpers/sheet-rows.mjs';
 
 Hooks.once('init', function () {
   game.carlrpg = {
@@ -25,10 +45,19 @@ Hooks.once('init', function () {
     CarlDice,
     CarlToolbox,
     CarlSpendStatPointsDialog,
+    CrawlerCreation,
     rollItemMacro,
     importCrawlerForgeCrawler,
     openRulebookImporter,
+    commandPet,
+    rollDrivingCheck,
+    rollRam,
   };
+
+  // Which one-time data migrations this world has had (helpers/migration.mjs).
+  registerMigrationSetting();
+  // Character creation: which Stat and background methods, animal crawlers.
+  registerChargenSettings();
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
   // gameTimer tracks REAL wall-clock time (Date.now()), unrelated to
@@ -57,9 +86,13 @@ Hooks.once('init', function () {
     // slot count until some unrelated update forced a fresh
     // prepareDerivedData pass. Mobs are almost always unlinked tokens
     // (absent from game.actors entirely), hence the separate scene sweep.
+    // reset(), not prepareData(): it starts again from the stored data. A
+    // second prepareData() pass starts from the last one's derived values,
+    // so an HB clamped by a lower Floor stayed clamped when the Floor went
+    // back up, and the next write saved the lost slot.
     onChange: () => {
       for (const actor of game.actors) {
-        actor.prepareData();
+        actor.reset();
         if (actor.sheet?.rendered) actor.sheet.render();
       }
       for (const scene of game.scenes) {
@@ -67,7 +100,7 @@ Hooks.once('init', function () {
           if (tokenDoc.actorLink) continue;
           const actor = tokenDoc.actor;
           if (!actor) continue;
-          actor.prepareData();
+          actor.reset();
           if (actor.sheet?.rendered) actor.sheet.render();
         }
       }
@@ -123,16 +156,38 @@ Hooks.once('init', function () {
   // Buffs - module/helpers/expiry.mjs) run out in combat as well as out.
   CONFIG.time.roundTime = 10;
   registerExpirySweep();
+  // Cooldowns (module/helpers/cooldowns.mjs): the "New scene" counter, the
+  // sheets' cooldown chip, and redrawing the chips as time moves.
+  registerCooldowns();
+
+  // Command Pet results (module/helpers/pet-command.mjs) as token status
+  // icons - shown on the token and in the combat tracker, offered on a
+  // Pet's token HUD only. Set by the Pet's command state, not by hand.
+  for (const def of Object.values(CONFIG.CARLRPG.petCommandStates)) {
+    CONFIG.statusEffects.push({ id: def.status, name: def.label, img: def.img, hud: { actorTypes: ["pet"] } });
+  }
 
   // End-of-round/end-of-combat Debuff automation (module/helpers/round-end.mjs).
   CONFIG.Combat.documentClass = CarlRPGCombat;
   CONFIG.Combatant.documentClass = CarlRPGCombatant;
+  // The phased PvE round (module/helpers/combat-phases.mjs): its world
+  // setting, and the tracker that shows and advances it.
+  registerPhaseSettings();
+  CONFIG.ui.combat = CarlRPGCombatTracker;
+  // The Reaction card, posted out of Declaration and resolved by Lock Results.
+  Object.assign(reactionHandlers, { startReaction, lockResults, finishResolution, retireReaction });
+  // Undoing a spent Action (helpers/action-undo.mjs).
+  registerActionUndo();
 
   CONFIG.Actor.documentClass = CarlRPGActor;
+  // Token bars on HB show hb.effectiveMax (documents/token.mjs).
+  CONFIG.Token.documentClass = CarlRPGTokenDocument;
   Object.assign(CONFIG.Actor.dataModels, {
     character: models.CarlRPGCharacter,
     mob: models.CarlRPGMob,
     lootBox: models.CarlRPGLootBox,
+    pet: models.CarlRPGPet,
+    vehicle: models.CarlRPGVehicle,
   });
 
   CONFIG.Item.documentClass = CarlRPGItem;
@@ -144,10 +199,11 @@ Hooks.once('init', function () {
     spell: models.CarlRPGSpell,
     class: models.CarlRPGClass,
     race: models.CarlRPGRace,
+    mobAttack: models.CarlRPGMobAttack,
   });
 
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Actor, 'carl-rpg', CarlRPGActorSheet, {
-    types: ['character', 'mob'],
+    types: ['character', 'mob', 'pet', 'vehicle'],
     makeDefault: true,
     label: 'CARLRPG.SheetLabels.Actor',
   });
@@ -157,7 +213,7 @@ Hooks.once('init', function () {
     label: 'CARLRPG.SheetLabels.LootBox',
   });
   foundry.applications.apps.DocumentSheetConfig.registerSheet(Item, 'carl-rpg', CarlRPGItemSheet, {
-    types: ['item', 'feature', 'skill', 'damageEffect', 'spell', 'class', 'race'],
+    types: ['item', 'feature', 'skill', 'damageEffect', 'spell', 'class', 'race', 'mobAttack'],
     makeDefault: true,
     label: 'CARLRPG.SheetLabels.Item',
   });
@@ -299,6 +355,11 @@ Handlebars.registerHelper('debuffEffectHint', function (debuffs, key, isMob) {
 // rather than erroring; the actor's stored `mode` value itself is untouched
 // until this sheet is next submitted (submitOnChange posts the whole form),
 // at which point it self-heals to whatever the dropdown was showing (Add).
+// The item sheets' compact Bonus and Debuff rows (module/helpers/sheet-rows.mjs;
+// docs/skill-item-sheets.md): each row's summary line, from the entry.
+Handlebars.registerHelper('changeLine', (change) => new Handlebars.SafeString(changeLineHtml(change)));
+Handlebars.registerHelper('debuffLine', (te) => new Handlebars.SafeString(debuffLineHtml(te)));
+
 Handlebars.registerHelper('changeModeChoices', function (allModes, modesByTarget, targetType, itemType) {
   if (targetType === "stat" && (itemType === "class" || itemType === "race")) return allModes;
   const allowed = modesByTarget?.[targetType];
@@ -319,6 +380,22 @@ Hooks.once('ready', function () {
   // Players taking items out of a Loot Box they only observe (see
   // module/helpers/loot-box.mjs).
   registerLootBoxSocket();
+  registerVehicleSocket();
+  registerVehicleHooks();
+  // Mob Action Declaration (docs/combat-phases.md): the GM's Declare HUD and
+  // the check marks on Mob tokens that have declared.
+  registerDeclareHud();
+  registerDeclaredMarks();
+  // Players' Reaction-card actions, applied on the active GM's client.
+  registerReactionSocket();
+  // Players' Party Skill Check rolls, applied on the active GM's client.
+  registerPartyCheckSocket();
+  // Combat Actions spent and undone by players, recorded by the active GM
+  // (helpers/actions.mjs).
+  registerActionSocket();
+  // Intervenes and AI Favor rerolls revising a Check card, applied on the
+  // active GM's client (chat/check-revision.mjs).
+  registerCheckRevisionSocket();
 
   Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
 
@@ -342,6 +419,10 @@ Hooks.once('ready', function () {
     // same actor's same Stat would otherwise race (each reading the same
     // stale base before either write lands, so one delta silently loses).
     (async () => {
+      // One-time data fixes for a world from an older version - the active
+      // GM only, once per world, before anything else writes
+      // (helpers/migration.mjs).
+      await migrateWorld().catch((err) => console.error('carl-rpg | World migration failed', err));
       for (const actor of game.actors) {
         if (actor.type !== 'character') continue;
         for (const item of actor.items) {

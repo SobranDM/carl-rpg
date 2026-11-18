@@ -13,6 +13,10 @@
   <fieldset>
     <legend>{{localize "CARLRPG.PdfImport.Maps"}}</legend>
     <p class="carl-dialog-hint">{{localize "CARLRPG.PdfImport.MapsHint"}}</p>
+    <div class="carl-pdf-import-map-select">
+      <button type="button" data-map-select="all"><i class="fa-solid fa-check-double"></i> {{localize "CARLRPG.PdfImport.MapsAll"}}</button>
+      <button type="button" data-map-select="none"><i class="fa-regular fa-square"></i> {{localize "CARLRPG.PdfImport.MapsNone"}}</button>
+    </div>
     <div class="carl-pdf-import-maps">
       {{#each maps as |map|}}
       <label class="carl-pdf-import-map">

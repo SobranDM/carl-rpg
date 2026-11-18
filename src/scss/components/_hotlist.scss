@@ -1,0 +1,241 @@
+// A Character's Combat tab (abilities.hbs): the Hotlist (hotlist.hbs) and
+// the Attacks list; the Hotlist slot picker; and the Inventory's Slot
+// column (items-list.hbs).
+@mixin styles {
+  .carl-hotlist {
+    margin-bottom: 6px;
+    border-width: 2px;
+
+    // Pinned (the core defaults) so --carl-legend-border-offset
+    // (_abilities.scss) holds; the height so the icon can't stretch it.
+    legend {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: calc(var(--font-size-14) * 1.25);
+      padding-block: 0;
+      font-size: var(--font-size-14);
+      line-height: 1.25;
+    }
+  }
+
+  // Rows are at least 31px (below); on the Combat tab they grow to fill the
+  // Hotlist down to the Level Grind box's bottom (_abilities.scss).
+  .carl-hotlist-rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .carl-hotlist-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    // A 28px slot + 2px padding + 1px border (border-box).
+    min-height: 31px;
+    padding: 1px 4px;
+    font-size: 16px;
+    border-bottom: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.1));
+
+    // An unfilled slot: a dashed outline round its pick button, solid on
+    // hover like a filled slot's.
+    &.empty .carl-hotlist-pick {
+      border: 1px dashed var(--carl-border-soft);
+
+      .carl-hint {
+        font-size: 13px;
+      }
+
+      &:hover,
+      &:focus-visible {
+        border-style: solid;
+      }
+    }
+
+    img {
+      flex: 0 0 22px;
+      border: none;
+    }
+
+    .carl-hotlist-number {
+      flex: 0 0 1.5em;
+      text-align: right;
+      opacity: 0.6;
+    }
+
+    .carl-hotlist-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .carl-hotlist-detail {
+      flex: 0 0 auto;
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    .carl-hotlist-inhand {
+      padding: 0 4px;
+      border: 1px solid var(--carl-accent);
+      border-radius: 3px;
+    }
+
+    // The slot itself is the control: click an empty one to pick, a filled
+    // one to use it. Styled as a row, not a button.
+    .carl-hotlist-pick,
+    .carl-hotlist-use {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: auto;
+      height: auto;
+      min-height: 28px;
+      margin: 0;
+      padding: 1px 4px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      background: none;
+      box-shadow: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      // A fixed line-height and no margins on the contents, so the text sits
+      // centered in the slot - the empty slot's .carl-hint would otherwise
+      // bring its 2px/6px margins and push the text up. In px, so a slot is
+      // 24px + 2px padding + 2px border = 28px whatever it holds.
+      line-height: 24px;
+
+      > * {
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+    }
+
+    button.carl-hotlist-pick,
+    button.carl-hotlist-use {
+      cursor: pointer;
+      // Core gives every button "transition: 0.5s", which made the hover
+      // outline fade in noticeably late.
+      transition: none;
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--carl-accent);
+        background: rgba(0, 0, 0, 0.05);
+      }
+    }
+
+    .carl-hotlist-badge {
+      flex: 0 0 auto;
+      min-width: 4em;
+      padding: 0 6px;
+      border: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.25));
+      border-radius: 3px;
+      font-size: 13px;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .carl-slot-clear {
+      flex: 0 0 auto;
+    }
+
+    // A Spell in the Hotlist is what's castable in a fight.
+    &.kind-spell .carl-hotlist-badge {
+      border-color: var(--carl-accent);
+    }
+  }
+
+  // The slot picker (templates/dialog/hotlist-pick.hbs).
+  .carl-hotlist-pick-body {
+    max-height: 60vh;
+    overflow-y: auto;
+
+    .carl-hotlist-pick-filter {
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .carl-hotlist-pick-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin: 0;
+
+      &[hidden] {
+        display: none;
+      }
+    }
+
+    .carl-hotlist-pick-entry {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 4px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      cursor: pointer;
+
+      &[hidden] {
+        display: none;
+      }
+
+      // The radio stays for the keyboard (arrows move, Add picks) but isn't
+      // shown: the row itself shows the hover, focus and pick.
+      input[type="radio"] {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.08);
+      }
+
+      &:has(input:focus-visible) {
+        border-color: var(--carl-accent);
+      }
+
+      &:has(input:checked) {
+        background: rgba(0, 0, 0, 0.12);
+        border-color: var(--carl-accent);
+      }
+
+      img {
+        flex: 0 0 24px;
+        border: none;
+      }
+
+      .carl-hotlist-pick-name {
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .carl-hotlist-pick-detail {
+        flex: 0 0 auto;
+        font-size: var(--font-size-12);
+        opacity: 0.8;
+      }
+    }
+  }
+
+  .items-list .item.carl-worn h4 {
+    font-weight: bold;
+  }
+
+  .carl-hotlist-pin .fa-star.fas {
+    color: var(--carl-gold);
+  }
+}

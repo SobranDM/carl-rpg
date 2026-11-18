@@ -21,8 +21,12 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
     );
 
     // Classes that DON'T pay the +1 Mana surcharge for casting this Spell.
+    // Blank entries are allowed in the source - the sheet's Add makes an
+    // empty row to type into, and a cleared row must still save - and are
+    // dropped from the prepared list (prepareBaseData), which is what
+    // everything else reads.
     schema.favoredClasses = new fields.ArrayField(
-      new fields.StringField({ required: true, blank: false }),
+      new fields.StringField({ required: true, blank: true }),
       { required: false, initial: [] },
     );
 
@@ -44,9 +48,11 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
     // Ongoing/toggled spell effects (docs/known-gaps.md 1.4) - e.g. Shield,
     // Bang Bro: cast once to start a timed effect, rather than a one-shot
     // roll. isToggled is content-authored (true only for spells that work this
-    // way); active is player/GM-toggled runtime state, off by default. No
-    // in-game timer is modeled - a person turns it off manually when the
-    // fiction says the duration elapsed (see CarlDice.rollToggleSpell).
+    // way); active is player/GM-toggled runtime state, off by default. When
+    // its `duration` text is a time, it switches itself off when that's up
+    // (module/helpers/spell-timers.mjs - the timer sits beside `active` in
+    // flags.carl-rpg.spellTimer); otherwise a person turns it off by hand
+    // (see CarlDice.rollToggleSpell).
     schema.isToggled = new fields.BooleanField({ required: true, initial: false });
     schema.active = new fields.BooleanField({ required: true, initial: false });
 
@@ -54,6 +60,16 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
     // upgrades detail drawer open (toggled by clicking the Spell's name)?
     schema.detailsExpanded = new fields.BooleanField({ required: true, initial: false });
 
+    // Persisted sheet UI state: is this Spell's nested Damage Effects drawer
+    // open (spells-section-body.hbs)? Same as skill.mjs's.
+    schema.damageEffectsExpanded = new fields.BooleanField({ required: true, initial: false });
+
     return schema;
+  }
+
+  /** A blank Favored Class row (see the schema) favours no one. */
+  prepareBaseData() {
+    super.prepareBaseData();
+    this.favoredClasses = (this.favoredClasses ?? []).filter((name) => name);
   }
 }

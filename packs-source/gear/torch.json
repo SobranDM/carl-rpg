@@ -1,0 +1,35 @@
+{
+  "_id": "Tqrr1xlzwN6Z8QNl",
+  "name": "Torch",
+  "type": "item",
+  "folder": "XNAa1jnZvRWmGmEu",
+  "img": "icons/sundries/lights/torch-brown.webp",
+  "system": {
+    "description": "<p>A torch: 20 feet of bright light and 20 feet of dim light past that. Held in one hand.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "slots": [
+      "held"
+    ]
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Tqrr1xlzwN6Z8QNl"
+}

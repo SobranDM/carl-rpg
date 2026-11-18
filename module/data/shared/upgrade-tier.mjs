@@ -58,6 +58,24 @@ export function defineTargetEffectsField(options = {}) {
 }
 
 /**
+ * A gear item's On-hit Debuffs (module/data/item.mjs; docs/skill-item-
+ * sheets.md): the same entries, plus "Only with" - the Attack Skills they
+ * come with (blank: any Attack the holder or wearer makes) - and "With any
+ * Hand-to-Hand Attack" (handToHandOnly: an Attack whose Skill has the
+ * Hand-to-Hand box; with Skills named too, either fits). Read by
+ * modifiers.mjs's collectItemTargetEffects / attackTargetEffects.
+ * @returns {foundry.data.fields.ArrayField}
+ */
+export function defineGearTargetEffectsField() {
+  const fields = foundry.data.fields;
+  return new fields.ArrayField(new fields.SchemaField({
+    ...defineTargetEffectSchema(),
+    skills: new fields.ArrayField(new fields.StringField({ required: true, blank: true }), { required: true, initial: [] }),
+    handToHandOnly: new fields.BooleanField({ required: true, initial: false }),
+  }), { required: false, initial: [] });
+}
+
+/**
  * Shared schema for one Rank-gated "Upgrade" tier (Rank 5 / 10 / 15), used by
  * Skills, Spells, and Damage Effects - the three item types that follow the
  * book's "gains additional bonuses at Ranks 5, 10, and 15" pattern.
@@ -104,6 +122,19 @@ export function defineUpgradeTierSchema() {
      */
     healMend: new fields.BooleanField({ required: true, initial: false }),
     /**
+     * This tier heals every targeted token instead of one (Heal Others Rank
+     * 15: "Instead of a single target, all party members within a 20ft
+     * Burst radius are healed" - the caster targets them). Each still has
+     * to be one the Spell's "Heals" allows (module/helpers/heal-targets.mjs).
+     */
+    healAllTargets: new fields.BooleanField({ required: true, initial: false }),
+    /**
+     * From this Rank the Attack's damage is Armor-Piercing: it ignores DR,
+     * except DR from gear marked Anti-Piercing (p.95, p.225; Dagger Rank 5,
+     * Javelin Rank 10). modifiers.mjs attackIsArmorPiercing.
+     */
+    armorPiercing: new fields.BooleanField({ required: true, initial: false }),
+    /**
      * Attack-capable Skills/Spells/Damage Effects only (see docs/known-gaps.md
      * 1.3/1.7). Once this tier is unlocked, it overrides the item's own
      * baseDamage.damageType for every damage term that doesn't carry its own
@@ -133,6 +164,24 @@ export function defineUpgradeTierSchema() {
      * own base shieldSlots if no unlocked tier overrides it.
      */
     shieldSlots: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
+    /**
+     * Skills that drive a vehicle (a vehicle's system.driveSkill names one -
+     * Driving, Chopper Pilot or homebrew; p.72-73, p.187, p.190). Once
+     * unlocked at the driver's live Rank, while they drive a vehicle with
+     * this Skill (module/helpers/vehicle-state.mjs driverPerks):
+     *  - vehicleMove: +ft to its Move ("Your vehicle has +5ft Move"; summed
+     *    over the unlocked tiers);
+     *  - vehicleAttackOk: no driving Disadvantage on Attacks ("You no longer
+     *    suffer Disadvantage when attacking while Driving");
+     *  - vehicleEvadeAdvantage: Advantage on the driver's Evade ("Roll with
+     *    Advantage to Evade Attacks against your vehicle");
+     *  - vehicleStuntAdvantage: the crazy-stunt Advantage, offered unticked
+     *    on Checks with this Skill.
+     */
+    vehicleMove: new fields.NumberField({ ...requiredInteger, initial: 0 }),
+    vehicleAttackOk: new fields.BooleanField({ required: true, initial: false }),
+    vehicleEvadeAdvantage: new fields.BooleanField({ required: true, initial: false }),
+    vehicleStuntAdvantage: new fields.BooleanField({ required: true, initial: false }),
   };
 }
 

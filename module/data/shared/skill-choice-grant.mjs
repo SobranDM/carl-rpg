@@ -17,7 +17,8 @@ export function defineSkillChoiceGrantSchema() {
     }),
     /** Free-text hint from the book, e.g. "crafting", "Weapon", "Reach Weapon". Not a closed category list. */
     category: new fields.StringField({ required: false, blank: true, initial: "" }),
-    amount: new fields.NumberField({ required: true, integer: true, initial: 1, min: 1 }),
+    // Never null: a cleared input keeps the stored Amount (keepStoredForBlankNumbers).
+    amount: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 1, min: 1 }),
   };
 }
 

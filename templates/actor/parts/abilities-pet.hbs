@@ -1,0 +1,63 @@
+{{!-- Pet's Abilities tab (Pets, p.228-232, module/data/pet.mjs) - the play
+      surface: rollable Stats, the numbers you look up (all read-only - their
+      bases are set on the Details tab), what its Role and Special Abilities
+      do, and its Skills / Spells, whose Ranks are always the Floor (no
+      use-marks or Advancement, see data/ranked-item-base.mjs). --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="abilities">
+  <div class="carl-abilities-layout">
+    {{> "systems/carl-rpg/templates/actor/parts/stats-column.hbs"}}
+
+    <div class="carl-abilities-main">
+      <div class="carl-mob-statblock-row carl-pet-statblock-row">
+        <div class="carl-mob-statblock-field">
+          <label class="resource-label">{{localize "CARLRPG.Roll.Evade"}}</label>
+          <span class="carl-stat-value" title="{{localize 'CARLRPG.Pet.EvadeHint'}}">{{system.evadeBase}}+F</span>
+        </div>
+        <div class="carl-mob-statblock-field">
+          <label class="resource-label">{{localize "CARLRPG.Actor.Move"}}</label>
+          <span class="carl-stat-value">{{system.moveEffective}}</span>
+        </div>
+        <div class="carl-mob-statblock-field">
+          <label class="resource-label">{{localize "CARLRPG.Actor.Step"}}</label>
+          <span class="carl-stat-value">{{system.step}}</span>
+        </div>
+        {{#if system.altMoveValue}}
+        <div class="carl-mob-statblock-field">
+          <label class="resource-label">{{localize (lookup config.petAltMoves system.specialAbilities.altMove)}}</label>
+          <span class="carl-stat-value">{{system.altMoveValue}}</span>
+        </div>
+        {{/if}}
+        <div class="carl-mob-statblock-field">
+          <label class="resource-label">{{localize "CARLRPG.Actor.Dr"}}</label>
+          <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.DrEditHint'}}">{{system.drEffective}}</span>
+        </div>
+        <div class="carl-mob-statblock-field">
+          <label class="resource-label">{{localize "CARLRPG.Ranked.Rank"}}</label>
+          <span class="carl-stat-value" title="{{localize 'CARLRPG.Pet.RankIsFloorHint'}}">{{system.rankFloor}}</span>
+        </div>
+      </div>
+
+      {{!-- What it can do, for reference in play. Chosen on the Details tab. --}}
+      {{#if pet.traits.length}}
+      <ul class="carl-pet-traits">
+        {{#each pet.traits as |trait|}}
+        <li><strong>{{trait.label}}</strong>{{#if trait.text}}: {{trait.text}}{{/if}}</li>
+        {{/each}}
+      </ul>
+      {{/if}}
+
+      {{#> carlCollapsibleSection sectionId="skills" expanded=system.uiState.skillsExpanded
+           label=(localize "CARLRPG.Tab.Skills") toggleScope="actor" togglePath="system.uiState.skillsExpanded"
+           showLockToggle=true locked=system.uiState.itemsLocked}}
+        {{> "systems/carl-rpg/templates/actor/parts/skills-section-body.hbs"
+            skills=skills unmatchedDamageEffects=unmatchedDamageEffects config=config locked=system.uiState.itemsLocked}}
+      {{/carlCollapsibleSection}}
+
+      {{#> carlCollapsibleSection sectionId="spells" expanded=system.uiState.spellsExpanded
+           label=(localize "CARLRPG.Tab.Spells") toggleScope="actor" togglePath="system.uiState.spellsExpanded"
+           showMana=true manaValue=system.mana.value manaMax=system.mana.max}}
+        {{> "systems/carl-rpg/templates/actor/parts/spells-section-body.hbs" spells=spells locked=system.uiState.itemsLocked}}
+      {{/carlCollapsibleSection}}
+    </div>
+  </div>
+</section>

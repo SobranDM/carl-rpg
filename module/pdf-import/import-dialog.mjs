@@ -7,12 +7,15 @@
 
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { importBook } from "./importer.mjs";
-import { canvasToBlob, findMapImage, renderRegion } from "./maps.mjs";
-import { loadPdfDocument } from "./pdf-loader.mjs";
-import { bookTitleFromFilename, parseBook, readPages } from "./scan.mjs";
+import { canvasToBlob, mapImageCanvas } from "./maps.mjs";
+import { closePdfDocument, loadPdfDocument } from "./pdf-loader.mjs";
+import { checkImageQuality, LowQualityPdfError } from "./quality.mjs";
+import { identifyPdf, UnknownBookError } from "./books.mjs";
+import { parseBook, readPages } from "./scan.mjs";
 
 const KINDS = ["gear", "spells", "mobs", "achievements"];
-const THUMB_WIDTH = 220;
+// A thumbnail's longest side, in pixels.
+const THUMB_SIZE = 320;
 
 async function pickFile() {
   return showCarlDialog({
@@ -31,9 +34,15 @@ async function pickFile() {
   });
 }
 
-/** Find each candidate page's map image and render a thumbnail of it. */
-async function resolveMaps(pdfDoc, pdfjs, candidates, progress) {
-  const maps = [];
+/**
+ * Find each candidate page's map image and make a thumbnail of it - of the
+ * embedded image the import will save (maps.mjs), not of the page.
+ * Each map goes into `maps` as soon as its thumbnail's blob: URL exists, so
+ * a caller holding that array can revoke them even if a later page throws.
+ * @param {object[]} [maps]  Where to put them.
+ * @returns {Promise<object[]>}  `maps`.
+ */
+export async function resolveMaps(pdfDoc, pdfjs, candidates, progress, maps = []) {
   for (const [n, candidate] of candidates.entries()) {
     progress.update({
       pct: n / candidates.length,
@@ -43,19 +52,16 @@ async function resolveMaps(pdfDoc, pdfjs, candidates, progress) {
       }),
     });
     const page = await pdfDoc.getPage(candidate.page);
-    const image = await findMapImage(page, pdfjs.OPS);
-    if (!image) continue;
-    const blob = await canvasToBlob(
-      await renderRegion(page, image.rect, { width: THUMB_WIDTH }),
-      "image/jpeg",
-      0.8,
-    );
-    maps.push({ ...candidate, image, thumb: URL.createObjectURL(blob) });
+    const thumb = await mapImageCanvas(page, pdfjs.OPS, { maxPixels: THUMB_SIZE });
+    page.cleanup();
+    if (!thumb) continue;
+    const blob = await canvasToBlob(thumb, "image/jpeg", 0.8);
+    maps.push({ ...candidate, thumb: URL.createObjectURL(blob) });
   }
   return maps;
 }
 
-async function chooseContent(title, found, maps) {
+export async function chooseContent(title, found, maps) {
   const kinds = KINDS.map((key) => ({
     key,
     label: game.i18n.localize(`CARLRPG.PdfImport.Kind.${key}`),
@@ -66,6 +72,18 @@ async function chooseContent(title, found, maps) {
     template: "systems/carl-rpg/templates/dialog/pdf-import-results.hbs",
     context: { title, kinds, maps },
     position: { width: 720 },
+    classes: ["carl-pdf-import-dialog"],
+    // The map thumbnails are blob: URLs, which Foundry's HTML cleaning strips.
+    trusted: true,
+    // Select all / no maps at once (e.g. a re-import that shouldn't make the
+    // map Scenes again).
+    onRender: (event, dialog) => {
+      const root = dialog?.element ?? event?.target?.element;
+      root?.querySelectorAll("[data-map-select]").forEach((button) => button.addEventListener("click", () => {
+        const on = button.dataset.mapSelect === "all";
+        for (const box of root.querySelectorAll('.carl-pdf-import-map input[type="checkbox"]')) box.checked = on;
+      }));
+    },
     buttons: [
       {
         action: "import",
@@ -90,9 +108,13 @@ function summarize(results) {
         created: r.created,
         updated: r.updated,
       });
-      return r.skipped?.length
-        ? `${line} ${game.i18n.format("CARLRPG.PdfImport.SummarySkipped", { skipped: r.skipped.length })}`
-        : line;
+      const parts = [line];
+      // Written as a compendium's copy (a gear bonus's matched Skill isn't one).
+      const { spells = 0, consumables = 0, gear = 0 } = r.matched ?? {};
+      const copies = spells + consumables + gear;
+      if (copies) parts.push(game.i18n.format("CARLRPG.PdfImport.SummaryCopied", { copied: copies }));
+      if (r.skipped?.length) parts.push(game.i18n.format("CARLRPG.PdfImport.SummarySkipped", { skipped: r.skipped.length }));
+      return parts.join(" ");
     })
     .join(", ");
 }
@@ -116,13 +138,25 @@ export async function openRulebookImporter() {
   const file = await pickFile();
   if (!file) return;
 
-  const title = bookTitleFromFilename(file.name);
-  let progress = ui.notifications.info(game.i18n.format("CARLRPG.PdfImport.Reading", { title }), {
+  // Named by its title page once that's read (books.mjs), never by the file name.
+  let title = "";
+  let progress = ui.notifications.info(game.i18n.localize("CARLRPG.PdfImport.Identifying"), {
     progress: true,
   });
-  let maps = [];
+  // Filled by resolveMaps as it goes, so the finally revokes every thumbnail.
+  const maps = [];
+  let pdfDoc = null;
   try {
-    const { pdfjs, pdfDoc } = await loadPdfDocument(file);
+    const loaded = await loadPdfDocument(file);
+    const pdfjs = loaded.pdfjs;
+    pdfDoc = loaded.pdfDoc;
+    // Only the Core Rulebook and the Toolkit are supported (books.mjs).
+    const book = await identifyPdf(pdfDoc);
+    title = game.i18n.localize(book.title);
+    // Only the full-quality edition is supported (quality.mjs).
+    progress.update({ message: game.i18n.format("CARLRPG.PdfImport.CheckingQuality", { title }) });
+    const quality = await checkImageQuality(pdfDoc, pdfjs.OPS);
+    if (quality.lowQuality) throw new LowQualityPdfError(quality.ppi);
     const pages = await readPages(pdfDoc, {
       onProgress: (done, total) =>
         progress.update({
@@ -131,7 +165,7 @@ export async function openRulebookImporter() {
         }),
     });
     const found = parseBook(pages);
-    maps = await resolveMaps(pdfDoc, pdfjs, found.maps, progress);
+    await resolveMaps(pdfDoc, pdfjs, found.maps, progress, maps);
     progress.update({ pct: 1 });
 
     const choice = await chooseContent(title, found, maps);
@@ -144,6 +178,7 @@ export async function openRulebookImporter() {
       progress: true,
     });
     const results = await importBook({
+      book: book.id,
       title,
       found,
       kinds,
@@ -158,11 +193,24 @@ export async function openRulebookImporter() {
     const skipped = skippedNotice(results);
     if (skipped) ui.notifications.warn(skipped, { permanent: true });
   } catch (err) {
+    if (err instanceof UnknownBookError) {
+      ui.notifications.error("CARLRPG.PdfImport.UnknownBook", { localize: true, permanent: true });
+      return;
+    }
+    if (err instanceof LowQualityPdfError) {
+      ui.notifications.error(
+        game.i18n.format("CARLRPG.PdfImport.LowQuality", { title, ppi: Math.round(err.ppi) }),
+        { permanent: true },
+      );
+      return;
+    }
     console.error("CarlRPG | Rulebook PDF import failed", err);
     ui.notifications.error(game.i18n.format("CARLRPG.PdfImport.Failed", { error: err.message }));
   } finally {
     progress?.update?.({ pct: 1 });
     for (const map of maps) URL.revokeObjectURL(map.thumb);
+    // Each document has its own pdf.js worker holding the whole book: end it.
+    closePdfDocument(pdfDoc);
   }
 }
 

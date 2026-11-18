@@ -89,7 +89,7 @@ export default function register(quench) {
           const clumsy = await createTestMob("clumsy", { system: { stats: { dex: { value: 3 } } } }); // mod 2 -> 13
           try {
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Punch", system: { category: "attack", rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
             });
             // d20 pinned to 10 + Rank 3 = 13.
             const message = await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
@@ -112,7 +112,7 @@ export default function register(quench) {
           try {
             await addConditionToActor(held, "held");
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Punch", system: { category: "attack", rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
             });
             const message = await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
               withFakeTargets([{ actor: free }, { actor: held }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
@@ -129,7 +129,7 @@ export default function register(quench) {
           const nimble = await createTestMob("nimble", { system: { stats: { dex: { value: 10 } } } }); // Evade 15
           try {
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Punch", system: { category: "attack", rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
             });
             const message = await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
               withFakeTargets([{ actor: nimble }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
@@ -147,7 +147,7 @@ export default function register(quench) {
           const clumsy = await createTestMob("clumsy", { system: { stats: { dex: { value: 3 } } } });
           try {
             const skill = await createTestItem(actor, "skill", "Breath", {
-              name: "Breath", system: { category: "attack", rank: 3, governingStat: "", range: "15ft Cone", baseDamage: { dice: "1d6" } },
+              name: "Breath", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", range: "15ft Cone", baseDamage: { dice: "1d6" } },
             });
             const message = await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
               withFakeTargets([{ actor: clumsy }, { actor: nimble }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));

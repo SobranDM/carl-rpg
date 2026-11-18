@@ -1,0 +1,58 @@
+{{!-- A Mob's Attacks (mobAttack items - module/data/mob-attack.mjs;
+      docs/mob-sheet.md), drawn like the combat cards' rows: a kind chip
+      (Melee, Ranged, Area), the name with its range, damage type and the
+      Debuffs it gives under it, the to-hit and damage on the right, then
+      Attack (the crosshairs: declare it in Declaration, post it otherwise -
+      Mobs never roll, p.267), edit and delete. The printed effect opens
+      under the row. Context: mobAttacks (actor-sheet.mjs #prepareMobAttacks). --}}
+<div class="carl-mob-attacks">
+  <header class="carl-mob-attacks-head">
+    <span class="carl-mob-attacks-title">{{localize "CARLRPG.MobAttack.Section"}}</span>
+    <span class="carl-mob-attacks-count">{{mobAttackSummary}}</span>
+  </header>
+  <ol class="carl-mob-attack-list">
+    {{#each mobAttacks as |attack|}}
+    <li class="item carl-mob-attack" data-item-id="{{attack.id}}">
+      <details>
+        <summary class="carl-mob-attack-line">
+          <span class="carl-mob-attack-kind" data-kind="{{attack.kind}}">
+            <i class="fas {{attack.kindIcon}}" aria-hidden="true"></i>{{localize attack.kindLabel}}
+          </span>
+          <span class="carl-mob-attack-what">
+            <strong>{{attack.name}}</strong>
+            <span class="carl-mob-attack-notes">
+              {{#each attack.notes as |note|}}<span>{{note}}</span>{{/each}}
+              {{#each attack.effects as |effect|}}
+              <span class="carl-mob-attack-pill">{{effect.label}} <em>· {{localize effect.when}}</em></span>
+              {{/each}}
+            </span>
+          </span>
+          <span class="carl-mob-attack-num" {{#if (ne attack.toHitValue null)}}data-tooltip="{{localize 'CARLRPG.MobAttack.ToHitAt' floor=../currentFloor value=attack.toHitValue}}"{{/if}}>
+            <b>{{attack.toHit}}</b><small>{{attack.damage}}</small>
+          </span>
+          <span class="carl-mob-attack-acts">
+            <button type="button" class="carl-mob-attack-icon is-primary" data-action="rollMobAttack"
+              data-tooltip="{{localize 'CARLRPG.MobAttack.AttackHint'}}" aria-label="{{localize 'CARLRPG.MobAttack.Attack'}}">
+              <i class="fas fa-crosshairs" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="carl-mob-attack-icon" data-action="editItem"
+              data-tooltip="{{localize 'DOCUMENT.Update' type=(localize 'TYPES.Item.mobAttack')}}" aria-label="{{localize 'DOCUMENT.Update' type=(localize 'TYPES.Item.mobAttack')}}">
+              <i class="fas fa-pen" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="carl-mob-attack-icon" data-action="deleteItem"
+              data-tooltip="{{localize 'DOCUMENT.Delete' type=(localize 'TYPES.Item.mobAttack')}}" aria-label="{{localize 'DOCUMENT.Delete' type=(localize 'TYPES.Item.mobAttack')}}">
+              <i class="fas fa-trash" aria-hidden="true"></i>
+            </button>
+          </span>
+        </summary>
+        <div class="carl-mob-attack-detail">
+          {{#if attack.descriptionHTML}}{{{attack.descriptionHTML}}}{{else}}<p class="carl-hint">{{localize "CARLRPG.MobAttack.NoEffect"}}</p>{{/if}}
+        </div>
+      </details>
+    </li>
+    {{/each}}
+  </ol>
+  <a class="item-control carl-add-link" data-action="createItem" data-type="mobAttack" data-name="CARLRPG.MobAttack.New">
+    <i class="fas fa-plus"></i> {{localize "CARLRPG.MobAttack.Add"}}
+  </a>
+</div>

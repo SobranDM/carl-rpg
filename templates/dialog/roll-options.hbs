@@ -1,11 +1,65 @@
 <div class="carl-dialog-body">
-  {{#if showRollMode}}
-  <div class="form-group">
-    <label>{{localize "CARLRPG.Dialog.RollMode"}}</label>
+  {{#if skillPicker}}
+  {{!-- The Attack! button (CarlDice.chooseAttack): the Attack Skills the
+        crawler can use now, as one-click radios - highest Rank first and
+        already picked. Picking another redraws the rest of the dialog for
+        it (module/dice/roll-prompt.mjs). --}}
+  <div class="form-group carl-dialog-attack-skill">
+    <label>{{localize "CARLRPG.Weapon.AttackSkill"}}</label>
+    <div class="form-fields carl-dialog-conditions-list">
+      {{#each skillPicker.choices as |choice|}}
+      <label class="carl-dialog-condition">
+        <input type="radio" name="attackSkillId" value="{{choice.id}}" data-carl-attack-skill {{checked (eq choice.id ../skillPicker.selected)}} />
+        {{choice.label}}
+      </label>
+      {{/each}}
+    </div>
+  </div>
+  {{/if}}
+  {{!-- The Damage Effect goes with the Skill it's for, so it comes next. --}}
+  {{#unless hideOptions}}
+  {{#if damageEffectChoices.length}}
+  {{!-- One click per choice: a radio list, "None" by default. --}}
+  <div class="form-group carl-dialog-damage-effect">
+    <label>{{localize "CARLRPG.Dialog.DamageEffect"}}</label>
+    <div class="form-fields carl-dialog-conditions-list">
+      <label class="carl-dialog-condition"><input type="radio" name="damageEffectId" value="" checked /> {{localize "CARLRPG.Dialog.NoDamageEffect"}}</label>
+      {{#each damageEffectChoices as |de|}}
+      <label class="carl-dialog-condition"><input type="radio" name="damageEffectId" value="{{de.id}}" /> {{de.name}} ({{localize "CARLRPG.Roll.Rank"}} {{de.rank}})</label>
+      {{/each}}
+    </div>
+  </div>
+  {{/if}}
+  {{/unless}}
+  {{#unless hideOptions}}
+  {{#if statChoice}}
+  {{!-- Off-Stat (p.58): the Stat this roll adds, the Skill's own picked. --}}
+  <div class="form-group carl-dialog-stat">
+    <label data-tooltip="{{localize 'CARLRPG.Dialog.StatHint'}}">{{localize "CARLRPG.Dialog.Stat"}}</label>
     <div class="form-fields">
-      <label><input type="radio" name="advantage" value="normal" {{#unless defaultAdvantage}}checked{{/unless}} /> {{localize "CARLRPG.Dialog.Normal"}}</label>
-      <label><input type="radio" name="advantage" value="advantage" {{#if (eq defaultAdvantage "advantage")}}checked{{/if}} /> {{localize "CARLRPG.Dialog.Advantage"}}</label>
-      <label><input type="radio" name="advantage" value="disadvantage" /> {{localize "CARLRPG.Dialog.Disadvantage"}}</label>
+      <select name="stat">
+        {{#each statChoice.options as |opt|}}
+        <option value="{{opt.key}}" {{#if opt.selected}}selected{{/if}}>{{opt.label}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+  {{/if}}
+  {{/unless}}
+  {{#if weaponNote}}
+  {{!-- The weapon comes out of the Hotlist, free with the Attack (p.64). --}}
+  <p class="carl-dialog-hint carl-dialog-weapon-note"><i class="fa-solid fa-right-left"></i> {{weaponNote}}</p>
+  {{/if}}
+  {{#unless hideOptions}}
+  {{#if showRollMode}}
+  <div class="form-group carl-dialog-roll-mode">
+    <label>{{localize "CARLRPG.Dialog.Advantage"}}</label>
+    <div class="form-fields">
+      <select name="advantage">
+        <option value="normal" {{#unless defaultAdvantage}}selected{{/unless}}>{{localize "CARLRPG.Dialog.Normal"}}</option>
+        <option value="advantage" {{#if (eq defaultAdvantage "advantage")}}selected{{/if}}>{{localize "CARLRPG.Dialog.Advantage"}}</option>
+        <option value="disadvantage">{{localize "CARLRPG.Dialog.Disadvantage"}}</option>
+      </select>
     </div>
     {{#if defaultAdvantage}}
     <p class="carl-dialog-hint">{{localize "CARLRPG.Dialog.AdvantageAutoApplied"}}</p>
@@ -13,25 +67,21 @@
   </div>
   {{/if}}
   {{#if showDifficulty}}
-  {{#if difficultyPresets.length}}
-  {{!-- p.59's Difficulty formulas at the current Floor; picking one fills the
-        number below (module/dice/roll-prompt.mjs wires the change). --}}
-  <div class="form-group">
-    <label>{{localize "CARLRPG.Dialog.DifficultyPreset"}}</label>
-    <div class="form-fields">
-      <select name="difficultyPreset" data-carl-difficulty-preset>
-        {{#each difficultyPresets as |preset|}}
-        <option value="{{preset.key}}" data-value="{{preset.value}}" {{#if preset.selected}}selected{{/if}}>{{preset.label}}</option>
-        {{/each}}
-      </select>
-    </div>
-  </div>
-  {{/if}}
-  <div class="form-group">
+  {{!-- Pre-filled from p.59's formulas at the current Floor (the roll's own:
+        Unopposed, Stat Check, Opposed vs a targeted creature, or one passed
+        in); the hint says which. A GM's situational call goes straight into
+        this number (ruled 2026-11-18: no separate modifier). --}}
+  <div class="form-group carl-dialog-difficulty">
     <label>{{#if difficultyLabel}}{{difficultyLabel}}{{else}}{{localize "CARLRPG.Dialog.Difficulty"}}{{/if}}</label>
-    <div class="form-fields">
+    <div class="form-fields carl-dialog-preset">
       <input type="number" name="difficulty" value="{{difficulty}}" placeholder="{{localize 'CARLRPG.Dialog.DifficultyPlaceholder'}}" />
+      {{#if difficultyBasis}}
+      <i class="fa-solid fa-circle-question carl-dialog-help" tabindex="0" role="img"
+        data-tooltip-html="{{localize 'CARLRPG.Dialog.DifficultyPresetHelp'}}" data-tooltip-direction="UP"
+        aria-label="{{localize 'CARLRPG.Dialog.DifficultyPresetHelpLabel'}}: {{difficultyHelpText}}"></i>
+      {{/if}}
     </div>
+    {{#if difficultyBasis}}<p class="carl-dialog-hint carl-dialog-difficulty-basis">{{difficultyBasis}}</p>{{/if}}
   </div>
   {{/if}}
   {{#if areaTargets.length}}
@@ -50,19 +100,6 @@
       {{#each areaTargets as |t index|}}
       <label><input type="checkbox" name="{{concat 'splash.' index}}" /> {{t.name}}</label>
       {{/each}}
-    </div>
-  </div>
-  {{/if}}
-  {{#if damageEffectChoices.length}}
-  <div class="form-group">
-    <label>{{localize "CARLRPG.Dialog.DamageEffect"}}</label>
-    <div class="form-fields">
-      <select name="damageEffectId">
-        <option value=""></option>
-        {{#each damageEffectChoices as |de|}}
-        <option value="{{de.id}}">{{de.name}} ({{localize "CARLRPG.Roll.Rank"}} {{de.rank}})</option>
-        {{/each}}
-      </select>
     </div>
   </div>
   {{/if}}
@@ -87,7 +124,7 @@
     <label>{{localize "CARLRPG.Dialog.Debuffs"}}</label>
     <div class="form-fields carl-dialog-conditions-list">
       {{#each debuffRows as |row|}}
-      <label class="carl-dialog-condition">
+      <label class="carl-dialog-condition" {{#if row.dexOnly}}data-carl-dex-only {{#unless ../statIsDex}}hidden{{/unless}}{{/if}}>
         <input type="checkbox" name="debuffs.{{row.id}}" {{#if row.defaultOn}}checked{{/if}} />
         {{row.label}} <span class="carl-dialog-condition-source">({{row.detail}})</span>
       </label>
@@ -110,10 +147,18 @@
     </div>
   </div>
   {{/if}}
-  <div class="form-group">
-    <label>{{localize "CARLRPG.Dialog.SituationalModifier"}}</label>
-    <div class="form-fields">
-      <input type="number" name="modifier" value="0" autofocus />
+  {{#if showUsesAction}}
+  {{!-- In a fight (helpers/actions.mjs): a Check the GM calls for "generally
+        doesn't require a crawler to spend an Action" (p.85). --}}
+  <div class="form-group carl-dialog-uses-action">
+    <label>{{localize "CARLRPG.Dialog.UsesAction"}}</label>
+    <div class="form-fields carl-dialog-conditions-list">
+      <label class="carl-dialog-condition">
+        <input type="checkbox" name="usesAction" {{#if usesAction}}checked{{/if}} />
+        <span>{{localize "CARLRPG.Dialog.UsesActionHint"}}</span>
+      </label>
     </div>
   </div>
+  {{/if}}
+  {{/unless}}
 </div>

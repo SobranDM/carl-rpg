@@ -116,6 +116,17 @@
         "damageDiceKind": "",
         "damageType": "",
         "conditions": []
+      },
+      {
+        "id": "PcFOY7g31tWIye8J",
+        "label": "",
+        "targetType": "resource",
+        "target": "dr",
+        "mode": "add",
+        "value": "2",
+        "damageDiceKind": "",
+        "damageType": "",
+        "conditions": []
       }
     ],
     "isEarthBased": true,

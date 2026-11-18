@@ -1,3 +1,4 @@
+@charset "UTF-8";
 @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
 .window-app {
   font-family: "Roboto", sans-serif;
@@ -366,11 +367,11 @@
   font-size: 11px;
   color: var(--carl-text-muted);
 }
-.carl-chat-card .carl-ai-reroll {
+.carl-chat-card .carl-roll-icons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
   margin-top: 4px;
-}
-.carl-chat-card .carl-ai-reroll button {
-  width: 100%;
 }
 .carl-chat-card .carl-reroll-note {
   font-style: italic;
@@ -418,6 +419,17 @@
 .carl-chat-card .carl-target-effects .carl-target-effects-label,
 .carl-chat-card .carl-attack-targets .carl-target-effects-label {
   margin-right: 4px;
+}
+.carl-chat-card .carl-target-effects .carl-target-effect-pill.is-dim,
+.carl-chat-card .carl-attack-targets .carl-target-effect-pill.is-dim {
+  opacity: 0.5;
+}
+.carl-chat-card .carl-target-effects .carl-target-effect-source,
+.carl-chat-card .carl-attack-targets .carl-target-effect-source {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.85;
 }
 .carl-chat-card .carl-target-effects .carl-target-effect-pill,
 .carl-chat-card .carl-attack-targets .carl-target-effect-pill {
@@ -484,6 +496,12 @@
   background: var(--carl-danger);
   color: var(--carl-header-text);
 }
+.carl-chat-card .carl-damage-card .carl-damage-pill.carl-armor-piercing-pill,
+.carl-chat-card .carl-attack-targets .carl-damage-pill.carl-armor-piercing-pill {
+  background: var(--carl-input-bg);
+  color: var(--carl-text);
+  border: 1px solid var(--carl-danger);
+}
 .carl-chat-card .carl-damage-card .carl-apply-damage,
 .carl-chat-card .carl-attack-targets .carl-apply-damage {
   width: auto;
@@ -547,35 +565,6 @@
 .carl-chat-card .carl-attack-targets .carl-target-effects-list {
   margin-bottom: 4px;
 }
-.carl-chat-card .carl-attack-targets .carl-target-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 6px;
-  padding: 3px 0;
-  border-top: 1px solid var(--carl-border-soft-2);
-}
-.carl-chat-card .carl-attack-targets .carl-target-row .carl-target-name {
-  font-weight: bold;
-}
-.carl-chat-card .carl-attack-targets .carl-target-row .carl-target-zone {
-  font-size: 10px;
-  text-transform: uppercase;
-  padding: 0 4px;
-  border-radius: 3px;
-  border: 1px solid var(--carl-border-soft-2);
-}
-.carl-chat-card .carl-attack-targets .carl-target-row .carl-target-status {
-  flex: 1 1 100%;
-  font-size: 11px;
-  opacity: 0.85;
-}
-.carl-chat-card .carl-attack-targets .carl-target-row .carl-target-buttons {
-  display: flex;
-  gap: 4px;
-}
-.carl-chat-card .carl-attack-targets .carl-row-evade,
-.carl-chat-card .carl-attack-targets .carl-row-apply,
 .carl-chat-card .carl-attack-targets .carl-apply-all {
   width: auto;
   font-size: 11px;
@@ -583,8 +572,9 @@
   padding: 2px 8px;
 }
 .carl-chat-card .carl-attack-targets .carl-apply-all-row {
+  display: flex;
+  justify-content: flex-end;
   margin-top: 4px;
-  text-align: right;
 }
 .carl-chat-card .carl-mark-choice .carl-mark-choice-buttons {
   display: flex;
@@ -622,19 +612,30 @@
   padding-left: 1.25em;
 }
 .carl-chat-card .carl-debuff-note,
-.carl-chat-card .carl-free-evade-note {
+.carl-chat-card .carl-free-evade-note,
+.carl-chat-card .carl-off-stat-note {
   margin: 4px 0;
   font-size: 11px;
   color: var(--carl-text-muted);
 }
 .carl-chat-card .carl-debuff-note i,
-.carl-chat-card .carl-free-evade-note i {
+.carl-chat-card .carl-free-evade-note i,
+.carl-chat-card .carl-off-stat-note i {
   color: var(--carl-danger);
   margin-right: 2px;
 }
 .carl-chat-card .carl-free-evade-note {
   font-weight: 700;
   color: var(--carl-text);
+}
+.carl-chat-card .carl-cooldown-early {
+  margin: 4px 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--carl-danger);
+}
+.carl-chat-card .carl-cooldown-early i {
+  margin-right: 2px;
 }
 .carl-chat-card .carl-round-end-list,
 .carl-chat-card .carl-consumable-list {
@@ -659,10 +660,53 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  line-height: normal;
+  white-space: normal;
+}
+.carl-dialog .carl-dialog-condition input[type=checkbox] {
+  flex: 0 0 auto;
+}
+.carl-dialog .carl-dialog-condition[hidden] {
+  display: none;
+}
+.carl-dialog .carl-dialog-attack-skill .carl-dialog-conditions-list,
+.carl-dialog .carl-dialog-damage-effect .carl-dialog-conditions-list {
+  align-items: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
+.carl-dialog .carl-dialog-attack-skill .carl-dialog-conditions-list .carl-dialog-condition,
+.carl-dialog .carl-dialog-damage-effect .carl-dialog-conditions-list .carl-dialog-condition {
+  justify-content: flex-start;
+}
+.carl-dialog .carl-dialog-attack-skill + .carl-dialog-damage-effect {
+  border-top: 1px solid var(--carl-border-soft);
+  margin-top: 6px;
+  padding-top: 6px;
 }
 .carl-dialog .carl-dialog-condition-source {
   opacity: 0.7;
   font-size: 11px;
+}
+.carl-dialog .carl-dialog-difficulty {
+  flex-wrap: wrap;
+}
+.carl-dialog .carl-dialog-difficulty .carl-dialog-difficulty-basis {
+  flex: 0 0 100%;
+  margin: 2px 0 0;
+}
+.carl-dialog .carl-dialog-preset {
+  align-items: center;
+}
+.carl-dialog .carl-dialog-preset .carl-dialog-help {
+  flex: 0 0 auto;
+  cursor: help;
+  opacity: 0.75;
+}
+.carl-dialog .carl-dialog-warning {
+  margin: 2px 0 0;
+  font-weight: bold;
+  color: var(--color-level-error, #b00);
 }
 .carl-dialog .carl-dialog-hint {
   margin: 2px 0 0;
@@ -670,34 +714,824 @@
   font-style: italic;
   opacity: 0.75;
 }
+.carl-dialog .carl-dialog-weapon-note {
+  margin: 0 0 6px;
+  font-size: 12px;
+  opacity: 1;
+}
+.carl-dialog .carl-actor-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.carl-dialog .carl-actor-picker p {
+  margin: 0;
+}
 .carl-dialog .carl-actor-picker-filter {
   width: 100%;
   box-sizing: border-box;
 }
 .carl-dialog .carl-actor-picker-select-all {
-  justify-content: space-between;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--carl-border-soft);
 }
 .carl-dialog .carl-actor-picker-count {
+  margin-left: auto;
   font-size: 11px;
   opacity: 0.75;
   font-weight: normal;
 }
 .carl-dialog .carl-actor-picker-list {
-  max-height: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
   overflow-y: auto;
   padding-right: 2px;
 }
-.carl-dialog .carl-actor-picker-other {
-  margin-top: 4px;
-}
-.carl-dialog .carl-actor-picker-other summary {
-  cursor: pointer;
+.carl-dialog .carl-actor-picker-heading {
+  margin: 0 0 2px;
   font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   opacity: 0.85;
-  padding: 2px 0;
+  cursor: default;
 }
-.carl-dialog .carl-actor-picker-other .carl-actor-picker-option {
-  margin-left: 4px;
+.carl-dialog details.carl-actor-picker-group > summary.carl-actor-picker-heading {
+  cursor: pointer;
+}
+.carl-dialog .carl-actor-picker-hint {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-style: italic;
+  opacity: 0.75;
+}
+.carl-dialog .carl-actor-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 6px;
+}
+.carl-dialog .carl-actor-picker-option[hidden] {
+  display: none;
+}
+.carl-dialog .carl-actor-picker-who {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.7;
+}
+.carl-dialog .carl-rest-length {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 6px 8px 8px;
+}
+.carl-dialog .carl-rest-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 14px;
+}
+.carl-dialog .carl-rest-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.carl-dialog .carl-rest-rule {
+  margin: 0;
+  padding: 6px 8px;
+  border-left: 3px solid var(--carl-accent);
+  background: var(--carl-panel-bg);
+  font-size: 12px;
+}
+.carl-dialog .carl-rest-rule[hidden] {
+  display: none;
+}
+.carl-dialog .carl-rest-rule p {
+  margin: 0 0 2px;
+}
+.carl-dialog .carl-rest-rule cite {
+  font-size: 10px;
+  opacity: 0.7;
+}
+.carl-dialog .carl-advance-time {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--carl-border-soft);
+}
+.carl-dialog .carl-advance-time-hint {
+  flex: 0 0 100%;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.carl-reroll-pick fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.carl-reroll-pick fieldset .carl-reroll-source {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.carl-phase-bar {
+  --carl-accent: #c9273f;
+  --carl-accent-dim: color-mix(in srgb, var(--carl-accent) 45%, var(--color-text-primary));
+  --carl-hazard: #e8542c;
+  --carl-danger: #7a1220;
+  --carl-gold: #ffd700;
+  --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
+  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-accent-2: #9b59e0;
+  --carl-border-soft-2: rgba(181, 123, 240, 0.55);
+  --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
+  --carl-accent-3: #2f7fe0;
+  --carl-border-soft-3: rgba(91, 157, 255, 0.55);
+  --carl-panel-bg-3: color-mix(in srgb, var(--carl-accent-3) 6%, var(--color-text-primary) 4%);
+  --carl-bg: linear-gradient(180deg, #160f10, #241315);
+  --carl-bg-solid: #1a1213;
+  --carl-header-bg: #3d0f14;
+  --carl-header-text: #f5e8e6;
+  --carl-border-soft: rgba(255, 74, 94, 0.55);
+  --carl-text: #e8e0df;
+  --carl-text-muted: rgba(232, 224, 223, 0.65);
+  --carl-input-bg: rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px 6px;
+  border-bottom: 1px solid var(--carl-border-soft);
+}
+.carl-phase-bar.carl-phase-bar-empty {
+  display: none;
+}
+.carl-phase-bar .carl-surprise-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-12);
+  cursor: pointer;
+}
+.carl-phase-bar .carl-surprise-toggle input {
+  margin: 0;
+}
+.carl-phase-bar .carl-phase-surprise {
+  text-align: center;
+  font-weight: 700;
+  font-size: var(--font-size-12);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--carl-gold);
+}
+.carl-phase-bar .carl-phase-steps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  margin: 0;
+}
+.carl-phase-bar .carl-phase-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 3px 2px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  font-size: var(--font-size-11);
+  line-height: 1.2;
+  text-align: center;
+  color: var(--carl-text-muted);
+  background: var(--carl-input-bg);
+}
+.carl-phase-bar .carl-phase-step .carl-phase-num {
+  font-weight: 700;
+}
+.carl-phase-bar .carl-phase-step.done {
+  opacity: 0.55;
+}
+.carl-phase-bar .carl-phase-step.active {
+  color: var(--carl-header-text);
+  background: var(--carl-accent);
+  border-color: var(--carl-accent);
+  font-weight: 700;
+  opacity: 1;
+}
+
+.carl-phase-bar .carl-declared-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--font-size-12);
+}
+.carl-phase-bar .carl-declared-title {
+  font-weight: 700;
+  font-size: var(--font-size-11);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--carl-text-muted);
+}
+.carl-phase-bar .carl-declared-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.carl-phase-bar .carl-declared-item span {
+  flex: 1;
+}
+.carl-phase-bar .carl-declared-empty {
+  font-style: italic;
+  color: var(--carl-text-muted);
+}
+
+#ui-right-column-1:has(> #carl-declare-hud) {
+  position: relative;
+}
+
+#carl-declare-hud {
+  --carl-accent: #c9273f;
+  --carl-accent-dim: color-mix(in srgb, var(--carl-accent) 45%, var(--color-text-primary));
+  --carl-hazard: #e8542c;
+  --carl-danger: #7a1220;
+  --carl-gold: #ffd700;
+  --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
+  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-accent-2: #9b59e0;
+  --carl-border-soft-2: rgba(181, 123, 240, 0.55);
+  --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
+  --carl-accent-3: #2f7fe0;
+  --carl-border-soft-3: rgba(91, 157, 255, 0.55);
+  --carl-panel-bg-3: color-mix(in srgb, var(--carl-accent-3) 6%, var(--color-text-primary) 4%);
+  --carl-bg: linear-gradient(180deg, #160f10, #241315);
+  --carl-bg-solid: #1a1213;
+  --carl-header-bg: #3d0f14;
+  --carl-header-text: #f5e8e6;
+  --carl-border-soft: rgba(255, 74, 94, 0.55);
+  --carl-text: #e8e0df;
+  --carl-text-muted: rgba(232, 224, 223, 0.65);
+  --carl-input-bg: rgba(255, 255, 255, 0.05);
+  pointer-events: auto;
+  position: absolute;
+  right: 0;
+  bottom: 14px;
+  z-index: 1;
+  width: 260px;
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 6px;
+  background: var(--carl-bg-solid);
+  color: var(--carl-text);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+}
+#carl-declare-hud .carl-declare-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px 8px;
+}
+#carl-declare-hud .carl-declare-title {
+  font-weight: 700;
+  font-size: var(--font-size-12);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--carl-header-text);
+  background: var(--carl-header-bg);
+  border-radius: 3px;
+  padding: 2px 6px;
+}
+#carl-declare-hud .carl-declare-targets {
+  font-size: var(--font-size-12);
+}
+#carl-declare-hud .carl-declare-targets.none {
+  font-style: italic;
+  color: var(--carl-text-muted);
+}
+#carl-declare-hud .carl-declare-mob {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--carl-border-soft);
+}
+#carl-declare-hud .carl-declare-mob-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+#carl-declare-hud .carl-declare-mob-name img {
+  width: 24px;
+  height: 24px;
+  border: none;
+  object-fit: contain;
+}
+#carl-declare-hud .carl-declare-attacks {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+#carl-declare-hud .carl-declare-attacks button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: auto;
+  padding: 3px 6px;
+  line-height: 1.2;
+  text-align: left;
+}
+#carl-declare-hud .carl-declare-attack-name {
+  font-weight: 700;
+}
+#carl-declare-hud .carl-declare-attack-stats {
+  font-size: var(--font-size-11);
+  color: var(--carl-text-muted);
+}
+#carl-declare-hud .carl-declare-empty {
+  margin: 0;
+  font-style: italic;
+  font-size: var(--font-size-12);
+  color: var(--carl-text-muted);
+}
+#carl-declare-hud .carl-declare-done {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  font-size: var(--font-size-12);
+}
+#carl-declare-hud .carl-declare-done li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+#carl-declare-hud .carl-declare-done li .fa-check {
+  color: #2ecc40;
+}
+#carl-declare-hud .carl-declare-done li span {
+  flex: 1;
+}
+#carl-declare-hud .carl-declare-done li button {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+}
+
+.combat-tracker.carl-grouped .carl-combat-group {
+  --carl-accent: #c9273f;
+  --carl-accent-dim: color-mix(in srgb, var(--carl-accent) 45%, var(--color-text-primary));
+  --carl-hazard: #e8542c;
+  --carl-danger: #7a1220;
+  --carl-gold: #ffd700;
+  --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
+  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-accent-2: #9b59e0;
+  --carl-border-soft-2: rgba(181, 123, 240, 0.55);
+  --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
+  --carl-accent-3: #2f7fe0;
+  --carl-border-soft-3: rgba(91, 157, 255, 0.55);
+  --carl-panel-bg-3: color-mix(in srgb, var(--carl-accent-3) 6%, var(--color-text-primary) 4%);
+  --carl-bg: linear-gradient(180deg, #160f10, #241315);
+  --carl-bg-solid: #1a1213;
+  --carl-header-bg: #3d0f14;
+  --carl-header-text: #f5e8e6;
+  --carl-border-soft: rgba(255, 74, 94, 0.55);
+  --carl-text: #e8e0df;
+  --carl-text-muted: rgba(232, 224, 223, 0.65);
+  --carl-input-bg: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px 2px;
+  font-size: var(--font-size-11);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--carl-text-muted);
+  border-bottom: 1px solid var(--carl-border-soft);
+}
+
+.chat-message:has(.carl-phase-notice) {
+  --carl-accent: #c9273f;
+  --carl-accent-dim: color-mix(in srgb, var(--carl-accent) 45%, var(--color-text-primary));
+  --carl-hazard: #e8542c;
+  --carl-danger: #7a1220;
+  --carl-gold: #ffd700;
+  --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
+  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-accent-2: #9b59e0;
+  --carl-border-soft-2: rgba(181, 123, 240, 0.55);
+  --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
+  --carl-accent-3: #2f7fe0;
+  --carl-border-soft-3: rgba(91, 157, 255, 0.55);
+  --carl-panel-bg-3: color-mix(in srgb, var(--carl-accent-3) 6%, var(--color-text-primary) 4%);
+  --carl-bg: linear-gradient(180deg, #160f10, #241315);
+  --carl-bg-solid: #1a1213;
+  --carl-header-bg: #3d0f14;
+  --carl-header-text: #f5e8e6;
+  --carl-border-soft: rgba(255, 74, 94, 0.55);
+  --carl-text: #e8e0df;
+  --carl-text-muted: rgba(232, 224, 223, 0.65);
+  --carl-input-bg: rgba(255, 255, 255, 0.05);
+  border-color: var(--carl-accent);
+}
+
+.carl-phase-notice {
+  text-align: center;
+}
+.carl-phase-notice strong {
+  display: block;
+  font-size: var(--font-size-14);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.carl-phase-notice .carl-phase-notice-step {
+  display: block;
+  font-weight: 700;
+  color: var(--carl-accent-dim);
+}
+.carl-phase-notice p {
+  margin: 4px 0 0;
+  font-size: var(--font-size-12);
+}
+
+.carl-reaction {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-12);
+}
+.carl-reaction .carl-attack-range {
+  font-size: var(--font-size-11);
+  color: var(--carl-text-muted);
+}
+.carl-reaction .carl-attack-effect {
+  font-size: var(--font-size-11);
+  font-style: italic;
+}
+.carl-reaction .carl-pull-area {
+  width: 100%;
+  margin-top: 2px;
+  font-size: var(--font-size-11);
+  line-height: 1.6;
+}
+
+.combat-tracker .carl-action-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  margin: 1px 0 2px;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble {
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble.action {
+  background: #2ecc40;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble.move {
+  background: #f1c40f;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble.favor {
+  background: #ffd700;
+  box-shadow: 0 0 3px #ffd700;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble.spent {
+  background: #c0392b;
+  box-shadow: none;
+}
+.combat-tracker .carl-action-bubbles .carl-action-bubble:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.combat-tracker .carl-action-bubbles .carl-action-favor {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  min-height: 0;
+  padding: 0;
+  line-height: 14px;
+  font-size: 9px;
+  color: #ffd700;
+  background: none;
+  border: 1px dashed #ffd700;
+  border-radius: 50%;
+}
+
+.carl-chat-card {
+  --carl-status-bad-bg: #c9273f;
+  --carl-status-bad-fg: #fff4f4;
+  --carl-status-good-bg: #2f9e4f;
+  --carl-status-good-fg: #f2fff4;
+  --carl-status-half-bg: rgba(47, 158, 79, 0.28);
+  --carl-status-half-fg: #b9f0c8;
+  --carl-status-caught-bg: #d99a26;
+  --carl-status-caught-fg: #2a1a02;
+  --carl-status-neutral-bg: #4a4243;
+  --carl-status-neutral-fg: #ddd5d4;
+  --carl-status-taunt-bg: #7b45c4;
+  --carl-status-taunt-fg: #f6efff;
+}
+.carl-chat-card .carl-status-progress {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  background: var(--carl-input-bg);
+}
+.carl-chat-card .carl-status-progress.is-locked {
+  background: var(--carl-header-bg);
+  color: var(--carl-header-text);
+}
+.carl-chat-card .carl-status-waiting {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  border-left: 3px solid var(--carl-hazard);
+  background: color-mix(in srgb, var(--carl-hazard) 18%, transparent);
+}
+.carl-chat-card .carl-status-note {
+  padding: 3px 6px;
+  border-radius: 3px;
+  color: var(--carl-text-muted);
+  background: var(--carl-input-bg);
+}
+.carl-chat-card .carl-status-section {
+  border: 1px solid color-mix(in srgb, var(--carl-border-soft) 70%, transparent);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.carl-chat-card .carl-status-section > header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 6px;
+  color: var(--carl-header-text);
+  background: var(--carl-header-bg);
+}
+.carl-chat-card .carl-status-who {
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.carl-chat-card .carl-status-sum {
+  margin-left: auto;
+  font-size: 11px;
+  text-align: right;
+  opacity: 0.85;
+}
+.carl-chat-card .carl-status-notes {
+  margin: 0;
+  padding: 3px 6px 4px 8px;
+  list-style: none;
+  font-size: 11px;
+  color: var(--carl-text-muted);
+  border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 30%, transparent);
+}
+.carl-chat-card .carl-status-section-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 3px 6px 5px;
+}
+.carl-chat-card .carl-status-row {
+  border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 30%, transparent);
+}
+.carl-chat-card .carl-status-section > header + .carl-status-row {
+  border-top: none;
+}
+.carl-chat-card .carl-status-line {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto auto 10px;
+  align-items: center;
+  column-gap: 6px;
+  padding: 3px 6px;
+  list-style: none;
+}
+.carl-chat-card summary.carl-status-line {
+  cursor: pointer;
+}
+.carl-chat-card summary.carl-status-line::-webkit-details-marker {
+  display: none;
+}
+.carl-chat-card summary.carl-status-line::after {
+  content: "▸";
+  justify-self: end;
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-chat-card details.carl-status-row[open] > summary.carl-status-line::after {
+  content: "▾";
+}
+.carl-chat-card .carl-status-what {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-chat-card .carl-status-sub {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-status-flag {
+  margin-left: 3px;
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-status-num {
+  min-width: 52px;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.carl-chat-card .carl-status-vs {
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-status-acts {
+  display: flex;
+  gap: 3px;
+}
+.carl-chat-card .carl-status-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 2px 8px 6px 86px;
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-status-detail .carl-attack-effect {
+  color: var(--carl-text);
+  font-style: italic;
+}
+.carl-chat-card .carl-status-detail .carl-status-detail-head {
+  margin-top: 2px;
+  font-weight: 700;
+}
+.carl-chat-card .carl-status-row.is-ghost .carl-status-what,
+.carl-chat-card .carl-status-row.is-ghost .carl-status-num {
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-status-row.is-ghost .carl-status-what {
+  text-decoration: line-through;
+}
+.carl-chat-card .carl-status-row.is-ghost .carl-status-sub {
+  text-decoration: none;
+}
+.carl-chat-card .carl-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.carl-chat-card .carl-status-chip i {
+  font-size: 9px;
+}
+.carl-chat-card .carl-status-chip[data-tone=incoming] {
+  border: 1px solid var(--carl-text);
+  color: var(--carl-text);
+}
+.carl-chat-card .carl-status-chip[data-tone=bad] {
+  background: var(--carl-status-bad-bg);
+  color: var(--carl-status-bad-fg);
+}
+.carl-chat-card .carl-status-chip[data-tone=good] {
+  background: var(--carl-status-good-bg);
+  color: var(--carl-status-good-fg);
+}
+.carl-chat-card .carl-status-chip[data-tone=half] {
+  background: var(--carl-status-half-bg);
+  color: var(--carl-status-half-fg);
+}
+.carl-chat-card .carl-status-chip[data-tone=caught] {
+  background: var(--carl-status-caught-bg);
+  color: var(--carl-status-caught-fg);
+}
+.carl-chat-card .carl-status-chip[data-tone=neutral] {
+  background: var(--carl-status-neutral-bg);
+  color: var(--carl-status-neutral-fg);
+}
+.carl-chat-card .carl-status-chip[data-tone=taunt] {
+  background: var(--carl-status-taunt-bg);
+  color: var(--carl-status-taunt-fg);
+}
+.carl-chat-card .carl-status-chip[data-tone=muted] {
+  border: 1px dashed var(--carl-text-muted);
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-status-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--carl-text) 25%, transparent);
+  background: var(--carl-input-bg);
+  color: var(--carl-text);
+  font-size: 11px;
+  line-height: 1;
+}
+.carl-chat-card .carl-status-icon:hover, .carl-chat-card .carl-status-icon:focus-visible {
+  border-color: var(--carl-accent);
+}
+.carl-chat-card .carl-status-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: auto;
+  height: 22px;
+  min-height: 0;
+  padding: 0 9px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--carl-text) 28%, transparent);
+  background: var(--carl-input-bg);
+  color: var(--carl-text);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.carl-chat-card .carl-status-button.is-primary {
+  background: var(--carl-header-bg);
+  border-color: var(--carl-border-soft);
+}
+.carl-chat-card .carl-status-button:hover, .carl-chat-card .carl-status-button:focus-visible {
+  border-color: var(--carl-accent);
+}
+.carl-chat-card .carl-status-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.carl-chat-card .carl-status-gm {
+  margin-left: auto;
+}
+.carl-chat-card .carl-party-check {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--font-size-12);
+}
+.carl-chat-card .carl-party-rule {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-party-outcome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 4px 0;
+  padding: 4px 6px;
+  border-radius: 3px;
+  background: var(--carl-status-neutral-bg);
+  color: var(--carl-status-neutral-fg);
+}
+.carl-chat-card .carl-party-outcome[data-tone=good] {
+  background: var(--carl-status-good-bg);
+  color: var(--carl-status-good-fg);
+}
+.carl-chat-card .carl-party-outcome[data-tone=bad] {
+  background: var(--carl-status-bad-bg);
+  color: var(--carl-status-bad-fg);
+}
+.carl-chat-card .carl-party-outcome span {
+  font-size: 11px;
 }
 
 /* Styles limited to carl-rpg sheets */
@@ -773,6 +1607,39 @@
 }
 .carl-rpg .sheet-header .header-fields {
   flex: 1;
+}
+.carl-rpg .sheet-header .carl-portrait-column {
+  flex: 0 0 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-right: 10px;
+}
+.carl-rpg .sheet-header .carl-portrait-column .profile-img {
+  margin-right: 0;
+}
+.carl-rpg .sheet-header .carl-portrait-stats {
+  display: flex;
+  gap: 4px;
+}
+.carl-rpg .sheet-header .carl-portrait-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.carl-rpg .sheet-header .carl-portrait-stat .resource-label {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.carl-rpg .sheet-header .carl-portrait-stat input {
+  width: 100%;
+  height: 22px;
+  text-align: center;
+  font-weight: 700;
 }
 .carl-rpg .sheet-header h1.charname {
   height: 50px;
@@ -915,6 +1782,39 @@
   font-weight: 700;
   color: var(--carl-accent-dim);
 }
+.carl-rpg .carl-mana-resource {
+  margin-top: 2px;
+}
+.carl-rpg .carl-mana-resource .resource-label {
+  margin-bottom: 1px;
+}
+.carl-rpg .carl-mana-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-mana-row input {
+  height: 22px;
+}
+.carl-rpg .carl-mana-bar {
+  flex: 1;
+  height: 10px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 5px;
+  background: var(--carl-input-bg, rgba(0, 0, 0, 0.08));
+  overflow: hidden;
+}
+.carl-rpg .carl-mana-fill {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2c5fd6, #5c9bff);
+  transition: width 0.2s ease;
+}
+.carl-rpg .carl-mana-max {
+  flex: 0 0 auto;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .carl-rpg .items-header {
   height: 28px;
   margin: 2px 0;
@@ -953,6 +1853,13 @@
 }
 .carl-rpg .items-header .carl-sort-header:hover i.fa-sort {
   opacity: 0.8;
+}
+.carl-rpg .carl-mark-icon {
+  color: var(--carl-text-muted);
+  font-size: 14px;
+}
+.carl-rpg .carl-mark-icon.is-marked {
+  color: var(--carl-accent);
 }
 .carl-rpg .items-list {
   list-style: none;
@@ -1061,19 +1968,24 @@
   flex: 0 0 200px;
   padding: 0 8px;
 }
-.carl-rpg .carl-consumable {
-  margin-top: 6px;
-}
-.carl-rpg .carl-consumable select[multiple] {
-  min-width: 12em;
-}
-.carl-rpg .carl-consumable .carl-consumable-buff {
-  margin-top: 6px;
-}
 .carl-rpg .carl-condition-expiry {
   font-size: 11px;
   color: var(--carl-text-muted);
   white-space: nowrap;
+}
+.carl-rpg .carl-cooldown-chip {
+  flex: 0 0 auto;
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--carl-accent);
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--carl-accent);
+  white-space: nowrap;
+}
+.carl-rpg .carl-cooldown-chip i {
+  margin-right: 2px;
 }
 .carl-rpg .carl-hint {
   font-size: 11px;
@@ -1111,132 +2023,6 @@
   background: var(--carl-header-bg);
   border-radius: 3px;
   padding: 2px 6px;
-}
-.carl-rpg .carl-upgrades {
-  margin: 11px 0;
-}
-.carl-rpg .carl-section-divider {
-  border: none;
-  border-top: 1px solid var(--carl-border-soft);
-  margin: 6px 0 0;
-}
-.carl-rpg .carl-section-divider + .carl-section-header {
-  margin-top: 4px;
-}
-.carl-rpg .carl-section-header {
-  margin: 4px 0;
-  font-weight: 700;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  text-align: center;
-  color: var(--carl-header-text);
-}
-.carl-rpg .carl-upgrade-tier {
-  border: 1px solid var(--carl-border-soft);
-  border-radius: 4px;
-  background: var(--carl-panel-bg);
-  padding: 8px;
-  margin-bottom: 11px;
-}
-.carl-rpg .carl-upgrade-tier:last-of-type {
-  margin-bottom: 0;
-}
-.carl-rpg .carl-upgrade-tier .carl-upgrade-tier-header {
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-.carl-rpg .carl-upgrade-tier .carl-upgrade-tier-header select {
-  font-weight: 700;
-  color: var(--carl-header-text);
-}
-.carl-rpg .carl-upgrade-tier .carl-upgrade-description {
-  width: 100%;
-  min-height: 2.4em;
-  resize: vertical;
-  margin-bottom: 6px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row {
-  border: 1px solid var(--color-border-light-tertiary);
-  border-radius: 3px;
-  padding: 6px;
-  margin-bottom: 9px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-fields {
-  margin: 0 0 4px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta {
-  align-items: flex-end;
-  gap: 6px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field--label {
-  flex: 1;
-}
-.carl-rpg .carl-changes-editor .carl-change-row .carl-change-row-meta .carl-change-meta-field--label .carl-change-label {
-  width: 100%;
-}
-.carl-rpg .carl-changes-editor .carl-change-group {
-  border: 1px solid var(--carl-border-soft-2);
-  border-radius: 3px;
-  background: var(--carl-panel-bg-2);
-  padding: 4px 6px 6px;
-  margin-bottom: 4px;
-}
-.carl-rpg .carl-changes-editor .carl-change-group legend {
-  font-weight: 700;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--carl-header-text);
-  background: var(--carl-header-bg);
-  border-radius: 3px;
-  padding: 1px 5px;
-}
-.carl-rpg .carl-changes-editor .carl-change-fields-2col {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.carl-rpg .carl-changes-editor .carl-change-field-full {
-  grid-column: 1/-1;
-}
-.carl-rpg .carl-changes-editor .carl-conditions-editor {
-  margin-top: 4px;
-  padding-left: 10px;
-  border-left: 2px solid var(--color-border-light-tertiary);
-}
-.carl-rpg .carl-changes-editor .carl-conditions-editor .carl-condition-row {
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 2px;
-}
-.carl-rpg .carl-changes-editor .carl-conditions-editor .carl-condition-row input[type=text] {
-  flex: 1;
-}
-.carl-rpg .carl-target-effects-editor {
-  margin: 4px 0 8px;
-}
-.carl-rpg .carl-target-effects-editor .carl-target-effect-row {
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-.carl-rpg .carl-target-effects-editor .carl-target-effect-row .carl-target-effect-crit {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 11px;
-  white-space: nowrap;
-}
-.carl-rpg .carl-target-effects-editor .carl-target-effect-row input[type=text].carl-w-medium {
-  flex: 1;
 }
 .carl-rpg .carl-resistances-grid {
   display: grid;
@@ -1286,11 +2072,6 @@
 .carl-rpg .carl-skill-choice-row input[type=text] {
   flex: 1;
 }
-.carl-rpg .carl-advancement-row {
-  align-items: center;
-  gap: 10px;
-  margin: 8px 0;
-}
 .carl-rpg .carl-marked-toggle {
   display: inline-flex;
   align-items: center;
@@ -1317,10 +2098,67 @@
   gap: 20px;
   align-items: flex-start;
   height: 100%;
+  --carl-legend-border-offset: calc((var(--font-size-14) * 1.25 - 2px) / 2);
 }
 @media (max-width: 640px) {
   .carl-rpg .carl-abilities-layout {
     flex-direction: column;
+  }
+}
+.carl-rpg .carl-stats-rest {
+  display: contents;
+}
+@media (min-width: 641px) {
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    grid-template-areas: "attack defenses" "stats hotlist";
+    align-content: start;
+    align-items: start;
+    gap: 6px 20px;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) > .carl-stats-column,
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) > .carl-abilities-main {
+    display: contents;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-attack-button {
+    grid-area: attack;
+    align-self: stretch;
+    height: auto;
+    margin: var(--carl-legend-border-offset) 0 0;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-combat-defenses {
+    grid-area: defenses;
+    margin-bottom: 0;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-stats-rest {
+    grid-area: stats;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: var(--carl-legend-border-offset);
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-stats-rest > :last-child {
+    margin-bottom: 0;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist {
+    grid-area: hotlist;
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist .carl-hotlist-rows {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist .carl-hotlist-row {
+    flex: 1 1 auto;
+  }
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist .carl-hotlist-pick,
+  .carl-rpg .carl-abilities-layout:has(> .carl-stats-column > .carl-attack-button) .carl-hotlist .carl-hotlist-use {
+    align-self: stretch;
   }
 }
 .carl-rpg .carl-stats-column {
@@ -1368,12 +2206,15 @@
 }
 .carl-rpg .carl-banked-stat-points {
   margin-top: 4px;
+  margin-inline: 0;
+  min-width: 0;
   border: 1px solid var(--carl-border-soft);
   border-radius: 3px;
   background: var(--carl-panel-bg);
   padding: 4px 6px 6px;
 }
 .carl-rpg .carl-banked-stat-points legend {
+  margin-inline: auto;
   font-weight: 700;
   font-size: 10px;
   text-transform: uppercase;
@@ -1397,6 +2238,125 @@
   font-weight: 700;
   color: var(--carl-text);
 }
+.carl-rpg .carl-attack-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  margin: 0 0 3px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--carl-header-text);
+  background: var(--carl-danger);
+  border: 1px solid color-mix(in srgb, var(--carl-danger) 60%, var(--carl-accent));
+  border-radius: 4px;
+}
+.carl-rpg .carl-attack-button:hover, .carl-rpg .carl-attack-button:focus-visible {
+  background: color-mix(in srgb, var(--carl-danger) 80%, var(--carl-accent));
+  border-color: color-mix(in srgb, var(--carl-danger) 35%, var(--carl-accent));
+  box-shadow: 0 0 4px color-mix(in srgb, var(--carl-danger) 60%, transparent);
+}
+.carl-rpg .carl-grind-level-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--carl-accent-dim);
+}
+.carl-rpg .carl-evade-button {
+  flex: 0 0 auto;
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  line-height: 1;
+  padding: 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.carl-rpg .carl-evade-total {
+  color: var(--carl-accent);
+  font-size: 14px;
+}
+.carl-rpg .carl-combat-defenses {
+  margin-top: 0;
+  margin-bottom: 6px;
+  border-width: 2px;
+}
+.carl-rpg .carl-combat-defenses legend {
+  font-size: var(--font-size-14);
+  line-height: 1.25;
+  padding-block: 0;
+}
+.carl-rpg .carl-defenses-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.carl-rpg .carl-defense-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-defense-field .resource-label {
+  margin: 0;
+}
+.carl-rpg .carl-defense-field input {
+  height: 24px;
+  text-align: center;
+}
+.carl-rpg .carl-defense-field .carl-stat-value {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-defense-field.carl-defense-blocked input,
+.carl-rpg .carl-defense-field.carl-defense-blocked .carl-stat-value {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+.carl-rpg .carl-resistances-button {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  line-height: 1;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.carl-rpg .carl-resistances-summary {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-resistance-table {
+  width: 100%;
+  margin: 0 0 6px;
+  border-collapse: collapse;
+}
+.carl-rpg .carl-resistance-table th,
+.carl-rpg .carl-resistance-table td {
+  padding: 3px 6px;
+  text-align: left;
+}
+.carl-rpg .carl-resistance-table .carl-resistance-state {
+  font-weight: 700;
+}
+.carl-rpg .carl-resistance-table .carl-resistance-immune .carl-resistance-state {
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-resistance-table .carl-resistance-vulnerable .carl-resistance-state {
+  color: var(--carl-hazard);
+}
 .carl-rpg .carl-abilities-main {
   flex: 1;
   min-width: 0;
@@ -1414,6 +2374,26 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+.carl-rpg .carl-mob-defense-now {
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-mob-defenses .carl-resistances-button.is-open {
+  border-color: var(--carl-accent);
+}
+.carl-rpg .carl-mob-resistances {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--carl-border-soft);
+}
+.carl-rpg .carl-mob-resistances .carl-resistances-grid {
+  margin-bottom: 0;
+}
+.carl-rpg .carl-portrait-stat.carl-portrait-check input[type=checkbox] {
+  width: auto;
+  height: 18px;
+  margin: 2px 0 0;
 }
 .carl-rpg .carl-debuffed-marker {
   font-size: 10px;
@@ -1478,6 +2458,19 @@
 }
 .carl-rpg .carl-drawer .carl-drawer-lock-toggle:hover {
   color: var(--carl-accent);
+}
+.carl-rpg .carl-drawer .carl-drawer-add-spell {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--carl-header-text);
+  text-transform: none;
+  letter-spacing: normal;
+}
+.carl-rpg .carl-drawer .carl-drawer-add-spell:hover {
+  color: var(--carl-accent);
+}
+.carl-rpg .carl-drawer .carl-drawer-add-spell + .carl-drawer-lock-toggle {
+  margin-left: 10px;
 }
 .carl-rpg .carl-drawer .carl-drawer-body {
   display: grid;
@@ -1727,10 +2720,104 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-.carl-rpg .carl-details-row {
-  align-items: center;
+.carl-rpg .tab.scrollable[data-tab=items] {
+  scrollbar-gutter: auto;
+}
+.carl-rpg .carl-inventory-layout {
+  display: flex;
   gap: 10px;
-  margin-bottom: 4px;
+  align-items: flex-start;
+}
+.carl-rpg .carl-inventory-layout > .items-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+}
+.carl-rpg .carl-equip-panel {
+  flex: 0 0 240px;
+  min-width: 0;
+}
+.carl-rpg .carl-equip-panel fieldset {
+  margin: 0 0 10px;
+}
+.carl-rpg .carl-equip-panel.is-dragging .carl-equip-slot[data-slot-type]:not(.is-fit) {
+  opacity: 0.35;
+}
+.carl-rpg .carl-equip-panel.is-dragging .carl-equip-slot.is-fit {
+  outline: 2px solid var(--carl-accent);
+  outline-offset: -2px;
+}
+.carl-rpg .carl-equip-slot {
+  border: 1px dashed var(--carl-border-soft);
+  border-radius: 3px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-equip-slot.filled {
+  border-style: solid;
+  background: var(--carl-panel-bg);
+  color: var(--color-text-primary);
+}
+.carl-rpg .carl-equip-slot .carl-equip-slot-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-rpg .carl-gear-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-areas: ". head ." "arms torso gloves" "mainHand legs offHand" ". feet .";
+  gap: 4px;
+}
+.carl-rpg .carl-gear-slot {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  aspect-ratio: 1;
+  padding: 2px;
+  font-size: var(--font-size-11);
+  text-align: center;
+}
+.carl-rpg .carl-gear-slot .carl-gear-icon {
+  width: 60%;
+  aspect-ratio: 1;
+  background-color: currentColor;
+  opacity: 0.6;
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+.carl-rpg .carl-gear-slot img {
+  width: 32px;
+  height: 32px;
+  border: none;
+}
+.carl-rpg .carl-gear-slot .carl-equip-slot-name {
+  width: 100%;
+  max-width: 100%;
+}
+.carl-rpg .carl-gear-slot .carl-slot-clear {
+  position: absolute;
+  top: 1px;
+  right: 3px;
+}
+.carl-rpg .carl-gear-slot .carl-slot-edit {
+  position: absolute;
+  top: 1px;
+  left: 3px;
+}
+.carl-rpg .carl-accessories-label {
+  margin: 10px 0 4px;
+}
+.carl-rpg .carl-accessory-slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
 }
 .carl-rpg .carl-sheet-columns {
   display: flex;
@@ -1763,115 +2850,6 @@
   flex: 1;
   min-width: 0;
 }
-.carl-rpg .carl-inventory-layout {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-.carl-rpg .carl-inventory-layout > .items-list {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.carl-rpg .carl-equip-panel {
-  flex: 0 0 240px;
-}
-.carl-rpg .carl-equip-panel fieldset {
-  margin: 0 0 10px;
-}
-.carl-rpg .carl-equip-slot {
-  border: 1px dashed var(--carl-border-soft);
-  border-radius: 3px;
-  color: var(--carl-text-muted);
-}
-.carl-rpg .carl-equip-slot.filled {
-  border-style: solid;
-  background: var(--carl-panel-bg);
-  color: var(--color-text-primary);
-}
-.carl-rpg .carl-equip-slot .carl-equip-slot-name {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.carl-rpg .carl-hotlist-slots {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.carl-rpg .carl-hotlist-slot {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 26px;
-  padding: 0 4px;
-}
-.carl-rpg .carl-hotlist-slot .carl-hotlist-index {
-  flex: 0 0 1.5em;
-  text-align: right;
-}
-.carl-rpg .carl-hotlist-slot img {
-  flex: 0 0 20px;
-  border: none;
-}
-.carl-rpg .carl-hotlist-slot .carl-equip-slot-name {
-  flex: 1;
-}
-.carl-rpg .carl-hotlist-slot .carl-slot-use {
-  flex: 0 0 auto;
-  color: var(--carl-accent);
-}
-.carl-rpg .carl-gear-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-areas: ". head ." "arms torso gloves" "mainHand legs offHand" ". feet .";
-  gap: 4px;
-}
-.carl-rpg .carl-gear-slot {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  aspect-ratio: 1;
-  padding: 2px;
-  font-size: var(--font-size-11);
-  text-align: center;
-}
-.carl-rpg .carl-gear-slot .carl-gear-icon {
-  width: 60%;
-  aspect-ratio: 1;
-  background-color: currentColor;
-  opacity: 0.6;
-  mask-position: center;
-  mask-size: contain;
-  mask-repeat: no-repeat;
-}
-.carl-rpg .carl-gear-slot img {
-  width: 32px;
-  height: 32px;
-  border: none;
-}
-.carl-rpg .carl-gear-slot .carl-equip-slot-name {
-  max-width: 100%;
-}
-.carl-rpg .carl-gear-slot .carl-slot-clear {
-  position: absolute;
-  top: 1px;
-  right: 3px;
-}
-.carl-rpg .carl-accessories-label {
-  margin: 10px 0 4px;
-}
-.carl-rpg .carl-accessory-slots {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
 .carl-rpg .carl-sheet-line {
   display: flex;
   align-items: center;
@@ -1886,6 +2864,66 @@
   flex: 1;
   min-width: 0;
 }
+.carl-rpg .carl-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+}
+.carl-rpg .carl-details-grid .carl-details-box {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin: 0;
+}
+.carl-rpg .carl-details-grid .carl-details-box.wide {
+  grid-column: 1/-1;
+}
+.carl-rpg .carl-details-grid .carl-details-box prose-mirror {
+  min-height: 90px;
+}
+.carl-rpg .carl-details-grid .carl-details-box.wide prose-mirror {
+  min-height: 140px;
+}
+.carl-rpg .carl-details-grid .carl-crawler-box {
+  gap: 2px;
+}
+.carl-rpg .carl-details-grid .carl-crawler-box .carl-sheet-line > span:first-child {
+  flex: 0 0 6.5em;
+}
+.carl-rpg .carl-details-grid .carl-crawler-box select {
+  flex: 1;
+  min-width: 0;
+}
+.carl-rpg .carl-details-grid .carl-potions-used {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.carl-rpg .carl-details-grid .carl-potion-count > span:first-child {
+  padding-left: 1em;
+}
+.carl-rpg .carl-details-grid .carl-potion-count .carl-potion-values {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.carl-rpg .carl-details-grid .carl-potion-count .carl-potion-values input {
+  flex: 0 0 auto;
+  text-align: right;
+}
+.carl-rpg .carl-details-grid .carl-personal-space-fields {
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-details-grid .carl-personal-space-fields .carl-sheet-line {
+  flex: 1;
+  min-width: 0;
+}
+.carl-rpg .carl-details-grid .carl-personal-space-fields .carl-sheet-line > span {
+  flex: 0 0 auto;
+}
 .carl-rpg .carl-sheet-box {
   display: flex;
   flex-direction: column;
@@ -1894,23 +2932,165 @@
 .carl-rpg .carl-sheet-box textarea {
   width: 100%;
 }
-.carl-rpg .carl-companion-hb {
+.carl-rpg .carl-inventory-bar {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 4px 0;
-}
-.carl-rpg .carl-companion-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2px 10px;
+  justify-content: flex-end;
   margin-bottom: 4px;
 }
-.carl-rpg .carl-companion-grid label {
+.carl-rpg .carl-gold {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 4px;
+  gap: 6px;
+}
+.carl-rpg .carl-gold .resource-label {
+  margin: 0;
+}
+.carl-rpg .carl-gold input {
+  text-align: right;
+  font-weight: 700;
+}
+.carl-rpg .carl-benefit-panel .carl-drawer-header {
+  gap: 6px;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-img {
+  flex: 0 0 20px;
+  border: none;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-type,
+.carl-rpg .carl-benefit-panel .carl-benefit-active {
+  font-size: 10px;
+  font-weight: 400;
+  opacity: 0.8;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-active {
+  font-weight: 700;
+  opacity: 1;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-controls a {
+  color: var(--carl-header-text);
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-controls a:hover {
+  color: var(--carl-accent);
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-text {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-text ul,
+.carl-rpg .carl-benefit-panel .carl-benefit-text ol {
+  margin: 2px 0;
+  padding-left: 18px;
+}
+.carl-rpg .carl-benefit-panel .carl-benefit-text p {
+  margin: 3px 0;
+}
+.carl-rpg .carl-benefits-empty {
+  margin: 4px 0 8px;
+}
+.carl-rpg .carl-deity {
+  margin: 0 0 10px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-deity legend {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 12px;
+}
+.carl-rpg .carl-deity prose-mirror {
+  min-height: 70px;
+  margin-top: 4px;
+}
+.carl-rpg .carl-deity-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-deity-line .resource-label {
+  margin: 0;
+}
+.carl-rpg .carl-deity-line input[type=text] {
+  height: 24px;
+}
+.carl-rpg .carl-deity-name {
+  flex: 1 1 10em;
+  min-width: 8em;
+  font-weight: 700;
+}
+.carl-rpg .carl-deity-tithe {
+  font-weight: 700;
+  color: var(--carl-accent);
+  white-space: nowrap;
+}
+.carl-rpg .carl-deity-add-day {
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.carl-rpg .carl-deity-next {
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-deity-next.due {
+  font-weight: 700;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-deity-boon {
+  flex: 0 0 auto;
+  width: auto;
+  margin-left: auto;
+  line-height: 20px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+.carl-rpg .carl-missed-pips {
+  display: inline-flex;
+  gap: 3px;
+}
+.carl-rpg .carl-missed-pip {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.carl-rpg .carl-missed-pip.filled {
+  background: var(--carl-accent);
+}
+.carl-rpg .carl-deity-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-deity-flag input {
+  margin: 0;
+}
+.carl-rpg .carl-deity-warning {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--carl-hazard);
+}
+.carl-rpg .carl-deity-benefits .carl-benefit-unreached,
+.carl-rpg .carl-perks .carl-benefit-unreached {
+  opacity: 0.5;
+}
+.carl-rpg .carl-deity-benefits .carl-benefits-none,
+.carl-rpg .carl-perks .carl-benefits-none {
+  list-style: none;
+  padding: 2px 4px;
 }
 .carl-rpg .carl-pdf-import fieldset {
   display: flex;
@@ -1921,6 +3101,16 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+.carl-rpg .carl-pdf-import .carl-pdf-import-map-select {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+.carl-rpg .carl-pdf-import .carl-pdf-import-map-select button {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 0 10px;
 }
 .carl-rpg .carl-pdf-import .carl-pdf-import-maps {
   display: grid;
@@ -2020,4 +3210,1143 @@
   padding: 12px;
   text-align: center;
   color: var(--carl-text-muted);
+}
+.carl-rpg .carl-pet-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 4px;
+}
+.carl-rpg .carl-pet-summary .carl-pet-owner-link {
+  cursor: pointer;
+  font-weight: bold;
+}
+.carl-rpg .carl-pet-summary .carl-pet-no-owner {
+  opacity: 0.7;
+  font-style: italic;
+}
+.carl-rpg .carl-pet-chip {
+  padding: 0 6px;
+  border: 1px solid var(--color-border-dark-secondary);
+  border-radius: 8px;
+  font-size: var(--font-size-12);
+}
+.carl-rpg .carl-pet-chip.warn {
+  border-color: var(--carl-hazard);
+  color: var(--carl-hazard);
+}
+.carl-rpg .carl-pet-command {
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  flex-wrap: wrap;
+}
+.carl-rpg .carl-pet-command > * {
+  flex: 0 0 auto;
+}
+.carl-rpg .carl-pet-command-state {
+  padding: 1px 8px;
+  border: 1px solid var(--color-border-dark-secondary);
+  border-radius: 3px;
+  font-weight: bold;
+  opacity: 0.7;
+}
+.carl-rpg .carl-pet-command-state.active {
+  opacity: 1;
+  border-color: var(--carl-accent);
+}
+.carl-rpg .carl-pet-command-state.state-free, .carl-rpg .carl-pet-command-state.state-restricted {
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-pet-command-state.state-stayingOut, .carl-rpg .carl-pet-command-state.state-hiding {
+  border-color: var(--carl-hazard);
+}
+.carl-rpg .carl-pet-command-button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-pet-command-override {
+  width: auto;
+  min-width: 9em;
+}
+.carl-rpg .carl-pet-traits {
+  margin: 0 0 6px;
+  padding-left: 1.2em;
+}
+.carl-rpg .carl-pet-traits li {
+  margin: 1px 0;
+}
+.carl-rpg .carl-pet-setup {
+  margin-bottom: 6px;
+}
+.carl-rpg .carl-pet-setup .carl-checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-pet-abilities .carl-pet-ability-count {
+  font-weight: normal;
+}
+.carl-rpg .carl-pet-abilities .carl-pet-ability-count.over {
+  color: var(--carl-hazard);
+}
+.carl-rpg .carl-pet-abilities .carl-pet-mature {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+.carl-rpg .carl-pet-abilities .carl-pet-mature input {
+  flex: 1;
+}
+.carl-rpg .carl-pet-int-warning {
+  color: var(--carl-hazard);
+}
+.carl-rpg .carl-vehicle-model {
+  font-style: italic;
+}
+.carl-rpg .carl-pet-chip.moving {
+  border-color: var(--carl-accent);
+  font-weight: bold;
+}
+.carl-rpg .carl-vehicle-statblock .carl-vehicle-move {
+  font-size: 1.4em;
+  font-weight: bold;
+}
+.carl-rpg .carl-vehicle-statblock .carl-vehicle-round a {
+  cursor: pointer;
+}
+.carl-rpg .carl-vehicle-actions {
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0;
+}
+.carl-rpg .carl-vehicle-actions button,
+.carl-rpg .carl-vehicle-actions .carl-vehicle-round-override {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-vehicle-actions .carl-vehicle-round-override {
+  min-width: 11em;
+}
+.carl-rpg .carl-vehicle-occupants,
+.carl-rpg .carl-vehicle-weapons,
+.carl-rpg .carl-vehicle-upgrades {
+  margin-bottom: 6px;
+}
+.carl-rpg .carl-vehicle-occupants .item-name,
+.carl-rpg .carl-vehicle-weapons .item-name,
+.carl-rpg .carl-vehicle-upgrades .item-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-vehicle-occupants .item-name img,
+.carl-rpg .carl-vehicle-weapons .item-name img,
+.carl-rpg .carl-vehicle-upgrades .item-name img {
+  border: none;
+}
+.carl-rpg .carl-vehicle-occupants .carl-vehicle-role,
+.carl-rpg .carl-vehicle-weapons .carl-vehicle-role,
+.carl-rpg .carl-vehicle-upgrades .carl-vehicle-role {
+  flex: 0 0 7em;
+}
+.carl-rpg .carl-vehicle-missing {
+  opacity: 0.6;
+}
+.carl-rpg .carl-vehicle-board {
+  gap: 6px;
+  margin: 4px 0;
+}
+.carl-rpg .carl-vehicle-board button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-vehicle-preset {
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.carl-rpg .carl-vehicle-preset > * {
+  flex: 0 0 auto;
+}
+.carl-rpg .carl-attack-skill,
+.carl-rpg .carl-attack-stat {
+  flex: 0 0 5em;
+}
+.carl-rpg .carl-hotlist {
+  margin-bottom: 6px;
+  border-width: 2px;
+}
+.carl-rpg .carl-hotlist legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: calc(var(--font-size-14) * 1.25);
+  padding-block: 0;
+  font-size: var(--font-size-14);
+  line-height: 1.25;
+}
+.carl-rpg .carl-hotlist-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.carl-rpg .carl-hotlist-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 31px;
+  padding: 1px 4px;
+  font-size: 16px;
+  border-bottom: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.1));
+}
+.carl-rpg .carl-hotlist-row.empty .carl-hotlist-pick {
+  border: 1px dashed var(--carl-border-soft);
+}
+.carl-rpg .carl-hotlist-row.empty .carl-hotlist-pick .carl-hint {
+  font-size: 13px;
+}
+.carl-rpg .carl-hotlist-row.empty .carl-hotlist-pick:hover, .carl-rpg .carl-hotlist-row.empty .carl-hotlist-pick:focus-visible {
+  border-style: solid;
+}
+.carl-rpg .carl-hotlist-row img {
+  flex: 0 0 22px;
+  border: none;
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-number {
+  flex: 0 0 1.5em;
+  text-align: right;
+  opacity: 0.6;
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-detail {
+  flex: 0 0 auto;
+  font-size: 13px;
+  opacity: 0.8;
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-inhand {
+  padding: 0 4px;
+  border: 1px solid var(--carl-accent);
+  border-radius: 3px;
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-pick,
+.carl-rpg .carl-hotlist-row .carl-hotlist-use {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  height: auto;
+  min-height: 28px;
+  margin: 0;
+  padding: 1px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  line-height: 24px;
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-pick > *,
+.carl-rpg .carl-hotlist-row .carl-hotlist-use > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.carl-rpg .carl-hotlist-row button.carl-hotlist-pick,
+.carl-rpg .carl-hotlist-row button.carl-hotlist-use {
+  cursor: pointer;
+  transition: none;
+}
+.carl-rpg .carl-hotlist-row button.carl-hotlist-pick:hover, .carl-rpg .carl-hotlist-row button.carl-hotlist-pick:focus-visible,
+.carl-rpg .carl-hotlist-row button.carl-hotlist-use:hover,
+.carl-rpg .carl-hotlist-row button.carl-hotlist-use:focus-visible {
+  border-color: var(--carl-accent);
+  background: rgba(0, 0, 0, 0.05);
+}
+.carl-rpg .carl-hotlist-row .carl-hotlist-badge {
+  flex: 0 0 auto;
+  min-width: 4em;
+  padding: 0 6px;
+  border: 1px solid var(--color-border-dark-tertiary, rgba(0, 0, 0, 0.25));
+  border-radius: 3px;
+  font-size: 13px;
+  line-height: 1.2;
+  text-align: center;
+}
+.carl-rpg .carl-hotlist-row .carl-slot-clear {
+  flex: 0 0 auto;
+}
+.carl-rpg .carl-hotlist-row.kind-spell .carl-hotlist-badge {
+  border-color: var(--carl-accent);
+}
+.carl-rpg .carl-hotlist-pick-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-filter {
+  width: 100%;
+  box-sizing: border-box;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-group[hidden] {
+  display: none;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry[hidden] {
+  display: none;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry input[type=radio] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:has(input:focus-visible) {
+  border-color: var(--carl-accent);
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry:has(input:checked) {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: var(--carl-accent);
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry img {
+  flex: 0 0 24px;
+  border: none;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry .carl-hotlist-pick-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-rpg .carl-hotlist-pick-body .carl-hotlist-pick-entry .carl-hotlist-pick-detail {
+  flex: 0 0 auto;
+  font-size: var(--font-size-12);
+  opacity: 0.8;
+}
+.carl-rpg .items-list .item.carl-worn h4 {
+  font-weight: bold;
+}
+.carl-rpg .carl-hotlist-pin .fa-star.fas {
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-create-crawler {
+  flex: 0 0 auto;
+  width: auto;
+  align-self: center;
+  white-space: nowrap;
+}
+.carl-rpg .carl-chargen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-chargen-steps {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  border-bottom: 1px solid var(--carl-border-soft);
+}
+.carl-rpg .carl-chargen-steps h2 {
+  margin: 0;
+  border: none;
+}
+.carl-rpg .carl-chargen-steps .carl-chargen-step-count {
+  color: var(--carl-text-muted);
+  font-size: var(--font-size-12);
+}
+.carl-rpg .carl-chargen-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.carl-rpg .carl-chargen-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: center;
+  gap: 6px 10px;
+}
+.carl-rpg .carl-chargen-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-chargen-inline select,
+.carl-rpg .carl-chargen-inline input {
+  flex: 1 1 auto;
+}
+.carl-rpg .carl-chargen-inline button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-chargen-stages {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.carl-rpg .carl-chargen-stage,
+.carl-rpg .carl-chargen-past {
+  margin: 0;
+}
+.carl-rpg .carl-chargen-stage legend .carl-hint,
+.carl-rpg .carl-chargen-past legend .carl-hint {
+  font-weight: normal;
+}
+.carl-rpg .carl-chargen-skills {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+.carl-rpg .carl-chargen-skills li {
+  display: flex;
+  align-items: center;
+  height: 24px;
+  min-width: 0;
+}
+.carl-rpg .carl-chargen-skills label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.carl-rpg .carl-chargen-skills .carl-chargen-skill-placeholder {
+  color: var(--carl-text-muted);
+  opacity: 0.5;
+  padding-left: 4px;
+}
+.carl-rpg .carl-chargen-skills .carl-chargen-taken {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+.carl-rpg .carl-chargen-stats {
+  width: auto;
+  margin: 0;
+}
+.carl-rpg .carl-chargen-stats th {
+  text-align: left;
+  padding-right: 12px;
+}
+.carl-rpg .carl-chargen-stats td {
+  padding: 2px 8px;
+}
+.carl-rpg .carl-chargen-past textarea {
+  width: 100%;
+  margin-top: 4px;
+}
+.carl-rpg .carl-chargen-sets {
+  flex-wrap: wrap;
+}
+.carl-rpg .carl-chargen-review {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.carl-rpg .carl-chargen-problems[hidden] {
+  display: none;
+}
+.carl-rpg .carl-chargen-problems {
+  list-style: none;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 3px;
+  background: var(--carl-panel-bg);
+  color: var(--carl-accent);
+}
+.carl-rpg .carl-chargen-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.carl-rpg .carl-chargen-nav button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-mob-attacks {
+  border: 1px solid color-mix(in srgb, var(--carl-border-soft) 70%, transparent);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.carl-rpg .carl-mob-attacks .carl-add-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+}
+.carl-rpg .carl-mob-attacks-head {
+  display: flex;
+  align-items: baseline;
+  padding: 2px 6px;
+  color: var(--carl-header-text);
+  background: var(--carl-header-bg);
+}
+.carl-rpg .carl-mob-attacks-title {
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.carl-rpg .carl-mob-attacks-count {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.85;
+}
+.carl-rpg .carl-mob-attack-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.carl-rpg .carl-mob-attack {
+  border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 30%, transparent);
+}
+.carl-rpg .carl-mob-attack:first-child {
+  border-top: none;
+}
+.carl-rpg .carl-mob-attack-line {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) auto auto 10px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 4px 6px;
+  list-style: none;
+  cursor: pointer;
+}
+.carl-rpg .carl-mob-attack-line::-webkit-details-marker {
+  display: none;
+}
+.carl-rpg .carl-mob-attack-line::after {
+  content: "▸";
+  justify-self: end;
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-mob-attack details[open] > .carl-mob-attack-line::after {
+  content: "▾";
+}
+.carl-rpg .carl-mob-attack-kind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.carl-rpg .carl-mob-attack-kind i {
+  font-size: 9px;
+}
+.carl-rpg .carl-mob-attack-kind[data-kind=melee] {
+  background: #4a4243;
+  color: #ddd5d4;
+}
+.carl-rpg .carl-mob-attack-kind[data-kind=ranged] {
+  background: #2f5f9e;
+  color: #eef4ff;
+}
+.carl-rpg .carl-mob-attack-kind[data-kind=area] {
+  background: #d99a26;
+  color: #2a1a02;
+}
+.carl-rpg .carl-mob-attack-what {
+  min-width: 0;
+}
+.carl-rpg .carl-mob-attack-what strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-rpg .carl-mob-attack-notes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  font-size: 10.5px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-mob-attack-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 5px;
+  border-radius: 3px;
+  border: 1px solid var(--carl-border-soft-2);
+  background: color-mix(in srgb, var(--carl-accent-2) 22%, transparent);
+  color: var(--carl-text);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-mob-attack-pill em {
+  font-style: normal;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-mob-attack-num {
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.carl-rpg .carl-mob-attack-num b {
+  font-size: 14px;
+}
+.carl-rpg .carl-mob-attack-num small {
+  display: block;
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-mob-attack-acts {
+  display: flex;
+  gap: 3px;
+}
+.carl-rpg .carl-mob-attack-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+  min-height: 0;
+  padding: 0;
+  border-radius: 3px;
+  border: 1px solid color-mix(in srgb, var(--carl-text) 25%, transparent);
+  background: var(--carl-input-bg);
+  color: var(--carl-text);
+  font-size: 11px;
+  line-height: 1;
+}
+.carl-rpg .carl-mob-attack-icon.is-primary {
+  background: var(--carl-danger);
+  border-color: color-mix(in srgb, var(--carl-danger) 60%, var(--carl-accent));
+  color: var(--carl-header-text);
+}
+.carl-rpg .carl-mob-attack-icon:hover, .carl-rpg .carl-mob-attack-icon:focus-visible {
+  border-color: var(--carl-accent);
+}
+.carl-rpg .carl-mob-attack-detail {
+  padding: 0 8px 6px 76px;
+  font-size: 12px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-mob-attack-detail p {
+  margin: 0 0 2px;
+}
+.carl-rpg .carl-mob-attack-detail em,
+.carl-rpg .carl-mob-attack-detail i {
+  color: var(--carl-text);
+}
+.carl-rpg .carl-single-page {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.carl-rpg .carl-mob-attack-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.carl-rpg .carl-mob-attack-sheet .carl-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-item-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-item-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--carl-header-text);
+}
+.carl-rpg .carl-check-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: end;
+}
+.carl-rpg .carl-row-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: #4a4243;
+  color: #ddd5d4;
+}
+.carl-rpg .carl-row-chip i {
+  font-size: 9px;
+}
+.carl-rpg .carl-row-chip[data-tone=good] {
+  background: #2f9e4f;
+  color: #f2fff4;
+}
+.carl-rpg .carl-row-chip[data-tone=accent] {
+  background: var(--carl-danger);
+  color: var(--carl-header-text);
+}
+.carl-rpg .carl-row-chip[data-tone=blue] {
+  background: #2f5f9e;
+  color: #eef4ff;
+}
+.carl-rpg .carl-row-chip[data-tone=gold] {
+  background: #d99a26;
+  color: #2a1a02;
+}
+.carl-rpg .carl-row-chip[data-tone=muted] {
+  background: transparent;
+  border: 1px dashed var(--carl-text-muted);
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-item-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+.carl-rpg .carl-item-chips .item-type-label {
+  margin-right: 2px;
+}
+.carl-rpg .carl-item-page {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+.carl-rpg .carl-item-page > prose-mirror {
+  min-height: 3em;
+}
+.carl-rpg .carl-item-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.carl-rpg .carl-item-group-summary {
+  margin-left: auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-check-field {
+  font-size: 12px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-edit-row-grow {
+  flex: 1 1 100%;
+}
+.carl-rpg .carl-edit-row-grow input[type=text] {
+  width: 100%;
+}
+.carl-rpg .carl-edit-rows {
+  border: 1px solid color-mix(in srgb, var(--carl-text) 14%, transparent);
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.12);
+}
+.carl-rpg .carl-edit-rows > * + * {
+  border-top: 1px solid color-mix(in srgb, var(--carl-text) 10%, transparent);
+}
+.carl-rpg .carl-edit-row-line {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto auto 10px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 4px 6px;
+  list-style: none;
+  cursor: pointer;
+}
+.carl-rpg .carl-edit-row-line::-webkit-details-marker {
+  display: none;
+}
+.carl-rpg .carl-edit-row-line::after {
+  content: "▸";
+  justify-self: end;
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-edit-row-line:hover, .carl-rpg .carl-edit-row-line:focus-visible {
+  background: color-mix(in srgb, var(--carl-accent) 10%, transparent);
+  outline: none;
+}
+.carl-rpg .carl-edit-row.is-debuff > .carl-edit-row-line {
+  grid-template-columns: 116px minmax(0, 1fr) auto auto 10px;
+}
+.carl-rpg .carl-edit-row[open] > .carl-edit-row-line {
+  background: color-mix(in srgb, var(--carl-accent) 8%, transparent);
+}
+.carl-rpg .carl-edit-row[open] > .carl-edit-row-line::after {
+  content: "▾";
+}
+.carl-rpg .carl-edit-row-what {
+  min-width: 0;
+}
+.carl-rpg .carl-edit-row-what b {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.carl-rpg .carl-edit-row-sub {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-edit-row-value {
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--carl-accent);
+  font-variant-numeric: tabular-nums;
+}
+.carl-rpg .carl-edit-row-acts {
+  display: flex;
+  gap: 3px;
+}
+.carl-rpg .carl-edit-row-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+  border: 1px solid color-mix(in srgb, var(--carl-text) 25%, transparent);
+  border-radius: 3px;
+  background: var(--carl-input-bg);
+  font-size: 11px;
+}
+.carl-rpg .carl-edit-row-icon:hover, .carl-rpg .carl-edit-row-icon:focus-visible {
+  border-color: var(--carl-accent);
+  text-shadow: none;
+}
+.carl-rpg .carl-edit-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px 8px 8px;
+  border-top: 1px dashed color-mix(in srgb, var(--carl-text) 14%, transparent);
+}
+.carl-rpg .carl-edit-row-body .carl-field-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 6px 10px;
+}
+.carl-rpg .carl-conditions-editor .carl-condition-row {
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+.carl-rpg .carl-conditions-editor .carl-condition-row input[type=text] {
+  flex: 1;
+}
+.carl-rpg .carl-conditions-editor .carl-hint {
+  margin: 0;
+}
+.carl-rpg .carl-conditions-editor .carl-add-link {
+  margin-top: 2px;
+}
+.carl-rpg .carl-tier-link {
+  display: grid;
+  grid-template-columns: 74px 56px minmax(0, 1fr) 12px;
+  align-items: center;
+  column-gap: 8px;
+  padding: 4px 6px;
+  color: var(--carl-text);
+}
+.carl-rpg .carl-tier-link:hover, .carl-rpg .carl-tier-link:focus-visible {
+  background: color-mix(in srgb, var(--carl-accent) 10%, transparent);
+  text-shadow: none;
+  outline: none;
+}
+.carl-rpg .carl-tier-link-rank {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.carl-rpg .carl-tier-link-summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+}
+.carl-rpg .carl-tier-link-summary.is-empty {
+  color: var(--carl-text-muted);
+  font-style: italic;
+}
+.carl-rpg .carl-tier-link-go {
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-tier-card {
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.carl-rpg .carl-tier-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px 3px 8px;
+  background: var(--carl-header-bg);
+  color: var(--carl-header-text);
+}
+.carl-rpg .carl-tier-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.carl-rpg .carl-tier-card-ctl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.carl-rpg .carl-tier-card-ctl select {
+  height: 22px;
+  font-size: 12px;
+}
+.carl-rpg .carl-tier-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-tier-card-body .carl-upgrade-description {
+  width: 100%;
+  min-height: 2.6em;
+  resize: vertical;
+}
+.carl-rpg .carl-tier-part {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.carl-rpg .carl-tier-part.carl-upgrade-damage-split {
+  margin: 0;
+}
+.carl-rpg .carl-tier-part .carl-add-link {
+  margin-top: 0;
+}
+.carl-rpg .carl-tier-part-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--carl-accent-dim);
+}
+.carl-rpg .carl-add-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px dashed color-mix(in srgb, var(--carl-text) 30%, transparent);
+  border-radius: 4px;
+}
+.carl-rpg .carl-add-bar button {
+  flex: 0 0 auto;
+  width: auto;
+  height: 22px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb, var(--carl-text) 28%, transparent);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--carl-text);
+  font-size: 12px;
+  line-height: 1;
+}
+.carl-rpg .carl-add-bar button i {
+  margin-right: 3px;
+  font-size: 10px;
+}
+.carl-rpg .carl-add-bar button:hover, .carl-rpg .carl-add-bar button:focus-visible {
+  border-color: var(--carl-accent);
+  box-shadow: none;
+}
+.carl-rpg .carl-add-bar-label {
+  font-size: 11px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-only-with-pills {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-only-with-pills select,
+.carl-rpg .carl-only-with-pills input[type=text] {
+  width: auto;
+  min-width: 9em;
+}
+.carl-rpg .carl-only-with-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--carl-border-soft-2);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--carl-accent-2) 22%, transparent);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.carl-rpg .carl-only-with-pill a {
+  font-size: 10px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-only-with-pill a:hover, .carl-rpg .carl-only-with-pill a:focus-visible {
+  color: var(--carl-text);
+  text-shadow: none;
+}
+.carl-rpg .carl-only-with .carl-hint {
+  margin: 2px 0 0;
+}
+.carl-rpg .carl-inline-fields {
+  display: inline-flex;
+  gap: 4px;
+}
+.carl-rpg .carl-consumable .carl-hint {
+  margin: 0;
+}
+.carl-rpg .carl-worn-on {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.carl-rpg .carl-worn-on > .resource-label {
+  flex: 0 0 100%;
+  margin: 0;
+}
+.carl-rpg .carl-worn-on .carl-hint {
+  flex: 0 0 100%;
+  margin: 0;
+}
+.carl-rpg .carl-shield-damage {
+  display: flex;
+  flex: 0 0 100%;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-shield-damage .resource-label {
+  margin: 0;
+}
+.carl-rpg .carl-shield-damage .carl-shield-dr {
+  color: var(--carl-text-muted);
+  font-size: 12px;
+}
+.carl-rpg .carl-shield-damage .carl-shield-repair {
+  flex: 0 0 auto;
+  width: auto;
+  height: 22px;
+  margin: 0;
+  padding: 0 8px;
+  font-size: 12px;
+  line-height: 1;
+}
+.carl-rpg .carl-worn-on-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.carl-rpg .carl-worn-pill {
+  flex: 0 0 auto;
+  width: auto;
+  height: 22px;
+  margin: 0;
+  padding: 0 8px;
+  border: 1px dashed color-mix(in srgb, var(--carl-text) 35%, transparent);
+  border-radius: 11px;
+  background: transparent;
+  color: var(--carl-text-muted);
+  font-size: 12px;
+  line-height: 1;
+}
+.carl-rpg .carl-worn-pill i {
+  margin-right: 4px;
+  font-size: 10px;
+}
+.carl-rpg .carl-worn-pill.is-on {
+  border-style: solid;
+  border-color: var(--carl-border-soft-2);
+  background: color-mix(in srgb, var(--carl-accent-2) 22%, transparent);
+  color: var(--carl-text);
+}
+.carl-rpg .carl-worn-pill:hover:not(:disabled), .carl-rpg .carl-worn-pill:focus-visible {
+  border-color: var(--carl-accent);
+  box-shadow: none;
+}
+.carl-rpg .carl-worn-pill:disabled {
+  opacity: 0.8;
+  cursor: default;
+}
+.carl-rpg.item nav.tabs [data-tab] i {
+  margin-right: 4px;
+  font-size: 10px;
+  opacity: 0.8;
 }

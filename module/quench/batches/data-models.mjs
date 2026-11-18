@@ -11,6 +11,7 @@ import {
   resolveSlotValue,
   unwearItem,
 } from "../../helpers/equip-slots.mjs";
+import { placeInHotlist } from "../../helpers/hotlist.mjs";
 
 export default function register(quench) {
   quench.registerBatch(
@@ -77,25 +78,28 @@ export default function register(quench) {
             assert.equal(s.details.move, 20);
             assert.equal(s.details.step, 10);
             assert.equal(s.details.size, 4);
-            for (const key of [
-              "externalBuffs",
-              "hotlist",
-              "accessories",
-              "importantKills",
-              "clubs",
-              "deity",
-              "sponsors",
-            ]) {
+            for (const key of ["externalBuffs", "hotlist", "accessories"]) {
               assert.deepEqual(s[key], [], key);
             }
-            assert.deepEqual(s.personalSpace.notes, []);
+            // The Details tab's notes are rich text boxes.
+            for (const key of ["importantKills", "clubs", "sponsors", "story"]) {
+              assert.equal(s[key], "", key);
+            }
+            // The Deity is a structured block (the Benefits tab).
+            assert.equal(s.deity.name, "");
+            assert.equal(s.deity.tier, "");
+            assert.equal(s.deity.worshipDays, 0);
+            assert.equal(s.deity.missedOfferings, 0);
+            assert.equal(s.deity.penitence, 0);
+            assert.isFalse(s.deity.shunned);
+            assert.isFalse(s.deity.fallen);
+            assert.equal(s.deity.notes, "");
+            assert.equal(s.personalSpace.notes, "");
+            assert.equal(s.personalSpace.tier, "");
             assert.equal(s.gearSlots.mainHand, "");
-            assert.equal(s.story.regrets, "");
-            assert.equal(s.pet.hb.max, 10);
-            assert.isNull(s.pet.str);
-            assert.deepEqual(s.pet.attacks, []);
-            assert.equal(s.mount.hb.value, 10);
-            assert.isNull(s.mount.occupants);
+            // The old Pet tab's blocks are gone (now Pet and Vehicle actors).
+            assert.notProperty(s, "pet");
+            assert.notProperty(s, "mount");
           } finally {
             await deleteTestActor(actor);
           }
@@ -108,15 +112,35 @@ export default function register(quench) {
           try {
             await actor.update({
               "system.hotlist": { 0: "Healing Potion", 1: "", 2: "Goblin Dynamite" },
-              "system.pet.attacks": { 0: "Bite 1d6" },
+              "system.externalBuffs": { 0: "Blessed" },
               "system.details.size": "5",
             });
             assert.deepEqual(actor.system.hotlist, ["Healing Potion", "", "Goblin Dynamite"]);
-            assert.deepEqual(actor.system.pet.attacks, ["Bite 1d6"]);
+            assert.deepEqual(actor.system.externalBuffs, ["Blessed"]);
             assert.equal(actor.system.details.size, 5);
           } finally {
             await deleteTestActor(actor);
           }
+        });
+
+        it("system.json's htmlFields each name a text field in the schema", function () {
+          // The server cleans every htmlFields path as an HTML string. One
+          // that points at an object (as "deity" did after the Deity box
+          // became a block) wipes that object on every save. The manifest is
+          // read at startup, so this checks what the running server uses.
+          const { StringField } = foundry.data.fields;
+          let checked = 0;
+          for (const [documentName, types] of Object.entries(game.system.documentTypes ?? {})) {
+            for (const [type, { htmlFields = [] } = {}] of Object.entries(types)) {
+              const model = CONFIG[documentName]?.dataModels?.[type];
+              for (const path of htmlFields) {
+                const field = model?.schema.getField(path);
+                assert.instanceOf(field, StringField, `${documentName}.${type} htmlFields "${path}" must be a text field`);
+                checked++;
+              }
+            }
+          }
+          assert.isAbove(checked, 0, "the Character's htmlFields were found");
         });
 
         it("Size rejects values outside the 1-8 scale", async function () {
@@ -444,6 +468,69 @@ export default function register(quench) {
             await deleteTestActor(actor);
           }
         });
+
+        it("amount can't be stored as null (a cleared Amount isn't a +0 grant)", async function () {
+          const amountField = CONFIG.Item.dataModels.race.schema.getField("skillChoiceGrants").element.fields.amount;
+          assert.isFalse(amountField.nullable);
+          const actor = await createTestCharacter();
+          try {
+            const race = await createTestItem(actor, "race", "race", {
+              system: { skillChoiceGrants: [{ category: "crafting", amount: null }] },
+            });
+            assert.equal(race.system.skillChoiceGrants[0].amount, 1, "created with null: the initial 1");
+            await race.update({ "system.skillChoiceGrants": [{ category: "crafting", amount: 3 }] });
+            await race.update({ "system.skillChoiceGrants": [{ category: "crafting", amount: null }] });
+            assert.equal(race._source.system.skillChoiceGrants[0].amount, 1, "updated to null: the initial 1");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("system.json htmlFields: the server sanitizes every rich text field", function () {
+        useQuenchTimeout(this);
+        const { ArrayField, HTMLField, SchemaField } = foundry.data.fields;
+        // The paths of a schema's HTMLFields, as htmlFields names them: an
+        // array's entries without an index.
+        const htmlPaths = (field, path = []) => {
+          if (field instanceof HTMLField) return [path.join(".")];
+          if (field instanceof SchemaField) return Object.entries(field.fields).flatMap(([key, f]) => htmlPaths(f, [...path, key]));
+          if (field instanceof ArrayField) return htmlPaths(field.element, path);
+          return [];
+        };
+        const manifest = async () => (await fetch(foundry.utils.getRoute(`systems/${game.system.id}/system.json`))).json();
+
+        it("each type declares its description or biography, and every other HTMLField it has", async function () {
+          const { documentTypes } = await manifest();
+          for (const documentName of ["Actor", "Item"]) {
+            for (const [type, model] of Object.entries(CONFIG[documentName].dataModels)) {
+              const declared = documentTypes[documentName]?.[type]?.htmlFields ?? [];
+              const main = documentName === "Actor" && type !== "lootBox" ? "biography" : "description";
+              assert.include(declared, main, `${documentName}.${type}: ${main}`);
+              for (const path of htmlPaths(model.schema)) {
+                assert.include(declared, path, `${documentName}.${type}: ${path} is an HTMLField`);
+              }
+            }
+          }
+        });
+
+        // Needs a world relaunch after system.json changes: the server reads
+        // htmlFields when it opens the world's databases.
+        it("a script in an Item's description or an Actor's biography isn't stored", async function () {
+          const evil = '<p>kept</p><script>window.carlQuenchXss = 1</script><img src="x" onerror="window.carlQuenchXss = 1">';
+          const item = await Item.create({ name: `Quench xss ${foundry.utils.randomID()}`, type: "feature", system: { description: evil } });
+          const pet = await Actor.create({ name: `Quench xss ${foundry.utils.randomID()}`, type: "pet", system: { biography: evil } });
+          try {
+            for (const stored of [item._source.system.description, pet._source.system.biography]) {
+              assert.include(stored, "<p>kept</p>");
+              assert.notInclude(stored, "<script");
+              assert.notInclude(stored, "onerror");
+            }
+          } finally {
+            await item.delete();
+            await deleteTestActor(pet);
+          }
+        });
       });
 
       describe("helpers/equip-slots.mjs (Inventory Hotlist/Equipped slots)", function () {
@@ -549,7 +636,7 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const potion = await createTestItem(actor, "item", "potion");
-            await assignItemToSlot(actor, { slotType: "hotlist", slotKey: "3" }, potion);
+            await placeInHotlist(actor, 3, potion);
             assert.equal(actor.system.hotlist[3], potion.id);
             assert.lengthOf(actor.system.hotlist, 10);
             assert.isFalse(potion.system.equipped);
@@ -567,6 +654,64 @@ export default function register(quench) {
           try {
             assert.equal(resolveSlotValue(actor, "Goblin Dynamite").name, "Goblin Dynamite");
             assert.equal(resolveSlotValue(actor, foundry.utils.randomID()).name, "");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("folds the old Details slot lists and Story into rich text boxes", async function () {
+          const actor = await createTestCharacter("legacy notes", {
+            system: {
+              importantKills: ["A goblin", "", "The <Hoarder>"],
+              clubs: ["Desperado Club"],
+              deity: [],
+              sponsors: ["Valtay", "Borant"],
+              personalSpace: { tier: "2", size: "Medium", amenities: "Hot tub", notes: ["", "Mini fridge"] },
+              story: { pastTrauma: "Lost a cat\nTwice", looseEnds: "", regrets: "Everything", notes: "" },
+            },
+          });
+          try {
+            const s = actor.system;
+            assert.equal(s.importantKills, "<p>A goblin</p><p>The &lt;Hoarder&gt;</p>", "one paragraph per non-empty slot, escaped");
+            assert.equal(s.clubs, "<p>Desperado Club</p>");
+            assert.equal(s.deity.notes, "", "an empty old Deity list becomes empty notes");
+            assert.equal(s.sponsors, "<p>Valtay</p><p>Borant</p>");
+            assert.equal(s.personalSpace.tier, "2");
+            assert.equal(s.personalSpace.size, "Medium");
+            assert.include(s.personalSpace.notes, "Hot tub");
+            assert.include(s.personalSpace.notes, "<p>Mini fridge</p>");
+            assert.notProperty(s.personalSpace, "amenities");
+            assert.include(s.story, game.i18n.localize("CARLRPG.Actor.PastTrauma"));
+            assert.include(s.story, "<p>Lost a cat</p><p>Twice</p>");
+            assert.include(s.story, "<p>Everything</p>");
+            assert.notInclude(s.story, game.i18n.localize("CARLRPG.Actor.LooseEnds"), "empty parts are left out");
+
+            // An old "amenities" key left in the database isn't folded in again.
+            const reloaded = actor.system.constructor.migrateData({
+              personalSpace: { amenities: "Hot tub", notes: "<p>mine</p>" },
+            });
+            assert.equal(reloaded.personalSpace.notes, "<p>mine</p>");
+
+            // Saving the new shapes changes nothing; a cleared box stays cleared.
+            await actor.update({ "system.clubs": "" });
+            assert.equal(actor.system.clubs, "");
+            assert.equal(actor.system.sponsors, "<p>Valtay</p><p>Borant</p>");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("keeps the old Deity rich text as the Deity block's notes", async function () {
+          const actor = await createTestCharacter("legacy deity", {
+            system: { deity: "<p>Apito - a single tear</p>" },
+          });
+          try {
+            assert.equal(actor.system.deity.notes, "<p>Apito - a single tear</p>");
+            assert.equal(actor.system.deity.tier, "");
+            // The shim only touches the old string shape.
+            const migrated = actor.system.constructor.migrateData({ deity: { name: "Apito", notes: "<p>x</p>" } });
+            assert.deepEqual(migrated.deity, { name: "Apito", notes: "<p>x</p>" });
+            assert.deepEqual(actor.system.constructor.migrateData({ deity: "<p>y</p>" }).deity, { notes: "<p>y</p>" });
           } finally {
             await deleteTestActor(actor);
           }

@@ -1,0 +1,30 @@
+{{!-- A Character's Resistances, read-only (the Combat tab's Resistances
+      button, actor-sheet.mjs #onShowResistances): each damage type it
+      resists, is immune or vulnerable to, and what grants it. They come from
+      the Race, Class, worn gear and Buffs, so nothing is edited here.
+      Context: rows. --}}
+<div class="carl-resistances-dialog-body">
+  {{#if rows.length}}
+  <table class="carl-resistance-table">
+    <thead>
+      <tr>
+        <th>{{localize "CARLRPG.Actor.DamageType"}}</th>
+        <th>{{localize "CARLRPG.Actor.ResistanceState"}}</th>
+        <th>{{localize "CARLRPG.Actor.ResistanceSource"}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each rows as |row|}}
+      <tr class="carl-resistance-{{row.state}}">
+        <td>{{localize row.label}}</td>
+        <td class="carl-resistance-state">{{localize row.stateLabel}}</td>
+        <td>{{row.source}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+  {{else}}
+  <p>{{localize "CARLRPG.Actor.ResistNoneLong"}}</p>
+  {{/if}}
+  <p class="carl-hint">{{localize "CARLRPG.Actor.ResistancesDialogHint"}}</p>
+</div>

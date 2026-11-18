@@ -1,0 +1,16 @@
+{{!-- Core's tracker list, grouped into Mobs and Crawlers in a PvE fight
+     (module/apps/combat-tracker.mjs). --}}
+<ol class="combat-tracker plain{{#if phaseGroups}} carl-grouped{{/if}}">
+    {{#if phaseGroups}}
+    {{#each phaseGroups}}
+    <li class="carl-combat-group" data-group="{{ key }}">{{ label }}</li>
+    {{#each turns}}
+    {{> "systems/carl-rpg/templates/combat/combatant.hbs" noInitiative=true}}
+    {{/each}}
+    {{/each}}
+    {{else}}
+    {{#each turns}}
+    {{> "systems/carl-rpg/templates/combat/combatant.hbs"}}
+    {{/each}}
+    {{/if}}
+</ol>

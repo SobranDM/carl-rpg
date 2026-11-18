@@ -1,7 +1,10 @@
 import CarlRPGActorBase from "./actor-base.mjs";
-import { getStatMod } from "../helpers/rules.mjs";
-import { aggregateActorBonuses, computeActiveShieldSlots } from "../helpers/modifiers.mjs";
+import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
+import { linesToHtml, storyToHtml } from "../helpers/rich-text.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
+import {
+  defineStatsField, deriveStats, deriveDefenses, deriveMovement, deriveResourceCaps, creatureRollData,
+} from "./shared/derive-creature.mjs";
 
 export default class CarlRPGCharacter extends CarlRPGActorBase {
   static defineSchema() {
@@ -36,24 +39,8 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     schema.class = new fields.StringField({ required: false, blank: true, initial: "" });
     schema.race = new fields.StringField({ required: false, blank: true, initial: "" });
 
-    const statKeys = Object.keys(CONFIG.CARLRPG.stats);
-    const statsSchema = {};
-    for (const stat of statKeys) {
-      statsSchema[stat] = new fields.SchemaField({
-        // Base value - GM/player-editable, NEVER touched by the modifier
-        // engine. `bonus`/`effective`/`mod` are derived-only every
-        // prepareDerivedData pass; mod is computed from effective
-        // (value+bonus), not value alone. `effective` exists purely so the
-        // sheet can show the summed total instead of making the reader do
-        // the arithmetic themselves.
-        value: new fields.NumberField({ ...requiredInteger, initial: 3, min: 1 }),
-        bonus: new fields.NumberField({ ...requiredInteger, initial: 0 }),
-        effective: new fields.NumberField({ ...requiredInteger, initial: 3 }),
-        mod: new fields.NumberField({ ...requiredInteger, initial: 0 }),
-        label: new fields.StringField({ required: true, blank: true }),
-      });
-    }
-    schema.stats = new fields.SchemaField(statsSchema);
+    // Shape and derivation shared with Mobs and Pets: data/shared/derive-creature.mjs.
+    schema.stats = defineStatsField(3);
 
     // Active Debuffs/Buffs (Table 11) - shape in data/shared/condition-entry.mjs.
     schema.conditions = defineConditionsField();
@@ -71,7 +58,6 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     // CONFIG.CARLRPG.characterListSlots); storage is a plain string array.
     const text = () => new fields.StringField({ required: true, blank: true, initial: "" });
     const textList = () => new fields.ArrayField(text(), { required: true, initial: [] });
-    const optionalInteger = { required: true, nullable: true, integer: true, initial: null };
 
     schema.details = new fields.SchemaField({
       pronouns: text(),
@@ -101,64 +87,63 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
       Object.fromEntries(Object.keys(CONFIG.CARLRPG.gearSlots).map((key) => [key, text()])),
     );
     schema.accessories = textList();
-    schema.story = new fields.SchemaField({
-      pastTrauma: text(),
-      looseEnds: text(),
-      regrets: text(),
-      notes: text(),
-    });
 
-    // Pet / Mount-Vehicle: kept as an inline stat block (as on the printed
-    // sheet) rather than a linked Actor. hb is slots remaining / total slots.
-    const companionHb = () =>
-      new fields.SchemaField({
-        value: new fields.NumberField({ ...requiredInteger, initial: 10, min: 0 }),
-        max: new fields.NumberField({ ...requiredInteger, initial: 10, min: 0 }),
-      });
-    schema.pet = new fields.SchemaField({
-      name: text(),
-      level: new fields.NumberField(optionalInteger),
-      str: new fields.NumberField(optionalInteger),
-      int: new fields.NumberField(optionalInteger),
-      con: new fields.NumberField(optionalInteger),
-      dex: new fields.NumberField(optionalInteger),
-      cha: new fields.NumberField(optionalInteger),
-      dr: new fields.NumberField(optionalInteger),
-      evade: new fields.NumberField(optionalInteger),
-      move: new fields.NumberField(optionalInteger),
-      size: text(),
-      attacks: textList(),
-      special: text(),
-      hb: companionHb(),
-    });
-    schema.mount = new fields.SchemaField({
-      name: text(),
-      size: text(),
-      move: new fields.NumberField(optionalInteger),
-      occupants: new fields.NumberField(optionalInteger),
-      dr: new fields.NumberField(optionalInteger),
-      accessories: text(),
-      hb: companionHb(),
-    });
+    // The Details tab's free-form notes (details.hbs): rich text boxes like
+    // Biography. They were once fixed slot lists and a four-part Story -
+    // folded in by migrateData below.
+    const richText = () => new fields.HTMLField({ required: true, blank: true, initial: "" });
+    schema.story = richText();
 
-    schema.importantKills = textList();
-    schema.clubs = textList();
+    // The old Pet tab's Pet and Mount/Vehicle blocks (system.pet,
+    // system.mount) are gone: they became Pet and Vehicle actors (the 0.7.0
+    // migration, module/helpers/migration.mjs). Until it has run, CarlRPGActor.
+    // migrateData keeps their values in a flag, as Foundry drops keys the
+    // schema doesn't know.
+
+    schema.importantKills = richText();
+    schema.clubs = richText();
     schema.personalSpace = new fields.SchemaField({
       tier: text(),
       size: text(),
-      amenities: text(),
-      notes: textList(),
+      notes: richText(),
     });
-    schema.deity = textList();
-    // "Crawlers are limited to three Sponsors each" (p.284) - three slots
-    // (CONFIG.CARLRPG.characterListSlots.sponsors).
-    schema.sponsors = textList();
+    // Worship (pp.163-164): the god, the church Tier (Acolyte/Devotee/
+    // Zealot - CONFIG.CARLRPG.featureTiers), consecutive days toward the
+    // next Boon ("every five consecutive days of worship", p.164) and the
+    // offering/penance bookkeeping. The tithe is derived from the Tier and
+    // penitence (module/helpers/worship.mjs), never stored. `notes` holds
+    // the old free-text Deity box (migrateData below).
+    schema.deity = new fields.SchemaField({
+      name: text(),
+      tier: new fields.StringField({
+        required: true, blank: true, initial: "",
+        choices: ["", ...Object.keys(CONFIG.CARLRPG.featureTiers)],
+      }),
+      worshipDays: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
+      // Consecutive missed daily offerings (p.163): 1 - no worship benefits
+      // that day, 2 - a Divine Debuff, 3 - Fallen from Grace.
+      missedOfferings: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0, max: 3 }),
+      // Offenses under penance (p.312): 1 doubles the tithe, 2 quadruples it.
+      penitence: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0, max: 2 }),
+      shunned: new fields.BooleanField({ required: true, initial: false }),
+      fallen: new fields.BooleanField({ required: true, initial: false }),
+      notes: richText(),
+    });
+    // "Crawlers are limited to three Sponsors each" (p.284).
+    schema.sponsors = richText();
 
     return schema;
   }
 
   /** @override */
   static migrateData(source) {
+    CarlRPGCharacter.#migrateNotesToRichText(source);
+    // The Deity rich text box became a structured block; its text is kept
+    // as the block's notes. Runs after the slot-list fold above, so an old
+    // array becomes HTML first. This only reshapes it in memory; the 0.7.0
+    // Deity migration (module/helpers/migration.mjs) saves it, so a later
+    // partial Deity edit can't be merged over the old string.
+    if (typeof source.deity === "string") source.deity = { notes: source.deity };
     // The old free-text "Hands/Holding" gear slot became Main Hand.
     const gear = source.gearSlots;
     if (gear && "hands" in gear) {
@@ -166,6 +151,46 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
       delete gear.hands;
     }
     return super.migrateData(source);
+  }
+
+  /**
+   * The Details tab's slot lists became rich text boxes: each non-empty
+   * slot becomes its own paragraph (module/helpers/rich-text.mjs). Only the
+   * old shapes are converted (an array, the four-part Story object, a
+   * Personal Space with Amenities), so this runs once per document and a
+   * box someone has since cleared stays cleared.
+   * @param {object} source
+   */
+  static #migrateNotesToRichText(source) {
+    for (const key of ["importantKills", "clubs", "deity", "sponsors"]) {
+      if (Array.isArray(source[key])) source[key] = linesToHtml(source[key]);
+    }
+    // Amenities joins the notes only while they're still the old list - the
+    // database keeps an old "amenities" key after the box is saved, and it
+    // must not be added again on every load.
+    const space = source.personalSpace;
+    if (space && Array.isArray(space.notes)) {
+      const amenities = String(space.amenities ?? "").trim();
+      const amenitiesLabel = game.i18n?.localize?.("CARLRPG.Actor.Amenities");
+      const head = amenities
+        ? `<p><strong>${foundry.utils.escapeHTML(amenitiesLabel && amenitiesLabel !== "CARLRPG.Actor.Amenities" ? amenitiesLabel : "Amenities")}:</strong> ${foundry.utils.escapeHTML(amenities)}</p>`
+        : "";
+      space.notes = head + linesToHtml(space.notes);
+    }
+    if (space && "amenities" in space) delete space.amenities;
+    if (source.story && typeof source.story === "object") source.story = storyToHtml(source.story);
+  }
+
+  /**
+   * A crawler has no DR of its own: all of it comes from its Race, Class,
+   * gear, Skills, Spells and Buffs (resource "dr" changes). The base is
+   * locked at 0 here, in memory - a value saved before 0.7.0 is zeroed in
+   * the database by the 0.7.0 base DR migration (helpers/migration.mjs).
+   * @override
+   */
+  prepareBaseData() {
+    super.prepareBaseData();
+    this.dr = 0;
   }
 
   prepareDerivedData() {
@@ -190,81 +215,13 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     this.classItem = this.class ? (this.parent?.items.get(this.class) ?? null) : null;
     this.raceItem = this.race ? (this.parent?.items.get(this.race) ?? null) : null;
 
-    for (const key in this.stats) {
-      if (!this.stats[key]) continue;
-      const bonus = this.bonuses?.[`stats.${key}`] ?? 0;
-      const cap = this.caps?.[`stats.${key}`];
-      const effective =
-        cap !== undefined
-          ? Math.min(this.stats[key].value + bonus, cap)
-          : this.stats[key].value + bonus;
-      this.stats[key].bonus = bonus;
-      this.stats[key].effective = effective;
-      this.stats[key].mod = getStatMod(effective);
-      this.stats[key].label = game.i18n.localize(CONFIG.CARLRPG.stats[key]) ?? key;
-    }
-
-    // DR: system.dr stays the flat GM/player-editable base (never mutated
-    // here, same reasoning as stats.*.value above); drBonus/drEffective are
-    // derived-only, from any "resource" ChangeEntry targeting "dr" (e.g. a
-    // Race/Class's "+N DR Buff"), with an optional capMax ceiling.
-    this.drBonus = this.bonuses?.dr ?? 0;
-    this.drEffective =
-      this.caps?.dr !== undefined
-        ? Math.min(this.dr + this.drBonus, this.caps.dr)
-        : this.dr + this.drBonus;
-
-    // Resistances: system.resistances stays the flat GM/player-editable base
-    // per-damage-type enum; a Race/Class's "resistance" ChangeEntry (e.g.
-    // "Immunity to Poison") overrides that base for its specific type only,
-    // in resistancesEffective (derived-only, read by module/helpers/
-    // damage-pipeline.mjs and shown on the sheet - the base itself is never
-    // mutated, so removing the granting item reverts to the GM-set default).
-    this.resistancesEffective = { ...this.resistances, ...this.grantedResistances };
-
-    // Derived resource caps: HB slot value from (effective) CON Mod, HB
-    // effective max = base max + any "hb.max" resource bonus, Mana max 1:1
-    // with INT score plus any "mana.max" resource bonus.
-    this.hb.slotValue = this.stats.con?.mod ?? 0;
-    this.hb.bonusMax = this.bonuses?.["hb.max"] ?? 0;
-    this.hb.effectiveMax = this.hb.max + this.hb.bonusMax;
-    // "You gain Mana Points equal to your Enhanced Intelligence Stat. Not
-    // the Stat Mod this time, but the actual value." (p.110) - "Enhanced"
-    // means the bonused/effective Stat value, not the raw base .value, so
-    // a live (non-baked) INT bonus from gear/feature/spell isn't silently
-    // dropped from Max Mana.
-    this.mana.max = (this.stats.int?.effective ?? 0) + (this.bonuses?.["mana.max"] ?? 0);
-
-    // Shield-style pool (docs/known-gaps.md 1.4): fully derived from
-    // whichever owned toggled spell is currently active - see actor-base.mjs.
-    // The clamp handles a spell being deactivated mid-session, or its Rank
-    // dropping, so the pool visually/mechanically shrinks to match.
-    this.shield.slotValue = this.stats.con?.mod ?? 0;
-    this.shield.effectiveMax = computeActiveShieldSlots(
-      this.parent?.items ? Array.from(this.parent.items) : [],
-    );
-    if (this.shield.value > this.shield.effectiveMax) this.shield.value = this.shield.effectiveMax;
+    deriveStats(this);
+    deriveDefenses(this);
+    deriveMovement(this);
+    deriveResourceCaps(this);
   }
 
   getRollData() {
-    const data = {};
-
-    if (this.stats) {
-      data.stats = {};
-      for (let [k, v] of Object.entries(this.stats)) {
-        data.stats[k] = foundry.utils.deepClone(v);
-      }
-    }
-
-    if (this.skills) {
-      data.skills = foundry.utils.deepClone(this.skills);
-    }
-
-    data.lvl = this.attributes.level.value;
-    // Floor is a single world-wide value (every crawler is on the same
-    // floor), owned by the GM Toolbox - never stored per-actor.
-    data.floor = game.settings.get("carl-rpg", "currentFloor");
-
-    return data;
+    return creatureRollData(this, this.attributes.level.value);
   }
 }

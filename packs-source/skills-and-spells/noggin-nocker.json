@@ -121,6 +121,7 @@
     ],
     "category": "attack",
     "attackType": "melee",
+    "isHandToHand": true,
     "range": "",
     "aiFavor": 1,
     "cooldown": "",

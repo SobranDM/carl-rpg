@@ -1,7 +1,16 @@
+{{!-- The item's image and name, with its type and - for a Skill, Spell or
+      Damage Effect - chips that sum it up (item-sheet.mjs #headerChips;
+      docs/skill-item-sheets.md). --}}
 <header class="sheet-header">
   <img class="profile-img" src="{{item.img}}" data-edit="img" data-action="editImage" title="{{item.name}}" />
   <div class="header-fields">
     <h1 class="charname"><input name="name" type="text" value="{{item.name}}" placeholder="Name" /></h1>
-    <div class="item-type-label">{{localize itemTypeLabel}}</div>
+    <div class="carl-item-chips">
+      <span class="item-type-label">{{localize itemTypeLabel}}</span>
+      {{#each headerChips as |chip|}}
+      <span class="carl-row-chip" data-tone="{{chip.tone}}"{{#if chip.tooltip}} data-tooltip="{{chip.tooltip}}"{{/if}}>
+        {{#if chip.icon}}<i class="{{chip.icon}}"></i>{{/if}}{{chip.label}}</span>
+      {{/each}}
+    </div>
   </div>
 </header>

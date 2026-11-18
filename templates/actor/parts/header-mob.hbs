@@ -1,34 +1,45 @@
-{{!-- Sheet Header (Mob) --}}
+{{!-- A Mob's header (docs/mob-sheet.md), the Character's shape: the portrait
+      with Level and Elite under it; the name with Tier, Size and Type; the
+      Health Bar and Shield. The Floor isn't in the header (world data, in
+      roll data): the Combat tab's Surprise and Evade name it beside today's
+      values. Actions per round is in the Combat tab's Defenses. --}}
 <header class="sheet-header">
-  <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+  <div class="carl-portrait-column">
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+    <div class="carl-portrait-stats">
+      <label class="carl-portrait-stat">
+        <span class="resource-label">{{localize "CARLRPG.Actor.Level"}}</span>
+        <input type="text" name="system.level" value="{{system.level}}" data-dtype="Number" />
+      </label>
+      {{!-- Elites and Bosses get 1 Action per crawler (p.81; helpers/actions.mjs). --}}
+      <label class="carl-portrait-stat carl-portrait-check" data-tooltip="{{localize 'CARLRPG.Actor.EliteHint'}}">
+        <span class="resource-label">{{localize "CARLRPG.Actor.Elite"}}</span>
+        <input type="checkbox" name="system.isElite" {{checked system.isElite}} />
+      </label>
+    </div>
+  </div>
   <div class="header-fields">
     <div class="carl-name-row flexrow">
       <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name" /></h1>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.level" class="resource-label">{{localize "CARLRPG.Actor.Level"}}</label>
-        <input type="text" class="carl-w-tiny" name="system.level" value="{{system.level}}" data-dtype="Number" />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label for="carl-floor-display" class="resource-label">{{localize "CARLRPG.Actor.Floor"}}</label>
-        <input id="carl-floor-display" type="text" class="carl-w-tiny carl-floor-readonly" value="{{currentFloor}}" disabled />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.mobTier" class="resource-label">{{localize "CARLRPG.Actor.MobTier"}}</label>
-        <select class="carl-w-medium" name="system.mobTier">
+      <label class="resource flex-group-center carl-name-row-field">
+        <span class="resource-label">{{localize "CARLRPG.Actor.MobTier"}}</span>
+        <select class="carl-w-short" name="system.mobTier">
           <option value="">{{localize "CARLRPG.MobTier.Mob"}}</option>
           {{selectOptions config.mobTiers selected=system.mobTier localize=true}}
         </select>
-      </div>
-    </div>
-    <div class="carl-name-row flexrow">
-      <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.size" class="resource-label">{{localize "CARLRPG.Actor.Size"}}</label>
-        <input type="text" class="carl-w-medium" name="system.size" value="{{system.size}}" placeholder="e.g. Medium (4)" />
-      </div>
-      <div class="resource flex-group-center carl-name-row-field">
-        <label for="system.creatureType" class="resource-label">{{localize "CARLRPG.Actor.CreatureType"}}</label>
-        <input type="text" class="carl-w-medium" name="system.creatureType" value="{{system.creatureType}}" placeholder="e.g. Humanoid" />
-      </div>
+      </label>
+      <label class="resource flex-group-center carl-name-row-field">
+        <span class="resource-label">{{localize "CARLRPG.Actor.Size"}}</span>
+        {{!-- Table 9: Creature Size (p.92). --}}
+        <select class="carl-w-short" name="system.size" data-dtype="Number">
+          <option value="">—</option>
+          {{selectOptions config.sizes selected=system.size localize=true}}
+        </select>
+      </label>
+      <label class="resource flex-group-center carl-name-row-field">
+        <span class="resource-label">{{localize "CARLRPG.Actor.CreatureType"}}</span>
+        <input type="text" class="carl-w-short" name="system.creatureType" value="{{system.creatureType}}" placeholder="Humanoid" />
+      </label>
     </div>
     {{> "systems/carl-rpg/templates/actor/parts/hb-bar.hbs"}}
     {{> "systems/carl-rpg/templates/actor/parts/shield-bar.hbs"}}

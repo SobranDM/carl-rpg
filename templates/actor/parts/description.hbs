@@ -1,63 +1,12 @@
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="description">
-  {{!-- Important Things I've Killed, Clubs, Personal Space, Deity, Sponsors
-        (from the printed sheet's Pet page). Character only: textSlots is
-        built for characters in actor-sheet.mjs's _prepareContext. --}}
-  {{#if (eq actor.type "character")}}
-  <div class="carl-sheet-columns">
-    <div class="carl-sheet-column">
-      <fieldset class="carl-text-list">
-        <legend>{{localize "CARLRPG.Actor.ImportantKills"}}</legend>
-        {{> "carlTextSlots" slots=textSlots.importantKills}}
-      </fieldset>
-      <fieldset class="carl-text-list">
-        <legend>{{localize "CARLRPG.Actor.Clubs"}}</legend>
-        {{> "carlTextSlots" slots=textSlots.clubs}}
-      </fieldset>
-    </div>
-
-    <div class="carl-sheet-column">
-      <fieldset class="carl-personal-space">
-        <legend>{{localize "CARLRPG.Actor.PersonalSpace"}}</legend>
-        <label class="carl-sheet-line">
-          <span>{{localize "CARLRPG.Actor.Tier"}}</span>
-          <input type="text" name="system.personalSpace.tier" value="{{system.personalSpace.tier}}" />
-        </label>
-        <label class="carl-sheet-line">
-          <span>{{localize "CARLRPG.Actor.Size"}}</span>
-          <input type="text" name="system.personalSpace.size" value="{{system.personalSpace.size}}" />
-        </label>
-        <label class="carl-sheet-line">
-          <span>{{localize "CARLRPG.Actor.Amenities"}}</span>
-          <input type="text" name="system.personalSpace.amenities" value="{{system.personalSpace.amenities}}" />
-        </label>
-        {{> "carlTextSlots" slots=textSlots.personalSpaceNotes}}
-      </fieldset>
-      <fieldset class="carl-text-list">
-        <legend>{{localize "CARLRPG.Actor.Deity"}}</legend>
-        {{> "carlTextSlots" slots=textSlots.deity}}
-      </fieldset>
-      <fieldset class="carl-text-list">
-        <legend>{{localize "CARLRPG.Actor.Sponsors"}}</legend>
-        {{> "carlTextSlots" slots=textSlots.sponsors multiline=true}}
-      </fieldset>
-    </div>
-  </div>
-  {{!-- Story notes (the printed/Roll20 sheet's Hotlist page). --}}
-  <fieldset class="carl-story">
-    <legend>{{localize "CARLRPG.Actor.Story"}}</legend>
-    {{#each config.storyFields as |label key|}}
-    <label class="carl-sheet-box">
-      <span class="resource-label">{{localize label}}</span>
-      <textarea name="{{concat 'system.story.' key}}" rows="3">{{lookup ../system.story key}}</textarea>
-    </label>
-    {{/each}}
-  </fieldset>
-  {{/if}}
+  {{!-- Mobs and Pets: Biography only. A Character's version of this tab is
+        its Details tab (details.hbs). --}}
   {{!-- The editor itself has no border/background while inactive (Foundry
         core only shows its rendered content, no chrome, until hovered) - a
         heading here is the only visual signal this section exists at all,
         especially with no biography text yet written. --}}
-  <label class="resource-label">{{localize "CARLRPG.Actor.Biography"}}</label>
+  {{!-- A Mob's is its stat block's "Notes:" (the Notes tab). --}}
+  <label class="resource-label">{{#if isMob}}{{localize "CARLRPG.Tab.Notes"}}{{else}}{{localize "CARLRPG.Actor.Biography"}}{{/if}}</label>
   <prose-mirror name="system.biography" toggled value="{{actor.system.biography}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
     {{{biographyHTML}}}
   </prose-mirror>

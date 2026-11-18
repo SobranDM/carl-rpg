@@ -35,6 +35,9 @@ function emptyCtx(overrides = {}) {
     resistances: {},
     advancementBonuses: {},
     rankCaps: {},
+    multipliers: {},
+    bonusSources: {},
+    evadeDice: [],
     ...overrides,
   };
 }
@@ -56,8 +59,10 @@ export default function register(quench) {
           assert.equal(slugifySkillName(null), "unknown");
         });
 
-        it("strips non a-z0-9 characters (accents included)", function () {
-          assert.equal(slugifySkillName("Über!!"), "ber");
+        it("drops accents and punctuation, keeps letters in any script", function () {
+          assert.equal(slugifySkillName("Über!!"), "uber");
+          assert.equal(slugifySkillName("Épée"), "epee");
+          assert.equal(slugifySkillName("Таунт"), "таунт");
         });
       });
 
@@ -215,11 +220,16 @@ export default function register(quench) {
           assert.equal(ctx.bonuses["stats.dex"], 0);
         });
 
-        it("resource: multiply on 'dr' scales actorSystem.dr's real persisted base", function () {
+        it("resource: multiply on 'dr' is kept as a multiplier of the whole DR, not added to the adds", function () {
           const ctx = emptyCtx({ actorSystem: { dr: 5 } });
           applyOneChange(change({ targetType: "resource", target: "dr", mode: "multiply", value: "3" }), "src", "id1", 0, ctx);
-          // base 5, factor 3 -> bonus contribution = 5*(3-1) = 10.
-          assert.equal(ctx.bonuses.dr, 10);
+          applyOneChange(change({ targetType: "resource", target: "dr", mode: "add", value: "1" }), "race", "id2", 0, ctx);
+          assert.equal(ctx.bonuses.dr, 1, "only the add is a bonus");
+          assert.equal(ctx.multipliers.dr, 2, "x3 is kept as +2 on a multiplier of 1");
+          applyOneChange(change({ targetType: "resource", target: "dr", mode: "multiply", value: "2" }), "src2", "id3", 0, ctx);
+          assert.equal(ctx.multipliers.dr, 3, "two multipliers add their (factor - 1), never compound");
+          assert.deepEqual(ctx.bonusSources.dr.map((s) => [s.label, s.value, s.mode]),
+            [["src", 3, "multiply"], ["race", 1, "add"], ["src2", 2, "multiply"]]);
         });
 
         it("resource: multiply on 'hb.max'/'mana.max' still falls back to the old no-real-base behavior (documented limitation, not fixed by this change)", function () {

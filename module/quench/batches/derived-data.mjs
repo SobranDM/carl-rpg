@@ -111,6 +111,44 @@ export default function register(quench) {
           }
         });
       });
+
+      describe("church benefits (Boons with a Tier) apply only when earned", function () {
+        useQuenchTimeout(this);
+
+        const strBoon = (actor, label, tier) => createTestItem(actor, "feature", label, {
+          system: { tier, changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }] },
+        });
+
+        it("a tiered Boon applies at or below the crawler's Tier, not above it and not while worship is suspended", async function () {
+          const actor = await createTestCharacter("church", { system: { deity: { name: "Apito", tier: "acolyte" } } });
+          try {
+            await strBoon(actor, "zealot perk", "zealot");
+            await strBoon(actor, "untiered title", "");
+            assert.equal(actor.system.stats.str.bonus, 2, "only the untiered Boon, the Zealot one is above Acolyte");
+
+            await actor.update({ "system.deity.tier": "zealot" });
+            assert.equal(actor.system.stats.str.bonus, 4, "Zealot reached");
+
+            for (const suspend of [{ shunned: true }, { fallen: true }, { missedOfferings: 1 }]) {
+              await actor.update({ "system.deity": { shunned: false, fallen: false, missedOfferings: 0, ...suspend } });
+              assert.equal(actor.system.stats.str.bonus, 2, `suspended by ${Object.keys(suspend)[0]}`);
+            }
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a Mob's tiered Boon still applies (it has no deity)", async function () {
+          const mob = await createTestMob("church");
+          try {
+            const before = mob.system.stats.str.bonus;
+            await strBoon(mob, "mob perk", "zealot");
+            assert.equal(mob.system.stats.str.bonus, before + 2);
+          } finally {
+            await deleteTestActor(mob);
+          }
+        });
+      });
     },
     { displayName: "CarlRPG: character.mjs/mob.mjs (derived data)" },
   );

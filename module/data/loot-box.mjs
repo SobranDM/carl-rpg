@@ -18,7 +18,8 @@ export default class CarlRPGLootBox extends foundry.abstract.TypeDataModel {
     // How many items "Generate Loot" rolls - one per crawler, like the book's
     // boxes. Defaults to 1 so a solo test doesn't spawn a pile.
     schema.crawlers = new fields.NumberField({ ...requiredInteger, initial: 1, min: 1, max: 20 });
-    schema.description = new fields.StringField({ required: true, blank: true });
+    // Rich text (loot-box.hbs's editor): also in system.json's htmlFields.
+    schema.description = new fields.HTMLField({ required: true, blank: true });
 
     return schema;
   }

@@ -2,15 +2,21 @@
  * Gear entries: an all-caps heading, an optional "Gear Slot:" line, prose,
  * and a bullet list of benefits (Core Rulebook Appendix 1: Iconic Gear, and
  * the loot lists in other books). Simple bullets ("+1 Dexterity", "+3 Double
- * Tap Skill", "Resistance to Poison and Ice damage") become ChangeEntries;
- * everything else stays readable in the description.
+ * Tap Skill", "Resistance to Poison and Ice damage") become ChangeEntries,
+ * and "On an Amazing Success ... the target gains the X Debuff" an On-hit
+ * Debuff; everything stays readable in the description.
  */
 
+import { itemTargetEffects } from "./debuff-text.mjs";
 import { bodySize, escapeHtml, isHeading, joinText, titleCase } from "./page-text.mjs";
 import { changeEntry, toBlocks } from "./shared.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
+import { parseGearSlotLine, slotsFromName } from "../helpers/gear-text.mjs";
 
 const SLOT_RE = /^Gear Slot:\s*(.*)$/;
+// Section headings on the gear pages that aren't items: the loot box
+// tiers ("GOLD BOXES"), and tables and lists of many items.
+const NOT_GEAR_RE = /^(?:\w+ Boxes|Randomized Magic Items\b.*|Memorial and Soul Crystals|Faction Wars Items)$/i;
 const STAT_WORDS = {
   strength: "str",
   dexterity: "dex",
@@ -46,7 +52,7 @@ export function parseGear(pages) {
       prevHeading = false;
     }
   }
-  return entries.filter((e) => e.lines.length).map(toGearItem);
+  return entries.filter((e) => e.lines.length && !NOT_GEAR_RE.test(e.name)).map(toGearItem);
 }
 
 /** Map one benefit bullet onto ChangeEntries, or none when it is prose. */
@@ -62,7 +68,9 @@ export function bulletToChanges(text, label) {
         value: value(m[1], m[2]),
       }),
     ];
-  m = text.match(/^([+−-])(\d+) (.+?) Skill\b/);
+  // "+3 Double Tap Skill", "+5 to the Skullcracker Skill". "+1 to all Skill
+  // or Stat Checks" names no one Skill: it stays prose.
+  m = text.match(/^([+−-])(\d+) (?!(?:to )?(?:all|any)\b)(?:to (?:the |your )?)?(.+?) Skill\b/);
   if (m)
     return [
       changeEntry({
@@ -88,6 +96,23 @@ export function bulletToChanges(text, label) {
   return [];
 }
 
+/**
+ * Where an entry is worn (docs/gear-slots.md): its "Gear Slot:" line, else
+ * its name (gear.mjs); a Belt or Cape by name.
+ * @param {string} slot  The "Gear Slot:" value, or "".
+ * @param {string} name
+ * @returns {object}  `slots`, and `twoHanded` / `accessoryKind` when set.
+ */
+function gearSlotData(slot, name) {
+  const fromLine = parseGearSlotLine(slot);
+  const fromName = slotsFromName(name);
+  const slots = fromLine?.slots ?? fromName?.slots ?? [];
+  const out = { slots };
+  if (fromLine?.twoHanded) out.twoHanded = true;
+  if (fromName?.accessoryKind && slots.includes("accessory")) out.accessoryKind = fromName.accessoryKind;
+  return out;
+}
+
 function toGearItem(entry) {
   const name = titleCase(entry.name);
   let slot = "";
@@ -100,6 +125,7 @@ function toGearItem(entry) {
   const html = [];
   if (slot) html.push(`<p><strong>Gear Slot:</strong> ${escapeHtml(slot)}</p>`);
   const changes = [];
+  const targetEffects = [];
   let list = [];
   const flushList = () => {
     if (list.length)
@@ -112,6 +138,9 @@ function toGearItem(entry) {
       const bullet = text.replace(/^•\s*/, "");
       list.push(bullet);
       changes.push(...bulletToChanges(bullet, name));
+      // "On an Amazing Success with any Hand-to-Hand Attack you make, the
+      // target gains the Stunned Debuff" (debuff-text.mjs).
+      targetEffects.push(...itemTargetEffects(bullet, "gear"));
     } else {
       flushList();
       html.push(`<p>${escapeHtml(text)}</p>`);
@@ -126,7 +155,7 @@ function toGearItem(entry) {
       name,
       type: "item",
       img: "icons/svg/item-bag.svg",
-      system: { description: html.join(""), changes },
+      system: { description: html.join(""), changes, targetEffects, ...gearSlotData(slot, name) },
     },
   };
 }

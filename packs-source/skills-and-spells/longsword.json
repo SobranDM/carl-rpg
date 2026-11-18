@@ -54,6 +54,17 @@
             "mode": "add",
             "value": "1d8",
             "damageDiceKind": "base"
+          },
+          {
+            "id": "OTf0pbEqalE6QLKS",
+            "label": "",
+            "targetType": "rollMode",
+            "target": "evadeBonus",
+            "mode": "add",
+            "value": "1",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
           }
         ]
       }

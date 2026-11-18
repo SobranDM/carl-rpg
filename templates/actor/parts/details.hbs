@@ -1,0 +1,93 @@
+{{!-- Character's Details tab (the "description" tab slot, relabelled - see
+      actor-sheet.mjs PART_TEMPLATES / TAB_LABELS_BY_TYPE). The printed
+      sheet's free-form notes, each a rich text box like Biography (they were
+      fixed slot lists - CarlRPGCharacter.migrateData folded them in).
+      The Crawler section (Pronouns, Crawler#, Size, Popularity, Potions
+      used) comes first;
+      Personal Space keeps Tier and Size as their own inputs. The Deity is
+      on the Benefits tab (benefits.hbs). --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="description">
+  <div class="carl-details-grid">
+    {{!-- Who the crawler is - Pronouns, Crawler#, Size, Popularity - and
+          the lifetime potion limit: "two Stat
+          potions and two Skill potions during the entirety of their short
+          life" (p.218), counted by module/helpers/consumables.mjs. Players
+          see the counts; the GM can correct them. --}}
+    <fieldset class="carl-details-box carl-crawler-box">
+      <legend>{{localize "CARLRPG.Actor.Crawler"}}</legend>
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Actor.Pronouns"}}</span>
+        <input type="text" name="system.details.pronouns" value="{{system.details.pronouns}}" />
+      </label>
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Actor.CrawlerNumber"}}</span>
+        <input type="text" name="system.details.crawlerNumber" value="{{system.details.crawlerNumber}}" />
+      </label>
+      {{!-- Set by the Race and rarely needed in play. --}}
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Actor.Size"}}</span>
+        <select name="system.details.size" data-dtype="Number">
+          {{selectOptions config.sizes selected=system.details.size localize=true}}
+        </select>
+      </label>
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Actor.Popularity"}}</span>
+        <input type="text" name="system.details.popularity" value="{{system.details.popularity}}" data-dtype="Number" />
+      </label>
+      {{!-- The heading, then Stat and Skill indented under it: each count
+            (the GM can correct it) out of the limit, both inputs on the
+            right; the limit and a player's count can't be edited. --}}
+      <div class="carl-potions-used" title="{{localize 'CARLRPG.Actor.PotionsUsedHint'}}">
+        <span class="carl-potions-heading">{{localize "CARLRPG.Actor.PotionsUsed"}}</span>
+        {{#each (object stat="CARLRPG.Actor.PotionsStat" skill="CARLRPG.Actor.PotionsSkill") as |label kind|}}
+        <div class="carl-sheet-line carl-potion-count">
+          <span>{{localize label}}</span>
+          <span class="carl-potion-values">
+            <input type="text" class="carl-w-tiny" {{#if @root.isGM}}name="system.permanentPotions.{{kind}}" data-dtype="Number"{{else}}disabled{{/if}}
+              value="{{lookup @root.potions kind}}" />
+            /
+            <input type="text" class="carl-w-tiny carl-potion-limit" value="{{@root.potions.limit}}" disabled
+              aria-label="{{localize 'CARLRPG.Actor.PotionsLimit'}}" />
+          </span>
+        </div>
+        {{/each}}
+      </div>
+    </fieldset>
+
+    <fieldset class="carl-details-box carl-personal-space">
+      <legend>{{localize "CARLRPG.Actor.PersonalSpace"}}</legend>
+      <div class="carl-personal-space-fields flexrow">
+        <label class="carl-sheet-line">
+          <span>{{localize "CARLRPG.Actor.Tier"}}</span>
+          <input type="text" name="system.personalSpace.tier" value="{{system.personalSpace.tier}}" />
+        </label>
+        <label class="carl-sheet-line">
+          <span>{{localize "CARLRPG.Actor.Size"}}</span>
+          <input type="text" name="system.personalSpace.size" value="{{system.personalSpace.size}}" />
+        </label>
+      </div>
+      <prose-mirror name="system.personalSpace.notes" toggled value="{{system.personalSpace.notes}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
+        {{{detailsHTML.personalSpace}}}
+      </prose-mirror>
+    </fieldset>
+
+    {{#each detailsBoxes as |box|}}
+    <fieldset class="carl-details-box {{#if box.wide}}wide{{/if}}">
+      <legend>{{localize box.label}}</legend>
+      {{#if box.hint}}<p class="carl-hint">{{localize box.hint}}</p>{{/if}}
+      <prose-mirror name="{{box.name}}" toggled value="{{box.value}}" data-document-uuid="{{@root.actor.uuid}}" {{#unless @root.editable}}disabled{{/unless}}>
+        {{{box.html}}}
+      </prose-mirror>
+    </fieldset>
+    {{/each}}
+
+    {{!-- The editor shows no chrome until hovered - the legend is the only
+          sign the section exists while it's empty. --}}
+    <fieldset class="carl-details-box wide">
+      <legend>{{localize "CARLRPG.Actor.Biography"}}</legend>
+      <prose-mirror name="system.biography" toggled value="{{actor.system.biography}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
+        {{{biographyHTML}}}
+      </prose-mirror>
+    </fieldset>
+  </div>
+</section>

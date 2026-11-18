@@ -17,7 +17,8 @@
  * of its total. A reroll swaps only the d20: the Rank, Stat Mod, Debuff
  * penalties and any bonus dice keep what they rolled, and nothing the
  * original roll already spent (Mana, a use-mark, a consumed Debuff) is
- * spent again. See module/chat/ai-favor-reroll.mjs for the button.
+ * spent again. See module/chat/ai-favor-reroll.mjs for the button and
+ * module/chat/check-revision.mjs for the card revised in place.
  */
 
 /**
@@ -25,7 +26,7 @@
  * reroll (anyone but a crawler).
  * @param {Actor} actor  Whoever rolled the Check.
  * @param {object} spec
- * @param {"check"|"attack"|"rowEvade"} spec.kind
+ * @param {"check"|"attack"|"rowEvade"|"driving"} spec.kind
  * @param {string} spec.formula     The d20 expression, e.g. "2d20kh".
  * @param {number|null} spec.natural  The kept d20.
  * @param {number} spec.total
@@ -36,9 +37,23 @@ export function aiRerollFlags(actor, { kind, formula, natural, total, difficulty
   if (actor?.type !== "character" || !formula || natural === null || natural === undefined) return {};
   return {
     aiReroll: {
-      kind, actorUuid: actor.uuid, formula, natural, total, difficulty, used: false, ...rest,
+      kind, actorUuid: actor.uuid, formula, natural, total, difficulty, used: false,
+      // The fight and round it was rolled in: an Intervene is open until the
+      // round ends (module/chat/check-revision.mjs).
+      fight: fightStamp(actor),
+      ...rest,
     },
   };
+}
+
+/**
+ * The started fight this actor is a combatant in, and its round, or null.
+ * @param {Actor} actor
+ * @returns {{combatId: string, round: number}|null}
+ */
+export function fightStamp(actor) {
+  const combat = game.combats.find((c) => c.started && c.combatants.some((cb) => cb.actor === actor));
+  return combat ? { combatId: combat.id, round: combat.round } : null;
 }
 
 /**
@@ -61,6 +76,35 @@ export function rerollFormula({ formula, natural, total }) {
  */
 export function rerollOpen(spec) {
   return !!spec && !spec.used && spec.natural !== 1;
+}
+
+/**
+ * Whether this user could spend this crawler's AI Favor to reroll this
+ * Check now (p.61): "Once per Check" - a failure or a success alike - never
+ * a Natural 1; the crawler's owner (or the GM), with AI Favor left. Whether
+ * the Check is still open to change is the caller's.
+ * @param {{natural?: number|null, used?: boolean, aiRerolled?: object|null}|null} check
+ *   A card's `aiReroll` spec (`used`) or a row's or Reaction card's Check (`aiRerolled`).
+ * @param {Actor|null} actor  Who rolled it.
+ * @param {User} [user]
+ * @returns {boolean}
+ */
+export function aiRerollAllowed(check, actor, user = game.user) {
+  if (!check || check.aiRerolled || !rerollOpen(check)) return false;
+  if (actor?.type !== "character" || (actor.system.details?.aiFavor ?? 0) < 1) return false;
+  return !!user && (user.isGM || actor.testUserPermission(user, "OWNER"));
+}
+
+/**
+ * Spend 1 AI Favor for a reroll.
+ * @param {Actor} actor
+ * @returns {Promise<boolean>}  False: none left.
+ */
+export async function spendAiFavor(actor) {
+  const favor = actor?.system.details?.aiFavor ?? 0;
+  if (favor < 1) return false;
+  await actor.update({ "system.details.aiFavor": favor - 1 });
+  return true;
 }
 
 /**

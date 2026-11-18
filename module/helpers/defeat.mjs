@@ -1,3 +1,4 @@
+import { diesAtZeroHb } from "./actor-kinds.mjs";
 /**
  * Defeat and death marking (Health Menu, p.92/94):
  *  - "Mobs die instantly at 0% HB" - a Mob (or Boss) at 0 HB is defeated.
@@ -24,7 +25,7 @@ function defeatedStatusId() {
 export function shouldBeDefeated(actor) {
   const sys = actor?.system;
   if (!sys) return false;
-  if (actor.type !== "character") return (sys.hb?.value ?? 1) <= 0;
+  if (diesAtZeroHb(actor)) return (sys.hb?.value ?? 1) <= 0;
   const dying = (sys.conditions ?? []).find((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown);
   return !!dying && (dying.remaining ?? 1) <= 0;
 }

@@ -18,13 +18,21 @@ export default class CarlRPGDamageEffect extends CarlRPGRankedItemBase {
     const schema = super.defineSchema();
 
     // Names (or UUIDs) of the Attack Skills this Damage Effect can attach to.
+    // Blank entries are allowed in the source (the sheet's Add makes an
+    // empty row) and dropped from the prepared list (prepareBaseData).
     schema.parentSkills = new fields.ArrayField(
-      new fields.StringField({ required: true, blank: false }),
+      new fields.StringField({ required: true, blank: true }),
       { required: false, initial: [] }
     );
 
     schema.cooldown = new fields.StringField({ required: false, blank: true, initial: "" });
 
     return schema;
+  }
+
+  /** A blank Parent Skill row (see the schema) attaches to nothing. */
+  prepareBaseData() {
+    super.prepareBaseData();
+    this.parentSkills = (this.parentSkills ?? []).filter((name) => name);
   }
 }

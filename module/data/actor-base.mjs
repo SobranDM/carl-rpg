@@ -46,7 +46,9 @@ export default class CarlRPGActorBase extends foundry.abstract.TypeDataModel {
       max: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
     });
 
-    schema.biography = new fields.StringField({ required: true, blank: true });
+    // Rich text: also listed in system.json's htmlFields for every Actor type
+    // built on this, which is what has the server sanitize it.
+    schema.biography = new fields.HTMLField({ required: true, blank: true });
 
     // Persisted sheet UI state for the merged Abilities tab's whole-section
     // drawers (Skills+DamageEffects, Spells) - real schema fields rather than
@@ -61,6 +63,10 @@ export default class CarlRPGActorBase extends foundry.abstract.TypeDataModel {
       // Mob's Attacks list drawer (abilities-mob.hbs) - unused by Character,
       // same pattern as skillsExpanded/spellsExpanded above.
       attacksExpanded: new fields.BooleanField({ required: true, initial: true }),
+      // A Character's Benefits tab (benefits.hbs): the Race and Class
+      // panels showing each one's benefits text.
+      raceExpanded: new fields.BooleanField({ required: true, initial: true }),
+      classExpanded: new fields.BooleanField({ required: true, initial: true }),
       // Play-mode guard for the Skills/Spells lists: locked (the default)
       // hides each row's edit/delete controls and shows the Advancement
       // mark checkbox; unlocked does the reverse. Toggled via the lock icon

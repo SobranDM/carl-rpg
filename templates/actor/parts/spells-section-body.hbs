@@ -1,5 +1,7 @@
-{{!-- Spells list body - the content of the Spells drawer on the merged
-      Abilities tab (see abilities.hbs / collapsible-section.hbs). --}}
+{{!-- Spells list body - the content of the Spells drawer: a Character's
+      Skills tab (skills-tab.hbs), a Mob's or Pet's Abilities tab.
+      A Character pins a Spell to the Hotlist with the star. A Spell
+      cooling down shows its chip (module/helpers/cooldowns.mjs). --}}
 <ol class="items-list">
   <li class="item flexrow items-header">
     <div class="item-name carl-sort-header" data-action="sortList" data-list="spells" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.spells.name}}"></i></div>
@@ -14,6 +16,13 @@
   {{#each spells as |item id|}}
   <li class="item flexrow" data-item-id="{{item._id}}">
     <div class="item-name">
+      {{#if item.damageEffects.length}}
+      <a class="item-control carl-drawer-caret carl-drawer-caret-lg{{#unless item.system.damageEffectsExpanded}} collapsed{{/unless}}"
+        data-action="toggleDrawer" data-scope="item" data-path="system.damageEffectsExpanded"
+        title="{{localize 'CARLRPG.DamageEffect.ToggleNested'}}">
+        <i class="fas fa-caret-down"></i>
+      </a>
+      {{/if}}
       <div class="item-image">
         <a class="rollable" data-action="roll" data-roll-type="item">
           <img src="{{item.img}}" title="{{item.name}}" width="24" height="24" />
@@ -23,14 +32,24 @@
         title="{{localize 'CARLRPG.Ranked.ToggleDetails'}}">
         <h4>{{item.name}}{{#if item.system.active}} <i class="fas fa-bolt carl-spell-active-indicator" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}</h4>
       </a>
+      {{cooldownChip item}}
     </div>
     <div class="item-prop">{{item.system.manaCost}}</div>
     <div class="item-prop">{{item.system.rank}}</div>
     <div class="item-controls">
-      {{#if ../locked}}
-      <a class="item-control" data-action="toggleMark" title="{{localize 'CARLRPG.Ranked.ToggleMark'}}">
-        <i class="fas {{#if item.system.marked}}fa-check-square{{else}}fa-square{{/if}}"></i>
+      {{#if @root.isCharacter}}
+      {{#if item.showHotlistPin}}
+      <a class="item-control carl-hotlist-pin" data-action="toggleHotlist" title="{{localize 'CARLRPG.Hotlist.PinSpellHint'}}">
+        <i class="{{#if item.inHotlist}}fas{{else}}far{{/if}} fa-star"></i>
       </a>
+      {{/if}}
+      {{/if}}
+      {{#if ../locked}}
+      {{#unless @root.isPet}}
+      <a class="item-control" data-action="toggleMark" title="{{localize 'CARLRPG.Ranked.ToggleMark'}}">
+        <i class="carl-mark-icon {{#if item.system.marked}}fa-solid fa-square-check is-marked{{else}}fa-regular fa-square{{/if}}"></i>
+      </a>
+      {{/unless}}
       {{else}}
       <a class="item-control item-edit" data-action="editItem" title="{{localize 'DOCUMENT.Update' type='Spell'}}">
         <i class="fas fa-edit"></i>
@@ -46,9 +65,10 @@
   <li class="carl-nested-drawer{{#unless item.system.detailsExpanded}} collapsed{{/unless}}">
     <div class="carl-skill-details">
       <div class="carl-skill-details-inner">
-        {{#if item.system.description}}
-        <div class="carl-skill-description">{{{item.system.description}}}</div>
-        {{/if}}
+        {{!-- Enriched, open drawers only (actor-sheet.mjs #prepareDrawerDescriptions). --}}
+        {{#with (lookup @root.drawerHTML item._id) as |descriptionHTML|}}
+        <div class="carl-skill-description">{{{descriptionHTML}}}</div>
+        {{/with}}
         {{#each item.system.upgrades as |upgrade|}}
         <div class="carl-skill-upgrade">
           <strong>{{localize "CARLRPG.Ranked.Rank"}} {{upgrade.rankThreshold}}</strong>
@@ -61,5 +81,16 @@
       </div>
     </div>
   </li>
+  {{!-- Its Damage Effects (parentSkills names it), as under a Skill
+        (skills-section-body.hbs; actor-sheet.mjs#_prepareItems). --}}
+  {{#if item.damageEffects.length}}
+  <li class="carl-nested-drawer{{#unless item.system.damageEffectsExpanded}} collapsed{{/unless}}">
+    <ol class="items-list carl-nested-damage-effects">
+      {{#each item.damageEffects as |de|}}
+        {{> "systems/carl-rpg/templates/actor/parts/damage-effect-row.hbs" item=de hideParents=true locked=../../locked}}
+      {{/each}}
+    </ol>
+  </li>
+  {{/if}}
   {{/each}}
 </ol>

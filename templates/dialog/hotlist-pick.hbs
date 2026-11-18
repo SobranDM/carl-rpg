@@ -1,0 +1,21 @@
+{{!-- Pick what goes in a Hotlist slot (module/helpers/hotlist.mjs's
+      promptHotlistPick): Spells with Ranks, consumables with some left, and
+      gear that isn't worn. A click on an entry picks it; the radios also
+      work from the keyboard with Add. --}}
+<div class="carl-dialog-body carl-hotlist-pick-body">
+  <input type="search" class="carl-hotlist-pick-filter" data-carl-pick-filter
+    placeholder="{{localize 'CARLRPG.Hotlist.Pick.Filter'}}" aria-label="{{localize 'CARLRPG.Hotlist.Pick.Filter'}}" />
+  {{#each groups as |group|}}
+  <fieldset class="carl-hotlist-pick-group" data-group="{{group.key}}">
+    <legend>{{group.label}}</legend>
+    {{#each group.entries as |entry|}}
+    <label class="carl-hotlist-pick-entry" data-name="{{entry.name}}">
+      <input type="radio" name="pick" value="{{entry.id}}" />
+      <img src="{{entry.img}}" alt="" width="24" height="24" />
+      <span class="carl-hotlist-pick-name" title="{{entry.name}}">{{entry.name}}</span>
+      {{#if entry.detail}}<span class="carl-hotlist-pick-detail">{{entry.detail}}</span>{{/if}}
+    </label>
+    {{/each}}
+  </fieldset>
+  {{/each}}
+</div>

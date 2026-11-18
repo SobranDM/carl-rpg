@@ -1,5 +1,5 @@
 const { HandlebarsApplicationMixin } = foundry.applications.api;
-const { DocumentSheetV2 } = foundry.applications.api;
+const { ActorSheetV2 } = foundry.applications.sheets;
 import DragDropMixin from "./mixins/drag-drop-mixin.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import {
@@ -12,12 +12,12 @@ import {
 /**
  * Loot Box sheet: pick a tier, roll loot (GM), take items out (everyone).
  * Kept apart from CarlRPGActorSheet - a box shares none of its tabs.
- * @extends {DocumentSheetV2}
+ * @extends {ActorSheetV2}
  * @mixes {HandlebarsApplication}
  * @mixes {DragDropMixin}
  */
 export class CarlRPGLootBoxSheet extends DragDropMixin(
-  HandlebarsApplicationMixin(DocumentSheetV2),
+  HandlebarsApplicationMixin(ActorSheetV2),
 ) {
   /** @override */
   static DEFAULT_OPTIONS = {
@@ -42,14 +42,6 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
       scrollable: [".carl-loot-list"],
     },
   };
-
-  /**
-   * The Actor document managed by this sheet.
-   * @type {Actor}
-   */
-  get actor() {
-    return this.document;
-  }
 
   /** @override */
   async _prepareContext(options) {

@@ -1,5 +1,5 @@
 import CarlRPGItemBase from "./item-base.mjs";
-import { defineUpgradesField } from "./shared/upgrade-tier.mjs";
+import { defineTargetEffectsField, defineUpgradesField } from "./shared/upgrade-tier.mjs";
 
 /**
  * Shared base for the three Rank-progression Item types: Skill, Spell, and
@@ -53,6 +53,25 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     // module/data/shared/upgrade-tier.mjs).
     schema.healDice = new fields.StringField({ required: false, blank: true, initial: "" });
 
+    // Who a heal can take (module/helpers/heal-targets.mjs): "self" (Heal
+    // Self, Heal), "others" - not yourself, pets or minions (Heal Others),
+    // "pets" - pets and minions only (Heal Critter), "anyone". Blank: by
+    // Range - "Self only" is "self", anything else "anyone".
+    schema.heals = new fields.StringField({
+      required: true, blank: true, initial: "",
+      choices: ["", "self", "others", "pets", "anyone"],
+    });
+    // The heal restores the target's whole Health Bar at any Rank, with no
+    // dice (Heal Critter: "heal back to 100% Health Bar"). HB only - unlike
+    // an Upgrade tier's healToFull, which also grants a Short Rest's
+    // benefits (Heal Self Rank 15).
+    schema.healToFull = new fields.BooleanField({ required: true, initial: false });
+
+    // The Attack's damage is Armor-Piercing at any Rank: it ignores DR,
+    // except DR from gear marked Anti-Piercing (p.95, p.225). An Upgrade
+    // tier can make it so from its Rank (upgrade-tier.mjs).
+    schema.armorPiercing = new fields.BooleanField({ required: true, initial: false });
+
     // Whether this item's damage counts as magical (docs/known-gaps.md 1.4) -
     // e.g. gates whether a Shield-style ward reduces it, or a future gear DR
     // that only applies to non-magical hits. Skills/Damage Effects (mundane
@@ -71,11 +90,28 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
 
     schema.upgrades = defineUpgradesField();
 
+    // On-hit Debuffs at any Rank (docs/skill-item-sheets.md): the base tier
+    // the Rank 5/10/15 Upgrades build on - "on a hit, the target gains X",
+    // with the same Critical Hit only / Amazing Success only flags.
+    schema.targetEffects = defineTargetEffectsField();
+
     return schema;
   }
 
   prepareDerivedData() {
     super.prepareDerivedData();
+    // "Pets don't have trackable Skill Ranks. Instead, their Ranks in their
+    // Attacks, Spells, and abilities ... are equal to the Floor Number (even
+    // at Level 1!)" (p.231). Set here, at prepare time, so every reader of
+    // system.rank agrees (upgrade gating, damage and heal tiers, the sheet)
+    // and nothing is written: the stored Rank stays the item's own when it's
+    // dragged to a crawler. Floor 0 counts as Rank 1, so Spells still cast.
+    // A Floor change re-prepares every actor and its items (carl-rpg.mjs).
+    this.rankIsFloor = this.parent?.actor?.type === "pet";
+    if (this.rankIsFloor) {
+      const floor = game.settings.get("carl-rpg", "currentFloor");
+      this.rank = Math.min(Math.max(1, floor), 20);
+    }
   }
 
   /**

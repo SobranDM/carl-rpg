@@ -91,6 +91,34 @@ export async function createTestMob(label = "mob", data = {}) {
 }
 
 /**
+ * A Pet (module/data/pet.mjs). Pass `system.ownerId` to bond it to a crawler.
+ * @param {string} [label]
+ * @param {object} [data]
+ * @returns {Promise<Actor>}
+ */
+export async function createTestPet(label = "pet", data = {}) {
+  return Actor.create({
+    name: `Quench ${label} ${foundry.utils.randomID()}`,
+    type: "pet",
+    ...data,
+  });
+}
+
+/**
+ * A Vehicle (module/data/vehicle.mjs).
+ * @param {string} [label]
+ * @param {object} [data]
+ * @returns {Promise<Actor>}
+ */
+export async function createTestVehicle(label = "vehicle", data = {}) {
+  return Actor.create({
+    name: `Quench ${label} ${foundry.utils.randomID()}`,
+    type: "vehicle",
+    ...data,
+  });
+}
+
+/**
  * @param {Actor} actor
  * @param {string} type  One of item|feature|skill|damageEffect|spell|class|race.
  * @param {string} [label]
@@ -98,11 +126,20 @@ export async function createTestMob(label = "mob", data = {}) {
  * @returns {Promise<Item>}
  */
 export async function createTestItem(actor, type, label = type, data = {}) {
+  // Test gear fits any slot unless the test says where it goes
+  // (docs/gear-slots.md: gear with no slot can't be worn). Tests of the
+  // slot rules set `system.slots` themselves.
+  if (type === "item" && data.system?.slots === undefined && !data.system?.consumable?.kind) {
+    data = { ...data, system: { ...(data.system ?? {}), slots: Object.keys(CONFIG.CARLRPG.wearSlots) } };
+  }
+  // `system.equipped: true` here is a test's shortcut for worn gear (or, in
+  // the migration tests, gear equipped the old way): kept, where a real
+  // copy arriving on a Character starts unequipped (CarlRPGItem#_preCreate).
   const [item] = await actor.createEmbeddedDocuments("Item", [{
     name: `Quench ${label} ${foundry.utils.randomID()}`,
     type,
     ...data,
-  }]);
+  }], { carlKeepEquipped: true });
   return item;
 }
 
@@ -153,6 +190,16 @@ export async function createTestCombat(actor, token = null) {
 }
 
 /**
+ * The real game.user.targets / canvas.tokens.controlled descriptors, saved
+ * by the outermost of any overlapping withFakeTargets calls and put back only
+ * when the last one ends. Without this, two calls running at once (e.g.
+ * `Promise.all([declare(), declare()])`) could have the later one "restore"
+ * the earlier one's fake, leaving a deleted test actor targeted for every
+ * later test.
+ */
+const fakeTargetState = { depth: 0, userDesc: undefined, controlledDesc: undefined, tokens: null };
+
+/**
  * Temporarily replace game.user.targets with fake token-like objects shaped
  * the way module/dice/dice.mjs's rollAttack reads them (`target.actor`,
  * `target.document?.uuid`). Also clears canvas.tokens.controlled, matching
@@ -162,7 +209,6 @@ export async function createTestCombat(actor, token = null) {
  */
 export async function withFakeTargets(fakeTargets, fn) {
   const user = game.user;
-  const descriptor = Object.getOwnPropertyDescriptor(user, "targets");
   const fakeTokens = fakeTargets.map((t) => ({
     actor: t.actor,
     document: { uuid: t.uuid ?? t.actor.uuid },
@@ -172,27 +218,31 @@ export async function withFakeTargets(fakeTargets, fn) {
     _refreshTarget() {},
   }));
   const fakeSet = new Set(fakeTokens);
-  Object.defineProperty(user, "targets", {
-    configurable: true,
-    enumerable: true,
-    get: () => fakeSet,
-  });
-
-  const tokens = canvas?.tokens;
-  const controlledDesc = tokens ? Object.getOwnPropertyDescriptor(tokens, "controlled") : undefined;
-  if (tokens) {
-    Object.defineProperty(tokens, "controlled", { configurable: true, enumerable: true, get: () => [] });
+  const tokens = canvas?.tokens ?? null;
+  if (fakeTargetState.depth++ === 0) {
+    fakeTargetState.userDesc = Object.getOwnPropertyDescriptor(user, "targets");
+    fakeTargetState.tokens = tokens;
+    fakeTargetState.controlledDesc = tokens ? Object.getOwnPropertyDescriptor(tokens, "controlled") : undefined;
   }
+  // Each call reads its own set while it runs; overlapping calls share the
+  // stub, so the latest-started call's set is what game.user.targets shows.
+  Object.defineProperty(user, "targets", { configurable: true, enumerable: true, get: () => fakeSet });
+  if (tokens) Object.defineProperty(tokens, "controlled", { configurable: true, enumerable: true, get: () => [] });
 
   try {
     return await fn();
   } finally {
-    if (tokens) {
-      if (controlledDesc) Object.defineProperty(tokens, "controlled", controlledDesc);
-      else delete tokens.controlled;
+    if (--fakeTargetState.depth === 0) {
+      const { userDesc, controlledDesc, tokens: savedTokens } = fakeTargetState;
+      if (savedTokens) {
+        if (controlledDesc) Object.defineProperty(savedTokens, "controlled", controlledDesc);
+        else delete savedTokens.controlled;
+      }
+      if (userDesc) Object.defineProperty(user, "targets", userDesc);
+      else delete user.targets;
+      fakeTargetState.userDesc = fakeTargetState.controlledDesc = undefined;
+      fakeTargetState.tokens = null;
     }
-    if (descriptor) Object.defineProperty(user, "targets", descriptor);
-    else delete user.targets;
   }
 }
 
@@ -219,6 +269,108 @@ export async function withPinnedDice(unit, fn) {
   }
 }
 
+/**
+ * A DragEvent carrying a real DataTransfer, as a browser delivers one.
+ * @param {string} type  "dragstart", "drop", ...
+ * @param {DataTransfer} [dataTransfer]
+ * @returns {DragEvent}
+ */
+export function makeDragEvent(type, dataTransfer = new DataTransfer()) {
+  return new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer });
+}
+
+/**
+ * Drop `data` on `element` (inside a rendered sheet) with a real DOM drop
+ * event and report how many times the sheet dispatched it, by spying on its
+ * `_onDropDocument`. More than one dispatch means two drop handlers are
+ * bound. With `expectDispatch: false` it waits a while and expects none
+ * (e.g. a hook blocked the drop).
+ * @param {foundry.applications.api.DocumentSheetV2} sheet
+ * @param {HTMLElement} element
+ * @param {object} data  Drag data, e.g. `doc.toDragData()`.
+ * @param {{expectDispatch?: boolean}} [options]
+ * @returns {Promise<{dispatches: number, result: any}>}
+ */
+export async function dropOnSheet(sheet, element, data, { expectDispatch = true } = {}) {
+  const proto = Object.getPrototypeOf(sheet);
+  const calls = [];
+  sheet._onDropDocument = (event, document) => {
+    const pending = proto._onDropDocument.call(sheet, event, document);
+    calls.push(pending);
+    return pending;
+  };
+  try {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.setData("text/plain", JSON.stringify(data));
+    element.dispatchEvent(makeDragEvent("drop", dataTransfer));
+    if (expectDispatch) {
+      await waitFor(() => calls.length > 0, { message: "the sheet never handled the drop" });
+    }
+    const results = await Promise.all(calls);
+    await settle(150);
+    await Promise.all(calls);
+    return { dispatches: calls.length, result: results[0] ?? null };
+  } finally {
+    delete sheet._onDropDocument;
+  }
+}
+
+/**
+ * Wrap a batch's registration function so the chat messages posted while
+ * the batch runs are deleted when it ends (module/quench/register.mjs wraps
+ * every batch). Rolls, Initiative, "Combat Over" and other cards are side
+ * effects many tests never clean up; left behind they pile up in the world
+ * (loaded at every startup) and in the chat log, a run at a time.
+ *
+ * Deletes every message created while the batch ran, whoever posted it.
+ * After a combat was deleted it waits a moment and looks again: "Combat
+ * Over" is posted un-awaited after the deletion (documents/combat.mjs).
+ * @param {string} key  The batch key, for the log line.
+ * @param {Function} fn  The batch's registration function.
+ * @returns {Function}
+ */
+export function withMessageCleanup(key, fn) {
+  return function (context) {
+    let before = null;
+    let combatDeleted = false;
+    let hookId = null;
+    // On the batch's root suite: before and after all of the batch's suites.
+    context.before(function () {
+      before = new Set(game.messages.keys());
+      combatDeleted = false;
+      hookId = Hooks.on("deleteCombat", () => { combatDeleted = true; });
+    });
+    context.after(async function () {
+      this.timeout?.(QUENCH_DEFAULT_TIMEOUT_MS);
+      if (!before) return;
+      let deleted = 0;
+      const sweep = async () => {
+        const ids = game.messages.filter((m) => !before.has(m.id)).map((m) => m.id);
+        if (!ids.length) return;
+        try {
+          await ChatMessage.deleteDocuments(ids);
+          deleted += ids.length;
+        } catch (err) {
+          console.warn(`CarlRPG | ${key}: deleting its chat messages failed`, err);
+        }
+      };
+      try {
+        await sweep();
+        if (combatDeleted) {
+          await settle(300);
+          await sweep();
+        }
+        if (deleted) console.info(`CarlRPG | ${key} left ${deleted} chat message(s); deleted`);
+      } finally {
+        if (hookId !== null) Hooks.off("deleteCombat", hookId);
+        hookId = null;
+        before = null;
+      }
+    });
+    return fn.call(this, context);
+  };
+}
+
 /** Pins a d20 to face 10, regardless of which direction randomUniform maps to a face - see withPinnedDice. */
 export const PIN_D20_MID = 0.5;
 
@@ -231,4 +383,48 @@ export const PIN_D20_MID = 0.5;
  */
 export function mockD20Roll(d20Results) {
   return { dice: [{ faces: 20, results: d20Results }] };
+}
+
+/**
+ * The open system dialog (module/apps/carl-dialog.mjs) with this class.
+ * @param {string} cssClass
+ * @returns {Promise<foundry.applications.api.DialogV2>}
+ */
+export async function openDialog(cssClass) {
+  let dialog;
+  await waitFor(() => {
+    dialog = [...foundry.applications.instances.values()].find(
+      (app) => app instanceof foundry.applications.api.DialogV2 && app.rendered && app.element.classList.contains(cssClass),
+    );
+    return !!dialog;
+  }, { message: `no .${cssClass} dialog opened` });
+  return dialog;
+}
+
+/** Click one of a dialog's footer buttons. */
+export function pressDialog(dialog, action) {
+  dialog.element.querySelector(`button[data-action="${action}"]`).click();
+}
+
+/**
+ * Start something that opens a dialog, run `fn` on the dialog (it must
+ * press a button), and return what the start resolved with. If `fn` throws,
+ * the dialog is closed, so a failed assertion can't leave it behind for the
+ * next test. (Closing it after a press would race the button's callback.)
+ * @param {() => Promise<*>} start
+ * @param {(dialog: foundry.applications.api.DialogV2) => void|Promise<void>} fn
+ * @param {string} cssClass  The dialog's class.
+ * @returns {Promise<*>}
+ */
+export async function withDialog(start, fn, cssClass) {
+  const pending = start();
+  let dialog = null;
+  try {
+    dialog = await openDialog(cssClass);
+    await fn(dialog);
+  } catch (err) {
+    if (dialog?.rendered) await dialog.close();
+    throw err;
+  }
+  return pending;
 }

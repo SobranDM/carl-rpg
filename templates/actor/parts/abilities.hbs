@@ -1,20 +1,56 @@
+{{!-- A Character's Combat tab (relabelled "abilities" slot - actor-sheet.mjs
+      TAB_LABELS_BY_TYPE): everything used in a fight on one screen - the
+      Stats column with the Attack! button (pick an Attack Skill the crawler
+      can use now - CarlDice.chooseAttack), the Defenses and the Hotlist
+      (p.98). Skills and Spells have their own tab (skills-tab.hbs). --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="abilities">
   <div class="carl-abilities-layout">
     {{> "systems/carl-rpg/templates/actor/parts/stats-column.hbs"}}
 
     <div class="carl-abilities-main">
-      {{#> carlCollapsibleSection sectionId="skills" expanded=system.uiState.skillsExpanded
-           label=(localize "CARLRPG.Tab.Skills") toggleScope="actor" togglePath="system.uiState.skillsExpanded"
-           showLockToggle=true locked=system.uiState.itemsLocked}}
-        {{> "systems/carl-rpg/templates/actor/parts/skills-section-body.hbs"
-            skills=skills unmatchedDamageEffects=unmatchedDamageEffects config=config locked=system.uiState.itemsLocked}}
-      {{/carlCollapsibleSection}}
+      {{!-- Defenses used every round: the Evade roll (DEX Mod + Evade
+            bonuses, shown as +N, then any dice such as +1d4), then DR - only
+            what the Race, Class, gear and Buffs give (a crawler's base DR is
+            0, character.mjs) - and Move and Step, each an editable base that
+            shows "= N" when items or Buffs change it. Hovering names the
+            sources (bonus-sources.mjs).
+            A Move or Step a Debuff blocks (Held...) is struck through.
+            Resistances come from the Race, Class, gear and Buffs - the button
+            lists them, read-only. --}}
+      <fieldset class="carl-combat-defenses">
+        <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
+        <div class="carl-defenses-row">
+          <button type="button" class="carl-evade-button" data-action="rollEvade"
+            title="{{localize 'CARLRPG.Actor.EvadeTotalHint'}}&#10;{{defenses.evade.tooltip}}">
+            <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
+            <span class="carl-evade-total">{{numberFormat evadeTotal sign=true}}{{defenses.evade.dice}}</span>
+          </button>
+          <label class="carl-defense-field" title="{{defenses.dr.tooltip}}">
+            <span class="resource-label">{{localize "CARLRPG.Actor.DrShort"}}</span>
+            <span class="carl-stat-value carl-dr-value">{{system.drEffective}}</span>
+          </label>
+          <label class="carl-defense-field{{#if defenses.move.blocked}} carl-defense-blocked{{/if}}" title="{{defenses.move.tooltip}}">
+            <span class="resource-label">{{localize "CARLRPG.Actor.Move"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.details.move" value="{{system.details.move}}" data-dtype="Number" />
+            {{#if defenses.move.shown}}
+            <span class="carl-stat-value">= {{system.moveEffective}} ft</span>
+            {{/if}}
+          </label>
+          <label class="carl-defense-field{{#if defenses.step.blocked}} carl-defense-blocked{{/if}}" title="{{defenses.step.tooltip}}">
+            <span class="resource-label">{{localize "CARLRPG.Actor.Step"}}</span>
+            <input type="text" class="carl-w-tiny" name="system.details.step" value="{{system.details.step}}" data-dtype="Number" />
+            {{#if defenses.step.shown}}
+            <span class="carl-stat-value">= {{system.stepEffective}} ft</span>
+            {{/if}}
+          </label>
+          <button type="button" class="carl-resistances-button" data-action="showResistances">
+            {{localize "CARLRPG.Actor.Resistances"}}
+            <span class="carl-resistances-summary">{{#if resistanceSummary}}{{resistanceSummary}}{{else}}{{localize "CARLRPG.Actor.ResistNone"}}{{/if}}</span>
+          </button>
+        </div>
+      </fieldset>
 
-      {{#> carlCollapsibleSection sectionId="spells" expanded=system.uiState.spellsExpanded
-           label=(localize "CARLRPG.Tab.Spells") toggleScope="actor" togglePath="system.uiState.spellsExpanded"
-           showMana=true manaValue=system.mana.value manaMax=system.mana.max}}
-        {{> "systems/carl-rpg/templates/actor/parts/spells-section-body.hbs" spells=spells locked=system.uiState.itemsLocked}}
-      {{/carlCollapsibleSection}}
+      {{> "systems/carl-rpg/templates/actor/parts/hotlist.hbs"}}
     </div>
   </div>
 </section>

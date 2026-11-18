@@ -1,0 +1,92 @@
+{{!-- Vehicle's Details tab (module/data/vehicle.mjs) - set up once: its
+      Table 7 stats (or a preset), upgrades, built-in weapons and
+      Resistances. Rendered in the "pet" tab slot (see actor-sheet.mjs
+      PART_TEMPLATES). --}}
+<section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="pet">
+  <fieldset class="carl-pet-setup">
+    <legend>{{localize "CARLRPG.Vehicle.Sections.Stats"}}</legend>
+    <div class="flexrow carl-vehicle-preset">
+      <select class="carl-w-medium" data-vehicle-preset>
+        <option value="">{{localize "CARLRPG.Vehicle.PresetPick"}}</option>
+        {{selectOptions vehicle.presetChoices localize=true}}
+      </select>
+      <button type="button" data-action="applyVehiclePreset" title="{{localize 'CARLRPG.Vehicle.PresetHint'}}">{{localize "CARLRPG.Vehicle.PresetApply"}}</button>
+    </div>
+    <div class="carl-field-grid">
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Vehicle.Model"}}</label>
+        <input type="text" class="carl-w-medium" name="system.model" value="{{system.model}}" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Size"}}</label>
+        <select class="carl-w-medium" name="system.size" data-dtype="Number">
+          {{selectOptions config.sizes selected=system.size localize=true}}
+        </select>
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Move"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.move" value="{{system.move}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label">{{localize "CARLRPG.Actor.Dr"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.OccupancyHint'}}">{{localize "CARLRPG.Vehicle.Occupancy"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.occupancy" value="{{system.occupancy}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.CargoHint'}}">{{localize "CARLRPG.Vehicle.Cargo"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.cargo" value="{{system.cargo}}" data-dtype="Number" />
+      </div>
+      <div>
+        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.DriveSkillHint'}}">{{localize "CARLRPG.Vehicle.DriveSkill"}}</label>
+        <input type="text" class="carl-w-medium" name="system.driveSkill" value="{{system.driveSkill}}"
+          list="carl-drive-skills-{{actor.id}}" placeholder="Driving" />
+        <datalist id="carl-drive-skills-{{actor.id}}">
+          {{#each vehicle.driveSkillNames as |name|}}<option value="{{name}}"></option>{{/each}}
+        </datalist>
+      </div>
+      <div>
+        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.SlotValueHint'}}">{{localize "CARLRPG.Vehicle.SlotValue"}}</label>
+        <input type="text" class="carl-w-tiny" name="system.hbSlotValueOverride" value="{{system.hbSlotValueOverride}}"
+          placeholder="{{system.size}}" data-dtype="Number" />
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="carl-pet-setup">
+    <legend>{{localize "CARLRPG.Vehicle.Sections.Upgrades"}}</legend>
+    <div class="carl-field-grid">
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.rollCage'}}">
+        <input type="checkbox" name="system.upgrades.rollCage" {{checked system.upgrades.rollCage}} /> {{localize "CARLRPG.Vehicle.Upgrades.rollCage"}}
+      </label>
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.ramPlate'}}">
+        <input type="checkbox" name="system.upgrades.ramPlate" {{checked system.upgrades.ramPlate}} /> {{localize "CARLRPG.Vehicle.Upgrades.ramPlate"}}
+      </label>
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.nitrous'}}">
+        <input type="checkbox" name="system.upgrades.nitrous.installed" {{checked system.upgrades.nitrous.installed}} /> {{localize "CARLRPG.Vehicle.Upgrades.nitrous"}}
+      </label>
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.shockAbsorbers'}}">
+        <input type="checkbox" name="system.upgrades.shockAbsorbers.installed" {{checked system.upgrades.shockAbsorbers.installed}} /> {{localize "CARLRPG.Vehicle.Upgrades.shockAbsorbers"}}
+        {{#if (ne system.upgrades.shockAbsorbers.usedFloor null)}}<a data-action="resetUpgradeUse" data-upgrade="shockAbsorbers" title="{{localize 'CARLRPG.Vehicle.PerFloor.Reset'}}"><i class="fas fa-undo"></i></a>{{/if}}
+      </label>
+      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.fuzzyDice'}}">
+        <input type="checkbox" name="system.upgrades.fuzzyDice.installed" {{checked system.upgrades.fuzzyDice.installed}} /> {{localize "CARLRPG.Vehicle.Upgrades.fuzzyDice"}}
+        {{#if (ne system.upgrades.fuzzyDice.usedFloor null)}}<a data-action="resetUpgradeUse" data-upgrade="fuzzyDice" title="{{localize 'CARLRPG.Vehicle.PerFloor.Reset'}}"><i class="fas fa-undo"></i></a>{{/if}}
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset class="carl-pet-setup">
+    <legend>{{localize "CARLRPG.Vehicle.Weapons"}}</legend>
+    <p class="carl-hint">{{localize "CARLRPG.Vehicle.WeaponsHint"}}</p>
+    {{> "systems/carl-rpg/templates/actor/parts/attacks-list.hbs"}}
+  </fieldset>
+
+  <fieldset class="carl-pet-setup">
+    <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
+    {{> "systems/carl-rpg/templates/actor/parts/resistances-grid.hbs"}}
+  </fieldset>
+
+</section>

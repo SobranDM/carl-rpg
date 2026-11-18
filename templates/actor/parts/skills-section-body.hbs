@@ -1,8 +1,8 @@
 {{!-- Skills + nested Damage Effects list - the content of the Skills
       drawer on the merged Abilities tab. Damage Effects nest under every
       matching parent Skill (see actor-sheet.mjs#_prepareItems); a Damage
-      Effect matching no owned Skill falls back to the "Unassigned" list
-      below. --}}
+      Effect matching no owned Skill or Spell (spells-section-body.hbs
+      nests a Spell's) falls back to the "Unassigned" list below. --}}
 <ol class="items-list carl-skills-list">
   <li class="item flexrow items-header">
     <div class="item-name carl-sort-header" data-action="sortList" data-list="skills" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.skills.name}}"></i></div>
@@ -33,14 +33,17 @@
         title="{{localize 'CARLRPG.Ranked.ToggleDetails'}}">
         <h4>{{skill.name}}</h4>
       </a>
+      {{cooldownChip skill}}
     </div>
     <div class="item-prop">{{skill.system.category}}</div>
     <div class="item-prop">{{skill.system.rank}}</div>
     <div class="item-controls">
       {{#if ../locked}}
+      {{#unless @root.isPet}}
       <a class="item-control" data-action="toggleMark" title="{{localize 'CARLRPG.Ranked.ToggleMark'}}">
-        <i class="fas {{#if skill.system.marked}}fa-check-square{{else}}fa-square{{/if}}"></i>
+        <i class="carl-mark-icon {{#if skill.system.marked}}fa-solid fa-square-check is-marked{{else}}fa-regular fa-square{{/if}}"></i>
       </a>
+      {{/unless}}
       {{else}}
       <a class="item-control item-edit" data-action="editItem" title="{{localize 'DOCUMENT.Update' type='Skill'}}">
         <i class="fas fa-edit"></i>
@@ -57,9 +60,10 @@
   <li class="carl-nested-drawer{{#unless skill.system.detailsExpanded}} collapsed{{/unless}}">
     <div class="carl-skill-details">
       <div class="carl-skill-details-inner">
-        {{#if skill.system.description}}
-        <div class="carl-skill-description">{{{skill.system.description}}}</div>
-        {{/if}}
+        {{!-- Enriched, open drawers only (actor-sheet.mjs #prepareDrawerDescriptions). --}}
+        {{#with (lookup @root.drawerHTML skill._id) as |descriptionHTML|}}
+        <div class="carl-skill-description">{{{descriptionHTML}}}</div>
+        {{/with}}
         {{#each skill.system.upgrades as |upgrade|}}
         <div class="carl-skill-upgrade">
           <strong>{{localize "CARLRPG.Ranked.Rank"}} {{upgrade.rankThreshold}}</strong>

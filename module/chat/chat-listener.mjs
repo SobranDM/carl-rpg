@@ -20,6 +20,9 @@
  * @property {string} wrapperSelector  Removed from the DOM when !canAct(message).
  * @property {(message: ChatMessage) => boolean} canAct
  * @property {string} doneFlag         Disables+relabels once this flag is set.
+ * @property {(message: ChatMessage) => boolean} [isDone]  Used instead of
+ *   doneFlag when "used" depends on the viewer (a heal with several
+ *   recipients is done for each owner once theirs are healed).
  * @property {() => string} doneLabel  innerHTML for the disabled/done state.
  * @property {string} [supersededFlag] Checked only when doneFlag isn't set -
  *   a distinct disabled state for "a later roll made this moot," not "used."
@@ -38,7 +41,13 @@ import { markChoiceActionEntries } from "./mark-choice-card.mjs";
 import { grindSurplusActionEntries } from "./grind-surplus-card.mjs";
 import { attackTargetsActionEntries, decorateTargetRows } from "./attack-targets-card.mjs";
 import { aiRerollActionEntries, decorateAiReroll } from "./ai-favor-reroll.mjs";
+import { decorateIntervene, interveneActionEntries } from "./check-revision.mjs";
 import { consumableActionEntries } from "./consumable-card.mjs";
+import { decorateDrivingCard, drivingActionEntries } from "./vehicle-card.mjs";
+import { decorateReactionCard, reactionActionEntries } from "./reaction-card.mjs";
+import { damageCardActionEntries, decorateDamageCard } from "../helpers/reaction-resolve.mjs";
+import { decoratePartyCheckCard, partyCheckActionEntries } from "./party-check-card.mjs";
+import { forgetCard } from "./status-rows.mjs";
 
 const REGISTRY = [
   ...damageActionEntries,
@@ -50,7 +59,12 @@ const REGISTRY = [
   ...grindSurplusActionEntries,
   ...attackTargetsActionEntries,
   ...aiRerollActionEntries,
+  ...interveneActionEntries,
   ...consumableActionEntries,
+  ...drivingActionEntries,
+  ...reactionActionEntries,
+  ...damageCardActionEntries,
+  ...partyCheckActionEntries,
 ];
 const BY_ACTION = new Map(REGISTRY.map((entry) => [entry.action, entry]));
 
@@ -63,12 +77,21 @@ function isBlocked(entry, message) {
   // handler re-checks everything for the button clicked.
   if (entry.custom) return false;
   return !entry.canAct(message)
-    || !!message.getFlag("carl-rpg", entry.doneFlag)
+    || isDoneFor(entry, message)
     || !!(entry.supersededFlag && message.getFlag("carl-rpg", entry.supersededFlag));
+}
+
+/** Whether an entry's button is used up, for this viewer. */
+function isDoneFor(entry, message) {
+  return entry.isDone ? !!entry.isDone(message) : !!message.getFlag("carl-rpg", entry.doneFlag);
 }
 
 /** Registers the single delegated listener - call once, from init. */
 export function registerChatListener() {
+  // A deleted card's client-side state (open expanders, results still on
+  // their way) goes with it.
+  Hooks.on("deleteChatMessage", (message) => forgetCard(message.id));
+
   Hooks.on("renderChatMessageHTML", (message, html) => {
     // Generic convention for any GM-only appended content (e.g. the folded
     // damage digest, module/chat/damage-card.mjs) - not one specific selector.
@@ -76,11 +99,18 @@ export function registerChatListener() {
       html.querySelectorAll(".carl-gm-only").forEach((el) => el.remove());
     }
 
-    // Per-viewer content drawn from flags (an Attack card's target rows).
+    // Per-viewer content drawn from flags (an Attack card's target rows, a
+    // Driving Check card's buttons).
     decorateTargetRows(message, html);
+    decorateDrivingCard(message, html);
+    decorateReactionCard(message, html);
+    decorateDamageCard(message, html);
+    decoratePartyCheckCard(message, html);
     // The AI Favor reroll button, or a replaced card's "rerolled" state -
     // after the rows, so it can switch their buttons off too.
     decorateAiReroll(message, html);
+    // Another crawler's Intervene (module/chat/check-revision.mjs).
+    decorateIntervene(message, html);
 
     for (const entry of REGISTRY) {
       if (entry.custom) continue;
@@ -91,7 +121,7 @@ export function registerChatListener() {
         html.querySelector(entry.wrapperSelector)?.remove();
         continue;
       }
-      if (message.getFlag("carl-rpg", entry.doneFlag)) {
+      if (isDoneFor(entry, message)) {
         btn.disabled = true;
         btn.innerHTML = entry.doneLabel();
         continue;

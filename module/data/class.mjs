@@ -16,9 +16,11 @@ export default class CarlRPGClass extends CarlRPGItemBase {
 
     // Categorical tags (e.g. "Barbarian", "Fighter") - a Class can carry
     // more than one. Free text, not a closed enum: new categories could
-    // exist beyond the book's 12.
+    // exist beyond the book's 12. Blank entries are allowed in the source
+    // (the sheet's Add makes an empty row) and dropped from the prepared
+    // list (prepareBaseData).
     schema.classTypes = new fields.ArrayField(
-      new fields.StringField({ required: true, blank: false }),
+      new fields.StringField({ required: true, blank: true }),
       { required: false, initial: [] }
     );
 
@@ -32,5 +34,11 @@ export default class CarlRPGClass extends CarlRPGItemBase {
     schema.skillChoiceGrants = defineSkillChoiceGrantsField();
 
     return schema;
+  }
+
+  /** A blank Class Type row (see the schema) is no category. */
+  prepareBaseData() {
+    super.prepareBaseData();
+    this.classTypes = (this.classTypes ?? []).filter((name) => name);
   }
 }

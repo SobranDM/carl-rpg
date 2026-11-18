@@ -10,32 +10,60 @@
  *   Notes: Pineapple Club—...
  *
  * The class line is "<kind>; <Size> (<n>), <type>", where kind is Mob,
- * Crawler, or a Boss tier. Prose between a section heading and the name is
- * the creature's flavor text.
+ * Elite, NPC, Crawler, Vehicle, or a Boss tier. Print varies: "Mob, Large
+ * (5)", "Mob Petite (3)", "Medium, (4)", a shapeshifter's "Small (2) to Huge
+ * (6)". Prose between a section heading and the name is the creature's
+ * flavor text. Vehicle blocks bound the block before them but aren't Mobs,
+ * so they aren't imported.
  */
 
+import { mobAttackTargetEffects, splitArmorPiercing } from "./debuff-text.mjs";
 import { bodySize, escapeHtml, isHeading, joinText } from "./page-text.mjs";
 import { findDamageType } from "../helpers/damage-types.mjs";
+import { findSections } from "./sections.mjs";
+import { parseSizeText } from "../helpers/size-text.mjs";
 
-const CLASS_RE = /^([A-Z][A-Za-z ]{1,30});\s*([A-Za-z]+)\s*\((\d+)\),\s*(.+)$/;
+// kind, size name, size number, a size range's upper number, type.
+const CLASS_RE =
+  /^([A-Z][A-Za-z ]{0,30}?)(?:[;,]\s*|\s+)([A-Z][a-z]+),?\s*\((\d)\)(?:\s*to\s+[A-Z][a-z]+\s*\((\d)\))?,\s*(.+)$/;
 // One % per slot; a % is sometimes missing or mistyped in print ("50 60%", "80&").
 const HB_PERCENT_RE = /^\d+[%&]?( \d+[%&]?)*$/;
 // The closing paren is sometimes missing in print: "10 (+4 8 (+3)".
 const STAT_PAIR_RE = /(\d+)\s*\(\s*[+−-]?\d+\s*\)?/g;
-// "2d8+3 Piercing", "−1d6", "No damage"; the comma after it is sometimes
-// missing in print ("1d6+3 60ft range").
-const DAMAGE_RE = /^(No damage|[+−-]?\d*d\d+(?:\s*[+−-]\s*\d+)?(?:\s*[A-Z][a-z]+)?)\s*,?\s*(.*)$/;
-const ATTACK_RE = /^([^:]{1,60}):\s*(\d+(?:\+F)* to hit|None|Auto)\b,?\s*(.*)$/i;
+// "2d8+3 Piercing", "2d6+F Acid", "5d6+6+F", "−1d6", "No damage"; the comma
+// after it is sometimes missing in print ("1d6+3 60ft range").
+const DAMAGE_RE =
+  /^(No damage|[+−-]?\d*d\d+(?:\s*[+−-]\s*(?:\d+|F\b))*(?:\s*[A-Z][a-z]+)?)\s*,?\s*(.*)$/;
+const DICE_RE = /\d*d\d+(?:\s*[+−-]\s*(?:\d+|F\b))*/;
+// To-hit: "13+F to hit", "15+5 to hit", "14+F," (no "to hit" - then only
+// with a bonus and a comma, so "Range: 10 feet" isn't an Attack), "See
+// below", "None", "Auto".
+const ATTACK_RE =
+  /^([^:]{1,60}):\s*(\d+(?:\s*\+\s*(?:F|\d+))*\s*to hit|\d+(?:\s*\+\s*(?:F|\d+))+(?=\s*,)|See below|None|Auto)\b,?\s*(.*)$/i;
+// The colon is sometimes missing in print ("Bite 14+F to hit, ..."): then
+// only with "to hit".
+const ATTACK_NO_COLON_RE = /^([A-Z][A-Za-z'’ -]{1,40}?)\s+(\d+(?:\s*\+\s*(?:F|\d+))*\s*to hit)\b,?\s*(.*)$/;
 const NOTES_RE = /^Notes:\s*(.*)$/;
 const NOTE_TITLE_RE = /^([A-Z][\w’'!?,()&. -]{1,40})—/;
 const EFFECT_START_RE = /^(On an?y? |Any |Make a |If |Each |\(Secret!?\))/;
 const TIERS = ["neighborhood", "borough", "city", "province", "country", "floor"];
+
+/**
+ * Bespoke tiers for Bosses whose class line names no Table 50 tier, by
+ * name (lower case, spaces collapsed). Kibril Atheras Darkoak (Core,
+ * ~p.410) prints "Quest Boss", a story label: his 13 HB slots (10 + F on the
+ * Third Floor) and 205 Stat points (3 per Level at Level 60, plus 5 each)
+ * are a Neighborhood Boss's (ruled 2026-11-18).
+ */
+const BOSS_TIER_BY_NAME = { "kibril atheras darkoak": "neighborhood" };
 const STAT_KEYS = { str: "str", int: "int", con: "con", dex: "dex", cha: "cha" };
 /**
  * @param {object[]} pages  From scan.mjs readPages.
- * @returns {{name: string, page: number, data: object}[]}
+ * @returns {{name: string, page: number, data: object, section: object}[]}  section: its Floor and
+ *   Neighborhood or Quest (sections.mjs).
  */
 export function parseMobs(pages) {
+  const sectionAt = findSections(pages);
   // A block can run onto the next page, which has no class line of its own.
   const lines = [];
   let prevHadBlock = false;
@@ -45,7 +73,7 @@ export function parseMobs(pages) {
     prevHadBlock = hasBlock;
     if (!keep) continue;
     const body = bodySize(page.lines);
-    for (const line of page.lines) lines.push({ ...line, heading: isHeading(line, body) });
+    page.lines.forEach((line, at) => lines.push({ ...line, at, heading: isHeading(line, body) }));
   }
 
   const anchors = [];
@@ -71,7 +99,7 @@ export function parseMobs(pages) {
     return nameAt;
   });
 
-  return anchors.map((at, n) => {
+  const mobs = anchors.map((at, n) => {
     const nameAt = nameStarts[n];
     // Flavor: prose between the nearest heading above and the name.
     // Reaching the previous block first means there is none.
@@ -89,18 +117,32 @@ export function parseMobs(pages) {
       }
     }
     const name = joinText(lines.slice(nameAt, at).map((l) => l.text));
-    return toMob(name, lines[at], lines.slice(at + 1, end), flavor);
+    const mob = toMob(name, lines[at], lines.slice(at + 1, end), flavor);
+    // Where in the dungeon it's found (sections.mjs): files it on import.
+    return mob && { ...mob, section: sectionAt(lines[at].page, lines[at].at) };
   });
+  // A Vehicle block is null (toMob).
+  return mobs.filter(Boolean);
 }
 
 function toMob(rawName, classLine, body, flavor) {
-  const [, kind, size, sizeN, type] = classLine.text.match(CLASS_RE);
+  const [, kind, size, sizeN, , type] = classLine.text.match(CLASS_RE);
+  if (/^Vehicle$/i.test(kind)) return null;
   const name = rawName.trim();
   const tierWord = kind.match(/^(\w+) Boss$/)?.[1]?.toLowerCase();
+  const mobTier = TIERS.includes(tierWord) ? tierWord
+    : (tierWord && BOSS_TIER_BY_NAME[name.toLowerCase().replace(/\s+/g, " ")]) || "";
   const system = {
-    mobTier: TIERS.includes(tierWord) ? tierWord : "",
-    size: `${size} (${sizeN})`,
-    creatureType: /^(Mob|Boss)$/i.test(kind) || tierWord ? type : `${type} ${kind}`,
+    mobTier,
+    // An Elite acts like a Boss (p.81). A Boss tier Table 50 doesn't list
+    // (a Quest Boss) has no tier, so it is made an Elite to keep that.
+    isElite: /^Elite$/i.test(kind) || (!!tierWord && !mobTier),
+    // Table 9's value (p.92) from the printed "Large (5)" - by its number,
+    // else its name (a misprinted number), else none. A shapeshifter's
+    // "Small (2) to Huge (6)" takes the first.
+    size: parseSizeText(`${size} (${sizeN})`),
+    // A bespoke tier keeps its printed kind ("Humanoid Quest Boss").
+    creatureType: /^(Mob|Boss|Elite)$/i.test(kind) || TIERS.includes(tierWord) ? type : `${type} ${kind}`,
     attacks: [],
     biography: "",
   };
@@ -121,16 +163,16 @@ function toMob(rawName, classLine, body, flavor) {
       if (/[%&]/.test(text)) hbCount += text.split(" ").length;
       continue;
     }
-    if (/^Level\b.*\bDR$/.test(text)) {
+    if (/^Level\b.*\bDR$/i.test(text)) {
       const values = body[++i]?.text.split(" ") ?? [];
       const headers = text.split(/\s+/);
-      const at = (h) => values[headers.indexOf(h)];
+      const at = (h) => values[headers.findIndex((x) => x.toLowerCase() === h.toLowerCase())];
       system.level = Number.parseInt(at("Level"), 10) || 1;
       system.move = at("Move") ?? "";
       system.dr = Number.parseInt(at("DR"), 10) || 0;
       continue;
     }
-    if (/^Str\b.*\bCha$/.test(text)) {
+    if (/^Str\b.*\bCha$/i.test(text)) {
       const headers = text.toLowerCase().split(/\s+/);
       const values = [...(body[++i]?.text ?? "").matchAll(STAT_PAIR_RE)].map((v) => Number(v[1]));
       system.stats = {};
@@ -144,7 +186,7 @@ function toMob(rawName, classLine, body, flavor) {
       notes.push((note = [m[1]]));
       continue;
     }
-    if ((m = text.match(ATTACK_RE))) {
+    if ((m = text.match(ATTACK_RE) ?? text.match(ATTACK_NO_COLON_RE))) {
       blockSize ??= body[i].size;
       note = null;
       system.attacks.push((attack = { name: m[1].trim(), toHit: m[2], main: [m[3]], effect: [] }));
@@ -189,6 +231,10 @@ function toMob(rawName, classLine, body, flavor) {
     name,
     page: classLine.page,
     data: { name, type: "mob", img: "icons/svg/mystery-man.svg", system },
+    // A Boss or Elite is one unique creature: its token is linked (ruled
+    // 2026-11-18). Only when first created - kept out of `data`, so it isn't
+    // part of the re-import fingerprint and a GM's later choice stands.
+    ...(system.mobTier || system.isElite ? { createData: { prototypeToken: { actorLink: true } } } : {}),
   };
 }
 
@@ -209,15 +255,24 @@ function finishAttack({ name, toHit, main, effect }) {
     extraEffect.push(rangeText.slice(semi + 1).trim());
     rangeText = rangeText.slice(0, semi);
   }
-  const dice = damagePart.match(/\d*d\d+(?:\s*[+−-]\s*\d+)?/)?.[0]?.replace(/\s+/g, "") ?? "";
+  // "F" (the Floor) stays in: the damage roll reads it (reaction-resolve.mjs).
+  const dice = damagePart.match(DICE_RE)?.[0]?.replace(/\s+/g, "").replace(/−/g, "-") ?? "";
   // "Psionic", a line-broken "Bludgeon-" etc. map onto the book's types.
   const damageType = findDamageType(damagePart);
+  // "5ft range, Armor-Piercing": ignores DR (p.95; docs/rules-fixes.md C).
+  const { range, armorPiercing } = splitArmorPiercing(rangeText.replace(/\s+range\b/i, "").trim());
+  const effectText = joinText([...extraEffect, ...effect]);
   return {
     name,
-    toHit: /to hit/i.test(toHit) ? toHit.replace(/\s*to hit/i, "") : "",
+    // "None", "Auto", "See below": no to-hit to roll against.
+    toHit: /^\d/.test(toHit) ? toHit.replace(/\s*to hit/i, "").replace(/\s+/g, "") : "",
     damage: dice,
     damageType,
-    range: rangeText.replace(/\s+range\b/i, "").trim(),
-    effect: joinText([...extraEffect, ...effect]),
+    range,
+    armorPiercing,
+    effect: effectText,
+    // Table 11's Debuffs, with when they land; any other stays in the
+    // effect text only (debuff-text.mjs).
+    targetEffects: mobAttackTargetEffects(effectText),
   };
 }

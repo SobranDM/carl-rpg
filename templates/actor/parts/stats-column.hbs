@@ -2,52 +2,70 @@
       (see abilities.hbs / abilities-mob.hbs). Extracted from the old
       standalone stats.hbs tab. --}}
 <div class="carl-stats-column">
-  <a class="rollable flex-group-center carl-evade-link" data-action="rollEvade">
-    <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
-  </a>
-  {{#each system.stats as |stat key|}}
-  <div class="carl-stat">
-    <label class="resource-label rollable" data-action="rollStat" data-stat="{{key}}">{{stat.label}}</label>
-    <div class="carl-stat-row">
-      <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EffectiveValue'}}">{{stat.effective}}</span>
-      <span class="carl-stat-mod rollable" data-action="rollStat" data-stat="{{key}}"
-        title="{{localize 'CARLRPG.Actor.EffectiveMod'}}">{{numberFormat stat.mod sign=true}}</span>
+  {{#if isCharacter}}
+  {{!-- Pick an Attack Skill the crawler can use now - a weapon for it in
+        hand or in the Hotlist, or none needed - then the Attack dialog
+        (CarlDice.chooseAttack, module/helpers/weapons.mjs). --}}
+  <button type="button" class="carl-attack-button" data-action="chooseAttack" title="{{localize 'CARLRPG.Weapon.AttackButtonHint'}}">
+    <i class="fas fa-hand-fist"></i> {{localize "CARLRPG.Weapon.AttackButton"}}
+  </button>
+  {{/if}}
+  {{!-- Everything below the Attack! button. display: contents, except on a
+        Character's Combat tab, where it's the cell under the button beside
+        the Hotlist (the button shares a row with the Defenses there). --}}
+  <div class="carl-stats-rest">
+    {{!-- A Character's Evade is in the Combat tab's Defenses row; a Mob
+          never rolls (p.267), so it has none. --}}
+    {{#unless (or isCharacter isMob)}}
+    <a class="rollable flex-group-center carl-evade-link" data-action="rollEvade">
+      <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
+    </a>
+    {{/unless}}
+    {{#each system.stats as |stat key|}}
+    <div class="carl-stat">
+      <label class="resource-label rollable" data-action="rollStat" data-stat="{{key}}">{{stat.label}}</label>
+      <div class="carl-stat-row">
+        <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EffectiveValue'}}">{{stat.effective}}</span>
+        <span class="carl-stat-mod rollable" data-action="rollStat" data-stat="{{key}}"
+          title="{{localize 'CARLRPG.Actor.EffectiveMod'}}">{{numberFormat stat.mod sign=true}}</span>
+      </div>
     </div>
+    {{/each}}
+
+    {{!-- Character spends from a banked pool accrued via leveling up (see
+          actor.mjs's _preUpdate); a Mob has no such pool - its budget is
+          computed fresh from Level/Tier every time (mob.mjs's
+          statPointsAvailable/statPointsSpent), so it gets a read-only
+          remaining-points display here instead of an editable input. Both
+          open the same Spend Stat Points dialog, which branches on actor
+          type internally (module/apps/spend-stat-points-dialog.mjs). --}}
+    <fieldset class="carl-banked-stat-points">
+      <legend>
+        {{#if (eq actor.type "mob")}}{{localize "CARLRPG.Actor.StatPointsRemaining"}}{{else}}{{localize "CARLRPG.Actor.BankedStatPoints"}}{{/if}}
+      </legend>
+      <div class="carl-banked-stat-points-row">
+        {{#if (eq actor.type "mob")}}
+        <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.StatPointsRemainingHint'}}">{{statPointsRemaining}}</span>
+        {{else}}
+        <input type="text" class="carl-w-tiny" name="system.bankedStatPoints" value="{{system.bankedStatPoints}}" data-dtype="Number" />
+        {{/if}}
+        {{#if canSpendStatPoints}}<button type="button" data-action="spendStatPoints">{{localize "CARLRPG.Actor.Spend"}}</button>{{/if}}
+      </div>
+    </fieldset>
+
+    {{#if isCharacter}}
+    {{!-- "You gain a Level when you grind a number of hours equal to your
+          current Level" (p.171) - the GM Toolbox's Grind adds to this, and any
+          Level gain resets it (CarlRPGActor#_preUpdate). --}}
+    <fieldset class="carl-banked-stat-points carl-grind-level">
+      <legend>{{localize "CARLRPG.Actor.GrindLevelHours"}}</legend>
+      <div class="carl-banked-stat-points-row">
+        <span class="carl-grind-level-label">{{localize "CARLRPG.Actor.GrindHoursLabel"}}</span>
+        <input type="text" class="carl-w-tiny" name="system.grindLevelHours" value="{{system.grindLevelHours}}" data-dtype="Number" />
+        <span class="carl-grind-level-of">/ {{system.attributes.level.value}}</span>
+      </div>
+    </fieldset>
+
+    {{/if}}
   </div>
-  {{/each}}
-
-  {{!-- Character spends from a banked pool accrued via leveling up (see
-        actor.mjs's _preUpdate); a Mob has no such pool - its budget is
-        computed fresh from Level/Tier every time (mob.mjs's
-        statPointsAvailable/statPointsSpent), so it gets a read-only
-        remaining-points display here instead of an editable input. Both
-        open the same Spend Stat Points dialog, which branches on actor
-        type internally (module/apps/spend-stat-points-dialog.mjs). --}}
-  <fieldset class="carl-banked-stat-points">
-    <legend>
-      {{#if (eq actor.type "mob")}}{{localize "CARLRPG.Actor.StatPointsRemaining"}}{{else}}{{localize "CARLRPG.Actor.BankedStatPoints"}}{{/if}}
-    </legend>
-    <div class="carl-banked-stat-points-row">
-      {{#if (eq actor.type "mob")}}
-      <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.StatPointsRemainingHint'}}">{{statPointsRemaining}}</span>
-      {{else}}
-      <input type="text" class="carl-w-tiny" name="system.bankedStatPoints" value="{{system.bankedStatPoints}}" data-dtype="Number" />
-      {{/if}}
-      <button type="button" data-action="spendStatPoints">{{localize "CARLRPG.Actor.Spend"}}</button>
-    </div>
-  </fieldset>
-
-  {{#unless (eq actor.type "mob")}}
-  {{!-- "You gain a Level when you grind a number of hours equal to your
-        current Level" (p.171) - the GM Toolbox's Grind adds to this, and any
-        Level gain resets it (CarlRPGActor#_preUpdate). --}}
-  <fieldset class="carl-banked-stat-points carl-grind-level">
-    <legend>{{localize "CARLRPG.Actor.GrindLevelHours"}}</legend>
-    <div class="carl-banked-stat-points-row">
-      <input type="text" class="carl-w-tiny" name="system.grindLevelHours" value="{{system.grindLevelHours}}" data-dtype="Number" />
-      <span class="carl-grind-level-of">/ {{system.attributes.level.value}}</span>
-    </div>
-  </fieldset>
-
-  {{/unless}}
 </div>

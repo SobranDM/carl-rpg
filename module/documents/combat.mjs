@@ -1,4 +1,9 @@
 import { processRoundEnd, processCombatEnd } from "../helpers/round-end.mjs";
+import { resetPetCommands } from "../helpers/pet-command.mjs";
+import { isCrawler, isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import {
+  currentPhase, isPhased, nextPhase, postPhaseNotice, previousPhase, roundStartPhase, syncPhaseState, usesPhases,
+} from "../helpers/combat-phases.mjs";
 
 /**
  * Initiative stand-ins for a PvE fight, where the book has no initiative at
@@ -11,7 +16,8 @@ export const PVE_INITIATIVE = { mob: 20, character: 10 };
 
 /** @param {Actor|null|undefined} actor */
 function pveInitiativeFor(actor) {
-  return actor?.type === "character" ? PVE_INITIATIVE.character : PVE_INITIATIVE.mob;
+  // Pets act in the Crawler phase alongside their crawler (p.232).
+  return rollsLikeCrawler(actor) ? PVE_INITIATIVE.character : PVE_INITIATIVE.mob;
 }
 
 /**
@@ -24,12 +30,73 @@ function pveInitiativeFor(actor) {
  *    first (PVE_INITIATIVE). A fight between crawlers only is PvP - "At the
  *    start of each round of PvP combat, each player rolls for initiative:
  *    d20 + DEX" (CONFIG.Combat.initiative), re-rolled every round.
+ *  - A started PvE fight runs the phased round instead of turns (module/
+ *    helpers/combat-phases.mjs): there is no current combatant (`turn` is
+ *    null), Next/Previous Turn step through the phases, and a round only ends
+ *    from the Crawler Action Phase. PvP keeps core's turns.
  */
 export class CarlRPGCombat extends Combat {
-  /** Whether every combatant is a crawler (PvP) - an empty combat isn't. */
+  /**
+   * Every round change of a phased fight - starting it, ending a round,
+   * rewinding one - writes the new round's step in the same update, and
+   * leaves no combatant "on turn".
+   * @override
+   */
+  async _preUpdate(changed, options, user) {
+    const allowed = await super._preUpdate(changed, options, user);
+    if (allowed === false) return false;
+    if (typeof changed.round === "number" && changed.round !== this.round && changed.round >= 1 && usesPhases(this)) {
+      const surprise = this.round === 0 && !!this.getFlag("carl-rpg", "surprise");
+      foundry.utils.setProperty(changed, "flags.carl-rpg.phase", roundStartPhase(changed.round, surprise));
+      changed.turn = null;
+    }
+  }
+
+  /** Next Phase in a phased fight (the tracker's button calls this). @override */
+  async nextTurn() {
+    if (isPhased(this)) return nextPhase(this);
+    return super.nextTurn();
+  }
+
+  /** @override */
+  async previousTurn() {
+    if (isPhased(this)) return previousPhase(this);
+    return super.previousTurn();
+  }
+
+  /**
+   * A phased round only ends from the Crawler Action Phase (End Round):
+   * ending it earlier would skip Mob Attack Resolution.
+   * @override
+   */
+  async nextRound() {
+    if (isPhased(this) && currentPhase(this) !== "act") {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Phase.FinishRoundFirst"));
+      return this;
+    }
+    return super.nextRound();
+  }
+
+  /**
+   * Before round 1: whether the crawlers surprise the Mobs (p.80) - round 1
+   * then opens with their one free Action.
+   * @param {boolean} value
+   * @returns {Promise<this>}
+   */
+  async setSurprise(value) {
+    if (this.started) return this;
+    return this.setFlag("carl-rpg", "surprise", !!value);
+  }
+
+  /**
+   * Whether every combatant is a crawler (PvP) - an empty combat isn't.
+   * Crawlers' Pets don't decide it either way: crawlers + their Pets is
+   * still PvP, and a Pet rolls d20 + DEX like everyone else. Nor do vehicles
+   * (which are never combatants anyway - see CarlRPGCombatant).
+   */
   get isPvP() {
-    const combatants = this.combatants.contents;
-    return combatants.length > 0 && combatants.every((c) => c.actor?.type === "character");
+    const combatants = this.combatants.contents.filter((c) => !isPet(c.actor) && !isVehicle(c.actor));
+    return combatants.length > 0 && combatants.every((c) => isCrawler(c.actor));
   }
 
   /**
@@ -61,6 +128,8 @@ export class CarlRPGCombat extends Combat {
       await this.rollInitiative(this.combatants.map((c) => c.id), { updateTurn: false });
     } else {
       await this.syncPveInitiative();
+      // A new phased round opens at its first step - say so in chat.
+      if (isPhased(this) && !context?.skipped) await postPhaseNotice(this, currentPhase(this), { roundStart: true });
     }
   }
 
@@ -79,6 +148,8 @@ export class CarlRPGCombat extends Combat {
     // for a combat that actually started.
     if (!game.user.isActiveGM || !this.started) return;
     void processCombatEnd(this);
+    // Command Pet results last "for the entire combat" (p.232).
+    resetPetCommands(this).catch((err) => console.error("CarlRPG | pet command reset failed", err));
   }
 }
 
@@ -92,10 +163,16 @@ export class CarlRPGCombatant extends Combatant {
   async _preCreate(data, options, user) {
     const allowed = await super._preCreate(data, options, user);
     if (allowed === false) return false;
+    // "They do not have Actions" (Vehicles, p.72): the people in it fight,
+    // the vehicle doesn't take turns.
+    if (isVehicle(this.actor)) {
+      ui.notifications.warn(game.i18n.format("CARLRPG.Vehicle.NotACombatant", { name: this.actor.name }));
+      return false;
+    }
     if (this.initiative !== null && this.initiative !== undefined) return;
     const combat = this.parent;
-    const pve = this.actor?.type !== "character"
-      || combat?.combatants.some((c) => c.actor?.type !== "character");
+    const pve = !rollsLikeCrawler(this.actor)
+      || combat?.combatants.some((c) => !rollsLikeCrawler(c.actor) && !isVehicle(c.actor));
     if (pve) this.updateSource({ initiative: pveInitiativeFor(this.actor) });
   }
 
@@ -103,6 +180,10 @@ export class CarlRPGCombatant extends Combatant {
   _onCreate(data, options, userId) {
     super._onCreate(data, options, userId);
     const combat = this.parent;
-    if (combat instanceof CarlRPGCombat) combat.queuePveSync();
+    if (combat instanceof CarlRPGCombat) {
+      combat.queuePveSync();
+      // A Mob joining a running PvP fight makes it phased mid-round.
+      void syncPhaseState(combat).catch((err) => console.error("CarlRPG | phase sync failed", err));
+    }
   }
 }

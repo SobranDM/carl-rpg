@@ -26,7 +26,19 @@
       {
         "rankThreshold": 10,
         "description": "You gain a +1 Evade Buff.",
-        "changes": []
+        "changes": [
+          {
+            "id": "L7S7k5O4NlJ6N5jH",
+            "label": "",
+            "targetType": "rollMode",
+            "target": "evadeBonus",
+            "mode": "add",
+            "value": "1",
+            "damageDiceKind": "",
+            "damageType": "",
+            "conditions": []
+          }
+        ]
       },
       {
         "rankThreshold": 15,

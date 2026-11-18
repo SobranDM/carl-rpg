@@ -1,45 +1,69 @@
+{{!-- A Skill's Main tab (docs/skill-item-sheets.md): the Description first,
+      then what it is, then the shared Rank / Rolling / Damage / Debuffs /
+      Upgrades sections (ranked-fields.hbs). --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="main">
-  <div class="carl-field-grid">
-    <div>
-      <label class="resource-label">{{localize "CARLRPG.Skill.Category"}}</label>
-      <select class="carl-w-medium" name="system.category">
-        {{selectOptions config.skillCategories selected=system.category localize=true}}
-      </select>
-    </div>
-    {{#if isAttackFlavored}}
-    <div>
-      <label class="resource-label">{{localize "CARLRPG.Skill.AttackType"}}</label>
-      <select class="carl-w-short" name="system.attackType">
-        <option value=""></option>
-        {{selectOptions config.attackTypes selected=system.attackType localize=true}}
-      </select>
-    </div>
-    {{/if}}
-    <div>
-      <label class="resource-label">{{localize "CARLRPG.Skill.Range"}}</label>
-      <input type="text" class="carl-w-short" name="system.range" value="{{system.range}}" placeholder="5 ft" />
-    </div>
-    {{#if isAttackFlavored}}
-    <div>
-      <label class="resource-label">{{localize "CARLRPG.Skill.AiFavor"}}</label>
-      <input type="text" class="carl-w-tiny" name="system.aiFavor" value="{{system.aiFavor}}" data-dtype="Number" />
-    </div>
-    {{/if}}
-    <div>
-      <label class="resource-label">{{localize "CARLRPG.Skill.Cooldown"}}</label>
-      <input type="text" class="carl-w-short" name="system.cooldown" value="{{system.cooldown}}" />
-    </div>
-  </div>
-  <div class="resource">
-    <label class="resource-label">{{localize "CARLRPG.Skill.Limitations"}}</label>
-    <input type="text" class="carl-w-full" name="system.limitations" value="{{system.limitations}}" />
-  </div>
+  <div class="carl-item-page">
+    {{> "systems/carl-rpg/templates/item/parts/description-editor.hbs"}}
 
-  {{> "systems/carl-rpg/templates/item/parts/ranked-fields.hbs" system=system config=config
-      canRollAdvancement=canRollAdvancement isAttackFlavored=isAttackFlavored}}
+    <div class="carl-item-group">
+      <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.About"}}</span>
+      <div class="carl-field-grid">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Skill.Category"}}</label>
+          <select class="carl-w-medium" name="system.category">
+            {{selectOptions config.skillCategories selected=system.category localize=true}}
+          </select>
+        </div>
+        {{#if isAttackFlavored}}
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Skill.AttackType"}}</label>
+          <select class="carl-w-short" name="system.attackType">
+            <option value=""></option>
+            {{selectOptions config.attackTypes selected=system.attackType localize=true}}
+          </select>
+        </div>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.HandToHandHint'}}">
+          <input type="checkbox" name="system.isHandToHand" {{checked system.isHandToHand}} />
+          {{localize "CARLRPG.Skill.HandToHand"}}
+        </label>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.NoWeaponHint'}}">
+          <input type="checkbox" name="system.noWeapon" {{checked system.noWeapon}} />
+          {{localize "CARLRPG.Skill.NoWeapon"}}
+        </label>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.NoDamageEffectsHint'}}">
+          <input type="checkbox" name="system.noDamageEffects" {{checked system.noDamageEffects}} />
+          {{localize "CARLRPG.Skill.NoDamageEffects"}}
+        </label>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.MountedHint'}}">
+          <input type="checkbox" name="system.mounted" {{checked system.mounted}} />
+          {{localize "CARLRPG.Skill.Mounted"}}
+        </label>
+        {{/if}}
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.Skill.CommandsPetsHint'}}">
+          <input type="checkbox" name="system.commandsPets" {{checked system.commandsPets}} />
+          {{localize "CARLRPG.Skill.CommandsPets"}}
+        </label>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Skill.Range"}}</label>
+          <input type="text" class="carl-w-short" name="system.range" value="{{system.range}}" placeholder="5 ft" />
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Skill.Cooldown"}}</label>
+          <input type="text" class="carl-w-short" name="system.cooldown" value="{{system.cooldown}}" />
+        </div>
+        {{#if isAttackFlavored}}
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.Skill.AiFavor"}}</label>
+          <input type="text" class="carl-w-tiny" name="system.aiFavor" value="{{system.aiFavor}}" data-dtype="Number" />
+        </div>
+        {{/if}}
+      </div>
+      <div class="carl-edit-row-grow">
+        <label class="resource-label">{{localize "CARLRPG.Skill.Limitations"}}</label>
+        <input type="text" name="system.limitations" value="{{system.limitations}}" />
+      </div>
+    </div>
 
-  <hr class="carl-section-divider" />
-  <h4 class="carl-section-header">{{localize "CARLRPG.Tab.Description"}}</h4>
-  <hr class="carl-section-divider" />
-  {{> "systems/carl-rpg/templates/item/parts/description-editor.hbs"}}
+    {{> "systems/carl-rpg/templates/item/parts/ranked-fields.hbs"}}
+  </div>
 </section>

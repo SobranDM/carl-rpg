@@ -176,14 +176,15 @@
     color: var(--carl-text-muted);
   }
 
-  // AI Favor reroll (module/chat/ai-favor-reroll.mjs): the button, the note
-  // on a reroll's own card, and the faded look of the card it replaced.
-  .carl-ai-reroll {
+  // A card's roll icons (module/chat/check-revision.mjs rollIcons): another
+  // crawler's Intervene (the handshake) and the Reroll (the d20), icons
+  // alone at the right of the footer, named in their tooltips. The note on
+  // a rerolled card, and the faded look of a card an old reroll replaced.
+  .carl-roll-icons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 4px;
     margin-top: 4px;
-
-    button {
-      width: 100%;
-    }
   }
 
   .carl-reroll-note {
@@ -257,6 +258,19 @@
       margin-right: 4px;
     }
 
+    // An Amazing-Success-only Debuff no target was an Amazing Success for.
+    .carl-target-effect-pill.is-dim {
+      opacity: 0.5;
+    }
+
+    // "Blazing Longsword · on an Amazing Success", after the Debuff's name.
+    .carl-target-effect-source {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      opacity: 0.85;
+    }
+
     .carl-target-effect-pill {
       display: inline-block;
       font-size: 10px;
@@ -328,6 +342,13 @@
       border-radius: 3px;
       background: var(--carl-danger);
       color: var(--carl-header-text);
+
+      // "Armor-Piercing" beside the damage (attack-targets-card.mjs).
+      &.carl-armor-piercing-pill {
+        background: var(--carl-input-bg);
+        color: var(--carl-text);
+        border: 1px solid var(--carl-danger);
+      }
     }
 
     .carl-apply-damage {
@@ -378,40 +399,8 @@
       margin-bottom: 4px;
     }
 
-    .carl-target-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 4px 6px;
-      padding: 3px 0;
-      border-top: 1px solid var(--carl-border-soft-2);
-
-      .carl-target-name {
-        font-weight: bold;
-      }
-
-      .carl-target-zone {
-        font-size: 10px;
-        text-transform: uppercase;
-        padding: 0 4px;
-        border-radius: 3px;
-        border: 1px solid var(--carl-border-soft-2);
-      }
-
-      .carl-target-status {
-        flex: 1 1 100%;
-        font-size: 11px;
-        opacity: 0.85;
-      }
-
-      .carl-target-buttons {
-        display: flex;
-        gap: 4px;
-      }
-    }
-
-    .carl-row-evade,
-    .carl-row-apply,
+    // The rows themselves: _status-rows.scss. Cards posted before them
+    // still carry the old Apply All markup.
     .carl-apply-all {
       width: auto;
       font-size: 11px;
@@ -420,8 +409,9 @@
     }
 
     .carl-apply-all-row {
+      display: flex;
+      justify-content: flex-end;
       margin-top: 4px;
-      text-align: right;
     }
   }
 
@@ -475,7 +465,8 @@
   // buildDebuffNote, CarlDice.rollMobAttack's free-Evade note) and the
   // end-of-round summary list (module/helpers/round-end.mjs).
   .carl-debuff-note,
-  .carl-free-evade-note {
+  .carl-free-evade-note,
+  .carl-off-stat-note {
     margin: 4px 0;
     font-size: 11px;
     color: var(--carl-text-muted);
@@ -486,6 +477,17 @@
   .carl-free-evade-note {
     font-weight: 700;
     color: var(--carl-text);
+  }
+
+  // "Used before cooldown." - the user went ahead past the warning
+  // (helpers/cooldowns.mjs), shown so the GM can see it.
+  .carl-cooldown-early {
+    margin: 4px 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--carl-danger);
+
+    i { margin-right: 2px; }
   }
 
   .carl-round-end-list,
@@ -516,11 +518,73 @@
     display: flex;
     align-items: center;
     gap: 4px;
+    // Core gives a form-group's labels one input-height line; a hint that
+    // wraps (the "Uses an Action" row) would stack its lines on the box.
+    line-height: normal;
+    white-space: normal;
+
+    input[type="checkbox"] {
+      flex: 0 0 auto;
+    }
+
+    // Woozy's "no DEX Mod" row while another Stat is picked (roll-prompt.mjs).
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  // The Attack! dialog's Attack Skill and Damage Effect radios: one
+  // left-aligned column each (core's .form-fields would otherwise push them
+  // right).
+  .carl-dialog-attack-skill .carl-dialog-conditions-list,
+  .carl-dialog-damage-effect .carl-dialog-conditions-list {
+    align-items: flex-start;
+    justify-content: flex-start;
+    text-align: left;
+
+    .carl-dialog-condition {
+      justify-content: flex-start;
+    }
+  }
+
+  // A line between the Skill radios and the Damage Effect radios under them.
+  .carl-dialog-attack-skill + .carl-dialog-damage-effect {
+    border-top: 1px solid var(--carl-border-soft);
+    margin-top: 6px;
+    padding-top: 6px;
   }
 
   .carl-dialog-condition-source {
     opacity: 0.7;
     font-size: 11px;
+  }
+
+  // Roll dialog (templates/dialog/roll-options.hbs): the Difficulty's help
+  // icon, and the hint under it naming where the number came from. (The
+  // Damage Effect radios reuse .carl-dialog-conditions-list.)
+  .carl-dialog-difficulty {
+    flex-wrap: wrap;
+
+    .carl-dialog-difficulty-basis {
+      flex: 0 0 100%;
+      margin: 2px 0 0;
+    }
+  }
+
+  .carl-dialog-preset {
+    align-items: center;
+
+    .carl-dialog-help {
+      flex: 0 0 auto;
+      cursor: help;
+      opacity: 0.75;
+    }
+  }
+
+  .carl-dialog-warning {
+    margin: 2px 0 0;
+    font-weight: bold;
+    color: var(--color-level-error, #b00);
   }
 
   .carl-dialog-hint {
@@ -530,43 +594,165 @@
     opacity: 0.75;
   }
 
-  // Character-actor picker (module/apps/gm-toolbox.mjs's #promptActorPicker)
-  // shared by Rest/2-Hour Tick/Party Level Up - a live filter + running
-  // counter + scroll-capped, collapsible "Other Characters" section so a
-  // large roster stays manageable in a fixed-size dialog.
+  // The Attack dialog's "swapped in from the Hotlist" line (roll-options.hbs).
+  .carl-dialog-weapon-note {
+    margin: 0 0 6px;
+    font-size: 12px;
+    opacity: 1;
+  }
+
+  // The GM Toolbox's "who does this apply to" picker (module/apps/
+  // actor-picker.mjs; docs/release-0.7.0.md §5): the filter, Select All on
+  // its own row with the count, then the groups - Logged in, Not logged in
+  // (collapsed, with a hint), Pets - each row naming who plays it.
+  .carl-actor-picker {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    p {
+      margin: 0;
+    }
+  }
+
   .carl-actor-picker-filter {
     width: 100%;
     box-sizing: border-box;
   }
 
   .carl-actor-picker-select-all {
-    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--carl-border-soft);
   }
 
   .carl-actor-picker-count {
+    margin-left: auto;
     font-size: 11px;
     opacity: 0.75;
     font-weight: normal;
   }
 
   .carl-actor-picker-list {
-    max-height: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 260px;
     overflow-y: auto;
     padding-right: 2px;
   }
 
-  .carl-actor-picker-other {
-    margin-top: 4px;
+  .carl-actor-picker-heading {
+    margin: 0 0 2px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    cursor: default;
+  }
 
-    summary {
-      cursor: pointer;
-      font-size: 11px;
-      opacity: 0.85;
-      padding: 2px 0;
+  details.carl-actor-picker-group > summary.carl-actor-picker-heading {
+    cursor: pointer;
+  }
+
+  .carl-actor-picker-hint {
+    margin: 0 0 4px;
+    font-size: 11px;
+    font-style: italic;
+    opacity: 0.75;
+  }
+
+  .carl-actor-picker-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 1px 6px;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  .carl-actor-picker-who {
+    margin-left: auto;
+    font-size: 11px;
+    opacity: 0.7;
+  }
+
+  // The Rest dialog's length, the book's words for it, and Advance time
+  // (gm-toolbox.mjs #onRest; docs/release-0.7.0.md §6).
+  .carl-rest-length {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 6px 8px 8px;
+  }
+
+  .carl-rest-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 14px;
+  }
+
+  .carl-rest-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .carl-rest-rule {
+    margin: 0;
+    padding: 6px 8px;
+    border-left: 3px solid var(--carl-accent);
+    background: var(--carl-panel-bg);
+    font-size: 12px;
+
+    &[hidden] {
+      display: none;
     }
 
-    .carl-actor-picker-option {
-      margin-left: 4px;
+    p {
+      margin: 0 0 2px;
     }
+
+    cite {
+      font-size: 10px;
+      opacity: 0.7;
+    }
+  }
+
+  .carl-advance-time {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--carl-border-soft);
+  }
+
+  .carl-advance-time-hint {
+    flex: 0 0 100%;
+    font-size: 11px;
+    opacity: 0.75;
+  }
+}
+
+// The Reroll button's source picker (module/chat/ai-favor-reroll.mjs), shown
+// when more than one reroll fits the roll (AI Favor and Fuzzy Dice).
+.carl-reroll-pick fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .carl-reroll-source {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 }

@@ -1,0 +1,84 @@
+{{!-- A Mob Attack (module/data/mob-attack.mjs; docs/mob-sheet.md): one page
+      of grouped sections - to hit and damage, range and Area, the Debuffs it
+      gives (each with when it lands), and the printed effect. Mobs never
+      roll (p.267): the to-hit is the crawlers' Evade Difficulty.
+      A plain page, not a tab: the sheet has no tab bar (item-sheet.mjs
+      SINGLE_PAGE_TYPES), and core's changeTab needs one. --}}
+<section class="scrollable carl-single-page">
+  <div class="carl-mob-attack-sheet">
+    <div class="carl-item-group">
+      <span class="carl-item-group-title">{{localize "CARLRPG.MobAttack.GroupHitDamage"}}</span>
+      <div class="carl-field-grid">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.MobAttack.ToHit"}}</label>
+          <input type="text" class="carl-w-short" name="system.toHit" value="{{system.toHit}}" placeholder="13+F" />
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.MobAttack.Damage"}}</label>
+          <input type="text" class="carl-w-short" name="system.damage" value="{{system.damage}}" placeholder="1d8+3" />
+        </div>
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.MobAttack.DamageType"}}</label>
+          <select name="system.damageType">
+            <option value=""></option>
+            {{selectOptions config.damageTypes selected=system.damageType localize=true}}
+          </select>
+        </div>
+        <label class="carl-check-field" data-tooltip="{{localize 'CARLRPG.ArmorPiercing.Hint'}}">
+          <input type="checkbox" name="system.armorPiercing" {{checked system.armorPiercing}} />
+          {{localize "CARLRPG.ArmorPiercing.Label"}}
+        </label>
+      </div>
+      <p class="carl-hint">{{localize "CARLRPG.MobAttack.ToHitHint"}}</p>
+    </div>
+
+    <div class="carl-item-group">
+      <span class="carl-item-group-title">{{localize "CARLRPG.MobAttack.GroupRange"}}</span>
+      <div class="carl-field-grid">
+        <div>
+          <label class="resource-label">{{localize "CARLRPG.MobAttack.Range"}}</label>
+          <input type="text" class="carl-w-medium" name="system.range" value="{{system.range}}" placeholder="30ft range" />
+        </div>
+        <label class="carl-check-field">
+          <input type="checkbox" name="system.isArea" {{checked system.isArea}} />
+          {{localize "CARLRPG.MobAttack.Area"}}
+        </label>
+        <label class="carl-check-field">
+          <input type="checkbox" name="system.splash" {{checked system.splash}} {{#unless system.isArea}}disabled{{/unless}} />
+          {{localize "CARLRPG.MobAttack.Splash"}}
+        </label>
+      </div>
+    </div>
+
+    <div class="carl-item-group">
+      <span class="carl-item-group-title">{{localize "CARLRPG.MobAttack.GroupDebuffs"}}</span>
+      {{#each system.targetEffects as |te index|}}
+      <div class="carl-target-effect-row flexrow">
+        <select class="carl-w-wide" name="{{concat 'system.targetEffects.' index '.debuffKey'}}">
+          <option value=""></option>
+          {{selectOptions ../config.debuffs selected=te.debuffKey localize=true}}
+        </select>
+        <input type="text" class="carl-w-tiny" name="{{concat 'system.targetEffects.' index '.stacks'}}" value="{{te.stacks}}"
+          data-dtype="Number" title="{{localize 'CARLRPG.TargetEffect.Stacks'}}" />
+        <select name="{{concat 'system.targetEffects.' index '.trigger'}}" title="{{localize 'CARLRPG.MobAttack.When'}}">
+          {{selectOptions ../config.mobAttackTriggers selected=te.trigger localize=true}}
+        </select>
+        <input type="text" class="carl-w-medium" name="{{concat 'system.targetEffects.' index '.label'}}" value="{{te.label}}"
+          placeholder="{{localize 'CARLRPG.TargetEffect.LabelPlaceholder'}}" />
+        <a class="item-control" data-action="deleteArrayItem" data-path="system.targetEffects" data-index="{{index}}"
+          title="{{localize 'CARLRPG.TargetEffect.Remove'}}"><i class="fas fa-trash"></i></a>
+      </div>
+      {{/each}}
+      <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.targetEffects"
+        data-template='{"debuffKey":"","stacks":1,"trigger":"hit","label":""}'>
+        <i class="fas fa-plus"></i> {{localize "CARLRPG.MobAttack.AddDebuff"}}
+      </a>
+      <p class="carl-hint">{{localize "CARLRPG.MobAttack.DebuffsHint"}}</p>
+    </div>
+
+    <div class="carl-item-group">
+      <span class="carl-item-group-title">{{localize "CARLRPG.MobAttack.GroupDescription"}}</span>
+      {{> "systems/carl-rpg/templates/item/parts/description-editor.hbs"}}
+    </div>
+  </div>
+</section>

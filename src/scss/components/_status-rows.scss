@@ -1,0 +1,376 @@
+// The status rows the combat cards share (module/chat/status-rows.mjs;
+// docs/reaction-card-redesign.md): the Reaction card, the Damage card and an
+// Attack card's target rows. Each row leads with a status chip (icon, colour
+// and word), then what it is, a right-aligned number column, its action
+// icons, and an expander. Inside a .carl-chat-card, so the palette is
+// declared on the message (_chat.scss).
+
+.carl-chat-card {
+  // Status colours: semantic, separate from the crimson accent.
+  --carl-status-bad-bg: #c9273f;
+  --carl-status-bad-fg: #fff4f4;
+  --carl-status-good-bg: #2f9e4f;
+  --carl-status-good-fg: #f2fff4;
+  --carl-status-half-bg: rgba(47, 158, 79, 0.28);
+  --carl-status-half-fg: #b9f0c8;
+  --carl-status-caught-bg: #d99a26;
+  --carl-status-caught-fg: #2a1a02;
+  --carl-status-neutral-bg: #4a4243;
+  --carl-status-neutral-fg: #ddd5d4;
+  --carl-status-taunt-bg: #7b45c4;
+  --carl-status-taunt-fg: #f6efff;
+
+  // The header's "3 of 5 settled" / Locked badge.
+  .carl-status-progress {
+    flex: 0 0 auto;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    background: var(--carl-input-bg);
+
+    &.is-locked {
+      background: var(--carl-header-bg);
+      color: var(--carl-header-text);
+    }
+  }
+
+  // "Waiting on Wren · Chase" - and, once locked, a plain note.
+  .carl-status-waiting {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    border-left: 3px solid var(--carl-hazard);
+    background: color-mix(in srgb, var(--carl-hazard) 18%, transparent);
+  }
+
+  .carl-status-note {
+    padding: 3px 6px;
+    border-radius: 3px;
+    color: var(--carl-text-muted);
+    background: var(--carl-input-bg);
+  }
+
+  // One creature's rows.
+  .carl-status-section {
+    border: 1px solid color-mix(in srgb, var(--carl-border-soft) 70%, transparent);
+    border-radius: 4px;
+    overflow: hidden;
+
+    > header {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      padding: 2px 6px;
+      color: var(--carl-header-text);
+      background: var(--carl-header-bg);
+    }
+  }
+
+  .carl-status-who {
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .carl-status-sum {
+    margin-left: auto;
+    font-size: 11px;
+    text-align: right;
+    opacity: 0.85;
+  }
+
+  // Reminders under a section's rows (injuries after combat, Dying).
+  .carl-status-notes {
+    margin: 0;
+    padding: 3px 6px 4px 8px;
+    list-style: none;
+    font-size: 11px;
+    color: var(--carl-text-muted);
+    border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 30%, transparent);
+  }
+
+  .carl-status-section-acts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 3px 6px 5px;
+  }
+
+  // A row: chip | what | number | actions | caret.
+  .carl-status-row {
+    border-top: 1px solid color-mix(in srgb, var(--carl-border-soft) 30%, transparent);
+  }
+
+  .carl-status-section > header + .carl-status-row {
+    border-top: none;
+  }
+
+  .carl-status-line {
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr) auto auto 10px;
+    align-items: center;
+    column-gap: 6px;
+    padding: 3px 6px;
+    list-style: none;
+  }
+
+  summary.carl-status-line {
+    cursor: pointer;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after {
+      content: "\25B8";
+      justify-self: end;
+      font-size: 10px;
+      color: var(--carl-text-muted);
+    }
+  }
+
+  details.carl-status-row[open] > summary.carl-status-line::after {
+    content: "\25BE";
+  }
+
+  .carl-status-what {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .carl-status-sub {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 10.5px;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-status-flag {
+    margin-left: 3px;
+    font-size: 10px;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-status-num {
+    min-width: 52px;
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .carl-status-vs {
+    color: var(--carl-text-muted);
+  }
+
+  .carl-status-acts {
+    display: flex;
+    gap: 3px;
+  }
+
+  .carl-status-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 8px 6px 86px;
+    font-size: 11px;
+    color: var(--carl-text-muted);
+
+    .carl-attack-effect {
+      color: var(--carl-text);
+      font-style: italic;
+    }
+
+    .carl-status-detail-head {
+      margin-top: 2px;
+      font-weight: 700;
+    }
+  }
+
+  // An Attack that moved away: struck through, saying where it went.
+  .carl-status-row.is-ghost {
+    .carl-status-what,
+    .carl-status-num {
+      color: var(--carl-text-muted);
+    }
+
+    .carl-status-what {
+      text-decoration: line-through;
+    }
+
+    .carl-status-sub {
+      text-decoration: none;
+    }
+  }
+
+  // The chips: icon + word, never colour alone.
+  .carl-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    box-sizing: border-box;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 3px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+
+    i {
+      font-size: 9px;
+    }
+
+    &[data-tone="incoming"] {
+      border: 1px solid var(--carl-text);
+      color: var(--carl-text);
+    }
+
+    &[data-tone="bad"] {
+      background: var(--carl-status-bad-bg);
+      color: var(--carl-status-bad-fg);
+    }
+
+    &[data-tone="good"] {
+      background: var(--carl-status-good-bg);
+      color: var(--carl-status-good-fg);
+    }
+
+    &[data-tone="half"] {
+      background: var(--carl-status-half-bg);
+      color: var(--carl-status-half-fg);
+    }
+
+    &[data-tone="caught"] {
+      background: var(--carl-status-caught-bg);
+      color: var(--carl-status-caught-fg);
+    }
+
+    &[data-tone="neutral"] {
+      background: var(--carl-status-neutral-bg);
+      color: var(--carl-status-neutral-fg);
+    }
+
+    &[data-tone="taunt"] {
+      background: var(--carl-status-taunt-bg);
+      color: var(--carl-status-taunt-fg);
+    }
+
+    &[data-tone="muted"] {
+      border: 1px dashed var(--carl-text-muted);
+      color: var(--carl-text-muted);
+    }
+  }
+
+  // Row icons (AI Reroll, Intervene, Evade, Apply) and section/footer buttons.
+  .carl-status-icon {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 20px;
+    min-height: 0;
+    padding: 0;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--carl-text) 25%, transparent);
+    background: var(--carl-input-bg);
+    color: var(--carl-text);
+    font-size: 11px;
+    line-height: 1;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--carl-accent);
+    }
+  }
+
+  .carl-status-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: auto;
+    height: 22px;
+    min-height: 0;
+    padding: 0 9px;
+    border-radius: 3px;
+    border: 1px solid color-mix(in srgb, var(--carl-text) 28%, transparent);
+    background: var(--carl-input-bg);
+    color: var(--carl-text);
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap;
+
+    &.is-primary {
+      background: var(--carl-header-bg);
+      border-color: var(--carl-border-soft);
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--carl-accent);
+    }
+  }
+
+  .carl-status-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .carl-status-gm {
+    margin-left: auto;
+  }
+
+  // A Party Skill Check (module/chat/party-check-card.mjs): laid out as the
+  // Reaction card is (_combat-phases.scss .carl-reaction), with the rule
+  // above the rows and the outcome once settled.
+  .carl-party-check {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: var(--font-size-12);
+  }
+
+  .carl-party-rule {
+    margin: 0 0 4px;
+    font-size: 11px;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-party-outcome {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    margin: 4px 0;
+    padding: 4px 6px;
+    border-radius: 3px;
+    background: var(--carl-status-neutral-bg);
+    color: var(--carl-status-neutral-fg);
+
+    &[data-tone="good"] {
+      background: var(--carl-status-good-bg);
+      color: var(--carl-status-good-fg);
+    }
+
+    &[data-tone="bad"] {
+      background: var(--carl-status-bad-bg);
+      color: var(--carl-status-bad-fg);
+    }
+
+    span {
+      font-size: 11px;
+    }
+  }
+}

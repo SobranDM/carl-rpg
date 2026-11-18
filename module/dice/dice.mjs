@@ -6,18 +6,22 @@
  * foundryvtt-wwn's module/dice/dice.mjs.
  */
 import { RollParts } from "./roll-parts.mjs";
-import { promptRollOptions, promptParentSkillChoice, collectApplicableConditionalModifiers } from "./roll-prompt.mjs";
+import {
+  promptRollOptions, promptParentSkillChoice, collectApplicableConditionalModifiers, buildStatChoice, chosenStat, offStatNote,
+} from "./roll-prompt.mjs";
 import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
 import { buildHealFooter } from "../chat/heal-card.mjs";
+import { chooseHealRecipient, healsMode, resolveHealRecipients, userHealTargets } from "../helpers/heal-targets.mjs";
 import { buildTauntLinkFooter } from "../chat/taunt-card.mjs";
 import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow } from "../helpers/attack-targets.mjs";
-import { aiRerollFlags, keptD20, rerollFormula } from "../helpers/ai-favor.mjs";
+import { aiRerollFlags, keptD20 } from "../helpers/ai-favor.mjs";
 import { buildScrollCast } from "../helpers/scroll-cast.mjs";
-import { isAreaItem, isAreaMobAttack } from "../helpers/area.mjs";
+import { isAreaItem } from "../helpers/area.mjs";
+import { mobAttackFor } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
-import { getDegreeOfSuccess, degreeBadge, isHitDegree, staticEvade, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
-import { slugifySkillName, collectItemTargetEffects, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
+import { getDegreeOfSuccess, degreeBadge, isHitDegree, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
+import { ownedRank, effectiveRank, slugifySkillName, sameSkillName, damageEffectFits, attackTargetEffects, attackIsArmorPiercing, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -27,6 +31,17 @@ import {
   buildDebuffNote, consumedConditionIds, endedConditionIds, getActionBlockReason,
 } from "../helpers/debuff-effects.mjs";
 import { removeConditionsById } from "../helpers/conditions.mjs";
+import { currentPhase, phasedCombatFor } from "../helpers/combat-phases.mjs";
+import { describeDeclaration, recordDeclaration } from "../helpers/declarations.mjs";
+import { canAct, combatantInFight, evadeIsFree, evadesWithoutAction, noteUndo, passiveContext, takeAction } from "../helpers/actions.mjs";
+import { isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { collectVehicleRows } from "../helpers/vehicle-rows.mjs";
+import { attackDifficultyParts, mobVsVehicleRows } from "../helpers/attack-targets.mjs";
+import { outsideHotlist, refuseOutsideHotlist, swapForAttack } from "../helpers/hotlist.mjs";
+import { attackChoices, attackReadiness, warnNoWeapon } from "../helpers/weapons.mjs";
+import { takesDamageEffects } from "../helpers/hand-to-hand.mjs";
+import { earlyUseNote, passCooldown, passCooldowns, startCooldown } from "../helpers/cooldowns.mjs";
+import { SPELL_TIMER_PATH, spellTimerFor } from "../helpers/spell-timers.mjs";
 
 /**
  * Net Advantage/Disadvantage don't stack (Playing the Game, p. 60): an
@@ -95,15 +110,15 @@ function applyCheckedConditionalModifiers(partsOrResolver, conditionalModifiers,
  * Upgrade tier that overrides/splits their own default damage-type pool
  * (module/data/shared/upgrade-tier.mjs's `damageTypes`, docs/known-gaps.md
  * 1.3/1.7 - e.g. Magic Missile Rank 10: "the missiles deal Force and Fire
- * damage"). Gated by the item's own `system.rank`, same convention as
- * collectItemTargetEffects (module/helpers/modifiers.mjs).
+ * damage"). Gated by the item's live Rank (effectiveRank), same convention
+ * as collectItemTargetEffects (module/helpers/modifiers.mjs).
  * @param {Item|null} item
  * @returns {string[]} Non-blank damage-type keys, highest-unlocked tier wins; empty = no override.
  */
 function resolveDamageTypeSplit(item) {
   if (!item) return [];
   const unlocked = (item.system?.upgrades ?? [])
-    .filter((u) => (item.system.rank ?? 0) >= u.rankThreshold)
+    .filter((u) => effectiveRank(item) >= u.rankThreshold)
     .filter((u) => (u.damageTypes ?? []).some(Boolean))
     .sort((a, b) => b.rankThreshold - a.rankThreshold);
   return (unlocked[0]?.damageTypes ?? []).filter(Boolean);
@@ -172,8 +187,21 @@ export function doubleDiceCount(formula) {
  * type-tracking, so this groups into multiple instances rather than
  * retrofitting type-tagging into one shared instance.
  *
- * @returns {{groups: Map<string, RollParts>, skillDefaultType: string, splitTypes: string[]}}
- *   groups is keyed by resolved damage type ("" = no type declared at all).
+ * Multipliers come in two kinds (modifiers.mjs skillDamageKind):
+ *  - "base" scales the base damage dice result only, after a Critical Hit
+ *    doubles them: "Multiply your base damage dice result by your Rank in
+ *    this Skill, then add your modifiers and buffs" (Powerful Strike,
+ *    p.180) - Pugilism 1d6+STR at Rank 5, a 3 and STR 4: 3x5+4 = 19.
+ *  - any other kind scales the total damage, every type and every
+ *    addition: "deals x2 the total damage" (Choke Out, Smush). An Amazing
+ *    Success's +Floor is part of that total too - the caller scales it by
+ *    the returned `totalFactor` (p.79: a "total damage" multiplier also
+ *    takes in a Critical Hit's extra dice, which it does here).
+ * A multiplier with its own damageType scales only that type's terms.
+ *
+ * @returns {{groups: Map<string, RollParts>, skillDefaultType: string, splitTypes: string[], totalFactor: number}}
+ *   groups is keyed by resolved damage type ("" = no type declared at all);
+ *   totalFactor is the untyped total-damage multiplier (1 = none).
  */
 function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageEffectEntry, isCrit, rollData, conditionalModifiers, checked }) {
   /** @type {Map<string, RollParts>} */
@@ -187,11 +215,37 @@ function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageE
   const skillDefaultType = skillEntry?.baseDamage?.damageType || "";
   const effectDefaultType = damageEffectEntry?.baseDamage?.damageType || skillDefaultType;
 
+  // The ticked damage boxes (already narrowed to this Attack's Skill and
+  // Damage Effect). Each carries its kind resolved as an unconditional
+  // change's is (modifiers.mjs): a Rank damage die already turned into its
+  // die, a multiplier's factor.
+  const ticked = (conditionalModifiers ?? []).filter((cm) => checked?.has(cm.id) && cm.targetType === "skillDamage");
+
+  // Every multiplier, each with the default type of the item it came from.
+  const multipliers = [
+    ...(skillEntry?.damage?.multipliers ?? []).map((m) => ({ ...m, defaultType: skillDefaultType })),
+    ...(damageEffectEntry?.damage?.multipliers ?? []).map((m) => ({ ...m, defaultType: effectDefaultType })),
+    ...ticked.filter((cm) => cm.mode === "multiply")
+      .map((cm) => ({ factor: cm.factor ?? cm.value, label: cm.label, kind: cm.damageDiceKind, damageType: cm.damageType || "" })),
+  ].map((m) => ({ ...m, factor: Number(m.factor) }))
+    .filter((m) => Number.isFinite(m.factor) && m.factor !== 1);
+  const baseMultipliers = multipliers.filter((m) => m.kind === "base");
+  const totalMultipliers = multipliers.filter((m) => m.kind !== "base");
+
+  /** A base dice term: doubled on a Critical Hit, then scaled by "base" multipliers. */
+  function addBaseTerm(formula, label, type) {
+    const rolled = isCrit ? doubleDiceCount(formula) : formula;
+    const scaling = baseMultipliers.filter((m) => !m.damageType || m.damageType === type);
+    const factor = scaling.reduce((product, m) => product * m.factor, 1);
+    if (factor === 1) return getGroup(type).add(rolled, label);
+    const names = scaling.map((m) => m.label).filter(Boolean).join(", ");
+    const scaled = /^[\w@.]+$/.test(String(rolled).trim()) ? `${rolled}*${factor}` : `(${rolled})*${factor}`;
+    getGroup(type).add(scaled, `${label} ×${factor}${names ? ` (${names})` : ""}`);
+  }
+
   function addDamageTerms(damage, defaultType) {
     if (!damage) return;
-    for (const term of damage.baseDice) {
-      getGroup(term.damageType || defaultType).add(isCrit ? doubleDiceCount(term.formula) : term.formula, term.label);
-    }
+    for (const term of damage.baseDice) addBaseTerm(term.formula, term.label, term.damageType || defaultType);
     for (const term of damage.rankDice) getGroup(term.damageType || defaultType).add(term.formula, term.label);
     for (const term of damage.flatBonuses) getGroup(term.damageType || defaultType).add(term.formula, term.label);
   }
@@ -206,27 +260,38 @@ function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageE
 
   addDamageTerms(damageEffectEntry?.damage, effectDefaultType);
 
-  // A checked skillDamage modifier can carry its own damageType override the
-  // same way an unconditional change can (module/helpers/modifiers.mjs
-  // copies it onto the conditionalModifiers entry) - route each into its
-  // own resolved group, falling back to the skill's default-type pool.
-  applyCheckedConditionalModifiers(
-    (cm) => getGroup(cm.damageType || skillDefaultType),
-    conditionalModifiers, checked, ["skillDamage"]
-  );
-
-  if (skillEntry?.damage) {
-    for (const m of skillEntry.damage.multipliers) getGroup(m.damageType || skillDefaultType).multiply(m.factor, m.label);
-    for (const o of skillEntry.damage.overrides) getGroup(o.damageType || skillDefaultType).override(o.formula, o.label);
+  // A ticked term can carry its own damageType override the same way an
+  // unconditional change can - routed into its own resolved group, falling
+  // back to the skill's default-type pool. A base one doubles on a Critical
+  // Hit (p.79) like any base die; a Rank damage die never does.
+  for (const cm of ticked) {
+    const type = cm.damageType || skillDefaultType;
+    if (cm.mode === "multiply") continue;
+    if (cm.mode === "override") getGroup(type).override(cm.value, cm.label);
+    else if (cm.mode === "subtract") {
+      const n = Number(cm.value);
+      getGroup(type).add(Number.isFinite(n) ? -n : `-(${cm.value})`, cm.label);
+    } else if (cm.damageDiceKind === "base") addBaseTerm(cm.value, cm.label, type);
+    else getGroup(type).add(cm.value, cm.label);
   }
-  if (damageEffectEntry?.damage) {
-    for (const m of damageEffectEntry.damage.multipliers) getGroup(m.damageType || effectDefaultType).multiply(m.factor, m.label);
-    for (const o of damageEffectEntry.damage.overrides) getGroup(o.damageType || effectDefaultType).override(o.formula, o.label);
+
+  for (const o of skillEntry?.damage?.overrides ?? []) getGroup(o.damageType || skillDefaultType).override(o.formula, o.label);
+  for (const o of damageEffectEntry?.damage?.overrides ?? []) getGroup(o.damageType || effectDefaultType).override(o.formula, o.label);
+
+  // The total damage: every group that has something in it (an empty one
+  // would only add a stray 0 row).
+  let totalFactor = 1;
+  for (const m of totalMultipliers) {
+    for (const [type, parts] of groups) {
+      if (parts.isEmpty || (m.damageType && m.damageType !== type)) continue;
+      parts.multiply(m.factor, m.label);
+    }
+    if (!m.damageType) totalFactor *= m.factor;
   }
 
   const splitTypes = resolveDamageTypeSplit(skillItem);
 
-  return { groups, skillDefaultType, splitTypes };
+  return { groups, skillDefaultType, splitTypes, totalFactor };
 }
 
 /**
@@ -235,9 +300,9 @@ function buildDamageRollParts({ skillItem, skillEntry, damageEffectItem, damageE
  * (post multi-type split, pre-resistance-pipeline - the resistance pipeline
  * itself runs later, at "Apply Damage" click time, against the target's
  * then-current resistances/dr; see module/chat/damage-card.mjs).
- * @returns {{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>}}
+ * @returns {{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>, totalFactor: number}}
  */
-async function evaluateDamageGroups({ groups, skillDefaultType, splitTypes }) {
+async function evaluateDamageGroups({ groups, skillDefaultType, splitTypes, totalFactor = 1 }) {
   const rolls = [];
   const rollMeta = [];
   const damageByType = {};
@@ -264,7 +329,19 @@ async function evaluateDamageGroups({ groups, skillDefaultType, splitTypes }) {
     }
   }
 
-  return { rolls, rollMeta, damageByType };
+  return { rolls, rollMeta, damageByType, totalFactor };
+}
+
+/**
+ * Note an Attack's "total damage" multiplier (Choke Out x2) on its target
+ * rows, so each row's Amazing Success +Floor is scaled with the rest of the
+ * damage (module/helpers/attack-targets.mjs rowOutcome). 1 leaves them be.
+ * @param {object[]} rows
+ * @param {number} factor
+ */
+function setRowDamageFactor(rows, factor) {
+  if (factor === 1) return;
+  for (const row of rows) row.damageFactor = factor;
 }
 
 /**
@@ -291,7 +368,7 @@ function buildManaCostChoices(spellItem) {
  * favoredClasses). A Spell lists Class CATEGORIES ("Mage", "Cleric"...),
  * which a Class item carries as `classTypes` - "Boring Ol' Mage" is a Mage
  * - so the match is against those (and the Class's own name, for a Spell
- * that names one). A Spell with no favoredClasses charges everyone the
+ * that names one), by slug: any case or punctuation. A Spell with no favoredClasses charges everyone the
  * same, and a caster with no Class yet isn't an "other Class", so pays no
  * surcharge either.
  * @param {Item} spellItem
@@ -305,7 +382,7 @@ export function applyFavoredClassSurcharge(spellItem, actor, manaCost) {
   const classItem = actor.system.classItem;
   if (!classItem) return manaCost;
   const categories = [...(classItem.system?.classTypes ?? []), classItem.name];
-  return categories.some((c) => favored.includes(c)) ? manaCost : manaCost + 1;
+  return categories.some((c) => favored.some((f) => sameSkillName(f, c))) ? manaCost : manaCost + 1;
 }
 
 /**
@@ -332,7 +409,24 @@ function resolveManaCost(spellItem, manaCostChoices, chosenIndex, actor) {
 async function applyManaCost(actor, manaCost) {
   if (!manaCost) return;
   const current = actor.system.mana?.value ?? 0;
-  await actor.update({ "system.mana.value": Math.max(0, current - manaCost) });
+  const value = Math.max(0, current - manaCost);
+  // Given back if the Action is undone (helpers/action-undo.mjs).
+  noteUndo(actor, { t: "mana", uuid: actor.uuid, amount: current - value });
+  await actor.update({ "system.mana.value": value });
+}
+
+/**
+ * A Check card's subtitle: the Degree of Success and the Difficulty it was
+ * rolled against, so the GM can check it. No Difficulty (or a bad one from
+ * an old card's flags) shows the Degree alone.
+ * @param {string} degree
+ * @param {number|null} difficulty
+ * @returns {string}
+ */
+export function checkSubtitle(degree, difficulty) {
+  const label = game.i18n.localize(CONFIG.CARLRPG.degreesOfSuccess[degree]);
+  if (typeof difficulty !== "number" || !Number.isFinite(difficulty)) return label;
+  return `${label} · ${game.i18n.format("CARLRPG.Roll.VsDifficulty", { difficulty })}`;
 }
 
 /** Append the spent Mana (and, for a non-base variant, its descriptive delta) to a subtitle. */
@@ -402,6 +496,25 @@ function addDebuffPenalties(parts, penalties) {
 }
 
 /**
+ * A Check's Debuff rows once its dialog has said whether it's an Action.
+ * Queasy is "If your next Action requires a roll, it's made with
+ * Disadvantage. At the end of the next Action you take" (Table 11, p.96;
+ * Staggered's end, p.97): a Check that isn't one - the "Uses an Action" box
+ * unticked, a Check the GM calls for - neither takes that Disadvantage nor
+ * ends them. With no box offered (outside a fight, or part of another
+ * Action) a Check counts as an Action, as before.
+ * @param {object[]} rows  The rows collected for the dialog (as an Action).
+ * @param {boolean|null} usesAction  The dialog's box; null when not offered.
+ * @returns {{rows: object[], isAction: boolean}}
+ */
+function checkActionRows(rows, usesAction) {
+  const isAction = usesAction !== false;
+  if (isAction) return { rows, isAction };
+  const actionOnly = (r) => r.kind === "disadvantage" && CARLRPG.debuffs[r.key]?.mechanics?.disadvantage === "nextAction";
+  return { rows: rows.filter((r) => !actionOnly(r)), isAction };
+}
+
+/**
  * A Mob stat block's constant "to hit" value (p.267: "Remember to add the
  * current Floor Number to values with '+F'"), e.g. "16+F" -> 16 + Floor.
  * @param {string} text
@@ -439,6 +552,54 @@ const PHYSICAL_DAMAGE_TYPES = new Set(["bludgeoning", "piercing", "slashing"]);
  */
 function resolveActorToken(actor) {
   return actor?.token ?? actor?.getActiveTokens?.(true, true)?.[0] ?? null;
+}
+
+/**
+ * A revised card's Intervene d6s (module/chat/check-revision.mjs): their
+ * Rolls and rows, and the "Total" row that follows them.
+ * @param {object[]} interventions  [{byName, value, roll}]
+ * @returns {{rolls: Roll[], meta: object[], totalRow: (total: number) => object[]}}
+ */
+export function interventionRolls(interventions = []) {
+  const rolls = interventions.map((i) => (i.roll ? Roll.fromData(i.roll) : Roll.fromTerms([new foundry.dice.terms.NumericTerm({ number: i.value })])));
+  const meta = interventions.map((i) => ({
+    label: game.i18n.format("CARLRPG.Intervene.Row", { name: i.byName }), breakdown: "1d6",
+  }));
+  return {
+    rolls,
+    meta,
+    totalRow: (total) => (interventions.length
+      ? [{ label: game.i18n.localize("CARLRPG.Intervene.Total"), total: String(total), insertAt: 1 + interventions.length }]
+      : []),
+  };
+}
+
+/**
+ * The roll dialog's "Uses an Action" box (helpers/actions.mjs): offered,
+ * ticked or not, only when the roll is a fight's Action of its own - not
+ * part of another (a Scroll's cast, boarding a vehicle) and not outside a
+ * fight. null hides it.
+ * @param {object} ctx  takeAction's context.
+ * @param {boolean} ticked  Its default.
+ * @returns {boolean|null}
+ */
+function actionBox(ctx, ticked) {
+  return ctx.tracked ? ticked : null;
+}
+
+/**
+ * Settle a roll's Action from its "Uses an Action" box: ticked, there must
+ * be one left; unticked, it's free.
+ * @param {object} ctx  takeAction's context.
+ * @param {boolean} usesAction
+ * @returns {boolean}  False: refused, none left.
+ */
+function settleAction(ctx, usesAction) {
+  if (!usesAction) {
+    ctx.free();
+    return true;
+  }
+  return ctx.require();
 }
 
 /**
@@ -503,6 +664,61 @@ function d20Formula(roll) {
   return term ? `${term.number}d20${(term.modifiers ?? []).join("")}` : null;
 }
 
+/**
+ * A note for the Attack dialog that the weapon comes out of the Hotlist.
+ * @param {Item} weapon
+ * @returns {string}
+ */
+function swapNote(weapon) {
+  return game.i18n.format("CARLRPG.Weapon.SwapNote", { weapon: weapon.name });
+}
+
+/**
+ * An Attack whose weapon is in the Hotlist (CarlDice.rollAttack): the dialog
+ * first (it says the weapon will be swapped in), then the free swap into
+ * the Main Hand and the roll with the dialog's choices - undone if the roll
+ * doesn't happen (module/helpers/hotlist.mjs swapForAttack).
+ * @param {Actor} actor
+ * @param {Item} skillItem
+ * @param {{swap: {index: number, item: Item}}} readiness  attackReadiness's result.
+ * @param {{skipDialog?: boolean, damageEffectItem?: Item|null}} options
+ * @returns {Promise<ChatMessage|null>}
+ */
+async function attackWithSwap(ctx, actor, skillItem, { swap }, { skipDialog = false, damageEffectItem = null } = {}) {
+  let presetOptions = null;
+  if (!skipDialog) {
+    const args = await CarlDice.rollAttack(actor, skillItem, { damageEffectItem, promptArgsOnly: true });
+    if (!args) return null;
+    presetOptions = await promptRollOptions({ ...args, weaponNote: swapNote(swap.item) });
+    if (!presetOptions) return null;
+  }
+  // Things may have moved while the dialog was open: swap from where the
+  // weapon is now (or not at all, if one's in hand by now).
+  const now = attackReadiness(actor, skillItem);
+  if (!now.ready) {
+    warnNoWeapon(skillItem);
+    return null;
+  }
+  // Still cooling down (helpers/cooldowns.mjs): asked before the weapon
+  // moves, so a "no" leaves everything where it was.
+  const cooldownAsked = await passCooldowns([skillItem, chosenDamageEffect(actor, presetOptions, damageEffectItem)]);
+  if (!cooldownAsked.ok) return null;
+  // Part of this Attack's own Action (ctx), swap and all.
+  const attack = () => CarlDice.rollAttack(actor, skillItem, { damageEffectItem, skipDialog, presetOptions, within: ctx, cooldownAsked });
+  return now.swap ? swapForAttack(actor, now.swap, attack) : attack();
+}
+
+/**
+ * The Damage Effect an Attack dialog's choices picked, else the one passed in.
+ * @param {Actor} actor
+ * @param {object|null} options  promptRollOptions' result.
+ * @param {Item|null} fallback
+ * @returns {Item|null}
+ */
+function chosenDamageEffect(actor, options, fallback = null) {
+  return (options?.damageEffectId ? actor.items.get(options.damageEffectId) : null) ?? fallback;
+}
+
 export default class CarlDice {
   /**
    * Stat Check: 1d20 + Stat Mod (the sheet's Stats column). Goes through the
@@ -511,17 +727,33 @@ export default class CarlDice {
    * @param {Actor} actor
    * @param {string} statKey  e.g. "str", "con".
    * @param {{difficulty?: number|null, skipDialog?: boolean}} [options]
+   *   In a fight it offers "Uses an Action", unticked - a Stat Check is
+   *   usually one the GM calls for (p.85) - unless it's part of another
+   *   Action (boarding a moving vehicle).
    * @returns {Promise<ChatMessage|null>}
    */
-  static async rollStatCheck(actor, statKey, { difficulty = null, skipDialog = false } = {}) {
+  static async rollStatCheck(actor, statKey, options = {}) {
+    const stat = actor.system.stats?.[statKey];
+    const label = game.i18n.format("CARLRPG.Actions.Label.Check", {
+      name: stat?.label || game.i18n.localize(CARLRPG.stats[statKey] ?? statKey),
+    });
+    return takeAction(actor, "other", label, (ctx) => CarlDice._statCheck(ctx, actor, statKey, options),
+      { optional: true, within: options.within });
+  }
+
+  /** rollStatCheck, inside its Action (helpers/actions.mjs takeAction). */
+  static async _statCheck(ctx, actor, statKey, {
+    difficulty = null, skipDialog = false, title = null, returnResult = false,
+  } = {}) {
     const sys = actor.system;
     const stat = sys.stats?.[statKey];
     if (!stat) return null;
     if (isBlockedByDebuff(actor)) return null;
 
     const statLabel = stat.label || game.i18n.localize(CARLRPG.stats[statKey] ?? statKey);
-    const debuffRows = decorateRows(collectDebuffRows(sys, "check"), "roll");
+    const debuffRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check")], "roll");
 
+    const usesActionDefault = actionBox(ctx, false);
     let options = { advantage: "normal", difficulty, modifier: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const difficultyPresets = buildDifficultyPresets({
@@ -535,12 +767,16 @@ export default class CarlDice {
         difficultyPresets,
         showDifficulty: true,
         debuffRows,
+        usesAction: usesActionDefault,
       });
       if (!prompted) return null;
       options = prompted;
     }
+    const usesAction = skipDialog ? usesActionDefault : options.usesAction;
+    if (!settleAction(ctx, !!usesAction)) return null;
+    const actionRows = checkActionRows(debuffRows, usesAction);
 
-    const debuffEffect = resolveRollerRows(debuffRows, options.checkedDebuffs);
+    const debuffEffect = resolveRollerRows(actionRows.rows, options.checkedDebuffs);
     const parts = new RollParts(actor.getRollData());
     parts.add(resolveD20Formula(false, options.advantage, debuffEffect), game.i18n.localize("CARLRPG.Roll.Die"));
     parts.add(stat.mod ?? 0, game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey));
@@ -551,23 +787,26 @@ export default class CarlDice {
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, options.difficulty);
 
-    await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied));
+    await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied, { isAction: actionRows.isAction }));
 
     const body = buildDebuffNote(debuffEffect.applied);
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: statLabel, breakdown }],
-      title: statLabel,
-      subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
+      title: title ?? statLabel,
+      subtitle: checkSubtitle(degree, options.difficulty),
       img: actor.img,
       badge: degreeBadge(degree),
       body,
       actor,
       flags: aiRerollFlags(actor, {
-        kind: "check", formula: d20Formula(roll), natural: naturalRoll, total, difficulty: options.difficulty,
-        title: statLabel, img: actor.img, label: statLabel, breakdown, body,
+        kind: "check", variant: "stat", formula: d20Formula(roll), natural: naturalRoll, total, difficulty: options.difficulty,
+        title: title ?? statLabel, img: actor.img, label: statLabel, breakdown, body,
       }),
     });
+    // returnResult: a caller that acts on the outcome (boarding a moving
+    // vehicle, module/helpers/vehicles.mjs) gets the Degree too.
+    return returnResult ? { message, degree, total } : message;
   }
 
   /**
@@ -579,13 +818,22 @@ export default class CarlDice {
    * @param {{skipDialog?: boolean, castAs?: object|null}} [options]
    *   castAs: a Scroll's cast (module/helpers/scroll-cast.mjs) - its own
    *   skill entry and fixed Rank, no Mana, no use-mark.
+   *   In a fight it offers "Uses an Action", ticked (Make a Check / Cast a
+   *   Spell) - unless it's part of another Action (a Scroll's use).
    */
-  static async rollSkillCheck(actor, skillItem, { skipDialog = false, castAs = null } = {}) {
+  static async rollSkillCheck(actor, skillItem, options = {}) {
+    const key = skillItem.type === "spell" ? "CARLRPG.Actions.Label.Cast" : "CARLRPG.Actions.Label.Check";
+    return takeAction(actor, "other", game.i18n.format(key, { name: skillItem.name }),
+      (ctx) => CarlDice._skillCheck(ctx, actor, skillItem, options), { optional: true, within: options.within });
+  }
+
+  /** rollSkillCheck, inside its Action (helpers/actions.mjs takeAction). */
+  static async _skillCheck(ctx, actor, skillItem, { skipDialog = false, castAs = null } = {}) {
     const sys = actor.system;
     const skillSys = skillItem.system;
     const cast = resolveCastContext(actor, skillItem, castAs);
     const { skillEntry } = cast;
-    const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
+    const rank = castAs ? (skillEntry?.rank ?? skillSys.rank ?? 0) : ownedRank(actor, skillItem);
 
     if (skillSys.isPassive) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.PassiveNoCheck", { name: skillItem.name }));
@@ -593,12 +841,17 @@ export default class CarlDice {
     }
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
+    // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+    // anything is spent. A Scroll's Spell isn't the crawler's own.
+    const cooldown = castAs ? { ok: true, early: false } : await passCooldown(skillItem);
+    if (!cooldown.ok) return null;
 
     const rollData = actor.getRollData();
     const { conditionalModifiers } = cast;
     const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
-    const debuffRows = decorateRows(collectDebuffRows(sys, "check"), "roll");
+    const debuffRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })], "roll");
 
+    const usesActionDefault = actionBox(ctx, true);
     let options = { advantage: "normal", difficulty: null, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const difficultyPresets = buildSkillCheckPresets(skillItem);
@@ -610,15 +863,22 @@ export default class CarlDice {
         conditionalModifiers,
         manaCostChoices,
         debuffRows,
+        usesAction: usesActionDefault,
+        // Off-Stat (p.58): rolled with another Stat than its own.
+        statChoice: buildStatChoice(skillSys.governingStat ?? ""),
       });
       if (!prompted) return null;
       options = prompted;
     }
+    const usesAction = skipDialog ? usesActionDefault : options.usesAction;
+    if (!settleAction(ctx, !!usesAction)) return null;
+    const actionRows = checkActionRows(debuffRows, usesAction);
 
     const untrained = rank === 0;
-    const statKey = skillSys.governingStat;
+    // The Stat picked in the dialog (Off-Stat, p.58), else the Skill's own.
+    const statKey = chosenStat(options, skillSys.governingStat);
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
-    const debuffEffect = resolveRollerRows(debuffRows, options.checkedDebuffs);
+    const debuffEffect = resolveRollerRows(actionRows.rows, options.checkedDebuffs);
 
     const parts = new RollParts(rollData);
     parts.add(resolveD20Formula(untrained, options.advantage, debuffEffect), game.i18n.localize("CARLRPG.Roll.Die"));
@@ -632,18 +892,19 @@ export default class CarlDice {
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, options.difficulty);
 
-    await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied));
+    await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied, { isAction: actionRows.isAction }));
     if (cast.markUse) await CarlDice.markForAdvancement(skillItem);
 
     const chosenManaCost = cast.payMana ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+    if (!castAs) await startCooldown(skillItem);
 
-    const body = buildDebuffNote(debuffEffect.applied);
-    return createRollMessage({
+    const body = (cooldown.early ? earlyUseNote() : "") + offStatNote(statKey, skillSys.governingStat) + buildDebuffNote(debuffEffect.applied);
+    const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
       title: skillItem.name,
-      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
+      subtitle: withManaCostSubtitle(checkSubtitle(degree, options.difficulty), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
       body,
@@ -653,6 +914,73 @@ export default class CarlDice {
         title: skillItem.name, img: skillItem.img, label: skillItem.name, breakdown, body, chosenManaCost,
       }),
     });
+    return message;
+  }
+
+  /**
+   * The Combat tab's Attack! button: the Attack dialog with a choice of
+   * Attack Skill first - only the ones the crawler can use now, with a
+   * weapon in hand or in the Hotlist, or needing none (module/helpers/
+   * weapons.mjs). Picking one fills in the rest of the dialog for it (its
+   * Damage Effects, conditions...); confirming makes that Attack, swapping
+   * a Hotlist weapon into the Main Hand first if that's where it is.
+   * @param {Actor} actor
+   * @returns {Promise<ChatMessage|null>}
+   */
+  static async chooseAttack(actor) {
+    if (isBlockedByDebuff(actor)) return null;
+    if (!canAct(actor, "attack")) return null;
+    const choices = attackChoices(actor);
+    if (!choices.length) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Weapon.NoAttacks"));
+      return null;
+    }
+    const rank = (skill) => ownedRank(actor, skill);
+    // Highest Rank first; a tie keeps attackChoices' alphabetical order (the
+    // sort is stable). The first is picked from the start, so the dialog
+    // opens ready to roll.
+    choices.sort((a, b) => rank(b.skill) - rank(a.skill));
+    const load = async (id) => {
+      const choice = choices.find((c) => c.skill.id === id);
+      if (!choice) return null;
+      const args = await CarlDice.rollAttack(actor, choice.skill, { promptArgsOnly: true });
+      return args ? { ...args, weaponNote: choice.swap ? swapNote(choice.swap.item) : "" } : null;
+    };
+    const selected = choices[0].skill.id;
+    const initial = await load(selected);
+    if (!initial) return null;
+    const prompted = await promptRollOptions({
+      ...initial,
+      title: game.i18n.localize("CARLRPG.Weapon.AttackTitle"),
+      skillPicker: {
+        selected,
+        load,
+        choices: choices.map(({ skill, weapon, swap }) => ({
+          id: skill.id,
+          label: [
+            `${skill.name} (${game.i18n.localize("CARLRPG.Roll.Rank")} ${rank(skill)})`,
+            weapon ? game.i18n.format(swap ? "CARLRPG.Weapon.FromHotlist" : "CARLRPG.Weapon.InHand", { weapon: weapon.name }) : "",
+          ].filter(Boolean).join(" - "),
+        })),
+      },
+    });
+    const skill = prompted?.skillId ? actor.items.get(prompted.skillId) : null;
+    if (!skill) return null;
+    // Things may have moved while the dialog was open.
+    const readiness = attackReadiness(actor, skill);
+    if (!readiness.ready) {
+      warnNoWeapon(skill);
+      return null;
+    }
+    // Still cooling down (helpers/cooldowns.mjs): asked before anything
+    // moves or is spent.
+    const cooldownAsked = await passCooldowns([skill, chosenDamageEffect(actor, prompted)]);
+    if (!cooldownAsked.ok) return null;
+    // One Attack Action: the swap out of the Hotlist is part of it (p.98).
+    return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name: skill.name }), (ctx) => {
+      const attack = () => CarlDice.rollAttack(actor, skill, { presetOptions: prompted, within: ctx, cooldownAsked });
+      return readiness.swap ? swapForAttack(actor, readiness.swap, attack) : attack();
+    });
   }
 
   /**
@@ -660,18 +988,58 @@ export default class CarlDice {
    * is selected, else a manually-entered Difficulty. On a hit, rolls damage
    * in the same card (base dice doubled on a Critical Hit; Rank Damage Dice
    * and flat/multiplier terms are not).
+   *
+   * A crawler's Attack with a Weapon Skill needs its weapon in hand or in
+   * the Hotlist (module/helpers/weapons.mjs): with neither it warns and
+   * stops; from the Hotlist, the weapon is swapped into the Main Hand once
+   * the dialog is confirmed, as part of the Attack (attackWithSwap).
    * @param {Actor} actor
    * @param {Item} skillItem
-   * @param {{skipDialog?: boolean, damageEffectItem?: Item|null}} [options]
+   * @param {{skipDialog?: boolean, damageEffectItem?: Item|null, castAs?: object|null,
+   *   promptArgsOnly?: boolean, presetOptions?: object|null, targets?: object[]|null,
+   *   cooldownAsked?: {ok: boolean, early: boolean}|null}} [options]
+   *   cooldownAsked: the cooldown prompt's answer, when the caller asked
+   *   already (the Attack! picker, a Swap and Attack - helpers/cooldowns.mjs).
+   *   promptArgsOnly: return what the dialog would show (promptRollOptions'
+   *   arguments) without showing it or rolling - the Attack! picker's.
+   *   presetOptions: roll with these dialog choices (promptRollOptions'
+   *   result) instead of asking - no weapon check, it was made before.
+   *   targets: attack these instead of the user's targets - token-like
+   *   `{actor, document, name}` (a Shield Bash at the attacker,
+   *   helpers/shield-block.mjs).
+   *   In a fight it's the Attack Action (helpers/actions.mjs) - refused with
+   *   none left, spent once rolled - or part of the Action it's made in (a
+   *   Scroll's use, a Swap and Attack).
    */
-  static async rollAttack(actor, skillItem, { skipDialog = false, damageEffectItem = null, castAs = null } = {}) {
+  static async rollAttack(actor, skillItem, options = {}) {
+    if (options.promptArgsOnly) return CarlDice._attack(passiveContext(), actor, skillItem, options);
+    return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name: skillItem.name }),
+      (ctx) => CarlDice._attack(ctx, actor, skillItem, options), { within: options.within });
+  }
+
+  /** rollAttack, inside its Action (helpers/actions.mjs takeAction). */
+  static async _attack(ctx, actor, skillItem, {
+    skipDialog = false, damageEffectItem = null, castAs = null, promptArgsOnly = false, presetOptions = null, targets: givenTargets = null,
+    cooldownAsked = null,
+  } = {}) {
+    if (!promptArgsOnly && !presetOptions && !castAs) {
+      const readiness = attackReadiness(actor, skillItem);
+      if (!readiness.ready) {
+        warnNoWeapon(skillItem);
+        return null;
+      }
+      if (readiness.swap) return attackWithSwap(ctx, actor, skillItem, readiness, { skipDialog, damageEffectItem });
+    }
     const sys = actor.system;
     const skillSys = skillItem.system;
     // castAs: a Scroll's cast - see resolveCastContext. It never adds a
     // Damage Effect.
     if (castAs) damageEffectItem = null;
+    // Unarmed Combat "Cannot choose a Damage Effect" (p.179) - not even one
+    // passed in (a macro).
+    if (!takesDamageEffects(skillItem)) damageEffectItem = null;
     const skillEntry = castAs ? castAs.skillEntry : sys.skills?.[slugifySkillName(skillItem.name)];
-    const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
+    const rank = castAs ? (skillEntry?.rank ?? skillSys.rank ?? 0) : ownedRank(actor, skillItem);
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
 
@@ -680,7 +1048,7 @@ export default class CarlDice {
     // reads these back off the chat message's flags, so re-targeting after
     // the roll (or before the GM gets around to clicking the button) can't
     // change who gets hit by this specific roll's target effects.
-    const targets = Array.from(game.user.targets ?? []);
+    const targets = givenTargets ?? Array.from(game.user.targets ?? []);
     const target = targets[0] ?? null;
     const targetUuids = targets.map((t) => t.document?.uuid).filter(Boolean);
     let targetDifficulty = null;
@@ -692,18 +1060,16 @@ export default class CarlDice {
     if (target?.actor) {
       const targetSys = target.actor.system;
       const floor = game.settings.get("carl-rpg", "currentFloor");
-      targetDifficulty = staticEvade(targetSys) + floor;
       const ownerName = target.actor.name;
       // A Mob's Evade is a static Difficulty, so every one of its Debuffs
       // that would touch a d20 Evade lowers it instead (p.96 - Disadvantage
       // -5, "-X" -X). A Character target's static Evade only loses its DEX
       // Mod to Woozy; the rest of a crawler's Debuffs apply to their own
       // Evade roll if they actively defend (module/chat/evade-link-card.mjs).
-      const evadeRows = collectDebuffRows(targetSys, "evade", { ownerName, idPrefix: "target", ownAction: false });
-      targetRows = decorateRows(
-        target.actor.type === "character" ? evadeRows.filter((r) => r.kind === "noDex") : evadeRows,
-        "difficulty",
-      );
+      // A vehicle's is 10 + Move ÷ 5 (module/helpers/attack-targets.mjs).
+      const parts = attackDifficultyParts(target.actor, floor);
+      targetDifficulty = parts.base;
+      targetRows = decorateRows(parts.rows, "difficulty");
       advantageRows = decorateRows(collectAdvantageAgainstRows(targetSys, { ownerName, idPrefix: "target" }), "roll");
     }
 
@@ -728,15 +1094,16 @@ export default class CarlDice {
 
     const rollData = actor.getRollData();
 
-    // Candidates are matched by name against parentSkills, same rule the
+    // Candidates are matched by slug against parentSkills (damageEffectFits), same rule the
     // actor sheet uses to list a Skill's Damage Effects (module/sheets/
     // actor-sheet.mjs) - not id/uuid, and not gated by item type, since
     // parentSkills can list Spells too. Rank-0 (untrained) ones are excluded
     // - Damage Effects are Passive Skills, and Passive Skills can't be used
     // untrained.
-    const rankedDamageEffectCandidates = castAs ? [] : (damageEffectItem ? [damageEffectItem] : actor.items
-      .filter((i) => i.type === "damageEffect" && (i.system.parentSkills ?? []).includes(skillItem.name)))
-      .filter((de) => (sys.skills?.[slugifySkillName(de.name)]?.rank ?? de.system.rank ?? 0) > 0);
+    // Unarmed Combat "Cannot choose a Damage Effect" (p.179).
+    const rankedDamageEffectCandidates = castAs || !takesDamageEffects(skillItem) ? [] : (damageEffectItem ? [damageEffectItem] : actor.items
+      .filter((i) => i.type === "damageEffect" && damageEffectFits(i, skillItem)))
+      .filter((de) => ownedRank(actor, de) > 0);
 
     // Omitted entirely (dropdown-wise) when a Damage Effect was already
     // supplied by the caller (CarlDice.rollDamageEffect, rolling FROM the
@@ -744,7 +1111,7 @@ export default class CarlDice {
     // that row, so re-offering the dropdown (and possibly having them pick a
     // DIFFERENT one, or blank it back out) would be confusing.
     const damageEffectChoices = damageEffectItem ? [] : rankedDamageEffectCandidates
-      .map((de) => ({ id: de.id, name: de.name, rank: sys.skills?.[slugifySkillName(de.name)]?.rank ?? de.system.rank ?? 0 }));
+      .map((de) => ({ id: de.id, name: de.name, rank: ownedRank(actor, de) }));
 
     // Surfaces every CANDIDATE Damage Effect's own conditions (e.g. Choke
     // Out/Smush/Skullcracker's grapple-check bonuses target THEMSELVES, not
@@ -754,17 +1121,39 @@ export default class CarlDice {
     const { conditionalModifiers } = cast;
 
     const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
-    const rollerRows = decorateRows(collectDebuffRows(sys, "attack", { usesDex: skillSys.governingStat === "dex" }), "roll");
+    // Woozy's "no DEX Mod" row is collected whatever the Stat, marked
+    // `dexOnly`: the dialog's Stat (Off-Stat, p.58) decides whether it counts.
+    const governingDex = skillSys.governingStat === "dex";
+    const allRollerRows = decorateRows([
+      ...collectDebuffRows(sys, "attack", { usesDex: true })
+        .map((r) => (r.kind === "noDex" ? { ...r, dexOnly: true, defaultOn: r.defaultOn && governingDex } : r)),
+      ...collectVehicleRows(actor, "attack", { skillItem, builtIn: !!castAs?.builtIn }),
+    ], "roll");
 
     // Area Attack (p.83) - pre-ticked in the dialog when the Skill/Spell (or
     // the Damage Effect passed in) reads as one (module/helpers/area.mjs).
-    const detectedArea = isAreaItem(skillItem, rank) || isAreaItem(damageEffectItem);
+    const detectedArea = isAreaItem(skillItem, rank) || isAreaItem(damageEffectItem, effectiveRank(damageEffectItem));
+
+    // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+    // anything is spent - the Skill before its dialog when that's shown
+    // here, and the Damage Effect it ends up with once the choices are made.
+    // The Attack! picker and a Swap and Attack ask before the weapon moves
+    // and pass their answer in (cooldownAsked).
+    const skillAskedFirst = !castAs && !promptArgsOnly && !presetOptions && !cooldownAsked;
+    let cooldownEarly = !!cooldownAsked?.early;
+    if (skillAskedFirst) {
+      const pass = await passCooldown(skillItem);
+      if (!pass.ok) return null;
+      cooldownEarly = pass.early;
+    }
     let options = {
       advantage: advantageEntitled ? "advantage" : "normal",
       difficulty: targetDifficulty, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null,
     };
-    if (!skipDialog) {
-      const prompted = await promptRollOptions({
+    if (presetOptions) {
+      options = presetOptions;
+    } else if (!skipDialog || promptArgsOnly) {
+      const promptArgs = {
         title: game.i18n.format("CARLRPG.Dialog.AttackTitle", { name: skillItem.name }),
         difficulty: targetDifficulty,
         difficultyLabel: targetRows.length ? game.i18n.localize("CARLRPG.Dialog.BaseDifficulty") : null,
@@ -772,18 +1161,26 @@ export default class CarlDice {
         conditionalModifiers,
         damageEffectChoices,
         manaCostChoices,
-        debuffRows: [...rollerRows, ...advantageRows, ...targetRows],
+        debuffRows: [...allRollerRows, ...advantageRows, ...targetRows],
         areaTargets: targets.map((t) => ({ name: t.actor?.name ?? t.name ?? "?" })),
         isArea: detectedArea,
-      });
+        // Off-Stat (p.58): rolled with another Stat than its own.
+        statChoice: buildStatChoice(skillSys.governingStat ?? ""),
+      };
+      if (promptArgsOnly) return promptArgs;
+      const prompted = await promptRollOptions(promptArgs);
       if (!prompted) return null;
       options = prompted;
-      if (prompted.damageEffectId) {
-        damageEffectItem = actor.items.get(prompted.damageEffectId) ?? damageEffectItem;
-      }
+    }
+    if (options.damageEffectId) {
+      damageEffectItem = actor.items.get(options.damageEffectId) ?? damageEffectItem;
     }
     const isArea = targets.length ? (skipDialog ? detectedArea : !!options.isArea) : false;
     const splash = options.splash ?? new Set();
+    // The Stat picked in the dialog (Off-Stat), else the Skill's own; the
+    // "no DEX Mod" row only with DEX.
+    const statKey = chosenStat(options, skillSys.governingStat);
+    const rollerRows = allRollerRows.filter((r) => !r.dexOnly || statKey === "dex");
     // The dialog's Difficulty field is the BASE value (still GM-editable,
     // e.g. to type in a printed Evade); the target's Debuff rows ticked in
     // the dialog adjust it from there.
@@ -796,7 +1193,7 @@ export default class CarlDice {
     // pass one directly via the damageEffectItem option (skipDialog: true) -
     // Damage Effects are Passive Skills, unusable untrained.
     if (damageEffectItem) {
-      const deRank = sys.skills?.[slugifySkillName(damageEffectItem.name)]?.rank ?? damageEffectItem.system.rank ?? 0;
+      const deRank = ownedRank(actor, damageEffectItem);
       if (deRank === 0) {
         ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectUntrained", { name: damageEffectItem.name }));
         damageEffectItem = null;
@@ -812,8 +1209,13 @@ export default class CarlDice {
     // is silently dropped rather than leaking its bonus onto this attack.
     const activeConditionalModifiers = narrowConditionalModifiers(conditionalModifiers, skillItem, damageEffectItem);
 
+    if (!castAs && !cooldownAsked) {
+      const pass = await passCooldowns([skillAskedFirst ? null : skillItem, damageEffectItem]);
+      if (!pass.ok) return null;
+      cooldownEarly ||= pass.early;
+    }
+
     const untrained = rank === 0;
-    const statKey = skillSys.governingStat;
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
 
     const primaryFormula = resolveD20Formula(untrained, options.advantage, rollerEffect);
@@ -927,6 +1329,11 @@ export default class CarlDice {
     // of hit/miss (docs/known-gaps.md 1.6).
     const chosenManaCost = cast.payMana ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+    // Used: their cooldowns start (the Damage Effect's too, if it was used).
+    if (!castAs) {
+      await startCooldown(skillItem);
+      await startCooldown(damageEffectItem);
+    }
 
     const rolls = [attackRoll, ...extraD20Rolls];
     const rollMeta = [
@@ -945,6 +1352,14 @@ export default class CarlDice {
     // system.resistances/system.dr, same roll-now/apply-on-click shape as
     // the target-effect and heal flows above.
     let damageByType = {};
+    // The damage as rolled (before an Amazing Success's +Floor) and its
+    // rows, for a revision of this card (module/chat/check-revision.mjs).
+    let damageRaw = null;
+    let damageRollMeta = [];
+    let damageRollData = [];
+    // A "total damage" multiplier (Choke Out x2) - already in damageByType;
+    // it scales an Amazing Success's +Floor too (buildDamageRollParts).
+    let damageFactor = 1;
     // Rolled for any targeted non-area Attack, even one that missed
     // everyone, so a Taunt redirect onto someone it does hit has damage to
     // apply (module/chat/taunt-card.mjs). The card hides the damage until
@@ -959,6 +1374,11 @@ export default class CarlDice {
       rolls.push(...damage.rolls);
       rollMeta.push(...damage.rollMeta);
       damageByType = damage.damageByType;
+      damageRaw = foundry.utils.deepClone(damage.damageByType);
+      damageRollMeta = damage.rollMeta;
+      damageRollData = damage.rolls.map((r) => r.toJSON());
+      damageFactor = damage.totalFactor ?? 1;
+      setRowDamageFactor(targetRowList, damageFactor);
       // "Success by 10 or more (Amazing Success): the crawler's Attack
       // deals extra damage equal to their current Floor Number" (Degrees
       // of Success table, p.79) - distinct from Critical Hit (which
@@ -968,13 +1388,19 @@ export default class CarlDice {
       // With targets, each row adds it for its own Amazing Success instead
       // (module/helpers/attack-targets.mjs's rowOutcome).
       if (isAmazingSuccess && !targetRowList.length) {
-        damageByType[""] = (damageByType[""] ?? 0) + floor;
+        damageByType[""] = (damageByType[""] ?? 0) + floor * damageFactor;
       }
-      targetEffects = damage.targetEffects;
+      // Every Debuff it carries: the Skill's, its Damage Effect's, held or
+      // worn gear's (modifiers.mjs attackTargetEffects). With targets, an
+      // Amazing-Success-only one waits for each target's own Degree.
+      targetEffects = attackTargetEffects(actor, skillItem, {
+        damageEffectItem, isCrit: naturalRoll === 20,
+        isAmazingSuccess: targetRowList.length ? null : isAmazingSuccess,
+      });
     }
 
     const hasDamage = Object.values(damageByType).some((v) => v);
-    const flags = {};
+    const flags = { attackDice: { extraD20: extraD20Rolls.length, damageRaw, damageRollMeta, damageRolls: damageRollData, damageFactor } };
     const footerParts = [];
     if (markChoicePending) {
       flags.markChoiceSkillUuid = markChoicePending.skillItem.uuid;
@@ -989,6 +1415,11 @@ export default class CarlDice {
       // different isMagicDamage is deliberately not tracked per-term.
       flags.damageIsMagic = skillItem.system.isMagicDamage;
     }
+    // "Armor-Piercing damage (ignores DR)": from the Skill, its Damage Effect
+    // or the weapon it's made with (modifiers.mjs attackIsArmorPiercing).
+    // Kept even on a miss, so a revision that turns it into a hit has it.
+    const armorPiercing = attackIsArmorPiercing(actor, skillItem, { damageEffectItem });
+    if (armorPiercing) flags.armorPiercing = true;
     if (targetUuids.length) {
       // Per-target rows (module/chat/attack-targets-card.mjs): each target's
       // own hit/miss, Roll Evade and Apply. targetDifficulty is the first
@@ -1005,18 +1436,24 @@ export default class CarlDice {
       flags.targetDifficulty = difficulty;
       flags.attackerType = actor.type;
       flags.attackerUuid = attackerUuid;
+      // A Spell can only be Shield Blocked from Rank 5 (helpers/shield-block.mjs).
+      if (skillItem.type === "spell") flags.isSpell = true;
     }
     if (targetUuids.length || hasDamage || targetEffects.length) {
-      footerParts.push(buildAttackTargetsFooter({ damageByType, targetEffects, isArea }));
+      footerParts.push(buildAttackTargetsFooter({
+        damageByType, targetEffects, isArea, armorPiercing,
+        noAmazing: targetRowList.length > 0 && !targetRowList.some((r) => r.amazing),
+      }));
     }
     // Taunt (Interrupt, p.81) - a third party may redirect a single-target
     // Attack onto themselves (module/chat/taunt-card.mjs). Not an Area Attack.
     if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
     const footer = footerParts.length ? footerParts.join("") : undefined;
-    const body = buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]);
+    const body = (cooldownEarly ? earlyUseNote() : "") + offStatNote(statKey, skillSys.governingStat)
+      + buildDebuffNote([...rollerEffect.applied, ...targetEffect.applied]);
 
-    // AI Favor reroll (module/helpers/ai-favor.mjs): enough to re-resolve
-    // this Attack from a new d20 - see CarlDice.rerollAttack.
+    // AI Favor reroll and Intervene (module/chat/check-revision.mjs): enough
+    // to re-resolve this Attack from a new d20 or total - CarlDice.reviseAttack.
     Object.assign(flags, aiRerollFlags(actor, {
       kind: "attack", formula: primaryFormula, natural: naturalRoll, total: attackTotal, difficulty,
       breakdown: attackBreakdown, body, chosenManaCost,
@@ -1028,10 +1465,11 @@ export default class CarlDice {
       castAs: castAs ? { spellData: castAs.spellData, rank: castAs.rank } : null,
     }));
 
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls, rollMeta,
       title: skillItem.name,
-      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
+      // Several targets: each row was rolled against its own Difficulty.
+      subtitle: withManaCostSubtitle(checkSubtitle(degree, targetRowList.length > 1 ? null : difficulty), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
       body,
@@ -1039,18 +1477,20 @@ export default class CarlDice {
       flags,
       actor,
     });
+    return message;
   }
 
   /**
    * An Attack's damage roll and on-hit effects - shared by rollAttack and
-   * its AI Favor reroll (rerollAttack), so both roll damage the same way.
+   * its revisions (reviseAttack), so both roll damage the same way.
    * Each damage row carries rowClass "carl-damage-roll" (hidden while no
    * target is hit - module/chat/attack-targets-card.mjs).
    * @param {Actor} actor
    * @param {Item} skillItem
    * @param {{damageEffectItem?: Item|null, isCrit?: boolean, isAmazingSuccess?: boolean, conditionalModifiers?: object[], checked?: Set<string>, skillEntry?: object|null}} [options]
    *   skillEntry: use this instead of the actor's own (a Scroll's cast).
-   * @returns {Promise<{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>, targetEffects: object[]}>}
+   * @returns {Promise<{rolls: Roll[], rollMeta: object[], damageByType: Record<string, number>, totalFactor: number, targetEffects: object[]}>}
+   *   totalFactor: the untyped "total damage" multiplier already in damageByType (1 = none).
    */
   static async rollAttackDamage(actor, skillItem, {
     damageEffectItem = null, isCrit = false, isAmazingSuccess = false, conditionalModifiers = [], checked = new Set(),
@@ -1068,149 +1508,196 @@ export default class CarlDice {
       rolls: evaluated.rolls,
       rollMeta: evaluated.rollMeta.map((meta) => ({ ...meta, rowClass: "carl-damage-roll" })),
       damageByType: evaluated.damageByType,
-      targetEffects: [
-        ...collectItemTargetEffects(skillItem, { isCrit, isAmazingSuccess }),
-        ...(damageEffectItem ? collectItemTargetEffects(damageEffectItem, { isCrit, isAmazingSuccess }) : []),
-      ],
+      totalFactor: evaluated.totalFactor,
+      targetEffects: attackTargetEffects(actor, skillItem, { damageEffectItem, isCrit, isAmazingSuccess }),
     };
   }
 
   /**
-   * Re-resolve an Attack card from a new d20 (an AI Favor reroll, module/
-   * chat/ai-favor-reroll.mjs) and post the result as a new card. Only the
-   * d20 changes: the rest of the total, each target's Difficulty and zone,
-   * and the dialog's choices come from the original card. Hit/miss, Critical
-   * Hit, Amazing Success and so the damage and on-hit effects follow the new
-   * die - damage is rolled after the d20 at the table too, so it's rolled
-   * afresh. Nothing the original spent (Mana, the use-mark, consumed
-   * Debuffs, the Nat-20 Advantage) is spent again.
-   * @param {ChatMessage} message  The original Attack card.
-   * @returns {Promise<ChatMessage|null>}
+   * Re-resolve an Attack card, in place (module/chat/check-revision.mjs):
+   * from a new d20 (an AI Favor reroll) and/or with Intervene d6s added to
+   * its total. The rest of the total, each target's Difficulty and zone,
+   * and the dialog's choices come from the card. Hit/miss, Amazing Success
+   * and so the on-hit effects follow the new total.
+   *  - A reroll rolls the damage afresh (a new d20 can make or unmake a
+   *    Critical Hit; damage is rolled after the d20 at the table too).
+   *  - An Intervene never re-rolls dice already shown: the damage stays, and
+   *    is rolled only if none was (an Area Attack or one at no one that
+   *    missed, now hitting).
+   * Nothing the original spent (Mana, the use-mark, consumed Debuffs, the
+   * Nat-20 Advantage) is spent again.
+   * @param {ChatMessage} message  The Attack card.
+   * @param {{interventions: object[], reroll?: {natural: number, total: number, roll: object}|null}} change
+   * @returns {Promise<object|null>}  The card's new parts (check-revision.mjs
+   *   writes them), or null if its Skill is gone.
    */
-  static async rerollAttack(message) {
+  static async reviseAttack(message, { interventions = [], reroll = null }) {
     const flags = message.flags["carl-rpg"] ?? {};
-    const spec = flags.aiReroll;
+    const spec = foundry.utils.deepClone(flags.aiReroll);
     const actor = spec ? await fromUuid(spec.actorUuid) : null;
     // A Scroll's cast: its Spell was never owned, so rebuild it - before any
     // owned-item lookup, which could hit an unrelated owned copy.
     const scroll = actor && spec.castAs?.spellData ? buildScrollCast(actor, spec.castAs.spellData, spec.castAs.rank) : null;
     const skillItem = scroll ? scroll.item : actor?.items.get(spec.skillItemId);
-    if (!skillItem) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.Reroll.Missing"));
-      return null;
-    }
+    if (!skillItem) return null;
     const damageEffectItem = !scroll && spec.damageEffectItemId ? (actor.items.get(spec.damageEffectItemId) ?? null) : null;
 
-    const roll = await new Roll(rerollFormula(spec)).evaluate();
-    const naturalRoll = extractNaturalD20(roll);
-    const attackTotal = roll.total;
+    const dice = flags.attackDice ?? { extraD20: 0, damageRaw: null, damageRollMeta: [] };
+    const oldRows = activeRows(flags.targetRows);
+    const rowFormulas = spec.rowFormulas ?? {};
+    const isArea = !!flags.isArea;
+    const priorD6 = (flags.interventions ?? []).length;
+    // The card's rolls: the d20, its Intervene d6s, any second d20, the damage.
+    const oldRolls = message.rolls ?? [];
+    let attackRoll = oldRolls[0];
+    let extraD20Rolls = oldRolls.slice(1 + priorD6, 1 + priorD6 + dice.extraD20);
+    // The damage rolled so far (kept even while the Attack misses, so a
+    // later hit shows the same dice).
+    let damageRolls = (dice.damageRolls ?? []).map((data) => Roll.fromData(data));
+    let rowNaturals = oldRows.map((row) => row.natural ?? spec.natural);
+
+    if (reroll) {
+      attackRoll = Roll.fromData(reroll.roll);
+      spec.rerolledFrom = { natural: spec.natural, total: spec.total };
+      Object.assign(spec, { natural: reroll.natural, total: reroll.total, used: true });
+      // Each row's kept d20 from the new dice (a second d20 if a row needs one).
+      const d20Results = (attackRoll.dice ?? []).find((d) => d.faces === 20)?.results ?? [];
+      const firstDie = d20Results[0]?.result ?? spec.natural;
+      let secondDie = d20Results[1]?.result ?? null;
+      extraD20Rolls = [];
+      if (secondDie === null && oldRows.some((row) => (rowFormulas[row.id] ?? spec.formula) !== "1d20")) {
+        const extra = await new Roll("1d20").evaluate();
+        extraD20Rolls.push(extra);
+        secondDie = extra.total;
+      }
+      rowNaturals = oldRows.map((row, i) => {
+        const formula = rowFormulas[row.id] ?? spec.formula;
+        return (i === 0 || isArea || formula === spec.formula) ? spec.natural : keptD20(formula, firstDie, secondDie);
+      });
+      damageRolls = [];
+    }
+
+    const naturalRoll = spec.natural;
+    const bonus = interventions.reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+    const attackTotal = spec.total + bonus;
     const difficulty = spec.difficulty;
     const degree = getDegreeOfSuccess(naturalRoll, attackTotal, difficulty);
     const hit = difficulty === null ? degree !== "criticalFail" : isHitDegree(degree);
-
-    const isArea = !!flags.isArea;
     const shared = isArea ? { hit, amazing: degree === "amazingSuccess" } : null;
-    const oldRows = activeRows(flags.targetRows);
-    const rowFormulas = spec.rowFormulas ?? {};
-    const d20Results = (roll.dice ?? []).find((d) => d.faces === 20)?.results ?? [];
-    const firstDie = d20Results[0]?.result ?? naturalRoll;
-    let secondDie = d20Results[1]?.result ?? null;
-    const extraD20Rolls = [];
-    if (secondDie === null && oldRows.some((row) => (rowFormulas[row.id] ?? spec.formula) !== "1d20")) {
-      const extra = await new Roll("1d20").evaluate();
-      extraD20Rolls.push(extra);
-      secondDie = extra.total;
-    }
-    const targetRowList = oldRows.map((row, i) => {
-      const formula = rowFormulas[row.id] ?? spec.formula;
-      const rowNat = (i === 0 || isArea || formula === spec.formula) ? naturalRoll : keptD20(formula, firstDie, secondDie);
-      return crawlerAttackRow({
-        id: row.id,
-        target: { uuid: row.uuid, actor: { name: row.name, type: row.isCharacter ? "character" : "mob" } },
-        difficulty: row.difficulty,
-        attackTotal: attackTotal - (naturalRoll ?? 0) + (rowNat ?? 0), naturalRoll: rowNat,
-        zone: row.zone, shared,
-      });
-    });
+    const targetRowList = oldRows.map((row, i) => crawlerAttackRow({
+      id: row.id,
+      target: {
+        uuid: row.uuid,
+        actor: { name: row.name, type: row.isVehicle ? "vehicle" : row.isCharacter ? "character" : "mob" },
+      },
+      difficulty: row.difficulty,
+      attackTotal: attackTotal - (naturalRoll ?? 0) + (rowNaturals[i] ?? 0), naturalRoll: rowNaturals[i],
+      zone: row.zone, shared,
+      // The vehicle the target was riding when first rolled (a Near Miss
+      // still hits it).
+      vehicle: row.vehicleUuid ? { uuid: row.vehicleUuid, name: row.vehicleName } : null,
+    }));
     const anyHit = targetRowList.length ? targetRowList.some((row) => row.hit) : hit;
+    const isAmazingSuccess = degree === "amazingSuccess";
 
-    const rolls = [roll, ...extraD20Rolls];
-    const rollMeta = [
-      { label: skillItem.name, detail: game.i18n.localize("CARLRPG.Reroll.Detail"), breakdown: spec.breakdown },
-      ...extraD20Rolls.map(() => ({ label: game.i18n.localize("CARLRPG.Targets.ExtraD20"), detail: game.i18n.localize("CARLRPG.Targets.ExtraD20Hint") })),
-    ];
-    let damageByType = {};
+    let damageRaw = reroll ? null : dice.damageRaw;
+    let damageRollMeta = reroll ? [] : (dice.damageRollMeta ?? []);
+    let damageFactor = reroll ? 1 : (dice.damageFactor ?? 1);
     let targetEffects = [];
-    if (anyHit || (targetRowList.length && !isArea)) {
-      const cast = resolveCastContext(actor, skillItem, scroll?.castAs ?? null, damageEffectItem ? [damageEffectItem.id] : []);
-      const conditionalModifiers = narrowConditionalModifiers(cast.conditionalModifiers, skillItem, damageEffectItem);
-      const isAmazingSuccess = degree === "amazingSuccess";
-      const damage = await CarlDice.rollAttackDamage(actor, skillItem, {
-        damageEffectItem, isCrit: naturalRoll === 20, isAmazingSuccess,
-        conditionalModifiers, checked: new Set(spec.checked ?? []),
-        skillEntry: scroll?.castAs.skillEntry ?? null,
-      });
-      rolls.push(...damage.rolls);
-      rollMeta.push(...damage.rollMeta);
-      damageByType = damage.damageByType;
-      if (isAmazingSuccess && !targetRowList.length) {
-        damageByType[""] = (damageByType[""] ?? 0) + (flags.floor ?? game.settings.get("carl-rpg", "currentFloor"));
+    // As at the roll: damage for any targeted single-target Attack, else
+    // only on a hit.
+    const needsDamage = anyHit || (targetRowList.length && !isArea);
+    if (needsDamage) {
+      if (!damageRaw) {
+        const cast = resolveCastContext(actor, skillItem, scroll?.castAs ?? null, damageEffectItem ? [damageEffectItem.id] : []);
+        const conditionalModifiers = narrowConditionalModifiers(cast.conditionalModifiers, skillItem, damageEffectItem);
+        const damage = await CarlDice.rollAttackDamage(actor, skillItem, {
+          damageEffectItem, isCrit: naturalRoll === 20, isAmazingSuccess,
+          conditionalModifiers, checked: new Set(spec.checked ?? []),
+          skillEntry: scroll?.castAs.skillEntry ?? null,
+        });
+        damageRolls = damage.rolls;
+        damageRollMeta = damage.rollMeta;
+        damageRaw = foundry.utils.deepClone(damage.damageByType);
+        damageFactor = damage.totalFactor ?? 1;
       }
-      targetEffects = damage.targetEffects;
+      setRowDamageFactor(targetRowList, damageFactor);
+      // The on-hit effects follow the Degree (some only on an Amazing Success).
+      targetEffects = attackTargetEffects(actor, skillItem, {
+        damageEffectItem, isCrit: naturalRoll === 20,
+        isAmazingSuccess: targetRowList.length ? null : isAmazingSuccess,
+      });
     }
-
+    const damageByType = needsDamage ? foundry.utils.deepClone(damageRaw ?? {}) : {};
+    // Amazing Success's +Floor: per row with targets (rowOutcome), else here.
+    if (needsDamage && damageRaw && isAmazingSuccess && !targetRowList.length) {
+      damageByType[""] = (damageByType[""] ?? 0) + (flags.floor ?? game.settings.get("carl-rpg", "currentFloor")) * damageFactor;
+    }
     const hasDamage = Object.values(damageByType).some((v) => v);
-    const newFlags = { aiReroll: { ...spec, used: true } };
+
+    const d6 = interventionRolls(interventions);
+    const shownDamage = needsDamage ? damageRolls : [];
+    const rolls = [attackRoll, ...d6.rolls, ...extraD20Rolls, ...shownDamage];
+    const rollMeta = [
+      { label: skillItem.name, detail: spec.used ? game.i18n.localize("CARLRPG.Reroll.Detail") : (spec.detail ?? ""), breakdown: spec.breakdown },
+      ...d6.meta,
+      ...extraD20Rolls.map(() => ({ label: game.i18n.localize("CARLRPG.Targets.ExtraD20"), detail: game.i18n.localize("CARLRPG.Targets.ExtraD20Hint") })),
+      ...(needsDamage ? damageRollMeta : []),
+    ];
+
+    const newFlags = {
+      aiReroll: spec,
+      interventions,
+      attackDice: {
+        extraD20: extraD20Rolls.length, damageRaw, damageRollMeta, damageRolls: damageRolls.map((r) => r.toJSON()), damageFactor,
+      },
+    };
+    const unset = [];
     const footerParts = [];
-    // A Skill-or-Damage-Effect mark choice still open on the old card moves
-    // to the new one.
+    // A Skill-or-Damage-Effect mark choice still open stays on the card.
     if (flags.markChoiceSkillUuid && !flags.markChoiceDone) {
       const skillChoice = await fromUuid(flags.markChoiceSkillUuid);
       const effectChoice = await fromUuid(flags.markChoiceDamageEffectUuid);
-      if (skillChoice && effectChoice) {
-        newFlags.markChoiceSkillUuid = flags.markChoiceSkillUuid;
-        newFlags.markChoiceDamageEffectUuid = flags.markChoiceDamageEffectUuid;
-        footerParts.push(await buildMarkChoiceFooter(skillChoice, effectChoice));
-      }
+      if (skillChoice && effectChoice) footerParts.push(await buildMarkChoiceFooter(skillChoice, effectChoice));
     }
     if (targetEffects.length) newFlags.targetEffects = targetEffects;
+    else unset.push("targetEffects");
     if (hasDamage) {
       newFlags.damageByType = damageByType;
       newFlags.damageIsMagic = skillItem.system.isMagicDamage;
+    } else {
+      unset.push("damageByType");
     }
     if (targetRowList.length) {
       Object.assign(newFlags, {
-        targetUuids: flags.targetUuids,
         targetRows: Object.fromEntries(targetRowList.map((row) => [row.id, row])),
-        isArea,
-        floor: flags.floor,
         attackTotal,
         naturalRoll,
-        targetDifficulty: difficulty,
-        attackerType: flags.attackerType,
-        attackerUuid: flags.attackerUuid,
       });
     }
     if (targetRowList.length || hasDamage || targetEffects.length) {
-      footerParts.push(buildAttackTargetsFooter({ damageByType, targetEffects, isArea }));
+      footerParts.push(buildAttackTargetsFooter({
+        damageByType, targetEffects, isArea, armorPiercing: !!flags.armorPiercing,
+        noAmazing: targetRowList.length > 0 && !targetRowList.some((r) => r.amazing),
+      }));
     }
     if (targetRowList.length && !isArea) footerParts.push(await buildTauntLinkFooter());
 
-    return createRollMessage({
-      rolls, rollMeta,
+    return {
+      rolls, rollMeta, extraRollRows: d6.totalRow(attackTotal),
       title: skillItem.name,
-      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), spec.chosenManaCost),
+      subtitle: withManaCostSubtitle(checkSubtitle(degree, targetRowList.length > 1 ? null : difficulty), spec.chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
-      body: `${spec.body ?? ""}<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>`,
+      body: `${spec.body ?? ""}${spec.used ? `<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>` : ""}`,
       footer: footerParts.length ? footerParts.join("") : undefined,
       flags: newFlags,
-      actor,
-    });
+      unset,
+    };
   }
 
   /**
-   * A Mob's printed Attack (module/data/mob.mjs's `attacks` list) against
+   * A Mob's Attack (a `mobAttack` item - module/data/mob-attack.mjs) against
    * the targeted crawler(s). "Mobs are player-facing; they never roll"
    * (p.267): the "to hit" value IS the Difficulty of the target's Evade
    * Check, and the GM rolls only the damage (Step 3: Mob Action Resolution,
@@ -1220,13 +1707,23 @@ export default class CarlDice {
    * free Evade Check (the `freeEvade` flag - module/chat/
    * evade-link-card.mjs). The card carries the same flag shape rollAttack
    * does, so Roll Evade / Taunt / Apply Damage work on it unchanged.
-   * @param {Actor} actor  The attacking Mob.
-   * @param {number} attackIndex  Index into actor.system.attacks.
+   * @param {Actor} actor  The attacking Mob (or a GM-crewed Vehicle).
+   * @param {string|number} ref  The Attack item's id - or (tests, macros) its
+   *   place in the Mob's Attacks; a Vehicle's weapon by its place in its
+   *   list (module/helpers/mob-attacks.mjs mobAttackFor).
    * @param {{skipDialog?: boolean}} [options]
    * @returns {Promise<ChatMessage|null>}
    */
-  static async rollMobAttack(actor, attackIndex, { skipDialog = false } = {}) {
-    const attack = actor.system.attacks?.[attackIndex];
+  static async rollMobAttack(actor, ref, options = {}) {
+    const attack = mobAttackFor(actor, ref);
+    const name = attack?.name || game.i18n.localize("CARLRPG.MobAttack.Unnamed");
+    // Checked once its targets are known: a preview at no one is free.
+    return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name }),
+      (ctx) => CarlDice._mobAttack(ctx, actor, attack, options), { optional: true });
+  }
+
+  /** rollMobAttack, inside its Action (helpers/actions.mjs takeAction). */
+  static async _mobAttack(ctx, actor, attack, { skipDialog = false } = {}) {
     if (!attack) return null;
     if (isBlockedByDebuff(actor)) return null;
 
@@ -1237,17 +1734,38 @@ export default class CarlDice {
     const baseToHit = evaluateMobConstant(attack.toHit, floor);
     const attackName = attack.name || game.i18n.localize("CARLRPG.MobAttack.Unnamed");
 
+    // In a phased fight's Declaration the Attack is declared against its
+    // targets (below) - with none there's nothing to declare.
+    const phasedCombat = phasedCombatFor(actor);
+    const declaring = currentPhase(phasedCombat) === "declare" ? phasedCombat : null;
+    if (declaring && !targetUuids.length) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.NoTargets"));
+      return null;
+    }
+    // An Attack against someone is one of the Mob's Actions (helpers/
+    // actions.mjs) - not its Move-only one. A preview with no target is free.
+    if (!settleAction(ctx, targetUuids.length > 0)) return null;
+
     // The stat block doesn't say whether a to-hit includes the DEX Mod, so
     // Woozy is offered but left unticked here.
-    const ownRows = collectDebuffRows(actor.system, "attack", { usesDex: true, ownerName: actor.name, idPrefix: "self" })
-      .map((r) => (r.kind === "noDex" ? { ...r, defaultOn: false } : r));
+    const ownRows = [
+      ...collectDebuffRows(actor.system, "attack", { usesDex: true, ownerName: actor.name, idPrefix: "self" })
+        .map((r) => (r.kind === "noDex" ? { ...r, defaultOn: false } : r)),
+      // A Mob driving a vehicle: the driver's Disadvantage (p.72).
+      ...collectVehicleRows(actor, "attack"),
+    ];
+    // Against a vehicle: the "head-on" row that raises the to-hit (it's
+    // compared with the vehicle's Difficulty - module/helpers/attack-targets.mjs).
     const defenderRows = target?.actor
-      ? collectAdvantageAgainstRows(target.actor.system, { ownerName: target.actor.name, idPrefix: "target" })
+      ? [
+        ...collectAdvantageAgainstRows(target.actor.system, { ownerName: target.actor.name, idPrefix: "target" }),
+        ...mobVsVehicleRows(target.actor),
+      ]
       : [];
     const debuffRows = decorateRows([...ownRows, ...defenderRows], "difficulty");
 
-    // Area Attack (p.83): "30ft Cone", "15ft Burst radius"... in the stat line.
-    const detectedArea = isAreaMobAttack(attack);
+    // Area Attack (p.83): marked on the Attack; the dialog can still change it.
+    const detectedArea = attack.isArea;
     let options = { difficulty: baseToHit, modifier: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const prompted = await promptRollOptions({
@@ -1285,6 +1803,59 @@ export default class CarlDice {
       zone: isArea && splash.has(i) ? "splash" : "full",
     }).row);
     const freeEvade = !!targetRowList[0]?.freeEvade;
+
+    // A phased fight's Mob Action Declaration (p.81): the Attack is recorded
+    // for the Reaction card, not rolled - no card, no damage yet
+    // (module/helpers/declarations.mjs). Any other step resolves it at once.
+    if (declaring) {
+      if (!game.user.isGM) {
+        ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.GMOnly"));
+        return null;
+      }
+      const token = resolveActorToken(actor);
+      // The Mob's one-shot Debuffs are spent on the Attack it declares, and
+      // kept with it so withdrawing the declaration gives them back.
+      const spentIds = new Set(endedConditionIds(actor.system, resolved.applied));
+      const spentConditions = (actor.system.toObject().conditions ?? []).filter((c) => spentIds.has(c.id));
+      // The Action it spends goes with it: withdrawing the declaration refunds
+      // it. (If the spend is refused - another declaration took the last
+      // Action meanwhile - takeAction takes the declaration back.)
+      const fight = ctx.tracked ? combatantInFight(actor) : null;
+      const declaration = await recordDeclaration(declaring, {
+        mobUuid: token?.uuid ?? actor.uuid,
+        tokenId: token?.id ?? null,
+        sceneId: token?.parent?.id ?? null,
+        mobName: token?.name ?? actor.name,
+        mobImg: actor.img,
+        attackId: attack.id,
+        attackName,
+        damage: attack.damage?.trim() ?? "",
+        damageType: attack.damageType || "",
+        damageIsMagic: !!attack.damageType && !PHYSICAL_DAMAGE_TYPES.has(attack.damageType),
+        armorPiercing: !!attack.armorPiercing,
+        isArea,
+        floor,
+        difficulty,
+        mobBase,
+        mobOwnRows: ownApplied,
+        targetRows: Object.fromEntries(targetRowList.map((row) => [row.id, row])),
+        effect: attack.effect ?? "",
+        range: attack.range ?? "",
+        // The Debuffs it gives, each with when it lands (docs/mob-sheet.md).
+        targetEffects: attack.targetEffects,
+        spentConditions,
+        action: fight ? { combatantId: fight.combatant.id, id: ctx.id } : null,
+      });
+      await removeConditionsById(actor, [...spentIds]);
+      // Noted last, so it's undone first: withdrawing gives the Debuffs back
+      // (their own record then finds them there already).
+      noteUndo(actor, { t: "declaration", combatId: declaring.id, id: declaration.id });
+      ui.notifications.info(game.i18n.format("CARLRPG.Declare.Recorded", {
+        mob: declaration.mobName, summary: describeDeclaration(declaration),
+      }));
+      ctx.use();
+      return null;
+    }
 
     // Damage: the printed formula, "+F" resolved to the current Floor.
     const rolls = [];
@@ -1324,6 +1895,8 @@ export default class CarlDice {
       // absorb them - docs/known-gaps.md 1.4), every other type as magic.
       flags.damageIsMagic = !!damageType && !PHYSICAL_DAMAGE_TYPES.has(damageType);
     }
+    // "..., Armor-Piercing" on the stat block (module/data/mob-attack.mjs).
+    if (attack.armorPiercing) flags.armorPiercing = true;
     if (targetUuids.length) {
       flags.targetUuids = targetUuids;
       flags.targetRows = Object.fromEntries(targetRowList.map((row) => [row.id, row]));
@@ -1338,7 +1911,13 @@ export default class CarlDice {
       flags.mobOwnRows = ownApplied;
       if (freeEvade) flags.freeEvade = true;
     }
-    if (targetUuids.length || hasDamage) footerParts.push(buildAttackTargetsFooter({ damageByType, isArea }));
+    // Its Debuffs, each landed by its trigger when a row is applied
+    // (attack-targets-card.mjs landDebuffs; docs/mob-sheet.md).
+    const targetEffects = attack.targetEffects ?? [];
+    if (targetEffects.length) flags.targetEffects = targetEffects;
+    if (targetUuids.length || hasDamage || targetEffects.length) {
+      footerParts.push(buildAttackTargetsFooter({ damageByType, isArea, targetEffects, armorPiercing: !!attack.armorPiercing }));
+    }
     if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
 
     const esc = foundry.utils.escapeHTML;
@@ -1352,7 +1931,7 @@ export default class CarlDice {
       ? game.i18n.localize("CARLRPG.MobAttack.NoToHit")
       : game.i18n.format("CARLRPG.MobAttack.Subtitle", { difficulty });
 
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls, rollMeta,
       title: attackName,
       subtitle,
@@ -1362,6 +1941,7 @@ export default class CarlDice {
       flags,
       actor,
     });
+    return message;
   }
 
   /**
@@ -1378,31 +1958,43 @@ export default class CarlDice {
    *   Skill/Spell, the untrained-DE check fails, or a dialog was cancelled.
    */
   static async rollDamageEffect(actor, damageEffectItem) {
-    const sys = actor.system;
     // Same untrained gate rollAttack applies defensively when a
     // damageEffectItem is passed in directly - checked here too so a
     // DE-initiated roll fails fast with a clear reason instead of silently
     // rolling the parent Skill/Spell alone (rollAttack's own fallback,
     // appropriate for the Skill-initiated dropdown, would be confusing here
     // since the whole point of this button IS the Damage Effect).
-    const deRank = sys.skills?.[slugifySkillName(damageEffectItem.name)]?.rank ?? damageEffectItem.system.rank ?? 0;
+    const deRank = ownedRank(actor, damageEffectItem);
     if (deRank === 0) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectUntrained", { name: damageEffectItem.name }));
       return null;
     }
 
-    const parentNames = damageEffectItem.system.parentSkills ?? [];
-    const candidates = actor.items.filter((i) => (i.type === "skill" || i.type === "spell") && parentNames.includes(i.name));
+    const candidates = actor.items.filter((i) => (i.type === "skill" || i.type === "spell") && damageEffectFits(damageEffectItem, i));
     if (!candidates.length) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectNoParentSkill", { name: damageEffectItem.name }));
       return null;
     }
+    // Unarmed Combat "Cannot choose a Damage Effect" (p.179).
+    const allowed = candidates.filter((c) => takesDamageEffects(c));
+    if (!allowed.length) {
+      ui.notifications.warn(game.i18n.format("CARLRPG.Warning.NoDamageEffects", { skill: candidates[0].name, name: damageEffectItem.name }));
+      return null;
+    }
 
-    let skillItem = candidates[0];
-    if (candidates.length > 1) {
-      const chosenId = await promptParentSkillChoice(damageEffectItem, candidates);
+    // A Spell parent is a Spell cast: in a fight, only from the Hotlist
+    // (p.86) - one that isn't there isn't offered.
+    const usable = allowed.filter((c) => !outsideHotlist(actor, c));
+    if (!usable.length) {
+      refuseOutsideHotlist(actor, allowed[0]);
+      return null;
+    }
+
+    let skillItem = usable[0];
+    if (usable.length > 1) {
+      const chosenId = await promptParentSkillChoice(damageEffectItem, usable);
       if (!chosenId) return null;
-      skillItem = candidates.find((c) => c.id === chosenId) ?? skillItem;
+      skillItem = usable.find((c) => c.id === chosenId) ?? skillItem;
     }
 
     return CarlDice.rollAttack(actor, skillItem, { damageEffectItem });
@@ -1415,32 +2007,65 @@ export default class CarlDice {
    * is just "you heal N Health Bar slots" at increasing dice tiers per Rank
    * (see packs-source/skills-and-spells/heal-self.json's `healDice`/`healToFull`/
    * `healMend` upgrade-tier fields, module/data/shared/upgrade-tier.mjs).
-   * This rolls the currently-unlocked tier's `healDice` - or, at a
-   * `healToFull` tier, skips dice entirely, per docs/known-gaps.md 1.2's
-   * instruction that "heal to full" isn't a dice roll - and posts an "Apply
-   * Healing" chat-card button (module/chat/heal-card.mjs). The roll itself
-   * never touches `hb.value`; only clicking that button does, mirroring
-   * rollAttack's roll-now/apply-on-click shape for target effects above.
+   * This rolls the currently-unlocked tier's `healDice` - or heals to full
+   * with no dice: at a `healToFull` tier (with a Short Rest's benefits, Heal
+   * Self Rank 15), or when the item itself heals to full (Heal Critter, the
+   * Health Bar only) - and posts an "Apply Healing" chat-card button
+   * (module/chat/heal-card.mjs). The roll itself never touches `hb.value`;
+   * only clicking that button does, mirroring rollAttack's
+   * roll-now/apply-on-click shape for target effects above.
    *
-   * Upgrade-tier gating uses the item's own `system.rank`, matching
-   * `collectItemTargetEffects`'s convention (module/helpers/modifiers.mjs),
-   * not the actor's skills-bag rank.
+   * Upgrade-tier gating uses the item's live Rank (effectiveRank - its own
+   * plus worn gear's and Buffs' "+N"), matching
+   * `collectItemTargetEffects`'s convention (module/helpers/modifiers.mjs);
+   * a Scroll's Spell keeps the scroll's Rank.
    *
-   * Heal Self's `range` is "Self only", so only the caster's own UUID is
-   * snapshotted (`healActorUuid`) - unlike rollAttack, this does NOT
-   * snapshot `game.user.targets`. A future ally-targeting Heal spell would
-   * need its own targeting snapshot and an actor picker on the Apply
-   * button; not built ahead of a real use case.
+   * Who it heals is decided now, before anything is spent (module/helpers/
+   * heal-targets.mjs): the targeted token(s) its "Heals" allows, or the
+   * caster with none targeted - refused with a warning otherwise. The card
+   * names them and snapshots each (`healRecipients`).
    * @param {Actor} actor
    * @param {Item} skillItem
+   * @param {{castAs?: object|null, within?: object|null, skipDialog?: boolean}} [options]
+   *   skipDialog: with one other creature targeted by a heal that could
+   *   take the caster too, heal it without asking.
    */
-  static async rollHeal(actor, skillItem, { castAs = null } = {}) {
+  static async rollHeal(actor, skillItem, options = {}) {
+    // In a fight this is the Heal Action (an Interrupt, p.82) - refused with
+    // none left - or part of the Action it's cast in (a Scroll's use).
+    return takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.Cast", { name: skillItem.name }),
+      () => CarlDice._heal(actor, skillItem, options), { within: options.within });
+  }
+
+  /** rollHeal, inside its Action (helpers/actions.mjs takeAction). */
+  static async _heal(actor, skillItem, { castAs = null, skipDialog = false } = {}) {
     // castAs: a Scroll's cast (module/helpers/scroll-cast.mjs) - its Rank is
     // the scroll's (already on the item), no Mana, no use-mark.
     const skillSys = skillItem.system;
-    const rank = skillSys.rank ?? 0;
+    const rank = effectiveRank(skillItem);
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
+
+    // Who it heals - refused before any Mana, use-mark or Action is spent.
+    const resolved = resolveHealRecipients(actor, skillItem, userHealTargets());
+    if (resolved.refusal) {
+      ui.notifications.warn(resolved.refusal);
+      return null;
+    }
+    let recipients = resolved.recipients;
+    // Foundry keeps the last Attack's target: a heal that could take the
+    // caster asks before going to someone else, as a potion does.
+    const other = recipients.length === 1 && recipients[0].actor !== actor ? recipients[0] : null;
+    if (other && !skipDialog && healsMode(skillItem) === "anyone") {
+      const chosen = await chooseHealRecipient(skillItem, actor, other);
+      if (!chosen) return null;
+      recipients = [chosen];
+    }
+    // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+    // anything is spent. A Scroll's Spell isn't the crawler's own.
+    const cooldown = castAs ? { ok: true, early: false } : await passCooldown(skillItem);
+    if (!cooldown.ok) return null;
+    const body = cooldown.early ? earlyUseNote() : "";
 
     const unlocked = (skillSys.upgrades ?? [])
       .filter((u) => rank >= u.rankThreshold)
@@ -1449,34 +2074,46 @@ export default class CarlDice {
     const diceTier = unlocked.find((u) => u.healDice);
     const canMend = unlocked.some((u) => u.healMend);
     const formula = diceTier?.healDice || skillSys.healDice || "1d4";
+    // A tier's "heal to full" also grants a Short Rest's benefits (Heal Self
+    // Rank 15); the item's own is the Health Bar only (Heal Critter).
+    const full = !!fullTier || !!skillSys.healToFull;
+    const rest = !!fullTier;
 
     const cast = resolveCastContext(actor, skillItem, castAs);
     await removeConditionsById(actor, endedConditionIds(actor.system, []));
     if (cast.markUse) await CarlDice.markForAdvancement(skillItem);
 
     // Casting always spends Mana, whether or not the tier rolls dice
-    // (docs/known-gaps.md 1.6) - no picker here, per this function's own
-    // "not built ahead of a real use case" precedent above: no heal spell
-    // currently has manaCostVariants. A Scroll pays none.
+    // (docs/known-gaps.md 1.6) - no picker here: no heal spell currently has
+    // manaCostVariants. A Scroll pays none.
     const chosenManaCost = cast.payMana
       ? { manaCost: applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost), isBase: true }
       : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+    if (!castAs) await startCooldown(skillItem);
 
-    const flags = { healActorUuid: actor.uuid };
+    // healActorUuid: the caster. Each recipient a row (heal-card.mjs).
+    const flags = {
+      healActorUuid: actor.uuid,
+      healRecipients: Object.fromEntries(recipients.map((r, i) => [`r${i}`, { uuid: r.uuid, name: r.name, applied: false }])),
+    };
+    const names = recipients.map((r) => r.name);
 
-    if (fullTier) {
+    if (full) {
       flags.healFull = true;
+      flags.healRest = rest;
       const label = withManaCostSubtitle(game.i18n.localize("CARLRPG.Heal.SubtitleFull"), chosenManaCost);
-      return createCardMessage({
+      const message = await createCardMessage({
         title: skillItem.name,
         img: skillItem.img,
         subtitle: label,
         badge: { label: game.i18n.localize("CARLRPG.Heal.SubtitleFull"), type: "hit" },
-        footer: await buildHealFooter({ full: true, canMend }),
+        body,
+        footer: await buildHealFooter({ full: true, rest, canMend, names }),
         flags,
         actor,
       });
+      return message;
     }
 
     const rollData = actor.getRollData();
@@ -1486,17 +2123,19 @@ export default class CarlDice {
 
     flags.healAmount = total;
 
-    return createRollMessage({
+    const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
       title: skillItem.name,
       subtitle: withManaCostSubtitle(game.i18n.format("CARLRPG.Heal.Subtitle", { amount: total }), chosenManaCost),
       img: skillItem.img,
       badge: { label: `+${total}`, type: "hit" },
-      footer: await buildHealFooter({ amount: total, canMend }),
+      body,
+      footer: await buildHealFooter({ amount: total, canMend, names }),
       flags,
       actor,
     });
+    return message;
   }
 
   /**
@@ -1510,19 +2149,41 @@ export default class CarlDice {
    * @param {Item} skillItem
    */
   static async rollToggleSpell(actor, skillItem) {
+    // Casting it is the Cast a Spell Action; switching it off is free.
+    if (skillItem.system.active) return CarlDice._toggleSpell(actor, skillItem);
+    return takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.Cast", { name: skillItem.name }),
+      () => CarlDice._toggleSpell(actor, skillItem));
+  }
+
+  /** rollToggleSpell, inside its Action when switching on (helpers/actions.mjs takeAction). */
+  static async _toggleSpell(actor, skillItem) {
     const skillSys = skillItem.system;
     const turningOn = !skillSys.active;
     let manaCostSpent = null;
+    let cooldown = { ok: true, early: false };
 
     if (turningOn) {
       if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
-      if (isBlockedUntrainedSpell(skillItem, skillSys.rank ?? 0)) return null;
+      if (isBlockedUntrainedSpell(skillItem, effectiveRank(skillItem))) return null;
+      // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+      // anything is spent.
+      cooldown = await passCooldown(skillItem);
+      if (!cooldown.ok) return null;
+      // Undone: off again (its timer gone), and the Shield back where it was.
+      noteUndo(actor, { t: "set", uuid: skillItem.uuid, data: { "system.active": false, [SPELL_TIMER_PATH]: null } });
+      if (skillSys.shieldSlots) noteUndo(actor, { t: "set", uuid: actor.uuid, data: { "system.shield.value": actor.system.shield?.value ?? 0 } });
       manaCostSpent = applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost);
       await applyManaCost(actor, manaCostSpent);
       await removeConditionsById(actor, endedConditionIds(actor.system, []));
     }
 
-    await skillItem.update({ "system.active": turningOn });
+    // Its duration, worked out now (helpers/spell-timers.mjs): the active
+    // GM switches it off when that's up. Off by hand clears it.
+    await skillItem.update({
+      "system.active": turningOn,
+      [SPELL_TIMER_PATH]: turningOn ? spellTimerFor(actor, skillItem) : null,
+    });
+    if (turningOn) await startCooldown(skillItem);
 
     // Shield-style pools (docs/known-gaps.md 1.4) refill to full on
     // (re)activation - "you can't heal a Shield" means recasting is the only
@@ -1539,13 +2200,14 @@ export default class CarlDice {
       ? withManaCostSubtitle(game.i18n.localize("CARLRPG.Toggle.Activated"), { manaCost: manaCostSpent, isBase: true })
       : game.i18n.localize("CARLRPG.Toggle.Deactivated");
 
-    return createCardMessage({
+    const message = await createCardMessage({
       title: skillItem.name,
       img: skillItem.img,
       subtitle: toggleSubtitle,
-      body: turningOn ? (skillItem.system.description ?? "") : "",
+      body: turningOn ? (cooldown.early ? earlyUseNote() : "") + (skillItem.system.description ?? "") : "",
       actor,
     });
+    return message;
   }
 
   /**
@@ -1565,15 +2227,33 @@ export default class CarlDice {
    * @returns {Promise<ChatMessage|{roll: Roll, total: number, breakdown: string, naturalRoll: number|null, degree: string}|null>}
    *   null if the roll-options dialog was cancelled, regardless of `post`.
    */
-  static async rollEvadeCheck(actor, { difficulty = null, skipDialog = false, post = true, isAction = true } = {}) {
+  static async rollEvadeCheck(actor, options = {}) {
+    const { post = true, isAction = true, preset = null } = options;
+    // Only the sheet's own Evade can be the Evade Action (one covers every
+    // Attack this round, p.81); a card's Evade pays for itself.
+    if (!post || !isAction || preset) return CarlDice._evadeCheck(passiveContext(), actor, options);
+    return takeAction(actor, "other", game.i18n.localize("CARLRPG.Roll.Evade"),
+      (ctx) => CarlDice._evadeCheck(ctx, actor, options), { tag: "evade", optional: true });
+  }
+
+  /** rollEvadeCheck, inside its Action (helpers/actions.mjs takeAction). */
+  static async _evadeCheck(ctx, actor, { difficulty = null, skipDialog = false, post = true, isAction = true, preset = null } = {}) {
     const sys = actor.system;
     if (isBlockedByDebuff(actor)) return null;
     const rollData = actor.getRollData();
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, "evade");
-    const debuffRows = decorateRows(collectDebuffRows(sys, "evade", { ownAction: isAction }), "roll");
+    const debuffRows = decorateRows([
+      ...collectDebuffRows(sys, "evade", { ownAction: isAction }),
+      ...collectVehicleRows(actor, "evade"),
+    ], "roll");
 
     let options = { advantage: "normal", difficulty, modifier: 0, checked: new Set(), checkedDebuffs: null };
-    if (!skipDialog) {
+    if (preset) {
+      // The choices of an earlier dialog (one Evade Action rolled against
+      // several Attacks - module/chat/reaction-card.mjs), or a fixed
+      // Advantage for an automatic free Evade; this Check's own Difficulty.
+      options = { ...options, ...preset, difficulty };
+    } else if (!skipDialog) {
       const difficultyPresets = difficulty === null ? [] : buildDifficultyPresets({
         floor: game.settings.get("carl-rpg", "currentFloor"),
         selected: "given",
@@ -1585,10 +2265,17 @@ export default class CarlDice {
         difficultyPresets,
         conditionalModifiers,
         debuffRows,
+        // Unticked once they have Evaded this round: one Evade Action covers
+        // every Attack (p.81). Hidden for an uncommanded Pet, whose Evade is free.
+        usesAction: evadesWithoutAction(actor) ? null : actionBox(ctx, !evadeIsFree(actor)),
       });
       if (!prompted) return null;
       options = prompted;
     }
+    // The sheet's Evade button in a fight: the Evade Action, unless unticked.
+    const usesAction = ctx.tracked && !evadesWithoutAction(actor)
+      && (skipDialog ? !evadeIsFree(actor) : !!options.usesAction);
+    if (!settleAction(ctx, usesAction)) return null;
 
     const dexMod = sys.stats?.dex?.mod ?? 0;
     const evadeBonus = sys.bonuses?.evadeBonus ?? 0;
@@ -1598,6 +2285,8 @@ export default class CarlDice {
     parts.add(resolveD20Formula(false, options.advantage, debuffEffect), game.i18n.localize("CARLRPG.Roll.Die"));
     parts.add(dexMod, game.i18n.localize(CARLRPG.statAbbreviations.dex));
     parts.add(evadeBonus, game.i18n.localize("CARLRPG.Roll.EvadeBonus"));
+    // Dice "added to Evade Checks" (Elf (High)'s 1d4) - modifiers.mjs.
+    for (const { formula, label } of sys.evadeDice ?? []) parts.add(formula, label || game.i18n.localize("CARLRPG.Roll.EvadeBonus"));
     addDebuffPenalties(parts, debuffEffect.penalties);
     parts.add(options.modifier, game.i18n.localize("CARLRPG.Roll.Situational"));
     applyCheckedConditionalModifiers(parts, conditionalModifiers, options.checked, ["stat", "rollMode", "custom"]);
@@ -1610,7 +2299,7 @@ export default class CarlDice {
     await removeConditionsById(actor, endedConditionIds(sys, debuffEffect.applied, { isAction }));
 
     const formula = d20Formula(roll);
-    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote, formula, difficulty: options.difficulty };
+    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote, formula, difficulty: options.difficulty, options };
 
     let body = debuffNote;
     if (degree === "majorFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeMajorFail")}</p>`;
@@ -1620,7 +2309,7 @@ export default class CarlDice {
       rolls: [roll],
       rollMeta: [{ label: game.i18n.localize("CARLRPG.Roll.Evade"), breakdown }],
       title: game.i18n.localize("CARLRPG.Roll.Evade"),
-      subtitle: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]),
+      subtitle: checkSubtitle(degree, options.difficulty),
       img: actor.img,
       badge: degreeBadge(degree),
       body,
@@ -1650,7 +2339,8 @@ export default class CarlDice {
    * @param {Item} skillItem  An Opposed-Check Skill (e.g. Taunt).
    * @param {{difficulty?: number|null, opponent?: Actor|null, skipDialog?: boolean, post?: boolean}} [options]
    *   opponent: the creature whose static number `difficulty` is. When it's
-   *   a Mob, its Debuffs adjust that Difficulty (p.96 - module/helpers/
+   *   a Mob (not a crawler or Pet, who roll their own side - actor-kinds.mjs
+   *   rollsLikeCrawler), its Debuffs adjust that Difficulty (p.96 - module/helpers/
    *   debuff-effects.mjs), offered as dialog rows like rollAttack's target.
    *   post (default true): when false, return the raw roll data instead of
    *   posting a ChatMessage, so a caller can fold this roll into its own
@@ -1658,11 +2348,12 @@ export default class CarlDice {
    * @returns {Promise<ChatMessage|{roll: Roll, total: number, breakdown: string, naturalRoll: number|null, degree: string}|null>}
    *   null if the roll-options dialog was cancelled, regardless of `post`.
    */
-  static async rollOpposedSkillCheck(actor, skillItem, { difficulty = null, opponent = null, skipDialog = false, post = true } = {}) {
+  static async rollOpposedSkillCheck(actor, skillItem, {
+    difficulty = null, opponent = null, skipDialog = false, post = true, markUse = true,
+  } = {}) {
     const sys = actor.system;
     const skillSys = skillItem.system;
-    const skillEntry = sys.skills?.[slugifySkillName(skillItem.name)];
-    const rank = skillEntry?.rank ?? skillSys.rank ?? 0;
+    const rank = ownedRank(actor, skillItem);
 
     if (skillSys.isPassive) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.PassiveNoCheck", { name: skillItem.name }));
@@ -1670,13 +2361,19 @@ export default class CarlDice {
     }
     if (isBlockedUntrainedSpell(skillItem, rank)) return null;
     if (isBlockedByDebuff(actor, { isSpell: skillItem.type === "spell" })) return null;
+    // Still cooling down: warn and ask (helpers/cooldowns.mjs), before
+    // anything is spent. A stand-in Skill that isn't saved has none.
+    const cooldown = await passCooldown(skillItem);
+    if (!cooldown.ok) return null;
 
     const rollData = actor.getRollData();
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
     // An opposed Spell is still cast - it costs Mana like any other (p.173).
     const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
-    const rollerRows = decorateRows(collectDebuffRows(sys, "check"), "roll");
-    const opponentRows = opponent && opponent.type !== "character"
+    const rollerRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })], "roll");
+    // A Mob's Debuffs lower its static Difficulty; a crawler or Pet rolls
+    // its own side, with its own Debuffs.
+    const opponentRows = opponent && !rollsLikeCrawler(opponent)
       ? decorateRows(collectDebuffRows(opponent.system, "check", { ownerName: opponent.name, idPrefix: "opp", ownAction: false }), "difficulty")
       : [];
 
@@ -1695,6 +2392,8 @@ export default class CarlDice {
         conditionalModifiers,
         manaCostChoices,
         debuffRows: [...rollerRows, ...opponentRows],
+        // Off-Stat (p.58): rolled with another Stat than its own.
+        statChoice: buildStatChoice(skillSys.governingStat ?? ""),
       });
       if (!prompted) return null;
       options = prompted;
@@ -1704,7 +2403,7 @@ export default class CarlDice {
     const finalDifficulty = opponentEffect.difficulty;
 
     const untrained = rank === 0;
-    const statKey = skillSys.governingStat;
+    const statKey = chosenStat(options, skillSys.governingStat);
     const statMod = statKey ? (sys.stats?.[statKey]?.mod ?? 0) : 0;
 
     const parts = new RollParts(rollData);
@@ -1718,24 +2417,37 @@ export default class CarlDice {
     const { roll, total, breakdown } = await parts.evaluate();
     const naturalRoll = extractNaturalD20(roll);
     const degree = getDegreeOfSuccess(naturalRoll, total, finalDifficulty);
-    const debuffNote = buildDebuffNote([...rollerEffect.applied, ...opponentEffect.applied]);
+    // A caller folding this roll into its own card (Taunt, Command Pet, a
+    // Driving Check) shows this note, the early-use one included.
+    const debuffNote = (cooldown.early ? earlyUseNote() : "") + offStatNote(statKey, skillSys.governingStat)
+      + buildDebuffNote([...rollerEffect.applied, ...opponentEffect.applied]);
 
     await removeConditionsById(actor, endedConditionIds(sys, rollerEffect.applied));
     if (opponent) await removeConditionsById(opponent, consumedConditionIds(opponentEffect.applied));
-    await CarlDice.markForAdvancement(skillItem);
+    // markUse: false for a stand-in Skill that isn't saved on the actor (an
+    // untrained Command Pet roll - module/helpers/pet-command.mjs).
+    if (markUse) await CarlDice.markForAdvancement(skillItem);
 
     // Spent before the post: false return, so a caller folding this roll
     // into its own card (Taunt) pays too.
     const chosenManaCost = skillItem.type === "spell" ? resolveManaCost(skillItem, manaCostChoices, options.manaCostChoice, actor) : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
+    await startCooldown(skillItem);
 
-    if (!post) return { roll, total, breakdown, naturalRoll, degree, debuffNote, chosenManaCost };
+    // A caller folding this roll into its own card (Taunt, Command Pet, a
+    // Driving Check) gets what a reroll needs, and which rows applied.
+    if (!post) {
+      return {
+        roll, total, breakdown, naturalRoll, degree, debuffNote, chosenManaCost, statKey: statKey ?? "",
+        formula: d20Formula(roll), difficulty: finalDifficulty, applied: rollerEffect.applied,
+      };
+    }
 
     return createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: skillItem.name, breakdown }],
       title: skillItem.name,
-      subtitle: withManaCostSubtitle(game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), chosenManaCost),
+      subtitle: withManaCostSubtitle(checkSubtitle(degree, finalDifficulty), chosenManaCost),
       img: skillItem.img,
       badge: degreeBadge(degree),
       body: debuffNote,
@@ -1766,6 +2478,10 @@ export default class CarlDice {
     apply = true, silent = false, debuffs = false, floorBonus = true, clearMark = true,
   } = {}) {
     const currentRank = skillItem.system.rank ?? 0;
+    if (isPet(actor)) {
+      if (!silent) ui.notifications.warn(game.i18n.localize("CARLRPG.Pet.NoAdvancement"));
+      return { success: false, roll: null, newRank: currentRank };
+    }
     const slug = slugifySkillName(skillItem.name);
     // "At the end of each floor, add 1 to your Skill Advancement Checks for
     // X" (a Race/Class grant, targetType "advancementBonus") and "X Skill can
@@ -1843,7 +2559,9 @@ export default class CarlDice {
    */
   static async markForAdvancement(item) {
     if (!item || !CarlDice.isAdvancedByUse(item)) return;
-    if (!item.system.marked) await item.update({ "system.marked": true });
+    if (item.system.marked) return;
+    noteUndo(item.parent, { t: "set", uuid: item.uuid, data: { "system.marked": false } });
+    await item.update({ "system.marked": true });
   }
 
   /**
@@ -1858,9 +2576,19 @@ export default class CarlDice {
    */
   static isAdvancedByUse(item) {
     if (!item) return false;
+    // A Pet's Ranks are the Floor; they "don't improve via the normal ways:
+    // grinding, training, potions, or the like" (p.231).
+    if (isPet(item.actor)) return false;
     if (item.system.advancementGate === "magic-only") return false;
     if (item.system.advancementGate === "passive-until-5" && (item.system.rank ?? 0) >= 5) return false;
     if (item.type === "spell" && item.system.castingKeywords?.includes("passive")) return false;
+    // "You can attempt to use Skills untrained on the Third Floor and lower,
+    // but you won't gain any new Skills this way like you would on the
+    // Tutorial Floors" (p.58): an untrained use marks only on Floors 1-2.
+    // The item's own Rank - a "+1" from gear doesn't make the Skill one the
+    // crawler has learned, and its Advancement Check against Rank 0 would
+    // always succeed.
+    if ((item.system.rank ?? 0) === 0 && game.settings.get("carl-rpg", "currentFloor") >= 3) return false;
     return true;
   }
 }
