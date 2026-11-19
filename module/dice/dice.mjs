@@ -20,7 +20,7 @@ import { buildScrollCast } from "../helpers/scroll-cast.mjs";
 import { isAreaItem } from "../helpers/area.mjs";
 import { mobAttackFor, rollMobDamage } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
-import { buildDifficultyPresets, degreeBadge, degreeLabel, getDegreeOfSuccess, interventionTotal, isHitDegree, selectedPresetValue } from "../helpers/rules.mjs";
+import { buildDifficultyPresets, degreeBadge, degreeLabel, getDegreeOfSuccess, interventionTotal, isHitDegree, isUntrained, selectedPresetValue } from "../helpers/rules.mjs";
 import { attackIsArmorPiercing, attackTargetEffects, computeActiveShieldSlots, damageEffectFits, effectiveRank, ownedRank, sameSkillName, skillRankCap, slugifySkillName, tiersHighestFirst } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
@@ -460,7 +460,7 @@ export function isBlockedByDebuff(actor, { isSpell = false } = {}) {
  * @returns {boolean}
  */
 function isBlockedUntrainedSpell(item, rank) {
-  if (item?.type !== "spell" || rank > 0) return false;
+  if (item?.type !== "spell" || !isUntrained(rank)) return false;
   ui.notifications.warn(game.i18n.format("CARLRPG.Warning.CannotCastUntrained", { name: item.name }));
   return true;
 }
@@ -981,7 +981,7 @@ export default class CarlDice {
     if (!settleAction(ctx, !!usesAction)) return null;
     const actionRows = checkActionRows(debuffRows, usesAction);
 
-    const untrained = rank === 0;
+    const untrained = isUntrained(rank);
     // The Stat picked in the dialog (Off-Stat, p.58), else the Skill's own.
     const statKey = chosenStat(options, skillSys.governingStat);
     const debuffEffect = resolveRollerRows(actionRows.rows, options.checkedDebuffs);
@@ -1203,7 +1203,7 @@ export default class CarlDice {
     // Unarmed Combat "Cannot choose a Damage Effect" (p.179).
     const rankedDamageEffectCandidates = castAs || !takesDamageEffects(skillItem) ? [] : (damageEffectItem ? [damageEffectItem] : actor.items
       .filter((i) => i.type === "damageEffect" && damageEffectFits(i, skillItem)))
-      .filter((de) => ownedRank(actor, de) > 0);
+      .filter((de) => !isUntrained(ownedRank(actor, de)));
 
     // Omitted entirely (dropdown-wise) when a Damage Effect was already
     // supplied by the caller (CarlDice.rollDamageEffect, rolling FROM the
@@ -1294,7 +1294,7 @@ export default class CarlDice {
     // Damage Effects are Passive Skills, unusable untrained.
     if (damageEffectItem) {
       const deRank = ownedRank(actor, damageEffectItem);
-      if (deRank === 0) {
+      if (isUntrained(deRank)) {
         ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectUntrained", { name: damageEffectItem.name }));
         damageEffectItem = null;
       }
@@ -1315,7 +1315,7 @@ export default class CarlDice {
       cooldownEarly ||= pass.early;
     }
 
-    const untrained = rank === 0;
+    const untrained = isUntrained(rank);
     const {
       roll: attackRoll, total: attackTotal, breakdown: attackBreakdown, naturalRoll, degree, dieFormula: primaryFormula,
     } = await rollD20Check({
@@ -2038,7 +2038,7 @@ export default class CarlDice {
     // appropriate for the Skill-initiated dropdown, would be confusing here
     // since the whole point of this button IS the Damage Effect).
     const deRank = ownedRank(actor, damageEffectItem);
-    if (deRank === 0) {
+    if (isUntrained(deRank)) {
       ui.notifications.warn(game.i18n.format("CARLRPG.Warning.DamageEffectUntrained", { name: damageEffectItem.name }));
       return null;
     }
@@ -2398,7 +2398,11 @@ export default class CarlDice {
    * project's precedent for reusable infrastructure (resolveActingActor).
    * @param {Actor} actor
    * @param {Item} skillItem  An Opposed-Check Skill (e.g. Taunt).
-   * @param {{difficulty?: number|null, opponent?: Actor|null, skipDialog?: boolean, post?: boolean}} [options]
+   * @param {{difficulty?: number|null, opponent?: Actor|null, skipDialog?: boolean, post?: boolean, markUse?: boolean, isAction?: boolean}} [options]
+   *   isAction (default true): whether the Check is an Action of its own
+   *   (Taunt, Shield Block, Command Pet). One that isn't - a Party Skill
+   *   Check, a Driving Check, a ram - neither takes Queasy's Disadvantage nor
+   *   ends Queasy/Staggered (checkActionRows; ruled 2026-11-19).
    *   opponent: the creature whose static number `difficulty` is. When it's
    *   a Mob (not a crawler or Pet, who roll their own side - actor-kinds.mjs
    *   rollsLikeCrawler), its Debuffs adjust that Difficulty (p.96 - module/helpers/
@@ -2410,7 +2414,7 @@ export default class CarlDice {
    *   null if the roll-options dialog was cancelled, regardless of `post`.
    */
   static async rollOpposedSkillCheck(actor, skillItem, {
-    difficulty = null, opponent = null, skipDialog = false, post = true, markUse = true,
+    difficulty = null, opponent = null, skipDialog = false, post = true, markUse = true, isAction = true,
   } = {}) {
     const sys = actor.system;
     const skillSys = skillItem.system;
@@ -2426,7 +2430,10 @@ export default class CarlDice {
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
     // An opposed Spell is still cast - it costs Mana like any other (p.173).
     const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
-    const rollerRows = decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })], "roll");
+    const rollerRows = checkActionRows(
+      decorateRows([...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })], "roll"),
+      isAction ? null : false,
+    ).rows;
     // A Mob's Debuffs lower its static Difficulty; a crawler or Pet rolls
     // its own side, with its own Debuffs.
     const opponentRows = opponent && !rollsLikeCrawler(opponent)
@@ -2454,7 +2461,7 @@ export default class CarlDice {
     const opponentEffect = resolveDifficultyRows(options.difficulty ?? difficulty, opponentRows, options.checkedDebuffs);
     const finalDifficulty = opponentEffect.difficulty;
 
-    const untrained = rank === 0;
+    const untrained = isUntrained(rank);
     const statKey = chosenStat(options, skillSys.governingStat);
     const { roll, total, breakdown, naturalRoll, degree, formula } = await rollD20Check({
       rollData, untrained, advantage: options.advantage, effect: rollerEffect,
@@ -2467,7 +2474,7 @@ export default class CarlDice {
     const debuffNote = (cooldown.early ? earlyUseNote() : "") + offStatNote(statKey, skillSys.governingStat)
       + buildDebuffNote([...rollerEffect.applied, ...opponentEffect.applied]);
 
-    await removeConditionsById(actor, endedConditionIds(sys, rollerEffect.applied));
+    await removeConditionsById(actor, endedConditionIds(sys, rollerEffect.applied, { isAction }));
     if (opponent) await removeConditionsById(opponent, consumedConditionIds(opponentEffect.applied));
     // markUse: false for a stand-in Skill that isn't saved on the actor (an
     // untrained Command Pet roll - module/helpers/pet-command.mjs).

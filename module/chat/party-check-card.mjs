@@ -157,7 +157,8 @@ export async function rollPartyRow(message, rowId) {
   if (!actor) return false;
   const { skill, trained } = await skillOrUntrainedCopy(actor, state.skill, { system: { governingStat: state.stat ?? "" } });
   const result = await CarlDice.rollOpposedSkillCheck(actor, skill, {
-    difficulty: state.difficulty, opponent: null, post: false, markUse: trained,
+    // Called for by the GM, not an Action of its own.
+    difficulty: state.difficulty, opponent: null, post: false, markUse: trained, isAction: false,
   });
   if (!result) return false;
   if (result.roll && game.dice3d) void game.dice3d.showForRoll(result.roll, game.user, true).catch(() => {});

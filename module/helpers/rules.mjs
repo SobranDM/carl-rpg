@@ -193,3 +193,15 @@ export function selectedPresetValue(presets) {
 export function interventionTotal(interventions = []) {
   return (interventions ?? []).reduce((sum, i) => sum + (Number(i.value) || 0), 0);
 }
+
+/**
+ * Whether a Skill, Spell or Damage Effect is used untrained at this (live)
+ * Rank: Rank 0 - or below it, a negative Rank always counting as untrained
+ * (ruled 2026-11-19). Untrained, a Skill rolls with Disadvantage and no
+ * Rank term; a Spell can't be cast; a Damage Effect can't be used.
+ * @param {number} rank
+ * @returns {boolean}
+ */
+export function isUntrained(rank) {
+  return !((Number(rank) || 0) > 0);
+}

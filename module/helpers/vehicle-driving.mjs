@@ -97,7 +97,8 @@ export async function rollDrivingCheck(vehicle, { mode = "table6", skipDialog = 
   // Unopposed: 10 + Floor x 2 (p.59). Stopping in time: 10 + Move ÷ 5.
   const difficulty = mode === "stop" ? status.stopDifficulty : unopposedDifficulty(floor);
   const result = await CarlDice.rollOpposedSkillCheck(driver, skill, {
-    difficulty, opponent: null, skipDialog, post: false, markUse: trained,
+    // Part of driving, not an Action of its own (it spends none).
+    difficulty, opponent: null, skipDialog, post: false, markUse: trained, isAction: false,
   });
   if (!result) return null;
 

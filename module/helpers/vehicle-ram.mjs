@@ -85,7 +85,8 @@ export async function rollRam(vehicle, { skipDialog = false } = {}) {
   const { skill, trained } = await skillOrUntrainedCopy(driver, driveSkill, { system: { governingStat: "dex" } });
   const check = await CarlDice.rollOpposedSkillCheck(driver, skill, {
     difficulty: crawlerAttackDifficulty(primary.actor, floor).difficulty,
-    opponent: null, skipDialog, post: false, markUse: trained,
+    // A ram spends no Action (known-gaps 7.3), so it isn't one here either.
+    opponent: null, skipDialog, post: false, markUse: trained, isAction: false,
   });
   if (!check) return null;
   // A ram is a Check to operate the vehicle: it spends an Amazing Success's Advantage.
