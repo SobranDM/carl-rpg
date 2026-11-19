@@ -4,7 +4,7 @@ import { CarlRPGTokenDocument } from './documents/token.mjs';
 import { CarlRPGCombat, CarlRPGCombatant } from './documents/combat.mjs';
 import { CarlRPGCombatTracker } from './apps/combat-tracker.mjs';
 import { reactionHandlers, registerPhaseSettings } from './helpers/combat-phases.mjs';
-import { registerReactionSocket, retireReaction, startReaction } from './chat/reaction-card.mjs';
+import { retireReaction, startReaction } from "./chat/reaction-card.mjs";
 import { registerPartyCheckSocket } from './chat/party-check-card.mjs';
 import { finishResolution, lockResults } from './helpers/reaction-resolve.mjs';
 import { registerActionSocket } from './helpers/actions.mjs';
@@ -387,7 +387,6 @@ Hooks.once('ready', function () {
   registerDeclareHud();
   registerDeclaredMarks();
   // Players' Reaction-card actions, applied on the active GM's client.
-  registerReactionSocket();
   // Players' Party Skill Check rolls, applied on the active GM's client.
   registerPartyCheckSocket();
   // Combat Actions spent and undone by players, recorded by the active GM

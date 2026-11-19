@@ -23,14 +23,14 @@
  * Attack card (module/chat/check-revision.mjs), and can go backwards (an
  * undone d6, a worse reroll).
  */
-import { gradeCheck, makeCheck } from "../helpers/reaction-state.mjs";
+import { applyAiReroll, gradeCheck, makeCheck } from "../helpers/reaction-state.mjs";
 import { aiRerollAllowed, fightStamp } from "../helpers/ai-favor.mjs";
 import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import { actorFromUuid, resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { vehicleSeatOf } from "../helpers/vehicle-state.mjs";
-import { cardFight } from "./check-revision.mjs";
+import { cardFight, fightHelpers } from "./check-revision.mjs";
 
 const SCOPE = "carl-rpg";
 const GREAT_EVADE = ["criticalHit", "amazingSuccess"];
@@ -216,8 +216,9 @@ export function rowCheckOpen(attack, rowId, which) {
 
 /**
  * Whether an Intervene can still change a row's Check: a crawler's (it
- * helps "another crawler", p.82 - not a Pet's), open, rolled in a fight
- * that's still on that round, and not a Natural 1 or 20.
+ * helps "another crawler", p.82 - not a Pet's), open, and rolled in a fight
+ * that's still on that round. Its natural d20 doesn't matter (ruled
+ * 2026-11-19).
  * @param {ChatMessage} attack
  * @param {string} rowId
  * @param {"free"|"evade"} which
@@ -225,7 +226,7 @@ export function rowCheckOpen(attack, rowId, which) {
  */
 export function rowInterveneOpen(attack, rowId, which) {
   const check = rowCheck(rowAt(attack, rowId), which);
-  if (!check || check.natural === 1 || check.natural === 20) return false;
+  if (!check) return false;
   if (!isCrawler(actorFromUuid(check.actorUuid))) return false;
   return rowCheckOpen(attack, rowId, which) && !!cardFight(check);
 }
@@ -237,15 +238,7 @@ export function rowInterveneOpen(attack, rowId, which) {
  */
 export function rowInterveners(attack, rowId, which, user = game.user) {
   const check = rowCheck(rowAt(attack, rowId), which);
-  const combat = check ? cardFight(check) : null;
-  if (!combat) return [];
-  const roller = actorFromUuid(check.actorUuid);
-  const seen = new Set();
-  return combat.combatants.map((c) => c.actor).filter((actor) => {
-    if (!actor || !isCrawler(actor) || actor === roller || seen.has(actor.uuid)) return false;
-    seen.add(actor.uuid);
-    return user.isGM || actor.testUserPermission(user, "OWNER");
-  });
+  return fightHelpers(check ? cardFight(check) : null, check?.actorUuid, user);
 }
 
 /**
@@ -278,12 +271,7 @@ export async function reviseRow(attack, rowId, which, { interventions = [], rero
   const target = row ? await resolveRowTarget(row) : null;
   if (!check || !target) return null;
   const before = decidingRowCheck(row)?.degree ?? null;
-  if (reroll) {
-    check.aiRerolled = { natural: check.natural, base: check.base, breakdown: check.breakdown, roll: check.roll };
-    Object.assign(check, {
-      natural: reroll.natural ?? null, base: Number(reroll.total) || 0, roll: reroll.roll ?? null, breakdown: String(reroll.breakdown ?? ""),
-    });
-  }
+  if (reroll) applyAiReroll(check, reroll);
   check.interventions = interventions;
   gradeCheck(check);
   const checks = { ...row.checks, [which]: check };

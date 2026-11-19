@@ -49,18 +49,13 @@ import { canAct, evadeIsFree, hasSpent, payAction, refundAction, takeAction, und
 import {
   BLOCK_TAG, bashOffered, blockNotes, keptBlockRoll, rollBlockAgain, rollShieldBash, shieldBlocker,
 } from "../helpers/shield-block.mjs";
-import {
-  blockableHitsFor, buildReactionState, cardProgress, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck,
-  hitBlockable, hitEvadable, hitLabel, hitList, hitStatus, idleBlockers, idleEvaders, intervenableChecks, makeCheck, pullableAreaAttacks,
-  pullableHits, rerollableChecks, sectionCounts, sectionsOf, tauntableMobs, unevadedNames,
-} from "../helpers/reaction-state.mjs";
+import { applyAiReroll, blockableHitsFor, buildReactionState, cardProgress, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck, hitBlockable, hitEvadable, hitLabel, hitList, hitStatus, idleBlockers, idleEvaders, intervenableChecks, makeCheck, pullableAreaAttacks, pullableHits, rerollableChecks, sectionCounts, sectionsOf, tauntableMobs, unevadedNames } from "../helpers/reaction-state.mjs";
 import { opposedDifficulty } from "../helpers/rules.mjs";
 import { esc } from "../helpers/html.mjs";
 import { actorFromUuid } from "../helpers/token-resolution.mjs";
 import { currentFloor } from "../helpers/floor.mjs";
 
 const SCOPE = "carl-rpg";
-const SOCKET = "system.carl-rpg";
 const OP = "reactionOp";
 const GREAT = ["criticalHit", "amazingSuccess"];
 
@@ -278,15 +273,6 @@ export async function rollForOp(actor, label, roll) {
   return { result: result ?? null, undo };
 }
 
-/** Register the GM side of the socket. Call once from `ready`. */
-export function registerReactionSocket() {
-  game.socket.on(SOCKET, (payload, senderId) => {
-    if (payload?.type !== OP || !game.users.activeGM?.isSelf) return;
-    const user = game.users.get(senderId);
-    if (user) void applyOp(payload.cardId, payload.op, payload.data ?? {}, user);
-  });
-}
-
 /**
  * Apply one operation to a card, in turn.
  * @param {string} cardId
@@ -393,25 +379,54 @@ async function pullTaunt(state, taunt) {
   if (!actor) return;
   const pulled = [];
   for (const hit of pullableHits(state, taunt.mobUuid, taunt.byUuid)) {
-    const attack = state.attacks[hit.attackId];
-    const { row } = mobAttackRow({
-      id: hit.row.id, target: { uuid: taunt.byUuid, actor }, base: attack.mobBase, ownRows: attack.mobOwnRows ?? [], zone: hit.row.zone,
-    });
     // Its target's Evade and Shield Block of it drop off (refundIdle*).
-    Object.assign(hit, {
-      row, targetUuid: taunt.byUuid, targetName: taunt.byName, tauntedBy: { uuid: taunt.byUuid, name: taunt.byName },
-      free: null, evade: null, block: null,
-    });
-    taunt.pulled.push(hit.id);
+    pullHit(state, taunt, actor, hit, { zone: hit.row.zone, tauntedBy: true, extra: { block: null } });
     pulled.push(hit);
   }
+  await afterPull(state, taunt, pulled, { blocks: true });
+}
+
+/**
+ * Re-aim a hit at the taunter: its to-hit re-resolved for them, its target
+ * and any free Evade or Evade of it dropped, and noted as pulled.
+ * @param {object} state
+ * @param {object} taunt
+ * @param {Actor} actor  The taunter.
+ * @param {object} hit
+ * @param {{zone: string, tauntedBy: boolean, extra?: object}} options
+ *   tauntedBy: mark it as pulled by the Taunt; extra: more fields to set.
+ */
+function pullHit(state, taunt, actor, hit, { zone, tauntedBy, extra = {} }) {
+  const attack = state.attacks[hit.attackId];
+  const { row } = mobAttackRow({
+    id: hit.row.id, target: { uuid: taunt.byUuid, actor }, base: attack.mobBase, ownRows: attack.mobOwnRows ?? [], zone,
+  });
+  Object.assign(hit, {
+    row, targetUuid: taunt.byUuid, targetName: taunt.byName, free: null, evade: null, ...extra,
+    ...(tauntedBy ? { tauntedBy: { uuid: taunt.byUuid, name: taunt.byName } } : {}),
+  });
+  taunt.pulled.push(hit.id);
+}
+
+/**
+ * What follows a Taunt's pull: the Taunt's free Evades (a free Evade
+ * already, or Rank 5+; Advantage at Rank 15), the taunter's earlier Evade
+ * rolled against what arrived, and Evades no longer covering anything
+ * refunded. With `blocks` (single-target Attacks - Shield Block doesn't
+ * cover Area Attacks, ruled 2026-11-19), the same for Shield Block, after
+ * the Evades: a hit they Evade isn't blocked too.
+ * @param {object} state
+ * @param {object} taunt
+ * @param {object[]} pulled
+ * @param {{blocks: boolean}} options
+ */
+async function afterPull(state, taunt, pulled, { blocks }) {
   const free = pulled.filter((hit) => (hit.row.freeEvade || taunt.rank >= 5) && hitEvadable(hit));
   await rollFreeEvades(state, free, { advantage: taunt.rank >= 15 ? "advantage" : "normal" });
   await evadeArrivals(state, pulled);
-  // After the Evades: a hit they Evade isn't blocked too.
-  await blockArrivals(state, pulled);
+  if (blocks) await blockArrivals(state, pulled);
   await refundIdleEvades(state);
-  await refundIdleBlocks(state);
+  if (blocks) await refundIdleBlocks(state);
 }
 
 /**
@@ -445,10 +460,21 @@ async function evadeArrivals(state, hits) {
  * @param {object} state
  */
 async function refundIdleEvades(state) {
+  await refundIdle(state, idleEvaders(state), "evadeSpent", { evaded: false, evadePreset: null, evadeSpent: null });
+}
+
+/**
+ * Reset these crawlers' idle defence and give back the Action it spent.
+ * @param {object} state
+ * @param {object[]} crawlers  Their `crawlers` entries (idleEvaders, idleBlockers).
+ * @param {string} spentKey  Where the defence's spent Action is kept.
+ * @param {object} reset  The fields that unmake it.
+ */
+async function refundIdle(state, crawlers, spentKey, reset) {
   const combat = game.combats.get(state.combatId);
-  for (const crawler of idleEvaders(state)) {
-    const spent = crawler.evadeSpent;
-    Object.assign(crawler, { evaded: false, evadePreset: null, evadeSpent: null });
+  for (const crawler of crawlers) {
+    const spent = crawler[spentKey];
+    Object.assign(crawler, reset);
     if (!spent || !combat) continue;
     await refundAction(combat, spent.combatantId, spent.id);
     state.spentActions = (state.spentActions ?? []).filter((s) => s.id !== spent.id);
@@ -485,15 +511,7 @@ async function blockArrivals(state, hits) {
  * @param {object} state
  */
 async function refundIdleBlocks(state) {
-  const combat = game.combats.get(state.combatId);
-  for (const crawler of idleBlockers(state)) {
-    const spent = crawler.blockSpent;
-    Object.assign(crawler, { blocked: false, blockRoll: null, blockSpent: null });
-    if (!spent || !combat) continue;
-    await refundAction(combat, spent.combatantId, spent.id);
-    state.spentActions = (state.spentActions ?? []).filter((s) => s.id !== spent.id);
-    state.blockUndo = true;
-  }
+  await refundIdle(state, idleBlockers(state), "blockSpent", { blocked: false, blockRoll: null, blockSpent: null });
 }
 
 /** A hit's block record: its Check, and the Shield and Rank it was made with. */
@@ -537,7 +555,6 @@ async function opPullArea(state, { tauntId }) {
   const pulled = [];
   const spared = new Set();
   for (const attackId of attackIds) {
-    const attack = state.attacks[attackId];
     const hits = hitList(state).filter((hit) => hit.attackId === attackId);
     const keep = hits.find((hit) => hit.targetUuid === taunt.byUuid) ?? hits[0];
     for (const hit of hits) {
@@ -547,22 +564,12 @@ async function opPullArea(state, { tauntId }) {
     }
     const wasElsewhere = keep.targetUuid !== taunt.byUuid;
     if (wasElsewhere) spared.add(keep.targetName);
-    const { row } = mobAttackRow({
-      id: keep.row.id, target: { uuid: taunt.byUuid, actor }, base: attack.mobBase, ownRows: attack.mobOwnRows ?? [], zone: "full",
-    });
-    Object.assign(keep, {
-      row, targetUuid: taunt.byUuid, targetName: taunt.byName, free: null, evade: null,
-      ...(wasElsewhere ? { tauntedBy: { uuid: taunt.byUuid, name: taunt.byName } } : {}),
-    });
-    taunt.pulled.push(keep.id);
+    pullHit(state, taunt, actor, keep, { zone: "full", tauntedBy: wasElsewhere });
     pulled.push(keep);
   }
   taunt.areaPulled = true;
   taunt.spared = [...spared].filter((name) => name !== taunt.byName);
-  const free = pulled.filter((hit) => (hit.row.freeEvade || taunt.rank >= 5) && hitEvadable(hit));
-  await rollFreeEvades(state, free, { advantage: taunt.rank >= 15 ? "advantage" : "normal" });
-  await evadeArrivals(state, pulled);
-  await refundIdleEvades(state);
+  await afterPull(state, taunt, pulled, { blocks: false });
   return true;
 }
 
@@ -663,11 +670,7 @@ async function opReroll(state, { ref, naturalRoll, total, roll, breakdown }, own
   const check = checkAt(state, ref);
   const wasSuccess = check.success;
   const wasDegree = check.degree;
-  check.aiRerolled = { natural: check.natural, base: check.base, breakdown: check.breakdown, roll: check.roll };
-  Object.assign(check, {
-    natural: naturalRoll ?? null, base: Number(total) || 0, roll: roll ?? null,
-    breakdown: String(breakdown ?? ""),
-  });
+  applyAiReroll(check, { natural: naturalRoll, total, roll, breakdown });
   gradeCheck(check);
   await afterCheckChanged(state, entry, check, wasSuccess, wasDegree);
   return true;

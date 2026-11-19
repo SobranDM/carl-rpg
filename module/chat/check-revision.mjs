@@ -150,17 +150,16 @@ export function cardFight(spec) {
 
 /**
  * Whether an Intervene can still change this card: a crawler's Check (not a
- * Stat Check, p.82), rolled in a fight that's still on that round, not a
- * Natural 1 or 20 (their result is fixed), and still open (`cardOpen`: an
- * Attack not acted on, a row's Evade whose row isn't applied, a Driving
- * result not used).
+ * Stat Check, p.82), rolled in a fight that's still on that round, and
+ * still open (`cardOpen`: an Attack not acted on, a row's Evade whose row
+ * isn't applied, a Driving result not used). Its natural d20 doesn't matter
+ * - Intervene adds 1d6 to the result (ruled 2026-11-19).
  * @param {ChatMessage} message
  * @returns {boolean}
  */
 export function interveneOpen(message) {
   const spec = specOf(message);
   if (!spec || spec.variant === "stat") return false;
-  if (spec.natural === 1 || spec.natural === 20) return false;
   if (!cardFight(spec)) return false;
   return cardOpen(message);
 }
@@ -174,9 +173,21 @@ export function interveneOpen(message) {
  */
 export function interveners(message, user = game.user) {
   const spec = specOf(message);
-  const combat = cardFight(spec);
+  return fightHelpers(cardFight(spec), spec?.actorUuid, user);
+}
+
+/**
+ * The crawlers in a fight who could help whoever rolled a Check (p.82:
+ * "another crawler"): each once, not the roller, and only those this user
+ * owns (any, for the GM).
+ * @param {Combat|null} combat  The Check's fight (cardFight).
+ * @param {string} rollerUuid
+ * @param {User} user
+ * @returns {Actor[]}
+ */
+export function fightHelpers(combat, rollerUuid, user) {
   if (!combat) return [];
-  const roller = actorFromUuid(spec.actorUuid);
+  const roller = actorFromUuid(rollerUuid);
   const seen = new Set();
   return combat.combatants.map((c) => c.actor).filter((actor) => {
     if (!actor || !isCrawler(actor) || actor === roller || seen.has(actor.uuid)) return false;
@@ -251,12 +262,26 @@ async function pickIntervener(list) {
  * @returns {Promise<boolean>}
  */
 export async function intervene(message, { intervener = null, roll = null } = {}) {
-  if (!interveneOpen(message)) {
-    // A card not redrawn since it closed (its round ended, say).
+  return sendIntervention(message, interveneOpen(message), () => interveners(message), {}, { intervener, roll });
+}
+
+/**
+ * Intervene on a card or one row's Check: pick who (when not preset), roll
+ * their d6 (shown), and send it to the GM. A card not redrawn since it
+ * closed (its round ended, say) is refused.
+ * @param {ChatMessage} message
+ * @param {boolean} open  Whether it can still be Intervened on.
+ * @param {() => Actor[]} helpers  Who could Intervene.
+ * @param {object} where  Added to the payload ({rowId, which} for a row).
+ * @param {{intervener: Actor|null, roll: Roll|null}} preset
+ * @returns {Promise<boolean>}
+ */
+async function sendIntervention(message, open, helpers, where, { intervener, roll }) {
+  if (!open) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Intervene.Closed"));
     return false;
   }
-  const who = intervener ?? await pickIntervener(interveners(message));
+  const who = intervener ?? await pickIntervener(helpers());
   if (!who || !canAct(who, "other")) return false;
   if (!game.users.activeGM) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
@@ -264,7 +289,7 @@ export async function intervene(message, { intervener = null, roll = null } = {}
   }
   const d6 = roll ?? await new Roll("1d6").evaluate();
   if (game.dice3d && !roll) await game.dice3d.showForRoll(d6, game.user, true);
-  return sendRevision(message, "intervene", { byUuid: who.uuid, byName: who.name, value: d6.total, roll: d6.toJSON() });
+  return sendRevision(message, "intervene", { ...where, byUuid: who.uuid, byName: who.name, value: d6.total, roll: d6.toJSON() });
 }
 
 function onIntervene(event, message) {
@@ -283,19 +308,8 @@ function onIntervene(event, message) {
  * @returns {Promise<boolean>}
  */
 export async function interveneRow(message, rowId, which, { intervener = null, roll = null } = {}) {
-  if (!rowInterveneOpen(message, rowId, which)) {
-    ui.notifications.warn(game.i18n.localize("CARLRPG.Intervene.Closed"));
-    return false;
-  }
-  const who = intervener ?? await pickIntervener(rowInterveners(message, rowId, which));
-  if (!who || !canAct(who, "other")) return false;
-  if (!game.users.activeGM) {
-    ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
-    return false;
-  }
-  const d6 = roll ?? await new Roll("1d6").evaluate();
-  if (game.dice3d && !roll) await game.dice3d.showForRoll(d6, game.user, true);
-  return sendRevision(message, "intervene", { rowId, which, byUuid: who.uuid, byName: who.name, value: d6.total, roll: d6.toJSON() });
+  return sendIntervention(message, rowInterveneOpen(message, rowId, which), () => rowInterveners(message, rowId, which),
+    { rowId, which }, { intervener, roll });
 }
 
 /** Registry entry for module/chat/chat-listener.mjs (drawn by decorateIntervene). */
@@ -374,22 +388,20 @@ function tellRefused(user, op, result) {
 
 async function reviseNow(cardId, op, data, user) {
   const message = game.messages.get(cardId);
-  if (data?.rowId) return reviseRowNow(message, op, data, user);
-  const kind = kindOf(message);
-  if (!kind) return false;
-  const spec = specOf(message);
-  let interventions = [...interventionsOf(message)];
+  const target = revisionTarget(message, data);
+  if (!target) return false;
+  let interventions = [...target.interventions];
   let reroll = null;
   let pay = null;
   let source = null;
 
   switch (op) {
     case "intervene": {
-      if (!interveneOpen(message)) return false;
+      if (!target.interveneOpen()) return false;
       const actor = actorFromUuid(data.byUuid);
       const value = Math.trunc(Number(data.value));
       if (!actor || !(value >= 1 && value <= 6)) return false;
-      if (!interveners(message, user).includes(actor)) return false;
+      if (!target.interveners(user).includes(actor)) return false;
       const entry = { id: foundry.utils.randomID(), byUuid: actor.uuid, byName: String(data.byName ?? actor.name), value, roll: data.roll ?? null };
       interventions.push(entry);
       pay = { actor, entry };
@@ -403,31 +415,33 @@ async function reviseNow(cardId, op, data, user) {
       break;
     }
     case "reroll": {
-      // The source must still be one this user has (rerollSources checks the
-      // card is open, and the AI Favor or Fuzzy Dice is there to spend).
-      source = rerollSources(message, user).find((s) => s.key === (data.source ?? "favor"));
+      // The source must still be one this user has (the sources check the
+      // Check is open, and the AI Favor or Fuzzy Dice is there to spend).
+      source = target.rerollSources(user).find((s) => s.key === (data.source ?? "favor"));
       if (!source) return false;
-      reroll = { natural: Number(data.natural), total: Number(data.total), roll: data.roll, source: source.key };
+      reroll = target.rerollOf(data, source);
       break;
     }
     default:
       return false;
   }
 
-  const parts = await KINDS[kind].revise(message, { interventions, reroll });
-  if (!parts) {
+  const revised = await target.revise({ interventions, reroll });
+  if (!revised) {
     tellUser(user, "CARLRPG.Reroll.Missing");
     return TOLD;
   }
   // Re-checked now its new parts are ready: something done meanwhile (a
   // row applied) closes it. Undoing a d6 was checked by its undo.
-  if (op !== "unintervene" && !cardOpen(message)) return false;
-  // The intervener's Action, now the card is ready to change: refused with
+  if (op !== "unintervene" && !target.stillOpen()) return false;
+  // The intervener's Action, now the Check is ready to change: refused with
   // none left. Undoing it takes this d6 back off (helpers/action-undo.mjs).
   if (pay) {
-    const roller = actorFromUuid(spec.actorUuid);
+    const roller = actorFromUuid(target.rollerUuid);
     const label = game.i18n.format("CARLRPG.Actions.Label.Intervene", { name: roller?.name ?? "?" });
-    const { paid } = await payAction(pay.actor, "other", label, { undo: [{ t: "intervene", messageId: cardId, id: pay.entry.id }], user });
+    const { paid } = await payAction(pay.actor, "other", label, {
+      undo: [{ t: "intervene", messageId: cardId, id: pay.entry.id, ...target.undoWhere }], user,
+    });
     if (!paid) return TOLD;
   }
   // What a reroll costs: 1 AI Favor (p.61), or the vehicle's Fuzzy Dice for
@@ -437,74 +451,57 @@ async function reviseNow(cardId, op, data, user) {
   } else if (source?.key === "fuzzyDice") {
     if (!await updateVehicle(source.vehicle, { "system.upgrades.fuzzyDice.usedFloor": currentFloor() })) return false;
   }
-  await writeCard(message, parts);
-  if (parts.after) await parts.after();
+  await revised.write();
   return true;
 }
 
 /**
- * A revision of the Evade on an Attack card's row (module/chat/row-evade.mjs):
- * an Intervene, its undo, or an AI Reroll - only that row is written.
- * @param {ChatMessage|undefined} message  The Attack card.
- * @param {"intervene"|"reroll"|"unintervene"} op
- * @param {{rowId: string, which: "free"|"evade"}} data
- * @param {User} user
- * @returns {Promise<boolean>}
+ * Where a revision lands, and what it reads there: a whole Check, Attack or
+ * Driving card, or - `data.rowId` - the Evade (or free Evade) on one row of
+ * an Attack card (module/chat/row-evade.mjs), of which only that row is
+ * written.
+ * @param {ChatMessage|undefined} message
+ * @param {{rowId?: string, which?: "free"|"evade"}} data
+ * @returns {object|null}  null if there's nothing to revise.
  */
-async function reviseRowNow(message, op, data, user) {
-  const { rowId, which } = data;
-  const check = rowCheck(rowAt(message, rowId), which);
-  if (!check) return false;
-  let interventions = [...(check.interventions ?? [])];
-  let reroll = null;
-  let pay = null;
-  let source = null;
-  switch (op) {
-    case "intervene": {
-      if (!rowInterveneOpen(message, rowId, which)) return false;
-      const actor = actorFromUuid(data.byUuid);
-      const value = Math.trunc(Number(data.value));
-      if (!actor || !(value >= 1 && value <= 6)) return false;
-      if (!rowInterveners(message, rowId, which, user).includes(actor)) return false;
-      const entry = { id: foundry.utils.randomID(), byUuid: actor.uuid, byName: String(data.byName ?? actor.name), value, roll: data.roll ?? null };
-      interventions.push(entry);
-      pay = { actor, entry };
-      break;
-    }
-    case "unintervene": {
-      if (!user.isGM) return false;
-      const kept = interventions.filter((i) => i.id !== data.id);
-      if (kept.length === interventions.length) return false;
-      interventions = kept;
-      break;
-    }
-    case "reroll": {
-      source = rowRerollSources(message, rowId, which, user).find((s) => s.key === (data.source ?? "favor"));
-      if (!source) return false;
-      reroll = { natural: Number(data.natural), total: Number(data.total), roll: data.roll ?? null, breakdown: data.breakdown };
-      break;
-    }
-    default:
-      return false;
+function revisionTarget(message, data) {
+  if (data?.rowId) {
+    const { rowId, which } = data;
+    const check = rowCheck(rowAt(message, rowId), which);
+    if (!check) return null;
+    return {
+      interventions: check.interventions ?? [],
+      rollerUuid: check.actorUuid,
+      undoWhere: { rowId, which },
+      interveneOpen: () => rowInterveneOpen(message, rowId, which),
+      interveners: (user) => rowInterveners(message, rowId, which, user),
+      rerollSources: (user) => rowRerollSources(message, rowId, which, user),
+      rerollOf: (d) => ({ natural: Number(d.natural), total: Number(d.total), roll: d.roll ?? null, breakdown: d.breakdown }),
+      revise: (change) => reviseRow(message, rowId, which, change),
+      stillOpen: () => rowCheckOpen(message, rowId, which),
+    };
   }
-  const revised = await reviseRow(message, rowId, which, { interventions, reroll });
-  if (!revised) {
-    tellUser(user, "CARLRPG.Reroll.Missing");
-    return TOLD;
-  }
-  // Re-checked now: something done meanwhile (the row applied) closes it.
-  if (op !== "unintervene" && !rowCheckOpen(message, rowId, which)) return false;
-  if (pay) {
-    const roller = actorFromUuid(check.actorUuid);
-    const label = game.i18n.format("CARLRPG.Actions.Label.Intervene", { name: roller?.name ?? "?" });
-    const { paid } = await payAction(pay.actor, "other", label, {
-      undo: [{ t: "intervene", messageId: message.id, id: pay.entry.id, rowId, which }], user,
-    });
-    if (!paid) return TOLD;
-  }
-  if (source?.key === "favor" && !(await spendAiFavor(source.actor))) return false;
-  await revised.write();
-  return true;
+  const kind = kindOf(message);
+  if (!kind) return null;
+  return {
+    interventions: interventionsOf(message),
+    rollerUuid: specOf(message).actorUuid,
+    undoWhere: {},
+    interveneOpen: () => interveneOpen(message),
+    interveners: (user) => interveners(message, user),
+    rerollSources: (user) => rerollSources(message, user),
+    rerollOf: (d, source) => ({ natural: Number(d.natural), total: Number(d.total), roll: d.roll, source: source.key }),
+    revise: async (change) => {
+      const parts = await KINDS[kind].revise(message, change);
+      return parts && {
+        write: async () => {
+          await writeCard(message, parts);
+          if (parts.after) await parts.after();
+        },
+      };
+    },
+    stillOpen: () => cardOpen(message),
+  };
 }
 
 /**

@@ -67,6 +67,19 @@ export function makeCheck(kind, result) {
 }
 
 /**
+ * Put an AI Reroll's new d20 on a Check (p.61), keeping what it replaced
+ * (`aiRerolled`, which also marks it rerolled). Re-grade it after.
+ * @param {object} check
+ * @param {{natural: number|null, total: number, roll: object|null, breakdown: string}} reroll
+ */
+export function applyAiReroll(check, { natural, total, roll, breakdown }) {
+  check.aiRerolled = { natural: check.natural, base: check.base, breakdown: check.breakdown, roll: check.roll };
+  Object.assign(check, {
+    natural: natural ?? null, base: Number(total) || 0, roll: roll ?? null, breakdown: String(breakdown ?? ""),
+  });
+}
+
+/**
  * Recompute a Check's total (rolled total + Intervene d6s) and its degree.
  * @param {object} check
  * @returns {object} The same check, updated.
@@ -210,10 +223,23 @@ export function evadableHitsFor(state, uuid) {
  * @returns {object[]}
  */
 export function pullableHits(state, mobUuid, taunterUuid) {
+  return redirectableHits(state, taunterUuid).filter((hit) => state.attacks[hit.attackId].mobUuid === mobUuid);
+}
+
+/**
+ * Single-target hits still landing on another crawler that someone could
+ * take onto themselves (a Taunt's pull, a Catch): not an Area Attack, not
+ * on `takerUuid` already, on a crawler, not Caught, not missed and not
+ * Evaded.
+ * @param {object} state
+ * @param {string} takerUuid
+ * @returns {object[]}
+ */
+function redirectableHits(state, takerUuid) {
   return hitList(state).filter((hit) => {
     const attack = state.attacks?.[hit.attackId];
-    return attack?.mobUuid === mobUuid && !attack.isArea && hit.targetUuid !== taunterUuid
-      && !hit.caughtBy && !hitMissed(hit) && !hit.evade?.success && !!hit.row?.isCharacter;
+    return !!attack && !attack.isArea && hit.targetUuid !== takerUuid && !!hit.row?.isCharacter
+      && !hit.caughtBy && !hitMissed(hit) && !hit.evade?.success;
   });
 }
 
@@ -260,11 +286,7 @@ export function tauntableMobs(state, taunterUuid) {
  * @returns {object[]}
  */
 export function catchableHits(state, catcherUuid) {
-  return hitList(state).filter((hit) => {
-    const attack = state.attacks?.[hit.attackId];
-    return attack && !attack.isArea && hit.targetUuid !== catcherUuid && !!hit.row?.isCharacter
-      && !hit.caughtBy && !hitMissed(hit) && !hit.evade?.success;
-  });
+  return redirectableHits(state, catcherUuid);
 }
 
 /**
@@ -470,8 +492,20 @@ export function sectionCounts(state, section) {
  * @returns {object[]}  Their `crawlers` entries.
  */
 export function idleEvaders(state) {
-  return Object.values(state?.crawlers ?? {}).filter((crawler) => crawler.evaded
-    && !hitList(state).some((hit) => hit.targetUuid === crawler.uuid && hit.evade));
+  return idleDefenders(state, "evaded", "evade");
+}
+
+/**
+ * The crawlers who made a defence this round (`made`: "evaded"/"blocked")
+ * that no longer covers any hit on them (none still carries its `check`).
+ * @param {object} state
+ * @param {string} made
+ * @param {string} check
+ * @returns {object[]}  Their `crawlers` entries.
+ */
+function idleDefenders(state, made, check) {
+  return Object.values(state?.crawlers ?? {}).filter((crawler) => crawler[made]
+    && !hitList(state).some((hit) => hit.targetUuid === crawler.uuid && hit[check]));
 }
 
 /**
@@ -481,8 +515,7 @@ export function idleEvaders(state) {
  * @returns {object[]}  Their `crawlers` entries.
  */
 export function idleBlockers(state) {
-  return Object.values(state?.crawlers ?? {}).filter((crawler) => crawler.blocked
-    && !hitList(state).some((hit) => hit.targetUuid === crawler.uuid && hit.block));
+  return idleDefenders(state, "blocked", "block");
 }
 
 /**
