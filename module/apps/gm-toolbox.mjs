@@ -629,11 +629,11 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoCharacters"));
       return;
     }
-    const actorOptions = actors.map((a) => `<option value="${a.id}">${a.name}</option>`).join("");
+    const actorOptions = actors.map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join("");
     const actorResult = await showCarlDialog({
       title: game.i18n.localize("CARLRPG.Toolbox.GrindTitle"),
       content: `<div class="carl-dialog-body">
-        <div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.GrindActor")}</label>
+        <div class="form-group"><label>${esc(game.i18n.localize("CARLRPG.Toolbox.GrindActor"))}</label>
           <select name="actorId">${actorOptions}</select></div>
         <div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.GrindHours")}</label>
           <input type="number" name="hours" value="1" min="1" /></div>
