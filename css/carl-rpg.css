@@ -4350,3 +4350,18 @@
   font-size: 10px;
   opacity: 0.8;
 }
+
+/* An item's description as its Foundry tooltip (the itemTooltip helper).
+   The tooltip lives on <body>, outside any sheet. */
+#tooltip.carl-item-tooltip {
+  max-width: 360px;
+  max-height: 50vh;
+  overflow: hidden;
+  text-align: left;
+}
+#tooltip.carl-item-tooltip p {
+  margin: 0 0 0.4em;
+}
+#tooltip.carl-item-tooltip p:last-child {
+  margin-bottom: 0;
+}

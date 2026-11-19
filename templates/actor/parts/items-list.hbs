@@ -27,7 +27,7 @@
             <img src="{{item.img}}" title="{{item.name}}" width="24" height="24" />
           </a>
         </div>
-        <h4>{{item.name}}</h4>
+        <h4{{itemTooltip (lookup @root.itemTooltips item.id)}}>{{item.name}}</h4>
       </div>
       <div class="item-prop">{{item.system.quantity}}</div>
       <div class="item-prop">{{item.system.weight}}</div>
@@ -71,7 +71,7 @@
       <legend>{{localize "CARLRPG.Item.Equipped"}}</legend>
       <div class="carl-gear-grid">
         {{#each equipSlots.gear as |slot|}}
-        <div class="carl-equip-slot carl-gear-slot{{#if slot.name}} filled{{/if}}" style="grid-area: {{slot.key}}" data-slot-type="gear" data-slot-key="{{slot.key}}"{{#if slot.itemId}} data-item-id="{{slot.itemId}}"{{/if}} title="{{#if slot.name}}{{slot.name}}{{else}}{{localize slot.label}}{{/if}}">
+        <div class="carl-equip-slot carl-gear-slot{{#if slot.name}} filled{{/if}}" style="grid-area: {{slot.key}}" data-slot-type="gear" data-slot-key="{{slot.key}}"{{#if slot.itemId}} data-item-id="{{slot.itemId}}"{{/if}}{{#if slot.itemId}}{{itemTooltip (lookup @root.itemTooltips slot.itemId)}}{{else}} data-tooltip-text="{{localize slot.label}}"{{/if}}>
           {{#if slot.img}}<img src="{{slot.img}}" alt="" />{{else}}<span class="carl-gear-icon" style="mask-image: url('{{slot.icon}}')"></span>{{/if}}
           <span class="carl-equip-slot-name">{{#if slot.name}}{{slot.name}}{{else}}{{localize slot.label}}{{/if}}</span>
           {{#if slot.itemId}}
@@ -89,7 +89,7 @@
       </div>
       <div class="carl-accessory-slots">
         {{#each equipSlots.accessories as |slot|}}
-        <div class="carl-equip-slot carl-gear-slot filled" data-slot-type="accessory" data-slot-key="{{slot.index}}"{{#if slot.itemId}} data-item-id="{{slot.itemId}}"{{/if}} title="{{slot.name}}">
+        <div class="carl-equip-slot carl-gear-slot filled" data-slot-type="accessory" data-slot-key="{{slot.index}}"{{#if slot.itemId}} data-item-id="{{slot.itemId}}"{{/if}}{{itemTooltip (lookup @root.itemTooltips slot.itemId)}}>
           {{#if slot.img}}<img src="{{slot.img}}" alt="" />{{else}}<span class="carl-gear-icon" style="mask-image: url('{{@root.config.accessoryIcon}}')"></span>{{/if}}
           <span class="carl-equip-slot-name">{{slot.name}}</span>
           {{#if slot.itemId}}

@@ -8,6 +8,7 @@ import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-array
 import { isConsumable, isShield, isTwoHanded, isWeapon, slotsOf } from '../helpers/gear.mjs';
 import { effectiveRank, shieldDrState } from '../helpers/modifiers.mjs';
 import { repairShield } from '../helpers/shield-block.mjs';
+import { enrichDescription } from "../helpers/rich-text.mjs";
 
 const ATTRIBUTES_TEMPLATES = {
   item: 'systems/carl-rpg/templates/item/parts/attributes-item.hbs',
@@ -300,10 +301,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // Retrieve the roll data for TinyMCE editors.
     context.rollData = item.getRollData();
 
-    context.descriptionHTML = await foundry.applications.ux.TextEditor.implementation.enrichHTML(
-      item.system.description ?? "",
-      { relativeTo: item, secrets: item.isOwner, rollData: context.rollData }
-    );
+    context.descriptionHTML = await enrichDescription(item.system.description, item, { rollData: context.rollData });
 
     return context;
   }

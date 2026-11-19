@@ -52,3 +52,15 @@
   @include mob-attacks.styles;
   @include item-sheet.styles;
 }
+
+/* An item's description as its Foundry tooltip (the itemTooltip helper).
+   The tooltip lives on <body>, outside any sheet. */
+#tooltip.carl-item-tooltip {
+  max-width: 360px;
+  max-height: 50vh;
+  overflow: hidden;
+  text-align: left;
+
+  p { margin: 0 0 0.4em; }
+  p:last-child { margin-bottom: 0; }
+}

@@ -8,6 +8,7 @@ import {
   rerollLootItem,
   takeLootItem,
 } from "../helpers/loot-box.mjs";
+import { enrichDescription } from "../helpers/rich-text.mjs";
 
 /**
  * Loot Box sheet: pick a tier, roll loot (GM), take items out (everyone).
@@ -47,7 +48,6 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const actor = this.actor;
-    const TextEditor = foundry.applications.ux.TextEditor.implementation;
 
     context.actor = actor;
     context.system = actor.system;
@@ -69,17 +69,11 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
         name: item.name,
         img: item.img || Item.DEFAULT_ICON,
         tierLabel: CONFIG.CARLRPG.lootBoxTiers[item.getFlag("carl-rpg", "lootTier")]?.label ?? "",
-        descriptionHTML: await TextEditor.enrichHTML(item.system.description ?? "", {
-          relativeTo: item,
-          secrets: game.user.isGM,
-        }),
+        descriptionHTML: await enrichDescription(item.system.description, item),
       })),
     );
 
-    context.descriptionHTML = await TextEditor.enrichHTML(actor.system.description ?? "", {
-      relativeTo: actor,
-      secrets: actor.isOwner,
-    });
+    context.descriptionHTML = await enrichDescription(actor.system.description, actor);
 
     return context;
   }

@@ -62,3 +62,38 @@ export const STORY_SECTIONS = [
 export function storyToHtml(parts) {
   return headedSectionsToHtml(STORY_SECTIONS.map((s) => ({ ...s, text: parts?.[s.field] ?? "" })));
 }
+
+/**
+ * A document's rich text as its own sheet shows it: links and inline rolls
+ * drawn relative to it, with its roll data (an item's includes its actor's -
+ * documents/item.mjs getRollData), GM Secret blocks only for its owner.
+ * An item's description is enriched against the item wherever it shows
+ * (ruled 2026-11-19).
+ * @param {string} html
+ * @param {foundry.abstract.Document} doc
+ * @param {{rollData?: object}} [options]  Roll data already worked out.
+ * @returns {Promise<string>}
+ */
+export function enrichDescription(html, doc, { rollData } = {}) {
+  return foundry.applications.ux.TextEditor.implementation.enrichHTML(html ?? "", {
+    relativeTo: doc, secrets: !!doc?.isOwner, rollData: rollData ?? doc?.getRollData?.() ?? {},
+  });
+}
+
+/**
+ * Each item's description, as the tooltip shown on hovering it (the
+ * `itemTooltip` Handlebars helper; ruled 2026-11-19: the description only).
+ * Plain HTML is used as it is; one with links, inline rolls or GM Secrets is
+ * enriched first (enrichDescription).
+ * @param {Iterable<Item>} items
+ * @returns {Promise<Record<string, string>>}  HTML by item id; none without a description.
+ */
+export async function itemTooltips(items) {
+  const out = {};
+  await Promise.all([...items].map(async (item) => {
+    const html = String(item.system?.description ?? "").trim();
+    if (!html) return;
+    out[item.id] = /@|\[\[|secret/.test(html) ? await enrichDescription(html, item) : html;
+  }));
+  return out;
+}

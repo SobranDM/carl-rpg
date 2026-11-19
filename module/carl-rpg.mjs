@@ -358,6 +358,11 @@ Handlebars.registerHelper('debuffEffectHint', function (debuffs, key, isMob) {
 // The item sheets' compact Bonus and Debuff rows (module/helpers/sheet-rows.mjs;
 // docs/skill-item-sheets.md): each row's summary line, from the entry.
 Handlebars.registerHelper('changeLine', (change) => new Handlebars.SafeString(changeLineHtml(change)));
+// An item's description as its Foundry tooltip (helpers/rich-text.mjs
+// itemTooltips): the attributes, or nothing for an item without one.
+Handlebars.registerHelper('itemTooltip', (html) => (html
+  ? new Handlebars.SafeString(` data-tooltip-html="${foundry.utils.escapeHTML(String(html))}" data-tooltip-class="carl-item-tooltip"`)
+  : ""));
 Handlebars.registerHelper('debuffLine', (te) => new Handlebars.SafeString(debuffLineHtml(te)));
 
 Handlebars.registerHelper('changeModeChoices', function (allModes, modesByTarget, targetType, itemType) {

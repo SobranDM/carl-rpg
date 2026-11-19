@@ -45,6 +45,7 @@ import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-array
 import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
 import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
 import { currentFloor } from "../helpers/floor.mjs";
+import { enrichDescription, itemTooltips } from "../helpers/rich-text.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -501,11 +502,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Add roll data for TinyMCE editors.
     context.rollData = actor.getRollData();
 
-    const enrich = (html) => foundry.applications.ux.TextEditor.implementation.enrichHTML(
-      html ?? "",
-      { relativeTo: actor, secrets: actor.isOwner, rollData: context.rollData },
-    );
+    const enrich = (html) => enrichDescription(html, actor, { rollData: context.rollData });
     context.biographyHTML = await enrich(actor.system.biography);
+    context.itemTooltips = await itemTooltips(actor.items);
     context.drawerHTML = await this.#prepareDrawerDescriptions(context);
     if (context.isMob) {
       context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);
@@ -530,10 +529,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   async #prepareDrawerDescriptions(context) {
     const open = [...(context.skills ?? []), ...(context.spells ?? [])]
       .filter((item) => item.system.detailsExpanded && item.system.description);
-    const html = await Promise.all(open.map((item) => foundry.applications.ux.TextEditor.implementation.enrichHTML(
-      item.system.description,
-      { relativeTo: item, secrets: item.isOwner, rollData: item.getRollData() },
-    )));
+    const html = await Promise.all(open.map((item) => enrichDescription(item.system.description, item)));
     return Object.fromEntries(open.map((item, i) => [item.id, html[i]]));
   }
 
@@ -631,7 +627,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       active: activeIds.has(item.id),
       expanded: sys.uiState[`${item.type}Expanded`] ?? true,
       togglePath: `system.uiState.${item.type}Expanded`,
-      html: await enrich(item.system.description),
+      html: await enrichDescription(item.system.description, item),
     })));
 
     // A tiered feature is one of the deity's church benefits. One that
@@ -1198,7 +1194,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
           label: te.label || game.i18n.localize(debuffs[te.debuffKey]?.label ?? te.debuffKey),
           when: `CARLRPG.MobAttack.TriggerShort.${te.trigger || "hit"}`,
         })),
-        descriptionHTML: await enrich(sys.description),
+        descriptionHTML: await enrichDescription(sys.description, item),
       };
     }));
   }

@@ -30,7 +30,7 @@
       </div>
       <a class="carl-item-name-toggle" data-action="toggleDrawer" data-scope="item" data-path="system.detailsExpanded"
         title="{{localize 'CARLRPG.Ranked.ToggleDetails'}}">
-        <h4>{{item.name}}{{#if item.system.active}} <i class="fas fa-bolt carl-spell-active-indicator" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}</h4>
+        <h4{{itemTooltip (lookup @root.itemTooltips item.id)}}>{{item.name}}{{#if item.system.active}} <i class="fas fa-bolt carl-spell-active-indicator" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}</h4>
       </a>
       {{cooldownChip item}}
     </div>
