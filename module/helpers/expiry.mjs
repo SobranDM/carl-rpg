@@ -15,8 +15,10 @@
  */
 import { queueForActor } from "./actor-queue.mjs";
 import { removeConditionsById } from "./conditions.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { expireSpellTimers, hasSpellTimers, spellEndedLines } from "./spell-timers.mjs";
+import { gmUserIds } from "./ownership.mjs";
+import { esc } from "./html.mjs";
 
 /**
  * Ids of the condition entries that have run out by `worldTime`.
@@ -141,7 +143,7 @@ export function registerExpirySweep() {
       await createCardMessage({
         title: game.i18n.localize("CARLRPG.Consumable.ExpiredTitle"),
         body: `<ul class="carl-round-end-list">${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
-        whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+        whisper: gmUserIds(),
       });
     }
   });

@@ -1,5 +1,5 @@
 import CarlRPGActorBase from "./actor-base.mjs";
-import { staticEvade } from "../helpers/rules.mjs";
+import { opposedDifficulty, staticEvade } from "../helpers/rules.mjs";
 import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
 import {
@@ -137,7 +137,7 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // a Surprise check) gets made. *DebuffDelta lets the sheet flag a
     // debuffed value.
     const evade = resolveDifficultyRows(staticEvade(this), collectDebuffRows(this, "evade", { ownAction: false }));
-    const surprise = resolveDifficultyRows(10 + (this.stats.int?.mod ?? 0), collectDebuffRows(this, "check", { ownAction: false }));
+    const surprise = resolveDifficultyRows(opposedDifficulty(this.stats.int?.mod, 0), collectDebuffRows(this, "check", { ownAction: false }));
     this.evadeBase = evade.difficulty;
     this.evadeDebuffDelta = evade.delta;
     this.surpriseBase = surprise.difficulty;

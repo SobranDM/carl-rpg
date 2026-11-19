@@ -14,7 +14,7 @@ import { useConsumable } from "../../helpers/consumables.mjs";
 import { currentPhase } from "../../helpers/combat-phases.mjs";
 import { declaredAttacks, removeDeclaration } from "../../helpers/declarations.mjs";
 import { placeInHotlist, useHotlistSlot } from "../../helpers/hotlist.mjs";
-import { applyOp, reactionCardFor, rollTaunt, withCard } from "../../chat/reaction-card.mjs";
+import { applyOp, reactionCardFor, rollTaunt } from "../../chat/reaction-card.mjs";
 import { runRecords } from "../../helpers/action-undo.mjs";
 import { hitList } from "../../helpers/reaction-state.mjs";
 import {
@@ -32,6 +32,7 @@ import {
   withDialog,
   withFakeTargets,
 } from "../helpers.mjs";
+import { queueForCard as withCard } from "../../helpers/actor-queue.mjs";
 
 /** An unstarted combat with these actors as combatants. */
 async function combatOf(...actors) {

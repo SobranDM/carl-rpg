@@ -31,20 +31,23 @@
  * anything still unrolled first.
  */
 import { RollParts } from "../dice/roll-parts.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { applyDamageWithResult } from "../chat/damage-card.mjs";
 import { blockedDamage } from "./damage-pipeline.mjs";
 import { blockReduction, damageShield, shieldLossFor } from "./shield-block.mjs";
 import { landDebuffs } from "./land-debuffs.mjs";
 import { resolveTargetEffectLabel } from "./conditions.mjs";
 import { debuffLandsOn } from "./modifiers.mjs";
-import { actorFor, attackDetails, attackLine, reactionCardFor, withCard, writeState } from "../chat/reaction-card.mjs";
+import { attackDetails, attackLine, reactionCardFor, writeState } from "../chat/reaction-card.mjs";
 import { headerProgress, rememberOpenRows, statusChip, statusRow, statusSection } from "../chat/status-rows.mjs";
 import { rowOutcome } from "./attack-targets.mjs";
 import { vehicleSeatOf } from "./vehicle-state.mjs";
 import { decidingEvade, hitList, nearMissOnVehicle, unevadedNames } from "./reaction-state.mjs";
 import { setPhase } from "./combat-phases.mjs";
 import { ownedSkill } from "./modifiers.mjs";
+import { queueForCard } from "./actor-queue.mjs";
+import { esc } from "./html.mjs";
+import { actorFromUuid } from "./token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG = "reactionDamage";
@@ -79,7 +82,7 @@ export async function lockResults(combat) {
   }
 
   // Locked through the card's queue, after any change still being applied.
-  const locked = await withCard(message.id, async () => {
+  const locked = await queueForCard(message.id, async () => {
     const current = foundry.utils.deepClone(message.getFlag(SCOPE, "reaction"));
     if (!current || current.locked) return null;
     current.locked = true;
@@ -161,7 +164,7 @@ export function buildDamageState(combat, state, { shields = {} } = {}) {
     const notes = [];
     if (hit.tauntedBy) tags.push({ key: "CARLRPG.Reaction.TauntedFrom", data: { name: hit.originalName } });
     if (hit.caughtBy) tags.push({ key: "CARLRPG.Reaction.CaughtFor", data: { name: hit.originalName } });
-    const catcher = hit.caughtBy ? actorFor(hit.caughtBy.uuid) : null;
+    const catcher = hit.caughtBy ? actorFromUuid(hit.caughtBy.uuid) : null;
     const extraDr = catcher ? catcherDr(catcher) : 0;
     if (extraDr) tags.push({ key: "CARLRPG.Resolve.CatcherDr", data: { dr: extraDr } });
     // "Ignore any Debuffs attached to this damage" (Catcher Rank 15, p.187).
@@ -183,7 +186,7 @@ export function buildDamageState(combat, state, { shields = {} } = {}) {
     let block = null;
     if (hit.block) {
       const blocked = hit.block.success && applyUuid === hit.targetUuid;
-      const reduction = blocked ? blockReduction(actorFor(hit.targetUuid), hit.block.rank ?? 0) : 0;
+      const reduction = blocked ? blockReduction(actorFromUuid(hit.targetUuid), hit.block.rank ?? 0) : 0;
       block = { success: blocked, degree: hit.block.degree, reduction };
       if (blocked) {
         tags.push(reduction
@@ -259,7 +262,7 @@ export function rowDebuffs(row, attack) {
  */
 function nearMissVehicle(attack, hit) {
   if (!attack || !nearMissOnVehicle(attack, hit, true)) return null;
-  const target = actorFor(hit.targetUuid);
+  const target = actorFromUuid(hit.targetUuid);
   return (target ? vehicleSeatOf(target) : null)?.vehicle ?? null;
 }
 
@@ -277,7 +280,7 @@ export async function damageBlockingShields(state) {
     if (!loss) continue;
     // A Near Miss that went to their vehicle: the block didn't happen (p.72).
     if (nearMissVehicle(state.attacks?.[hit.attackId], hit)) continue;
-    const hurt = await damageShield(actorFor(hit.targetUuid), hit.block.shieldId, loss);
+    const hurt = await damageShield(actorFromUuid(hit.targetUuid), hit.block.shieldId, loss);
     if (hurt) out[hit.id] = hurt;
   }
   return out;
@@ -323,7 +326,7 @@ export function unrolledAttacks(data) {
  * @returns {Promise<boolean>} Whether it rolled.
  */
 export function rollAttackOnCard(message, attackId) {
-  return withCard(message.id, async () => {
+  return queueForCard(message.id, async () => {
     if (!game.user.isGM) return false;
     const current = message.getFlag(SCOPE, FLAG);
     if (!current?.attacks?.[attackId] || current.attacks[attackId].rolled) return false;
@@ -342,7 +345,7 @@ export function rollAttackOnCard(message, attackId) {
       row.status = "rolled";
       const outcome = rowOutcome({ ...row.row, evade: row.evade }, { damageByType, isArea: attack.isArea, floor: attack.floor });
       const raw = Object.values(outcome.damage).reduce((sum, v) => sum + (v || 0), 0);
-      const actor = actorFor(row.applyUuid);
+      const actor = actorFromUuid(row.applyUuid);
       if (!actor) {
         row.result = { missing: true };
         continue;
@@ -394,7 +397,7 @@ export async function rollAllDamage(message) {
  * @returns {Promise<{roll: Roll, total: number, breakdown: string}|null>}
  */
 async function rollAttackDamage(attack) {
-  const mob = actorFor(attack.mobUuid);
+  const mob = actorFromUuid(attack.mobUuid);
   const data = { ...(mob?.getRollData() ?? {}) };
   data.floor ??= attack.floor;
   const parts = new RollParts(data);

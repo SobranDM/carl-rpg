@@ -14,6 +14,7 @@ import { addConditionToActor, resolveTargetEffectLabel } from "../helpers/condit
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { isImmuneToAllDamage } from "../helpers/damage-pipeline.mjs";
 import { takesConditions } from "../helpers/actor-kinds.mjs";
+import { ownsUuid } from "../helpers/token-resolution.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/target-effects-footer.hbs";
 
@@ -52,15 +53,7 @@ async function resolveTargetActor(uuid) {
 export function canApplyTargetEffects(message) {
   if (game.user.isGM) return true;
   const targetUuids = message.getFlag("carl-rpg", "targetUuids") ?? [];
-  return targetUuids.some((uuid) => {
-    try {
-      const doc = fromUuidSync(uuid);
-      const actor = doc instanceof Actor ? doc : doc?.actor;
-      return !!actor?.isOwner;
-    } catch (e) {
-      return false;
-    }
-  });
+  return targetUuids.some((uuid) => ownsUuid(uuid));
 }
 
 /**

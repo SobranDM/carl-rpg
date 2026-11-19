@@ -27,7 +27,7 @@
  *   overrides aren't visited (as in dnd5e and Draw Steel).
  */
 import { slugifySkillName } from "./modifiers.mjs";
-import { createNoticeMessage, esc } from "../chat/chat-card.mjs";
+import { createNoticeMessage } from "../chat/chat-card.mjs";
 import { tierRank } from "./worship.mjs";
 import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions } from "./companion-migration.mjs";
 import { LEGACY_FLAG, MOB_ATTACK_TYPE, attacksToCheck, convertLegacyAttacks } from "./mob-attacks.mjs";
@@ -39,6 +39,9 @@ import {
   isTwoHanded, isWeapon, slotsFromName,
 } from "./gear.mjs";
 import { freeSlotFor, isItemWorn, placeInFreeSlot } from "./equip-slots.mjs";
+import { PACKS, withUnlockedPack } from "./packs.mjs";
+import { gmUserIds } from "./ownership.mjs";
+import { esc } from "./html.mjs";
 
 const SCOPE = "carl-rpg";
 export const MIGRATION_SETTING = "completedMigrations";
@@ -1144,7 +1147,7 @@ function whisperGmList(key, lines) {
     title: game.i18n.localize(`CARLRPG.Migration.${key}.Title`),
     bodyHtml: `<p>${esc(game.i18n.localize(`CARLRPG.Migration.${key}.Body`))}</p>`
       + `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
-    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+    whisper: gmUserIds(),
   });
 }
 
@@ -1606,7 +1609,7 @@ export function whisperUnplacedGear(unplaced) {
   return createNoticeMessage({
     title: i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Title"),
     bodyHtml: `<p>${esc(i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Body"))}</p>${sections}`,
-    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+    whisper: gmUserIds(),
   });
 }
 
@@ -1630,7 +1633,7 @@ export function announceRemovedGear(removed) {
   return createNoticeMessage({
     title: game.i18n.localize("CARLRPG.Migration.GearSlots.Title"),
     bodyHtml: `<p>${esc(game.i18n.localize("CARLRPG.Migration.GearSlots.Body"))}</p>${sections}`,
-    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+    whisper: gmUserIds(),
   });
 }
 
@@ -1638,9 +1641,7 @@ export function announceRemovedGear(removed) {
 /*  0.7.0: Weapon Skills guessed from names           */
 /* -------------------------------------------------- */
 
-// The system's packs the guesses are read from (only read, never written).
-const GEAR_PACK = "carl-rpg.gear";
-const SKILLS_PACK = "carl-rpg.skills-and-spells";
+// The guesses are read from the system's Gear and Skills packs (only read, never written).
 
 /** How many this load's guess run filled in, for the notice (null: it didn't run this load). */
 let weaponSkillsFilled = null;
@@ -1687,8 +1688,8 @@ export async function loadWeaponSkillSources() {
   const gear = new Map();
   const notWeapons = new Set();
   const skills = new Map();
-  const missing = [GEAR_PACK, SKILLS_PACK].filter((id) => !game.packs.get(id));
-  const gearPack = game.packs.get(GEAR_PACK);
+  const missing = [PACKS.gear, PACKS.skillsAndSpells].filter((id) => !game.packs.get(id));
+  const gearPack = game.packs.get(PACKS.gear);
   for (const entry of (await gearPack?.getIndex({ fields: ["type", "system.weaponSkill", "system.consumable.kind"] })) ?? []) {
     const slug = nameSlug(entry.name);
     if (entry.type !== "item" || !slug) continue;
@@ -1699,7 +1700,7 @@ export async function loadWeaponSkillSources() {
     }
     gear.set(slug, gear.has(slug) && gear.get(slug) !== weaponSkill ? null : weaponSkill);
   }
-  const skillsPack = game.packs.get(SKILLS_PACK);
+  const skillsPack = game.packs.get(PACKS.skillsAndSpells);
   for (const entry of (await skillsPack?.getIndex({ fields: ["type", "system.category", "system.isHandToHand", "system.noWeapon"] })) ?? []) {
     if (isWieldedAttackSkill(entry)) skills.set(nameSlug(entry.name), entry.name);
   }
@@ -1944,20 +1945,9 @@ export async function postWeaponSkillNotice({ filled, remaining }) {
   const list = await createNoticeMessage({
     title: i18n.localize("CARLRPG.Migration.WeaponSkillLeft.Title"),
     bodyHtml: `<p>${esc(i18n.localize("CARLRPG.Migration.WeaponSkillLeft.Body"))}</p>${sections}`,
-    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+    whisper: gmUserIds(),
   });
   return { notice, list };
-}
-
-/** Run fn with a compendium unlocked, locked again after. */
-async function withUnlockedPack(pack, fn) {
-  const wasLocked = pack.locked;
-  if (wasLocked) await pack.configure({ locked: false });
-  try {
-    return await fn();
-  } finally {
-    if (wasLocked) await pack.configure({ locked: true });
-  }
 }
 
 /** One compendium: unlocked for the run, locked again after. */

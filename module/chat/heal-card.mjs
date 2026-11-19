@@ -23,7 +23,8 @@ import { shortRestUpdates, conditionsAfterRest, hbCeiling, restoreUpTo } from ".
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { askGM, registerAskHandler, updateCardMessage } from "../helpers/chat-socket.mjs";
 import { isVehicle } from "../helpers/actor-kinds.mjs";
-import { queueOn } from "../helpers/actor-queue.mjs";
+import { queueForCard } from "../helpers/actor-queue.mjs";
+import { ownsUuid } from "../helpers/token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/heal-footer.hbs";
@@ -64,18 +65,6 @@ async function resolveHealActor(uuid) {
   return doc instanceof Actor ? doc : (doc.actor ?? null);
 }
 
-/** Whether a user (this one by default) owns the actor behind a token/actor uuid (a GM always does). */
-function ownsUuid(uuid, user = game.user) {
-  if (user.isGM) return true;
-  if (!uuid) return false;
-  try {
-    const doc = fromUuidSync(uuid);
-    const actor = doc instanceof Actor ? doc : doc?.actor;
-    return !!actor?.testUserPermission(user, "OWNER");
-  } catch (e) {
-    return false;
-  }
-}
 
 /**
  * The card's recipient rows: `healRecipients` in order, or - a card from
@@ -178,8 +167,6 @@ export async function onApplyHeal(event, message) {
 }
 
 const HEAL = "healApply";
-// Heals, one at a time per Heal card (the GM's client).
-const healQueues = new Map();
 
 /**
  * The GM's side of a Heal's Apply (onApplyHeal), in the card's queue: the
@@ -191,7 +178,7 @@ const healQueues = new Map();
  * @returns {Promise<{healed: {id: string, name: string}[]}>}
  */
 export function healNow({ cardId, rowIds } = {}, user = game.user) {
-  return queueOn(healQueues, cardId, async () => {
+  return queueForCard(cardId, async () => {
     const message = game.messages.get(cardId);
     if (!message || message.getFlag(SCOPE, "healApplied")) return { healed: [] };
     const wanted = new Set(Array.isArray(rowIds) ? rowIds : []);

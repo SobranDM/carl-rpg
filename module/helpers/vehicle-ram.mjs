@@ -26,8 +26,9 @@ import { updateCardMessage } from "./chat-socket.mjs";
 import { actorSizeValue, vehicleDriver, vehicleFight, vehicleOccupants, vehicleStatus } from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
 import { canDrive } from "./vehicle-driving.mjs";
-import { createRollMessage, esc } from "../chat/chat-card.mjs";
+import { createRollMessage } from "../chat/chat-card.mjs";
 import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
+import { esc } from "./html.mjs";
 
 const SCOPE = "carl-rpg";
 

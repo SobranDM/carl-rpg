@@ -32,6 +32,7 @@ import { bookIdOf } from "./books.mjs";
 import { slugify } from "./scan.mjs";
 import { sectionFolders } from "./sections.mjs";
 import { LEGACY_FLAG, legacyAttackItems, MOB_ATTACK_TYPE } from "../helpers/mob-attacks.mjs";
+import { withUnlockedPack } from "../helpers/packs.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG = "pdfImport";
@@ -108,17 +109,6 @@ async function bookPack(book, title, documentName) {
     (await Folder.implementation.create({ name: title, type: "Compendium", flags: importFlags(book) }));
   await pack.configure({ folder: folder.id });
   return pack;
-}
-
-/** Run `fn` with the pack unlocked (a GM may have locked it), then lock it again. */
-async function unlocked(pack, fn) {
-  const locked = pack.locked;
-  if (locked) await pack.configure({ locked: false });
-  try {
-    return await fn();
-  } finally {
-    if (locked) await pack.configure({ locked: true });
-  }
 }
 
 /** A top-level folder of the pack by name, made if missing. */
@@ -575,7 +565,7 @@ export async function importBook({ book, title, found, kinds, maps, pdfDoc, onPr
     const folders = {};
     const folderFor = async (kind) =>
       (folders[kind] ??= (await packFolder(pack, game.i18n.localize(`CARLRPG.PdfImport.Kind.${kind}`))).id);
-    results.items = await unlocked(pack, () =>
+    results.items = await withUnlockedPack(pack, () =>
       upsert(pack, entries, book, {
         place: async (doc) => ({ folder: await folderFor(doc.data.type === "spell" ? "spells" : "gear") }),
       }),
@@ -586,7 +576,7 @@ export async function importBook({ book, title, found, kinds, maps, pdfDoc, onPr
     step("mobs");
     const pack = await bookPack(book, title, "Actor");
     const mobs = dedupe(found.mobs.map(withAttacksApart));
-    results.mobs = await unlocked(pack, async () => {
+    results.mobs = await withUnlockedPack(pack, async () => {
       const places = await mobPlaces(pack, mobs, book);
       return upsert(pack, mobs, book, {
         place: async (doc) => places.get(`${doc.data.type}:${doc.name}`) ?? {},
@@ -600,7 +590,7 @@ export async function importBook({ book, title, found, kinds, maps, pdfDoc, onPr
   if (kinds.includes("achievements") && found.achievements.length) {
     step("achievements");
     const pack = await bookPack(book, title, "JournalEntry");
-    results.achievements = await unlocked(pack, () => importAchievements(pack, found.achievements, book));
+    results.achievements = await withUnlockedPack(pack, () => importAchievements(pack, found.achievements, book));
   }
   if (maps.length) {
     const label = game.i18n.localize("CARLRPG.PdfImport.Kind.maps");

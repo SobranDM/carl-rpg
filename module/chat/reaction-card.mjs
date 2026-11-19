@@ -32,13 +32,13 @@
  * back. The card is updated in place and drawn per viewer from its flags.
  */
 import CarlDice, { extractNaturalD20 } from "../dice/dice.mjs";
-import { createCardMessage, esc } from "./chat-card.mjs";
+import { createCardMessage } from "./chat-card.mjs";
 import {
   checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, versusNum,
 } from "./status-rows.mjs";
 import { aiRerollAllowed, rerollFormula, spendAiFavor } from "../helpers/ai-favor.mjs";
 import { askGM, registerAskHandler, tellUser } from "../helpers/chat-socket.mjs";
-import { queueOn } from "../helpers/actor-queue.mjs";
+import { queueForCard } from "../helpers/actor-queue.mjs";
 import { mobAttackRow } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { ownedSkill } from "../helpers/modifiers.mjs";
@@ -54,6 +54,9 @@ import {
   hitBlockable, hitEvadable, hitLabel, hitList, hitStatus, idleBlockers, idleEvaders, intervenableChecks, makeCheck, pullableAreaAttacks,
   pullableHits, rerollableChecks, sectionCounts, sectionsOf, tauntableMobs, unevadedNames,
 } from "../helpers/reaction-state.mjs";
+import { opposedDifficulty } from "../helpers/rules.mjs";
+import { esc } from "../helpers/html.mjs";
+import { actorFromUuid } from "../helpers/token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -64,16 +67,6 @@ const GREAT = ["criticalHit", "amazingSuccess"];
 /*  Lookups                                     */
 /* -------------------------------------------- */
 
-/** An Actor from a token or actor uuid (sync), or null. */
-export function actorFor(uuid) {
-  if (!uuid) return null;
-  try {
-    const doc = fromUuidSync(uuid);
-    return doc instanceof Actor ? doc : (doc?.actor ?? null);
-  } catch {
-    return null;
-  }
-}
 
 /** This round's Reaction card for a combat, if it has one. */
 export function reactionCardFor(combat) {
@@ -172,7 +165,7 @@ export async function retireReaction(combat) {
  */
 async function rollFreeEvades(state, hits, { advantage = "normal" } = {}) {
   for (const hit of hits) {
-    const actor = actorFor(hit.targetUuid);
+    const actor = actorFromUuid(hit.targetUuid);
     if (!actor) continue;
     const result = await CarlDice.rollEvadeCheck(actor, {
       difficulty: hit.row.difficulty, post: false, isAction: false, preset: { advantage },
@@ -215,19 +208,6 @@ function evaderAndMob(state, hit) {
 /* -------------------------------------------- */
 /*  The GM's side: one operation at a time      */
 /* -------------------------------------------- */
-
-const queues = new Map();
-
-/**
- * Run `task` after every earlier one for this card (GM client).
- * @template T
- * @param {string} cardId
- * @param {() => Promise<T>} task
- * @returns {Promise<T>}
- */
-export function withCard(cardId, task) {
-  return queueOn(queues, cardId, task);
-}
 
 /**
  * Write a card's whole state back. Each write counts up `rev`, so undoing an
@@ -315,7 +295,7 @@ export function registerReactionSocket() {
  * @returns {Promise<boolean>} Whether the card changed.
  */
 export function applyOp(cardId, op, data, user) {
-  return withCard(cardId, async () => {
+  return queueForCard(cardId, async () => {
     const message = game.messages.get(cardId);
     const current = message?.getFlag(SCOPE, "reaction");
     // Who asked, the undo records their roll sent (payFor), and whether
@@ -325,7 +305,7 @@ export function applyOp(cardId, op, data, user) {
     const state = foundry.utils.deepClone(current);
     // What an Action spent by this op undoes to (payFor).
     opBefore.set(state, asked);
-    const owns = (uuid) => user.isGM || !!actorFor(uuid)?.testUserPermission(user, "OWNER");
+    const owns = (uuid) => user.isGM || !!actorFromUuid(uuid)?.testUserPermission(user, "OWNER");
     let changed = false;
     try {
       switch (op) {
@@ -408,7 +388,7 @@ async function opTaunt(state, { byUuid, byName, mobUuid, rank, check }, owns) {
  * @param {object} taunt
  */
 async function pullTaunt(state, taunt) {
-  const actor = actorFor(taunt.byUuid);
+  const actor = actorFromUuid(taunt.byUuid);
   if (!actor) return;
   const pulled = [];
   for (const hit of pullableHits(state, taunt.mobUuid, taunt.byUuid)) {
@@ -445,7 +425,7 @@ async function evadeArrivals(state, hits) {
   for (const hit of hits) {
     const crawler = state.crawlers?.[crawlerKey(hit.targetUuid)];
     if (!crawler?.evaded || !hitEvadable(hit)) continue;
-    const actor = actorFor(hit.targetUuid);
+    const actor = actorFromUuid(hit.targetUuid);
     if (!actor) continue;
     const result = await CarlDice.rollEvadeCheck(actor, {
       difficulty: hit.row.difficulty, post: false, isAction: false, preset: presetFrom(crawler.evadePreset),
@@ -490,7 +470,7 @@ async function blockArrivals(state, hits) {
   for (const hit of hits) {
     const crawler = state.crawlers?.[crawlerKey(hit.targetUuid)];
     if (!crawler?.blocked || !crawler.blockRoll) continue;
-    const blocker = shieldBlocker(actorFor(hit.targetUuid));
+    const blocker = shieldBlocker(actorFromUuid(hit.targetUuid));
     if (!blocker || !hitBlockable(state, hit, { magicOk: blocker.rank >= 5 })) continue;
     const result = await rollBlockAgain(crawler.blockRoll, hit.row.difficulty);
     showDice(result.roll);
@@ -550,7 +530,7 @@ function presetFrom(data) {
 async function opPullArea(state, { tauntId }) {
   const taunt = state.taunts?.[tauntId];
   if (!taunt?.check?.success || taunt.areaPulled) return false;
-  const actor = actorFor(taunt.byUuid);
+  const actor = actorFromUuid(taunt.byUuid);
   const attackIds = pullableAreaAttacks(state, taunt.mobUuid, taunt.byUuid);
   if (!actor || !attackIds.length) return false;
   const pulled = [];
@@ -613,7 +593,7 @@ async function opCatch(state, { byUuid, byName, hitId }, owns) {
  */
 async function opBlock(state, { uuid, checks }, owns) {
   if (!owns(uuid)) return false;
-  const blocker = shieldBlocker(actorFor(uuid));
+  const blocker = shieldBlocker(actorFromUuid(uuid));
   const hits = blocker ? blockableHitsFor(state, uuid, { magicOk: blocker.rank >= 5 }) : [];
   const rolled = hits.filter((hit) => checks?.[hit.id]);
   if (!rolled.length) return false;
@@ -677,7 +657,7 @@ async function opReroll(state, { ref, naturalRoll, total, roll, breakdown }, own
   const entry = checkList(state).find((c) => sameRef(c.ref, ref));
   if (!entry || !owns(entry.ownerUuid)) return false;
   if (!rerollableChecks(state, entry.ownerUuid).some((c) => sameRef(c.ref, ref))) return false;
-  const actor = actorFor(entry.ownerUuid);
+  const actor = actorFromUuid(entry.ownerUuid);
   if (!aiRerollAllowed(entry.check, actor, user) || !(await spendAiFavor(actor))) return false;
   const check = checkAt(state, ref);
   const wasSuccess = check.success;
@@ -727,7 +707,7 @@ const opBefore = new WeakMap();
  *   false: refused. `spent`: the Action spent here, if one was.
  */
 async function payFor(state, uuid, labelKey, { tag = null } = {}) {
-  const actor = actorFor(uuid);
+  const actor = actorFromUuid(uuid);
   const free = { spent: null };
   if (!actor) return free;
   if (tag === "evade" ? (evadeIsFree(actor) || hasSpent(actor, tag)) : (tag && hasSpent(actor, tag))) return free;
@@ -845,7 +825,7 @@ async function onTaunt(message, state) {
   const mobUuid = await pick(game.i18n.localize("CARLRPG.Reaction.Op.taunt"), game.i18n.localize("CARLRPG.Reaction.WhichMob"),
     mobs.map((m) => ({ value: m.mobUuid, label: label(m) })));
   const chosen = mobs.find((m) => m.mobUuid === mobUuid);
-  const mob = actorFor(mobUuid);
+  const mob = actorFromUuid(mobUuid);
   if (!mob || !chosen) return;
   if (chosen.distance !== null && chosen.distance > range) {
     const anyway = await foundry.applications.api.DialogV2.confirm({
@@ -871,7 +851,7 @@ async function onTaunt(message, state) {
  */
 export async function rollTaunt(message, { taunter, item, rank, mob, mobUuid }, { skipDialog = false } = {}) {
   const statKey = item.system.opposedStat || "int";
-  const difficulty = 10 + (mob.system.stats?.[statKey]?.mod ?? 0) + game.settings.get(SCOPE, "currentFloor");
+  const difficulty = opposedDifficulty(mob.system.stats?.[statKey]?.mod, game.settings.get(SCOPE, "currentFloor"));
   const { result, undo } = await rollForOp(taunter.actor, game.i18n.localize("CARLRPG.Reaction.Op.taunt"),
     () => CarlDice.rollOpposedSkillCheck(taunter.actor, item, { difficulty, opponent: mob, post: false, skipDialog }));
   if (!result) return null;

@@ -25,10 +25,11 @@ import { actionRecord, applyActionOp, undoHandlers } from "./actions.mjs";
 import { currentPhase } from "./combat-phases.mjs";
 import { declaredAttacks, removeDeclaration } from "./declarations.mjs";
 import { isCardLocked } from "../chat/taunt-card.mjs";
-import { withCard, writeState } from "../chat/reaction-card.mjs";
-import { applyRevision, interventionsOf, interveneOpen, withCardQueue } from "../chat/check-revision.mjs";
+import { writeState } from "../chat/reaction-card.mjs";
+import { applyRevision, interventionsOf, interveneOpen } from "../chat/check-revision.mjs";
 import { clearRowEvade, recoilSettledBy, rowAt, rowCheck, rowInterveneOpen } from "../chat/row-evade.mjs";
 import { tellUser } from "./chat-socket.mjs";
+import { queueForCard } from "./actor-queue.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -287,7 +288,7 @@ async function runRecord(record) {
     case "rowEvade":
       // In the Attack card's queue (after any Intervene or reroll on it),
       // checked again: a row applied since the undo was asked refuses it.
-      return withCardQueue(record.messageId, async () => {
+      return queueForCard(record.messageId, async () => {
         const message = game.messages.get(record.messageId);
         if (!message) return null;
         const reason = rowEvadeBlocker(record);
@@ -305,7 +306,7 @@ async function runRecord(record) {
       // Checked again in the card's queue: an op that landed while this
       // waited (another crawler's Intervene) changes `rev`, and the card
       // can't be put back without losing it - refused.
-      return withCard(record.messageId, async () => {
+      return queueForCard(record.messageId, async () => {
         const message = game.messages.get(record.messageId);
         const current = message?.getFlag(SCOPE, "reaction");
         if (!current) return null; // the card is gone, and its Actions with it

@@ -24,6 +24,7 @@
 import { isPet, isVehicle } from "./actor-kinds.mjs";
 import { effectiveRank } from "./modifiers.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
+import { esc } from "./html.mjs";
 
 export const HEALS_MODES = Object.freeze(["self", "others", "pets", "anyone"]);
 
@@ -115,7 +116,6 @@ export function userHealTargets() {
  * @returns {Promise<{actor: Actor, uuid: string, name: string}|null>}  null when cancelled.
  */
 export async function chooseHealRecipient(item, caster, target) {
-  const esc = (v) => foundry.utils.escapeHTML(String(v ?? ""));
   const choice = await showCarlDialog({
     title: item.name,
     content: `<div class="carl-dialog-body"><p>${esc(game.i18n.format("CARLRPG.Heals.ChooseRecipient", { spell: item.name, name: target.name }))}</p></div>`,

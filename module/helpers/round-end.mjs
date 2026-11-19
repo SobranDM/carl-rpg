@@ -45,11 +45,14 @@ import { CARLRPG } from "./config.mjs";
 import { computeDamageApplication } from "./damage-pipeline.mjs";
 import { collectDebuffRows, resolveRollerRows, consumedConditionIds, conditionLabel } from "./debuff-effects.mjs";
 import { resolveD20Formula } from "../dice/dice.mjs";
-import { createRollMessage, createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
 import { queueForActor } from "./actor-queue.mjs";
 import { restorePerRound, restoresPerRound } from "./rest.mjs";
 import { diesAtZeroHb, isCrawler } from "./actor-kinds.mjs";
 import { endCombatSpellTimers, spellEndedLines } from "./spell-timers.mjs";
+import { statDifficulty } from "./rules.mjs";
+import { dyingRounds } from "./conditions.mjs";
+import { esc } from "./html.mjs";
 
 /** An entry's own duration type (Potion Sickness's Poisoned) wins over its preset's. */
 function durationTypeOf(condition) {
@@ -164,7 +167,7 @@ async function runActorRoundEnd(actor) {
 
   const dying = conditions.find((c) => mechanicsOf(c)?.countdown) ?? null;
   if (dying && (dying.remaining === null || dying.remaining === undefined)) {
-    dying.remaining = Math.max(0, sys.stats?.con?.mod ?? 0);
+    dying.remaining = dyingRounds(sys);
   }
   // Once the countdown has hit 0 and been announced (keyed to this Dying
   // entry's id, so a later, fresh Dying starts over) nothing more ticks or
@@ -202,7 +205,7 @@ async function runActorRoundEnd(actor) {
       // An automatic CON Stat Check - the crawler's own Debuffs (Minor
       // Injury's -2, Shit-Faced's Disadvantage, Stunned...) still apply. It
       // isn't an Action, so Queasy/Staggered neither apply nor end.
-      const difficulty = 10 + floor;
+      const difficulty = statDifficulty(floor);
       const conMod = sys.stats?.con?.mod ?? 0;
       const checkRows = collectDebuffRows(sys, "check", { ownAction: false });
       const effect = resolveRollerRows(checkRows);

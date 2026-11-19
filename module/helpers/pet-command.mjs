@@ -23,12 +23,13 @@
 import CarlDice, { checkSubtitle } from "../dice/dice.mjs";
 import { noteUndo, takeAction } from "./actions.mjs";
 import { CARLRPG } from "./config.mjs";
-import { degreeBadge } from "./rules.mjs";
+import { degreeBadge, opposedDifficulty } from "./rules.mjs";
 import { isMinion, isPet } from "./actor-kinds.mjs";
 import { petOwner } from "./pets.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { effectiveRank } from "./modifiers.mjs";
-import { createCardMessage, createRollMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage, createRollMessage } from "../chat/chat-card.mjs";
+import { esc } from "./html.mjs";
 
 /** Results that settle the Pet for the rest of the fight - only "staying out" can be retried. */
 const SETTLED_STATES = ["free", "restricted", "hiding"];
@@ -64,7 +65,7 @@ export function commandStateForDegree(degree) {
  * @returns {number}
  */
 export function commandDifficulty(pet) {
-  return 10 + (pet.system.stats.int?.mod ?? 0) + game.settings.get("carl-rpg", "currentFloor");
+  return opposedDifficulty(pet.system.stats.int?.mod, game.settings.get("carl-rpg", "currentFloor"));
 }
 
 /**

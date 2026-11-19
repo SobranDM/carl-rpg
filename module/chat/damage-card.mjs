@@ -28,17 +28,14 @@
  * either can be clicked (or not) without affecting the other.
  */
 import { computeDamageApplication } from "../helpers/damage-pipeline.mjs";
-import { removeConditionsWithMechanic } from "../helpers/conditions.mjs";
+import { dyingRounds, removeConditionsWithMechanic } from "../helpers/conditions.mjs";
 import { appendCardSection } from "./chat-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
+import { ownsUuid } from "../helpers/token-resolution.mjs";
+import { damageTypeLabel } from "../helpers/damage-types.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/damage-footer.hbs";
-
-function damageTypeLabel(type) {
-  if (!type) return game.i18n.localize("CARLRPG.Roll.Damage");
-  return game.i18n.localize(CARLRPG.damageTypes[type] ?? type);
-}
 
 /**
  * Render the chat-card footer listing this roll's raw per-type damage
@@ -77,15 +74,7 @@ async function resolveTargetActor(uuid) {
 export function canApplyDamage(message) {
   if (game.user.isGM) return true;
   const targetUuids = message.getFlag("carl-rpg", "targetUuids") ?? [];
-  return targetUuids.some((uuid) => {
-    try {
-      const doc = fromUuidSync(uuid);
-      const actor = doc instanceof Actor ? doc : doc?.actor;
-      return !!actor?.isOwner;
-    } catch (e) {
-      return false;
-    }
-  });
+  return targetUuids.some((uuid) => ownsUuid(uuid));
 }
 
 /**
@@ -160,7 +149,7 @@ export async function applyDamageWithResult(actor, damageByType, isMagic, { noSh
 
   const dying = (actor.system.conditions ?? []).find((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown);
   if (dying) {
-    const left = dying.remaining ?? Math.max(0, actor.system.stats?.con?.mod ?? 0);
+    const left = dying.remaining ?? dyingRounds(actor.system);
     if (result.totalFinalDamage > 0 && left > 0) {
       const conditions = foundry.utils.deepClone(actor.system.conditions);
       conditions.find((c) => c.id === dying.id).remaining = left - 1;

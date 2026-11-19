@@ -22,15 +22,15 @@
  * Attack card.
  */
 import CarlDice from "../dice/dice.mjs";
-import { degreeBadge, isHitDegree } from "../helpers/rules.mjs";
+import { degreeBadge, isHitDegree, opposedDifficulty } from "../helpers/rules.mjs";
 import { resolveActingActor } from "../helpers/token-resolution.mjs";
 import { createRollMessage } from "./chat-card.mjs";
 import { askGM, registerAskHandler } from "../helpers/chat-socket.mjs";
 import { noteUndo, takeAction } from "../helpers/actions.mjs";
-import { withCardQueue } from "./check-revision.mjs";
 import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow, nextRowId } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { ownedSkill } from "../helpers/modifiers.mjs";
+import { queueForCard } from "../helpers/actor-queue.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/taunt-footer.hbs";
 
@@ -176,9 +176,7 @@ export async function tauntAttack(message, { taunter = null, skipDialog = false 
   }
 
   const statKey = tauntItem.system.opposedStat || "int";
-  const statMod = attackerActor.system.stats?.[statKey]?.mod ?? 0;
-  const floor = game.settings.get("carl-rpg", "currentFloor");
-  const difficulty = 10 + statMod + floor;
+  const difficulty = opposedDifficulty(attackerActor.system.stats?.[statKey]?.mod, game.settings.get("carl-rpg", "currentFloor"));
   // The rows the redirect would replace, as they are before the dialog: if
   // they change meanwhile, the redirect is refused (tauntRedirectNow).
   const seen = activeRows(message.getFlag("carl-rpg", "targetRows")).map((row) => row.id);
@@ -246,7 +244,7 @@ const TAUNT = "tauntRedirect";
  * @returns {Promise<{outcome: "redirected"|"failed"|"refused", marked: boolean}|null>}
  */
 export function tauntRedirectNow({ cardId, taunterUuid, success, seen } = {}, user = game.user) {
-  return withCardQueue(cardId, async () => {
+  return queueForCard(cardId, async () => {
     const message = game.messages.get(cardId);
     const taunter = taunterFrom(taunterUuid);
     if (!message || !taunter) return null;

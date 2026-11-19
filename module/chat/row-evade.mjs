@@ -27,7 +27,7 @@ import { gradeCheck, makeCheck } from "../helpers/reaction-state.mjs";
 import { aiRerollAllowed, fightStamp } from "../helpers/ai-favor.mjs";
 import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
-import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
+import { actorFromUuid, resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { vehicleSeatOf } from "../helpers/vehicle-state.mjs";
 import { cardFight } from "./check-revision.mjs";
@@ -44,15 +44,6 @@ export async function resolveRowTarget(row) {
   return doc.actor ? { actor: doc.actor, token: doc } : null;
 }
 
-/** An Actor from a uuid (sync), or null. */
-function actorOf(uuid) {
-  try {
-    const doc = uuid ? fromUuidSync(uuid) : null;
-    return doc instanceof Actor ? doc : (doc?.actor ?? null);
-  } catch {
-    return null;
-  }
-}
 
 /** A row of an Attack card, by id. */
 export function rowAt(message, rowId) {
@@ -235,7 +226,7 @@ export function rowCheckOpen(attack, rowId, which) {
 export function rowInterveneOpen(attack, rowId, which) {
   const check = rowCheck(rowAt(attack, rowId), which);
   if (!check || check.natural === 1 || check.natural === 20) return false;
-  if (!isCrawler(actorOf(check.actorUuid))) return false;
+  if (!isCrawler(actorFromUuid(check.actorUuid))) return false;
   return rowCheckOpen(attack, rowId, which) && !!cardFight(check);
 }
 
@@ -248,7 +239,7 @@ export function rowInterveners(attack, rowId, which, user = game.user) {
   const check = rowCheck(rowAt(attack, rowId), which);
   const combat = check ? cardFight(check) : null;
   if (!combat) return [];
-  const roller = actorOf(check.actorUuid);
+  const roller = actorFromUuid(check.actorUuid);
   const seen = new Set();
   return combat.combatants.map((c) => c.actor).filter((actor) => {
     if (!actor || !isCrawler(actor) || actor === roller || seen.has(actor.uuid)) return false;
@@ -266,7 +257,7 @@ export function rowInterveners(attack, rowId, which, user = game.user) {
 export function rowRerollSources(attack, rowId, which, user = game.user) {
   if (!rowCheckOpen(attack, rowId, which)) return [];
   const check = rowCheck(rowAt(attack, rowId), which);
-  const actor = actorOf(check.actorUuid);
+  const actor = actorFromUuid(check.actorUuid);
   if (!aiRerollAllowed(check, actor, user)) return [];
   return [{ key: "favor", actor, favor: actor.system.details?.aiFavor ?? 0 }];
 }

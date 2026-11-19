@@ -8,9 +8,10 @@
  */
 import { CARLRPG } from "../helpers/config.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
-import { appendCardSection, createCardMessage, createRollMessage, esc } from "./chat-card.mjs";
+import { appendCardSection, createCardMessage, createRollMessage } from "./chat-card.mjs";
 import { canActOnUuidFlag, resolveTargetActor } from "./evade-link-card.mjs";
 import { applyConsumableEffects, hasBuff } from "../helpers/consumables.mjs";
+import { esc } from "../helpers/html.mjs";
 
 const SCOPE = "carl-rpg";
 

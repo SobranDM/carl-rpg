@@ -15,12 +15,11 @@ import { cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem } from "./rac
 import { assignItemToSlot, slotHolds } from "./equip-slots.mjs";
 import { isInHotlist, toggleHotlist } from "./hotlist.mjs";
 import { headedSectionsToHtml, STORY_SECTIONS } from "./rich-text.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
+import { PACKS } from "./packs.mjs";
+import { esc } from "./html.mjs";
 
 const SCOPE = "carl-rpg";
-const TABLES_PACK = `${SCOPE}.roll-tables`;
-const CONSUMABLES_PACK = `${SCOPE}.consumables`;
-const GEAR_PACK = `${SCOPE}.gear`;
 
 /**
  * Step 1's four backgrounds, by kind of crawler: the table each is chosen
@@ -209,7 +208,7 @@ function resultText(result) {
 export async function chargenTable(name) {
   const world = game.tables?.getName?.(name);
   if (world) return world;
-  const pack = game.packs.get(TABLES_PACK);
+  const pack = game.packs.get(PACKS.rollTables);
   const entry = (await pack?.getIndex())?.find((e) => e.name === name);
   return entry ? pack.getDocument(entry._id) : null;
 }
@@ -463,7 +462,7 @@ export function allChargenProblems(state) {
 
 /** The Mana Potion from the Consumables pack, as item data. */
 async function manaPotionData() {
-  const pack = game.packs.get(CONSUMABLES_PACK);
+  const pack = game.packs.get(PACKS.consumables);
   const entry = (await pack?.getIndex())?.find((e) => e.name === "Mana Potion");
   const doc = entry ? await pack.getDocument(entry._id) : null;
   if (!doc) return null;
@@ -484,7 +483,7 @@ async function manaPotionData() {
  * @returns {Promise<object>}
  */
 export async function weaponData(name, skill) {
-  const pack = game.packs.get(GEAR_PACK);
+  const pack = game.packs.get(PACKS.gear);
   const index = (await pack?.getIndex({ fields: ["system.weaponSkill"] })) ?? [];
   const lower = (s) => String(s ?? "").trim().toLowerCase();
   const forSkill = index.filter((e) => lower(e.system?.weaponSkill) === lower(skill));

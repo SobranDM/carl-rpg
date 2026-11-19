@@ -82,3 +82,14 @@ export function findDamageTypes(text) {
 export function findDamageType(text) {
   return findDamageTypes(text)[0] ?? "";
 }
+
+/**
+ * A damage type's localized name, or "Damage" for none. Reads
+ * CONFIG.CARLRPG at call time (this module stays loadable in Node).
+ * @param {string} [type]
+ * @returns {string}
+ */
+export function damageTypeLabel(type) {
+  if (!type) return game.i18n.localize("CARLRPG.Roll.Damage");
+  return game.i18n.localize(CONFIG.CARLRPG.damageTypes[type] ?? type);
+}

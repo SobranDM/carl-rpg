@@ -16,9 +16,10 @@ import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
 import {
   invalidateSeatIndex, occupantKey, resolveOccupant, vehicleSeatOf, vehicleStatus,
 } from "./vehicle-state.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { isHitDegree } from "./rules.mjs";
 import { noteUndo, takeAction } from "./actions.mjs";
+import { esc } from "./html.mjs";
 
 const SOCKET = "system.carl-rpg";
 const FLAG_SCOPE = "carl-rpg";

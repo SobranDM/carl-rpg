@@ -63,3 +63,31 @@ export function resolveCombatantFor({ actor, token } = {}, combat = game.combat)
   }
   return combat.combatants.find((c) => c.actorId === actor.id) ?? null;
 }
+
+/**
+ * The Actor behind a token or actor uuid (sync), or null - a token's uuid
+ * gives its own (synthetic) actor.
+ * @param {string|null|undefined} uuid
+ * @returns {Actor|null}
+ */
+export function actorFromUuid(uuid) {
+  if (!uuid) return null;
+  try {
+    const doc = fromUuidSync(uuid);
+    return doc instanceof Actor ? doc : (doc?.actor ?? null);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Whether a user (this one by default) owns the actor behind a token or
+ * actor uuid. A GM always does.
+ * @param {string|null|undefined} uuid
+ * @param {User} [user]
+ * @returns {boolean}
+ */
+export function ownsUuid(uuid, user = game.user) {
+  if (user.isGM) return true;
+  return !!actorFromUuid(uuid)?.testUserPermission(user, "OWNER");
+}

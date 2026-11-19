@@ -1,6 +1,6 @@
 import CarlRPGActorBase from "./actor-base.mjs";
 import { ownerIds, withOwners } from "../helpers/ownership.mjs";
-import { staticEvade } from "../helpers/rules.mjs";
+import { opposedDifficulty, staticEvade } from "../helpers/rules.mjs";
 import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
 import {
@@ -161,7 +161,7 @@ export default class CarlRPGPet extends CarlRPGActorBase {
     this.evadeBase = staticEvade(this);
     // "INT-Opposed Animal Handling Skill Checks vs. the INT of the pet ...
     // base 10, +1 for their INT Mod, and + Floor" (p.230).
-    this.commandBase = 10 + (this.stats.int?.mod ?? 0);
+    this.commandBase = opposedDifficulty(this.stats.int?.mod, 0);
     this.rankFloor = Math.min(Math.max(1, floor), 20);
 
     const abilities = this.specialAbilities;

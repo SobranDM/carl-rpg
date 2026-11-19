@@ -1,4 +1,5 @@
 import { createCardMessage } from "../chat/chat-card.mjs";
+import { PACKS } from "./packs.mjs";
 
 /**
  * Randomized Magic Items (Skills, Spells & Gear, p.219-220), driven from the
@@ -17,7 +18,6 @@ import { createCardMessage } from "../chat/chat-card.mjs";
  * only chat output.
  */
 
-const ROLL_TABLES_PACK = `${game.system?.id ?? "carl-rpg"}.roll-tables`;
 const ITEM_TYPE_TABLE_NAME = "Item Type";
 
 /**
@@ -47,7 +47,7 @@ export async function generateMagicItem(tierKey) {
   if (!tier) return null;
   if (tier.rolls === 0) return { tierKey, tier, itemType: "", properties: [] };
 
-  const pack = game.packs.get(ROLL_TABLES_PACK);
+  const pack = game.packs.get(PACKS.rollTables);
   const index = await pack?.getIndex();
   const itemTypeEntry = index?.find((e) => e.name === ITEM_TYPE_TABLE_NAME);
   const itemTypeTable = itemTypeEntry ? await pack.getDocument(itemTypeEntry._id) : null;

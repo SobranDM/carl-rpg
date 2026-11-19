@@ -59,6 +59,16 @@ export function getDegreeOfSuccess(naturalRoll, total, difficulty) {
 }
 
 /**
+ * A Degree of Success's localized name ("Major Fail"); an unknown key is
+ * shown as given.
+ * @param {string} degree
+ * @returns {string}
+ */
+export function degreeLabel(degree) {
+  return game.i18n.localize(CARLRPG.degreesOfSuccess[degree] ?? degree ?? "");
+}
+
+/**
  * Build a chat-card badge {label, type} for a Degree of Success. Shared by
  * module/dice/dice.mjs and module/chat/evade-link-card.mjs - lives here
  * (rather than in dice.mjs) so the chat module can import it without a
@@ -67,7 +77,7 @@ export function getDegreeOfSuccess(naturalRoll, total, difficulty) {
  * @returns {{label: string, type: "hit"|"miss"|"warn"}}
  */
 export function degreeBadge(degree) {
-  const label = game.i18n.localize(CARLRPG.degreesOfSuccess[degree] ?? degree);
+  const label = degreeLabel(degree);
   const type = ['criticalHit', 'amazingSuccess', 'standardSuccess'].includes(degree)
     ? 'hit'
     : ['criticalFail', 'majorFail'].includes(degree)
@@ -105,6 +115,35 @@ export function evadeModifier(sys) {
 }
 
 /**
+ * Unopposed Difficulty (p.59): 10 + Floor Number x 2.
+ * @param {number} floor
+ * @returns {number}
+ */
+export function unopposedDifficulty(floor) {
+  return 10 + 2 * (Number(floor) || 0);
+}
+
+/**
+ * Stat Check Difficulty (p.59): 10 + Floor Number.
+ * @param {number} floor
+ * @returns {number}
+ */
+export function statDifficulty(floor) {
+  return 10 + (Number(floor) || 0);
+}
+
+/**
+ * Opposed Difficulty (p.59): 10 + the antagonist's relevant Stat Mod + Floor
+ * Number. With floor 0 it's the "+F" base a stat block prints ("13+F").
+ * @param {number} mod  The antagonist's Stat Mod.
+ * @param {number} floor
+ * @returns {number}
+ */
+export function opposedDifficulty(mod, floor) {
+  return 10 + (Number(mod) || 0) + (Number(floor) || 0);
+}
+
+/**
  * The roll dialog's Difficulty presets (The Core Mechanic, p.59), at the
  * current Floor: Unopposed "10 + [Floor Number x 2]", Stat Check "10 + Floor
  * Number", and - when there's an opponent - Opposed "10 + antagonist's
@@ -126,10 +165,10 @@ export function buildDifficultyPresets({ floor, selected = "custom", opposed = n
   if (given && given.value !== null && given.value !== undefined) {
     presets.push({ key: "given", label: `${given.label}: ${given.value}`, value: given.value });
   }
-  presets.push({ key: "unopposed", label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: 10 + 2 * f }), value: 10 + 2 * f });
-  presets.push({ key: "stat", label: i18n.format("CARLRPG.Dialog.Preset.Stat", { value: 10 + f }), value: 10 + f });
+  presets.push({ key: "unopposed", label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: unopposedDifficulty(f) }), value: unopposedDifficulty(f) });
+  presets.push({ key: "stat", label: i18n.format("CARLRPG.Dialog.Preset.Stat", { value: statDifficulty(f) }), value: statDifficulty(f) });
   if (opposed) {
-    const value = 10 + (Number(opposed.mod) || 0) + f;
+    const value = opposedDifficulty(opposed.mod, f);
     presets.push({ key: "opposed", label: i18n.format("CARLRPG.Dialog.Preset.Opposed", { name: opposed.name, stat: opposed.stat, value }), value });
   }
   presets.push({ key: "custom", label: i18n.localize("CARLRPG.Dialog.Preset.Custom"), value: null });

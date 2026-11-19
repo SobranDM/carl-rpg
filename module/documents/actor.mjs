@@ -1,6 +1,6 @@
 import CarlDice from "../dice/dice.mjs";
 import { recheckLevelGatedGrants } from "../helpers/race-class-grants.mjs";
-import { buildConditionEntry } from "../helpers/conditions.mjs";
+import { buildConditionEntry, dyingRounds } from "../helpers/conditions.mjs";
 import { syncDefeated } from "../helpers/defeat.mjs";
 import { isCrawler, isPet, isVehicle } from "../helpers/actor-kinds.mjs";
 import { explodeVehicle } from "../helpers/vehicle-ram.mjs";
@@ -172,7 +172,7 @@ export class CarlRPGActor extends Actor {
       if (!conditions.some((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown)) {
         const dying = buildConditionEntry("dying", { source: game.i18n.localize("CARLRPG.Actor.HealthBar") });
         dying.id = foundry.utils.randomID();
-        dying.remaining = Math.max(0, this.system.stats?.con?.mod ?? 0);
+        dying.remaining = dyingRounds(this.system);
         foundry.utils.setProperty(changed, "system.conditions", [...conditions, dying]);
       }
     }

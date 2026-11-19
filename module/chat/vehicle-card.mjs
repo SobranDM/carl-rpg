@@ -16,14 +16,15 @@
  * Check has replaced.
  */
 import { CARLRPG } from "../helpers/config.mjs";
-import { isHitDegree } from "../helpers/rules.mjs";
+import { degreeLabel, isHitDegree } from "../helpers/rules.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
-import { appendCardSection, esc } from "./chat-card.mjs";
+import { appendCardSection } from "./chat-card.mjs";
 import { resolveOccupant, stepUpDegree } from "../helpers/vehicle-state.mjs";
 import { updateVehicle } from "../helpers/vehicles.mjs";
 import {
   canDrive, cardOutcome, commitDrivingRound, drivingCardCurrent, drivingOutcomeText, upgradeReady,
 } from "../helpers/vehicle-driving.mjs";
+import { esc } from "../helpers/html.mjs";
 
 const SCOPE = "carl-rpg";
 /** Cards with a button mid-click - a double click mustn't apply twice. */
@@ -137,7 +138,7 @@ const handlers = {
       await commitDrivingRound(vehicle, degree, { checkId: driving.checkId });
       await updateCardMessage(message, { flags: { [SCOPE]: { driving: { degree, absorbed: true } } } });
       await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.AbsorbDone", {
-        result: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), outcome: drivingOutcomeText("table6", degree),
+        result: degreeLabel(degree), outcome: drivingOutcomeText("table6", degree),
       }));
     });
   },

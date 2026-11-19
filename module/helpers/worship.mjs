@@ -1,4 +1,6 @@
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
+import { PACKS } from "./packs.mjs";
+import { esc } from "./html.mjs";
 
 /**
  * Worship (Character Creation, pp.163-168; Gods, pp.312-313): the
@@ -12,7 +14,6 @@ export const BOON_DAYS = 5;
 /** "Advantage on all Stat or Skill Checks for one stat for 30 hours" - a Boon's usual span (Table 63, p.313). */
 export const BOON_HOURS = 30;
 
-const ROLL_TABLES_PACK = `${game.system?.id ?? "carl-rpg"}.roll-tables`;
 const BOONS_TABLE_NAME = "Boons";
 
 /**
@@ -117,7 +118,7 @@ export function describeDeity(deity) {
  * @returns {Promise<TableResult|null>}
  */
 export async function receiveBoon(actor) {
-  const pack = game.packs.get(ROLL_TABLES_PACK);
+  const pack = game.packs.get(PACKS.rollTables);
   const index = await pack?.getIndex();
   const entry = index?.find((e) => e.name === BOONS_TABLE_NAME);
   const table = entry ? await pack.getDocument(entry._id) : null;

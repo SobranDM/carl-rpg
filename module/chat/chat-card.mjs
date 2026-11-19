@@ -6,6 +6,7 @@
 
 import { buildRollRows } from "./roll-rows.mjs";
 import { noteUndo } from "../helpers/actions.mjs";
+import { esc } from "../helpers/html.mjs";
 
 const SHELL_TEMPLATE = "systems/carl-rpg/templates/chat/card-shell.hbs";
 
@@ -153,11 +154,5 @@ export function appendCardSection(message, html) {
   return div.innerHTML;
 }
 
-/**
- * Escape a value for HTML text - the one helper every card builder uses.
- * @param {*} value
- * @returns {string}
- */
-export function esc(value) {
-  return foundry.utils.escapeHTML(String(value ?? ""));
-}
+// The one HTML escape (helpers/html.mjs), re-exported for the card builders.
+export { esc };

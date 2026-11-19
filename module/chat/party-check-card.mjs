@@ -23,13 +23,15 @@
  * closes it, it says whether the party succeeds (partyTally).
  */
 import CarlDice from "../dice/dice.mjs";
-import { createCardMessage, esc } from "./chat-card.mjs";
+import { createCardMessage } from "./chat-card.mjs";
 import { headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, trackPerCard, versusNum } from "./status-rows.mjs";
-import { queueOn } from "../helpers/actor-queue.mjs";
+import { queueForCard } from "../helpers/actor-queue.mjs";
 import { findSkillLikeItem, skillOrUntrainedCopy } from "../helpers/race-class-grants.mjs";
-import { getDegreeOfSuccess, isHitDegree } from "../helpers/rules.mjs";
+import { degreeLabel, getDegreeOfSuccess, isHitDegree } from "../helpers/rules.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 import { ownedByActivePlayer } from "../apps/actor-picker.mjs";
+import { esc } from "../helpers/html.mjs";
+import { actorFromUuid } from "../helpers/token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -42,16 +44,6 @@ const FLAG = "partyCheck";
 /*  State                                       */
 /* -------------------------------------------- */
 
-/** An Actor from a token or actor uuid (sync), or null. */
-function actorFor(uuid) {
-  if (!uuid) return null;
-  try {
-    const doc = fromUuidSync(uuid);
-    return doc instanceof Actor ? doc : (doc?.actor ?? null);
-  } catch {
-    return null;
-  }
-}
 
 /**
  * A new card's state.
@@ -113,7 +105,7 @@ export function gradePartyRoll(roll, difficulty) {
  * @returns {boolean}
  */
 export function canRollRow(row, user = game.user) {
-  const actor = actorFor(row?.uuid);
+  const actor = actorFromUuid(row?.uuid);
   if (!actor) return false;
   if (user.isGM) return !ownedByActivePlayer(actor);
   return actor.testUserPermission(user, "OWNER");
@@ -161,7 +153,7 @@ export async function rollPartyRow(message, rowId) {
   const state = message.getFlag(SCOPE, FLAG);
   const row = state?.rows?.[rowId];
   if (!row || row.check || state.closed || !canRollRow(row)) return false;
-  const actor = actorFor(row.uuid);
+  const actor = actorFromUuid(row.uuid);
   if (!actor) return false;
   const { skill, trained } = await skillOrUntrainedCopy(actor, state.skill, { system: { governingStat: state.stat ?? "" } });
   const result = await CarlDice.rollOpposedSkillCheck(actor, skill, {
@@ -187,8 +179,6 @@ export async function rollPartyRow(message, rowId) {
 /* -------------------------------------------- */
 /*  The GM's side                               */
 /* -------------------------------------------- */
-
-const queues = new Map();
 
 /** Send an operation to the active GM's client (or apply it, on that client). */
 async function sendOp(message, op, data) {
@@ -222,7 +212,7 @@ export function registerPartyCheckSocket() {
  * @returns {Promise<boolean>}  Whether the card changed.
  */
 export function applyPartyOp(cardId, op, data, user) {
-  return queueOn(queues, cardId, async () => {
+  return queueForCard(cardId, async () => {
     const message = game.messages.get(cardId);
     const state = message?.getFlag(SCOPE, FLAG);
     if (!state || state.closed) return false;
@@ -236,7 +226,7 @@ export function applyPartyOp(cardId, op, data, user) {
     const row = state.rows?.[rowId];
     if (!row || row.check) return false;
     // A player rolls for a crawler they own; the GM for anyone.
-    if (!user.isGM && !actorFor(row.uuid)?.testUserPermission(user, "OWNER")) return false;
+    if (!user.isGM && !actorFromUuid(row.uuid)?.testUserPermission(user, "OWNER")) return false;
     const sent = data?.check ?? {};
     const total = Number(sent.total);
     if (!Number.isFinite(total)) return false;
@@ -317,7 +307,7 @@ function crawlerRow(state, row, cardId) {
   else chip = check.success ? statusChip("success") : statusChip("fail");
   const sub = [];
   if (check) {
-    sub.push(i18n.localize(CARLRPG.degreesOfSuccess[check.degree] ?? check.degree ?? ""));
+    sub.push(degreeLabel(check.degree));
     if (!check.trained) sub.push(i18n.localize("CARLRPG.PartyCheck.Untrained"));
     const off = offStatLabel(check.stat, state.stat);
     if (off) sub.push(off);

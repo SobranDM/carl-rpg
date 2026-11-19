@@ -24,7 +24,7 @@ import { parseTimerText, resolveTimerSeconds, ROUND_SECONDS } from "./timer-text
 import { showCarlDialog, cancelButton } from "../apps/carl-dialog.mjs";
 import { noteUndo } from "./actions.mjs";
 import { ownedRank } from "./modifiers.mjs";
-import { esc } from "../chat/chat-card.mjs";
+import { esc } from "./html.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG_PATH = "flags.carl-rpg.cooldown";

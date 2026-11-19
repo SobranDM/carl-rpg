@@ -1,3 +1,4 @@
+import { esc } from "./html.mjs";
 /**
  * One-line summaries for the item sheets' compact rows (docs/skill-item-
  * sheets.md): a Bonus (a ChangeEntry - module/data/shared/change-entry.mjs)
@@ -8,7 +9,6 @@
  * Registered as Handlebars helpers in module/carl-rpg.mjs.
  */
 
-const esc = (value) => foundry.utils.escapeHTML(String(value ?? ""));
 const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
 
 /**

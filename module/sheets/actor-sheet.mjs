@@ -39,7 +39,7 @@ import { PERMANENT_POTION_LIMIT } from "../helpers/consumables.mjs";
 import {
   boonAvailable, deityBenefitApplies, describeDeity, receiveBoon, tierRank, worshipSuspended,
 } from "../helpers/worship.mjs";
-import { evadeModifier } from "../helpers/rules.mjs";
+import { degreeLabel, evadeModifier } from "../helpers/rules.mjs";
 import { describeDefenses } from "../helpers/bonus-sources.mjs";
 import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-arrays.mjs';
 import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
@@ -682,11 +682,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       if (boarder && sys.occupants.some((o) => o.uuid === boarder.uuid)) boarder = null;
     }
     const loc = (key) => game.i18n.localize(key);
-    const degreeLabel = status.roundDegree ? loc(cfg.degreesOfSuccess[status.roundDegree]) : "";
+    const roundDegreeLabel = status.roundDegree ? degreeLabel(status.roundDegree) : "";
     let roundLabel = "";
     if (!sys.parked && (status.roundDegree || (status.roundActive && sys.round.ramFactor < 1))) {
       roundLabel = [
-        degreeLabel ? game.i18n.format("CARLRPG.Vehicle.RoundResult", { result: degreeLabel }) : "",
+        roundDegreeLabel ? game.i18n.format("CARLRPG.Vehicle.RoundResult", { result: roundDegreeLabel }) : "",
         status.roundActive && sys.round.ramFactor < 1 ? loc("CARLRPG.Vehicle.Ram.MoveLost") : "",
       ].filter(Boolean).join(" - ");
     }

@@ -33,12 +33,13 @@ import { assignItemToSlot, hotlistWithout, isItemWorn, padList, resolveSlotValue
 import { useConsumable } from "./consumables.mjs";
 import { ownedRank } from "./modifiers.mjs";
 import { withoutOutclassedUnarmed } from "./hand-to-hand.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { beginSwap, endSwap, refuseWhileSwapping } from "./swap-lock.mjs";
 import { attackReadiness } from "./weapons.mjs";
 import { activeCooldown, cooldownLabel } from "./cooldowns.mjs";
-import { isTwoHanded } from "./gear.mjs";
+import { isInHand, isTwoHanded } from "./gear.mjs";
+import { esc } from "./html.mjs";
 
 export { refuseWhileSwapping };
 
@@ -65,18 +66,6 @@ function hotlistValues(actor) {
 export function isInHotlist(actor, item) {
   const id = typeof item === "string" ? item : item?.id;
   return !!id && (actor?.system?.hotlist ?? []).includes(id);
-}
-
-/**
- * The item in this crawler's hands: what sits in the Main Hand or Off Hand
- * gear slot.
- * @param {Actor} actor
- * @param {string} itemId
- * @returns {boolean}
- */
-export function isInHand(actor, itemId) {
-  const slots = actor.system.gearSlots ?? {};
-  return !!itemId && (slots.mainHand === itemId || slots.offHand === itemId);
 }
 
 /** Worn: in a gear or accessory slot, or equipped with no slot. */
@@ -162,7 +151,7 @@ export function hotlistRows(actor) {
       Object.assign(row, { kind: "consumable", action: "Use", quantity: sys.quantity });
     } else if (item.type === "item") {
       // Worn and in the Hotlist only happens with older data: nothing to do.
-      const inHand = isInHand(actor, item.id);
+      const inHand = isInHand(item);
       const worn = !inHand && isWorn(actor, item);
       Object.assign(row, { kind: "gear", action: inHand || worn ? null : "Ready", inHand, worn });
     } else {

@@ -21,13 +21,14 @@
  * Intervene: it keeps its `checkId`, and the vehicle's round follows.
  */
 import CarlDice, { checkSubtitle, interventionRolls } from "../dice/dice.mjs";
-import { degreeBadge, getDegreeOfSuccess, isHitDegree } from "./rules.mjs";
+import { degreeBadge, getDegreeOfSuccess, isHitDegree, unopposedDifficulty } from "./rules.mjs";
 import { rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { aiRerollFlags } from "./ai-favor.mjs";
-import { createRollMessage, esc } from "../chat/chat-card.mjs";
+import { createRollMessage } from "../chat/chat-card.mjs";
 import { drivingOutcome, resolveOccupant, vehicleDriver, vehicleFight, vehicleStatus } from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
+import { esc } from "./html.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -102,7 +103,7 @@ export async function rollDrivingCheck(vehicle, { mode = "table6", skipDialog = 
   const floor = game.settings.get("carl-rpg", "currentFloor");
   const status = vehicleStatus(vehicle);
   // Unopposed: 10 + Floor x 2 (p.59). Stopping in time: 10 + Move ÷ 5.
-  const difficulty = mode === "stop" ? status.stopDifficulty : 10 + 2 * floor;
+  const difficulty = mode === "stop" ? status.stopDifficulty : unopposedDifficulty(floor);
   const result = await CarlDice.rollOpposedSkillCheck(driver, skill, {
     difficulty, opponent: null, skipDialog, post: false, markUse: trained,
   });

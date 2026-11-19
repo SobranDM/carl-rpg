@@ -12,6 +12,7 @@
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { ownsUuid } from "../helpers/token-resolution.mjs";
 
 /**
  * Resolve a snapshotted token/actor UUID back to its Actor, if it (and its
@@ -27,22 +28,6 @@ export async function resolveTargetActor(uuid) {
   return doc instanceof Actor ? doc : (doc.actor ?? null);
 }
 
-/**
- * Whether the current user owns the actor behind a token/actor uuid (a GM
- * always does).
- * @param {string} uuid
- * @returns {boolean}
- */
-export function userOwnsUuid(uuid) {
-  if (game.user.isGM) return true;
-  try {
-    const doc = fromUuidSync(uuid);
-    const actor = doc instanceof Actor ? doc : doc?.actor;
-    return !!actor?.isOwner;
-  } catch (e) {
-    return false;
-  }
-}
 
 /**
  * @param {ChatMessage} message
@@ -53,7 +38,7 @@ export function userOwnsUuid(uuid) {
 export function canActOnUuidFlag(message, flagKey) {
   if (game.user.isGM) return true;
   const uuids = [message.getFlag("carl-rpg", flagKey)].flat().filter(Boolean);
-  return uuids.some((uuid) => userOwnsUuid(uuid));
+  return uuids.some((uuid) => ownsUuid(uuid));
 }
 
 /**

@@ -12,6 +12,16 @@ import { conditionLabel } from "./debuff-effects.mjs";
 import { takesConditions } from "./actor-kinds.mjs";
 
 /**
+ * The Dying countdown a creature starts with: "Your CON Mod is how many
+ * rounds you have before you die" (Table 11; the Mod, never below 0).
+ * @param {object} sys  An actor's system data.
+ * @returns {number}
+ */
+export function dyingRounds(sys) {
+  return Math.max(0, sys?.stats?.con?.mod ?? 0);
+}
+
+/**
  * Build one `system.conditions` entry from a debuff key, the same shape
  * whether it was added manually from the Conditions tab or automatically
  * from an Attack/Spell's targetEffects.
@@ -104,7 +114,7 @@ async function writeConditionToActor(actor, key, options) {
   // countdown lives in the entry's `remaining`, ticked down at the end of
   // each round by module/helpers/round-end.mjs.
   if (CONFIG.CARLRPG.debuffs[key]?.mechanics?.countdown && entry.remaining === null) {
-    entry.remaining = Math.max(0, actor.system.stats?.con?.mod ?? 0);
+    entry.remaining = dyingRounds(actor.system);
   }
   current.push(entry);
   return actor.update({ "system.conditions": current });

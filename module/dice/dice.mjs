@@ -20,11 +20,11 @@ import { buildScrollCast } from "../helpers/scroll-cast.mjs";
 import { isAreaItem } from "../helpers/area.mjs";
 import { mobAttackFor } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
-import { getDegreeOfSuccess, degreeBadge, isHitDegree, buildDifficultyPresets, selectedPresetValue } from "../helpers/rules.mjs";
+import { buildDifficultyPresets, degreeBadge, degreeLabel, getDegreeOfSuccess, isHitDegree, selectedPresetValue } from "../helpers/rules.mjs";
 import { ownedRank, effectiveRank, slugifySkillName, sameSkillName, damageEffectFits, attackTargetEffects, attackIsArmorPiercing, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
-import { normalizeDamageType } from "../helpers/damage-types.mjs";
+import { damageTypeLabel, normalizeDamageType } from "../helpers/damage-types.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 import {
   collectDebuffRows, collectAdvantageAgainstRows, decorateRows, resolveRollerRows, resolveDifficultyRows,
@@ -128,7 +128,7 @@ function resolveDamageTypeSplit(item) {
 function damageRowLabel(types) {
   const base = game.i18n.localize("CARLRPG.Roll.Damage");
   if (!types.length) return base;
-  const names = types.map((t) => game.i18n.localize(CARLRPG.damageTypes[t] ?? t));
+  const names = types.map((t) => damageTypeLabel(t));
   if (types.length === 1) return `${base} (${names[0]})`;
   return `${base} (${names.join("/")}, ${game.i18n.localize("CARLRPG.Roll.SplitEvenly")})`;
 }
@@ -424,7 +424,7 @@ async function applyManaCost(actor, manaCost) {
  * @returns {string}
  */
 export function checkSubtitle(degree, difficulty) {
-  const label = game.i18n.localize(CONFIG.CARLRPG.degreesOfSuccess[degree]);
+  const label = degreeLabel(degree);
   if (typeof difficulty !== "number" || !Number.isFinite(difficulty)) return label;
   return `${label} · ${game.i18n.format("CARLRPG.Roll.VsDifficulty", { difficulty })}`;
 }

@@ -56,11 +56,13 @@ import { HANDS, WEAR_SLOT_OF_GEAR_SLOT, canWear, isTwoHanded } from "./gear.mjs"
 import { freeSlotFor, isItemWorn, placeInFreeSlot, slotHolds, slotRefusal } from "./equip-slots.mjs";
 import { canHotlist } from "./hotlist.mjs";
 import { PAST_TABLES, chargenTable, tableTexts, weaponData } from "./chargen.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
+import { PACKS } from "./packs.mjs";
+import { gmUserIds } from "./ownership.mjs";
+import { esc } from "./html.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG = "crawlerforge";
-const RACE_CLASS_PACK = `${SCOPE}.classes-and-races`;
 const SUPPORTED_SCHEMA_VERSION = 1;
 
 /** Read `species` as a Race name (Q7b) rather than the kind of crawler. */
@@ -553,7 +555,7 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
     const name = definition?.name ?? (type === "race" && SPECIES_IS_RACE ? c.species : null);
     const found = ours(type, name);
     if (found) {
-      report.copied.push({ name: found.name, type, source: RACE_CLASS_PACK });
+      report.copied.push({ name: found.name, type, source: PACKS.classesAndRaces });
       return { ...preBaked(found, level, type), name: found.name };
     }
     if (!definition) {
@@ -757,7 +759,7 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
 
 /** Our Race/Class documents named exactly like the export's (Q7b). */
 async function raceClassSources(crawler) {
-  const pack = game.packs.get(RACE_CLASS_PACK);
+  const pack = game.packs.get(PACKS.classesAndRaces);
   const names = ["race", "class"]
     .map((type) => crawler[type]?.definition?.name ?? (type === "race" && SPECIES_IS_RACE ? crawler.species : null))
     .filter(Boolean)
@@ -989,7 +991,7 @@ async function postImportReport(actor, report) {
     img: actor.img,
     body: sections.join("") || `<p>${esc(t("AllMatched"))}</p>`,
     actor,
-    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+    whisper: gmUserIds(),
     flags: { kind: "crawlerforgeReport" },
   });
 }

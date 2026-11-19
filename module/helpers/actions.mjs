@@ -335,14 +335,7 @@ const turns = new Map();
 
 /** Run an actor's Action after any already under way on this client. */
 function inTurn(actor, task) {
-  const key = actor.uuid;
-  const run = (turns.get(key) ?? Promise.resolve()).then(task, task);
-  const settled = run.catch(() => {});
-  turns.set(key, settled);
-  settled.then(() => {
-    if (turns.get(key) === settled) turns.delete(key);
-  });
-  return run;
+  return queueOn(turns, actor.uuid, task);
 }
 
 /**

@@ -10,9 +10,9 @@
  * Markup only: the cards build their rows from their own state and draw
  * them per viewer. Styles: src/scss/components/_status-rows.scss.
  */
-import { esc } from "./chat-card.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
-import { getDegreeOfSuccess } from "../helpers/rules.mjs";
+import { degreeLabel, getDegreeOfSuccess } from "../helpers/rules.mjs";
+import { esc } from "../helpers/html.mjs";
 
 /** Each status's icon (Font Awesome). */
 const ICONS = {
@@ -181,7 +181,7 @@ function rolledD20s(rollData) {
 export function checkDetail(check) {
   if (!check) return "";
   const i18n = game.i18n;
-  const degree = i18n.localize(CARLRPG.degreesOfSuccess[check.degree] ?? check.degree ?? "");
+  const degree = degreeLabel(check.degree);
   const lines = [`${check.breakdown ? `${esc(check.breakdown)} · ` : ""}${esc(degree)}`];
   const dice = rolledD20s(check.roll);
   if (dice) lines.push(esc(i18n.format("CARLRPG.Reaction.Dice", { dice })));

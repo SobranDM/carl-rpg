@@ -14,7 +14,7 @@
  *    advance), which is unrelated to wall-clock time and only moves
  *    when a GM clicks a button.
  */
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "./carl-dialog.mjs";
 import { shortRestUpdates, fullRestoreUpdates, conditionsAfterRest, mendingUpdates } from "../helpers/rest.mjs";
 import { BOSS_TIERS, collapseDays, endOfFloorPopularityDelta } from "../helpers/floor.mjs";
@@ -27,6 +27,8 @@ import { dropExpiredConditions } from "../helpers/expiry.mjs";
 import { actorPickerContent, advanceTimeField, pickerGroups, wireActorPicker } from "./actor-picker.mjs";
 import { postPartyCheck } from "../chat/party-check-card.mjs";
 import { startNewScene } from "../helpers/cooldowns.mjs";
+import { unopposedDifficulty } from "../helpers/rules.mjs";
+import { esc } from "../helpers/html.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -684,7 +686,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         </div>
         <div class="form-group">
           <label>${esc(i18n.localize("CARLRPG.Dialog.Difficulty"))}</label>
-          <input type="number" name="carl-party-difficulty" value="${10 + 2 * floor}" />
+          <input type="number" name="carl-party-difficulty" value="${unopposedDifficulty(floor)}" />
         </div>
         <p class="carl-dialog-hint">${esc(i18n.localize("CARLRPG.PartyCheck.Rule"))}</p>
       </div>`;

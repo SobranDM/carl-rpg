@@ -16,21 +16,17 @@
  */
 import { extractNaturalD20 } from "../dice/dice.mjs";
 import { rerollFormula } from "../helpers/ai-favor.mjs";
-import { esc } from "./chat-card.mjs";
 import { rerollBase, rerollSources, rollIcons, sendRevision } from "./check-revision.mjs";
 import { rowAt, rowCheck, rowRerollSources } from "./row-evade.mjs";
+import { esc } from "../helpers/html.mjs";
+import { actorFromUuid } from "../helpers/token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 const inFlight = new Set();
 
 /** @returns {Actor|null} The crawler who rolled the Check. */
 function rerollActor(spec) {
-  try {
-    const doc = spec?.actorUuid ? fromUuidSync(spec.actorUuid) : null;
-    return doc instanceof Actor ? doc : (doc?.actor ?? null);
-  } catch (err) {
-    return null;
-  }
+  return actorFromUuid(spec?.actorUuid);
 }
 
 /**

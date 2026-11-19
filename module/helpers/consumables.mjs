@@ -36,12 +36,13 @@ import { durationSeconds } from "./expiry.mjs";
 import { buildScrollCast } from "./scroll-cast.mjs";
 import { queueForActor } from "./actor-queue.mjs";
 import { hbCeiling, restorePerRound, restoreUpTo, restoresPerRound } from "./rest.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { postConsumableCard } from "../chat/consumable-card.mjs";
 import { isVehicle } from "./actor-kinds.mjs";
 import { refuseOutsideHotlist } from "./hotlist.mjs";
 import { isInCombat, noteUndo, takeAction } from "./actions.mjs";
+import { esc } from "./html.mjs";
 
 // "Each crawler may only consume two Stat potions and two Skill potions
 // during the entirety of their short life" (p.218).

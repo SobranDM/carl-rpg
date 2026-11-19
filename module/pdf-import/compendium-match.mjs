@@ -1,3 +1,4 @@
+import { PACKS } from "../helpers/packs.mjs";
 /**
  * Prefer a compendium copy to a parsed one (ruled 2026-11-18, Q2): a Spell,
  * Skill, consumable or piece of gear the book prints is matched by name to
@@ -20,7 +21,7 @@
  */
 
 /** The system's own packs, in priority order. */
-export const SYSTEM_PACKS = ["carl-rpg.skills-and-spells", "carl-rpg.consumables", "carl-rpg.gear"];
+export const SYSTEM_PACKS = [PACKS.skillsAndSpells, PACKS.consumables, PACKS.gear];
 
 /** Source tiers, best first. */
 export const TIERS = { system: 0, rulebook: 1, world: 2, other: 3 };

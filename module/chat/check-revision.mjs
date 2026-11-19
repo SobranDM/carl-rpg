@@ -30,12 +30,14 @@ import { canAct, payAction } from "../helpers/actions.mjs";
 import { aiRerollAllowed, spendAiFavor } from "../helpers/ai-favor.mjs";
 import { tellUser } from "../helpers/chat-socket.mjs";
 import { resolveOccupant } from "../helpers/vehicle-state.mjs";
-import { queueOn } from "../helpers/actor-queue.mjs";
+import { queueForCard } from "../helpers/actor-queue.mjs";
 import { canDrive, drivingOpen, reviseDriving, upgradeReady } from "../helpers/vehicle-driving.mjs";
 import { updateVehicle } from "../helpers/vehicles.mjs";
-import { esc, renderRollCard } from "./chat-card.mjs";
+import { renderRollCard } from "./chat-card.mjs";
 import { isCardLocked } from "./taunt-card.mjs";
 import { reviseRow, rowAt, rowCheck, rowCheckOpen, rowInterveneOpen, rowInterveners, rowRerollSources } from "./row-evade.mjs";
+import { esc } from "../helpers/html.mjs";
+import { actorFromUuid } from "../helpers/token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -111,7 +113,7 @@ export function rerollSources(message, user = game.user) {
   const flags = message.flags[SCOPE];
   const sources = [];
   const spec = flags.aiReroll;
-  const actor = spec ? actorOf(spec.actorUuid) : null;
+  const actor = spec ? actorFromUuid(spec.actorUuid) : null;
   if (aiRerollAllowed(spec, actor, user)) sources.push({ key: "favor", actor, favor: actor.system.details?.aiFavor ?? 0 });
   if (flags.driving) {
     const vehicle = resolveOccupant(flags.driving.vehicleUuid);
@@ -134,15 +136,6 @@ export function revisedInPlace(message) {
   return !!kindOf(message);
 }
 
-/** An Actor from a token or actor uuid (sync), or null. */
-function actorOf(uuid) {
-  try {
-    const doc = uuid ? fromUuidSync(uuid) : null;
-    return doc instanceof Actor ? doc : (doc?.actor ?? null);
-  } catch (err) {
-    return null;
-  }
-}
 
 /**
  * The fight a card was rolled in, while it's still on that round - or null.
@@ -182,7 +175,7 @@ export function interveners(message, user = game.user) {
   const spec = specOf(message);
   const combat = cardFight(spec);
   if (!combat) return [];
-  const roller = actorOf(spec.actorUuid);
+  const roller = actorFromUuid(spec.actorUuid);
   const seen = new Set();
   return combat.combatants.map((c) => c.actor).filter((actor) => {
     if (!actor || !isCrawler(actor) || actor === roller || seen.has(actor.uuid)) return false;
@@ -203,7 +196,7 @@ export function interveners(message, user = game.user) {
  */
 export function decorateIntervene(message, html) {
   if (!interveneOpen(message) || !interveners(message).length) return;
-  const roller = actorOf(specOf(message).actorUuid);
+  const roller = actorFromUuid(specOf(message).actorUuid);
   const hint = esc(game.i18n.format("CARLRPG.Intervene.Hint", { name: roller?.name ?? "?" }));
   // The handshake icon, named in its tooltip - beside the Reroll d20.
   rollIcons(html)?.insertAdjacentHTML("afterbegin", `<button type="button" class="carl-status-icon carl-intervene-button" data-action="intervene"
@@ -340,26 +333,6 @@ export function registerCheckRevisionSocket() {
   });
 }
 
-// Revisions, one at a time per queue: a card, or - a row's Evade - the
-// Attack card it shares its state with. A row's Apply, a Taunt's redirect
-// and undoing a row's Evade share it (withCardQueue).
-const queues = new Map();
-
-/**
- * Run `task` in a card's write queue (the writer's client - the active GM's,
- * or with none online the one client that can write the card): after every
- * revision and write on it already queued, before the next. Never call it -
- * or applyRevision - from inside a task on the same card: the queue would
- * wait on itself.
- * @template T
- * @param {string} cardId
- * @param {() => Promise<T>} task
- * @returns {Promise<T>}
- */
-export function withCardQueue(cardId, task) {
-  return queueOn(queues, cardId, task);
-}
-
 /**
  * Apply one revision to a card, after any earlier one.
  * @param {string} cardId
@@ -379,7 +352,7 @@ export function applyRevision(cardId, op, data, user) {
     if (result !== true) tellRefused(user, op, result);
     return result === true;
   };
-  return queueOn(queues, cardId, task);
+  return queueForCard(cardId, task);
 }
 
 // reviseNow's "refused, and the asker has been told why" (payAction's warning).
@@ -412,7 +385,7 @@ async function reviseNow(cardId, op, data, user) {
   switch (op) {
     case "intervene": {
       if (!interveneOpen(message)) return false;
-      const actor = actorOf(data.byUuid);
+      const actor = actorFromUuid(data.byUuid);
       const value = Math.trunc(Number(data.value));
       if (!actor || !(value >= 1 && value <= 6)) return false;
       if (!interveners(message, user).includes(actor)) return false;
@@ -451,7 +424,7 @@ async function reviseNow(cardId, op, data, user) {
   // The intervener's Action, now the card is ready to change: refused with
   // none left. Undoing it takes this d6 back off (helpers/action-undo.mjs).
   if (pay) {
-    const roller = actorOf(spec.actorUuid);
+    const roller = actorFromUuid(spec.actorUuid);
     const label = game.i18n.format("CARLRPG.Actions.Label.Intervene", { name: roller?.name ?? "?" });
     const { paid } = await payAction(pay.actor, "other", label, { undo: [{ t: "intervene", messageId: cardId, id: pay.entry.id }], user });
     if (!paid) return TOLD;
@@ -488,7 +461,7 @@ async function reviseRowNow(message, op, data, user) {
   switch (op) {
     case "intervene": {
       if (!rowInterveneOpen(message, rowId, which)) return false;
-      const actor = actorOf(data.byUuid);
+      const actor = actorFromUuid(data.byUuid);
       const value = Math.trunc(Number(data.value));
       if (!actor || !(value >= 1 && value <= 6)) return false;
       if (!rowInterveners(message, rowId, which, user).includes(actor)) return false;
@@ -521,7 +494,7 @@ async function reviseRowNow(message, op, data, user) {
   // Re-checked now: something done meanwhile (the row applied) closes it.
   if (op !== "unintervene" && !rowCheckOpen(message, rowId, which)) return false;
   if (pay) {
-    const roller = actorOf(check.actorUuid);
+    const roller = actorFromUuid(check.actorUuid);
     const label = game.i18n.format("CARLRPG.Actions.Label.Intervene", { name: roller?.name ?? "?" });
     const { paid } = await payAction(pay.actor, "other", label, {
       undo: [{ t: "intervene", messageId: message.id, id: pay.entry.id, rowId, which }], user,

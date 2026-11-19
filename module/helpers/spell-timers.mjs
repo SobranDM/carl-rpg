@@ -23,7 +23,7 @@ import { parseTimerText, resolveTimerSeconds } from "./timer-text.mjs";
 import { fightOf, intelligenceScore, roundSeconds } from "./cooldowns.mjs";
 import { ownedRank } from "./modifiers.mjs";
 import { queueForActor } from "./actor-queue.mjs";
-import { esc } from "../chat/chat-card.mjs";
+import { esc } from "./html.mjs";
 
 export const SPELL_TIMER_PATH = "flags.carl-rpg.spellTimer";
 

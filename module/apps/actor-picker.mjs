@@ -15,8 +15,8 @@
  */
 import { isPet } from "../helpers/actor-kinds.mjs";
 import { petOwner } from "../helpers/pets.mjs";
+import { esc } from "../helpers/html.mjs";
 
-const esc = (value) => foundry.utils.escapeHTML(String(value ?? ""));
 
 /** Does a connected, non-GM user own this actor? */
 export function ownedByActivePlayer(actor) {

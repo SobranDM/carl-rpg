@@ -27,9 +27,10 @@
  */
 import CarlRPGPet from "../data/pet.mjs";
 import { grantPetSkills } from "./pets.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { parseSize } from "./size.mjs";
-import { ownerIds, withOwners } from "./ownership.mjs";
+import { gmUserIds, ownerIds, withOwners } from "./ownership.mjs";
+import { esc } from "./html.mjs";
 
 export const COMPANIONS_MIGRATION_ID = "0.7.0-companion-actors";
 const SCOPE = "carl-rpg";
@@ -313,7 +314,7 @@ async function postSummary(rows, failed) {
   await createCardMessage({
     title: loc("CardTitle"),
     body: lines.join(""),
-    whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+    whisper: gmUserIds(),
   });
 }
 

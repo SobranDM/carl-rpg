@@ -39,9 +39,7 @@ import { activeRows, rowOutcome, rowEvadeDifficulty, rowResolved } from "../help
 import { resolveTargetEffectLabel } from "../helpers/conditions.mjs";
 import { landDebuffs } from "../helpers/land-debuffs.mjs";
 import { askGM, registerAskHandler, updateCardMessage } from "../helpers/chat-socket.mjs";
-import { esc } from "./chat-card.mjs";
 import { applyDamageToActor } from "./damage-card.mjs";
-import { userOwnsUuid } from "./evade-link-card.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { afterRamRowApplied } from "../helpers/vehicle-ram.mjs";
 import { evadeIsFree, hasSpent, noteUndo, takeAction } from "../helpers/actions.mjs";
@@ -57,8 +55,12 @@ import {
 import {
   checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, trackPerCard, versusNum,
 } from "./status-rows.mjs";
-import { interveneRow, withCardQueue } from "./check-revision.mjs";
+import { interveneRow } from "./check-revision.mjs";
 import { rerollRow } from "./ai-favor-reroll.mjs";
+import { queueForCard } from "../helpers/actor-queue.mjs";
+import { esc } from "../helpers/html.mjs";
+import { actorFromUuid, ownsUuid } from "../helpers/token-resolution.mjs";
+import { damageTypeLabel } from "../helpers/damage-types.mjs";
 
 export { resolveRowTarget };
 
@@ -102,10 +104,6 @@ function withLocal(message, row) {
 function markLocal(message, rowId, result) {
   const key = `${message.id}:${rowId}`;
   doneLocally.set(key, { ...(doneLocally.get(key) ?? {}), ...result });
-}
-
-function damageTypeLabel(type) {
-  return type ? game.i18n.localize(CARLRPG.damageTypes[type] ?? type) : game.i18n.localize("CARLRPG.Roll.Damage");
 }
 
 /**
@@ -236,10 +234,10 @@ function targetRow(message, row, flags, { status, check, which }) {
   else if (row.toHit !== undefined && row.toHit !== null) num = versusNum(row.toHit, row.difficulty);
 
   // This viewer's icons on the row.
-  const mine = userOwnsUuid(row.uuid);
+  const mine = ownsUuid(row.uuid);
   // Whoever owns what actually takes the hit applies it - the vehicle, when
   // a Near Miss on its occupant hits it instead.
-  const applier = userOwnsUuid(row.redirectUuid ?? row.uuid);
+  const applier = ownsUuid(row.redirectUuid ?? row.uuid);
   const data = { "row-id": row.id };
   const acts = [];
   if (mine && !row.applied && row.hit && row.isCharacter && !row.evade && !row.block && !row.redirectUuid) {
@@ -281,15 +279,6 @@ function targetRow(message, row, flags, { status, check, which }) {
   });
 }
 
-/** An Actor from a row's uuid (sync), or null. */
-function rowActor(uuid) {
-  try {
-    const doc = uuid ? fromUuidSync(uuid) : null;
-    return doc instanceof Actor ? doc : (doc?.actor ?? null);
-  } catch {
-    return null;
-  }
-}
 
 /** What Shield Block needs to know about the card's Attack. */
 function attackFacts(flags) {
@@ -313,7 +302,7 @@ function attackFacts(flags) {
 export function rowBlockable(row, flags) {
   if (!row?.hit || !row.isCharacter || row.applied || row.block || row.redirectUuid || row.damageOverride) return false;
   if ((row.role ?? "target") !== "target" || row.evade?.success || row.evade?.pending) return false;
-  const blocker = shieldBlocker(rowActor(row.uuid));
+  const blocker = shieldBlocker(actorFromUuid(row.uuid));
   return !!blocker && blockableAttack(attackFacts(flags), blocker.rank);
 }
 
@@ -538,7 +527,7 @@ async function onRowBash(event, message, button) {
   event.preventDefault();
   const row = clickedRow(message, button);
   const flags = message.flags[SCOPE];
-  if (!row || !rowBashOpen(row, flags) || !userOwnsUuid(row.uuid)) return;
+  if (!row || !rowBashOpen(row, flags) || !ownsUuid(row.uuid)) return;
   await guarded(message, `${row.id}:bash`, async () => {
     const target = await resolveRowTarget(row);
     if (!target) return;
@@ -591,13 +580,13 @@ const APPLY = "attackRowApply";
  * @returns {Promise<{applied: boolean, lines: string[]}>}
  */
 export function applyRowNow({ cardId, rowId } = {}, user = game.user) {
-  return withCardQueue(cardId, async () => {
+  return queueForCard(cardId, async () => {
     const refused = { applied: false, lines: [] };
     const message = game.messages.get(cardId);
     const flags = message?.flags?.[SCOPE];
     const row = flags?.targetRows?.[rowId];
     if (!row || row.replaced || row.applied || recoilWaiting(row, flags)) return refused;
-    if (!user.isGM && !rowActor(row.redirectUuid ?? row.uuid)?.testUserPermission(user, "OWNER")) return refused;
+    if (!user.isGM && !actorFromUuid(row.redirectUuid ?? row.uuid)?.testUserPermission(user, "OWNER")) return refused;
     // A Near Miss on a vehicle's occupant lands on the vehicle (p.72).
     const target = await resolveRowTarget(row.redirectUuid ? { uuid: row.redirectUuid } : row);
     if (!target) return refused;
@@ -676,7 +665,7 @@ async function onRowApply(event, message, button) {
   event.preventDefault();
   const row = clickedRow(message, button);
   if (!row || row.evade?.pending || row.block?.pending || rowResolved(row, message.getFlag(SCOPE, "isArea"))) return;
-  if (!userOwnsUuid(row.redirectUuid ?? row.uuid)) return;
+  if (!ownsUuid(row.redirectUuid ?? row.uuid)) return;
   await guarded(message, row.id, () => applyRow(message, row));
 }
 
