@@ -123,6 +123,7 @@ async function onApplyConsumable(event, message) {
     });
     // Marked applied only once the effects are in - if they fail, Apply
     // stays available to try again.
+    if (!lines) return;
     await updateCardMessage(message, {
       flags: { [SCOPE]: { consumableApplied: true } },
       ...(lines.length ? { content: appendCardSection(message, list(lines)) } : {}),

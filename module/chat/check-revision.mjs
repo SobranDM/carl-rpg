@@ -485,7 +485,7 @@ function revisionTarget(message, data) {
   if (!kind) return null;
   return {
     interventions: interventionsOf(message),
-    rollerUuid: specOf(message).actorUuid,
+    rollerUuid: specOf(message)?.actorUuid,
     undoWhere: {},
     interveneOpen: () => interveneOpen(message),
     interveners: (user) => interveners(message, user),

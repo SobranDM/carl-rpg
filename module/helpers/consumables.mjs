@@ -297,7 +297,11 @@ async function drinkOrUse(actor, item, { skipDialog }) {
   const drankAt = potionMoment(recipient);
   const applyNow = recipient.isOwner;
   let lines = null;
-  if (applyNow) lines = await applyConsumableEffects(recipient, effects, { itemName: item.name, isPotion, drankAt });
+  if (applyNow) {
+    lines = await applyConsumableEffects(recipient, effects, { itemName: item.name, isPotion, drankAt });
+    // Its effects couldn't be written: kept, not used.
+    if (!lines) return null;
+  }
   const card = { name: item.name, img: item.img };
   await consumeOne(item);
   return postConsumableCard({ actor, recipient, item: card, effects, isPotion, drankAt, lines });
@@ -389,7 +393,8 @@ async function confirmUse(actor, item, { recipient = actor, isPotion = false } =
  * @param {object} effects  A snapshot of the item's system.consumable.
  * @param {{itemName?: string, isPotion?: boolean, drankAt?: {combatId: string, round: number}|null}} [options]
  *   drankAt: when it was drunk (potionMoment) - defaults to now.
- * @returns {Promise<string[]>} Result lines (HTML-safe).
+ * @returns {Promise<string[]|null>} Result lines (HTML-safe); null if they
+ *   couldn't be written (changeConditions).
  */
 export function applyConsumableEffects(recipient, effects, { itemName = "", isPotion = false, drankAt } = {}) {
   return queueForActor(recipient.uuid, () => runConsumableEffects(recipient, effects, { itemName, isPotion, drankAt }));
@@ -567,7 +572,8 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
     }
   }
 
-  await changeConditions(recipient, conditionOps(original, conditions), { updates, inQueue: true });
+  // Not made (the GM's client didn't answer): nothing was written.
+  if (!(await changeConditions(recipient, conditionOps(original, conditions), { updates, inQueue: true }))) return null;
   return lines;
 }
 

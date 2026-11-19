@@ -70,7 +70,7 @@ async function onAddEvadeDebuff(event, message) {
     return;
   }
 
-  await addConditionToActor(actor, debuffKey, { source: game.i18n.localize("CARLRPG.Roll.Evade") });
+  if (!(await addConditionToActor(actor, debuffKey, { source: game.i18n.localize("CARLRPG.Roll.Evade") }))) return;
   await updateCardMessage(message, { flags: { "carl-rpg": { debuffAdded: true } } });
   ui.notifications.info(game.i18n.format("CARLRPG.Evade.DebuffAddedNotice", { name: actor.name }));
 }

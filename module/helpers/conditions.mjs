@@ -80,14 +80,13 @@ const INJURY_UPGRADES = {
  * @param {Actor} actor
  * @param {string} key
  * @param {{stacks?: number, source?: string, label?: string}} [options]
- * @returns {Promise<Actor>}
+ * @returns {Promise<Actor|null>}  null if it couldn't be added (changeConditions).
  */
 export async function addConditionToActor(actor, key, options = {}) {
   // Vehicles take no Debuffs (Object Immunities, p.584) - and have nowhere
   // to put them.
   if (!takesConditions(actor)) return actor;
-  await changeConditions(actor, [{ op: "add", key, options }]);
-  return actor;
+  return (await changeConditions(actor, [{ op: "add", key, options }])) ? actor : null;
 }
 
 /**
@@ -221,7 +220,7 @@ function applyOps(sys, list, ops) {
  * @param {User} user
  * @returns {object[]}
  */
-function opsAllowed(ops, list, actor, user) {
+export function opsAllowed(ops, list, actor, user) {
   if (user.isGM || actor.testUserPermission(user, "OWNER")) return ops;
   const targeted = [...(user.targets ?? [])].some((t) => t.actor === actor || t.document?.actorId === actor.id);
   const inCombat = game.combats.some((c) => c.started && c.combatants.some((cb) => cb.actor === actor));
@@ -237,12 +236,15 @@ function opsAllowed(ops, list, actor, user) {
  * @param {object[]} ops
  * @param {object} updates
  * @param {User} [user]  Who asked (the GM's side of a player's ops).
- * @returns {Promise<{removed: object[]}>}
+ * @returns {Promise<{removed: object[]}|null>}  null: refused - an op this
+ *   user may not make (opsAllowed) - and nothing written.
  */
 async function writeNow(actor, ops, updates, user = null) {
   const before = actor.system.toObject().conditions ?? [];
   const list = foundry.utils.deepClone(before);
-  const removed = applyOps(actor.system, list, user ? opsAllowed(ops, before, actor, user) : ops);
+  const allowed = user ? opsAllowed(ops, before, actor, user) : ops;
+  if (allowed.length < ops.length) return null;
+  const removed = applyOps(actor.system, list, allowed);
   const changed = JSON.stringify(list) !== JSON.stringify(before);
   const write = { ...updates, ...(changed ? { "system.conditions": list } : {}) };
   if (Object.keys(write).length) await actor.update(write);
@@ -266,7 +268,12 @@ async function writeNow(actor, ops, updates, user = null) {
  *   answering).
  */
 export async function changeConditions(actor, ops, { updates = {}, inQueue = false } = {}) {
-  if (!actor || (!ops?.length && !Object.keys(updates).length)) return { removed: [] };
+  if (!actor) return null;
+  // Nothing for the list: the other fields are written here, as ever.
+  if (!ops?.length) {
+    if (Object.keys(updates).length) await actor.update(updates);
+    return { removed: [] };
+  }
   const gm = game.users.activeGM;
   if (gm && !gm.isSelf) {
     const answer = await askGM(CHANGE, { uuid: actor.uuid, ops, updates });

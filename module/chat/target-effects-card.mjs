@@ -90,11 +90,13 @@ export async function onApplyTargetEffects(event, message) {
       continue;
     }
     for (const te of targetEffects) {
-      await addConditionToActor(actor, te.debuffKey, {
+      const added = await addConditionToActor(actor, te.debuffKey, {
         stacks: te.stacks,
         source: te.sourceLabel,
         label: te.label,
       });
+      // Not added (no GM answering): the button stays, to try again.
+      if (!added) return;
     }
   }
 

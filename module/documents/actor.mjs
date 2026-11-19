@@ -1,6 +1,6 @@
 import CarlDice from "../dice/dice.mjs";
 import { recheckLevelGatedGrants } from "../helpers/race-class-grants.mjs";
-import { buildConditionEntry, dyingRounds } from "../helpers/conditions.mjs";
+import { buildConditionEntry, changeConditions, dyingRounds } from "../helpers/conditions.mjs";
 import { syncDefeated } from "../helpers/defeat.mjs";
 import { isCrawler, isPet, isVehicle } from "../helpers/actor-kinds.mjs";
 import { explodeVehicle } from "../helpers/vehicle-ram.mjs";
@@ -166,10 +166,18 @@ export class CarlRPGActor extends Actor {
     // "defeated" on a heal up from 0). Options travel with the update.
     if (foundry.utils.hasProperty(changed, "system.hb.value")) options.carlPreviousHb = this.system.hb?.value ?? 0;
 
+    // The Conditions this changes ride this update on the active GM's
+    // client (or with none online), or when it writes the list anyway;
+    // from another client the GM makes them just after, through the one
+    // writer of the list (_onUpdate, helpers/conditions.mjs changeConditions).
+    const gm = game.users.activeGM;
+    const here = !gm || gm.isSelf || foundry.utils.hasProperty(changed, "system.conditions");
+
     const droppedHb = foundry.utils.getProperty(changed, "system.hb.value");
     if (isCrawler(this) && droppedHb !== undefined && Number(droppedHb) <= 0 && (this.system.hb?.value ?? 0) > 0) {
       const conditions = foundry.utils.getProperty(changed, "system.conditions") ?? this.system.toObject().conditions ?? [];
-      if (!conditions.some((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown)) {
+      if (!here) options.carlDyingFollowUp = true;
+      else if (!conditions.some((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown)) {
         const dying = buildConditionEntry("dying", { source: game.i18n.localize("CARLRPG.Actor.HealthBar") });
         dying.id = foundry.utils.randomID();
         dying.remaining = dyingRounds(this.system);
@@ -181,7 +189,9 @@ export class CarlRPGActor extends Actor {
     // gain - Apply Healing, a rest, a hand edit on the sheet - ends every
     // `endsOnHealing` Debuff, in this same update.
     const newHb = foundry.utils.getProperty(changed, "system.hb.value");
-    if (newHb !== undefined && Number(newHb) > (this.system.hb?.value ?? 0)) {
+    if (newHb !== undefined && Number(newHb) > (this.system.hb?.value ?? 0) && !here) {
+      options.carlHealedFollowUp = true;
+    } else if (newHb !== undefined && Number(newHb) > (this.system.hb?.value ?? 0)) {
       const conditions = foundry.utils.getProperty(changed, "system.conditions") ?? this.system.toObject().conditions ?? [];
       const kept = conditions.filter((c) => !CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.endsOnHealing);
       if (kept.length !== conditions.length) foundry.utils.setProperty(changed, "system.conditions", kept);
@@ -206,6 +216,18 @@ export class CarlRPGActor extends Actor {
       && (foundry.utils.hasProperty(changed, "system.hb.value") || foundry.utils.hasProperty(changed, "system.conditions"))) {
       syncDefeated(this, { previousHb: options.carlPreviousHb ?? null })
         .catch((err) => console.error("CarlRPG | defeat sync failed", err));
+    }
+    // What another client's HB change does to the Conditions (_preUpdate):
+    // Dying at 0 HB (p.94), and any HB gain ending "until healed" Debuffs.
+    if (game.users.activeGM?.isSelf && (options.carlDyingFollowUp || options.carlHealedFollowUp)) {
+      const ops = [];
+      if (options.carlDyingFollowUp && (this.system.hb?.value ?? 0) <= 0) {
+        ops.push({ op: "add", key: "dying", options: { source: game.i18n.localize("CARLRPG.Actor.HealthBar") } });
+      }
+      if (options.carlHealedFollowUp) ops.push({ op: "removeMechanic", flag: "endsOnHealing" });
+      if (ops.length) {
+        changeConditions(this, ops).catch((err) => console.error("CarlRPG | Conditions after an HB change failed", err));
+      }
     }
     if (game.users.activeGM?.isSelf) {
       const levelDelta = options.carlLevelDelta?.[this.id];
