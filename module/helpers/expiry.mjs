@@ -19,6 +19,7 @@ import { expireSpellTimers, hasSpellTimers, spellEndedLines } from "./spell-time
 import { gmUserIds } from "./ownership.mjs";
 import { esc } from "./html.mjs";
 import { changeConditions } from "./conditions.mjs";
+import { unlinkedTokenActors } from "./token-resolution.mjs";
 
 /**
  * Ids of the condition entries that have run out by `worldTime`.
@@ -56,11 +57,7 @@ export function sweepableActors() {
   const actors = new Map();
   for (const actor of game.actors) actors.set(actor.uuid, actor);
   const scenes = new Set([canvas?.scene, ...game.combats.filter((c) => c.started).map((c) => c.scene)].filter(Boolean));
-  for (const scene of scenes) {
-    for (const token of scene.tokens) {
-      if (!token.actorLink && token.actor) actors.set(token.actor.uuid, token.actor);
-    }
-  }
+  for (const actor of unlinkedTokenActors(scenes)) actors.set(actor.uuid, actor);
   return [...actors.values()];
 }
 

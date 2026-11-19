@@ -42,6 +42,7 @@ import { freeSlotFor, isItemWorn, placeInFreeSlot } from "./equip-slots.mjs";
 import { PACKS, withUnlockedPack } from "./packs.mjs";
 import { gmUserIds } from "./ownership.mjs";
 import { esc } from "./html.mjs";
+import { unlinkedTokenActors } from "./token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 export const MIGRATION_SETTING = "completedMigrations";
@@ -257,6 +258,80 @@ export async function eachDocument(documents, fn, onFail) {
   return total;
 }
 
+/**
+ * A migration's count of what it changed and what failed. `failed` logs a
+ * failure, counts it and reports it (runMigrations' `fail`, which lists it
+ * for the GM by `label`); `attempt` adds what `fn` changed, reporting a
+ * throw as a failure of `label`.
+ * @param {(where: string, err: unknown) => void} fail  runMigrations'.
+ * @returns {{changed: number, errors: number,
+ *   failed: (label: string, err: unknown, message?: string) => void,
+ *   attempt: (label: string, fn: () => Promise<number|boolean>, message?: string) => Promise<void>,
+ *   result: () => {changed: number, errors: number}}}
+ */
+function migrationTally(fail) {
+  const tally = { changed: 0, errors: 0 };
+  tally.failed = (label, err, message = `couldn't update ${label}`) => {
+    console.error(`carl-rpg | 0.7.0 migration: ${message}`, err);
+    tally.errors += 1;
+    fail(label, err);
+  };
+  tally.attempt = async (label, fn, message) => {
+    try {
+      tally.changed += Number(await fn()) || 0;
+    } catch (err) {
+      tally.failed(label, err, message);
+    }
+  };
+  tally.result = () => ({ changed: tally.changed, errors: tally.errors });
+  return tally;
+}
+
+/**
+ * Every world Actor, then every Actor in the world's own Actor compendiums
+ * (unlocked for the run): `perActor` gives how many it changed (`where`: the
+ * compendium's title). One that throws is reported by its name, a
+ * compendium that can't be read by its id.
+ * @param {ReturnType<typeof migrationTally>} tally
+ * @param {(actor: Actor, where?: string) => Promise<number|boolean>} perActor
+ * @param {{actorMessage: (actor: Actor) => string, packMessage: (pack: CompendiumCollection) => string}} messages
+ *   The console messages for a failure.
+ */
+async function eachWorldActor(tally, perActor, { actorMessage, packMessage }) {
+  for (const actor of game.actors) await tally.attempt(actor.name, () => perActor(actor), actorMessage(actor));
+  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        for (const actor of await pack.getDocuments()) {
+          await tally.attempt(actor.name, () => perActor(actor, pack.title), actorMessage(actor));
+        }
+      });
+    } catch (err) {
+      tally.failed(pack.collection, err, packMessage(pack));
+    }
+  }
+}
+
+/**
+ * One of the world's own compendiums, unlocked for the run: each Actor
+ * through `onActor`; for an Item compendium, each Item's update
+ * (`itemUpdate`, null for none) written together (updateItemsEach).
+ * @param {CompendiumCollection} pack
+ * @param {{onActor: (actor: Actor) => Promise<number>, itemUpdate: (item: Item) => object|null, options: object}} how
+ *   options: the Item update's ({pack} is added).
+ * @param {((label: string, err: unknown) => void)|null} failed  None: the first failure throws.
+ * @returns {Promise<number>}  How many were changed.
+ */
+function migrateWorldPack(pack, { onActor, itemUpdate, options }, failed) {
+  return withUnlockedPack(pack, async () => {
+    const documents = await pack.getDocuments();
+    const onFail = failed && ((doc, err) => failed(`${doc.name} (${pack.title})`, err));
+    if (pack.documentName === "Actor") return eachDocument(documents, onActor, onFail ?? ((doc, err) => { throw err; }));
+    const updates = documents.map(itemUpdate).filter(Boolean);
+    return updateItemsEach(documents, updates, { pack: pack.collection, ...options }, onFail);
+  });
+}
+
 /** An imported rulebook document the GM hadn't edited (fingerprint.mjs), so a migration's write can be re-stamped. */
 function untouchedImport(doc) {
   const flag = doc?.flags?.[SCOPE]?.pdfImport;
@@ -355,20 +430,7 @@ export async function tickHandToHandOn(actor) {
  * @returns {Promise<{changed: number, errors: number}>}
  */
 async function migrateHandToHandSkills({ fail = NO_FAIL } = {}) {
-  let changed = 0;
-  let errors = 0;
-  const failed = (label, err) => {
-    console.error(`carl-rpg | 0.7.0 migration: couldn't update ${label}`, err);
-    errors += 1;
-    fail(label, err);
-  };
-  const attempt = async (label, fn) => {
-    try {
-      changed += await fn();
-    } catch (err) {
-      failed(label, err);
-    }
-  };
+  const { attempt, failed, result } = migrationTally(fail);
 
   for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => tickHandToHandOn(actor));
 
@@ -380,7 +442,7 @@ async function migrateHandToHandSkills({ fail = NO_FAIL } = {}) {
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
     await attempt(`compendium ${pack.collection}`, () => migratePack(pack, failed));
   }
-  return { changed, errors };
+  return result();
 }
 
 /* -------------------------------------------------- */
@@ -475,35 +537,18 @@ export async function applySkillSettingBoxesOn(actor) {
  * @returns {Promise<{changed: number, errors: number}>}
  */
 export async function migrateSkillSettingBoxes({ fail = NO_FAIL } = {}) {
-  let changed = 0;
-  let errors = 0;
-  const failed = (label, err) => {
-    console.error(`carl-rpg | 0.7.0 migration: couldn't update ${label}`, err);
-    errors += 1;
-    fail(label, err);
-  };
-  const attempt = async (label, fn) => {
-    try {
-      changed += await fn();
-    } catch (err) {
-      failed(label, err);
-    }
-  };
+  const { attempt, failed, result } = migrationTally(fail);
   for (const actor of actorsWithOwnGear()) await attempt(`Actor ${actor.name}`, () => applySkillSettingBoxesOn(actor));
   await attempt("the Items directory", () => {
     const updates = game.items.map(skillSettingUpdate).filter(Boolean);
     return updateItemsEach(game.items, updates, { carlMigration: true, render: false }, (item, err) => failed(item.name, err));
   });
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
-    await attempt(`compendium ${pack.collection}`, () => withUnlockedPack(pack, async () => {
-      const documents = await pack.getDocuments();
-      const onFail = (doc, err) => failed(`${doc.name} (${pack.title})`, err);
-      if (pack.documentName === "Actor") return eachDocument(documents, applySkillSettingBoxesOn, onFail);
-      const updates = documents.map(skillSettingUpdate).filter(Boolean);
-      return updateItemsEach(documents, updates, { pack: pack.collection, carlMigration: true, render: false }, onFail);
-    }));
+    await attempt(`compendium ${pack.collection}`, () => migrateWorldPack(pack, {
+      onActor: applySkillSettingBoxesOn, itemUpdate: skillSettingUpdate, options: { carlMigration: true, render: false },
+    }, failed));
   }
-  return { changed, errors };
+  return result();
 }
 
 /* -------------------------------------------------- */
@@ -559,35 +604,18 @@ async function fixBaseMultipliersOn(actor) {
  * @returns {Promise<{changed: number, errors: number}>}
  */
 async function migrateBaseMultipliers({ fail = NO_FAIL } = {}) {
-  let changed = 0;
-  let errors = 0;
-  const failed = (label, err) => {
-    console.error(`carl-rpg | 0.7.0 migration: couldn't update ${label}`, err);
-    errors += 1;
-    fail(label, err);
-  };
-  const attempt = async (label, fn) => {
-    try {
-      changed += await fn();
-    } catch (err) {
-      failed(label, err);
-    }
-  };
+  const { attempt, failed, result } = migrationTally(fail);
   for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => fixBaseMultipliersOn(actor));
   await attempt("the Items directory", () => {
     const updates = game.items.map(baseMultiplierUpdate).filter(Boolean);
     return updateItemsEach(game.items, updates, { render: false }, (item, err) => failed(item.name, err));
   });
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
-    await attempt(`compendium ${pack.collection}`, () => withUnlockedPack(pack, async () => {
-      const documents = await pack.getDocuments();
-      const onFail = (doc, err) => failed(`${doc.name} (${pack.title})`, err);
-      if (pack.documentName === "Actor") return eachDocument(documents, fixBaseMultipliersOn, onFail);
-      const updates = documents.map(baseMultiplierUpdate).filter(Boolean);
-      return updateItemsEach(documents, updates, { pack: pack.collection, render: false }, onFail);
-    }));
+    await attempt(`compendium ${pack.collection}`, () => migrateWorldPack(pack, {
+      onActor: fixBaseMultipliersOn, itemUpdate: baseMultiplierUpdate, options: { render: false },
+    }, failed));
   }
-  return { changed, errors };
+  return result();
 }
 
 /**
@@ -617,26 +645,15 @@ function shouldMigratePack(pack) {
  * @returns {Promise<{changed: number, errors: number}>}
  */
 async function migrateDeityBlocks({ fail = NO_FAIL } = {}) {
-  let changed = 0;
-  let errors = 0;
-  const failed = (label, err) => {
-    console.error(`carl-rpg | 0.7.0 migration: couldn't save the Deity of ${label}`, err);
-    errors += 1;
-    fail(label, err);
-  };
-  const attempt = async (label, fn) => {
-    try {
-      changed += await fn();
-    } catch (err) {
-      failed(label, err);
-    }
-  };
+  const tally = migrationTally(fail);
+  const failed = (label, err) => tally.failed(label, err, `couldn't save the Deity of ${label}`);
+  const attempt = (label, fn) => tally.attempt(label, fn, `couldn't save the Deity of ${label}`);
   for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => persistDeityBlock(actor));
   for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
     await attempt(`compendium ${pack.collection}`, () => withUnlockedPack(pack, async () =>
       eachDocument(await pack.getDocuments(), persistDeityBlock, (actor, err) => failed(`${actor.name} (${pack.title})`, err))));
   }
-  return { changed, errors };
+  return tally.result();
 }
 
 /**
@@ -700,38 +717,22 @@ export async function backfillDeityTier(actor) {
  * @returns {Promise<{changed: number, errors: number}>}
  */
 async function migrateDeityTiers({ fail = NO_FAIL } = {}) {
-  let changed = 0;
-  let errors = 0;
+  const tally = migrationTally(fail);
   const lines = [];
-  const attempt = async (actor, where) => {
-    try {
-      const tier = await backfillDeityTier(actor);
-      if (!tier) return;
-      changed += 1;
-      lines.push(game.i18n.format("CARLRPG.Migration.DeityTier.Line", {
-        name: esc(actor.name) + (where ? ` (${esc(where)})` : ""),
-        tier: esc(game.i18n.localize(CONFIG.CARLRPG.featureTiers[tier])),
-      }));
-    } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't set the Deity Tier of ${actor.name}`, err);
-      errors += 1;
-      fail(actor.name, err);
-    }
-  };
-  for (const actor of game.actors) await attempt(actor);
-  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
-    try {
-      await withUnlockedPack(pack, async () => {
-        for (const actor of await pack.getDocuments()) await attempt(actor, pack.title);
-      });
-    } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't set Deity Tiers in compendium ${pack.collection}`, err);
-      errors += 1;
-      fail(pack.collection, err);
-    }
-  }
+  await eachWorldActor(tally, async (actor, where) => {
+    const tier = await backfillDeityTier(actor);
+    if (!tier) return 0;
+    lines.push(game.i18n.format("CARLRPG.Migration.DeityTier.Line", {
+      name: esc(actor.name) + (where ? ` (${esc(where)})` : ""),
+      tier: esc(game.i18n.localize(CONFIG.CARLRPG.featureTiers[tier])),
+    }));
+    return 1;
+  }, {
+    actorMessage: (actor) => `couldn't set the Deity Tier of ${actor.name}`,
+    packMessage: (pack) => `couldn't set Deity Tiers in compendium ${pack.collection}`,
+  });
   if (lines.length) await whisperGmList("DeityTier", lines);
-  return { changed, errors };
+  return tally.result();
 }
 
 /* -------------------------------------------------- */
@@ -1036,37 +1037,21 @@ export async function zeroCharacterBaseDr(actor) {
  * @returns {Promise<{changed: number, errors: number}>}
  */
 async function migrateCharacterBaseDr({ fail = NO_FAIL } = {}) {
-  let changed = 0;
-  let errors = 0;
+  const tally = migrationTally(fail);
   const lines = [];
-  const attempt = async (actor, where) => {
-    try {
-      const dr = await zeroCharacterBaseDr(actor);
-      if (!dr) return;
-      changed += 1;
-      lines.push(game.i18n.format("CARLRPG.Migration.BaseDr.Line", {
-        name: esc(actor.name) + (where ? ` (${esc(where)})` : ""), dr,
-      }));
-    } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't zero the base DR of ${actor.name}`, err);
-      errors += 1;
-      fail(actor.name, err);
-    }
-  };
-  for (const actor of game.actors) await attempt(actor);
-  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
-    try {
-      await withUnlockedPack(pack, async () => {
-        for (const actor of await pack.getDocuments()) await attempt(actor, pack.title);
-      });
-    } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't zero base DR in compendium ${pack.collection}`, err);
-      errors += 1;
-      fail(pack.collection, err);
-    }
-  }
+  await eachWorldActor(tally, async (actor, where) => {
+    const dr = await zeroCharacterBaseDr(actor);
+    if (!dr) return 0;
+    lines.push(game.i18n.format("CARLRPG.Migration.BaseDr.Line", {
+      name: esc(actor.name) + (where ? ` (${esc(where)})` : ""), dr,
+    }));
+    return 1;
+  }, {
+    actorMessage: (actor) => `couldn't zero the base DR of ${actor.name}`,
+    packMessage: (pack) => `couldn't zero base DR in compendium ${pack.collection}`,
+  });
   if (lines.length) await whisperGmList("BaseDr", lines);
-  return { changed, errors };
+  return tally.result();
 }
 
 /* -------------------------------------------------- */
@@ -1110,30 +1095,12 @@ export async function markChargenDone(actor) {
  * @returns {Promise<{changed: number, errors: number}>}
  */
 async function migrateChargenDone({ fail = NO_FAIL } = {}) {
-  let changed = 0;
-  let errors = 0;
-  const attempt = async (actor) => {
-    try {
-      if (await markChargenDone(actor)) changed += 1;
-    } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't mark ${actor.name} as created`, err);
-      errors += 1;
-      fail(actor.name, err);
-    }
-  };
-  for (const actor of game.actors) await attempt(actor);
-  for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
-    try {
-      await withUnlockedPack(pack, async () => {
-        for (const actor of await pack.getDocuments()) await attempt(actor);
-      });
-    } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't mark Characters in compendium ${pack.collection}`, err);
-      errors += 1;
-      fail(pack.collection, err);
-    }
-  }
-  return { changed, errors };
+  const tally = migrationTally(fail);
+  await eachWorldActor(tally, async (actor) => ((await markChargenDone(actor)) ? 1 : 0), {
+    actorMessage: (actor) => `couldn't mark ${actor.name} as created`,
+    packMessage: (pack) => `couldn't mark Characters in compendium ${pack.collection}`,
+  });
+  return tally.result();
 }
 
 /**
@@ -1395,13 +1362,7 @@ export async function migrateGearSlots({ fail = NO_FAIL } = {}) {
     errors += 1;
     fail(sidebar, err);
   }
-  const actors = [...game.actors];
-  for (const scene of game.scenes) {
-    for (const token of scene.tokens) {
-      if (!token.actorLink && token.actor && token.delta?._source?.items?.length) actors.push(token.actor);
-    }
-  }
-  for (const actor of actors) {
+  for (const actor of actorsWithOwnGear()) {
     try {
       const result = await inferActorGear(actor);
       changed += result.changed;
@@ -1847,13 +1808,7 @@ export async function migrateWeaponSkillGuesses({ fail = NO_FAIL } = {}) {
 
 /** World actors, and unlinked tokens with gear of their own (as migrateGearSlots walks them). */
 function actorsWithOwnGear() {
-  const actors = [...game.actors];
-  for (const scene of game.scenes) {
-    for (const token of scene.tokens) {
-      if (!token.actorLink && token.actor && token.delta?._source?.items?.length) actors.push(token.actor);
-    }
-  }
-  return actors;
+  return [...game.actors, ...unlinkedTokenActors(game.scenes, (token) => !!token.delta?._source?.items?.length)];
 }
 
 /* -------------------------------------------------- */
@@ -1960,15 +1915,11 @@ export async function postWeaponSkillNotice({ filled, remaining }) {
  * @returns {Promise<number>}  How many were ticked.
  */
 export function migratePack(pack, failed = null) {
-  return withUnlockedPack(pack, async () => {
-    const documents = await pack.getDocuments();
-    const onFail = failed && ((doc, err) => failed(`${doc.name} (${pack.title})`, err));
-    if (pack.documentName === "Actor") {
-      return eachDocument(documents, tickHandToHandOn, onFail ?? ((doc, err) => { throw err; }));
-    }
-    const updates = documents.filter(needsHandToHand).map((item) => ({ _id: item.id, "system.isHandToHand": true }));
-    return updateItemsEach(documents, updates, { pack: pack.collection, render: false }, onFail);
-  });
+  return migrateWorldPack(pack, {
+    onActor: tickHandToHandOn,
+    itemUpdate: (item) => (needsHandToHand(item) ? { _id: item.id, "system.isHandToHand": true } : null),
+    options: { render: false },
+  }, failed);
 }
 
 /* -------------------------------------------------- */
@@ -2080,20 +2031,7 @@ export function saveDriveSkills(vehicles, onFail = (doc, err) => { throw err; })
  * @returns {Promise<{changed: number, errors: number}>}
  */
 export async function migrateVehicleSkillSettings({ fail = NO_FAIL } = {}) {
-  let changed = 0;
-  let errors = 0;
-  const failed = (label, err) => {
-    console.error(`carl-rpg | 0.7.0 migration: couldn't update ${label}`, err);
-    errors += 1;
-    fail(label, err);
-  };
-  const attempt = async (label, fn) => {
-    try {
-      changed += await fn();
-    } catch (err) {
-      failed(label, err);
-    }
-  };
+  const { attempt, failed, result } = migrationTally(fail);
 
   await attempt(game.i18n.localize("TYPES.Actor.vehicle"),
     () => saveDriveSkills(game.actors.filter((a) => a.type === "vehicle"), (actor, err) => failed(actor.name, err)));
@@ -2135,7 +2073,7 @@ export async function migrateVehicleSkillSettings({ fail = NO_FAIL } = {}) {
       return keys + await eachDocument(documents, fixVehicleSkillsOn, onFail);
     }));
   }
-  return { changed, errors };
+  return result();
 }
 
 /* -------------------------------------------------- */

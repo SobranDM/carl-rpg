@@ -95,3 +95,20 @@ export function ownsUuid(uuid, user = game.user) {
   if (user.isGM) return true;
   return !!actorFromUuid(uuid)?.testUserPermission(user, "OWNER");
 }
+
+/**
+ * The own (synthetic) actors of unlinked tokens - absent from game.actors -
+ * on these scenes, optionally only the tokens passing `test`.
+ * @param {Iterable<Scene>} [scenes]
+ * @param {(token: TokenDocument) => boolean} [test]
+ * @returns {Actor[]}
+ */
+export function unlinkedTokenActors(scenes = game.scenes, test = () => true) {
+  const actors = [];
+  for (const scene of scenes) {
+    for (const token of scene.tokens) {
+      if (!token.actorLink && token.actor && test(token)) actors.push(token.actor);
+    }
+  }
+  return actors;
+}

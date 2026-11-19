@@ -37,6 +37,7 @@ import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
 import { openRulebookImporter, RulebookImportMenu } from './pdf-import/import-dialog.mjs';
 import { migrateWorld, registerMigrationSetting } from './helpers/migration.mjs';
 import { changeLineHtml, debuffLineHtml } from './helpers/sheet-rows.mjs';
+import { unlinkedTokenActors } from "./helpers/token-resolution.mjs";
 
 Hooks.once('init', function () {
   game.carlrpg = {
@@ -95,14 +96,9 @@ Hooks.once('init', function () {
         actor.reset();
         if (actor.sheet?.rendered) actor.sheet.render();
       }
-      for (const scene of game.scenes) {
-        for (const tokenDoc of scene.tokens) {
-          if (tokenDoc.actorLink) continue;
-          const actor = tokenDoc.actor;
-          if (!actor) continue;
-          actor.reset();
-          if (actor.sheet?.rendered) actor.sheet.render();
-        }
+      for (const actor of unlinkedTokenActors()) {
+        actor.reset();
+        if (actor.sheet?.rendered) actor.sheet.render();
       }
     },
   });
