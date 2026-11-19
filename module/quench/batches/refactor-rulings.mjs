@@ -12,6 +12,7 @@ import { useConsumable } from "../../helpers/consumables.mjs";
 import {
   createTestCharacter, createTestCombat, createTestMob, createTestItem, deleteTestActor, deleteTestCombat, useQuenchTimeout, waitFor, withFakeTargets,
 } from "../helpers.mjs";
+import { REFRESHED_ITEMS } from "../../helpers/migration.mjs";
 
 /**
  * The rulings of the 0.7.1 consolidation (docs/refactor-0.7.1.md, ruled
@@ -278,6 +279,17 @@ export default function register(quench) {
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
+          }
+        });
+      });
+
+      describe("The 0.7.0 refresh migration's items (known-gaps §10)", function () {
+        it("every name it refreshes is in its system compendium", async function () {
+          for (const [packName, names] of Object.entries(REFRESHED_ITEMS)) {
+            const index = await game.packs.get(`carl-rpg.${packName}`)?.getIndex();
+            assert.exists(index, `carl-rpg.${packName}`);
+            const have = new Set(index.map((e) => e.name));
+            for (const name of names) assert.isTrue(have.has(name), `${name} in ${packName}`);
           }
         });
       });
