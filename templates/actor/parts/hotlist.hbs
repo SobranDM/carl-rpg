@@ -27,7 +27,7 @@
         {{#if slot.img}}<img src="{{slot.img}}" alt="" width="22" height="22" />{{/if}}
         <span class="carl-hotlist-name"{{itemTooltip (lookup @root.itemTooltips slot.itemId)}}>{{slot.name}}</span>
         <span class="carl-hotlist-detail">
-          {{#if (eq slot.kind "spell")}}R{{slot.rank}} · {{slot.manaCost}} MP{{#if slot.active}} <i class="fas fa-bolt" title="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}{{/if}}
+          {{#if (eq slot.kind "spell")}}R{{slot.rank}} · {{slot.manaCost}} MP{{#if slot.active}} <i class="fas fa-bolt" data-tooltip-text="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}{{/if}}
           {{#if (eq slot.kind "skill")}}R{{slot.rank}}{{/if}}
           {{#if (eq slot.kind "consumable")}}×{{slot.quantity}}{{/if}}
         </span>
@@ -46,7 +46,7 @@
       {{else}}
       </div>
       {{/if}}
-      <a class="item-control carl-slot-clear" data-action="clearSlot" title="{{localize 'CARLRPG.Actor.ClearSlot'}}"><i class="fas fa-times"></i></a>
+      <a class="item-control carl-slot-clear" data-action="clearSlot" data-tooltip-text="{{localize 'CARLRPG.Actor.ClearSlot'}}"><i class="fas fa-times"></i></a>
       {{/if}}
     </li>
     {{/each}}

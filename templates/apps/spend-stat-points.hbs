@@ -22,11 +22,11 @@
     <div class="carl-spend-stat-points-row">
       <div class="carl-spend-stat-points-buttons">
         <button type="button" data-action="decrementStat" data-key="{{stat.key}}"
-          {{#if stat.atInitial}}disabled{{/if}} title="{{localize 'CARLRPG.SpendStatPoints.Decrement'}}">
+          {{#if stat.atInitial}}disabled{{/if}} data-tooltip-text="{{localize 'CARLRPG.SpendStatPoints.Decrement'}}">
           <i class="fas fa-minus"></i>
         </button>
         <button type="button" data-action="incrementStat" data-key="{{stat.key}}"
-          {{#unless stat.canIncrement}}disabled{{/unless}} title="{{#if stat.locked}}{{localize 'CARLRPG.Pet.IntLocked'}}{{else}}{{localize 'CARLRPG.SpendStatPoints.Increment'}}{{/if}}">
+          {{#unless stat.canIncrement}}disabled{{/unless}} data-tooltip-text="{{#if stat.locked}}{{localize 'CARLRPG.Pet.IntLocked'}}{{else}}{{localize 'CARLRPG.SpendStatPoints.Increment'}}{{/if}}">
           <i class="fas fa-plus"></i>
         </button>
       </div>

@@ -19,19 +19,19 @@
   <fieldset class="carl-toolbox-section">
     <legend>{{localize "CARLRPG.Toolbox.FloorProgress"}}</legend>
     <div class="carl-toolbox-row carl-toolbox-floor-row">
-      <button type="button" data-action="floorDecrement" title="{{localize 'CARLRPG.Toolbox.FloorDecrement'}}">
+      <button type="button" data-action="floorDecrement" data-tooltip-text="{{localize 'CARLRPG.Toolbox.FloorDecrement'}}">
         <i class="fas fa-minus"></i>
       </button>
       <span class="carl-toolbox-floor">{{localize "CARLRPG.Actor.Floor"}} {{floor}}</span>
-      <button type="button" data-action="floorIncrement" title="{{localize 'CARLRPG.Toolbox.FloorIncrement'}}">
+      <button type="button" data-action="floorIncrement" data-tooltip-text="{{localize 'CARLRPG.Toolbox.FloorIncrement'}}">
         <i class="fas fa-plus"></i>
       </button>
     </div>
     <div class="carl-toolbox-row">
-      <button type="button" data-action="endFloor" title="{{localize 'CARLRPG.Toolbox.EndFloorHint'}}">
+      <button type="button" data-action="endFloor" data-tooltip-text="{{localize 'CARLRPG.Toolbox.EndFloorHint'}}">
         <i class="fas fa-stairs"></i> {{localize "CARLRPG.Toolbox.EndFloor"}}
       </button>
-      <button type="button" data-action="bossKilled" title="{{localize 'CARLRPG.Toolbox.BossKilledHint'}}">
+      <button type="button" data-action="bossKilled" data-tooltip-text="{{localize 'CARLRPG.Toolbox.BossKilledHint'}}">
         <i class="fas fa-skull"></i> {{localize "CARLRPG.Toolbox.BossKilled"}}
       </button>
     </div>
@@ -41,7 +41,7 @@
     <legend>{{localize "CARLRPG.Toolbox.InWorldRest"}}</legend>
     <div class="carl-toolbox-row">
       <button type="button" data-action="rest"><i class="fas fa-bed"></i> {{localize "CARLRPG.Toolbox.Rest.Button"}}</button>
-      <button type="button" data-action="mend" title="{{localize 'CARLRPG.Toolbox.MendHint'}}">
+      <button type="button" data-action="mend" data-tooltip-text="{{localize 'CARLRPG.Toolbox.MendHint'}}">
         <i class="fas fa-bandage"></i> {{localize "CARLRPG.Toolbox.Mend"}}
       </button>
     </div>
@@ -54,9 +54,9 @@
       <button type="button" data-action="rollLoot"><i class="fas fa-gem"></i> {{localize "CARLRPG.Toolbox.RollLoot"}}</button>
     </div>
     <div class="carl-toolbox-row">
-      <button type="button" data-action="partyCheck" title="{{localize 'CARLRPG.PartyCheck.ButtonHint'}}">
+      <button type="button" data-action="partyCheck" data-tooltip-text="{{localize 'CARLRPG.PartyCheck.ButtonHint'}}">
         <i class="fas fa-people-group"></i> {{localize "CARLRPG.PartyCheck.Button"}}</button>
-      <button type="button" data-action="newScene" title="{{localize 'CARLRPG.Toolbox.NewSceneHint'}}">
+      <button type="button" data-action="newScene" data-tooltip-text="{{localize 'CARLRPG.Toolbox.NewSceneHint'}}">
         <i class="fas fa-clapperboard"></i> {{localize "CARLRPG.Toolbox.NewScene"}}</button>
     </div>
   </fieldset>

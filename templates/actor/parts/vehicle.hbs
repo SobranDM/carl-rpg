@@ -15,10 +15,10 @@
         <div class="item-prop carl-vehicle-role">{{localize occupant.roleLabel}}</div>
         <div class="item-controls">
           {{#if occupant.canDrive}}
-          <a class="item-control" data-action="setDriver" data-uuid="{{occupant.uuid}}" title="{{localize 'CARLRPG.Vehicle.MakeDriver'}}"><i class="fas fa-car-side"></i></a>
+          <a class="item-control" data-action="setDriver" data-uuid="{{occupant.uuid}}" data-tooltip-text="{{localize 'CARLRPG.Vehicle.MakeDriver'}}"><i class="fas fa-car-side"></i></a>
           {{/if}}
           {{#if occupant.canExit}}
-          <a class="item-control" data-action="exitVehicle" data-uuid="{{occupant.uuid}}" title="{{localize 'CARLRPG.Vehicle.Exit'}}"><i class="fas fa-sign-out-alt"></i></a>
+          <a class="item-control" data-action="exitVehicle" data-uuid="{{occupant.uuid}}" data-tooltip-text="{{localize 'CARLRPG.Vehicle.Exit'}}"><i class="fas fa-sign-out-alt"></i></a>
           {{/if}}
         </div>
       </li>
@@ -31,7 +31,7 @@
       <button type="button" data-action="boardVehicle"><i class="fas fa-sign-in-alt"></i> {{localize "CARLRPG.Vehicle.BoardAs" name=vehicle.boarder.name}}</button>
       {{/if}}
       {{#if @root.isGM}}
-      <button type="button" data-action="boardSelected" title="{{localize 'CARLRPG.Vehicle.BoardSelectedHint'}}"><i class="fas fa-users"></i> {{localize "CARLRPG.Vehicle.BoardSelected"}}</button>
+      <button type="button" data-action="boardSelected" data-tooltip-text="{{localize 'CARLRPG.Vehicle.BoardSelectedHint'}}"><i class="fas fa-users"></i> {{localize "CARLRPG.Vehicle.BoardSelected"}}</button>
       {{/if}}
     </div>
     <p class="carl-hint">{{localize "CARLRPG.Vehicle.RulesReminder" board=vehicle.status.boardDifficulty stop=vehicle.status.stopDifficulty buff=vehicle.status.evadeBuff}}</p>
@@ -48,10 +48,10 @@
         <div class="item-prop">{{weapon.range}}</div>
         <div class="item-controls">
           {{#if weapon.canFire}}
-          <a class="item-control" data-action="fireVehicleWeapon" data-index="{{weapon.index}}" title="{{localize 'CARLRPG.Vehicle.FireHint'}}"><i class="fas fa-crosshairs"></i></a>
+          <a class="item-control" data-action="fireVehicleWeapon" data-index="{{weapon.index}}" data-tooltip-text="{{localize 'CARLRPG.Vehicle.FireHint'}}"><i class="fas fa-crosshairs"></i></a>
           {{/if}}
           {{#if @root.isGM}}
-          <a class="item-control" data-action="rollMobAttack" data-index="{{weapon.index}}" title="{{localize 'CARLRPG.Vehicle.FireAsCrewHint'}}"><i class="fas fa-dice-d20"></i></a>
+          <a class="item-control" data-action="rollMobAttack" data-index="{{weapon.index}}" data-tooltip-text="{{localize 'CARLRPG.Vehicle.FireAsCrewHint'}}"><i class="fas fa-dice-d20"></i></a>
           {{/if}}
         </div>
       </li>

@@ -56,7 +56,7 @@
     <div class="item-controls">
       {{!-- CarlDice.rollMobAttack: posts this Attack against the user's
             targeted tokens, its to-hit adjusted for Debuffs (p.96). --}}
-      <a class="item-control carl-roll-mob-attack" data-action="rollMobAttack" data-index="{{index}}" title="{{localize 'CARLRPG.MobAttack.RollHint'}}">
+      <a class="item-control carl-roll-mob-attack" data-action="rollMobAttack" data-index="{{index}}" data-tooltip-text="{{localize 'CARLRPG.MobAttack.RollHint'}}">
         <i class="fas fa-dice-d20"></i>
       </a>
       <a class="item-control" data-action="deleteArrayItem" data-path="system.attacks" data-index="{{index}}">

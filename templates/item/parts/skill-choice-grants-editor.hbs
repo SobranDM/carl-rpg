@@ -13,9 +13,9 @@
   {{#each grants as |grant gIndex|}}
   <div class="carl-skill-choice-row flexrow">
     <input type="text" class="carl-w-medium" name="{{concat ../path '.' gIndex '.category'}}" value="{{grant.category}}"
-      placeholder="{{localize 'CARLRPG.SkillChoice.CategoryPlaceholder'}}" title="{{localize 'CARLRPG.SkillChoice.Category'}}" />
+      placeholder="{{localize 'CARLRPG.SkillChoice.CategoryPlaceholder'}}" data-tooltip-text="{{localize 'CARLRPG.SkillChoice.Category'}}" />
     <input type="text" class="carl-w-tiny" data-dtype="Number" name="{{concat ../path '.' gIndex '.amount'}}" value="{{grant.amount}}"
-      title="{{localize 'CARLRPG.SkillChoice.Amount'}}" />
+      data-tooltip-text="{{localize 'CARLRPG.SkillChoice.Amount'}}" />
     {{#if ../item.actor}}
     <input type="text" class="carl-w-medium" list="carl-skill-choice-target-list-{{../item.id}}" data-skill-choice-input="{{gIndex}}"
       placeholder="{{localize 'CARLRPG.SkillChoice.PickPlaceholder'}}" />

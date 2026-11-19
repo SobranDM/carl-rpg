@@ -37,7 +37,7 @@
       {{!-- The heading, then Stat and Skill indented under it: each count
             (the GM can correct it) out of the limit, both inputs on the
             right; the limit and a player's count can't be edited. --}}
-      <div class="carl-potions-used" title="{{localize 'CARLRPG.Actor.PotionsUsedHint'}}">
+      <div class="carl-potions-used" data-tooltip-text="{{localize 'CARLRPG.Actor.PotionsUsedHint'}}">
         <span class="carl-potions-heading">{{localize "CARLRPG.Actor.PotionsUsed"}}</span>
         {{#each (object stat="CARLRPG.Actor.PotionsStat" skill="CARLRPG.Actor.PotionsSkill") as |label kind|}}
         <div class="carl-sheet-line carl-potion-count">

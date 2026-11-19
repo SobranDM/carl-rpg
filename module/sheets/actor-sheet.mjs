@@ -46,6 +46,7 @@ import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
 import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
 import { currentFloor } from "../helpers/floor.mjs";
 import { enrichDescription, itemTooltips } from "../helpers/rich-text.mjs";
+import { esc } from "../helpers/html.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -570,6 +571,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.evadeTotal = evadeModifier(sys);
     // Evade, DR, Move and Step with their source tooltips (bonus-sources.mjs).
     context.defenses = describeDefenses(sys);
+    // The Evade button's tooltip: what it rolls, then where its bonus comes from, on two lines.
+    context.defenses.evade.tooltipHtml = `${esc(game.i18n.localize("CARLRPG.Actor.EvadeTotalHint"))}<br>${esc(context.defenses.evade.tooltip)}`;
     context.resistanceSummary = resistanceSummary(sys);
     context.potions = {
       limit: PERMANENT_POTION_LIMIT,

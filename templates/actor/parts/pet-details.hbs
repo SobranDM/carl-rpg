@@ -15,20 +15,20 @@
         </select>
       </div>
       <div>
-        <label class="resource-label" title="{{localize 'CARLRPG.Pet.AttitudeHint'}}">{{localize "CARLRPG.Pet.Attitude"}}</label>
+        <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Pet.AttitudeHint'}}">{{localize "CARLRPG.Pet.Attitude"}}</label>
         <select class="carl-w-short" name="system.attitude">
           {{selectOptions config.petAttitudes selected=system.attitude localize=true}}
         </select>
       </div>
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.IsMountHint'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Pet.IsMountHint'}}">
         <input type="checkbox" name="system.isMount" {{checked system.isMount}} />
         {{localize "CARLRPG.Pet.IsMount"}}
       </label>
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.IsMinionHint'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Pet.IsMinionHint'}}">
         <input type="checkbox" name="system.isMinion" {{checked system.isMinion}} {{#if system.isMount}}disabled{{/if}} />
         {{localize "CARLRPG.Pet.IsMinion"}}
       </label>
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.EarthBornHint'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Pet.EarthBornHint'}}">
         <input type="checkbox" name="system.earthBorn" {{checked system.earthBorn}} />
         {{localize "CARLRPG.Pet.EarthBorn"}}
       </label>
@@ -41,7 +41,7 @@
     <div class="carl-field-grid">
       {{#unless system.isMount}}
       <div>
-        <label class="resource-label" title="{{localize 'CARLRPG.Pet.LevelHint'}}">{{localize "CARLRPG.Actor.Level"}}</label>
+        <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Pet.LevelHint'}}">{{localize "CARLRPG.Actor.Level"}}</label>
         <input type="text" class="carl-w-tiny" name="system.attributes.level.value" value="{{system.attributes.level.value}}" data-dtype="Number" />
       </div>
       {{/unless}}
@@ -64,7 +64,7 @@
         <input type="text" class="carl-w-tiny" name="system.step" value="{{system.step}}" data-dtype="Number" />
       </div>
       <div>
-        <label class="resource-label" title="{{localize 'CARLRPG.Pet.HbSlotsHint'}}">{{localize "CARLRPG.Actor.HbSlotsOverride"}}</label>
+        <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Pet.HbSlotsHint'}}">{{localize "CARLRPG.Actor.HbSlotsOverride"}}</label>
         <input type="text" class="carl-w-tiny" name="system.hbSlotsOverride" value="{{system.hbSlotsOverride}}"
           placeholder="{{system.hbSlotsRule}}" data-dtype="Number" />
       </div>
@@ -76,13 +76,13 @@
     <legend>
       {{localize "CARLRPG.Pet.Sections.Role"}}
       <span class="carl-pet-ability-count {{#if (gt system.specialAbilityCount system.specialAbilityAllowed)}}over{{/if}}"
-        title="{{localize 'CARLRPG.Pet.SpecialAbilityCountHint'}}">
+        data-tooltip-text="{{localize 'CARLRPG.Pet.SpecialAbilityCountHint'}}">
         ({{localize "CARLRPG.Pet.SpecialAbilities"}} {{system.specialAbilityCount}} / {{system.specialAbilityAllowed}})
       </span>
     </legend>
     <div class="carl-field-grid">
       <div>
-        <label class="resource-label" title="{{localize 'CARLRPG.Pet.RoleHint'}}">{{localize "CARLRPG.Pet.Role"}}</label>
+        <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Pet.RoleHint'}}">{{localize "CARLRPG.Pet.Role"}}</label>
         <select class="carl-w-short" name="system.role">
           <option value="">{{localize "CARLRPG.Pet.Roles.none"}}</option>
           {{selectOptions config.petRoles selected=system.role localize=true}}
@@ -92,7 +92,7 @@
         <input type="checkbox" name="system.specialAbilities.move60" {{checked system.specialAbilities.move60}} />
         {{localize "CARLRPG.Pet.Move60"}}
       </label>
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Pet.HeightenedSensesHint'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Pet.HeightenedSensesHint'}}">
         <input type="checkbox" name="system.specialAbilities.heightenedSenses" {{checked system.specialAbilities.heightenedSenses}} />
         {{localize "CARLRPG.Pet.HeightenedSenses"}}
       </label>
@@ -120,7 +120,7 @@
     </div>
     {{#if system.role}}<p class="carl-hint">{{localize (concat "CARLRPG.Pet.RoleRules." system.role)}}</p>{{/if}}
     <div class="carl-pet-mature">
-      <label class="resource-label" title="{{localize 'CARLRPG.Pet.MatureBenefitHint'}}">{{localize "CARLRPG.Pet.MatureBenefit"}}</label>
+      <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Pet.MatureBenefitHint'}}">{{localize "CARLRPG.Pet.MatureBenefit"}}</label>
       <input type="text" name="system.matureBenefit" value="{{system.matureBenefit}}" placeholder="{{localize 'CARLRPG.Pet.MatureBenefitPlaceholder'}}" />
     </div>
   </fieldset>

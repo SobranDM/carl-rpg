@@ -10,7 +10,7 @@
         <option value="">{{localize "CARLRPG.Vehicle.PresetPick"}}</option>
         {{selectOptions vehicle.presetChoices localize=true}}
       </select>
-      <button type="button" data-action="applyVehiclePreset" title="{{localize 'CARLRPG.Vehicle.PresetHint'}}">{{localize "CARLRPG.Vehicle.PresetApply"}}</button>
+      <button type="button" data-action="applyVehiclePreset" data-tooltip-text="{{localize 'CARLRPG.Vehicle.PresetHint'}}">{{localize "CARLRPG.Vehicle.PresetApply"}}</button>
     </div>
     <div class="carl-field-grid">
       <div>
@@ -32,15 +32,15 @@
         <input type="text" class="carl-w-tiny" name="system.dr" value="{{system.dr}}" data-dtype="Number" />
       </div>
       <div>
-        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.OccupancyHint'}}">{{localize "CARLRPG.Vehicle.Occupancy"}}</label>
+        <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Vehicle.OccupancyHint'}}">{{localize "CARLRPG.Vehicle.Occupancy"}}</label>
         <input type="text" class="carl-w-tiny" name="system.occupancy" value="{{system.occupancy}}" data-dtype="Number" />
       </div>
       <div>
-        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.CargoHint'}}">{{localize "CARLRPG.Vehicle.Cargo"}}</label>
+        <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Vehicle.CargoHint'}}">{{localize "CARLRPG.Vehicle.Cargo"}}</label>
         <input type="text" class="carl-w-tiny" name="system.cargo" value="{{system.cargo}}" data-dtype="Number" />
       </div>
       <div>
-        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.DriveSkillHint'}}">{{localize "CARLRPG.Vehicle.DriveSkill"}}</label>
+        <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Vehicle.DriveSkillHint'}}">{{localize "CARLRPG.Vehicle.DriveSkill"}}</label>
         <input type="text" class="carl-w-medium" name="system.driveSkill" value="{{system.driveSkill}}"
           list="carl-drive-skills-{{actor.id}}" placeholder="Driving" />
         <datalist id="carl-drive-skills-{{actor.id}}">
@@ -48,7 +48,7 @@
         </datalist>
       </div>
       <div>
-        <label class="resource-label" title="{{localize 'CARLRPG.Vehicle.SlotValueHint'}}">{{localize "CARLRPG.Vehicle.SlotValue"}}</label>
+        <label class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Vehicle.SlotValueHint'}}">{{localize "CARLRPG.Vehicle.SlotValue"}}</label>
         <input type="text" class="carl-w-tiny" name="system.hbSlotValueOverride" value="{{system.hbSlotValueOverride}}"
           placeholder="{{system.size}}" data-dtype="Number" />
       </div>
@@ -58,22 +58,22 @@
   <fieldset class="carl-pet-setup">
     <legend>{{localize "CARLRPG.Vehicle.Sections.Upgrades"}}</legend>
     <div class="carl-field-grid">
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.rollCage'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Vehicle.UpgradeHints.rollCage'}}">
         <input type="checkbox" name="system.upgrades.rollCage" {{checked system.upgrades.rollCage}} /> {{localize "CARLRPG.Vehicle.Upgrades.rollCage"}}
       </label>
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.ramPlate'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Vehicle.UpgradeHints.ramPlate'}}">
         <input type="checkbox" name="system.upgrades.ramPlate" {{checked system.upgrades.ramPlate}} /> {{localize "CARLRPG.Vehicle.Upgrades.ramPlate"}}
       </label>
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.nitrous'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Vehicle.UpgradeHints.nitrous'}}">
         <input type="checkbox" name="system.upgrades.nitrous.installed" {{checked system.upgrades.nitrous.installed}} /> {{localize "CARLRPG.Vehicle.Upgrades.nitrous"}}
       </label>
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.shockAbsorbers'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Vehicle.UpgradeHints.shockAbsorbers'}}">
         <input type="checkbox" name="system.upgrades.shockAbsorbers.installed" {{checked system.upgrades.shockAbsorbers.installed}} /> {{localize "CARLRPG.Vehicle.Upgrades.shockAbsorbers"}}
-        {{#if (ne system.upgrades.shockAbsorbers.usedFloor null)}}<a data-action="resetUpgradeUse" data-upgrade="shockAbsorbers" title="{{localize 'CARLRPG.Vehicle.PerFloor.Reset'}}"><i class="fas fa-undo"></i></a>{{/if}}
+        {{#if (ne system.upgrades.shockAbsorbers.usedFloor null)}}<a data-action="resetUpgradeUse" data-upgrade="shockAbsorbers" data-tooltip-text="{{localize 'CARLRPG.Vehicle.PerFloor.Reset'}}"><i class="fas fa-undo"></i></a>{{/if}}
       </label>
-      <label class="carl-checkbox-field" title="{{localize 'CARLRPG.Vehicle.UpgradeHints.fuzzyDice'}}">
+      <label class="carl-checkbox-field" data-tooltip-text="{{localize 'CARLRPG.Vehicle.UpgradeHints.fuzzyDice'}}">
         <input type="checkbox" name="system.upgrades.fuzzyDice.installed" {{checked system.upgrades.fuzzyDice.installed}} /> {{localize "CARLRPG.Vehicle.Upgrades.fuzzyDice"}}
-        {{#if (ne system.upgrades.fuzzyDice.usedFloor null)}}<a data-action="resetUpgradeUse" data-upgrade="fuzzyDice" title="{{localize 'CARLRPG.Vehicle.PerFloor.Reset'}}"><i class="fas fa-undo"></i></a>{{/if}}
+        {{#if (ne system.upgrades.fuzzyDice.usedFloor null)}}<a data-action="resetUpgradeUse" data-upgrade="fuzzyDice" data-tooltip-text="{{localize 'CARLRPG.Vehicle.PerFloor.Reset'}}"><i class="fas fa-undo"></i></a>{{/if}}
       </label>
     </div>
   </fieldset>
