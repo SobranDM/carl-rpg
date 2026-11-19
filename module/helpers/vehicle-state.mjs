@@ -12,6 +12,7 @@
 import { isVehicle } from "./actor-kinds.mjs";
 import { ownedSkill, unlockedTiers } from "./modifiers.mjs";
 import { sweepableActors } from "./expiry.mjs";
+import { fightWhere } from "./fights.mjs";
 
 /**
  * The Actor behind an occupant's uuid (a world Actor, or an unlinked
@@ -141,7 +142,7 @@ export function roundStamp(vehicle, patch = {}) {
 export function vehicleFight(vehicle) {
   const keys = new Set((vehicle?.system?.occupants ?? []).map((o) => o.uuid));
   if (!keys.size) return null;
-  return game.combats.find((c) => c.started && c.combatants.some((cb) => keys.has(cb.actor?.uuid))) ?? null;
+  return fightWhere((cb) => keys.has(cb.actor?.uuid));
 }
 
 /**

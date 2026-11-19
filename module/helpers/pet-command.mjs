@@ -31,6 +31,7 @@ import { effectiveRank } from "./modifiers.mjs";
 import { createCardMessage, createRollMessage } from "../chat/chat-card.mjs";
 import { esc } from "./html.mjs";
 import { currentFloor } from "./floor.mjs";
+import { fightWhere } from "./fights.mjs";
 
 /** Results that settle the Pet for the rest of the fight - only "staying out" can be retried. */
 const SETTLED_STATES = ["free", "restricted", "hiding"];
@@ -44,8 +45,7 @@ const SETTLED_STATES = ["free", "restricted", "hiding"];
  */
 export function petFight(pet) {
   const owner = petOwner(pet);
-  const involved = (c) => c.combatants.some((cb) => cb.actor === pet || (owner && cb.actor === owner));
-  return game.combats.find((c) => c.started && involved(c)) ?? null;
+  return fightWhere((cb) => cb.actor === pet || (!!owner && cb.actor === owner));
 }
 
 /**

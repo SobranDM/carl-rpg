@@ -19,6 +19,7 @@ import { noteUndo } from "./actions.mjs";
 import { conditionLabel, isOneShotDebuff } from "./debuff-effects.mjs";
 import { takesConditions } from "./actor-kinds.mjs";
 import { queueForActor } from "./actor-queue.mjs";
+import { fightOf } from "./fights.mjs";
 
 /** The askGM question a player's client sends with its ops. */
 const CHANGE = "changeConditions";
@@ -223,7 +224,7 @@ function applyOps(sys, list, ops) {
 export function opsAllowed(ops, list, actor, user) {
   if (user.isGM || actor.testUserPermission(user, "OWNER")) return ops;
   const targeted = [...(user.targets ?? [])].some((t) => t.actor === actor || t.document?.actorId === actor.id);
-  const inCombat = game.combats.some((c) => c.started && c.combatants.some((cb) => cb.actor === actor));
+  const inCombat = !!fightOf(actor);
   if (!targeted && !inCombat) return [];
   const oneShot = new Set(list.filter((c) => isOneShotDebuff(c.key)).map((c) => c.id));
   return ops.filter((op) => op?.op === "remove").map((op) => ({ op: "remove", ids: (op.ids ?? []).filter((id) => oneShot.has(id)) }));

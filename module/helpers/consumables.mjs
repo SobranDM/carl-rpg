@@ -43,6 +43,7 @@ import { isVehicle } from "./actor-kinds.mjs";
 import { refuseOutsideHotlist } from "./hotlist.mjs";
 import { isInCombat, noteUndo, takeAction } from "./actions.mjs";
 import { esc } from "./html.mjs";
+import { fightStamp } from "./fights.mjs";
 
 // "Each crawler may only consume two Stat potions and two Skill potions
 // during the entirety of their short life" (p.218).
@@ -313,8 +314,7 @@ async function drinkOrUse(actor, item, { skipDialog }) {
  * @returns {{combatId: string, round: number}|null}
  */
 export function potionMoment(recipient) {
-  const combat = game.combats.find((c) => c.started && c.combatants.some((cb) => cb.actor?.uuid === recipient.uuid));
-  return combat ? { combatId: combat.id, round: combat.round } : null;
+  return fightStamp(recipient);
 }
 
 /**

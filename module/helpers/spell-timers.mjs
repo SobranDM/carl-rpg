@@ -20,10 +20,11 @@
  * when a fight ends (module/helpers/round-end.mjs processCombatEnd).
  */
 import { parseTimerText, resolveTimerSeconds } from "./timer-text.mjs";
-import { fightOf, intelligenceScore, roundSeconds } from "./cooldowns.mjs";
+import { intelligenceScore, roundSeconds } from "./cooldowns.mjs";
 import { ownedRank } from "./modifiers.mjs";
 import { queueForActor } from "./actor-queue.mjs";
 import { esc } from "./html.mjs";
+import { fightOf } from "./fights.mjs";
 
 export const SPELL_TIMER_PATH = "flags.carl-rpg.spellTimer";
 

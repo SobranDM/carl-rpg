@@ -26,6 +26,7 @@ import { currentPhase, isPhased, phasedCombatFor } from "./combat-phases.mjs";
 import { isCrawler, isMinion, isPet, isVehicle } from "./actor-kinds.mjs";
 import { queueOn } from "./actor-queue.mjs";
 import { tellUser } from "./chat-socket.mjs";
+import { fightOf } from "./fights.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -47,8 +48,7 @@ export const ACTION_KINDS = Object.freeze(["attack", "move", "other"]);
  * @returns {boolean}
  */
 export function isInCombat(actor) {
-  if (!actor) return false;
-  return game.combats.some((c) => c.started && c.combatants.some((cb) => cb.actor === actor));
+  return !!fightOf(actor);
 }
 
 /**

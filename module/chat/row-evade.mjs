@@ -24,13 +24,14 @@
  * undone d6, a worse reroll).
  */
 import { applyAiReroll, gradeCheck, makeCheck } from "../helpers/reaction-state.mjs";
-import { aiRerollAllowed, fightStamp } from "../helpers/ai-favor.mjs";
+import { aiRerollAllowed } from "../helpers/ai-favor.mjs";
 import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import { actorFromUuid, resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { vehicleSeatOf } from "../helpers/vehicle-state.mjs";
 import { cardFight, fightHelpers } from "./check-revision.mjs";
+import { fightStamp } from "../helpers/fights.mjs";
 
 const SCOPE = "carl-rpg";
 const GREAT_EVADE = ["criticalHit", "amazingSuccess"];

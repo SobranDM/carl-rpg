@@ -1,3 +1,4 @@
+import { fightOf } from "./fights.mjs";
 /**
  * "Which token/actor should this roll act for" - a standalone helper with no
  * dependency on any specific chat-card feature, since more than one Opposed
@@ -46,22 +47,25 @@ export function resolveActingActor(user = game.user) {
  * built standalone, same reuse rationale as resolveActingActor above.
  *
  * Combat-only by design (docs/taunt-and-nat20-advantage-prompt.md): returns
- * null with no game.combat, no actor, or when this actor/token isn't seated
- * in the given Combat at all - callers no-op silently rather than falling
- * back to Actor flags. No cleanup is ever needed for state stored on the
- * Combatant this resolves to: Foundry deletes embedded Combatants along with
- * their parent Combat automatically.
+ * null with no fight, no actor, or when this actor/token isn't seated in the
+ * Combat at all - callers no-op silently rather than falling back to Actor
+ * flags. No cleanup is ever needed for state stored on the Combatant this
+ * resolves to: Foundry deletes embedded Combatants along with their parent
+ * Combat automatically.
  * @param {{actor: Actor, token: TokenDocument|null}} resolved
- * @param {Combat|null} [combat]  Defaults to game.combat.
+ * @param {Combat|null} [combat]  Defaults to the actor's own fight
+ *   (fights.mjs fightOf - not the one the tracker shows; ruled 2026-11-19).
  * @returns {Combatant|null}
  */
-export function resolveCombatantFor({ actor, token } = {}, combat = game.combat) {
+export function resolveCombatantFor({ actor, token } = {}, combat = fightOf(actor)) {
   if (!combat || !actor) return null;
   if (token) {
     const byToken = combat.combatants.find((c) => c.tokenId === token.id && c.sceneId === (token.parent?.id ?? null));
     if (byToken) return byToken;
   }
-  return combat.combatants.find((c) => c.actorId === actor.id) ?? null;
+  // The actor itself: an unlinked token's own actor is its own, so two
+  // Goblins from one stat block aren't mistaken for each other.
+  return combat.combatants.find((c) => c.actor === actor) ?? null;
 }
 
 /**

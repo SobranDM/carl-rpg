@@ -25,6 +25,7 @@ import { showCarlDialog, cancelButton } from "../apps/carl-dialog.mjs";
 import { noteUndo } from "./actions.mjs";
 import { ownedRank } from "./modifiers.mjs";
 import { esc } from "./html.mjs";
+import { fightOf } from "./fights.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG_PATH = "flags.carl-rpg.cooldown";
@@ -37,16 +38,6 @@ const COOLDOWN_TYPES = new Set(["skill", "spell", "damageEffect"]);
 /** Seconds in a round (CONFIG.time.roundTime, p.62). */
 export function roundSeconds() {
   return CONFIG.time?.roundTime || ROUND_SECONDS;
-}
-
-/**
- * The started fight this actor is a combatant of, if any.
- * @param {Actor|null|undefined} actor
- * @returns {Combat|null}
- */
-export function fightOf(actor) {
-  if (!actor) return null;
-  return game.combats.find((c) => c.started && c.combatants.some((cb) => cb.actor === actor)) ?? null;
 }
 
 /**
