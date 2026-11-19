@@ -41,12 +41,13 @@ import {
 } from "../helpers/worship.mjs";
 import { degreeLabel, evadeModifier } from "../helpers/rules.mjs";
 import { describeDefenses } from "../helpers/bonus-sources.mjs";
-import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-arrays.mjs';
+import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-arrays.mjs";
 import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
 import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
 import { currentFloor } from "../helpers/floor.mjs";
 import { enrichDescription, itemTooltips } from "../helpers/rich-text.mjs";
-import { esc } from "../helpers/html.mjs";
+import { esc, labelChoices } from "../helpers/html.mjs";
+import { itemFor, itemRow } from "../helpers/sheet-rows.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -303,15 +304,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const data = super._processFormData(event, form, formData);
     const submitted = data.system;
     if (!submitted || typeof submitted !== "object") return data;
-    const source = this.actor.system.toObject();
     if (isPet(this.actor) && submitted.command) this.#processCommandOverride(submitted);
     if (isVehicle(this.actor) && submitted.round) this.#processVehicleRoundOverride(submitted);
-    for (const [key, value] of Object.entries(submitted)) {
-      const current = source[key];
-      if (!Array.isArray(current) || !value || typeof value !== "object" || Array.isArray(value)) continue;
-      if (!current.some((entry) => entry && typeof entry === "object")) continue;
-      submitted[key] = mergeSubmitted(current, value);
-    }
+    data.system = mergeSystemSubmit(this.actor.system, submitted, { objectArraysOnly: true });
     return data;
   }
 
@@ -720,7 +715,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       perFloor: ["shockAbsorbers", "fuzzyDice"]
         .filter((key) => sys.upgrades[key].installed)
         .map((key) => ({ label: `CARLRPG.Vehicle.Upgrades.${key}`, available: sys.upgrades[key].usedFloor !== floor })),
-      presetChoices: Object.fromEntries(Object.entries(cfg.vehiclePresets).map(([k, p]) => [k, p.label])),
+      presetChoices: labelChoices(cfg.vehiclePresets),
       // "Driven with" suggestions: Table 7's Skills and those its occupants have.
       driveSkillNames: [...new Set([
         ...Object.values(cfg.vehiclePresets).map((p) => p.driveSkill),
@@ -1005,8 +1000,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   _onDragStart(event) {
     super._onDragStart(event);
     if (this.actor.type !== "character") return;
-    const row = event.target.closest?.("[data-item-id]");
-    const item = this.actor.items.get(row?.dataset.itemId);
+    const item = itemFor(this.actor, event.target);
     const panel = this.element.querySelector(".carl-equip-panel");
     if (item?.type !== "item" || !panel) return;
     panel.classList.add("is-dragging");
@@ -1047,9 +1041,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static #editItem(event, target) {
     // [data-item-id], not .item: the Skill details drawer's Edit button
     // sits in the drawer below the row and carries the id itself.
-    const li = target.closest("[data-item-id]");
-    const item = this.actor.items.get(li.dataset.itemId);
-    item.sheet.render(true);
+    itemFor(this.actor, target)?.sheet.render(true);
   }
 
   /**
@@ -1080,8 +1072,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @private
    */
   static async #deleteItem(event, target) {
-    const li = target.closest(".item");
-    const item = this.actor.items.get(li.dataset.itemId);
+    const li = itemRow(target);
+    const item = itemFor(this.actor, target);
+    if (!item) return;
     await item.delete();
     // Use native DOM to hide the element
     li.style.display = "none";
@@ -1102,8 +1095,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // for gear/features/damage effects - see CarlRPGItem#roll()).
     if (dataset.rollType) {
       if (dataset.rollType == "item") {
-        const itemId = target.closest(".item").dataset.itemId;
-        const item = this.actor.items.get(itemId);
+        const item = itemFor(this.actor, target);
         if (item) return item.roll();
       }
     }
@@ -1159,7 +1151,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     event.preventDefault();
     // A Mob's Attack by its item; a Vehicle's weapon (fired as a Mob Attack
     // by its crew) by its place in the Vehicle's list.
-    const itemId = target.closest("[data-item-id]")?.dataset.itemId;
+    const itemId = itemRow(target)?.dataset.itemId;
     const ref = itemId ?? (target.dataset.index !== undefined ? Number(target.dataset.index) : null);
     return ref === null ? null : CarlDice.rollMobAttack(this.actor, ref);
   }
@@ -1210,8 +1202,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     event.preventDefault();
     // A Pet's Ranks are the Floor and never advance (p.231).
     if (isPet(this.actor)) return;
-    const li = target.closest(".item");
-    const item = this.actor.items.get(li.dataset.itemId);
+    const item = itemFor(this.actor, target);
     if (!item) return;
     return item.update({ "system.marked": !item.system.marked });
   }
@@ -1223,8 +1214,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onToggleEquipped(event, target) {
     event.preventDefault();
-    const li = target.closest(".item");
-    const item = this.actor.items.get(li.dataset.itemId);
+    const item = itemFor(this.actor, target);
     if (!item) return;
     // In a fight either is the Retrieve Action (helpers/equip-slots.mjs,
     // CarlRPGItem#_preUpdate).
@@ -1240,8 +1230,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onUseItem(event, target) {
     event.preventDefault();
-    const itemId = target.dataset.itemId ?? target.closest("[data-item-id]")?.dataset.itemId;
-    const item = this.actor.items.get(itemId);
+    const item = itemFor(this.actor, target);
     if (!item) return;
     return useConsumable(this.actor, item);
   }
@@ -1274,7 +1263,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onToggleHotlist(event, target) {
     event.preventDefault();
-    const item = this.actor.items.get(target.closest("[data-item-id]")?.dataset.itemId);
+    const item = itemFor(this.actor, target);
     if (item) return toggleHotlist(this.actor, item);
   }
 
@@ -1345,7 +1334,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const scope = target.dataset.scope;
     const doc =
       scope === "item"
-        ? this.actor.items.get(target.closest("[data-item-id]")?.dataset.itemId)
+        ? itemFor(this.actor, target)
         : this.actor;
     return onToggleDrawer(event, target, doc);
   }

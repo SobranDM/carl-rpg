@@ -28,7 +28,7 @@ import { actorPickerContent, advanceTimeField, pickerGroups, wireActorPicker } f
 import { postPartyCheck } from "../chat/party-check-card.mjs";
 import { startNewScene } from "../helpers/cooldowns.mjs";
 import { unopposedDifficulty } from "../helpers/rules.mjs";
-import { esc } from "../helpers/html.mjs";
+import { esc, labelChoices, optionsHtml } from "../helpers/html.mjs";
 import { changeConditions, conditionOps } from "../helpers/conditions.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -751,9 +751,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   static async #onRollLoot(event, target) {
     if (!game.user.isGM) return;
 
-    const options = Object.entries(CONFIG.CARLRPG.lootBoxTiers)
-      .map(([key, tier]) => `<option value="${key}">${game.i18n.localize(tier.label)}</option>`)
-      .join("");
+    const options = optionsHtml(labelChoices(CONFIG.CARLRPG.lootBoxTiers));
     const result = await showCarlDialog({
       title: game.i18n.localize("CARLRPG.Toolbox.RollLootTitle"),
       content: `<div class="carl-dialog-body"><div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.LootTierLabel")}</label><select name="tier">${options}</select></div></div>`,

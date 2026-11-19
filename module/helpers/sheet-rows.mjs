@@ -118,3 +118,24 @@ export function debuffLineHtml(te) {
     + `<span class="carl-edit-row-what"><b>${esc(s.what)}</b>${notes}</span>`
     + `<span class="carl-edit-row-value"></span>`;
 }
+
+/**
+ * The item row an element in a sheet belongs to: the nearest
+ * `[data-item-id]` (a row, a Hotlist slot, a drawer's own button).
+ * @param {Element|null} element
+ * @returns {HTMLElement|null}
+ */
+export function itemRow(element) {
+  return element?.closest?.("[data-item-id]") ?? null;
+}
+
+/**
+ * The owned item a sheet action's element belongs to, or null.
+ * @param {Actor} actor
+ * @param {Element|null} element
+ * @returns {Item|null}
+ */
+export function itemFor(actor, element) {
+  const id = itemRow(element)?.dataset.itemId;
+  return id ? (actor.items.get(id) ?? null) : null;
+}

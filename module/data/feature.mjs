@@ -16,7 +16,7 @@ export default class CarlRPGFeature extends CarlRPGItemBase {
 
     schema.tier = new fields.StringField({
       required: false, blank: true, initial: "",
-      choices: ["", "acolyte", "devotee", "zealot"],
+      choices: () => ["", ...Object.keys(CONFIG.CARLRPG.featureTiers)],
     });
 
     return schema;

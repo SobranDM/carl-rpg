@@ -37,7 +37,7 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
 
     schema.advancementGate = new fields.StringField({
       required: true, blank: false, initial: "normal",
-      choices: ["normal", "passive-until-5", "magic-only"],
+      choices: () => Object.keys(CONFIG.CARLRPG.advancementGates),
     });
 
     // Optional: only meaningful for attack-capable entries.
@@ -60,7 +60,7 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     // Range - "Self only" is "self", anything else "anyone".
     schema.heals = new fields.StringField({
       required: true, blank: true, initial: "",
-      choices: ["", "self", "others", "pets", "anyone"],
+      choices: () => Object.keys(CONFIG.CARLRPG.healsChoices),
     });
     // The heal restores the target's whole Health Bar at any Rank, with no
     // dice (Heal Critter: "heal back to 100% Health Bar"). HB only - unlike

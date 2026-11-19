@@ -29,7 +29,7 @@ import { petOwner } from "./pets.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { effectiveRank } from "./modifiers.mjs";
 import { createCardMessage, createRollMessage } from "../chat/chat-card.mjs";
-import { esc } from "./html.mjs";
+import { esc, labelChoices } from "./html.mjs";
 import { currentFloor } from "./floor.mjs";
 import { fightWhere } from "./fights.mjs";
 
@@ -104,7 +104,7 @@ export function describePetCommand(pet) {
     selected: active ? state : "",
     label: active && def ? game.i18n.localize(def.label) : "",
     rule: active ? game.i18n.localize(`CARLRPG.Pet.Command.Rules.${state}`) : "",
-    stateChoices: Object.fromEntries(Object.entries(CARLRPG.petCommandStates).map(([key, d]) => [key, d.label])),
+    stateChoices: labelChoices(CARLRPG.petCommandStates),
     canCommand: canCommandPet(pet),
     minion,
   };

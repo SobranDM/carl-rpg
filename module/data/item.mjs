@@ -61,13 +61,13 @@ export default class CarlRPGItem extends CarlRPGItemBase {
       // "potion" counts toward Potion Sickness; "other" (Bandages, ...) doesn't.
       kind: new fields.StringField({
         required: true, blank: true, initial: "",
-        choices: ["", "potion", "scroll", "spellbook", "other"],
+        choices: () => Object.keys(CONFIG.CARLRPG.consumableKinds),
       }),
       heal: new fields.SchemaField({
         slots: optionalInt({ min: 0 }),
         full: new fields.BooleanField({ required: true, initial: false }),
         // "minor": mend one Minor Injury; "any": one Minor or Major Injury.
-        mend: new fields.StringField({ required: true, blank: true, initial: "", choices: ["", "minor", "any"] }),
+        mend: new fields.StringField({ required: true, blank: true, initial: "", choices: () => Object.keys(CONFIG.CARLRPG.consumableMend) }),
       }),
       mana: new fields.SchemaField({
         amount: optionalInt({ min: 0 }),
@@ -78,7 +78,7 @@ export default class CarlRPGItem extends CarlRPGItemBase {
       // A permanent +N Stat or Skill potion. A blank Skill target is chosen
       // when it's drunk ("Choose a Skill and gain 3 Ranks in it").
       permanent: new fields.SchemaField({
-        kind: new fields.StringField({ required: true, blank: true, initial: "", choices: ["", "stat", "skill"] }),
+        kind: new fields.StringField({ required: true, blank: true, initial: "", choices: () => Object.keys(CONFIG.CARLRPG.consumablePermanent) }),
         target: text(),
         value: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 1 }),
       }),
@@ -87,7 +87,7 @@ export default class CarlRPGItem extends CarlRPGItemBase {
       buff: new fields.SchemaField({
         label: text(),
         duration: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 0, min: 0 }),
-        unit: new fields.StringField({ required: true, blank: false, initial: "minutes", choices: ["rounds", "minutes", "hours"] }),
+        unit: new fields.StringField({ required: true, blank: false, initial: "minutes", choices: () => Object.keys(CONFIG.CARLRPG.consumableUnits) }),
         changes: defineChangesField(),
         // Restored at the end of each round while it lasts ("Restores 15
         // Mana per round for 10 rounds" - Good Mana Refill Potion).

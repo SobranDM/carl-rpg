@@ -15,7 +15,7 @@ export default class CarlRPGSpell extends CarlRPGRankedItemBase {
       new fields.StringField({
         required: true,
         blank: false,
-        choices: ["attack", "passive", "interrupt", "areaOfEffect", "mindControl", "heal"],
+        choices: () => Object.keys(CONFIG.CARLRPG.castingKeywords),
       }),
       { required: false, initial: [] },
     );

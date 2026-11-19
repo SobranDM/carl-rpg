@@ -31,13 +31,13 @@ export function defineChangeEntrySchema() {
     label: new fields.StringField({ required: false, blank: true }),
     targetType: new fields.StringField({
       required: true, blank: false, initial: "skillDamage",
-      choices: ["stat", "skillRank", "skillDamage", "resource", "rollMode", "custom", "resistance", "advancementBonus"],
+      choices: () => Object.keys(CONFIG.CARLRPG.changeTargetTypes),
     }),
     /** Dotted path or arbitrary skill/resource name. Resolved dynamically - no master list required. */
     target: new fields.StringField({ required: true, blank: true }),
     mode: new fields.StringField({
       required: true, blank: false, initial: "add",
-      choices: ["add", "subtract", "multiply", "override", "upgrade", "downgrade"],
+      choices: () => Object.keys(CONFIG.CARLRPG.changeModes),
     }),
     /** Formula string; may include dice notation and @-refs (e.g. "1d4", "2", "@rank"). For targetType "resistance", one of "resist"|"vulnerable"|"immune" instead of a number. */
     value: new fields.StringField({ required: true, blank: true, initial: "0" }),
@@ -75,7 +75,7 @@ export function defineChangeEntrySchema() {
      */
     damageDiceKind: new fields.StringField({
       required: false, blank: true, initial: "",
-      choices: ["", "base", "rankDie", "flat", "multiplier"],
+      choices: () => ["", ...Object.keys(CONFIG.CARLRPG.damageDiceKinds)],
     }),
     /**
      * Only meaningful when targetType is "skillDamage" (see

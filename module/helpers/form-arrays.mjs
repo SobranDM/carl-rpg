@@ -72,3 +72,29 @@ export function keepStoredForBlankNumbers(flat, system, form) {
     if (input instanceof HTMLInputElement && Number.isFinite(stored)) input.value = String(stored);
   }
 }
+
+/**
+ * A sheet's submitted `system` data merged onto what's stored
+ * (mergeSubmitted), so a form that only shows some fields of an entry
+ * doesn't wipe the rest. Every sheet's _processFormData uses it.
+ * @param {foundry.abstract.DataModel} system  The document's system.
+ * @param {object} submitted  The expanded `system` part of the submission.
+ * @param {{objectArraysOnly?: boolean}} [options]  objectArraysOnly: merge
+ *   only top-level arrays of objects (an actor's Conditions, Sponsors...),
+ *   leaving everything else - an array of plain values (the Hotlist's text
+ *   slots) - as Foundry submits it. Otherwise the whole tree is merged
+ *   (an item's Upgrade tiers, Bonuses...).
+ * @returns {object}  The data to save.
+ */
+export function mergeSystemSubmit(system, submitted, { objectArraysOnly = false } = {}) {
+  if (!isPlainObject(submitted)) return submitted;
+  const source = system.toObject();
+  if (!objectArraysOnly) return mergeSubmitted(source, submitted);
+  for (const [key, value] of Object.entries(submitted)) {
+    const current = source[key];
+    if (!Array.isArray(current) || !isPlainObject(value)) continue;
+    if (!current.some((entry) => entry && typeof entry === "object")) continue;
+    submitted[key] = mergeSubmitted(current, value);
+  }
+  return submitted;
+}

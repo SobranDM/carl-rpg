@@ -16,12 +16,12 @@ export default class CarlRPGSkill extends CarlRPGRankedItemBase {
 
     schema.category = new fields.StringField({
       required: true, blank: false, initial: "utility",
-      choices: ["attack", "utility", "passive"],
+      choices: () => Object.keys(CONFIG.CARLRPG.skillCategories),
     });
 
     schema.attackType = new fields.StringField({
       required: false, blank: true, initial: "",
-      choices: ["", "melee", "ranged"],
+      choices: () => ["", ...Object.keys(CONFIG.CARLRPG.attackTypes)],
     });
     schema.range = new fields.StringField({ required: false, blank: true, initial: "" });
 

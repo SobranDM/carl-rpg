@@ -36,7 +36,7 @@ export default class CarlRPGMob extends CarlRPGActorBase {
 
     schema.mobTier = new fields.StringField({
       required: false, blank: true, initial: "",
-      choices: ["", "neighborhood", "borough", "city", "province", "country", "floor"],
+      choices: () => ["", ...Object.keys(CONFIG.CARLRPG.mobTiers)],
     });
 
     // Plain GM-set number, no XP/leveling-up mechanism (Mobs don't accrue

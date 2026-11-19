@@ -9,6 +9,9 @@ import {
   takeLootItem,
 } from "../helpers/loot-box.mjs";
 import { enrichDescription } from "../helpers/rich-text.mjs";
+import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-arrays.mjs";
+import { itemFor } from "../helpers/sheet-rows.mjs";
+import { labelChoices } from "../helpers/html.mjs";
 
 /**
  * Loot Box sheet: pick a tier, roll loot (GM), take items out (everyone).
@@ -53,9 +56,7 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
     context.system = actor.system;
     context.config = CONFIG.CARLRPG;
     context.isGM = game.user.isGM;
-    context.tierChoices = Object.fromEntries(
-      Object.entries(CONFIG.CARLRPG.lootBoxTiers).map(([key, tier]) => [key, tier.label]),
-    );
+    context.tierChoices = labelChoices(CONFIG.CARLRPG.lootBoxTiers);
 
     // "Take" puts the item on the user's assigned Character; without one
     // they can still drag a card onto any sheet they own.
@@ -111,7 +112,22 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
    * @returns {Item|undefined}
    */
   #itemFor(target) {
-    return this.actor.items.get(target.closest("[data-item-id]")?.dataset.itemId);
+    return itemFor(this.actor, target);
+  }
+
+  /**
+   * A cleared number input (Crawlers) keeps the stored value, and the
+   * submission is merged onto what's stored, as the other sheets do
+   * (helpers/form-arrays.mjs).
+   * @override
+   */
+  _processFormData(event, form, formData) {
+    keepStoredForBlankNumbers(formData.object, this.actor.system, form);
+    const data = super._processFormData(event, form, formData);
+    if (data.system && typeof data.system === "object") {
+      data.system = mergeSystemSubmit(this.actor.system, data.system, { objectArraysOnly: true });
+    }
+    return data;
   }
 
   /** @private */

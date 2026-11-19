@@ -4,7 +4,7 @@ import { onAddArrayItem, onDeleteArrayItem } from '../helpers/array-editor.mjs';
 import CarlDice from '../dice/dice.mjs';
 import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
 import { needsWeapon } from '../helpers/weapons.mjs';
-import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-arrays.mjs';
+import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-arrays.mjs";
 import { isConsumable, isShield, isTwoHanded, isWeapon, slotsOf } from '../helpers/gear.mjs';
 import { effectiveRank, shieldDrState } from '../helpers/modifiers.mjs';
 import { repairShield } from '../helpers/shield-block.mjs';
@@ -118,9 +118,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // A cleared number input keeps the stored value (form-arrays.mjs).
     keepStoredForBlankNumbers(formData.object, this.item.system, form);
     const data = super._processFormData(event, form, formData);
-    if (data.system && typeof data.system === "object") {
-      data.system = mergeSubmitted(this.item.system.toObject(), data.system);
-    }
+    if (data.system && typeof data.system === "object") data.system = mergeSystemSubmit(this.item.system, data.system);
     return data;
   }
 
@@ -611,7 +609,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         event.stopPropagation();
         const key = select.value;
         if (!key) return;
-        const cures = this.item.system.consumable?.cures ?? [];
+        const cures = this.item._source.system.consumable?.cures ?? [];
         if (!cures.includes(key)) this.item.update({ "system.consumable.cures": [...cures, key] });
       });
     }
@@ -679,7 +677,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     event.preventDefault();
     const key = target.dataset.slot;
     if (!key || !(key in CONFIG.CARLRPG.wearSlots)) return;
-    const slots = new Set(this.item.system.slots ?? []);
+    const slots = new Set(this.item._source.system.slots ?? []);
     if (slots.has(key)) slots.delete(key);
     else slots.add(key);
     const ordered = Object.keys(CONFIG.CARLRPG.wearSlots).filter((s) => slots.has(s));
@@ -698,7 +696,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   static async #onRemoveCure(event, target) {
     event.preventDefault();
     const key = target.dataset.key;
-    const cures = this.item.system.consumable?.cures ?? [];
+    const cures = this.item._source.system.consumable?.cures ?? [];
     if (!key || !cures.includes(key)) return;
     return this.item.update({ "system.consumable.cures": cures.filter((k) => k !== key) });
   }
@@ -747,7 +745,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   static async #onResolveSkillChoice(event, target) {
     event.preventDefault();
     const index = Number(target.dataset.index);
-    const grants = this.item.system.skillChoiceGrants ?? [];
+    const grants = this.item._source.system.skillChoiceGrants ?? [];
     const grant = grants[index];
     if (!grant) return;
     const input = this.element.querySelector(`[data-skill-choice-input="${index}"]`);
@@ -765,7 +763,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         ? game.i18n.format('CARLRPG.SkillChoice.ResolvedLabel', { category: grant.category })
         : '',
     };
-    const changes = [...(this.item.system.changes ?? []), newChange];
+    const changes = [...foundry.utils.deepClone(this.item._source.system.changes ?? []), newChange];
     const remainingGrants = grants.filter((_, i) => i !== index);
     await this.item.update({ 'system.changes': changes, 'system.skillChoiceGrants': remainingGrants });
   }
