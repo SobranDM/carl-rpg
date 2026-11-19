@@ -216,9 +216,8 @@ export function rowCheckOpen(attack, rowId, which) {
 
 /**
  * Whether an Intervene can still change a row's Check: a crawler's (it
- * helps "another crawler", p.82 - not a Pet's), open, and rolled in a fight
- * that's still on that round. Its natural d20 doesn't matter (ruled
- * 2026-11-19).
+ * helps "another crawler", p.82 - not a Pet's), open, rolled in a fight
+ * that's still on that round, and not a Natural 1 or 20.
  * @param {ChatMessage} attack
  * @param {string} rowId
  * @param {"free"|"evade"} which
@@ -226,7 +225,7 @@ export function rowCheckOpen(attack, rowId, which) {
  */
 export function rowInterveneOpen(attack, rowId, which) {
   const check = rowCheck(rowAt(attack, rowId), which);
-  if (!check) return false;
+  if (!check || check.natural === 1 || check.natural === 20) return false;
   if (!isCrawler(actorFromUuid(check.actorUuid))) return false;
   return rowCheckOpen(attack, rowId, which) && !!cardFight(check);
 }

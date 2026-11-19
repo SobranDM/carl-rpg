@@ -150,16 +150,18 @@ export function cardFight(spec) {
 
 /**
  * Whether an Intervene can still change this card: a crawler's Check (not a
- * Stat Check, p.82), rolled in a fight that's still on that round, and
- * still open (`cardOpen`: an Attack not acted on, a row's Evade whose row
- * isn't applied, a Driving result not used). Its natural d20 doesn't matter
- * - Intervene adds 1d6 to the result (ruled 2026-11-19).
+ * Stat Check, p.82), rolled in a fight that's still on that round, not a
+ * Natural 1 or 20 (their Degree is fixed - rules.mjs getDegreeOfSuccess -
+ * so a d6 can't change it), and still open (`cardOpen`: an Attack not
+ * acted on, a row's Evade whose row isn't applied, a Driving result not
+ * used).
  * @param {ChatMessage} message
  * @returns {boolean}
  */
 export function interveneOpen(message) {
   const spec = specOf(message);
   if (!spec || spec.variant === "stat") return false;
+  if (spec.natural === 1 || spec.natural === 20) return false;
   if (!cardFight(spec)) return false;
   return cardOpen(message);
 }

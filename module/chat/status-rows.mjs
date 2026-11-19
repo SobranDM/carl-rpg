@@ -194,15 +194,15 @@ export function checkDetail(check) {
 
 /**
  * Whether a d6 could still change a Check's result - where the Intervene
- * icon is drawn: +6 would change its Degree (a Near Miss to a Success, a
- * Success to an Amazing Success). A Taunt only matters while it has failed.
- * Its natural d20 isn't checked on its own (ruled 2026-11-19).
+ * icon is drawn: not a Natural 1 or 20 (fixed), and +6 would change its
+ * Degree (a Near Miss to a Success, a Success to an Amazing Success). A
+ * Taunt only matters while it has failed.
  * @param {object|null} check
  * @param {{taunt?: boolean}} [options]
  * @returns {boolean}
  */
 export function d6CouldChange(check, { taunt = false } = {}) {
-  if (!check) return false;
+  if (!check || check.natural === 1 || check.natural === 20) return false;
   if (taunt) return !check.success;
   return getDegreeOfSuccess(check.natural, check.total + 6, check.difficulty) !== check.degree;
 }
