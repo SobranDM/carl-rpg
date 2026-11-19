@@ -184,3 +184,12 @@ export function buildDifficultyPresets({ floor, selected = "custom", opposed = n
 export function selectedPresetValue(presets) {
   return presets.find((p) => p.selected)?.value ?? null;
 }
+
+/**
+ * What Intervene adds to a Check (p.82): the sum of its 1d6s.
+ * @param {{value: number}[]} [interventions]
+ * @returns {number}
+ */
+export function interventionTotal(interventions = []) {
+  return (interventions ?? []).reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+}

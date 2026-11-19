@@ -31,6 +31,7 @@ import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow, ne
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { ownedSkill } from "../helpers/modifiers.mjs";
 import { queueForCard } from "../helpers/actor-queue.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/taunt-footer.hbs";
 
@@ -72,7 +73,7 @@ function taunterRow(message, taunter) {
   if (!rollsLikeCrawler(flags.attackerType)) {
     return mobAttackRow({ id, target, base: flags.mobBase ?? flags.targetDifficulty, ownRows: flags.mobOwnRows ?? [] }).row;
   }
-  const floor = flags.floor ?? game.settings.get("carl-rpg", "currentFloor");
+  const floor = flags.floor ?? currentFloor();
   return crawlerAttackRow({
     id, target,
     difficulty: crawlerAttackDifficulty(taunter.actor, floor).difficulty,
@@ -176,7 +177,7 @@ export async function tauntAttack(message, { taunter = null, skipDialog = false 
   }
 
   const statKey = tauntItem.system.opposedStat || "int";
-  const difficulty = opposedDifficulty(attackerActor.system.stats?.[statKey]?.mod, game.settings.get("carl-rpg", "currentFloor"));
+  const difficulty = opposedDifficulty(attackerActor.system.stats?.[statKey]?.mod, currentFloor());
   // The rows the redirect would replace, as they are before the dialog: if
   // they change meanwhile, the redirect is refused (tauntRedirectNow).
   const seen = activeRows(message.getFlag("carl-rpg", "targetRows")).map((row) => row.id);

@@ -35,6 +35,7 @@ import { getRankDamageDie } from "./rules.mjs";
 import { CARLRPG } from "./config.mjs";
 import { deityBenefitApplies } from "./worship.mjs";
 import { drGroupOf, givesBonuses, isWeaponFor } from "./gear.mjs";
+import { currentFloor } from "./floor.mjs";
 
 const RANKED_TYPES = new Set(["skill", "spell", "damageEffect"]);
 
@@ -1025,7 +1026,7 @@ function makeAggregationContext(actorSystem) {
     rollData: {
       stats: actorSystem.stats ? foundry.utils.deepClone(actorSystem.stats) : {},
       lvl: actorSystem.attributes?.level?.value ?? 1,
-      floor: game.settings.get("carl-rpg", "currentFloor"),
+      floor: currentFloor(),
     },
     conditionalModifiers: [],
     caps: {},

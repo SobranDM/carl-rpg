@@ -1,5 +1,6 @@
 import CarlRPGItemBase from "./item-base.mjs";
 import { defineTargetEffectsField, defineUpgradesField } from "./shared/upgrade-tier.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 /**
  * Shared base for the three Rank-progression Item types: Skill, Spell, and
@@ -109,7 +110,7 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     // A Floor change re-prepares every actor and its items (carl-rpg.mjs).
     this.rankIsFloor = this.parent?.actor?.type === "pet";
     if (this.rankIsFloor) {
-      const floor = game.settings.get("carl-rpg", "currentFloor");
+      const floor = currentFloor();
       this.rank = Math.min(Math.max(1, floor), 20);
     }
   }

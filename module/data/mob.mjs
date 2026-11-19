@@ -8,6 +8,7 @@ import {
 import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effects.mjs";
 import { legacyAttackItems } from "../helpers/mob-attacks.mjs";
 import { parseSize } from "../helpers/size.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 /**
  * Mob actor ("Building a Mob", p.270-272) - a GM-built monster/NPC stat
@@ -164,7 +165,7 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // (actor-base.mjs) that gets overwritten every derived-data pass here,
     // the same pattern actor-base.mjs's own mana.max already uses for a
     // fully-derived resource.
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     this.hbSlotsRule = tier ? tier.hbSlotsBase + floor : Math.min(this.level, 10);
     this.hb.max = this.hbSlotsOverride ?? this.hbSlotsRule;
 

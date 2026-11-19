@@ -57,6 +57,7 @@ import {
 import { opposedDifficulty } from "../helpers/rules.mjs";
 import { esc } from "../helpers/html.mjs";
 import { actorFromUuid } from "../helpers/token-resolution.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -851,7 +852,7 @@ async function onTaunt(message, state) {
  */
 export async function rollTaunt(message, { taunter, item, rank, mob, mobUuid }, { skipDialog = false } = {}) {
   const statKey = item.system.opposedStat || "int";
-  const difficulty = opposedDifficulty(mob.system.stats?.[statKey]?.mod, game.settings.get(SCOPE, "currentFloor"));
+  const difficulty = opposedDifficulty(mob.system.stats?.[statKey]?.mod, currentFloor());
   const { result, undo } = await rollForOp(taunter.actor, game.i18n.localize("CARLRPG.Reaction.Op.taunt"),
     () => CarlDice.rollOpposedSkillCheck(taunter.actor, item, { difficulty, opponent: mob, post: false, skipDialog }));
   if (!result) return null;

@@ -48,6 +48,8 @@ import { ownedSkill } from "./modifiers.mjs";
 import { queueForCard } from "./actor-queue.mjs";
 import { esc } from "./html.mjs";
 import { actorFromUuid } from "./token-resolution.mjs";
+import { currentFloor } from "./floor.mjs";
+import { rollMobDamage } from "./mob-attacks.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG = "reactionDamage";
@@ -145,7 +147,7 @@ export function buildDamageState(combat, state, { shields = {} } = {}) {
       id: attack.id, mobUuid: attack.mobUuid, mobName: attack.mobName, attackName: attack.attackName,
       damage: attack.damage ?? "", damageType: attack.damageType ?? "", damageIsMagic: attack.damageIsMagic ?? true,
       armorPiercing: !!attack.armorPiercing,
-      isArea: !!attack.isArea, floor: attack.floor ?? game.settings.get(SCOPE, "currentFloor"), rolled: null,
+      isArea: !!attack.isArea, floor: attack.floor ?? currentFloor(), rolled: null,
       effect: attack.effect ?? "", range: attack.range ?? "",
       targetEffects: attack.targetEffects ?? [],
     };
@@ -400,14 +402,7 @@ async function rollAttackDamage(attack) {
   const mob = actorFromUuid(attack.mobUuid);
   const data = { ...(mob?.getRollData() ?? {}) };
   data.floor ??= attack.floor;
-  const parts = new RollParts(data);
-  parts.add(String(attack.damage).replace(/\bF\b/g, "@floor"), attack.attackName);
-  try {
-    return await parts.evaluate();
-  } catch (err) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.MobAttack.BadDamage", { formula: attack.damage }));
-    return null;
-  }
+  return rollMobDamage(data, attack.damage, attack.attackName);
 }
 
 /** The formula as the button shows it: "F" as the Floor. */

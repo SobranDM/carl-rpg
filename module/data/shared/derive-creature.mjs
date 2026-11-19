@@ -1,6 +1,7 @@
 import { getStatMod } from "../../helpers/rules.mjs";
 import { computeActiveShieldSlots } from "../../helpers/modifiers.mjs";
 import { conditionLabel, findConditionWithMechanic } from "../../helpers/debuff-effects.mjs";
+import { currentFloor } from "../../helpers/floor.mjs";
 
 /**
  * The stat block and derived values every creature Actor shares - Characters
@@ -144,6 +145,6 @@ export function creatureRollData(sys, lvl) {
   }
   if (sys.skills) data.skills = foundry.utils.deepClone(sys.skills);
   data.lvl = lvl;
-  data.floor = game.settings.get("carl-rpg", "currentFloor");
+  data.floor = currentFloor();
   return data;
 }

@@ -6,6 +6,7 @@ import { defineConditionsField } from "./shared/condition-entry.mjs";
 import {
   defineStatsField, deriveStats, deriveDefenses, deriveResourceCaps, creatureRollData,
 } from "./shared/derive-creature.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 /**
  * Pet actor (Pets, p.228-232) - a crawler's animal companion, and living
@@ -143,7 +144,7 @@ export default class CarlRPGPet extends CarlRPGActorBase {
     if (!this.stats) return;
 
     aggregateActorBonuses(this);
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     this.applyRoleBonuses(floor);
 
     deriveStats(this);

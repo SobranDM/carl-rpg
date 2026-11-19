@@ -29,6 +29,7 @@ import { canDrive } from "./vehicle-driving.mjs";
 import { createRollMessage } from "../chat/chat-card.mjs";
 import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
 import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -73,7 +74,7 @@ export async function rollRam(vehicle, { skipDialog = false } = {}) {
     return null;
   }
 
-  const floor = game.settings.get(SCOPE, "currentFloor");
+  const floor = currentFloor();
   const primary = targets[0];
   // The Skill the vehicle names (Driving, Chopper Pilot or homebrew).
   const driveSkill = vehicle.system.driveSkill.trim();
@@ -214,7 +215,7 @@ export async function afterRamRowApplied(message, row, recipient, damage) {
  */
 export async function explodeVehicle(vehicle) {
   if (!isVehicle(vehicle)) return null;
-  const floor = game.settings.get(SCOPE, "currentFloor");
+  const floor = currentFloor();
   const formula = `${vehicle.system.size}d6 + @floor`;
   const roll = await new Roll(formula, { floor }).evaluate();
   const occupants = vehicleOccupants(vehicle).filter((o) => o.actor);

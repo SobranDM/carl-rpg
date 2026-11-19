@@ -20,8 +20,8 @@
  * intervene.md, stage 2) by an AI Favor or Fuzzy Dice reroll and by an
  * Intervene: it keeps its `checkId`, and the vehicle's round follows.
  */
-import CarlDice, { checkSubtitle, interventionRolls } from "../dice/dice.mjs";
-import { degreeBadge, getDegreeOfSuccess, isHitDegree, unopposedDifficulty } from "./rules.mjs";
+import CarlDice, { checkSubtitle, interventionRolls, rerollNote } from "../dice/dice.mjs";
+import { degreeBadge, getDegreeOfSuccess, interventionTotal, isHitDegree, unopposedDifficulty } from "./rules.mjs";
 import { rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { aiRerollFlags } from "./ai-favor.mjs";
@@ -29,6 +29,7 @@ import { createRollMessage } from "../chat/chat-card.mjs";
 import { drivingOutcome, resolveOccupant, roundStamp, vehicleDriver, vehicleStatus } from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
 import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -91,7 +92,7 @@ export async function rollDrivingCheck(vehicle, { mode = "table6", skipDialog = 
     return null;
   }
   const { skill, trained } = await skillOrUntrainedCopy(driver, driveSkill, { system: { governingStat: "dex" } });
-  const floor = game.settings.get("carl-rpg", "currentFloor");
+  const floor = currentFloor();
   const status = vehicleStatus(vehicle);
   // Unopposed: 10 + Floor x 2 (p.59). Stopping in time: 10 + Move ÷ 5.
   const difficulty = mode === "stop" ? status.stopDifficulty : unopposedDifficulty(floor);
@@ -139,8 +140,7 @@ export function drivingOutcomeText(mode, degree) {
 function drivingCardParts(vehicle, driver, {
   mode, degree, difficulty, rolls, rollMeta, extraRollRows = [], debuffNote = "", trained = true, rerolledBy = [],
 }) {
-  const notes = rerolledBy.map((by) => `<p class="carl-reroll-note">${esc(game.i18n.localize(
-    by === "favor" ? "CARLRPG.Reroll.Note" : "CARLRPG.Vehicle.Card.FuzzyNote"))}</p>`);
+  const notes = rerolledBy.map((by) => rerollNote(by === "favor" ? "CARLRPG.Reroll.Note" : "CARLRPG.Vehicle.Card.FuzzyNote"));
   return {
     rolls,
     rollMeta,
@@ -227,7 +227,7 @@ export function drivingResultSettled(driving) {
  */
 export function upgradeReady(vehicle, key) {
   const upgrade = vehicle?.system.upgrades?.[key];
-  return !!upgrade?.installed && upgrade.usedFloor !== game.settings.get(SCOPE, "currentFloor");
+  return !!upgrade?.installed && upgrade.usedFloor !== currentFloor();
 }
 
 /**
@@ -274,7 +274,7 @@ export async function reviseDriving(message, { interventions = [], reroll = null
     // The Intervene window and the AI Favor reroll read the d20 from here.
     if (aiReroll) Object.assign(aiReroll, { natural: reroll.natural, total: reroll.total, used: aiReroll.used || reroll.source === "favor" });
   }
-  const total = spec.total + interventions.reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+  const total = spec.total + interventionTotal(interventions);
   const degree = getDegreeOfSuccess(spec.natural, total, spec.difficulty);
   driving.degree = degree;
   const d6 = interventionRolls(interventions);

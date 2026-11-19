@@ -1,6 +1,7 @@
 import CarlRPGActorBase from "./actor-base.mjs";
 import { ownerIds, withOwners } from "../helpers/ownership.mjs";
 import { deriveDefenses } from "./shared/derive-creature.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 /** The driving Skill keys a vehicle stored before 0.7.0, and the Skills they named. */
 export const LEGACY_DRIVE_SKILLS = Object.freeze({ driving: "Driving", chopperPilot: "Chopper Pilot" });
@@ -171,6 +172,6 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
   }
 
   getRollData() {
-    return { floor: game.settings.get("carl-rpg", "currentFloor"), size: this.size, move: this.move };
+    return { floor: currentFloor(), size: this.size, move: this.move };
   }
 }

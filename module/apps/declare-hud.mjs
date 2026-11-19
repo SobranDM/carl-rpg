@@ -20,6 +20,7 @@ import { declarationsByMob, describeDeclaration, removeDeclaration } from "../he
 import { mobAttacksOf } from "../helpers/mob-attacks.mjs";
 import { isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { actionBubbles } from "../helpers/actions.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -65,7 +66,7 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @override */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     context.mobs = CarlDeclareHud.declaringMobs().map(({ token, actor, combat }) => ({
       tokenId: token.id,
       name: token.name,

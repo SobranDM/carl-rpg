@@ -29,7 +29,7 @@
  * derived `total`, `degree` and `success` (gradeCheck). `base` is the rolled
  * total; Intervene d6s add to it (p.82).
  */
-import { getDegreeOfSuccess, isHitDegree } from "./rules.mjs";
+import { getDegreeOfSuccess, interventionTotal, isHitDegree } from "./rules.mjs";
 import { rerollOpen } from "./ai-favor.mjs";
 import { attackIsMagical, blockableAttack } from "./shield-block.mjs";
 
@@ -72,7 +72,7 @@ export function makeCheck(kind, result) {
  * @returns {object} The same check, updated.
  */
 export function gradeCheck(check) {
-  const bonus = (check.interventions ?? []).reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+  const bonus = interventionTotal(check.interventions);
   check.total = (Number(check.base) || 0) + bonus;
   check.degree = getDegreeOfSuccess(check.natural, check.total, check.difficulty);
   check.success = isHitDegree(check.degree);

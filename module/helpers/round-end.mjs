@@ -53,6 +53,7 @@ import { endCombatSpellTimers, spellEndedLines } from "./spell-timers.mjs";
 import { statDifficulty } from "./rules.mjs";
 import { dyingRounds } from "./conditions.mjs";
 import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 /** An entry's own duration type (Potion Sickness's Poisoned) wins over its preset's. */
 function durationTypeOf(condition) {
@@ -144,7 +145,7 @@ async function applyPerRoundRestores(actor, lines) {
 async function runActorRoundEnd(actor) {
   if (!(actor.system.conditions ?? []).length) return null;
 
-  const floor = game.settings.get("carl-rpg", "currentFloor");
+  const floor = currentFloor();
   const rollData = actor.getRollData();
   const name = esc(actor.name);
   const lines = [];

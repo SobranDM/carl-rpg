@@ -44,6 +44,7 @@ import { describeDefenses } from "../helpers/bonus-sources.mjs";
 import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-arrays.mjs';
 import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
 import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
+import { currentFloor } from "../helpers/floor.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -430,7 +431,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Floor is a single world-wide value owned by the GM Toolbox, shown
     // read-only here for player visibility - never per-actor. See
     // module/data/character.mjs#getRollData.
-    context.currentFloor = game.settings.get("carl-rpg", "currentFloor");
+    context.currentFloor = currentFloor();
 
     // Active Class/Race display (header.hbs) - resolved on Character actors
     // only, see module/data/character.mjs#prepareDerivedData. Undefined on

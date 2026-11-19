@@ -17,7 +17,7 @@
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "./carl-dialog.mjs";
 import { shortRestUpdates, fullRestoreUpdates, conditionsAfterRest, mendingUpdates } from "../helpers/rest.mjs";
-import { BOSS_TIERS, collapseDays, endOfFloorPopularityDelta } from "../helpers/floor.mjs";
+import { BOSS_TIERS, collapseDays, currentFloor, endOfFloorPopularityDelta } from "../helpers/floor.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import { rollMagicItem } from "../helpers/loot.mjs";
 import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
@@ -128,7 +128,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       timerRunning: timer.running,
       elapsedLabel: formatElapsed(elapsedMs),
       thresholdReached: timer.running && elapsedMs >= TWO_HOURS_MS,
-      floor: game.settings.get("carl-rpg", "currentFloor"),
+      floor: currentFloor(),
     };
   }
 
@@ -284,7 +284,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
    */
   static async #onEndFloor(event, target) {
     if (!game.user.isGM) return;
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     const actors = await CarlToolbox.#promptActorPicker({
       titleKey: "CARLRPG.Toolbox.EndFloorTitle",
       promptKey: "CARLRPG.Toolbox.EndFloorPickerPrompt",
@@ -397,14 +397,14 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
   static async #onFloorIncrement(event, target) {
     if (!game.user.isGM) return;
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     await game.settings.set("carl-rpg", "currentFloor", floor + 1);
     this.render();
   }
 
   static async #onFloorDecrement(event, target) {
     if (!game.user.isGM) return;
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     await game.settings.set("carl-rpg", "currentFloor", Math.max(0, floor - 1));
     this.render();
   }
@@ -676,7 +676,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   static async #onPartyCheck(event, target) {
     if (!game.user.isGM) return;
     const i18n = game.i18n;
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     const names = await CarlToolbox.#skillNames();
     const before = `<div class="carl-party-check-setup">
         <div class="form-group">

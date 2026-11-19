@@ -61,6 +61,7 @@ import { queueForCard } from "../helpers/actor-queue.mjs";
 import { esc } from "../helpers/html.mjs";
 import { actorFromUuid, ownsUuid } from "../helpers/token-resolution.mjs";
 import { damageTypeLabel } from "../helpers/damage-types.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 export { resolveRowTarget };
 
@@ -616,7 +617,7 @@ async function applyRowDamage(message, row, target) {
   const outcome = rowOutcome(row, {
     damageByType: flags.damageByType ?? {},
     isArea: !!flags.isArea,
-    floor: flags.floor ?? game.settings.get(SCOPE, "currentFloor"),
+    floor: flags.floor ?? currentFloor(),
   });
   const lines = [];
   // A Shield Block (p.198): half the damage before DR, less the STR Mod at Rank 15.

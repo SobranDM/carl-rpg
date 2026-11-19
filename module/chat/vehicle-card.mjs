@@ -25,6 +25,7 @@ import {
   canDrive, cardOutcome, commitDrivingRound, drivingCardCurrent, drivingOutcomeText, upgradeReady,
 } from "../helpers/vehicle-driving.mjs";
 import { esc } from "../helpers/html.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 const SCOPE = "carl-rpg";
 /** Cards with a button mid-click - a double click mustn't apply twice. */
@@ -134,7 +135,7 @@ const handlers = {
   async drivingAbsorb(message) {
     await run(message, "drivingAbsorb", async ({ driving, vehicle }) => {
       const degree = stepUpDegree(driving.degree);
-      if (!await updateVehicle(vehicle, { "system.upgrades.shockAbsorbers.usedFloor": game.settings.get(SCOPE, "currentFloor") })) return;
+      if (!await updateVehicle(vehicle, { "system.upgrades.shockAbsorbers.usedFloor": currentFloor() })) return;
       await commitDrivingRound(vehicle, degree, { checkId: driving.checkId });
       await updateCardMessage(message, { flags: { [SCOPE]: { driving: { degree, absorbed: true } } } });
       await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.AbsorbDone", {

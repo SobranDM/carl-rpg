@@ -18,6 +18,7 @@
  * module/pdf-import/debuff-text.mjs).
  */
 import { isAreaMobAttack } from "./area.mjs";
+import { RollParts } from "../dice/roll-parts.mjs";
 
 const SCOPE = "carl-rpg";
 export const MOB_ATTACK_TYPE = "mobAttack";
@@ -207,4 +208,24 @@ export function attacksToCheck(attacks) {
     const effect = String(attack?.effect ?? "").toLowerCase();
     return debuffNames.some((name) => effect.includes(name));
   }).map((attack) => String(attack?.name ?? "").trim() || game.i18n.localize("CARLRPG.MobAttack.Unnamed"));
+}
+
+/**
+ * A Mob Attack's printed damage, rolled: "F" is the Floor (p.267: "add the
+ * current Floor Number to values with '+F'"), read from the roll data's
+ * `floor`. A formula that won't roll warns and gives null.
+ * @param {object} rollData  The Mob's roll data (or one with at least `floor`).
+ * @param {string} damage  The printed formula ("2d6+F").
+ * @param {string} label  The roll term's label.
+ * @returns {Promise<{roll: Roll, total: number, breakdown: string}|null>}
+ */
+export async function rollMobDamage(rollData, damage, label) {
+  const parts = new RollParts(rollData);
+  parts.add(String(damage).replace(/\bF\b/g, "@floor"), label);
+  try {
+    return await parts.evaluate();
+  } catch (err) {
+    ui.notifications.warn(game.i18n.format("CARLRPG.MobAttack.BadDamage", { formula: damage }));
+    return null;
+  }
 }

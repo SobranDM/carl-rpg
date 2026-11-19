@@ -30,6 +30,7 @@ import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { effectiveRank } from "./modifiers.mjs";
 import { createCardMessage, createRollMessage } from "../chat/chat-card.mjs";
 import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 /** Results that settle the Pet for the rest of the fight - only "staying out" can be retried. */
 const SETTLED_STATES = ["free", "restricted", "hiding"];
@@ -65,7 +66,7 @@ export function commandStateForDegree(degree) {
  * @returns {number}
  */
 export function commandDifficulty(pet) {
-  return opposedDifficulty(pet.system.stats.int?.mod, game.settings.get("carl-rpg", "currentFloor"));
+  return opposedDifficulty(pet.system.stats.int?.mod, currentFloor());
 }
 
 /**

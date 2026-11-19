@@ -23,8 +23,8 @@
  * card's queue). With no GM online the roller's own reroll still applies on
  * their client, as far as it can.
  */
-import CarlDice, { checkSubtitle, interventionRolls, withManaCostSubtitle } from "../dice/dice.mjs";
-import { degreeBadge, getDegreeOfSuccess } from "../helpers/rules.mjs";
+import CarlDice, { checkSubtitle, evadeFailNote, interventionRolls, rerollNote, withManaCostSubtitle } from "../dice/dice.mjs";
+import { degreeBadge, getDegreeOfSuccess, interventionTotal } from "../helpers/rules.mjs";
 import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { canAct, payAction } from "../helpers/actions.mjs";
 import { aiRerollAllowed, spendAiFavor } from "../helpers/ai-favor.mjs";
@@ -38,6 +38,7 @@ import { isCardLocked } from "./taunt-card.mjs";
 import { reviseRow, rowAt, rowCheck, rowCheckOpen, rowInterveneOpen, rowInterveners, rowRerollSources } from "./row-evade.mjs";
 import { esc } from "../helpers/html.mjs";
 import { actorFromUuid } from "../helpers/token-resolution.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -434,7 +435,7 @@ async function reviseNow(cardId, op, data, user) {
   if (source?.key === "favor") {
     if (!(await spendAiFavor(source.actor))) return false;
   } else if (source?.key === "fuzzyDice") {
-    if (!await updateVehicle(source.vehicle, { "system.upgrades.fuzzyDice.usedFloor": game.settings.get(SCOPE, "currentFloor") })) return false;
+    if (!await updateVehicle(source.vehicle, { "system.upgrades.fuzzyDice.usedFloor": currentFloor() })) return false;
   }
   await writeCard(message, parts);
   if (parts.after) await parts.after();
@@ -521,16 +522,15 @@ function reviseCheck(message, { interventions, reroll }) {
     Object.assign(spec, { natural: reroll.natural, total: reroll.total, used: true });
     base = Roll.fromData(reroll.roll);
   }
-  const total = spec.total + interventions.reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+  const total = spec.total + interventionTotal(interventions);
   const degree = getDegreeOfSuccess(spec.natural, total, spec.difficulty);
   const flags = { aiReroll: spec, interventions };
   let body = spec.body ?? "";
   if (spec.variant === "evade") {
-    if (degree === "majorFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeMajorFail")}</p>`;
-    else if (degree === "criticalFail") body += `<p>${game.i18n.localize("CARLRPG.Roll.EvadeCriticalFail")}</p>`;
+    body += evadeFailNote(degree);
     Object.assign(flags, { evadeDegree: degree, evadeTotal: total });
   }
-  if (spec.used) body += `<p class="carl-reroll-note">${game.i18n.localize("CARLRPG.Reroll.Note")}</p>`;
+  if (spec.used) body += rerollNote();
   const d6 = interventionRolls(interventions);
   return {
     rolls: [base, ...d6.rolls],

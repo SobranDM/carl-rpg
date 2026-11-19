@@ -1,6 +1,15 @@
 /**
- * Floor-level rules the GM Toolbox's End Floor and Boss Killed actions use.
+ * Floor-level rules the GM Toolbox's End Floor and Boss Killed actions use,
+ * and the current Floor.
  */
+
+/**
+ * The Floor the party is on (the world setting the GM Toolbox moves).
+ * @returns {number}
+ */
+export function currentFloor() {
+  return game.settings.get("carl-rpg", "currentFloor");
+}
 
 /**
  * "When a party kills a Boss, each member gains Levels based on the tier of

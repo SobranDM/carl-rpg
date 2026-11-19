@@ -18,6 +18,7 @@ import { createCardMessage } from "../chat/chat-card.mjs";
 import { isHitDegree } from "./rules.mjs";
 import { noteUndo, takeAction } from "./actions.mjs";
 import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 const SOCKET = "system.carl-rpg";
 const FLAG_SCOPE = "carl-rpg";
@@ -127,7 +128,7 @@ function upgradeUseAllowed(vehicle, flat) {
     if (!vehicle.system.upgrades.nitrous.installed || nitrousInstalled !== false) return false;
     if (!(typeof nitrousEnds === "number" && nitrousEnds <= game.time.worldTime + seconds + 1)) return false;
   }
-  const floor = game.settings.get("carl-rpg", "currentFloor");
+  const floor = currentFloor();
   for (const key of ["shockAbsorbers", "fuzzyDice"]) {
     const used = flat[`system.upgrades.${key}.usedFloor`];
     if (used !== undefined && used !== floor) return false;
