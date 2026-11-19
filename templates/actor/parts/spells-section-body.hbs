@@ -15,7 +15,7 @@
   </li>
   {{#each spells as |item id|}}
   <li class="item flexrow" data-item-id="{{item._id}}">
-    <div class="item-name">
+    <div class="item-name"{{itemTooltip (lookup @root.itemTooltips item._id)}}>
       {{#if item.damageEffects.length}}
       <a class="item-control carl-drawer-caret carl-drawer-caret-lg{{#unless item.system.damageEffectsExpanded}} collapsed{{/unless}}"
         data-action="toggleDrawer" data-scope="item" data-path="system.damageEffectsExpanded"
@@ -25,12 +25,12 @@
       {{/if}}
       <div class="item-image">
         <a class="rollable" data-action="roll" data-roll-type="item">
-          <img src="{{item.img}}" data-tooltip-text="{{item.name}}" width="24" height="24" />
+          <img src="{{item.img}}" alt="" width="24" height="24" />
         </a>
       </div>
       <a class="carl-item-name-toggle" data-action="toggleDrawer" data-scope="item" data-path="system.detailsExpanded"
         data-tooltip-text="{{localize 'CARLRPG.Ranked.ToggleDetails'}}">
-        <h4{{itemTooltip (lookup @root.itemTooltips item.id)}}>{{item.name}}{{#if item.system.active}} <i class="fas fa-bolt carl-spell-active-indicator" data-tooltip-text="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}</h4>
+        <h4>{{item.name}}{{#if item.system.active}} <i class="fas fa-bolt carl-spell-active-indicator" data-tooltip-text="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}</h4>
       </a>
       {{cooldownChip item}}
     </div>

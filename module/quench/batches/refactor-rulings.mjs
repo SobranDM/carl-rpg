@@ -10,7 +10,7 @@ import { resolveCombatantFor } from "../../helpers/token-resolution.mjs";
 import { itemTooltips } from "../../helpers/rich-text.mjs";
 import { useConsumable } from "../../helpers/consumables.mjs";
 import {
-  createTestCharacter, createTestCombat, createTestMob, createTestItem, deleteTestActor, deleteTestCombat, useQuenchTimeout, withFakeTargets,
+  createTestCharacter, createTestCombat, createTestMob, createTestItem, deleteTestActor, deleteTestCombat, useQuenchTimeout, waitFor, withFakeTargets,
 } from "../helpers.mjs";
 
 /**
@@ -257,6 +257,26 @@ export default function register(quench) {
             assert.include(tips[described.id], "A sturdy rope.");
             assert.notProperty(tips, plain.id);
           } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("the Inventory row's whole name cell (icon and name) carries it, as a Foundry tooltip", async function () {
+          const actor = await createTestCharacter("tooltip row");
+          const sheet = actor.sheet;
+          try {
+            const described = await createTestItem(actor, "item", "described", { system: { description: "<p>A sturdy rope.</p>" } });
+            const plain = await createTestItem(actor, "item", "plain");
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered && sheet.element.querySelector(`li[data-item-id="${described.id}"]`));
+            const cell = (item) => sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name`);
+            assert.include(cell(described).dataset.tooltipHtml ?? "", "A sturdy rope.");
+            assert.equal(cell(described).dataset.tooltipClass, "carl-item-tooltip");
+            assert.isUndefined(cell(plain).dataset.tooltipHtml, "no description, no tooltip");
+            // The system's own markup (Foundry's window frame isn't ours).
+            assert.isNull(sheet.element.querySelector(".window-content [title]"), "no browser title= tooltips");
+          } finally {
+            await sheet.close();
             await deleteTestActor(actor);
           }
         });

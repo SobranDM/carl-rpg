@@ -8,13 +8,13 @@
     </li>
     {{#each raceAndClass as |item id|}}
     <li class="item flexrow" data-item-id="{{item._id}}">
-      <div class="item-name">
+      <div class="item-name"{{itemTooltip (lookup @root.itemTooltips item._id)}}>
         <div class="item-image">
           <a class="rollable" data-action="roll" data-roll-type="item">
-            <img src="{{item.img}}" data-tooltip-text="{{item.name}}" width="24" height="24" />
+            <img src="{{item.img}}" alt="" width="24" height="24" />
           </a>
         </div>
-        <h4{{itemTooltip (lookup @root.itemTooltips item.id)}}>{{item.name}}</h4>
+        <h4>{{item.name}}</h4>
       </div>
       <div class="item-prop">
         {{item.typeLabel}}
@@ -46,13 +46,13 @@
     </li>
     {{#each features as |item id|}}
     <li class="item flexrow" data-item-id="{{item._id}}">
-      <div class="item-name">
+      <div class="item-name"{{itemTooltip (lookup @root.itemTooltips item._id)}}>
         <div class="item-image">
           <a class="rollable" data-action="roll" data-roll-type="item">
-            <img src="{{item.img}}" data-tooltip-text="{{item.name}}" width="24" height="24" />
+            <img src="{{item.img}}" alt="" width="24" height="24" />
           </a>
         </div>
-        <h4{{itemTooltip (lookup @root.itemTooltips item.id)}}>{{item.name}}</h4>
+        <h4>{{item.name}}</h4>
       </div>
       <div class="item-prop">{{#if item.system.tier}}{{localize (lookup config.featureTiers item.system.tier)}}{{/if}}</div>
       <div class="item-controls">
