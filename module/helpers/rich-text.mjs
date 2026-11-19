@@ -71,12 +71,13 @@ export function storyToHtml(parts) {
  * (ruled 2026-11-19).
  * @param {string} html
  * @param {foundry.abstract.Document} doc
- * @param {{rollData?: object}} [options]  Roll data already worked out.
+ * @param {{rollData?: object, secrets?: boolean}} [options]  rollData: already
+ *   worked out; secrets: whether GM Secret blocks show (default: to its owner).
  * @returns {Promise<string>}
  */
-export function enrichDescription(html, doc, { rollData } = {}) {
+export function enrichDescription(html, doc, { rollData, secrets } = {}) {
   return foundry.applications.ux.TextEditor.implementation.enrichHTML(html ?? "", {
-    relativeTo: doc, secrets: !!doc?.isOwner, rollData: rollData ?? doc?.getRollData?.() ?? {},
+    relativeTo: doc, secrets: secrets ?? !!doc?.isOwner, rollData: rollData ?? doc?.getRollData?.() ?? {},
   });
 }
 

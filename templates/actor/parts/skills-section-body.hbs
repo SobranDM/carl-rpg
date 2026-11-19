@@ -31,7 +31,7 @@
       </div>
       <a class="carl-item-name-toggle" data-action="toggleDrawer" data-scope="item" data-path="system.detailsExpanded"
         data-tooltip-text="{{localize 'CARLRPG.Ranked.ToggleDetails'}}">
-        <h4>{{skill.name}}</h4>
+        <h4{{itemTooltip (lookup @root.itemTooltips skill._id)}}>{{skill.name}}</h4>
       </a>
       {{cooldownChip skill}}
     </div>

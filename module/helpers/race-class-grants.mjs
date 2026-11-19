@@ -103,7 +103,12 @@ export function isEligibleNow(change, actorLevel) {
  * @returns {Promise<Item|null>}
  */
 export async function findSkillLikeItem(name, types = SKILL_LIKE_TYPES) {
-  const match = buildMatcher(await matchCandidates(null), { slug: slugifySkillName })(name, types);
+  const candidates = await matchCandidates(null);
+  // The same Skill slug first, best source first, so "Name (Base Skill)"
+  // isn't taken for "Name"; then the importer's looser name match.
+  const slug = slugifySkillName(name);
+  const exact = buildMatcher(candidates.filter((c) => slugifySkillName(c.name) === slug), { slug: slugifySkillName });
+  const match = exact(name, types) ?? buildMatcher(candidates, { slug: slugifySkillName })(name, types);
   return match ? ((await fromUuid(match.ref)) ?? null) : null;
 }
 

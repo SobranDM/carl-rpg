@@ -70,7 +70,8 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
         name: item.name,
         img: item.img || Item.DEFAULT_ICON,
         tierLabel: CONFIG.CARLRPG.lootBoxTiers[item.getFlag("carl-rpg", "lootTier")]?.label ?? "",
-        descriptionHTML: await enrichDescription(item.system.description, item),
+        // A loot item's GM Secrets are the GM's, even to a player who owns the box.
+        descriptionHTML: await enrichDescription(item.system.description, item, { secrets: game.user.isGM }),
       })),
     );
 

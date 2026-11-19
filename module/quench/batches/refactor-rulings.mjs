@@ -266,16 +266,21 @@ export default function register(quench) {
           const actor = await createTestCharacter("tooltip row");
           const sheet = actor.sheet;
           try {
-            const described = await createTestItem(actor, "item", "described", { system: { description: "<p>A sturdy rope.</p>" } });
+            const quoted = '<p class="x">A "sturdy" rope.</p>';
+            const described = await createTestItem(actor, "item", "described", { system: { description: quoted } });
             const plain = await createTestItem(actor, "item", "plain");
+            const skill = await createTestItem(actor, "skill", "Tooltip Skill", {
+              system: { description: `<p>See @UUID[${actor.uuid}]{its owner}.</p>` },
+            });
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered && sheet.element.querySelector(`li[data-item-id="${described.id}"]`));
             const cell = (item) => sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name`);
-            assert.include(cell(described).dataset.tooltipHtml ?? "", "A sturdy rope.");
+            assert.equal(cell(described).dataset.tooltipHtml, quoted, "the description, quotes and all");
             assert.equal(cell(described).dataset.tooltipClass, "carl-item-tooltip");
             assert.isUndefined(cell(plain).dataset.tooltipHtml, "no description, no tooltip");
-            // The system's own markup (Foundry's window frame isn't ours).
-            assert.isNull(sheet.element.querySelector(".window-content [title]"), "no browser title= tooltips");
+            const skillName = sheet.element.querySelector(`li[data-item-id="${skill.id}"] h4`);
+            assert.include(skillName?.dataset.tooltipHtml ?? "", "content-link", "a Skill's name shows its enriched description");
+            assert.isNull(sheet.element.querySelector("li[data-item-id] [title], li[data-item-id][title]"), "no browser title= tooltips on rows");
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
