@@ -3,10 +3,14 @@ import {
   addConditionToActor, changeConditions, conditionOps, opsAllowed,
 } from "../../helpers/conditions.mjs";
 import { isUntrained } from "../../helpers/rules.mjs";
-import { bareSkillLikeData } from "../../helpers/race-class-grants.mjs";
+import { bareSkillLikeData, cleanSkillLikeCopy, findSkillLikeItem } from "../../helpers/race-class-grants.mjs";
+import { copyData, PACKS } from "../../helpers/packs.mjs";
+import { fightOf } from "../../helpers/fights.mjs";
+import { resolveCombatantFor } from "../../helpers/token-resolution.mjs";
+import { itemTooltips } from "../../helpers/rich-text.mjs";
 import { useConsumable } from "../../helpers/consumables.mjs";
 import {
-  createTestCharacter, createTestMob, createTestItem, deleteTestActor, useQuenchTimeout, withFakeTargets,
+  createTestCharacter, createTestCombat, createTestMob, createTestItem, deleteTestActor, deleteTestCombat, useQuenchTimeout, withFakeTargets,
 } from "../helpers.mjs";
 
 /**
@@ -183,7 +187,81 @@ export default function register(quench) {
           }
         });
       });
+
+      describe("Finding by name, in the importer's priority (#5)", function () {
+        useQuenchTimeout(this);
+
+        it("the system's copy wins over a same-named world Item; a Spell lookup skips a same-named Skill", async function () {
+          const pack = game.packs.get(PACKS.skillsAndSpells);
+          const index = await pack?.getIndex({ fields: ["type"] });
+          const spell = index?.find((e) => e.type === "spell");
+          if (!spell) this.skip();
+          const [worldSkill] = await Item.createDocuments([{ name: spell.name, type: "skill" }]);
+          try {
+            const found = await findSkillLikeItem(spell.name);
+            assert.equal(found?.pack, pack.collection, "the system compendium's, not the world's");
+            const asSpell = await findSkillLikeItem(spell.name, ["spell"]);
+            assert.equal(asSpell?.type, "spell");
+          } finally {
+            await worldSkill.delete();
+          }
+        });
+      });
+
+      describe("Which fight a creature is in (#9)", function () {
+        useQuenchTimeout(this);
+
+        it("only a started fight counts, and the Combatant is the actor's own", async function () {
+          const actor = await createTestCharacter("fighter");
+          const other = await createTestCharacter("bystander");
+          let combat;
+          try {
+            ({ combat } = await createTestCombat(actor));
+            assert.isNull(fightOf(actor), "not started");
+            await combat.startCombat();
+            assert.equal(fightOf(actor), combat);
+            assert.isNull(fightOf(other));
+            assert.equal(resolveCombatantFor({ actor, token: null })?.actor, actor);
+            assert.isNull(resolveCombatantFor({ actor: other, token: null }));
+          } finally {
+            await deleteTestCombat(combat);
+            await deleteTestActor(actor);
+            await deleteTestActor(other);
+          }
+        });
+      });
+
+      describe("Copies keep their compendium source (#12)", function () {
+        it("copyData and cleanSkillLikeCopy", async function () {
+          const pack = game.packs.get(PACKS.skillsAndSpells);
+          const entry = (await pack?.getIndex())?.contents?.[0] ?? [...((await pack?.getIndex()) ?? [])][0];
+          if (!entry) this.skip();
+          const doc = await pack.getDocument(entry._id);
+          const data = copyData(doc);
+          assert.equal(data._stats.compendiumSource, doc.uuid);
+          for (const key of ["_id", "folder", "sort", "ownership"]) assert.notProperty(data, key);
+          assert.equal(cleanSkillLikeCopy(doc, 3)._stats.compendiumSource, doc.uuid);
+          assert.notProperty(cleanSkillLikeCopy({ name: "X", type: "skill", system: {} }, 1), "_stats", "plain data names none");
+        });
+      });
+
+      describe("Item descriptions as tooltips (#11)", function () {
+        useQuenchTimeout(this);
+
+        it("an item's description, and nothing for one without", async function () {
+          const actor = await createTestCharacter("tooltips");
+          try {
+            const described = await createTestItem(actor, "item", "described", { system: { description: "<p>A sturdy rope.</p>" } });
+            const plain = await createTestItem(actor, "item", "plain");
+            const tips = await itemTooltips(actor.items);
+            assert.include(tips[described.id], "A sturdy rope.");
+            assert.notProperty(tips, plain.id);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+      });
     },
-    { displayName: "CarlRPG: 0.7.1 rulings (conditions writer, Ranks, Opposed, Mend)" },
+    { displayName: "CarlRPG: 0.7.1 rulings (conditions writer, Ranks, Opposed, Mend, lookups, fights, copies, tooltips)" },
   );
 }
