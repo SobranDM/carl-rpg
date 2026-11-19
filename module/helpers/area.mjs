@@ -1,3 +1,4 @@
+import { unlockedTiers } from "./modifiers.mjs";
 /**
  * Area Attack detection (Combat, p.83): whether an Attack affects an area -
  * a Blast, Burst, Cone, Line, or Splash - so the roll dialog can pre-tick
@@ -32,7 +33,7 @@ export function isAreaItem(item, rank = item?.system?.rank ?? 0) {
   if (!item) return false;
   const sys = item.system ?? {};
   if ((sys.castingKeywords ?? []).includes("areaOfEffect")) return true;
-  const unlocked = (sys.upgrades ?? []).filter((u) => rank >= (u.rankThreshold ?? Infinity)).map((u) => u.description);
+  const unlocked = unlockedTiers(item, rank).map((u) => u.description);
   return textDescribesArea(sys.range, sys.description, ...unlocked);
 }
 

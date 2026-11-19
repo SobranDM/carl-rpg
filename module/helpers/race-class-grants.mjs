@@ -152,6 +152,22 @@ export function cleanSkillLikeCopy(source, rank) {
 }
 
 /**
+ * Creation data for a Skill-like item found in no compendium: a bare item
+ * of that type at a Rank - a Skill is a Utility Skill.
+ * @param {string} name
+ * @param {number} rank
+ * @param {{type?: "skill"|"spell"|"damageEffect", img?: string, system?: object, flags?: object}} [options]
+ *   system: more system fields (over the defaults); flags: the item's flags.
+ * @returns {object}
+ */
+export function bareSkillLikeData(name, rank, { type = "skill", img, system = {}, flags } = {}) {
+  const data = { name, type, system: { rank, ...(type === "skill" ? { category: "utility" } : {}), ...system } };
+  if (img) data.img = img;
+  if (flags) data.flags = flags;
+  return data;
+}
+
+/**
  * The actor's own Skill by name, or - untrained - an unsaved Rank 0 copy
  * from the compendium (a bare Utility Skill if there's none), which rolls
  * with Disadvantage and must not be marked for Advancement (it isn't on the
@@ -165,10 +181,9 @@ export async function skillOrUntrainedCopy(actor, name, fallback = {}) {
   const owned = findOwnedSkillLike(actor, name, ["skill"]);
   if (owned) return { skill: owned, trained: true };
   const source = await findSkillLikeItem(name);
-  const data = cleanSkillLikeCopy(source ?? {
-    name, type: "skill", img: fallback.img ?? "icons/svg/d20.svg",
-    system: { category: "utility", ...(fallback.system ?? {}) },
-  }, 0);
+  const data = cleanSkillLikeCopy(source ?? bareSkillLikeData(name, 0, {
+    img: fallback.img ?? "icons/svg/d20.svg", system: fallback.system,
+  }), 0);
   data._id = foundry.utils.randomID();
   return { skill: new CONFIG.Item.documentClass(data, { parent: actor }), trained: false };
 }
@@ -185,7 +200,7 @@ export async function learnSkillLike(actor, name, rank) {
   const found = await findSkillLikeItem(name);
   const data = found
     ? cleanSkillLikeCopy(found, rank)
-    : { name, type: "skill", system: { rank, category: "utility" } };
+    : bareSkillLikeData(name, rank);
   const [created] = await actor.createEmbeddedDocuments("Item", [data]);
   return created ?? null;
 }
@@ -265,8 +280,16 @@ async function bakeEligibleGrants(item, actor) {
   const pending = changes.filter((c) => !baked.has(c.id) && isEligibleNow(c, actorLevel));
   if (!pending.length) return;
 
-  const newlyBaked = [];
+  // Recorded as each write lands, so a grant that fails part-way doesn't
+  // leave the ones already written unrecorded (and re-applied next time).
+  const recorded = [...baked];
+  const record = (ids) => {
+    if (!ids.length) return undefined;
+    recorded.push(...ids);
+    return item.setFlag("carl-rpg", "bakedGrantIds", [...recorded]);
+  };
 
+  const statIds = [];
   const statUpdates = {};
   for (const change of pending) {
     if (change.targetType !== "stat" || !STAT_KEYS.has(change.target)) continue;
@@ -274,9 +297,10 @@ async function bakeEligibleGrants(item, actor) {
     const base = actor.system.stats?.[change.target]?.value ?? 0;
     const current = path in statUpdates ? statUpdates[path] : base;
     statUpdates[path] = applyScalarChange(current, change.mode, Number(change.value) || 0);
-    newlyBaked.push(change.id);
+    statIds.push(change.id);
   }
   if (Object.keys(statUpdates).length) await actor.update(statUpdates);
+  await record(statIds);
 
   // Skill-rank grants run sequentially (each may create/copy its own item,
   // and a later grant targeting the same Skill needs to see the prior one's
@@ -284,11 +308,7 @@ async function bakeEligibleGrants(item, actor) {
   for (const change of pending) {
     if (change.targetType !== "skillRank") continue;
     await bakeSkillRankGrant(actor, change);
-    newlyBaked.push(change.id);
-  }
-
-  if (newlyBaked.length) {
-    await item.setFlag("carl-rpg", "bakedGrantIds", [...baked, ...newlyBaked]);
+    await record([change.id]);
   }
 }
 

@@ -110,6 +110,29 @@ export function vehicleSeatOf(actor) {
   return seatIndex.get(occupantKey(actor)) ?? null;
 }
 
+/** A vehicle's round stamp with no round set: full Move, no result. */
+export const BLANK_ROUND = Object.freeze({ combatId: "", checkId: "", round: null, degree: "", critChoice: "", ramFactor: 1 });
+
+/**
+ * A new round stamp (system.round) for the vehicle's current fight, or for
+ * outside one: `patch` over what the stamp keeps - the current stamp's
+ * fields while its round is still the current one, a blank round's
+ * otherwise (vehicleStatus's roundActive).
+ * @param {Actor} vehicle
+ * @param {object} patch  Fields set now (degree, checkId, ramFactor...).
+ * @returns {object}
+ */
+export function roundStamp(vehicle, patch = {}) {
+  const status = vehicleStatus(vehicle);
+  const kept = status.roundActive ? vehicle.system.round : BLANK_ROUND;
+  return {
+    ...Object.fromEntries(Object.keys(BLANK_ROUND).map((key) => [key, kept[key]])),
+    combatId: status.fight?.id ?? "",
+    round: status.fight?.round ?? null,
+    ...patch,
+  };
+}
+
 /**
  * The started fight a vehicle is in: one where any occupant is a combatant.
  * @param {Actor} vehicle

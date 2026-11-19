@@ -21,7 +21,7 @@ import { isAreaItem } from "../helpers/area.mjs";
 import { mobAttackFor } from "../helpers/mob-attacks.mjs";
 import { buildMarkChoiceFooter } from "../chat/mark-choice-card.mjs";
 import { buildDifficultyPresets, degreeBadge, degreeLabel, getDegreeOfSuccess, isHitDegree, selectedPresetValue } from "../helpers/rules.mjs";
-import { ownedRank, effectiveRank, slugifySkillName, sameSkillName, damageEffectFits, attackTargetEffects, attackIsArmorPiercing, computeActiveShieldSlots, skillRankCap } from "../helpers/modifiers.mjs";
+import { attackIsArmorPiercing, attackTargetEffects, computeActiveShieldSlots, damageEffectFits, effectiveRank, ownedRank, sameSkillName, skillRankCap, slugifySkillName, tiersHighestFirst } from "../helpers/modifiers.mjs";
 import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { splitDamageEvenly } from "../helpers/damage-pipeline.mjs";
 import { damageTypeLabel, normalizeDamageType } from "../helpers/damage-types.mjs";
@@ -117,11 +117,8 @@ function applyCheckedConditionalModifiers(partsOrResolver, conditionalModifiers,
  */
 function resolveDamageTypeSplit(item) {
   if (!item) return [];
-  const unlocked = (item.system?.upgrades ?? [])
-    .filter((u) => effectiveRank(item) >= u.rankThreshold)
-    .filter((u) => (u.damageTypes ?? []).some(Boolean))
-    .sort((a, b) => b.rankThreshold - a.rankThreshold);
-  return (unlocked[0]?.damageTypes ?? []).filter(Boolean);
+  const tier = tiersHighestFirst(item).find((u) => (u.damageTypes ?? []).some(Boolean));
+  return (tier?.damageTypes ?? []).filter(Boolean);
 }
 
 /** Localized "Damage" or "Damage (Fire)" / "Damage (Force/Fire, split evenly)" row label. */
@@ -2067,9 +2064,7 @@ export default class CarlDice {
     if (!cooldown.ok) return null;
     const body = cooldown.early ? earlyUseNote() : "";
 
-    const unlocked = (skillSys.upgrades ?? [])
-      .filter((u) => rank >= u.rankThreshold)
-      .sort((a, b) => b.rankThreshold - a.rankThreshold);
+    const unlocked = tiersHighestFirst(skillItem, rank);
     const fullTier = unlocked.find((u) => u.healToFull);
     const diceTier = unlocked.find((u) => u.healDice);
     const canMend = unlocked.some((u) => u.healMend);

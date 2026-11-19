@@ -26,7 +26,7 @@ import { rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { aiRerollFlags } from "./ai-favor.mjs";
 import { createRollMessage } from "../chat/chat-card.mjs";
-import { drivingOutcome, resolveOccupant, vehicleDriver, vehicleFight, vehicleStatus } from "./vehicle-state.mjs";
+import { drivingOutcome, resolveOccupant, roundStamp, vehicleDriver, vehicleStatus } from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
 import { esc } from "./html.mjs";
 
@@ -56,17 +56,8 @@ export function canDrive(vehicle, user = game.user) {
  * @returns {Promise<void>}
  */
 export async function commitDrivingRound(vehicle, degree, { critChoice = "", checkId = "" } = {}) {
-  const fight = vehicleFight(vehicle);
-  const status = vehicleStatus(vehicle);
   await updateVehicle(vehicle, {
-    "system.round": {
-      combatId: fight?.id ?? "",
-      checkId,
-      round: fight?.round ?? null,
-      degree,
-      critChoice,
-      ramFactor: status.roundActive ? vehicle.system.round.ramFactor : 1,
-    },
+    "system.round": roundStamp(vehicle, { checkId, degree, critChoice }),
     "system.nextCheckAdvantage": degree === "amazingSuccess",
     "system.parked": false,
   });

@@ -21,7 +21,7 @@ import { MOB_ATTACK_TYPE, attackKind, mobAttacksOf } from "../helpers/mob-attack
 import { isLootBoxItem, takeLootItem } from "../helpers/loot-box.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
 import { isCrawler, isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
-import { resolveOccupant, vehicleOccupants, vehicleStatus } from "../helpers/vehicle-state.mjs";
+import { BLANK_ROUND, resolveOccupant, roundStamp, vehicleOccupants, vehicleStatus } from "../helpers/vehicle-state.mjs";
 import {
   activateNitrous, applyVehiclePreset, boardVehicle, exitVehicle, setDriver, toggleParked, updateVehicle,
 } from "../helpers/vehicles.mjs";
@@ -344,16 +344,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       delete submitted.round;
       return;
     }
-    const current = this.actor.system.round;
-    submitted.round = {
-      combatId: status.fight?.id ?? "",
-      // Set by hand: no Driving Check card's buttons may change it now.
-      checkId: "",
-      round: status.fight?.round ?? null,
-      degree: picked,
-      critChoice: "",
-      ramFactor: status.roundActive ? current.ramFactor : 1,
-    };
+    // Set by hand: no Driving Check card's buttons may change it now.
+    submitted.round = roundStamp(this.actor, { checkId: "", degree: picked, critChoice: "" });
   }
 
   /** @override */
@@ -1454,7 +1446,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static #onResetVehicleRound(event, target) {
     event.preventDefault();
     return updateVehicle(this.actor, {
-      "system.round": { combatId: "", checkId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
+      "system.round": { ...BLANK_ROUND },
     });
   }
 

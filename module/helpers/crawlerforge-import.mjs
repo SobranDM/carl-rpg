@@ -45,7 +45,7 @@
  */
 
 import { CARLRPG } from "./config.mjs";
-import { SKILL_LIKE_TYPES, cappedGrantRank, cleanSkillLikeCopy, isEligibleNow } from "./race-class-grants.mjs";
+import { bareSkillLikeData, cappedGrantRank, cleanSkillLikeCopy, isEligibleNow, SKILL_LIKE_TYPES } from "./race-class-grants.mjs";
 import { slugifySkillName } from "./modifiers.mjs";
 import { changeEntry } from "../pdf-import/shared.mjs";
 import { escapeHtml } from "../pdf-import/page-text.mjs";
@@ -67,6 +67,22 @@ const SUPPORTED_SCHEMA_VERSION = 1;
 
 /** Read `species` as a Race name (Q7b) rather than the kind of crawler. */
 const SPECIES_IS_RACE = false;
+
+/**
+ * The Race or Class name an export asks for: its definition's, or for a
+ * Race the species when that's read as one (Q7b).
+ * @param {object} crawler
+ * @param {"race"|"class"} type
+ * @returns {string|null}
+ */
+function raceClassName(crawler, type) {
+  return crawler[type]?.definition?.name ?? (type === "race" && SPECIES_IS_RACE ? crawler.species : null);
+}
+
+/** A Race/Class name as matched: exact but for case and surrounding spaces (Q7b). */
+function raceClassKey(name) {
+  return String(name ?? "").trim().toLowerCase();
+}
 
 /** A CrawlerForge slot -> the Equipment Doll slot it means. */
 const GEAR_SLOT_MAP = {
@@ -546,13 +562,13 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
 
   // Race and Class: ours by exact name (Q7b), else CrawlerForge's own.
   const ours = (type, name) => {
-    const want = String(name ?? "").trim().toLowerCase();
-    return want ? raceClass.find((d) => d.type === type && String(d.name).trim().toLowerCase() === want) ?? null : null;
+    const want = raceClassKey(name);
+    return want ? raceClass.find((d) => d.type === type && raceClassKey(d.name) === want) ?? null : null;
   };
   const kind = String(c.species ?? "").trim().toLowerCase();
   const raceOrClass = (type) => {
     const definition = c[type]?.definition;
-    const name = definition?.name ?? (type === "race" && SPECIES_IS_RACE ? c.species : null);
+    const name = raceClassName(c, type);
     const found = ours(type, name);
     if (found) {
       report.copied.push({ name: found.name, type, source: PACKS.classesAndRaces });
@@ -641,7 +657,7 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
     } else {
       skills.push({
         key, name: grant.name, type: "skill",
-        data: { name: grant.name, type: "skill", system: { rank, category: "utility" }, flags: { [SCOPE]: { [FLAG]: { key, notInRulebook: true } } } },
+        data: bareSkillLikeData(grant.name, rank, { flags: { [SCOPE]: { [FLAG]: { key, notInRulebook: true } } } }),
       });
     }
     skillNames.set(slug, { name: found?.name ?? grant.name, type: found?.type ?? "skill", category: found?.category || null, handToHand: !!found?.handToHand, noWeapon: !!found?.noWeapon, definition: {} });
@@ -760,13 +776,10 @@ export function buildCrawlerForgeActorData(state, { candidates = [], raceClass =
 /** Our Race/Class documents named exactly like the export's (Q7b). */
 async function raceClassSources(crawler) {
   const pack = game.packs.get(PACKS.classesAndRaces);
-  const names = ["race", "class"]
-    .map((type) => crawler[type]?.definition?.name ?? (type === "race" && SPECIES_IS_RACE ? crawler.species : null))
-    .filter(Boolean)
-    .map((n) => String(n).trim().toLowerCase());
+  const names = ["race", "class"].map((type) => raceClassName(crawler, type)).filter(Boolean).map(raceClassKey);
   if (!pack || !names.length) return [];
   const index = await pack.getIndex({ fields: ["type"] });
-  const hits = index.filter((e) => ["race", "class"].includes(e.type) && names.includes(String(e.name).trim().toLowerCase()));
+  const hits = index.filter((e) => ["race", "class"].includes(e.type) && names.includes(raceClassKey(e.name)));
   const docs = await Promise.all(hits.map((e) => pack.getDocument(e._id)));
   return docs.filter(Boolean).map((d) => ({ ...d.toObject(), _stats: { compendiumSource: d.uuid } }));
 }
@@ -799,11 +812,9 @@ async function skillData(entry, report) {
     // (flagged), else a bare item of the matched type - and say so.
     report?.notes.push({ key: "CopyFailed", data: { name: entry.name } });
     if (entry.fallback) return { ...entry.fallback, system: { ...entry.fallback.system, rank: entry.copy.rank } };
-    return {
-      name: entry.name, type: entry.type ?? "skill",
-      system: { rank: entry.copy.rank, ...(entry.type === "skill" ? { category: "utility" } : {}) },
-      flags: { [SCOPE]: { [FLAG]: { key: entry.key, notInRulebook: true } } },
-    };
+    return bareSkillLikeData(entry.name, entry.copy.rank, {
+      type: entry.type ?? "skill", flags: { [SCOPE]: { [FLAG]: { key: entry.key, notInRulebook: true } } },
+    });
   }
   const data = cleanSkillLikeCopy(source, entry.copy.rank);
   // cleanSkillLikeCopy drops _stats; keep where it came from.

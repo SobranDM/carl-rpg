@@ -13,9 +13,7 @@
  */
 import CarlDice from "../dice/dice.mjs";
 import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
-import {
-  invalidateSeatIndex, occupantKey, resolveOccupant, vehicleSeatOf, vehicleStatus,
-} from "./vehicle-state.mjs";
+import { BLANK_ROUND, invalidateSeatIndex, occupantKey, resolveOccupant, vehicleSeatOf, vehicleStatus } from "./vehicle-state.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { isHitDegree } from "./rules.mjs";
 import { noteUndo, takeAction } from "./actions.mjs";
@@ -324,7 +322,7 @@ export async function setDriver(vehicle, uuid) {
 export async function toggleParked(vehicle) {
   return updateVehicle(vehicle, {
     "system.parked": !vehicle.system.parked,
-    "system.round": { combatId: "", checkId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
+    "system.round": { ...BLANK_ROUND },
   });
 }
 

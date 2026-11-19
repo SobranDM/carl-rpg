@@ -30,7 +30,7 @@ import CarlDice, { isBlockedByDebuff } from "../dice/dice.mjs";
 import { CARLRPG } from "./config.mjs";
 import { findConditionWithMechanic, conditionLabel } from "./debuff-effects.mjs";
 import { cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem, learnSkillLike } from "./race-class-grants.mjs";
-import { skillRankCap } from "./modifiers.mjs";
+import { skillRankCap, unlockedTiers } from "./modifiers.mjs";
 import { buildConditionEntry } from "./conditions.mjs";
 import { durationSeconds } from "./expiry.mjs";
 import { buildScrollCast } from "./scroll-cast.mjs";
@@ -91,8 +91,8 @@ export async function resolveConsumableSpell(item) {
  * @returns {Promise<ChatMessage>}
  */
 async function postScrollEffect(actor, spell, rank) {
-  const upgrades = (spell.system.upgrades ?? [])
-    .filter((u) => rank >= u.rankThreshold && u.description)
+  const upgrades = unlockedTiers(spell, rank)
+    .filter((u) => u.description)
     .map((u) => `<p><strong>${game.i18n.format("CARLRPG.Consumable.UpgradeRank", { rank: u.rankThreshold })}</strong> ${u.description}</p>`)
     .join("");
   return createCardMessage({

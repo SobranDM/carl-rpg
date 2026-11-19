@@ -23,7 +23,7 @@ import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { baseRow, childRowId, crawlerAttackDifficulty, crawlerAttackRow } from "./attack-targets.mjs";
 import { updateCardMessage } from "./chat-socket.mjs";
-import { actorSizeValue, vehicleDriver, vehicleFight, vehicleOccupants, vehicleStatus } from "./vehicle-state.mjs";
+import { actorSizeValue, roundStamp, vehicleDriver, vehicleOccupants, vehicleStatus } from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
 import { canDrive } from "./vehicle-driving.mjs";
 import { createRollMessage } from "../chat/chat-card.mjs";
@@ -174,19 +174,9 @@ export async function afterRamRowApplied(message, row, recipient, damage) {
   if (!flags.ram || !isVehicle(recipient)) return [];
   const lines = [];
   if (row.role === "recoil") {
-    const status = vehicleStatus(recipient);
-    const fight = vehicleFight(recipient);
-    const current = recipient.system.round;
+    // This round's Driving Check card (and result) is kept.
     await updateVehicle(recipient, {
-      "system.round": {
-        combatId: fight?.id ?? "",
-        // This round's Driving Check card still owns its result.
-        checkId: status.roundActive ? current.checkId : "",
-        round: fight?.round ?? null,
-        degree: status.roundActive ? current.degree : "",
-        critChoice: status.roundActive ? current.critChoice : "",
-        ramFactor: row.moveFactor ?? 0.5,
-      },
+      "system.round": roundStamp(recipient, { ramFactor: row.moveFactor ?? 0.5 }),
     });
     lines.push(game.i18n.format(row.moveFactor === 0 ? "CARLRPG.Vehicle.Ram.Stopped" : "CARLRPG.Vehicle.Ram.Slowed", { vehicle: esc(recipient.name) }));
   }

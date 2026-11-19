@@ -22,7 +22,7 @@
  * "a pet or minion" is any `pet` actor.
  */
 import { isPet, isVehicle } from "./actor-kinds.mjs";
-import { effectiveRank } from "./modifiers.mjs";
+import { effectiveRank, unlockedTiers } from "./modifiers.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { esc } from "./html.mjs";
 
@@ -46,9 +46,7 @@ export function healsMode(item) {
  * @returns {boolean}
  */
 export function healsAllTargets(item) {
-  const sys = item?.system ?? {};
-  const rank = effectiveRank(item);
-  return (sys.upgrades ?? []).some((u) => u.healAllTargets && rank >= u.rankThreshold);
+  return unlockedTiers(item).some((u) => u.healAllTargets);
 }
 
 /** A pet or minion, for a heal's limits: any Pet actor (see above). */

@@ -11,7 +11,7 @@
  * rolling, or both) and allowAnimalCrawlers.
  */
 import { slugifySkillName } from "./modifiers.mjs";
-import { cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem } from "./race-class-grants.mjs";
+import { bareSkillLikeData, cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem } from "./race-class-grants.mjs";
 import { assignItemToSlot, slotHolds } from "./equip-slots.mjs";
 import { isInHotlist, toggleHotlist } from "./hotlist.mjs";
 import { headedSectionsToHtml, STORY_SECTIONS } from "./rich-text.mjs";
@@ -517,13 +517,17 @@ async function skillWrites(actor, state) {
   const raise = [];
   const wanted = chargenSkills(state);
   const sources = await Promise.all(wanted.map(({ name }) => (findOwnedSkillLike(actor, name) ? null : findSkillLikeItem(name))));
-  wanted.forEach(({ name, rank }, i) => {
+  const { damageEffect } = combatChoice(state);
+  wanted.forEach(({ name, rank, source }, i) => {
     const owned = findOwnedSkillLike(actor, name);
     if (owned) {
       if ((owned.system.rank ?? 0) < rank) raise.push({ _id: owned.id, "system.rank": rank });
       return;
     }
-    create.push(sources[i] ? cleanSkillLikeCopy(sources[i], rank) : { name, type: "skill", system: { rank, category: "utility" } });
+    // Missing from every compendium: a bare item of what it is - the Heal
+    // Spell a Spell, the chosen Damage Effect a Damage Effect.
+    const type = source === "heal" ? "spell" : (source === "combat" && name === damageEffect ? "damageEffect" : "skill");
+    create.push(sources[i] ? cleanSkillLikeCopy(sources[i], rank) : bareSkillLikeData(name, rank, { type }));
   });
   return { create, raise };
 }

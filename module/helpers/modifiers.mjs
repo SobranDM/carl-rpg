@@ -139,16 +139,30 @@ export function effectiveRank(item) {
 }
 
 /**
- * A Skill, Spell or Damage Effect's Upgrade tiers unlocked at its live Rank
- * (effectiveRank) - unlike system.unlockedUpgrades, which reads its own Rank.
- * @param {Item|null} item
+ * A Skill, Spell or Damage Effect's Upgrade tiers unlocked at a Rank, in
+ * authored order. The Rank defaults to the item's live Rank (effectiveRank:
+ * tier gating, ruled 2026-11-18); a caller that gates on something else -
+ * the item's own Rank, a Scroll's fixed Rank - passes it.
+ * @param {Item|{system: object}|null} item
+ * @param {number} [rank]
  * @returns {object[]}
  */
-export function unlockedTiers(item) {
+export function unlockedTiers(item, rank) {
   const upgrades = item?.system?.upgrades;
   if (!Array.isArray(upgrades) || !upgrades.length) return [];
-  const rank = effectiveRank(item);
-  return upgrades.filter((u) => rank >= u.rankThreshold);
+  const at = rank ?? effectiveRank(item);
+  return upgrades.filter((u) => at >= u.rankThreshold);
+}
+
+/**
+ * The unlocked tiers, highest Rank first - the order in which "the highest
+ * unlocked tier that sets X wins".
+ * @param {Item|{system: object}|null} item
+ * @param {number} [rank]  As unlockedTiers.
+ * @returns {object[]}
+ */
+export function tiersHighestFirst(item, rank) {
+  return unlockedTiers(item, rank).sort((a, b) => b.rankThreshold - a.rankThreshold);
 }
 
 function emptySkillEntry(name) {
@@ -269,8 +283,7 @@ function collectItemChanges(item, rank = item.system.rank ?? 0) {
     out.push({ change, sourceLabel: item.name, sourceItemId: item.id, sourceItemRank, sourceItemType: item.type });
   }
   if (Array.isArray(sys.upgrades)) {
-    for (const upgrade of sys.upgrades) {
-      if (sourceItemRank < upgrade.rankThreshold) continue;
+    for (const upgrade of unlockedTiers(item, sourceItemRank)) {
       for (const change of upgrade.changes ?? []) {
         if (isDamageEffect && !targetsSelf(change)) continue;
         out.push({
@@ -342,8 +355,7 @@ export function collectItemTargetEffects(item, { isCrit = false, isAmazingSucces
   };
   // The base list: at any Rank.
   for (const te of sys.targetEffects ?? []) take(te, item.name);
-  for (const upgrade of Array.isArray(sys.upgrades) ? sys.upgrades : []) {
-    if (sourceItemRank < upgrade.rankThreshold) continue;
+  for (const upgrade of unlockedTiers(item, sourceItemRank)) {
     for (const te of upgrade.targetEffects ?? []) take(te, `${item.name} (Rank ${upgrade.rankThreshold})`);
   }
   return out;
@@ -386,8 +398,7 @@ export function itemIsArmorPiercing(item) {
   const sys = item?.system;
   if (!sys) return false;
   if (sys.armorPiercing) return true;
-  const rank = effectiveRank(item);
-  return (Array.isArray(sys.upgrades) ? sys.upgrades : []).some((u) => u.armorPiercing && rank >= u.rankThreshold);
+  return unlockedTiers(item).some((u) => u.armorPiercing);
 }
 
 /**
@@ -457,11 +468,7 @@ export function computeActiveShieldSlots(items) {
     if (item.type !== "spell" || !item.system.isToggled || !item.system.active) continue;
     const sys = item.system;
     if (!sys.shieldSlots) continue;
-    const rank = effectiveRank(item);
-    const unlocked = (sys.upgrades ?? [])
-      .filter((u) => rank >= u.rankThreshold && u.shieldSlots)
-      .sort((a, b) => b.rankThreshold - a.rankThreshold);
-    return unlocked[0]?.shieldSlots ?? sys.shieldSlots;
+    return tiersHighestFirst(item).find((u) => u.shieldSlots)?.shieldSlots ?? sys.shieldSlots;
   }
   return 0;
 }
@@ -887,6 +894,26 @@ function armorDr(item, rollData) {
 }
 
 /**
+ * The total of armor DR bonuses (isArmorDrBonus) among these changes that
+ * apply at the wearer's Level (levelGate), each resolved as applyOneChange
+ * resolves it (@rank is its item's).
+ * @param {{change: object, rank: number}[]} entries
+ * @param {object} rollData
+ * @returns {number}
+ */
+function armorDrTotal(entries, rollData) {
+  let total = 0;
+  for (const { change, rank } of entries) {
+    if (!isArmorDrBonus(change)) continue;
+    if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
+    const value = resolveValue(change.value, { ...rollData, rank });
+    if (typeof value !== "number") continue;
+    total += change.mode === "add" ? value : -value;
+  }
+  return total;
+}
+
+/**
  * A piece's armor DR before and after Shield damage: a Shield's DR is
  * lowered by its `shieldDamage` (Shield Block, p.198), to no less than 0 -
  * "It breaks at 0 DR". Other gear is unaffected.
@@ -895,14 +922,7 @@ function armorDr(item, rollData) {
  * @returns {{base: number, damage: number, dr: number}}
  */
 function shieldDrParts(item, rollData) {
-  let base = 0;
-  for (const { change, sourceItemRank } of collectItemChanges(item)) {
-    if (!isArmorDrBonus(change)) continue;
-    if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
-    const value = resolveValue(change.value, { ...rollData, rank: sourceItemRank });
-    if (typeof value !== "number") continue;
-    base += change.mode === "add" ? value : -value;
-  }
+  const base = armorDrTotal(collectItemChanges(item).map(({ change, sourceItemRank }) => ({ change, rank: sourceItemRank })), rollData);
   const damage = item?.system?.shield ? Math.max(0, Number(item.system.shieldDamage) || 0) : 0;
   if (!damage) return { base, damage: 0, dr: base };
   return { base, damage, dr: Math.max(0, Math.min(base, base - damage)) };
@@ -939,14 +959,8 @@ function shieldDamageChange(item, rollData) {
  */
 export function shieldDrState(item) {
   const rollData = makeAggregationContext(item?.actor?.system ?? {}).rollData;
-  let base = 0;
-  for (const change of item?.system?.changes ?? []) {
-    if (!isArmorDrBonus(change)) continue;
-    if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
-    const value = resolveValue(change.value, { ...rollData, rank: item.system.rank ?? 0 });
-    if (typeof value !== "number") continue;
-    base += change.mode === "add" ? value : -value;
-  }
+  const rank = item?.system?.rank ?? 0;
+  const base = armorDrTotal((item?.system?.changes ?? []).map((change) => ({ change, rank })), rollData);
   const damage = Math.max(0, Number(item?.system?.shieldDamage) || 0);
   const dr = Math.max(0, base - damage);
   return { base, damage, dr, broken: damage > 0 && base > 0 && dr <= 0 };
