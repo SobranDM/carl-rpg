@@ -78,7 +78,7 @@ export async function resolveConsumableSpell(item) {
   const name = spec.name || parsed.name;
   const rank = spec.rank ?? parsed.rank;
   let source = spec.uuid ? await fromUuid(spec.uuid).catch(() => null) : null;
-  if (source?.type !== "spell") source = name ? await findSkillLikeItem(name) : null;
+  if (source?.type !== "spell") source = name ? await findSkillLikeItem(name, ["spell"]) : null;
   if (source?.type !== "spell") source = null;
   return { source, name: source?.name ?? name, rank };
 }

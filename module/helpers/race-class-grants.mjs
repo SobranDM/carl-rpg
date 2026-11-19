@@ -34,6 +34,8 @@
 import { applyScalarChange, slugifySkillName } from "./modifiers.mjs";
 import { CARLRPG } from "./config.mjs";
 import { queueForActor } from "./actor-queue.mjs";
+import { buildMatcher } from "../pdf-import/compendium-match.mjs";
+import { matchCandidates } from "../pdf-import/importer.mjs";
 
 const BAKEABLE_TARGET_TYPES = new Set(["stat", "skillRank"]);
 // Derived from the same table modifiers.mjs's isBakedGrant validates a
@@ -87,34 +89,21 @@ export function isEligibleNow(change, actorLevel) {
 }
 
 /**
- * Search world compendiums, then the world Items directory, for a
- * Skill/Spell/Damage-Effect by name - the "you gain it at that Rank
- * listed" case, where the actor doesn't already own a matching item.
- * Matched by slugified name (module/helpers/modifiers.mjs's
- * slugifySkillName), the same convention the live aggregation engine uses
- * everywhere else - a raw case/whitespace difference between a grant's
- * authored target and the real item name must not miss the match here.
+ * Find a Skill, Spell or Damage Effect (or another Item type) by name, in
+ * the PDF importer's priority (ruled 2026-11-19): the system's own
+ * compendiums, then the rulebook imports' compendiums, then the Items
+ * directory, then any other compendium (importer.mjs matchCandidates,
+ * compendium-match.mjs buildMatcher). Matched by name (case, apostrophes,
+ * dashes and parentheticals aside), else by Skill slug (modifiers.mjs
+ * slugifySkillName). Only `types` count: a Spellbook asking for a Spell
+ * isn't handed a same-named Skill.
  * @param {string} name
+ * @param {string[]} [types]
  * @returns {Promise<Item|null>}
  */
-export async function findSkillLikeItem(name) {
-  const slug = slugifySkillName(name);
-  for (const pack of game.packs) {
-    if (pack.documentName !== "Item") continue;
-    let index;
-    try {
-      index = await pack.getIndex({ fields: ["type"] });
-    } catch (e) {
-      continue;
-    }
-    const hit = index.find((e) => slugifySkillName(e.name) === slug && SKILL_LIKE_TYPES.includes(e.type));
-    if (hit) {
-      const doc = await pack.getDocument(hit._id);
-      if (doc) return doc;
-    }
-  }
-  const worldHit = game.items?.find((i) => slugifySkillName(i.name) === slug && SKILL_LIKE_TYPES.includes(i.type));
-  return worldHit ?? null;
+export async function findSkillLikeItem(name, types = SKILL_LIKE_TYPES) {
+  const match = buildMatcher(await matchCandidates(null), { slug: slugifySkillName })(name, types);
+  return match ? ((await fromUuid(match.ref)) ?? null) : null;
 }
 
 /**
