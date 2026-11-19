@@ -64,6 +64,7 @@ import registerPartyCheck from "./batches/party-check.mjs";
 import registerShieldBlock from "./batches/shield-block.mjs";
 import registerTimers from "./batches/timers.mjs";
 import registerSkillNames from "./batches/skill-names.mjs";
+import registerRefactorRulings from "./batches/refactor-rulings.mjs";
 import { withMessageCleanup } from "./helpers.mjs";
 
 const BATCH_REGISTRARS = [
@@ -119,6 +120,7 @@ const BATCH_REGISTRARS = [
   registerShieldBlock,
   registerTimers,
   registerSkillNames,
+  registerRefactorRulings,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {
