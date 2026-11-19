@@ -1,6 +1,7 @@
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { PACKS } from "./packs.mjs";
 import { esc } from "./html.mjs";
+import { changeConditions } from "./conditions.mjs";
 
 /**
  * Worship (Character Creation, pp.163-168; Gods, pp.312-313): the
@@ -131,8 +132,7 @@ export async function receiveBoon(actor) {
   if (!result) return null;
 
   const deityName = actor.system.deity.name || game.i18n.localize("CARLRPG.Actor.Deity");
-  const conditions = foundry.utils.deepClone(actor.system.conditions ?? []);
-  conditions.push({
+  const boon = {
     id: foundry.utils.randomID(),
     key: "custom",
     label: result.name,
@@ -142,9 +142,9 @@ export async function receiveBoon(actor) {
     remaining: null,
     expiresAt: game.time.worldTime + BOON_HOURS * 3600,
     changes: [],
-  });
+  };
   const worshipDays = Math.max(0, (actor.system.deity.worshipDays ?? 0) - BOON_DAYS);
-  await actor.update({ "system.conditions": conditions, "system.deity.worshipDays": worshipDays });
+  await changeConditions(actor, [{ op: "push", entry: boon }], { updates: { "system.deity.worshipDays": worshipDays } });
 
   const description = result.description
     ? await foundry.applications.ux.TextEditor.implementation.enrichHTML(result.description, { relativeTo: actor })

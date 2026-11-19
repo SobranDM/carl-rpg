@@ -28,7 +28,7 @@
  * either can be clicked (or not) without affecting the other.
  */
 import { computeDamageApplication } from "../helpers/damage-pipeline.mjs";
-import { dyingRounds, removeConditionsWithMechanic } from "../helpers/conditions.mjs";
+import { changeConditions, dyingRounds, removeConditionsWithMechanic } from "../helpers/conditions.mjs";
 import { appendCardSection } from "./chat-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
@@ -151,9 +151,7 @@ export async function applyDamageWithResult(actor, damageByType, isMagic, { noSh
   if (dying) {
     const left = dying.remaining ?? dyingRounds(actor.system);
     if (result.totalFinalDamage > 0 && left > 0) {
-      const conditions = foundry.utils.deepClone(actor.system.conditions);
-      conditions.find((c) => c.id === dying.id).remaining = left - 1;
-      await actor.update({ "system.conditions": conditions });
+      await changeConditions(actor, [{ op: "patch", id: dying.id, fields: { remaining: left - 1 } }]);
       lines.push(game.i18n.format("CARLRPG.Damage.DyingCountdown", {
         name: foundry.utils.escapeHTML(actor.name), rounds: left - 1,
       }));

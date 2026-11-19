@@ -51,7 +51,7 @@ import { restorePerRound, restoresPerRound } from "./rest.mjs";
 import { diesAtZeroHb, isCrawler } from "./actor-kinds.mjs";
 import { endCombatSpellTimers, spellEndedLines } from "./spell-timers.mjs";
 import { statDifficulty } from "./rules.mjs";
-import { dyingRounds } from "./conditions.mjs";
+import { changeConditions, conditionOps, dyingRounds } from "./conditions.mjs";
 import { esc } from "./html.mjs";
 import { currentFloor } from "./floor.mjs";
 
@@ -272,10 +272,9 @@ async function runActorRoundEnd(actor) {
   // by step 0.
   const kept = conditions.filter((c) => !removeIds.has(c.id));
   const updates = {};
-  if (JSON.stringify(kept) !== JSON.stringify(sys.conditions ?? [])) updates["system.conditions"] = kept;
   if (hb !== startHb) updates["system.hb.value"] = hb;
   if (announceDeath) updates["flags.carl-rpg.dyingAnnounced"] = dying.id;
-  if (Object.keys(updates).length) await actor.update(updates);
+  await changeConditions(actor, conditionOps(sys.toObject().conditions ?? [], kept), { updates, inQueue: true });
 
   return { lines, gmLines, rolls, rollMeta };
 }
@@ -396,10 +395,10 @@ export async function processCombatEnd(combat) {
       }
       if (hb !== (sys.hb?.value ?? 0)) updates["system.hb.value"] = hb;
       if (mana !== (sys.mana?.value ?? 0)) updates["system.mana.value"] = mana;
-      if (JSON.stringify(kept) !== JSON.stringify(sys.conditions ?? [])) updates["system.conditions"] = kept;
-      if (!Object.keys(updates).length) return;
+      const ops = conditionOps(sys.toObject().conditions ?? [], kept);
+      if (!ops.length && !Object.keys(updates).length) return;
       try {
-        await actor.update(updates);
+        await changeConditions(actor, ops, { updates, inQueue: true });
         if (ending.length) {
           lines.push(game.i18n.format("CARLRPG.RoundEnd.CombatEnded", {
             name,

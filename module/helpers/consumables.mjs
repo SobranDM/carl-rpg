@@ -31,7 +31,7 @@ import { CARLRPG } from "./config.mjs";
 import { findConditionWithMechanic, conditionLabel } from "./debuff-effects.mjs";
 import { cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem, learnSkillLike } from "./race-class-grants.mjs";
 import { skillRankCap, unlockedTiers } from "./modifiers.mjs";
-import { buildConditionEntry } from "./conditions.mjs";
+import { buildConditionEntry, changeConditions, conditionOps } from "./conditions.mjs";
 import { durationSeconds } from "./expiry.mjs";
 import { buildScrollCast } from "./scroll-cast.mjs";
 import { queueForActor } from "./actor-queue.mjs";
@@ -244,10 +244,12 @@ async function drinkOrUse(actor, item, { skipDialog }) {
 
   // A healing-only potion - including HB restored each round - can't help
   // someone who can't be healed (The Taint): keep it for later instead.
+  // Mending an Injury isn't healing (ruled 2026-11-19, as the Heal Spell's
+  // Mend Debuff): The Taint doesn't stop it, so a potion that mends is used.
   const heal = effects.heal ?? {};
   const buff = effects.buff ?? {};
-  const heals = heal.full || heal.slots || heal.mend || buff.perRound?.hb;
-  const doesMore = effects.mana?.full || effects.mana?.amount || effects.cures?.length
+  const heals = heal.full || heal.slots || buff.perRound?.hb;
+  const doesMore = heal.mend || effects.mana?.full || effects.mana?.amount || effects.cures?.length
     || effects.permanent?.kind || buff.label || buff.changes?.length || buff.perRound?.mana;
   const taint = heals && !doesMore ? findConditionWithMechanic(recipient.system, "noHealing") : null;
   if (taint) {
@@ -565,8 +567,7 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
     }
   }
 
-  if (JSON.stringify(conditions) !== JSON.stringify(original)) updates["system.conditions"] = conditions;
-  if (Object.keys(updates).length) await recipient.update(updates);
+  await changeConditions(recipient, conditionOps(original, conditions), { updates, inQueue: true });
   return lines;
 }
 

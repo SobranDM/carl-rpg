@@ -17,7 +17,7 @@
  * `healActorUuid` is the caster; a card from before recipients were
  * snapshotted has only that, and heals it.
  */
-import { removeConditionFromActor } from "../helpers/conditions.mjs";
+import { changeConditions, conditionOps, removeConditionFromActor } from "../helpers/conditions.mjs";
 import { findConditionWithMechanic, conditionLabel } from "../helpers/debuff-effects.mjs";
 import { shortRestUpdates, conditionsAfterRest, hbCeiling, restoreUpTo } from "../helpers/rest.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
@@ -244,7 +244,9 @@ async function healActor(actor, { full, rest, amount }) {
     // The Short Rest also ends whatever a short rest ends (Minor Injury -
     // rest.mjs's conditionsAfterRest), independent of the separate Mend
     // Debuff button, which still lets the caster pick one more to remove.
-    updates["system.conditions"] = conditionsAfterRest(sys.conditions, "short");
+    const before = sys.toObject().conditions ?? [];
+    await changeConditions(actor, conditionOps(before, conditionsAfterRest(before, "short")), { updates });
+    return true;
   } else if (full) {
     // "Heal back to 100% Health Bar" (Heal Critter) - the Health Bar only.
     updates = { "system.hb.value": Math.max(sys.hb?.value ?? 0, effectiveMax) };

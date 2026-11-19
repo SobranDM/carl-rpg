@@ -12,6 +12,7 @@
  */
 import { refundAction } from "./actions.mjs";
 import { queueOn } from "./actor-queue.mjs";
+import { changeConditions } from "./conditions.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -139,11 +140,7 @@ async function restoreSpentConditions(declaration) {
   if (!spent.length) return;
   const doc = await fromUuid(declaration.mobUuid);
   const actor = doc instanceof Actor ? doc : doc?.actor;
-  if (!actor) return;
-  const current = actor.system.toObject().conditions ?? [];
-  const have = new Set(current.map((c) => c.id));
-  const back = spent.filter((c) => !have.has(c.id));
-  if (back.length) await actor.update({ "system.conditions": [...current, ...back] });
+  if (actor) await changeConditions(actor, [{ op: "restore", entries: spent }]);
 }
 
 /**

@@ -2,7 +2,7 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 import { onAddArrayItem, onDeleteArrayItem } from "../helpers/array-editor.mjs";
 import { onToggleDrawer } from "../helpers/drawer-toggle.mjs";
-import { addConditionToActor } from "../helpers/conditions.mjs";
+import { addConditionToActor, changeConditions, conditionOps, removeConditionFromActor } from "../helpers/conditions.mjs";
 import { cooldownSignature } from "../helpers/cooldowns.mjs";
 import DragDropMixin from "./mixins/drag-drop-mixin.mjs";
 import CarlSpendStatPointsDialog from "../apps/spend-stat-points-dialog.mjs";
@@ -311,6 +311,22 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       submitted[key] = mergeSubmitted(current, value);
     }
     return data;
+  }
+
+  /**
+   * The Conditions tab's edits go through the one writer of the list
+   * (helpers/conditions.mjs changeConditions), as the fields they change;
+   * the rest of the form is saved as usual.
+   * @override
+   */
+  async _processSubmitData(event, form, submitData, options = {}) {
+    const conditions = submitData.system?.conditions;
+    if (Array.isArray(conditions)) {
+      delete submitData.system.conditions;
+      const ops = conditionOps(this.actor.system.toObject().conditions ?? [], conditions);
+      if (ops.length) await changeConditions(this.actor, ops);
+    }
+    return super._processSubmitData(event, form, submitData, options);
   }
 
   /**
@@ -1311,6 +1327,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   }
 
   static #onDeleteArrayItem(event, target) {
+    // A Condition goes through the one writer of the list (helpers/conditions.mjs).
+    if (target.dataset.path === "system.conditions") {
+      event.preventDefault();
+      return removeConditionFromActor(this.actor, Number(target.dataset.index));
+    }
     return onDeleteArrayItem(event, target, this.actor);
   }
 

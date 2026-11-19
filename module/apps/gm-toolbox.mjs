@@ -29,6 +29,7 @@ import { postPartyCheck } from "../chat/party-check-card.mjs";
 import { startNewScene } from "../helpers/cooldowns.mjs";
 import { unopposedDifficulty } from "../helpers/rules.mjs";
 import { esc } from "../helpers/html.mjs";
+import { changeConditions, conditionOps } from "../helpers/conditions.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -531,10 +532,8 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
           : fullRestoreUpdates(actor);
 
         // Injuries and Fatigued end by rest length (rest.mjs's conditionsAfterRest).
-        const conditions = conditionsAfterRest(sys.conditions, kind);
-        if (conditions.length !== (sys.conditions ?? []).length) updates["system.conditions"] = conditions;
-
-        await actor.update(updates);
+        const before = sys.toObject().conditions ?? [];
+        await changeConditions(actor, conditionOps(before, conditionsAfterRest(before, kind)), { updates, inQueue: true });
       });
     }
     if (data.advance) await advanceWorldTime(seconds);

@@ -30,6 +30,7 @@ import { applyRevision, interventionsOf, interveneOpen } from "../chat/check-rev
 import { clearRowEvade, recoilSettledBy, rowAt, rowCheck, rowInterveneOpen } from "../chat/row-evade.mjs";
 import { tellUser } from "./chat-socket.mjs";
 import { queueForCard } from "./actor-queue.mjs";
+import { changeConditions } from "./conditions.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -237,11 +238,7 @@ async function runRecord(record) {
     }
     case "conditions": {
       const actor = fromUuidSync(record.uuid);
-      if (!actor) return;
-      const current = actor.system.toObject?.().conditions ?? foundry.utils.deepClone(actor.system.conditions ?? []);
-      const have = new Set(current.map((c) => c.id));
-      const back = (record.removed ?? []).filter((c) => !have.has(c.id));
-      if (back.length) await actor.update({ "system.conditions": [...current, ...back] });
+      if (actor && record.removed?.length) await changeConditions(actor, [{ op: "restore", entries: record.removed }]);
       return;
     }
     case "set": {

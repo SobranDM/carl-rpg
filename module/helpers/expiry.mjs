@@ -14,11 +14,11 @@
  * spell-timers.mjs).
  */
 import { queueForActor } from "./actor-queue.mjs";
-import { removeConditionsById } from "./conditions.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { expireSpellTimers, hasSpellTimers, spellEndedLines } from "./spell-timers.mjs";
 import { gmUserIds } from "./ownership.mjs";
 import { esc } from "./html.mjs";
+import { changeConditions } from "./conditions.mjs";
 
 /**
  * Ids of the condition entries that have run out by `worldTime`.
@@ -77,7 +77,7 @@ export async function dropExpiredConditions(actor, worldTime) {
   const ids = expiredConditionIds(current, worldTime);
   if (!ids.length) return [];
   const ended = current.filter((c) => ids.includes(c.id)).map((c) => c.label || c.source || c.key);
-  await removeConditionsById(actor, ids);
+  await changeConditions(actor, [{ op: "remove", ids }], { inQueue: true });
   return ended;
 }
 
