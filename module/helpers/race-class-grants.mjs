@@ -36,6 +36,7 @@ import { CARLRPG } from "./config.mjs";
 import { queueForActor } from "./actor-queue.mjs";
 import { buildMatcher } from "../pdf-import/compendium-match.mjs";
 import { matchCandidates } from "../pdf-import/importer.mjs";
+import { copyData, stripCopyFields } from "./packs.mjs";
 
 const BAKEABLE_TARGET_TYPES = new Set(["stat", "skillRank"]);
 // Derived from the same table modifiers.mjs's isBakedGrant validates a
@@ -130,11 +131,12 @@ export function findOwnedSkillLike(actor, name, types = SKILL_LIKE_TYPES) {
  * @returns {object}
  */
 export function cleanSkillLikeCopy(source, rank) {
-  const data = foundry.utils.deepClone(typeof source.toObject === "function" ? source.toObject() : source);
-  delete data._id;
-  delete data.folder;
-  delete data._stats;
-  delete data.ownership;
+  // A document is copied with its source (packs.mjs copyData); plain data
+  // keeps only a source it already names.
+  const data = typeof source.toObject === "function" ? copyData(source) : stripCopyFields(foundry.utils.deepClone(source));
+  const compendiumSource = data._stats?.compendiumSource;
+  if (compendiumSource) data._stats = { compendiumSource };
+  else delete data._stats;
   data.system = { ...(data.system ?? {}), rank, marked: false };
   if (data.type === "spell") data.system.active = false;
   return data;

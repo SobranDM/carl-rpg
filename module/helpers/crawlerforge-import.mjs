@@ -57,7 +57,7 @@ import { freeSlotFor, isItemWorn, placeInFreeSlot, slotHolds, slotRefusal } from
 import { canHotlist } from "./hotlist.mjs";
 import { PAST_TABLES, chargenTable, tableTexts, weaponData } from "./chargen.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
-import { PACKS } from "./packs.mjs";
+import { copyData, PACKS, stripCopyFields } from "./packs.mjs";
 import { gmUserIds } from "./ownership.mjs";
 import { esc } from "./html.mjs";
 
@@ -279,8 +279,7 @@ function grantAppliesAt(change, level) {
  * @returns {object}
  */
 function preBaked(data, level, key) {
-  const copy = foundry.utils.deepClone(data);
-  for (const field of ["_id", "folder", "sort", "ownership"]) delete copy[field];
+  const copy = stripCopyFields(foundry.utils.deepClone(data));
   copy.system ??= {};
   copy.system.changes = (copy.system.changes ?? []).map((c) => (c.id ? c : { ...c, id: foundry.utils.randomID() }));
   copy.flags = foundry.utils.mergeObject(copy.flags ?? {}, {
@@ -796,11 +795,7 @@ async function backgroundTables() {
 /** A compendium document's data as a new owned item, from its uuid. */
 async function copyOf(ref) {
   const source = ref ? await fromUuid(ref) : null;
-  if (!source) return null;
-  const data = source.toObject();
-  for (const key of ["_id", "folder", "sort", "ownership"]) delete data[key];
-  data._stats = { compendiumSource: source.uuid };
-  return data;
+  return source ? copyData(source) : null;
 }
 
 /** A planned Skill/Spell as creation data. */
@@ -816,9 +811,8 @@ async function skillData(entry, report) {
       type: entry.type ?? "skill", flags: { [SCOPE]: { [FLAG]: { key: entry.key, notInRulebook: true } } },
     });
   }
+  // Its compendium source comes along (copyOf, kept by cleanSkillLikeCopy).
   const data = cleanSkillLikeCopy(source, entry.copy.rank);
-  // cleanSkillLikeCopy drops _stats; keep where it came from.
-  data._stats = { compendiumSource: source._stats.compendiumSource };
   data.flags = foundry.utils.mergeObject(data.flags ?? {}, { [SCOPE]: { [FLAG]: { key: entry.key } } });
   return data;
 }

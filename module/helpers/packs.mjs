@@ -31,3 +31,31 @@ export async function withUnlockedPack(pack, fn) {
     if (wasLocked) await pack.configure({ locked: true });
   }
 }
+
+/** The fields a copy of a document doesn't take: it gets its own. */
+const COPY_DROPS = ["_id", "folder", "sort", "ownership"];
+
+/**
+ * Drop what a copy doesn't take (its id, folder, sort and ownership) from
+ * plain document data, in place.
+ * @param {object} data
+ * @returns {object}  The same data.
+ */
+export function stripCopyFields(data) {
+  for (const key of COPY_DROPS) delete data[key];
+  return data;
+}
+
+/**
+ * A document's data as a new copy (a compendium item onto an actor or into
+ * the world): no id, folder, sort or ownership of its own, and where it came
+ * from kept as Foundry's `_stats.compendiumSource` (ruled 2026-11-19), so a
+ * later refresh can find copies by source rather than by name.
+ * @param {foundry.abstract.Document} doc
+ * @returns {object}
+ */
+export function copyData(doc) {
+  const data = stripCopyFields(doc.toObject());
+  data._stats = { compendiumSource: doc.uuid };
+  return data;
+}

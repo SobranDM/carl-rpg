@@ -16,7 +16,7 @@ import { assignItemToSlot, slotHolds } from "./equip-slots.mjs";
 import { isInHotlist, toggleHotlist } from "./hotlist.mjs";
 import { headedSectionsToHtml, STORY_SECTIONS } from "./rich-text.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
-import { PACKS } from "./packs.mjs";
+import { copyData, PACKS } from "./packs.mjs";
 import { esc } from "./html.mjs";
 
 const SCOPE = "carl-rpg";
@@ -465,11 +465,7 @@ async function manaPotionData() {
   const pack = game.packs.get(PACKS.consumables);
   const entry = (await pack?.getIndex())?.find((e) => e.name === "Mana Potion");
   const doc = entry ? await pack.getDocument(entry._id) : null;
-  if (!doc) return null;
-  const data = doc.toObject();
-  delete data._id;
-  delete data.folder;
-  return data;
+  return doc ? copyData(doc) : null;
 }
 
 /**
@@ -490,12 +486,9 @@ export async function weaponData(name, skill) {
   const entry = forSkill.find((e) => lower(e.name) === lower(name)) ?? forSkill.find((e) => lower(e.name) === lower(skill));
   const doc = entry ? await pack.getDocument(entry._id) : null;
   if (!doc) return gearData(name, { weaponSkill: skill });
-  const data = doc.toObject();
-  delete data._id;
-  delete data.folder;
+  const data = copyData(doc);
   data.name = name || data.name;
   data.system.weaponSkill = skill;
-  data._stats = { ...(data._stats ?? {}), compendiumSource: doc.uuid };
   return data;
 }
 

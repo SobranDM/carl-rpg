@@ -32,7 +32,7 @@ import { bookIdOf } from "./books.mjs";
 import { slugify } from "./scan.mjs";
 import { sectionFolders } from "./sections.mjs";
 import { LEGACY_FLAG, legacyAttackItems, MOB_ATTACK_TYPE } from "../helpers/mob-attacks.mjs";
-import { withUnlockedPack } from "../helpers/packs.mjs";
+import { copyData, withUnlockedPack } from "../helpers/packs.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG = "pdfImport";
@@ -433,10 +433,8 @@ async function preferCompendiumCopies(entries, book) {
       continue;
     }
     matched[matchKind(found)]++;
-    const data = source.toObject();
-    for (const key of ["_id", "folder", "sort", "ownership"]) delete data[key];
+    const data = copyData(source);
     if (!data.effects?.length) delete data.effects;
-    data._stats = { compendiumSource: source.uuid };
     if (data.flags?.[SCOPE]) delete data.flags[SCOPE][FLAG];
     data.name = entry.name;
     out.push({ ...entry, data });
