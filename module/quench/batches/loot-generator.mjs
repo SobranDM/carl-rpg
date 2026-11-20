@@ -139,6 +139,19 @@ export default function register(quench) {
             { value: 4, percent: 5 },
             "never under +4",
           );
+          // The least rises with the tier (ruled 2026-11-19).
+          assert.deepEqual(statBonus(tiers.legendary.statX, weak, "dex"), {
+            value: 5,
+            percent: 10,
+          });
+          assert.deepEqual(statBonus(tiers.celestial.statX, weak, "dex"), {
+            value: 6,
+            percent: 20,
+          });
+          assert.deepEqual(statBonus(tiers.legendary.statX, strong, "dex"), {
+            value: 13,
+            percent: 10,
+          });
           assert.deepEqual(
             statBonus(tiers.legendary.statX, null, "dex"),
             { value: null, percent: 10 },

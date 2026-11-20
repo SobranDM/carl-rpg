@@ -678,7 +678,9 @@ CARLRPG.consumableUnits = {
  *    Bronze to Platinum; Legendary and Celestial provisional).
  *  - skillX / statX: what "+X Skill/Stat Bonus" is worth (p.220). A
  *    percentage Stat bonus is of the recipient's Stat, rounded down and
- *    fixed when gained (`min`: the least it gives, from the p.218 sample).
+ *    fixed when gained. `min` is the least it gives: Platinum +4 (the
+ *    p.218 sample), rising with the tier - Legendary +5, Celestial +6 - so
+ *    a rarer box never gives less than a Gold box's +3-5 (ruled 2026-11-19).
  *  - img / achievementImg: the tier's box art and achievement icon.
  *  - xValues: the p.220 text, shown with a rolled item.
  */
@@ -753,7 +755,7 @@ CARLRPG.lootBoxTiers = {
     mundane: 0,
     spellRank: "3d4",
     skillX: { min: 5, max: 5 },
-    statX: { percent: 10, min: 4 },
+    statX: { percent: 10, min: 5 },
     img: "systems/carl-rpg/assets/loot-boxes/legendary-box.webp",
     achievementImg: "systems/carl-rpg/assets/achievements/legendary-achievement.svg",
   },
@@ -768,7 +770,7 @@ CARLRPG.lootBoxTiers = {
     mundane: 0,
     spellRank: "4d4",
     skillX: { min: 6, max: 6 },
-    statX: { percent: 20, min: 4 },
+    statX: { percent: 20, min: 6 },
     img: "systems/carl-rpg/assets/loot-boxes/celestial-box.webp",
     achievementImg: "systems/carl-rpg/assets/achievements/celestial-achievement.svg",
   },
