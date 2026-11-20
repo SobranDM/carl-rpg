@@ -41,6 +41,7 @@ import { CARLRPG } from "../helpers/config.mjs";
 import { ownedByActivePlayer } from "../apps/actor-picker.mjs";
 import { esc } from "../helpers/html.mjs";
 import { actorFromUuid } from "../helpers/token-resolution.mjs";
+import { opposedNote } from "../dice/opposed.mjs";
 
 const SCOPE = "carl-rpg";
 const SOCKET = "system.carl-rpg";
@@ -129,10 +130,11 @@ export function canRollRow(row, user = game.user) {
 /**
  * Post a Party Skill Check card (GM - the Toolbox). The Skill's Stat, for an
  * untrained roll, is the compendium (or world) Skill's.
- * @param {{skill: string, difficulty: number, actors: Actor[]}} args
+ * @param {{skill: string, difficulty: number, actors: Actor[], opposed?: object|null}} args
+ *   opposed: who it's Opposed by (dice/opposed.mjs readOpposed), noted on the card.
  * @returns {Promise<ChatMessage|null>}
  */
-export async function postPartyCheck({ skill, difficulty, actors }) {
+export async function postPartyCheck({ skill, difficulty, actors, opposed = null }) {
   const name = String(skill ?? "").trim();
   if (!name || !actors?.length) return null;
   const source = await findSkillLikeItem(name);
@@ -146,7 +148,7 @@ export async function postPartyCheck({ skill, difficulty, actors }) {
     title: game.i18n.format("CARLRPG.PartyCheck.Title", { skill: state.skill }),
     subtitle: game.i18n.format("CARLRPG.PartyCheck.Subtitle", { difficulty: state.difficulty }),
     img: source?.img ?? "icons/svg/d20-grey.svg",
-    body: `<div class="carl-party-check"></div>`,
+    body: `${opposedNote(opposed)}<div class="carl-party-check"></div>`,
     flags: { kind: "partyCheck", [FLAG]: state },
     speaker: { alias: game.i18n.localize("CARLRPG.PartyCheck.Speaker") },
   });

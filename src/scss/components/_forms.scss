@@ -251,4 +251,22 @@
     margin: 0;
     line-height: 1;
   }
+
+  // Opposed (dice/opposed.mjs): under a Difficulty field.
+  .carl-dialog-opposed {
+    align-items: center;
+
+    .form-fields {
+      gap: 6px;
+    }
+
+    select {
+      flex: 1 1 auto;
+      width: auto;
+    }
+  }
+
+  .carl-opposed-note {
+    margin: 0.25em 0;
+  }
 }

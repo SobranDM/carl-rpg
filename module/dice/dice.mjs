@@ -94,6 +94,7 @@ import { earlyUseNote, passCooldown, passCooldowns, startCooldown } from "../hel
 import { SPELL_TIMER_PATH, spellTimerFor } from "../helpers/spell-timers.mjs";
 import { currentFloor } from "../helpers/floor.mjs";
 import { esc } from "../helpers/html.mjs";
+import { buildOpposedChoice, opposedNote } from "./opposed.mjs";
 
 /**
  * Net Advantage/Disadvantage don't stack (Playing the Game, p. 60): an
@@ -575,20 +576,23 @@ function isBlockedUntrainedSpell(item, rank) {
 
 /**
  * Difficulty presets for a Skill Check (p.59): Opposed when the Skill names
- * an opposed Stat and a token is targeted (10 + its Mod + Floor), otherwise
- * Unopposed (10 + 2xFloor).
+ * an opposed Stat and a token is targeted (10 + its Mod + Floor; several
+ * targets, the hardest of them - ruled 2026-11-20), otherwise Unopposed
+ * (10 + 2xFloor).
  * @param {Item} skillItem
  * @returns {ReturnType<typeof buildDifficultyPresets>}
  */
 function buildSkillCheckPresets(skillItem) {
   const statKey = skillItem.system.opposedStat;
-  const targetActor = Array.from(game.user.targets ?? [])[0]?.actor ?? null;
+  const targets = Array.from(game.user.targets ?? []).filter((t) => t.actor);
+  const modOf = (t) => t.actor.system.stats?.[statKey]?.mod ?? 0;
+  const hardest = targets.reduce((best, t) => (!best || modOf(t) > modOf(best) ? t : best), null);
   const opposed =
-    statKey && targetActor
+    statKey && hardest
       ? {
-          name: targetActor.name,
+          name: hardest.name,
           stat: game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey),
-          mod: targetActor.system.stats?.[statKey]?.mod ?? 0,
+          mod: modOf(hardest),
         }
       : null;
   return buildDifficultyPresets({
@@ -1071,6 +1075,7 @@ export default class CarlDice {
     let options = { advantage: "normal", difficulty, modifier: 0, checkedDebuffs: null };
     if (!skipDialog) {
       const difficultyPresets = givenPresets(difficulty, { otherwise: "stat" });
+      const base = difficultyPresets.find((p) => p.selected);
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.StatCheckTitle", { name: statLabel }),
         difficulty: selectedPresetValue(difficultyPresets),
@@ -1078,6 +1083,16 @@ export default class CarlDice {
         showDifficulty: true,
         debuffRows,
         usesAction: usesActionDefault,
+        // Opposed (p.58: "Difficulty 10 + the Cha of the perv trying to
+        // manipulate you"): 10 + their Mod + Floor, with the same Stat.
+        // A Difficulty passed in (boarding a vehicle) isn't offered it.
+        opposedChoice:
+          difficulty === null
+            ? buildOpposedChoice({
+                statKey,
+                base: { value: base?.value ?? null, label: base?.label ?? "" },
+              })
+            : null,
       });
       if (!prompted) return null;
       options = prompted;
@@ -1101,7 +1116,7 @@ export default class CarlDice {
       endedConditionIds(sys, debuffEffect.applied, { isAction: actionRows.isAction }),
     );
 
-    const body = buildDebuffNote(debuffEffect.applied);
+    const body = opposedNote(options.opposed) + buildDebuffNote(debuffEffect.applied);
     const message = await createRollMessage({
       rolls: [roll],
       rollMeta: [{ label: statLabel, breakdown }],
@@ -1186,7 +1201,11 @@ export default class CarlDice {
       checkedDebuffs: null,
     };
     if (!skipDialog) {
-      const difficultyPresets = buildSkillCheckPresets(skillItem);
+      const difficultyPresets = buildDifficultyPresets({
+        floor: currentFloor(),
+        selected: "unopposed",
+      });
+      const base = difficultyPresets.find((p) => p.selected);
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.SkillCheckTitle", { name: skillItem.name }),
         difficulty: selectedPresetValue(difficultyPresets),
@@ -1198,6 +1217,14 @@ export default class CarlDice {
         usesAction: usesActionDefault,
         // Off-Stat (p.58): rolled with another Stat than its own.
         statChoice: buildStatChoice(skillSys.governingStat ?? ""),
+        // Opposed (p.59): any Skill Check can be; one whose Skill names the
+        // Stat it's Opposed by opens Opposed at a targeted creature.
+        opposedChoice: buildOpposedChoice({
+          statKey: skillSys.opposedStat || skillSys.governingStat || "",
+          follow: !skillSys.opposedStat,
+          opposed: !!skillSys.opposedStat,
+          base: { value: base?.value ?? null, label: base?.label ?? "" },
+        }),
       });
       if (!prompted) return null;
       options = prompted;
@@ -1239,6 +1266,7 @@ export default class CarlDice {
 
     const body =
       (cooldown.early ? earlyUseNote() : "") +
+      opposedNote(options.opposed) +
       offStatNote(statKey, skillSys.governingStat) +
       buildDebuffNote(debuffEffect.applied);
     const message = await createRollMessage({

@@ -94,7 +94,8 @@
     "range": "",
     "aiFavor": 1,
     "cooldown": "",
-    "limitations": "Requires two hands to wield. AI Favor 1 only applies if no Damage Effect is used."
+    "limitations": "Requires two hands to wield. AI Favor 1 only applies if no Damage Effect is used.",
+    "opposedStat": "str"
   },
   "effects": [],
   "_stats": {

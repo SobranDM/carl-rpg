@@ -57,6 +57,12 @@ import {
   setCollapseTimer,
   setTimeLeft,
 } from "../helpers/floor-clock.mjs";
+import {
+  buildOpposedChoice,
+  opposedFieldsHtml,
+  readOpposed,
+  wireOpposed,
+} from "../dice/opposed.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -974,6 +980,16 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const i18n = game.i18n;
     const floor = currentFloor();
     const names = await CarlToolbox.#skillNames();
+    // Opposed (p.59; ruled 2026-11-20): against a target, a Stat or a number.
+    const opposedChoice = buildOpposedChoice({
+      statKey: "int",
+      base: {
+        value: unopposedDifficulty(floor),
+        label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", {
+          value: unopposedDifficulty(floor),
+        }),
+      },
+    });
     const before = `<div class="carl-party-check-setup">
         <div class="form-group">
           <label>${esc(i18n.localize("CARLRPG.PartyCheck.Skill"))}</label>
@@ -984,6 +1000,8 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
           <label>${esc(i18n.localize("CARLRPG.Dialog.Difficulty"))}</label>
           <input type="number" name="carl-party-difficulty" value="${unopposedDifficulty(floor)}" />
         </div>
+        <p class="carl-dialog-hint carl-party-difficulty-basis">${esc(opposedChoice.label)}</p>
+        ${opposedFieldsHtml(opposedChoice)}
         <p class="carl-dialog-hint">${esc(i18n.localize("CARLRPG.PartyCheck.Rule"))}</p>
       </div>`;
     const picked = await CarlToolbox.#pickActors({
@@ -991,10 +1009,27 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       promptKey: "CARLRPG.PartyCheck.PickerPrompt",
       confirmLabelKey: "CARLRPG.PartyCheck.Confirm",
       before,
-      read: (form) => ({
-        skill: form.querySelector('input[name="carl-party-skill"]')?.value ?? "",
-        difficulty: form.querySelector('input[name="carl-party-difficulty"]')?.value ?? "",
-      }),
+      read: (form) => {
+        const field = (name) => form.querySelector(`[name="${name}"]`);
+        return {
+          skill: field("carl-party-skill")?.value ?? "",
+          difficulty: field("carl-party-difficulty")?.value ?? "",
+          opposed: readOpposed(
+            {
+              opposed: !!field("opposed")?.checked,
+              opposedBy: field("opposedBy")?.value,
+              opposedStat: field("opposedStat")?.value,
+              opposedNumber: field("opposedNumber")?.value,
+            },
+            opposedChoice,
+          ),
+        };
+      },
+      onRender: (root) =>
+        wireOpposed(root, {
+          difficulty: root.querySelector('input[name="carl-party-difficulty"]'),
+          basis: root.querySelector(".carl-party-difficulty-basis"),
+        }),
     });
     if (!picked) return;
     const skill = String(picked.data.skill ?? "").trim();
@@ -1007,7 +1042,12 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       ui.notifications.warn(i18n.localize("CARLRPG.Toolbox.NoCharactersPicked"));
       return;
     }
-    await postPartyCheck({ skill, difficulty, actors: picked.actors });
+    await postPartyCheck({
+      skill,
+      difficulty,
+      actors: picked.actors,
+      opposed: picked.data.opposed,
+    });
   }
 
   /**

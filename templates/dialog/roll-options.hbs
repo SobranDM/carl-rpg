@@ -81,8 +81,11 @@
         aria-label="{{localize 'CARLRPG.Dialog.DifficultyPresetHelpLabel'}}: {{difficultyHelpText}}"></i>
       {{/if}}
     </div>
-    {{#if difficultyBasis}}<p class="carl-dialog-hint carl-dialog-difficulty-basis">{{difficultyBasis}}</p>{{/if}}
+    {{#if (or difficultyBasis opposedHtml)}}<p class="carl-dialog-hint carl-dialog-difficulty-basis">{{difficultyBasis}}</p>{{/if}}
   </div>
+  {{!-- Opposed (p.59; dice/opposed.mjs): by whom and with which Stat - or a
+        number (a Spell Rank, a size class) - sets the Difficulty above. --}}
+  {{{opposedHtml}}}
   {{/if}}
   {{#if areaTargets.length}}
   {{!-- Area Attack (p.83): one roll, damage to everyone in the area; Splash

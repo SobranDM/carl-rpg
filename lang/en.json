@@ -1987,6 +1987,21 @@
         "Hint": "Don't play the sound when a loot box opens while the party opens its boxes together."
       }
     },
+    "Opposed": {
+      "Label": "Opposed",
+      "Hint": "Opposed (p.59): someone or something stands in the way. The Difficulty is 10 + their Stat Mod + the Floor; the GM doesn't roll.",
+      "By": "Opposed by",
+      "Stat": "Their Stat",
+      "Number": "Their number",
+      "NumberHint": "In place of a Stat Mod: a Spell Rank, a size class, or whatever force the crawler is up against.",
+      "Targeted": "Targeted",
+      "Scene": "On the scene",
+      "Hardest": "The hardest of the {count} targeted",
+      "Other": "A number (a Spell Rank, a size class...)",
+      "LabelNumber": "Opposed by {number}: {value}",
+      "Note": "Opposed by {name}'s {stat} ({mod})",
+      "NoteNumber": "Opposed by {mod} (a Spell Rank, a size class or another force)"
+    },
     "FloorClock": {
       "Floor": "Floor {floor}",
       "Left": "{time} to collapse",

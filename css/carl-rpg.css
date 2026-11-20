@@ -1802,6 +1802,19 @@
   margin: 0;
   line-height: 1;
 }
+.carl-rpg .carl-dialog-opposed {
+  align-items: center;
+}
+.carl-rpg .carl-dialog-opposed .form-fields {
+  gap: 6px;
+}
+.carl-rpg .carl-dialog-opposed select {
+  flex: 1 1 auto;
+  width: auto;
+}
+.carl-rpg .carl-opposed-note {
+  margin: 0.25em 0;
+}
 .carl-rpg .resource-label {
   display: block;
   font-weight: 700;

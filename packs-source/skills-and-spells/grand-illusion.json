@@ -45,7 +45,8 @@
       "mindControl"
     ],
     "favoredClasses": [],
-    "manaCostVariants": []
+    "manaCostVariants": [],
+    "opposedStat": "int"
   },
   "effects": [],
   "_stats": {

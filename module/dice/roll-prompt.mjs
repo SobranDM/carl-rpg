@@ -8,6 +8,7 @@
  */
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { slugifySkillName } from "../helpers/modifiers.mjs";
+import { opposedFieldsHtml, readOpposed, wireOpposed } from "./opposed.mjs";
 
 /**
  * When a Damage Effect with more than one `parentSkills` entry is rolled
@@ -175,6 +176,10 @@ export function offStatNote(statKey, governing = "") {
  * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number, isArea: boolean, splash: Set<number>, usesAction: boolean|null, statKey?: string, skillId?: string|null}|null>}
  *   null if the dialog was cancelled/closed. skillId: the picked Attack
  *   Skill, with a skillPicker.
+ * @param {object|null} [options.opposedChoice]  The Opposed controls under
+ *   the Difficulty (dice/opposed.mjs buildOpposedChoice): its Difficulty and
+ *   label are the dialog's to start; the result's `opposed` is who opposed
+ *   it (readOpposed), or null.
  */
 export async function promptRollOptions(options = {}) {
   const { title, skillPicker = null } = options;
@@ -188,7 +193,7 @@ export async function promptRollOptions(options = {}) {
       .replace(/<[^>]+>/g, " ")
       .replace(/\s+/g, " ")
       .trim(),
-    difficulty: args.difficulty,
+    difficulty: args.opposedChoice ? args.opposedChoice.difficulty : args.difficulty,
     showDifficulty: args.showDifficulty,
     defaultAdvantage: args.defaultAdvantage,
     conditions: args.conditionalModifiers,
@@ -198,7 +203,11 @@ export async function promptRollOptions(options = {}) {
     showRollMode: args.showRollMode,
     difficultyLabel: args.difficultyLabel,
     // Where the pre-filled Difficulty came from ("Unopposed: 16"), or nothing.
-    difficultyBasis: difficultyBasisOf(args.difficultyPresets),
+    difficultyBasis: args.opposedChoice
+      ? args.opposedChoice.label
+      : difficultyBasisOf(args.difficultyPresets),
+    // The Opposed controls (dice/opposed.mjs), trusted HTML.
+    opposedHtml: opposedFieldsHtml(args.opposedChoice),
     areaTargets: args.areaTargets,
     isArea: args.isArea,
     weaponNote: args.weaponNote,
@@ -254,7 +263,8 @@ export async function promptRollOptions(options = {}) {
   if (!result) return null;
   if (skillPicker && !selected) return null;
 
-  const { conditionalModifiers, debuffRows, areaTargets, usesAction, statChoice } = current;
+  const { conditionalModifiers, debuffRows, areaTargets, usesAction, statChoice, opposedChoice } =
+    current;
   // Each conditionalModifier may list multiple alternative conditions (e.g.
   // "attacking from behind OR flanking"); checking any one of them applies
   // the change once (OR logic, no double-counting).
@@ -294,6 +304,8 @@ export async function promptRollOptions(options = {}) {
       ? { statKey: typeof result.stat === "string" ? result.stat : statChoice.selected }
       : {}),
     ...(skillPicker ? { skillId: selected } : {}),
+    // Who opposed it (dice/opposed.mjs), or null.
+    opposed: readOpposed(result, opposedChoice),
   };
 }
 
@@ -317,6 +329,7 @@ function withDefaults({
   weaponNote = "",
   usesAction = null,
   statChoice = null,
+  opposedChoice = null,
 } = {}) {
   return {
     title,
@@ -335,6 +348,7 @@ function withDefaults({
     weaponNote,
     usesAction,
     statChoice,
+    opposedChoice,
   };
 }
 
@@ -398,6 +412,11 @@ export function difficultyBasisOf(presets = []) {
  */
 function wireRollOptions(root) {
   if (!(root instanceof HTMLElement)) return;
+  // Opposed (dice/opposed.mjs): sets the Difficulty and its source line.
+  wireOpposed(root, {
+    difficulty: root.querySelector('input[name="difficulty"]'),
+    basis: root.querySelector(".carl-dialog-difficulty-basis"),
+  });
   const area = root.querySelector("[data-carl-area-toggle]");
   const splash = root.querySelector(".carl-splash-targets");
   if (area && splash)
