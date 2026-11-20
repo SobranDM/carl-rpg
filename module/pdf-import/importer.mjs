@@ -33,6 +33,7 @@ import { slugify } from "./scan.mjs";
 import { sectionFolders } from "./sections.mjs";
 import { LEGACY_FLAG, legacyAttackItems, MOB_ATTACK_TYPE } from "../helpers/mob-attacks.mjs";
 import { copyData, withUnlockedPack } from "../helpers/packs.mjs";
+import { ensureAchievementLibrary } from "../helpers/achievement-library.mjs";
 
 const SCOPE = "carl-rpg";
 const FLAG = "pdfImport";
@@ -249,18 +250,20 @@ async function stamp(written, dataOf, update) {
  *   re-import (a Mob into its Floor's folder); else it stays where the GM keeps it.
  * @param {(doc: Document, entry: object) => Promise<void>} [options.afterWrite]  Run for
  *   each document created or updated (an unchanged one too), with its entry.
+ * @param {(doc: Document) => boolean} [options.ours]  Which of the compendium's
+ *   documents this book may update (a compendium several books share).
  * @returns {Promise<{created: number, updated: number, skipped: string[]}>}
  */
 async function upsert(
   pack,
   docs,
   book,
-  { place = async () => ({}), moveExisting = false, afterWrite = null } = {},
+  { place = async () => ({}), moveExisting = false, afterWrite = null, ours = () => true } = {},
 ) {
   const cls = pack.documentClass;
   const options = { pack: pack.collection };
   const keyOf = (d) => `${d.type}:${d.name}`;
-  const existing = new Map((await pack.getDocuments()).map((d) => [keyOf(d), d]));
+  const existing = new Map((await pack.getDocuments()).filter(ours).map((d) => [keyOf(d), d]));
   const creates = [];
   const updates = [];
   const updated = [];
@@ -606,14 +609,17 @@ export async function importBook({ book, title, found, kinds, maps, pdfDoc, onPr
   }
   if (kinds.includes("achievements") && found.achievements.length) {
     step("achievements");
-    // Achievement items (data/achievement.mjs) in the book's Item compendium,
-    // in their own folder - the GM's Achievements grid lists them from there.
-    const pack = await bookPack(book, title, "Item");
+    // Achievement items (data/achievement.mjs) in the Achievements library
+    // (helpers/achievement-library.mjs), a folder per book - the GM's
+    // Achievements window lists them from there. Only this book's are
+    // updated: another book's of the same name is left alone.
+    const pack = await ensureAchievementLibrary();
     results.achievements = await withUnlockedPack(pack, async () => {
-      const folder = (
-        await packFolder(pack, game.i18n.localize("CARLRPG.PdfImport.Kind.achievements"))
-      ).id;
-      return upsert(pack, found.achievements, book, { place: async () => ({ folder }) });
+      const folder = (await packFolder(pack, title)).id;
+      return upsert(pack, found.achievements, book, {
+        place: async () => ({ folder }),
+        ours: (doc) => bookOfFlag(doc.getFlag(SCOPE, FLAG)) === book,
+      });
     });
   }
   if (maps.length) {

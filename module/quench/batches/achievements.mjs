@@ -18,6 +18,13 @@ import {
   withSetting,
 } from "../helpers.mjs";
 import { levelUpSoundsHere, playSound, SOUNDS, soundTiming } from "../../helpers/sounds.mjs";
+import {
+  achievementLibrary,
+  createLibraryAchievement,
+  deleteLibraryAchievement,
+  ensureAchievementLibrary,
+  updateLibraryAchievement,
+} from "../../helpers/achievement-library.mjs";
 
 /**
  * Achievements (0.8.0 phase 4, docs/loot-and-achievements.md; p.21,
@@ -25,9 +32,9 @@ import { levelUpSoundsHere, playSound, SOUNDS, soundTiming } from "../../helpers
  * back, the splash, the chat setting and the GM's grid.
  */
 async function makeDefinition(system = {}, name = "Quench Button Masher") {
-  return Item.implementation.create({
+  // In the Achievements library, where the GM's window makes them.
+  return createLibraryAchievement({
     name: `${name} ${foundry.utils.randomID()}`,
-    type: "achievement",
     system: {
       description: "<p>You pressed every button.</p>",
       reward: "You've received a Bronze Crafter's Box!",
@@ -68,11 +75,25 @@ export default function register(quench) {
           try {
             const tiers = CONFIG.CARLRPG.lootBoxTiers;
             assert.equal(def.img, tiers.gold.achievementImg);
-            await def.update({ "system.grade": "celestial" });
+            await updateLibraryAchievement(def, { "system.grade": "celestial" });
             assert.equal(def.img, tiers.celestial.achievementImg);
           } finally {
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
+        });
+      });
+
+      describe("The Achievements library (ruled 2026-11-19)", function () {
+        useQuenchTimeout(this);
+
+        it("one world compendium, made once, hidden from players", async function () {
+          const pack = await ensureAchievementLibrary();
+          assert.exists(pack);
+          assert.equal(pack.metadata.packageType, "world");
+          assert.equal(pack.documentName, "Item");
+          assert.strictEqual(await ensureAchievementLibrary(), pack, "not made twice");
+          assert.strictEqual(achievementLibrary(), pack);
+          assert.equal(pack.ownership.PLAYER, "NONE");
         });
       });
 
@@ -105,7 +126,7 @@ export default function register(quench) {
             );
           } finally {
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
 
@@ -125,7 +146,7 @@ export default function register(quench) {
             );
           } finally {
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
 
@@ -139,7 +160,7 @@ export default function register(quench) {
             assert.isFalse(copy.system.seen);
           } finally {
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
 
@@ -157,7 +178,7 @@ export default function register(quench) {
           } finally {
             await app?.close();
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
 
@@ -170,7 +191,7 @@ export default function register(quench) {
             assert.isFalse(actor.items.some((i) => i.type === "box"));
           } finally {
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
 
@@ -184,7 +205,7 @@ export default function register(quench) {
             assert.isTrue(actor.items.get(copy.id).system.rewarded);
           } finally {
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
 
@@ -198,7 +219,7 @@ export default function register(quench) {
             assert.isFalse(actor.items.some((i) => i.type === "box"));
           } finally {
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
 
@@ -217,7 +238,7 @@ export default function register(quench) {
             assert.include(card.content, def.name);
           } finally {
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
       });
@@ -234,7 +255,7 @@ export default function register(quench) {
             assert.isUndefined(foundry.applications.instances.get(`carl-achievement-${copy.id}`));
           } finally {
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
 
@@ -253,7 +274,7 @@ export default function register(quench) {
           } finally {
             await app?.close();
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
       });
@@ -281,7 +302,7 @@ export default function register(quench) {
           } finally {
             await grid.close();
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
       });
@@ -361,6 +382,38 @@ export default function register(quench) {
         });
       });
 
+      describe("Making and editing achievements in the window", function () {
+        useQuenchTimeout(this, 30000);
+
+        it("New Achievement makes one in the library and opens its editor; a field saves as it changes", async function () {
+          const grid = AchievementGrid.open();
+          let def = null;
+          try {
+            await waitFor(() => grid.rendered);
+            grid.element.querySelector('[data-action="newAchievement"]').click();
+            await waitFor(
+              () => grid.editing && grid.element.querySelector(".carl-achievement-editor"),
+            );
+            def = await fromUuid(grid.editing);
+            assert.exists(def);
+            assert.equal(def.pack, achievementLibrary().collection, "in the library");
+            const name = grid.element.querySelector('.carl-achievement-editor input[name="name"]');
+            name.value = "Quench Edited Achievement";
+            name.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => def.name === "Quench Edited Achievement");
+            const box = grid.element.querySelector(
+              '.carl-achievement-editor input[name="system.lootBox"]',
+            );
+            box.checked = true;
+            box.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => def.system.lootBox === true);
+          } finally {
+            await grid.close();
+            if (def) await deleteLibraryAchievement(await fromUuid(def.uuid));
+          }
+        });
+      });
+
       describe("The Character's Details tab", function () {
         useQuenchTimeout(this);
 
@@ -378,7 +431,7 @@ export default function register(quench) {
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
-            await def.delete();
+            await deleteLibraryAchievement(def);
           }
         });
       });

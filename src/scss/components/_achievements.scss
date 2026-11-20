@@ -63,7 +63,13 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
+
+    button {
+      flex: 0 0 auto;
+      width: auto;
+    }
 
     label {
       display: flex;
@@ -106,6 +112,27 @@
   .carl-grid-achievement {
     text-align: left;
     white-space: nowrap;
+
+    a {
+      cursor: pointer;
+    }
+  }
+
+  .carl-grid-editing .carl-grid-achievement {
+    color: var(--carl-gold);
+  }
+
+  // The editor, below the grid.
+  .carl-achievement-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--carl-border-soft);
+
+    prose-mirror {
+      min-height: 80px;
+    }
   }
 
   .carl-grid-cell {

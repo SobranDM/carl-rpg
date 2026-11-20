@@ -4581,7 +4581,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
+}
+.carl-rpg .carl-grid-controls button {
+  flex: 0 0 auto;
+  width: auto;
 }
 .carl-rpg .carl-grid-controls label {
   display: flex;
@@ -4617,6 +4622,22 @@
 .carl-rpg .carl-grid-achievement {
   text-align: left;
   white-space: nowrap;
+}
+.carl-rpg .carl-grid-achievement a {
+  cursor: pointer;
+}
+.carl-rpg .carl-grid-editing .carl-grid-achievement {
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-achievement-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--carl-border-soft);
+}
+.carl-rpg .carl-achievement-editor prose-mirror {
+  min-height: 80px;
 }
 .carl-rpg .carl-grid-cell {
   position: relative;

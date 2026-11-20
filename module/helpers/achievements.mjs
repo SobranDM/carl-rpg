@@ -32,13 +32,6 @@ export function registerAchievementSettings() {
     type: Boolean,
     default: false,
   });
-  // The compendium the GM's grid also lists achievements from.
-  game.settings.register(SCOPE, "achievementGridPack", {
-    scope: "client",
-    config: false,
-    type: String,
-    default: "",
-  });
 }
 
 /**

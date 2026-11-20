@@ -56,6 +56,8 @@ import { legacyAttackItems, mobAttacksOf } from "../../helpers/mob-attacks.mjs";
 import { pressDialog, useQuenchTimeout, withDialog } from "../helpers.mjs";
 import { chooseContent, resolveMaps } from "../../pdf-import/import-dialog.mjs";
 import { closePdfDocument, getPdfJs, loadPdfDocument } from "../../pdf-import/pdf-loader.mjs";
+import { achievementLibrary, libraryAchievements } from "../../helpers/achievement-library.mjs";
+import { withUnlockedPack } from "../../helpers/packs.mjs";
 
 /**
  * A one-page PDF with a correct cross-reference table, as a File - for
@@ -1571,8 +1573,29 @@ export default function register(quench) {
           data: { name, type, img: "icons/svg/item-bag.svg", system: { description } },
         });
         const none = { gear: [], spells: [], mobs: [], achievements: [] };
+        /** A test book's achievement in the Achievements library. */
+        const libraryDoc = async (b, name) =>
+          (await libraryAchievements()).find(
+            (d) => d.name === name && d.getFlag("carl-rpg", "pdfImport")?.book === b,
+          );
 
         async function cleanUp() {
+          // The test books' achievements and folders in the Achievements
+          // library - never the library itself, which is the GM's.
+          const library = achievementLibrary();
+          if (library) {
+            const wasLocked = library.locked;
+            if (wasLocked) await library.configure({ locked: false });
+            const ours = (await libraryAchievements()).filter((d) =>
+              [book, otherBook].includes(d.getFlag("carl-rpg", "pdfImport")?.book),
+            );
+            for (const doc of ours) await doc.delete();
+            for (const folder of library.folders.filter((f) =>
+              [title, otherTitle].includes(f.name),
+            ))
+              await folder.delete();
+            if (wasLocked) await library.configure({ locked: true });
+          }
           for (const b of [book, otherBook]) {
             for (const type of ["Actor", "Item", "JournalEntry"]) {
               const pack = findBookPack(b, type);
@@ -1648,11 +1671,17 @@ export default function register(quench) {
           const queen = await docNamed(book, "Actor", "Test Blob Queen");
           assert.isTrue(queen.prototypeToken.actorLink, "a Boss imports linked");
           assert.isFalse(blob.prototypeToken.actorLink, "a Mob imports unlinked");
-          const pilot = await docNamed(book, "Item", "Test Pilot!");
+          const pilot = await libraryDoc(book, "Test Pilot!");
+          assert.exists(pilot, "in the Achievements library");
           assert.equal(pilot.type, "achievement", "achievements are Achievement items");
           assert.equal(
-            itemPack.folders.get(pilot._source.folder)?.name,
-            game.i18n.localize("CARLRPG.PdfImport.Kind.achievements"),
+            achievementLibrary().folders.get(pilot._source.folder)?.name,
+            title,
+            "in the book's folder",
+          );
+          assert.isUndefined(
+            await docNamed(book, "Item", "Test Pilot!"),
+            "not in the book's own compendium",
           );
           assert.isNull(findBookPack(book, "JournalEntry"), "no achievements journal");
 
@@ -1983,12 +2012,29 @@ export default function register(quench) {
         it("an achievement the GM edited isn't overwritten by a re-import", async function () {
           const found = { ...none, achievements: parseAchievements([achievementPage(0)]) };
           await importBook({ book, title, found, kinds: ["achievements"], maps: [] });
-          const pilot = await docNamed(book, "Item", "Test Pilot!");
-          await pilot.update({ "system.reward": "The GM's own reward" });
+          const pilot = await libraryDoc(book, "Test Pilot!");
+          await withUnlockedPack(achievementLibrary(), () =>
+            pilot.update({ "system.reward": "The GM's own reward" }),
+          );
           const again = await importBook({ book, title, found, kinds: ["achievements"], maps: [] });
           assert.deepEqual(again.achievements.skipped, ["Test Pilot!"]);
-          const kept = await docNamed(book, "Item", "Test Pilot!");
+          const kept = await libraryDoc(book, "Test Pilot!");
           assert.equal(kept.system.reward, "The GM's own reward");
+        });
+
+        it("another book's achievement of the same name is its own", async function () {
+          const found = { ...none, achievements: parseAchievements([achievementPage(0)]) };
+          await importBook({ book, title, found, kinds: ["achievements"], maps: [] });
+          const other = await importBook({
+            book: otherBook,
+            title: otherTitle,
+            found,
+            kinds: ["achievements"],
+            maps: [],
+          });
+          assert.equal(other.achievements.created, 1, "made, not an update of the first book's");
+          assert.exists(await libraryDoc(book, "Test Pilot!"));
+          assert.exists(await libraryDoc(otherBook, "Test Pilot!"));
         });
       });
     },

@@ -1,20 +1,19 @@
-{{!-- The GM's Achievements grid (module/apps/achievement-grid.mjs):
+{{!-- The GM's Achievements window (module/apps/achievement-grid.mjs):
       crawlers across, achievements down. A dimmed icon: click to award; a
-      lit one: awarded (a check once its box is opened); right-click to
-      take it back. --}}
+      lit one: awarded (a check once its box is opened) - click or
+      right-click to take it back. An achievement's name opens its editor
+      below. --}}
 <div class="carl-grid">
   <div class="carl-grid-controls">
     <label class="checkbox">
       <input type="checkbox" data-action="toggleOffline" {{#if showOffline}}checked{{/if}} />
       {{localize "CARLRPG.Achievement.Grid.ShowOffline"}}
     </label>
-    <label>
-      {{localize "CARLRPG.Achievement.Grid.Pack"}}
-      <select name="packId">{{selectOptions packChoices selected=packId localize=true}}</select>
-    </label>
+    <button type="button" data-action="newAchievement"><i class="fas fa-plus"></i> {{localize "CARLRPG.Achievement.Grid.New"}}</button>
   </div>
-  {{#if columns.length}}
+
   {{#if rows.length}}
+  {{#unless columns.length}}<p class="carl-hint">{{localize "CARLRPG.Achievement.Grid.NoCrawlers"}}</p>{{/unless}}
   <div class="carl-grid-scroll">
     <table class="carl-grid-table">
       <thead>
@@ -27,8 +26,10 @@
       </thead>
       <tbody>
         {{#each rows as |row|}}
-        <tr data-uuid="{{row.uuid}}">
-          <th class="carl-grid-achievement"{{itemTooltip row.tooltip}}>{{row.name}}</th>
+        <tr data-uuid="{{row.uuid}}"{{#if row.editing}} class="carl-grid-editing"{{/if}}>
+          <th class="carl-grid-achievement"{{itemTooltip row.tooltip}}>
+            <a data-action="editAchievement">{{row.name}}</a>
+          </th>
           {{#each row.cells as |cell|}}
           <td class="carl-grid-cell carl-grid-{{cell.state}}" data-action="award" data-actor-id="{{cell.actorId}}"
             {{#unless (eq cell.state "none")}}data-state="{{cell.state}}"{{/unless}} data-tooltip-text="{{cell.tooltip}}">
@@ -44,7 +45,39 @@
   {{else}}
   <p class="carl-hint">{{localize "CARLRPG.Achievement.Grid.NoAchievements"}}</p>
   {{/if}}
-  {{else}}
-  <p class="carl-hint">{{localize "CARLRPG.Achievement.Grid.NoCrawlers"}}</p>
+
+  {{#if editor}}
+  {{!-- The editor: every field saves as it changes. --}}
+  <section class="carl-achievement-editor" data-uuid="{{editor.uuid}}">
+    <header class="carl-box-head">
+      <img class="carl-box-art" src="{{editor.img}}" alt="" />
+      <div class="carl-box-title">
+        <input type="text" name="name" value="{{editor.name}}" placeholder="{{localize 'Name'}}" />
+        <label class="carl-sheet-line">
+          <span>{{localize "CARLRPG.Achievement.Grade"}}</span>
+          <select name="system.grade">{{selectOptions editor.gradeChoices selected=editor.system.grade localize=true}}</select>
+        </label>
+      </div>
+    </header>
+    <label class="carl-sheet-line">
+      <span>{{localize "CARLRPG.Achievement.Reward"}}</span>
+      <input type="text" name="system.reward" value="{{editor.system.reward}}" placeholder="{{localize 'CARLRPG.Achievement.RewardPlaceholder'}}" />
+    </label>
+    <label class="carl-sheet-line" data-tooltip-text="{{localize 'CARLRPG.Achievement.LootBoxHint'}}">
+      <span>{{localize "CARLRPG.Achievement.LootBox"}}</span>
+      <input type="checkbox" name="system.lootBox" {{checked editor.system.lootBox}} />
+    </label>
+    <prose-mirror toggled value="{{editor.system.description}}" data-document-uuid="{{editor.uuid}}">
+      {{{editor.descriptionHTML}}}
+    </prose-mirror>
+    <label class="carl-achievement-note">
+      <span>{{localize "CARLRPG.Achievement.Contents"}}</span>
+      <textarea name="system.contents" rows="2">{{editor.system.contents}}</textarea>
+    </label>
+    <footer class="carl-box-buttons">
+      <button type="button" data-action="closeEditor"><i class="fas fa-check"></i> {{localize "CARLRPG.Achievement.Grid.Done"}}</button>
+      <button type="button" data-action="deleteAchievement"><i class="fas fa-trash"></i> {{localize "CARLRPG.Achievement.Grid.Delete"}}</button>
+    </footer>
+  </section>
   {{/if}}
 </div>

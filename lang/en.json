@@ -723,7 +723,9 @@
       "FloorProgress": "Floor Progress",
       "FloorIncrement": "Increment Floor",
       "FloorDecrement": "Decrement Floor",
-      "InWorldRest": "In-World Rest",
+      "Downtime": "Downtime",
+      "Rewards": "Rewards",
+      "Party": "Party",
       "Rest": {
         "Title": "Rest",
         "Button": "Rest",
@@ -765,7 +767,6 @@
         "Pets": "Pets ({count})",
         "Confirm": "Confirm"
       },
-      "Other": "Other",
       "NewScene": "New scene",
       "NewSceneHint": "Start a new scene: every \"Once per scene\" cooldown ends, for every actor.",
       "NewSceneDone": "New scene: \"Once per scene\" cooldowns are cleared.",
@@ -1932,6 +1933,8 @@
     },
     "Achievement": {
       "New": "New Achievement!",
+      "NewName": "New Achievement",
+      "Library": "Achievements",
       "Plural": "Achievements",
       "Reward": "Reward",
       "RewardPlaceholder": "e.g. You've received a Bronze Crafter's Box!",
@@ -1953,13 +1956,16 @@
         "Button": "Achievements",
         "Hint": "Award achievements to crawlers.",
         "ShowOffline": "Show crawlers whose player is offline",
-        "Pack": "Also list from",
-        "NoPack": "(the Items sidebar only)",
+        "New": "New Achievement",
+        "Done": "Done",
+        "Delete": "Delete",
+        "DeleteTitle": "Delete an Achievement",
+        "DeleteText": "Delete {achievement}? Crawlers who were awarded it keep it.",
         "Award": "Award {achievement} to {name}",
         "Awarded": "{name} has {achievement}. Click to take it back.",
         "RevokeTitle": "Take Back an Achievement",
         "RevokeText": "Take {achievement} back from {name}? Its loot box goes too, if it hasn't been opened.",
-        "NoAchievements": "No achievements yet. Make some in the Items sidebar, or pick a compendium above.",
+        "NoAchievements": "No achievements yet. Click New Achievement to make one.",
         "NoCrawlers": "No crawlers to show. Tick \"Show crawlers whose player is offline\" to see the rest."
       }
     },
@@ -1979,7 +1985,7 @@
     },
     "Opening": {
       "Title": "Opening Loot Boxes",
-      "Button": "Open Loot Boxes",
+      "Button": "Open Loot",
       "Hint": "The party opens its unopened loot boxes together, one crawler at a time.",
       "StartPrompt": "Who opens their boxes, in this order:",
       "Start": "Start",

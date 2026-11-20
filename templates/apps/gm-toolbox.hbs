@@ -38,33 +38,35 @@
   </fieldset>
 
   <fieldset class="carl-toolbox-section">
-    <legend>{{localize "CARLRPG.Toolbox.InWorldRest"}}</legend>
+    <legend>{{localize "CARLRPG.Toolbox.Downtime"}}</legend>
     <div class="carl-toolbox-row">
       <button type="button" data-action="rest"><i class="fas fa-bed"></i> {{localize "CARLRPG.Toolbox.Rest.Button"}}</button>
       <button type="button" data-action="mend" data-tooltip-text="{{localize 'CARLRPG.Toolbox.MendHint'}}">
         <i class="fas fa-bandage"></i> {{localize "CARLRPG.Toolbox.Mend"}}
       </button>
     </div>
+    <div class="carl-toolbox-row">
+      <button type="button" data-action="grind"><i class="fas fa-dumbbell"></i> {{localize "CARLRPG.Toolbox.Grind"}}</button>
+    </div>
   </fieldset>
 
   <fieldset class="carl-toolbox-section">
-    <legend>{{localize "CARLRPG.Toolbox.Other"}}</legend>
+    <legend>{{localize "CARLRPG.Toolbox.Rewards"}}</legend>
     <div class="carl-toolbox-row">
-      <button type="button" data-action="grind"><i class="fas fa-dumbbell"></i> {{localize "CARLRPG.Toolbox.Grind"}}</button>
+      <button type="button" data-action="achievements" data-tooltip-text="{{localize 'CARLRPG.Achievement.Grid.Hint'}}"><i class="fas fa-trophy"></i> {{localize "CARLRPG.Achievement.Grid.Button"}}</button>
       <button type="button" data-action="rollLoot"><i class="fas fa-gem"></i> {{localize "CARLRPG.Toolbox.RollLoot"}}</button>
     </div>
     <div class="carl-toolbox-row">
-      <button type="button" data-action="openBoxes" data-tooltip-text="{{localize 'CARLRPG.Opening.Hint'}}"><i class="fas fa-box-open"></i> {{localize "CARLRPG.Opening.Button"}}</button>
       <button type="button" data-action="giveBox" data-tooltip-text="{{localize 'CARLRPG.Box.GiveHint'}}"><i class="fas fa-box"></i> {{localize "CARLRPG.Box.Give"}}</button>
+      <button type="button" data-action="openBoxes" data-tooltip-text="{{localize 'CARLRPG.Opening.Hint'}}"><i class="fas fa-box-open"></i> {{localize "CARLRPG.Opening.Button"}}</button>
     </div>
-    <div class="carl-toolbox-row">
-      <button type="button" data-action="achievements" data-tooltip-text="{{localize 'CARLRPG.Achievement.Grid.Hint'}}"><i class="fas fa-trophy"></i> {{localize "CARLRPG.Achievement.Grid.Button"}}</button>
-    </div>
+  </fieldset>
+
+  <fieldset class="carl-toolbox-section">
+    <legend>{{localize "CARLRPG.Toolbox.Party"}}</legend>
     <div class="carl-toolbox-row">
       <button type="button" data-action="partyCheck" data-tooltip-text="{{localize 'CARLRPG.PartyCheck.ButtonHint'}}">
         <i class="fas fa-people-group"></i> {{localize "CARLRPG.PartyCheck.Button"}}</button>
-    </div>
-    <div class="carl-toolbox-row">
       <button type="button" data-action="newScene" data-tooltip-text="{{localize 'CARLRPG.Toolbox.NewSceneHint'}}">
         <i class="fas fa-clapperboard"></i> {{localize "CARLRPG.Toolbox.NewScene"}}</button>
     </div>
