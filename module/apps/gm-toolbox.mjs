@@ -22,7 +22,12 @@ import {
   conditionsAfterRest,
   mendingUpdates,
 } from "../helpers/rest.mjs";
-import { BOSS_TIERS, currentFloor, endOfFloorPopularityDelta } from "../helpers/floor.mjs";
+import {
+  BOSS_TIERS,
+  collapseDays,
+  currentFloor,
+  endOfFloorPopularityDelta,
+} from "../helpers/floor.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import AchievementGrid from "./achievement-grid.mjs";
 import OpeningSessionApp from "./opening-session.mjs";
@@ -49,6 +54,7 @@ import {
   defaultCollapseHours,
   hoursLeft,
   setCollapseTimer,
+  setTimeLeft,
 } from "../helpers/floor-clock.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
@@ -327,7 +333,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const floor = currentFloor();
     // The next floor's collapse timer: the book's length (p.63), the GM's
     // to change; blank, no timer.
-    const nextDays = (defaultCollapseHours(floor + 1) ?? 0) / DAY_HOURS || "";
+    const nextDays = collapseDays(floor + 1) ?? "";
     const picked = await CarlToolbox.#pickActors({
       titleKey: "CARLRPG.Toolbox.EndFloorTitle",
       promptKey: "CARLRPG.Toolbox.EndFloorPickerPrompt",
@@ -338,7 +344,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
             placeholder="${esc(game.i18n.localize("CARLRPG.FloorClock.NoTimer"))}" />
         </div>`,
       read: (form) => ({
-        days: Number(form.querySelector('input[name="collapseDays"]')?.value) || 0,
+        days: Math.max(0, Number(form.querySelector('input[name="collapseDays"]')?.value) || 0),
       }),
     });
     if (!picked) return;
@@ -645,8 +651,9 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     if (!result) return;
     if (result.clear) await clearCollapseTimer();
     else {
-      const total = (Number(result.days) || 0) * DAY_HOURS + (Number(result.hours) || 0);
-      await setCollapseTimer(total);
+      const total =
+        Math.max(0, Number(result.days) || 0) * DAY_HOURS + Math.max(0, Number(result.hours) || 0);
+      await setTimeLeft(total);
     }
     this.render();
   }

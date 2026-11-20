@@ -1991,6 +1991,7 @@
       "Floor": "Floor {floor}",
       "Left": "{time} to collapse",
       "Collapsed": "Floor collapsed",
+      "CollapsedNotice": "System message: the floor has collapsed.",
       "Warning": "System message: less than 24 hours until the floor collapses! Get to a stairwell.",
       "Hint": "Time until this floor collapses (30-hour days). Drag to move it; double-click to put it back.",
       "Button": "Collapse Timer",

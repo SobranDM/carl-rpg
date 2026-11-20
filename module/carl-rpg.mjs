@@ -107,6 +107,8 @@ Hooks.once("init", function () {
     // so an HB clamped by a lower Floor stayed clamped when the Floor went
     // back up, and the next write saved the lost slot.
     onChange: () => {
+      // The floor-collapse bar's Floor (every client).
+      FloorClockHud.refresh();
       for (const actor of game.actors) {
         actor.reset();
         if (actor.sheet?.rendered) actor.sheet.render();

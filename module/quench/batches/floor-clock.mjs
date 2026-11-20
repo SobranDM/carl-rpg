@@ -1,5 +1,6 @@
 import {
   adjustCollapseTimer,
+  checkCollapseWarning,
   clearCollapseTimer,
   clockStage,
   defaultCollapseHours,
@@ -7,6 +8,7 @@ import {
   formatTimeLeft,
   hoursLeft,
   setCollapseTimer,
+  setTimeLeft,
 } from "../../helpers/floor-clock.mjs";
 import { collapseDays, currentFloor } from "../../helpers/floor.mjs";
 import { useQuenchTimeout, waitFor } from "../helpers.mjs";
@@ -29,6 +31,7 @@ export default function register(quench) {
           assert.equal(formatTimeLeft(12 + 5 / 60), "12h 05m");
           assert.equal(formatTimeLeft(30), "1d 0h 00m", "a whole dungeon day");
           assert.equal(formatTimeLeft(-3), "0h 00m");
+          assert.equal(formatTimeLeft(7380 / 3600), "2h 03m", "no floating-point minute lost");
         });
 
         it("its stages: running, the last 30 hours, the last 24, collapsed", function () {
@@ -79,6 +82,30 @@ export default function register(quench) {
 
           await clearCollapseTimer();
           assert.isNull(hoursLeft());
+        });
+
+        it("the dialog's Set: unchanged keeps the minutes and doesn't warn again; changed moves it", async function () {
+          await setCollapseTimer(20 + 40 / 60);
+          assert.isTrue(floorClock().warned);
+          const endsAt = floorClock().endsAt;
+          await setTimeLeft(20); // the dialog shows 0 days, 20 hours
+          assert.equal(floorClock().endsAt, endsAt, "the 40 minutes are kept");
+          assert.isTrue(floorClock().warned, "not warned a second time");
+          await setTimeLeft(40);
+          assert.closeTo(hoursLeft(), 40, 0.01);
+          assert.isFalse(floorClock().warned, "past 24 hours again");
+        });
+
+        it("a clock that jumps past zero still tells everyone", async function () {
+          await setCollapseTimer(26);
+          assert.isFalse(floorClock().warned);
+          await game.settings.set("carl-rpg", "floorClock", {
+            endsAt: game.time.worldTime - 4 * 3600,
+            warned: false,
+          });
+          assert.isTrue(await checkCollapseWarning());
+          assert.isTrue(floorClock().warned);
+          assert.equal(clockStage(hoursLeft()), "collapsed");
         });
 
         it("everyone's bar: the Floor, and the time left once a timer runs", async function () {

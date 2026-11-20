@@ -40,14 +40,16 @@ export default class FloorClockHud {
     FloorClockHud.refresh();
     FloorClockHud.place();
 
-    // The clock moving, the Floor changing.
+    // The clock moving (the Floor changing: the currentFloor setting's
+    // onChange calls refresh).
     Hooks.on("updateWorldTime", () => {
       FloorClockHud.refresh();
       checkCollapseWarning();
     });
-    Hooks.on("updateSetting", (setting) => {
-      if (setting.key === "carl-rpg.currentFloor") FloorClockHud.refresh();
-    });
+    // The hotbar moving (it re-renders; the sidebar opening or closing) or
+    // the window resizing: back above it, unless the user placed it.
+    Hooks.on("renderHotbar", () => FloorClockHud.place());
+    Hooks.on("collapseSidebar", () => FloorClockHud.place());
     window.addEventListener("resize", () => FloorClockHud.place());
   }
 
@@ -58,9 +60,13 @@ export default class FloorClockHud {
    */
   static onClockChange(clock) {
     if (clock?.warned && !FloorClockHud.#warned) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.FloorClock.Warning"), {
-        permanent: true,
-      });
+      const collapsed = clockStage(hoursLeft(clock)) === "collapsed";
+      ui.notifications.warn(
+        game.i18n.localize(
+          collapsed ? "CARLRPG.FloorClock.CollapsedNotice" : "CARLRPG.FloorClock.Warning",
+        ),
+        { permanent: true },
+      );
     }
     FloorClockHud.#warned = !!clock?.warned;
     FloorClockHud.refresh();
@@ -131,18 +137,30 @@ export default class FloorClockHud {
     el.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
       const at = centreOf();
-      start = { dx: event.clientX - at.x, dy: event.clientY - at.y };
+      start = {
+        dx: event.clientX - at.x,
+        dy: event.clientY - at.y,
+        x: event.clientX,
+        y: event.clientY,
+        moved: false,
+      };
       el.setPointerCapture(event.pointerId);
       el.classList.add("dragging");
     });
     el.addEventListener("pointermove", (event) => {
-      if (start) FloorClockHud.#moveTo(event.clientX - start.dx, event.clientY - start.dy);
+      if (!start) return;
+      // A few pixels' wobble in a click isn't a drag.
+      if (!start.moved && Math.hypot(event.clientX - start.x, event.clientY - start.y) < 4) return;
+      start.moved = true;
+      FloorClockHud.#moveTo(event.clientX - start.dx, event.clientY - start.dy);
     });
     el.addEventListener("pointerup", async (event) => {
       if (!start) return;
+      const moved = start.moved;
       start = null;
       el.releasePointerCapture(event.pointerId);
       el.classList.remove("dragging");
+      if (!moved) return;
       const at = centreOf();
       await game.settings.set("carl-rpg", "floorClockPosition", {
         centre: Math.round(at.x),

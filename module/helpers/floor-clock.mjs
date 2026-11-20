@@ -68,7 +68,8 @@ export function hoursLeft(clock = floorClock(), now = game.time.worldTime) {
  * @returns {string}
  */
 export function formatTimeLeft(hours) {
-  const minutes = Math.max(0, Math.floor(hours * 60));
+  // From whole seconds: 7380s / 3600 * 60 comes out at 122.999...
+  const minutes = Math.max(0, Math.floor(Math.round(hours * 3600) / 60));
   const days = Math.floor(minutes / (DAY_HOURS * 60));
   const h = Math.floor((minutes % (DAY_HOURS * 60)) / 60);
   const m = String(minutes % 60).padStart(2, "0");
@@ -87,6 +88,23 @@ export function clockStage(hours) {
   if (hours <= 24) return "final";
   if (hours <= DAY_HOURS) return "lastDay";
   return "running";
+}
+
+/**
+ * Set the time left (GM): a running timer is moved by the difference - so
+ * its minutes and its 24-hour notice survive a Set that changes nothing -
+ * and with none running, one starts.
+ * @param {number} hours
+ * @returns {Promise<void>}
+ */
+export async function setTimeLeft(hours) {
+  const left = hoursLeft();
+  if (left === null) return setCollapseTimer(hours);
+  // The dialog shows whole hours: an unchanged Set keeps the minutes.
+  const shown = Math.floor(Math.max(0, left));
+  const target = Math.max(0, Number(hours) || 0);
+  if (target === shown) return;
+  return adjustCollapseTimer(target - left);
 }
 
 /**
@@ -133,7 +151,9 @@ export async function checkCollapseWarning() {
   if (!game.users.activeGM?.isSelf) return false;
   const clock = floorClock();
   const hours = hoursLeft(clock);
-  if (hours === null || clock.warned || hours > 24 || hours <= 0) return false;
+  // Also when the clock jumps straight past zero (a long rest): everyone
+  // still hears it - the notice then says the floor has collapsed.
+  if (hours === null || clock.warned || hours > 24) return false;
   await game.settings.set(SCOPE, SETTING, { ...clock, warned: true });
   return true;
 }
