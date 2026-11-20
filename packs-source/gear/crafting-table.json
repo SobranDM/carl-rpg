@@ -1,0 +1,34 @@
+{
+  "_id": "2thNBg9yW92m3FXp",
+  "name": "Crafting Table",
+  "type": "item",
+  "folder": "XNAa1jnZvRWmGmEu",
+  "img": "icons/tools/smithing/anvil.webp",
+  "system": {
+    "description": "<p>A table for your personal space: a Crafting, Sapper, Engineer, Alchemy or Metal Working Table (p.217).</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "slots": [],
+    "weaponSkill": ""
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!2thNBg9yW92m3FXp"
+}

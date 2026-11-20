@@ -1,0 +1,34 @@
+{
+  "_id": "FMToyEuOPpWGxM0Y",
+  "name": "Bicycle",
+  "type": "item",
+  "folder": "XNAa1jnZvRWmGmEu",
+  "img": "icons/commodities/tech/cog-brass.webp",
+  "system": {
+    "description": "<p>A bicycle.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "slots": [],
+    "weaponSkill": ""
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!FMToyEuOPpWGxM0Y"
+}

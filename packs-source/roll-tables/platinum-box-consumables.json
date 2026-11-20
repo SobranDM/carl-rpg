@@ -1,0 +1,299 @@
+{
+  "_id": "w9eDy5oxE80QEFFQ",
+  "name": "Platinum Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>Rolled by the loot generator for a Platinum box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "O5C2EYXx3nc7o1ib",
+      "type": "document",
+      "name": "Potion of +3 Skill",
+      "img": "icons/consumables/potions/bottle-pear-corked-labeled-ornamental-purple.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.iXIJQ3sJWrl3VCiQ",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.O5C2EYXx3nc7o1ib"
+    },
+    {
+      "_id": "DEy9pFaVZhRVxNSi",
+      "type": "document",
+      "name": "Supreme Healing Potion",
+      "img": "icons/consumables/potions/bottle-bulb-corked-glowing-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.81nUjuVKyu5by1AU",
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.DEy9pFaVZhRVxNSi"
+    },
+    {
+      "_id": "QPnlS0dcjojwfQbZ",
+      "type": "document",
+      "name": "Scratcher Ticket",
+      "img": "icons/sundries/documents/document-sealed-signatures-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.qYcSMVA4r6WB7KAh",
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.QPnlS0dcjojwfQbZ"
+    },
+    {
+      "_id": "Nh9EAlmwFnTP1xZF",
+      "type": "document",
+      "name": "Crafting Table",
+      "img": "icons/tools/smithing/anvil.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.2thNBg9yW92m3FXp",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.Nh9EAlmwFnTP1xZF"
+    },
+    {
+      "_id": "pTx3hmpQkr1HA1Al",
+      "type": "document",
+      "name": "Crafting Table Upgrade Coupon",
+      "img": "icons/sundries/documents/document-sealed-brown-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.oR3jhpOxf218UG0Z",
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.pTx3hmpQkr1HA1Al"
+    },
+    {
+      "_id": "ri6lUAb7nMq8iiGn",
+      "type": "document",
+      "name": "Personal Space Coupon",
+      "img": "icons/sundries/documents/document-sealed-brown-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.hzn8RJH74TKjdTCe",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.ri6lUAb7nMq8iiGn"
+    },
+    {
+      "_id": "J4MRI0xvtMWoH44D",
+      "type": "document",
+      "name": "Good Mana Refill Potion",
+      "img": "icons/consumables/potions/bottle-conical-bubbling-blue.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.UtXFPHvoqPRmpe9m",
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.J4MRI0xvtMWoH44D"
+    },
+    {
+      "_id": "6z4KwJruaWrfZTEJ",
+      "type": "text",
+      "name": "Spellbook",
+      "img": "icons/sundries/books/book-backed-wood-tan.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.6z4KwJruaWrfZTEJ"
+    },
+    {
+      "_id": "thNWdNKA3IKM2dz7",
+      "type": "text",
+      "name": "Spell Scroll",
+      "img": "icons/sundries/scrolls/scroll-bound-blue-red.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.thNWdNKA3IKM2dz7"
+    },
+    {
+      "_id": "7sxwXAWiMk2WBHri",
+      "type": "document",
+      "name": "Scroll of Upgrade",
+      "img": "icons/sundries/scrolls/scroll-symbol-triangle-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.1MCDeJyPTudgTzga",
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!w9eDy5oxE80QEFFQ.7sxwXAWiMk2WBHri"
+    }
+  ],
+  "formula": "1d10",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!w9eDy5oxE80QEFFQ"
+}

@@ -1,0 +1,34 @@
+{
+  "_id": "oR3jhpOxf218UG0Z",
+  "name": "Crafting Table Upgrade Coupon",
+  "type": "item",
+  "folder": "XNAa1jnZvRWmGmEu",
+  "img": "icons/sundries/documents/document-sealed-brown-red.webp",
+  "system": {
+    "description": "<p>Exchange it with a Bopca to upgrade a crafting table (p.218).</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "slots": [],
+    "weaponSkill": ""
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!oR3jhpOxf218UG0Z"
+}

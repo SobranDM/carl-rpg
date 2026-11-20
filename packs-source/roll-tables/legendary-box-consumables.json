@@ -1,0 +1,191 @@
+{
+  "_id": "WwtFasnpPX9VCm9f",
+  "name": "Legendary Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>Rolled by the loot generator for a Legendary box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "RQHawZhDOOQ27pK7",
+      "type": "document",
+      "name": "Potion of +5 Skill",
+      "img": "icons/consumables/potions/bottle-pear-corked-labeled-ornamental-purple.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.3pq9MoC8NAL14vJt",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!WwtFasnpPX9VCm9f.RQHawZhDOOQ27pK7"
+    },
+    {
+      "_id": "3uQvrsnW2VbYUBd1",
+      "type": "text",
+      "name": "Rare Spellbook",
+      "img": "icons/sundries/books/book-backed-wood-tan.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!WwtFasnpPX9VCm9f.3uQvrsnW2VbYUBd1"
+    },
+    {
+      "_id": "mPNVMRLHvd4FpDVZ",
+      "type": "text",
+      "name": "Rare Spell Scroll",
+      "img": "icons/sundries/scrolls/scroll-bound-blue-red.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!WwtFasnpPX9VCm9f.mPNVMRLHvd4FpDVZ"
+    },
+    {
+      "_id": "mjwCF7bbyeZpugqu",
+      "type": "document",
+      "name": "Crafting Table",
+      "img": "icons/tools/smithing/anvil.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.2thNBg9yW92m3FXp",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!WwtFasnpPX9VCm9f.mjwCF7bbyeZpugqu"
+    },
+    {
+      "_id": "gfKLuQJJ11xkSyDj",
+      "type": "document",
+      "name": "Crafting Table Upgrade Coupon",
+      "img": "icons/sundries/documents/document-sealed-brown-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.oR3jhpOxf218UG0Z",
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!WwtFasnpPX9VCm9f.gfKLuQJJ11xkSyDj"
+    },
+    {
+      "_id": "tlf5IeXg6kpLHgtD",
+      "type": "document",
+      "name": "Heal Severe Injury Potion",
+      "img": "icons/consumables/potions/bottle-bulb-corked-glowing-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.Bm4AKmHCuolWYOvc",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!WwtFasnpPX9VCm9f.tlf5IeXg6kpLHgtD"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!WwtFasnpPX9VCm9f"
+}

@@ -1,0 +1,34 @@
+{
+  "_id": "hzn8RJH74TKjdTCe",
+  "name": "Personal Space Coupon",
+  "type": "item",
+  "folder": "XNAa1jnZvRWmGmEu",
+  "img": "icons/sundries/documents/document-sealed-brown-red.webp",
+  "system": {
+    "description": "<p>Exchange it with a Bopca to add a room to your personal space (p.216).</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "slots": [],
+    "weaponSkill": ""
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!hzn8RJH74TKjdTCe"
+}

@@ -1,0 +1,110 @@
+{
+  "_id": "nB98Ms4Z5SI1nhwM",
+  "name": "Celestial Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>Rolled by the loot generator for a Celestial box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "DGtiJoIK5sBt4VOy",
+      "type": "text",
+      "name": "A Potion that Maxes Out a Skill",
+      "img": "icons/svg/item-bag.svg",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!nB98Ms4Z5SI1nhwM.DGtiJoIK5sBt4VOy"
+    },
+    {
+      "_id": "aHdEmvyIPYQJbMcG",
+      "type": "text",
+      "name": "A Divine Item (GM's choice)",
+      "img": "icons/svg/item-bag.svg",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!nB98Ms4Z5SI1nhwM.aHdEmvyIPYQJbMcG"
+    },
+    {
+      "_id": "j0Vty4gUV5Kzn24p",
+      "type": "text",
+      "name": "A life-altering effect (GM's choice)",
+      "img": "icons/svg/item-bag.svg",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!nB98Ms4Z5SI1nhwM.j0Vty4gUV5Kzn24p"
+    }
+  ],
+  "formula": "1d3",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!nB98Ms4Z5SI1nhwM"
+}

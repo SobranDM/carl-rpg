@@ -18,6 +18,7 @@
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "check:tooltips": "node tools/check-tooltips.mjs",
+    "check:packs": "node tools/check-pack-links.mjs",
     "dev:sync": "node tools/dev-sync.mjs",
     "dev:world": "node tools/ensure-world.mjs",
     "dev": "npm run build && npm run build:packs && npm run dev:sync && npm run dev:world",

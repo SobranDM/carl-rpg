@@ -1861,6 +1861,24 @@
       "Legendary": { "Label": "Legendary", "XValues": "+5 Skill Rank or +10% Stat" },
       "Celestial": { "Label": "Celestial", "XValues": "+6 Skill Rank or +20% Stat" }
     },
+    "Loot": {
+      "Enchantment": {
+        "stat": "+{value} {stat}",
+        "statPercent": "+{percent}% {stat} (of the Stat, set when gained)",
+        "skill": "+{value} {skill} Skill",
+        "skillChoice": "+{value} to a Skill of your choice",
+        "passiveSkill": "{skill} (Passive) at Rank {value}",
+        "passiveSkillChoice": "A Passive Skill at Rank {value} (GM's choice)",
+        "resistance": "Resistance to {type} damage",
+        "dr": "+{value} Damage Resistance",
+        "inherentSpell": "Inherent Spell: {spell} at Rank {rank}, no Mana cost (Cooldown {hours} hours)",
+        "unique": "Something Unique (×{multiplier}): {text}"
+      },
+      "ScrollName": "Scroll of {spell} (Rank {rank})",
+      "ScrollText": "Casts {spell} once at Rank {rank}. The caster pays no Mana.",
+      "SpellbookName": "Spellbook of {spell}",
+      "SpellbookText": "Reading it teaches {spell} at Rank {rank} before the book disappears."
+    },
     "Degree": {
       "CriticalHit": "Critical Hit",
       "AmazingSuccess": "Amazing Success",

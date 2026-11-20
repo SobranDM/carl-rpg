@@ -1,0 +1,245 @@
+{
+  "_id": "Pn26MeZvGjJ3JIM1",
+  "name": "Silver Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>Rolled by the loot generator for a Silver box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "veizK6PWS2VhrPtS",
+      "type": "document",
+      "name": "Potion of +1 Skill",
+      "img": "icons/consumables/potions/bottle-pear-corked-labeled-ornamental-purple.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.WG8JtZpao8io928d",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Pn26MeZvGjJ3JIM1.veizK6PWS2VhrPtS"
+    },
+    {
+      "_id": "bCCvZtkNRQFfugDh",
+      "type": "text",
+      "name": "Spell Scroll",
+      "img": "icons/sundries/scrolls/scroll-bound-blue-red.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Pn26MeZvGjJ3JIM1.bCCvZtkNRQFfugDh"
+    },
+    {
+      "_id": "QCHuvGaOZf7MVF96",
+      "type": "text",
+      "name": "Spellbook",
+      "img": "icons/sundries/books/book-backed-wood-tan.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Pn26MeZvGjJ3JIM1.QCHuvGaOZf7MVF96"
+    },
+    {
+      "_id": "KHECfxZExVmbRxjO",
+      "type": "document",
+      "name": "Magic Paper",
+      "img": "icons/sundries/scrolls/scroll-plain-tan.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.AVxogJPJPHesmKSW",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Pn26MeZvGjJ3JIM1.KHECfxZExVmbRxjO"
+    },
+    {
+      "_id": "DytEOiMw4hIlF5RO",
+      "type": "document",
+      "name": "Poison Antidote ×2",
+      "img": "icons/consumables/potions/bottle-conical-corked-green.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.Ghu5J0A8zWEewZVS",
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Pn26MeZvGjJ3JIM1.DytEOiMw4hIlF5RO"
+    },
+    {
+      "_id": "NoptmvWTW7c9TnyO",
+      "type": "document",
+      "name": "Good Healing Potion",
+      "img": "icons/consumables/potions/bottle-round-label-cork-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.G1F9L3xhCnSAHej7",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Pn26MeZvGjJ3JIM1.NoptmvWTW7c9TnyO"
+    },
+    {
+      "_id": "gCw8i6N14gWH0d5E",
+      "type": "document",
+      "name": "Heal Pet Potion",
+      "img": "icons/consumables/potions/bottle-round-corked-pink.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.i29hqj7aLoAluRJJ",
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Pn26MeZvGjJ3JIM1.gCw8i6N14gWH0d5E"
+    },
+    {
+      "_id": "oPWjon9L0RMyGARs",
+      "type": "document",
+      "name": "Stick of Good Goblin Dynamite",
+      "img": "icons/weapons/thrown/dynamite-simple-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.0AosTPbKmlQ1UbSs",
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Pn26MeZvGjJ3JIM1.oPWjon9L0RMyGARs"
+    }
+  ],
+  "formula": "1d8",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Pn26MeZvGjJ3JIM1"
+}
