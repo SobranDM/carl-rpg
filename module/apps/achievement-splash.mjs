@@ -22,9 +22,9 @@ export default class AchievementSplash extends HandlebarsApplicationMixin(Applic
   static DEFAULT_OPTIONS = {
     classes: ["carl-rpg", "carl-achievement-splash"],
     // No window chrome: the paint-splash banner is the splash, with its own
-    // X (the built-in "close" action).
-    window: { frame: false, title: "CARLRPG.Achievement.New" },
-    position: { width: 680, height: "auto", top: 90 },
+    // X (the built-in "close" action). A frameless window isn't positioned
+    // by Foundry: its CSS places it, centred, 100px from the top.
+    window: { frame: false, positioned: false, title: "CARLRPG.Achievement.New" },
   };
 
   /** @override */

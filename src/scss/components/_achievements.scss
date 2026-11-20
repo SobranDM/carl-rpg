@@ -7,6 +7,13 @@
   // (assets/paint-banner.webp) slammed onto the screen, white text with a
   // heavy black outline (~5:1 on the red before the outline).
   &.carl-achievement-splash {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    z-index: 100;
+    width: 680px;
+    max-width: calc(100vw - 32px);
+    translate: -50% 0;
     background: none;
     border: none;
     box-shadow: none;
