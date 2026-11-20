@@ -1,4 +1,5 @@
 import { enrichDescription } from "../helpers/rich-text.mjs";
+import { playSound } from "../helpers/sounds.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -59,6 +60,8 @@ export default class AchievementSplash extends HandlebarsApplicationMixin(Applic
     }
     const app = new AchievementSplash(achievement);
     app.render({ force: true });
+    // Its player hears it (not the GM, who awarded it).
+    if (AchievementSplash.showsHere(achievement)) playSound("achievement");
     return app;
   }
 

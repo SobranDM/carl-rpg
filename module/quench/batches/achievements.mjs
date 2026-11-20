@@ -17,6 +17,7 @@ import {
   waitFor,
   withSetting,
 } from "../helpers.mjs";
+import { levelUpSoundsHere, playSound, SOUNDS } from "../../helpers/sounds.mjs";
 
 /**
  * Achievements (0.8.0 phase 4, docs/loot-and-achievements.md; p.21,
@@ -281,6 +282,45 @@ export default function register(quench) {
             await grid.close();
             await deleteTestActor(actor);
             await def.delete();
+          }
+        });
+      });
+
+      describe("Sounds (ruled 2026-11-19)", function () {
+        useQuenchTimeout(this);
+
+        it("each sound's file is there", async function () {
+          for (const [key, sound] of Object.entries(SOUNDS)) {
+            const response = await fetch(sound.src, { method: "HEAD" });
+            assert.isTrue(response.ok, `${key}: ${sound.src}`);
+          }
+        });
+
+        it("a muted sound doesn't play", async function () {
+          for (const [key, sound] of Object.entries(SOUNDS)) {
+            await withSetting(sound.setting, true, () => {
+              assert.isNull(playSound(key), key);
+            });
+          }
+        });
+
+        it("a Level gain tells every client (the GM hears none of the Level-up sound)", async function () {
+          const actor = await createTestCharacter("level up");
+          try {
+            let options = null;
+            const id = Hooks.on("updateActor", (a, changed, opts) => {
+              if (a.id === actor.id) options = opts;
+            });
+            try {
+              const level = actor.system.attributes.level.value;
+              await actor.update({ "system.attributes.level.value": level + 2 });
+            } finally {
+              Hooks.off("updateActor", id);
+            }
+            assert.equal(options?.carlLevelDelta?.[actor.id], 2);
+            assert.isFalse(levelUpSoundsHere(actor), "the GM's client");
+          } finally {
+            await deleteTestActor(actor);
           }
         });
       });

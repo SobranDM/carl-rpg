@@ -4,6 +4,7 @@ import {
   pressSession,
   sessionState,
 } from "../helpers/opening-session.mjs";
+import { playSound } from "../helpers/sounds.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -49,7 +50,19 @@ export default class OpeningSessionApp extends HandlebarsApplicationMixin(Applic
     }
     if (app) app.render({ force: !app.rendered });
     else new OpeningSessionApp().render({ force: true });
+    // A box opened: everyone hears it, once per reveal.
+    if (
+      state.step === "revealed" &&
+      !state.result?.failed &&
+      state.turn !== OpeningSessionApp.#heardTurn
+    ) {
+      OpeningSessionApp.#heardTurn = state.turn;
+      playSound("lootBox");
+    }
   }
+
+  /** The reveal this client last played the loot box sound for. */
+  static #heardTurn = null;
 
   /** Where this client last put the window. @override */
   _initializeApplicationOptions(options) {

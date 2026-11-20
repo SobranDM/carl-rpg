@@ -36,12 +36,17 @@ export default function register(quench) {
       describe("Opening loot boxes together", function () {
         useQuenchTimeout(this, 30000);
         let openingMs;
-        before(function () {
+        let muted;
+        before(async function () {
           openingMs = sessionTiming.openingMs;
           sessionTiming.openingMs = 0;
+          // A test run opens a lot of boxes: quiet.
+          muted = game.settings.get("carl-rpg", "muteLootBoxSound");
+          await game.settings.set("carl-rpg", "muteLootBoxSound", true);
         });
-        after(function () {
+        after(async function () {
           sessionTiming.openingMs = openingMs;
+          await game.settings.set("carl-rpg", "muteLootBoxSound", muted);
         });
         afterEach(async function () {
           if (sessionState().active) await pressSession("end");

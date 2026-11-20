@@ -1963,6 +1963,20 @@
         "NoCrawlers": "No crawlers to show. Tick \"Show crawlers whose player is offline\" to see the rest."
       }
     },
+    "Sound": {
+      "achievement": {
+        "Name": "Mute the achievement sound",
+        "Hint": "Don't play the sound when one of your crawlers earns an achievement."
+      },
+      "levelUp": {
+        "Name": "Mute the Level-up sound",
+        "Hint": "Don't play the sound when one of your crawlers gains a Level."
+      },
+      "lootBox": {
+        "Name": "Mute the loot box sound",
+        "Hint": "Don't play the sound when a loot box opens while the party opens its boxes together."
+      }
+    },
     "Opening": {
       "Title": "Opening Loot Boxes",
       "Button": "Open Loot Boxes",

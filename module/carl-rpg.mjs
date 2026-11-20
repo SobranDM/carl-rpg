@@ -20,6 +20,7 @@ import { CarlRPGAchievementSheet } from "./sheets/achievement-sheet.mjs";
 import { registerAchievementSettings } from "./helpers/achievements.mjs";
 import AchievementSplash from "./apps/achievement-splash.mjs";
 import OpeningSessionApp from "./apps/opening-session.mjs";
+import { registerSoundHooks, registerSoundSettings } from "./helpers/sounds.mjs";
 import { registerOpeningSessionSetting, resumeSession } from "./helpers/opening-session.mjs";
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { CARLRPG } from "./helpers/config.mjs";
@@ -66,6 +67,7 @@ Hooks.once("init", function () {
   // Character creation: which Stat and background methods, animal crawlers.
   registerChargenSettings();
   registerAchievementSettings();
+  registerSoundSettings();
   // The box-opening session's state: its change redraws every client's window.
   registerOpeningSessionSetting((state) => OpeningSessionApp.sync(state));
 
@@ -445,6 +447,8 @@ Hooks.once("ready", function () {
   registerChatSocket();
   // A crawler's new achievements, shown to their player until closed.
   AchievementSplash.registerHooks();
+  // A crawler's Level-up sound, for its player.
+  registerSoundHooks();
   // A box-opening session under way: its window, and (GM) a box left
   // mid-opening by a reload.
   OpeningSessionApp.sync();
