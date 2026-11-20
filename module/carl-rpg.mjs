@@ -21,6 +21,8 @@ import { registerAchievementSettings } from "./helpers/achievements.mjs";
 import AchievementSplash from "./apps/achievement-splash.mjs";
 import OpeningSessionApp from "./apps/opening-session.mjs";
 import { registerSoundHooks, registerSoundSettings } from "./helpers/sounds.mjs";
+import { registerFloorClockSettings } from "./helpers/floor-clock.mjs";
+import FloorClockHud from "./apps/floor-clock-hud.mjs";
 import { registerOpeningSessionSetting, resumeSession } from "./helpers/opening-session.mjs";
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { CARLRPG } from "./helpers/config.mjs";
@@ -68,6 +70,8 @@ Hooks.once("init", function () {
   registerChargenSettings();
   registerAchievementSettings();
   registerSoundSettings();
+  // The floor-collapse timer: its change redraws every client's bar.
+  registerFloorClockSettings((clock) => FloorClockHud.onClockChange(clock));
   // The box-opening session's state: its change redraws every client's window.
   registerOpeningSessionSetting((state) => OpeningSessionApp.sync(state));
 
@@ -445,6 +449,8 @@ Hooks.once("ready", function () {
   AchievementSplash.registerHooks();
   // A crawler's Level-up sound, for its player.
   registerSoundHooks();
+  // The floor-collapse bar, on everyone's screen.
+  FloorClockHud.init();
   // A box-opening session under way: its window, and (GM) a box left
   // mid-opening by a reload.
   OpeningSessionApp.sync();

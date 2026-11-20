@@ -1571,6 +1571,11 @@
     filter: drop-shadow(0 0 24px #ffd76a) brightness(1.4);
   }
 }
+@keyframes carl-floor-clock-pulse {
+  50% {
+    box-shadow: 0 0 12px rgba(224, 48, 48, 0.8);
+  }
+}
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
   --carl-accent: #c9273f;
@@ -4920,6 +4925,40 @@
 }
 .carl-rpg .carl-opening-order-name {
   flex: 1 1 auto;
+}
+.carl-rpg.carl-floor-clock {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 14px;
+  background: rgba(10, 10, 10, 0.85);
+  color: #f0f0f0;
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.carl-rpg.carl-floor-clock.dragging {
+  cursor: grabbing;
+}
+.carl-rpg.carl-floor-clock[data-stage=lastDay] {
+  border-color: #f0a020;
+  color: #ffc860;
+}
+.carl-rpg.carl-floor-clock[data-stage=final], .carl-rpg.carl-floor-clock[data-stage=collapsed] {
+  border-color: #e03030;
+  color: #ff7070;
+}
+.carl-rpg.carl-floor-clock[data-stage=final] {
+  animation: carl-floor-clock-pulse 1.6s ease-in-out infinite;
+}
+.carl-rpg .carl-floor-clock-sep {
+  opacity: 0.6;
 }
 
 /* An item's description as its Foundry tooltip (the itemTooltip helper).

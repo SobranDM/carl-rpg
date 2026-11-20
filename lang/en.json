@@ -692,8 +692,8 @@
         "Popularity": "Other end-of-floor Popularity calls (p.280): +1 for a cute Pet moment or a memorable catchphrase; -1 for a boring d10+ main Attack, entering the stairwell 30+ hours early, or grinding 15+ of the final 30 hours.",
         "Boxes": "Fan Box for high performers (one per Floor); a Benefactor Box if they have a Sponsor (once per Floor).",
         "RaceClass": "Race/Class end-of-floor features, e.g. Human's or Hobgoblin's extra Advancement Check with Advantage.",
-        "Collapse": "Floor {floor} collapses in {days} days (30-hour days) unless you set your own.",
-        "CollapseCustom": "Set Floor {floor}'s collapse timer and announce it."
+        "Collapse": "Floor {floor}'s collapse timer is running: {days} days (30-hour days). Announce it.",
+        "CollapseCustom": "Floor {floor} has no collapse timer: set one with the GM Toolbox's Collapse Timer, and announce it."
       },
       "BossKilled": "Boss Killed",
       "BossKilledHint": "Award Levels for a Boss kill by its tier (p.170), and a Boss Box (p.22).",
@@ -1986,6 +1986,23 @@
         "Name": "Mute the loot box sound",
         "Hint": "Don't play the sound when a loot box opens while the party opens its boxes together."
       }
+    },
+    "FloorClock": {
+      "Floor": "Floor {floor}",
+      "Left": "{time} to collapse",
+      "Collapsed": "Floor collapsed",
+      "Warning": "System message: less than 24 hours until the floor collapses! Get to a stairwell.",
+      "Hint": "Time until this floor collapses (30-hour days). Drag to move it; double-click to put it back.",
+      "Button": "Collapse Timer",
+      "ButtonHint": "Set the time until this floor collapses, or stop the timer.",
+      "DialogTitle": "Floor Collapse Timer",
+      "DialogHint": "Time left before Floor {floor} collapses. A dungeon day is 30 hours.",
+      "Days": "Days",
+      "Hours": "Hours",
+      "Set": "Set",
+      "Clear": "No Timer",
+      "NextFloorDays": "Floor {floor} collapses in (days)",
+      "NoTimer": "no timer"
     },
     "Opening": {
       "Title": "Opening Loot Boxes",

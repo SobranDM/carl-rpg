@@ -22,12 +22,7 @@ import {
   conditionsAfterRest,
   mendingUpdates,
 } from "../helpers/rest.mjs";
-import {
-  BOSS_TIERS,
-  collapseDays,
-  currentFloor,
-  endOfFloorPopularityDelta,
-} from "../helpers/floor.mjs";
+import { BOSS_TIERS, currentFloor, endOfFloorPopularityDelta } from "../helpers/floor.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import AchievementGrid from "./achievement-grid.mjs";
 import OpeningSessionApp from "./opening-session.mjs";
@@ -48,6 +43,13 @@ import { esc, labelChoices, optionsHtml } from "../helpers/html.mjs";
 import { changeConditions, conditionOps } from "../helpers/conditions.mjs";
 import { boxesOf, giveBox } from "../helpers/boxes.mjs";
 import { sessionState, startSession } from "../helpers/opening-session.mjs";
+import {
+  clearCollapseTimer,
+  DAY_HOURS,
+  defaultCollapseHours,
+  hoursLeft,
+  setCollapseTimer,
+} from "../helpers/floor-clock.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -120,6 +122,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       toggleTimer: CarlToolbox.#onToggleTimer,
       resolveTwoHourTick: CarlToolbox.#onResolveTwoHourTick,
       endFloor: CarlToolbox.#onEndFloor,
+      collapseTimer: CarlToolbox.#onCollapseTimer,
       bossKilled: CarlToolbox.#onBossKilled,
       giveBox: CarlToolbox.#onGiveBox,
       achievements: CarlToolbox.#onAchievements,
@@ -322,12 +325,24 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   static async #onEndFloor(event, target) {
     if (!game.user.isGM) return;
     const floor = currentFloor();
-    const actors = await CarlToolbox.#promptActorPicker({
+    // The next floor's collapse timer: the book's length (p.63), the GM's
+    // to change; blank, no timer.
+    const nextDays = (defaultCollapseHours(floor + 1) ?? 0) / DAY_HOURS || "";
+    const picked = await CarlToolbox.#pickActors({
       titleKey: "CARLRPG.Toolbox.EndFloorTitle",
       promptKey: "CARLRPG.Toolbox.EndFloorPickerPrompt",
       confirmLabelKey: "CARLRPG.Toolbox.EndFloorConfirm",
+      after: `<div class="form-group carl-end-floor-clock">
+          <label>${esc(game.i18n.format("CARLRPG.FloorClock.NextFloorDays", { floor: floor + 1 }))}</label>
+          <input type="number" name="collapseDays" value="${nextDays}" min="0" step="1"
+            placeholder="${esc(game.i18n.localize("CARLRPG.FloorClock.NoTimer"))}" />
+        </div>`,
+      read: (form) => ({
+        days: Number(form.querySelector('input[name="collapseDays"]')?.value) || 0,
+      }),
     });
-    if (!actors) return;
+    if (!picked) return;
+    const actors = picked.actors;
 
     const digest = [];
     for (const actor of actors) {
@@ -364,9 +379,11 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
     const next = floor + 1;
     await game.settings.set("carl-rpg", "currentFloor", next);
+    const days = picked.data.days;
+    if (days > 0) await setCollapseTimer(days * DAY_HOURS);
+    else await clearCollapseTimer();
     this.render();
 
-    const days = collapseDays(next);
     const reminders = [
       game.i18n.localize("CARLRPG.Toolbox.EndFloorReminder.Cooldowns"),
       game.i18n.localize("CARLRPG.Toolbox.EndFloorReminder.Popularity"),
@@ -589,6 +606,49 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const level = Math.min((actor.system.attributes?.level?.value ?? 1) + levels, 250);
     await actor.update({ "system.attributes.level.value": level });
     return level;
+  }
+
+  /**
+   * Collapse Timer: set the time left before this floor collapses (in
+   * 30-hour days and hours), or stop it. Opens on the time left now, or
+   * the floor's default length (p.63).
+   */
+  static async #onCollapseTimer() {
+    if (!game.user.isGM) return;
+    const left = hoursLeft();
+    const hours = left !== null ? Math.max(0, left) : (defaultCollapseHours() ?? 0);
+    const days = Math.floor(hours / DAY_HOURS);
+    const rest = Math.floor(hours - days * DAY_HOURS);
+    const result = await showCarlDialog({
+      title: game.i18n.localize("CARLRPG.FloorClock.DialogTitle"),
+      content: `<div class="carl-dialog-body">
+        <p class="carl-dialog-hint">${esc(game.i18n.format("CARLRPG.FloorClock.DialogHint", { floor: currentFloor() }))}</p>
+        <div class="form-group">
+          <label>${esc(game.i18n.localize("CARLRPG.FloorClock.Days"))}</label>
+          <input type="number" name="days" value="${days}" min="0" step="1" />
+        </div>
+        <div class="form-group">
+          <label>${esc(game.i18n.localize("CARLRPG.FloorClock.Hours"))}</label>
+          <input type="number" name="hours" value="${rest}" min="0" step="1" />
+        </div></div>`,
+      buttons: [
+        rollButton({ label: "CARLRPG.FloorClock.Set" }),
+        {
+          action: "clear",
+          icon: "fas fa-ban",
+          label: "CARLRPG.FloorClock.Clear",
+          callback: () => ({ clear: true }),
+        },
+        cancelButton(),
+      ],
+    });
+    if (!result) return;
+    if (result.clear) await clearCollapseTimer();
+    else {
+      const total = (Number(result.days) || 0) * DAY_HOURS + (Number(result.hours) || 0);
+      await setCollapseTimer(total);
+    }
+    this.render();
   }
 
   static async #onFloorIncrement(event, target) {

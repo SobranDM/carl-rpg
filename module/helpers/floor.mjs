@@ -25,14 +25,15 @@ export const BOSS_TIERS = {
 };
 
 /**
- * Default days before a floor collapses (Time, p.63): "Third Floor: 8
- * days... Fourth Floor: 10 days... Fifth Floor: 15 days" (30-hour days). The
- * GM may set their own; floors without a default return null.
+ * Default days before a floor collapses (30-hour days): the First Floor 5
+ * and the Second 6 (Atlas, "Time to Level Collapse"), the Third 8, the
+ * Fourth 10 and the Fifth 15 (Time, p.63). The GM may set their own; floors
+ * without a default return null.
  * @param {number} floor
  * @returns {number|null}
  */
 export function collapseDays(floor) {
-  return { 3: 8, 4: 10, 5: 15 }[floor] ?? null;
+  return { 1: 5, 2: 6, 3: 8, 4: 10, 5: 15 }[floor] ?? null;
 }
 
 /**
