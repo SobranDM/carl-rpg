@@ -33,14 +33,36 @@ export function registerSoundSettings() {
 }
 
 /**
- * Play a sound here, unless this user muted it.
+ * How long after a sound starts that it isn't started again, while it
+ * loads (once it's playing, it isn't started again until it ends).
+ */
+export const soundTiming = { guardMs: 1500 };
+
+/** Each sound's last start here: {at: ms, sound: Sound|null}. */
+const started = new Map();
+
+/**
+ * Play a sound here, unless this user muted it - or it's already playing:
+ * several Levels, achievements or boxes at once (two crawlers leveled by
+ * one Boss kill, a run of Level edits) make one sound, not a pile of them.
  * @param {keyof SOUNDS} key
- * @returns {object|null}  The playing Sound, or null if muted.
+ * @returns {Promise<object>|null}  The sound starting (AudioHelper.play), or
+ *   null if muted or already playing.
  */
 export function playSound(key) {
   const sound = SOUNDS[key];
   if (!sound || game.settings.get(SCOPE, sound.setting)) return null;
-  return foundry.audio.AudioHelper.play({ src: sound.src, volume: 0.8 }, false) ?? null;
+  const last = started.get(key);
+  if (last && (last.sound?.playing || Date.now() - last.at < soundTiming.guardMs)) return null;
+  const entry = { at: Date.now(), sound: null };
+  started.set(key, entry);
+  const playing = foundry.audio.AudioHelper.play({ src: sound.src, volume: 0.8 }, false);
+  Promise.resolve(playing)
+    .then((s) => {
+      entry.sound = s ?? null;
+    })
+    .catch(() => {});
+  return playing ?? null;
 }
 
 /**

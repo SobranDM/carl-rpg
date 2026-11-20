@@ -17,7 +17,7 @@ import {
   waitFor,
   withSetting,
 } from "../helpers.mjs";
-import { levelUpSoundsHere, playSound, SOUNDS } from "../../helpers/sounds.mjs";
+import { levelUpSoundsHere, playSound, SOUNDS, soundTiming } from "../../helpers/sounds.mjs";
 
 /**
  * Achievements (0.8.0 phase 4, docs/loot-and-achievements.md; p.21,
@@ -301,6 +301,42 @@ export default function register(quench) {
             await withSetting(sound.setting, true, () => {
               assert.isNull(playSound(key), key);
             });
+          }
+        });
+
+        it("a sound already playing isn't started again (several Levels at once: one sound)", async function () {
+          const helper = foundry.audio.AudioHelper;
+          const real = helper.play;
+          const guard = soundTiming.guardMs;
+          const plays = [];
+          // Count the plays instead of making noise: one fake sound, playing
+          // until the test stops it.
+          const fake = { playing: true };
+          helper.play = (data) => {
+            plays.push(data.src);
+            return Promise.resolve(fake);
+          };
+          const tick = () => new Promise((r) => setTimeout(r, 10));
+          try {
+            await withSetting(SOUNDS.levelUp.setting, false, async () => {
+              playSound("levelUp");
+              await tick();
+              playSound("levelUp");
+              playSound("levelUp");
+              assert.lengthOf(plays, 1, "one sound for three Level-ups");
+              assert.isNotNull(playSound("achievement"), "another sound still plays");
+              assert.lengthOf(plays, 2);
+              await tick();
+              // Over, and past the guard: it plays again.
+              fake.playing = false;
+              soundTiming.guardMs = 0;
+              assert.isNotNull(playSound("levelUp"));
+              assert.lengthOf(plays, 3);
+            });
+          } finally {
+            fake.playing = false;
+            helper.play = real;
+            soundTiming.guardMs = guard;
           }
         });
 
