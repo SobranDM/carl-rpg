@@ -1,5 +1,7 @@
 import {
   achievementBoxOf,
+  achievementCategories,
+  achievementSections,
   achievementsOf,
   awardAchievement,
   awardedCopy,
@@ -67,6 +69,56 @@ export default function register(quench) {
           });
           assert.isNull(rewardBox("You've received a title: Button Lord."));
           assert.isNull(rewardBox(""));
+        });
+      });
+
+      describe("Categories (ruled 2026-11-20)", function () {
+        const def = (name, grade, category = "") => ({ name, system: { grade, category } });
+
+        it("a category groups its achievements Bronze to Celestial; groups and the rest are alphabetical", function () {
+          const sections = achievementSections([
+            def("Zoo Keeper", "bronze"),
+            def("Giant Slayer", "gold", "Boss Kills"),
+            def("Apple Picker", "silver"),
+            def("Rat Catcher", "bronze", "Boss Kills"),
+            def("Mouse Hunter", "bronze", " boss  kills "),
+            def("Cake", "celestial", "Desserts"),
+          ]);
+          assert.deepEqual(
+            sections.map((s) => [s.category, s.items.map((d) => d.name)]),
+            [
+              [null, ["Apple Picker"]],
+              ["Boss Kills", ["Mouse Hunter", "Rat Catcher", "Giant Slayer"]],
+              ["Desserts", ["Cake"]],
+              [null, ["Zoo Keeper"]],
+            ],
+            "'Boss Kills' sorts as B, between Apple and Zoo; capitals and spaces don't split it",
+          );
+        });
+
+        it("achievements without a category next to each other share a section", function () {
+          const sections = achievementSections([
+            def("A", "gold"),
+            def("B", "bronze"),
+            def("C", "silver"),
+          ]);
+          assert.lengthOf(sections, 1);
+          assert.deepEqual(
+            sections[0].items.map((d) => d.name),
+            ["A", "B", "C"],
+            "by name, not grade",
+          );
+        });
+
+        it("the editor suggests every category in use, once each", function () {
+          assert.deepEqual(
+            achievementCategories([
+              def("a", "gold", "Boss Kills"),
+              def("b", "gold", "boss kills"),
+              def("c", "gold"),
+            ]),
+            ["Boss Kills"],
+          );
         });
       });
 

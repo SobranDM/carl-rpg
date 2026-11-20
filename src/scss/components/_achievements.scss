@@ -236,6 +236,22 @@
     }
   }
 
+  // A category: its own section, its name on top, a line above and below.
+  .carl-grid-group {
+    border-top: 2px solid var(--carl-gold);
+    border-bottom: 2px solid var(--carl-gold);
+  }
+
+  .carl-grid-group-head th {
+    padding: 4px 6px 2px;
+    text-align: left;
+    font-size: 0.85em;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--carl-gold);
+  }
+
   .carl-grid-editing .carl-grid-achievement {
     color: var(--carl-gold);
   }

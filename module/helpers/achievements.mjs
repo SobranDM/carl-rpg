@@ -1,6 +1,6 @@
 import { copyData } from "./packs.mjs";
 import { currentFloor } from "./floor.mjs";
-import { boxName, giveBox, prepareBox } from "./boxes.mjs";
+import { boxName, boxTierRank, giveBox, prepareBox } from "./boxes.mjs";
 import { rewardBox } from "./reward-text.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { enrichDescription } from "./rich-text.mjs";
@@ -212,4 +212,77 @@ async function postAchievementCard(copy, actor) {
     img: copy.img,
     body: `<h3>${esc(copy.name)}</h3>${description}${reward}`,
   });
+}
+
+/**
+ * A category as written, tidied: trimmed, single spaces. "" for none.
+ * @param {string} category
+ * @returns {string}
+ */
+function tidyCategory(category) {
+  return String(category ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * How the Achievements window lists achievements (ruled 2026-11-20): an
+ * achievement with a category is grouped with the rest of its category -
+ * the same name whatever its capitals or spacing - sorted Bronze to
+ * Celestial, then by name; the groups and the achievements with no category
+ * are in alphabetical order together, a group by its category's name.
+ * Achievements with no category next to each other share a section.
+ * @param {Item[]} definitions
+ * @returns {{category: string|null, items: Item[]}[]}  category: null for ungrouped.
+ */
+export function achievementSections(definitions) {
+  const groups = new Map();
+  const loose = [];
+  for (const def of definitions) {
+    const category = tidyCategory(def.system?.category);
+    if (!category) {
+      loose.push(def);
+      continue;
+    }
+    const key = category.toLocaleLowerCase();
+    if (!groups.has(key)) groups.set(key, { category, items: [] });
+    groups.get(key).items.push(def);
+  }
+  const byName = (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" });
+  for (const group of groups.values()) {
+    group.items.sort(
+      (a, b) => boxTierRank(a.system.grade) - boxTierRank(b.system.grade) || byName(a.name, b.name),
+    );
+  }
+  const entries = [
+    ...loose.map((def) => ({ key: def.name, def })),
+    ...[...groups.values()].map((group) => ({ key: group.category, group })),
+  ].sort((a, b) => byName(a.key, b.key));
+  const sections = [];
+  for (const entry of entries) {
+    if (entry.group) {
+      sections.push(entry.group);
+      continue;
+    }
+    const last = sections.at(-1);
+    if (last && last.category === null) last.items.push(entry.def);
+    else sections.push({ category: null, items: [entry.def] });
+  }
+  return sections;
+}
+
+/**
+ * Every category in use, for the editor's suggestions.
+ * @param {Item[]} definitions
+ * @returns {string[]}
+ */
+export function achievementCategories(definitions) {
+  const seen = new Map();
+  for (const def of definitions) {
+    const category = tidyCategory(def.system?.category);
+    if (category && !seen.has(category.toLocaleLowerCase())) {
+      seen.set(category.toLocaleLowerCase(), category);
+    }
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
 }

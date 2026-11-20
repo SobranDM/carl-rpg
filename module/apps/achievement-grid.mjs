@@ -2,6 +2,8 @@ import { pickerGroups } from "./actor-picker.mjs";
 import {
   achievementBox,
   achievementBoxOf,
+  achievementCategories,
+  achievementSections,
   awardAchievement,
   awardedCopy,
   preparedBoxFor,
@@ -16,7 +18,7 @@ import {
   libraryAchievements,
   updateLibraryAchievement,
 } from "../helpers/achievement-library.mjs";
-import { boxDraftForForge, boxTierRank, clearBoxContents, prepareBox } from "../helpers/boxes.mjs";
+import { boxDraftForForge, clearBoxContents, prepareBox } from "../helpers/boxes.mjs";
 import { generateLoot } from "../helpers/loot.mjs";
 import LootForge from "./loot-forge.mjs";
 import { enrichDescription, itemDescriptions, itemTooltips } from "../helpers/rich-text.mjs";
@@ -97,15 +99,13 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
   }
 
   /**
-   * The library's achievements, by grade (Bronze first), then name.
+   * The library's achievements (in no order: achievementSections orders
+   * them for the window).
    * @returns {Promise<Item[]>}
    */
   async definitions() {
     this.#cache ??= await libraryAchievements();
-    return [...this.#cache].sort(
-      (a, b) =>
-        boxTierRank(a.system.grade) - boxTierRank(b.system.grade) || a.name.localeCompare(b.name),
-    );
+    return [...this.#cache];
   }
 
   /** @override */
@@ -120,35 +120,42 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     }
     const editing = defs.find((d) => d.uuid === this.editing) ?? null;
     if (!editing) this.editing = null;
+    const rowOf = (def) => ({
+      uuid: def.uuid,
+      name: def.name,
+      img: def.img,
+      tooltip: tooltips[def.uuid],
+      editing: def.uuid === this.editing,
+      cells: columns.map((actor) => {
+        const copy = awardedCopy(actor, def.uuid);
+        const data = { name: actor.name, achievement: def.name };
+        const tooltip = [
+          game.i18n.format(
+            copy ? "CARLRPG.Achievement.Grid.Awarded" : "CARLRPG.Achievement.Grid.Award",
+            data,
+          ),
+        ];
+        // Right-click: this crawler's loot box, until it's opened.
+        if (def.system.lootBox && boxState(actor, def).canPrepare) {
+          tooltip.push(game.i18n.localize("CARLRPG.Achievement.Grid.RightClickPrepare"));
+        }
+        return {
+          actorId: actor.id,
+          state: copy ? (copy.system.rewarded ? "rewarded" : "awarded") : "none",
+          tooltip: tooltip.join(" "),
+        };
+      }),
+    });
     return {
       showOffline,
       columns: columns.map((a) => ({ id: a.id, name: a.name, img: a.img })),
-      rows: defs.map((def) => ({
-        uuid: def.uuid,
-        name: def.name,
-        img: def.img,
-        tooltip: tooltips[def.uuid],
-        editing: def.uuid === this.editing,
-        cells: columns.map((actor) => {
-          const copy = awardedCopy(actor, def.uuid);
-          const data = { name: actor.name, achievement: def.name };
-          const tooltip = [
-            game.i18n.format(
-              copy ? "CARLRPG.Achievement.Grid.Awarded" : "CARLRPG.Achievement.Grid.Award",
-              data,
-            ),
-          ];
-          // Right-click: this crawler's loot box, until it's opened.
-          if (def.system.lootBox && boxState(actor, def).canPrepare) {
-            tooltip.push(game.i18n.localize("CARLRPG.Achievement.Grid.RightClickPrepare"));
-          }
-          return {
-            actorId: actor.id,
-            state: copy ? (copy.system.rewarded ? "rewarded" : "awarded") : "none",
-            tooltip: tooltip.join(" "),
-          };
-        }),
+      // Grouped by category, alphabetical (helpers/achievements.mjs).
+      sections: achievementSections(defs).map((section) => ({
+        category: section.category,
+        rows: section.items.map(rowOf),
       })),
+      // A category heading spans the achievement column and every crawler's.
+      span: columns.length + 1,
       editor: editing
         ? {
             uuid: editing.uuid,
@@ -156,6 +163,7 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
             img: editing.img,
             system: editing.system,
             gradeChoices: labelChoices(CONFIG.CARLRPG.lootBoxTiers),
+            categories: achievementCategories(defs),
             descriptionHTML: await enrichDescription(editing.system.description, editing, {
               secrets: true,
             }),

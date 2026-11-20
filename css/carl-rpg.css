@@ -4757,6 +4757,19 @@
 .carl-rpg .carl-grid-achievement a {
   cursor: pointer;
 }
+.carl-rpg .carl-grid-group {
+  border-top: 2px solid var(--carl-gold);
+  border-bottom: 2px solid var(--carl-gold);
+}
+.carl-rpg .carl-grid-group-head th {
+  padding: 4px 6px 2px;
+  text-align: left;
+  font-size: 0.85em;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--carl-gold);
+}
 .carl-rpg .carl-grid-editing .carl-grid-achievement {
   color: var(--carl-gold);
 }
