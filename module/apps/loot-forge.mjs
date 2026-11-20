@@ -60,6 +60,22 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     this.onSave = onSave;
     this.single = single;
     this.customTitle = title;
+    /** True while loot is being handed out: a second click does nothing. */
+    this.busy = false;
+  }
+
+  /**
+   * Run a hand-out action once: further clicks while it runs are ignored.
+   * @param {() => Promise<void>} fn
+   */
+  async #once(fn) {
+    if (this.busy) return;
+    this.busy = true;
+    try {
+      await fn();
+    } finally {
+      this.busy = false;
+    }
   }
 
   /**
@@ -228,11 +244,9 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     if (data.tierKey) draft.tierKey = data.tierKey;
     if (data.gold !== undefined) draft.gold = Math.max(0, Math.floor(Number(data.gold) || 0));
     if (data.recipientId !== undefined && data.recipientId !== (this.recipient?.id ?? "")) {
-      // A new recipient fills in what was left open for one: a Skill they
-      // own, a percentage Stat of theirs (choices already made are kept).
       this.recipient = game.actors.get(data.recipientId) ?? null;
       for (const entry of draft.entries) {
-        if (entry.kind === "magic") await autofillMagicDraft(entry, { recipient: this.recipient });
+        if (entry.kind === "magic") await refitForRecipient(entry, this.recipient);
       }
     }
     for (const [i, changes] of Object.entries(data.entries ?? {})) {
@@ -306,27 +320,33 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   }
 
   static async #onGive() {
-    if (!this.recipient) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.Loot.Forge.PickRecipient"));
-      return;
-    }
-    await grantLoot(this.draft, this.recipient);
-    await postLootCard(this.draft, { actor: this.recipient });
-    ui.notifications.info(
-      game.i18n.format("CARLRPG.Loot.Forge.Given", { name: this.recipient.name }),
-    );
-    this.close();
+    return this.#once(async () => {
+      if (!this.recipient) {
+        ui.notifications.warn(game.i18n.localize("CARLRPG.Loot.Forge.PickRecipient"));
+        return;
+      }
+      await grantLoot(this.draft, this.recipient);
+      await postLootCard(this.draft, { actor: this.recipient });
+      ui.notifications.info(
+        game.i18n.format("CARLRPG.Loot.Forge.Given", { name: this.recipient.name }),
+      );
+      this.close();
+    });
   }
 
   static async #onCreateWorld() {
-    const items = await createLootInWorld(this.draft);
-    ui.notifications.info(game.i18n.format("CARLRPG.Loot.Forge.Created", { count: items.length }));
-    if (this.draft.gold) {
-      ui.notifications.warn(
-        game.i18n.format("CARLRPG.Loot.Forge.GoldNotItem", { gold: this.draft.gold }),
+    return this.#once(async () => {
+      const items = await createLootInWorld(this.draft);
+      ui.notifications.info(
+        game.i18n.format("CARLRPG.Loot.Forge.Created", { count: items.length }),
       );
-    }
-    this.close();
+      if (this.draft.gold) {
+        ui.notifications.warn(
+          game.i18n.format("CARLRPG.Loot.Forge.GoldNotItem", { gold: this.draft.gold }),
+        );
+      }
+      this.close();
+    });
   }
 
   static async #onPostChat() {
@@ -334,9 +354,29 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   }
 
   static async #onSave() {
-    await this.onSave?.(foundry.utils.deepClone(this.draft));
-    this.close();
+    return this.#once(async () => {
+      await this.onSave?.(foundry.utils.deepClone(this.draft));
+      this.close();
+    });
   }
+}
+
+/**
+ * A magic draft made over for a new recipient: a percentage Stat is worked
+ * out from their Stat again (p.220), and a +X Skill they don't have goes to
+ * one they do; then the rest is filled in as for a fresh roll.
+ * @param {object} entry  A magic draft (changed in place).
+ * @param {Actor|null} recipient
+ */
+async function refitForRecipient(entry, recipient) {
+  const owned = new Set(
+    (recipient?.items ?? []).filter((i) => i.type === "skill").map((i) => i.name),
+  );
+  for (const e of entry.enchantments) {
+    if (e.kind === "stat" && e.percent) e.value = null;
+    if (e.kind === "skill" && recipient && !owned.has(e.target)) e.target = "";
+  }
+  await autofillMagicDraft(entry, { recipient });
 }
 
 /** A non-magic entry's name as shown. */

@@ -76,7 +76,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
    * @override
    */
   _getHeaderControls() {
-    const controls = super._getHeaderControls();
+    const controls = [...super._getHeaderControls()];
     if (game.user.isGM && this.item.getFlag("carl-rpg", "magicDraft")) {
       controls.push({
         action: "reforge",

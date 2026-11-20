@@ -404,6 +404,81 @@ export default function register(quench) {
         });
       });
 
+      describe("The Loot Forge's form", function () {
+        useQuenchTimeout(this, 30000);
+
+        /** Set a field in the Forge and fire its change, as a GM's edit would. */
+        const edit = (forge, name, value) => {
+          const el = forge.element.querySelector(`[name="${name}"]`);
+          assert.exists(el, name);
+          el.value = value;
+          el.dispatchEvent(new Event("change", { bubbles: true }));
+        };
+        const magicDraft = (enchantments) => ({
+          tierKey: "legendary",
+          gold: 0,
+          entries: [
+            {
+              kind: "magic",
+              tierKey: "legendary",
+              itemType: "accessory",
+              typeLabel: "Enchanted Accessory",
+              name: "Ring of Forms",
+              slots: ["accessory"],
+              accessoryKind: "",
+              enchantments,
+            },
+          ],
+        });
+
+        it("an edited X and a picked Stat land in the draft", async function () {
+          const forge = await LootForge.open({
+            draft: magicDraft([{ kind: "stat", target: "dex", value: 3, percent: null }]),
+          });
+          try {
+            edit(forge, "entries.0.enchantments.0.value", "7");
+            await waitFor(() => forge.draft.entries[0].enchantments[0].value === 7);
+            edit(forge, "entries.0.enchantments.0.target", "con");
+            await waitFor(() => forge.draft.entries[0].enchantments[0].target === "con");
+            await waitFor(
+              () =>
+                forge.element.querySelector('[name="entries.0.enchantments.0.target"]')?.value ===
+                "con",
+            );
+            edit(forge, "gold", "250");
+            await waitFor(() => forge.draft.gold === 250);
+          } finally {
+            await forge.close();
+          }
+        });
+
+        it("a new recipient: a percentage Stat from their Stat, and a Skill they have", async function () {
+          const actor = await createTestCharacter("forge recipient", {
+            system: { stats: { dex: { value: 60 } } },
+          });
+          const forge = await LootForge.open({
+            draft: magicDraft([
+              { kind: "stat", target: "dex", value: 9, percent: 10 },
+              { kind: "skill", target: "Nobody Has This", value: 5 },
+            ]),
+          });
+          try {
+            await createTestItem(actor, "skill", "Lockpicking", {
+              system: { rank: 1, category: "utility" },
+            });
+            edit(forge, "recipientId", actor.id);
+            await waitFor(() => forge.recipient?.id === actor.id);
+            const [stat, skill] = forge.draft.entries[0].enchantments;
+            await waitFor(() => skill.target === "Lockpicking");
+            assert.equal(stat.value, 6, "10% of 60, worked out again");
+            assert.equal(skill.value, 5, "the X is kept");
+          } finally {
+            await forge.close();
+            await deleteTestActor(actor);
+          }
+        });
+      });
+
       describe("Mending all Injuries (Heal Severe Injury Potion, p.218; ruled 2026-11-19)", function () {
         useQuenchTimeout(this);
 
