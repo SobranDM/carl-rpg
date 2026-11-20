@@ -60,6 +60,13 @@
       margin: 0;
       border: none;
     }
+
+    // The box's title (from its Reward) above its art.
+    .carl-opening-title {
+      font-size: 1.5em;
+      font-weight: bold;
+      color: var(--carl-gold);
+    }
   }
 
   .carl-opening-shake {

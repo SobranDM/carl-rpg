@@ -23,15 +23,15 @@
 
   {{#if (eq step "opening")}}
   <div class="carl-opening-splash">
+    <h3 class="carl-opening-title">{{box.name}}</h3>
     <img class="carl-opening-shake carl-tier-{{box.tierKey}}" src="{{box.img}}" alt="" />
-    <h3>{{box.name}}</h3>
   </div>
   {{/if}}
 
   {{#if (eq step "revealed")}}
   <div class="carl-opening-splash carl-opening-revealed">
+    <h3 class="carl-opening-title">{{box.name}}</h3>
     <img class="carl-opening-open carl-tier-{{box.tierKey}}" src="{{box.img}}" alt="" />
-    <h3>{{box.name}}</h3>
     {{#if failed}}
     <p class="carl-hint">{{localize "CARLRPG.Opening.Failed"}}</p>
     {{else if result.empty}}

@@ -4862,6 +4862,11 @@
   margin: 0;
   border: none;
 }
+.carl-rpg .carl-opening-splash .carl-opening-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: var(--carl-gold);
+}
 .carl-rpg .carl-opening-shake {
   animation: carl-box-shake 0.35s ease-in-out infinite, carl-box-glow 1.25s ease-in forwards;
 }
