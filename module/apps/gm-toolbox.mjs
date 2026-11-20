@@ -46,6 +46,7 @@ import { startNewScene } from "../helpers/cooldowns.mjs";
 import { unopposedDifficulty } from "../helpers/rules.mjs";
 import { esc, labelChoices, optionsHtml } from "../helpers/html.mjs";
 import { changeConditions, conditionOps } from "../helpers/conditions.mjs";
+import { giveBox } from "../helpers/boxes.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -119,6 +120,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       resolveTwoHourTick: CarlToolbox.#onResolveTwoHourTick,
       endFloor: CarlToolbox.#onEndFloor,
       bossKilled: CarlToolbox.#onBossKilled,
+      giveBox: CarlToolbox.#onGiveBox,
       mend: CarlToolbox.#onMend,
       floorIncrement: CarlToolbox.#onFloorIncrement,
       floorDecrement: CarlToolbox.#onFloorDecrement,
@@ -385,7 +387,9 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
   /**
    * Boss Killed (p.170): "When a party kills a Boss, each member gains Levels
-   * based on the tier of the Boss" - Neighborhood 1 up to Floor Boss 6.
+   * based on the tier of the Boss" - Neighborhood 1 up to Floor Boss 6. And
+   * a Boss Box of the Boss's tier each (p.22: Neighborhood Bronze up to
+   * Floor Boss Celestial), unless the GM unticks it.
    */
   static async #onBossKilled(event, target) {
     if (!game.user.isGM) return;
@@ -403,6 +407,9 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       content: `<div class="carl-dialog-body"><div class="form-group">
         <label>${game.i18n.localize("CARLRPG.Toolbox.BossTierLabel")}</label>
         <select name="tier">${options}</select>
+      </div><div class="form-group">
+        <label>${game.i18n.localize("CARLRPG.Toolbox.GiveBossBox")}</label>
+        <input type="checkbox" name="bossBox" checked />
       </div></div>`,
       buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
     });
@@ -425,12 +432,67 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
           level,
         }),
       );
+      const box = choice.bossBox
+        ? await giveBox(actor, { tierKey: tier.box, source: { kind: "boss" } })
+        : null;
+      if (box) {
+        lines.push(
+          game.i18n.format("CARLRPG.Box.Received", { name: esc(actor.name), box: esc(box.name) }),
+        );
+      }
     }
     await createCardMessage({
       title: game.i18n.localize("CARLRPG.Toolbox.BossKilledTitle"),
       subtitle: game.i18n.localize(tier.label),
       body: `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
     });
+  }
+
+  /**
+   * Give Box: an unopened loot box (data/box.mjs) of a tier, with a title
+   * ("Bronze Crafter's Box"; default "Bronze Box"), to each picked crawler.
+   * Its contents are rolled when it's opened, unless the GM prepares them
+   * on its sheet.
+   */
+  static async #onGiveBox(event, target) {
+    if (!game.user.isGM) return;
+    const tiers = optionsHtml(labelChoices(CONFIG.CARLRPG.lootBoxTiers));
+    const choice = await showCarlDialog({
+      title: game.i18n.localize("CARLRPG.Box.GiveTitle"),
+      content: `<div class="carl-dialog-body"><div class="form-group">
+        <label>${game.i18n.localize("CARLRPG.Toolbox.LootTierLabel")}</label>
+        <select name="tier">${tiers}</select>
+      </div><div class="form-group">
+        <label>${game.i18n.localize("CARLRPG.Box.Title")}</label>
+        <input type="text" name="name" placeholder="${esc(game.i18n.localize("CARLRPG.Box.TitlePlaceholder"))}" />
+      </div></div>`,
+      buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
+    });
+    if (!choice?.tier) return;
+    const actors = await CarlToolbox.#promptActorPicker({
+      titleKey: "CARLRPG.Box.GiveTitle",
+      promptKey: "CARLRPG.Box.GivePrompt",
+    });
+    if (!actors?.length) return;
+    const lines = [];
+    for (const actor of actors) {
+      const box = await giveBox(actor, {
+        tierKey: choice.tier,
+        name: String(choice.name ?? "").trim(),
+        source: { kind: "gift" },
+      });
+      if (box) {
+        lines.push(
+          game.i18n.format("CARLRPG.Box.Received", { name: esc(actor.name), box: esc(box.name) }),
+        );
+      }
+    }
+    if (lines.length) {
+      await createCardMessage({
+        title: game.i18n.localize("CARLRPG.Box.GiveTitle"),
+        body: `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
+      });
+    }
   }
 
   /** "{name} - {skill}: Rank N / no change" lines for a card. */

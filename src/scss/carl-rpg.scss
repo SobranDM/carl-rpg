@@ -27,6 +27,7 @@
 @use "components/mob-attacks";
 @use "components/item-sheet";
 @use "components/loot-forge";
+@use "components/boxes";
 
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
@@ -53,6 +54,7 @@
   @include mob-attacks.styles;
   @include item-sheet.styles;
   @include loot-forge.styles;
+  @include boxes.styles;
 }
 
 /* An item's description as its Foundry tooltip (the itemTooltip helper).

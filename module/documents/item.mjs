@@ -67,6 +67,7 @@ export class CarlRPGItem extends Item {
   async _preCreate(data, options, user) {
     const allowed = await super._preCreate(data, options, user);
     if (allowed === false) return false;
+    if (this.type === "box") return this.#preCreateBox(data, user);
     if (this.type === "spell" && this.parent && (this.system.rank ?? 0) < 1) {
       this.updateSource({ "system.rank": 1 });
     }
@@ -123,6 +124,46 @@ export class CarlRPGItem extends Item {
   }
 
   /**
+   * A Box (data/box.mjs) is the GM's: a player can't make, change or delete
+   * one (ruled 2026-11-19 - the GM gives boxes and they're opened through
+   * the GM), and one only goes to a Character, or the Items sidebar. It
+   * starts with its tier's art.
+   * @returns {boolean|void}
+   */
+  #preCreateBox(data, user) {
+    if (!user.isGM) return false;
+    if (this.parent && this.parent.type !== "character") {
+      ui.notifications?.warn(game.i18n.localize("CARLRPG.Box.CharactersOnly"));
+      return false;
+    }
+    const art = CONFIG.CARLRPG.lootBoxTiers[this.system.tier]?.img;
+    if (art && (!data.img || data.img === Item.DEFAULT_ICON)) this.updateSource({ img: art });
+  }
+
+  /**
+   * A Box: the GM's only. A new tier brings its art, unless the GM gave the
+   * box other art.
+   * @returns {boolean|void}
+   */
+  #preUpdateBox(changed, user) {
+    if (!user.isGM) return false;
+    const tier = foundry.utils.getProperty(changed, "system.tier");
+    if (!tier || tier === this.system.tier || changed.img) return;
+    const tiers = CONFIG.CARLRPG.lootBoxTiers;
+    if (this.img === tiers[this.system.tier]?.img && tiers[tier]?.img)
+      changed.img = tiers[tier].img;
+  }
+
+  /**
+   * A player can't delete a Box (opening it is what removes it).
+   * @override
+   */
+  async _preDelete(options, user) {
+    if ((await super._preDelete(options, user)) === false) return false;
+    if (this.type === "box" && !user.isGM) return false;
+  }
+
+  /**
    * Equipping, however it's done (the Equipment Doll, the Equipped box, a
    * macro):
    *  - refused while a Hotlist swap is under way on this client
@@ -135,6 +176,7 @@ export class CarlRPGItem extends Item {
    */
   async _preUpdate(changed, options, user) {
     if ((await super._preUpdate(changed, options, user)) === false) return false;
+    if (this.type === "box") return this.#preUpdateBox(changed, user);
     // Where it's worn changed while it's worn: off whatever it no longer fits.
     const slotFields = ["system.slots", "system.twoHanded", "system.accessoryKind"].some((p) =>
       foundry.utils.hasProperty(changed, p),

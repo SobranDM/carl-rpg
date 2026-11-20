@@ -7,6 +7,18 @@
       aren't listed here (actor-sheet.mjs _prepareItems). Gold sits above
       the doll, so it doesn't push the list down. --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="items">
+  {{#if boxes.length}}
+  {{!-- Unopened loot boxes (data/box.mjs): the art, the title as its
+        tooltip; click for its sheet. --}}
+  <div class="carl-box-strip">
+    <span class="resource-label">{{localize "CARLRPG.Box.Strip"}}</span>
+    {{#each boxes as |box|}}
+    <a class="carl-box-chip" data-item-id="{{box._id}}" data-action="editItem" data-tooltip-text="{{box.name}}">
+      <img src="{{box.img}}" alt="" />
+    </a>
+    {{/each}}
+  </div>
+  {{/if}}
   <div class="carl-inventory-layout">
   <ol class="items-list">
     <li class="item flexrow items-header">

@@ -16,12 +16,12 @@ export function currentFloor() {
  * the Boss" (Crawler Advancement, p.170).
  */
 export const BOSS_TIERS = {
-  neighborhood: { label: "CARLRPG.Toolbox.BossTier.Neighborhood", levels: 1 },
-  borough: { label: "CARLRPG.Toolbox.BossTier.Borough", levels: 2 },
-  city: { label: "CARLRPG.Toolbox.BossTier.City", levels: 3 },
-  province: { label: "CARLRPG.Toolbox.BossTier.Province", levels: 4 },
-  country: { label: "CARLRPG.Toolbox.BossTier.Country", levels: 5 },
-  floor: { label: "CARLRPG.Toolbox.BossTier.Floor", levels: 6 },
+  neighborhood: { label: "CARLRPG.Toolbox.BossTier.Neighborhood", levels: 1, box: "bronze" },
+  borough: { label: "CARLRPG.Toolbox.BossTier.Borough", levels: 2, box: "silver" },
+  city: { label: "CARLRPG.Toolbox.BossTier.City", levels: 3, box: "gold" },
+  province: { label: "CARLRPG.Toolbox.BossTier.Province", levels: 4, box: "platinum" },
+  country: { label: "CARLRPG.Toolbox.BossTier.Country", levels: 5, box: "legendary" },
+  floor: { label: "CARLRPG.Toolbox.BossTier.Floor", levels: 6, box: "celestial" },
 };
 
 /**

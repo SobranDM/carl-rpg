@@ -50,6 +50,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     onSave = null,
     single = false,
     title = null,
+    lockRecipient = false,
     ...options
   } = {}) {
     super(options);
@@ -60,6 +61,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     this.onSave = onSave;
     this.single = single;
     this.customTitle = title;
+    this.lockRecipient = lockRecipient;
     /** True while loot is being handed out: a second click does nothing. */
     this.busy = false;
   }
@@ -189,7 +191,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       tierChoices: labelChoices(cfg.lootBoxTiers),
       tierKey: this.draft.tierKey,
       gold: this.draft.gold,
-      showRecipient: !this.single,
+      showRecipient: !this.single && !this.lockRecipient,
       recipientId: this.recipient?.id ?? "",
       recipientChoices: {
         "": loc("CARLRPG.Loot.Forge.NoRecipient"),

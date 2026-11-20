@@ -81,6 +81,7 @@ import {
 } from "../helpers/rich-text.mjs";
 import { labelChoices } from "../helpers/html.mjs";
 import { itemFor, itemRow } from "../helpers/sheet-rows.mjs";
+import { boxTierRank } from "../helpers/boxes.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -909,10 +910,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const spells = [];
     const damageEffects = [];
     const raceAndClass = [];
+    const boxes = [];
 
     for (let i of context.items) {
       i.img = i.img || Item.DEFAULT_ICON;
       if (i.type === "item") gear.push(i);
+      else if (i.type === "box") boxes.push(i);
       else if (i.type === "feature") features.push(i);
       else if (i.type === "skill") skills.push(i);
       else if (i.type === "spell") spells.push(i);
@@ -971,6 +974,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.spells = spells;
     context.damageEffects = damageEffects;
     context.raceAndClass = raceAndClass;
+    // Unopened loot boxes (data/box.mjs), Bronze to Celestial.
+    context.boxes = boxes.sort(
+      (a, b) => boxTierRank(a.system.tier) - boxTierRank(b.system.tier) || byName(a, b),
+    );
 
     // Header-click column sort (see #onSortList) on top of the fixed order
     // above, which is what "off" falls back to. Damage Effects nest under

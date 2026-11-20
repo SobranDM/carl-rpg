@@ -529,10 +529,12 @@ export async function rerollEnchantment(
  * to theirs (system.details.gold; an actor with none just gets the items).
  * @param {{gold?: number, entries: object[]}} draft
  * @param {Actor} actor
+ * @param {{itemData?: object[]|null}} [options]  The draft's Item data, if
+ *   already made (lootItemData).
  * @returns {Promise<{items: Item[], gold: number}>}
  */
-export async function grantLoot(draft, actor) {
-  const data = await lootItemData(draft);
+export async function grantLoot(draft, actor, { itemData = null } = {}) {
+  const data = itemData ?? (await lootItemData(draft));
   const items = data.length ? await actor.createEmbeddedDocuments("Item", data) : [];
   const gold = Math.max(0, Math.floor(Number(draft?.gold) || 0));
   const hasGold = foundry.utils.hasProperty(actor.system ?? {}, "details.gold");
@@ -600,15 +602,17 @@ function entryLine(entry) {
 /**
  * Post a LootDraft to chat: what it holds, and who it went to.
  * @param {{tierKey: string, gold?: number, entries: object[]}} draft
- * @param {{actor?: Actor|null}} [options]
+ * @param {{actor?: Actor|null, title?: string|null}} [options]
  * @returns {Promise<ChatMessage>}
  */
-export function postLootCard(draft, { actor = null } = {}) {
+export function postLootCard(draft, { actor = null, title = null } = {}) {
   const tier = CONFIG.CARLRPG.lootBoxTiers[draft.tierKey];
   return createCardMessage({
-    title: actor
-      ? game.i18n.format("CARLRPG.Loot.CardTitleFor", { name: actor.name })
-      : game.i18n.localize("CARLRPG.Loot.CardTitle"),
+    title:
+      title ??
+      (actor
+        ? game.i18n.format("CARLRPG.Loot.CardTitleFor", { name: actor.name })
+        : game.i18n.localize("CARLRPG.Loot.CardTitle")),
     subtitle: tier ? game.i18n.localize(tier.label) : "",
     img: tier?.img,
     body: describeLoot(draft),

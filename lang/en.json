@@ -530,6 +530,7 @@
       "Cha": { "long": "Charisma", "abbr": "CHA" }
     },
     "SheetLabels": {
+      "Box": "CarlRPG Box Sheet",
       "Actor": "CarlRPG Actor Sheet",
       "Item": "CarlRPG Item Sheet",
       "LootBox": "CarlRPG Loot Box Sheet"
@@ -694,7 +695,8 @@
         "CollapseCustom": "Set Floor {floor}'s collapse timer and announce it."
       },
       "BossKilled": "Boss Killed",
-      "BossKilledHint": "Award Levels for a Boss kill by its tier (p.170).",
+      "BossKilledHint": "Award Levels for a Boss kill by its tier (p.170), and a Boss Box (p.22).",
+      "GiveBossBox": "Give each a Boss Box of its tier (p.22)",
       "BossKilledTitle": "Boss Killed",
       "BossTierLabel": "Boss tier",
       "BossTierOption": "{tier} (+{levels} Level(s))",
@@ -1927,6 +1929,34 @@
         }
       }
     },
+    "Box": {
+      "Name": "{tier} Box",
+      "BossName": "{tier} Boss Box",
+      "Strip": "Unopened Boxes",
+      "Unopened": "An unopened loot box. What's inside is a surprise.",
+      "Contents": "Contents",
+      "RandomHint": "Rolled for this crawler when it's opened. Prepare it to choose what's inside.",
+      "PrepareContents": "Prepare Contents",
+      "EditContents": "Edit Contents",
+      "PrepareTitle": "Prepare: {name}",
+      "Randomize": "Roll When Opened",
+      "Open": "Open Now",
+      "OpenedTitle": "{name} opened {box}",
+      "MissingContents": "{name} couldn't be opened: something prepared in it no longer exists. Edit its contents.",
+      "CharactersOnly": "Loot boxes only go to Characters.",
+      "Give": "Give Box",
+      "GiveHint": "Give crawlers an unopened loot box.",
+      "GiveTitle": "Give a Loot Box",
+      "GivePrompt": "Who gets one?",
+      "Title": "Title",
+      "TitlePlaceholder": "e.g. Bronze Crafter's Box (blank: Bronze Box)",
+      "Received": "{name} received a {box}.",
+      "Source": {
+        "achievement": "From an achievement",
+        "boss": "From a Boss kill",
+        "gift": "Given by the GM"
+      }
+    },
     "Degree": {
       "CriticalHit": "Critical Hit",
       "AmazingSuccess": "Amazing Success",
@@ -2348,7 +2378,7 @@
     "Actor": {
       "character": "Character",
       "mob": "Mob",
-      "lootBox": "Loot Box",
+      "lootBox": "Loot Box (Map)",
       "pet": "Pet",
       "vehicle": "Vehicle"
     },
@@ -2360,7 +2390,8 @@
       "spell": "Spell",
       "class": "Class",
       "race": "Race",
-      "mobAttack": "Mob Attack"
+      "mobAttack": "Mob Attack",
+      "box": "Loot Box"
     }
   }
 }

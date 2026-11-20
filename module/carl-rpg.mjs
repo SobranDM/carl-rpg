@@ -15,6 +15,7 @@ import { registerDeclaredMarks } from "./helpers/declared-marks.mjs";
 import { CarlRPGActorSheet } from "./sheets/actor-sheet.mjs";
 import { CarlRPGItemSheet } from "./sheets/item-sheet.mjs";
 import { CarlRPGLootBoxSheet } from "./sheets/loot-box-sheet.mjs";
+import { CarlRPGBoxSheet } from "./sheets/box-sheet.mjs";
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { CARLRPG } from "./helpers/config.mjs";
 import * as models from "./data/_module.mjs";
@@ -204,6 +205,7 @@ Hooks.once("init", function () {
     class: models.CarlRPGClass,
     race: models.CarlRPGRace,
     mobAttack: models.CarlRPGMobAttack,
+    box: models.CarlRPGBox,
   });
 
   foundry.applications.apps.DocumentSheetConfig.registerSheet(
@@ -230,6 +232,11 @@ Hooks.once("init", function () {
     types: ["item", "feature", "skill", "damageEffect", "spell", "class", "race", "mobAttack"],
     makeDefault: true,
     label: "CARLRPG.SheetLabels.Item",
+  });
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(Item, "carl-rpg", CarlRPGBoxSheet, {
+    types: ["box"],
+    makeDefault: true,
+    label: "CARLRPG.SheetLabels.Box",
   });
 
   return preloadHandlebarsTemplates();

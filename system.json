@@ -87,6 +87,9 @@
       },
       "mobAttack": {
         "htmlFields": ["description"]
+      },
+      "box": {
+        "htmlFields": ["description"]
       }
     }
   },
