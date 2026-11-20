@@ -9,6 +9,7 @@ import {
   magicItemUpdate,
   rerollEnchantment,
   statBonus,
+  uniqueMultiplier,
 } from "../../helpers/loot.mjs";
 import LootForge from "../../apps/loot-forge.mjs";
 import {
@@ -89,6 +90,19 @@ export default function register(quench) {
             "accessory",
           );
           assert.equal(itemTypeKind("Enchanted Mundane Item or Weapon"), "mundane");
+        });
+      });
+
+      describe("Something Unique (p.220)", function () {
+        it("is worth the roll it came up on and every roll it stopped", function () {
+          assert.equal(
+            uniqueMultiplier(3, 1),
+            3,
+            "first of a Platinum item's three: x3 (the book's example)",
+          );
+          assert.equal(uniqueMultiplier(2, 1), 2, "two rolls left: x2");
+          assert.equal(uniqueMultiplier(2, 2), 1, "the last roll: x1");
+          assert.equal(uniqueMultiplier(1, 1), 1, "an item's only roll: x1");
         });
       });
 

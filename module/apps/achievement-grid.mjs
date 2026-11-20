@@ -34,8 +34,8 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * "Show offline" is ticked - and achievements down the side, by grade. Each
  * cell is the achievement's icon: dimmed until the crawler has it (click to
  * award it), lit once awarded, with a check once its loot box is opened.
- * Click (or right-click) an awarded one to take it back, after a
- * confirmation. New Achievement, or an achievement's name, opens its editor
+ * Click an awarded one to take it back, after a confirmation. Right-click
+ * any to prepare that crawler's loot box for it. New Achievement, or an achievement's name, opens its editor
  * below the grid. For an achievement with a loot box, the editor lists the
  * crawlers: the GM can prepare what each one's box holds (ruled 2026-11-19:
  * per crawler) - before it's awarded, or after, until it's opened.
@@ -64,8 +64,12 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     body: { template: "systems/carl-rpg/templates/apps/achievement-grid.hbs" },
   };
 
-  /** Crawlers whose player isn't online are shown too. */
-  showOffline = false;
+  /**
+   * Crawlers whose player isn't online are shown too. Until the GM ticks or
+   * unticks it (null), it's on when no player is online (ruled 2026-11-19).
+   * @type {boolean|null}
+   */
+  showOffline = null;
 
   /** The uuid of the achievement open in the editor. */
   editing = null;
@@ -107,7 +111,8 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
   /** @override */
   async _prepareContext(options) {
     const groups = pickerGroups();
-    const columns = [...groups.active, ...(this.showOffline ? groups.other : [])];
+    const showOffline = this.showOffline ?? !groups.active.length;
+    const columns = [...groups.active, ...(showOffline ? groups.other : [])];
     const defs = await this.definitions();
     const tooltips = {};
     for (const def of defs) {
@@ -116,7 +121,7 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     const editing = defs.find((d) => d.uuid === this.editing) ?? null;
     if (!editing) this.editing = null;
     return {
-      showOffline: this.showOffline,
+      showOffline,
       columns: columns.map((a) => ({ id: a.id, name: a.name, img: a.img })),
       rows: defs.map((def) => ({
         uuid: def.uuid,
@@ -126,13 +131,21 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
         editing: def.uuid === this.editing,
         cells: columns.map((actor) => {
           const copy = awardedCopy(actor, def.uuid);
+          const data = { name: actor.name, achievement: def.name };
+          const tooltip = [
+            game.i18n.format(
+              copy ? "CARLRPG.Achievement.Grid.Awarded" : "CARLRPG.Achievement.Grid.Award",
+              data,
+            ),
+          ];
+          // Right-click: this crawler's loot box, until it's opened.
+          if (def.system.lootBox && boxState(actor, def).canPrepare) {
+            tooltip.push(game.i18n.localize("CARLRPG.Achievement.Grid.RightClickPrepare"));
+          }
           return {
             actorId: actor.id,
             state: copy ? (copy.system.rewarded ? "rewarded" : "awarded") : "none",
-            tooltip: game.i18n.format(
-              copy ? "CARLRPG.Achievement.Grid.Awarded" : "CARLRPG.Achievement.Grid.Award",
-              { name: actor.name, achievement: def.name },
-            ),
+            tooltip: tooltip.join(" "),
           };
         }),
       })),
@@ -190,10 +203,13 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
   /** @override */
   _onRender(context, options) {
     super._onRender(context, options);
-    for (const cell of this.element.querySelectorAll(".carl-grid-cell[data-state]")) {
-      cell.addEventListener("contextmenu", (event) => {
+    // Right-click a trophy: that crawler's loot box for it, as in the
+    // editor (ruled 2026-11-19). Taking an award back is a left-click.
+    for (const cell of this.element.querySelectorAll(".carl-grid-cell")) {
+      cell.addEventListener("contextmenu", async (event) => {
         event.preventDefault();
-        this.#onRevoke(cell);
+        const { actor, definition } = await this.#cellTargets(cell);
+        if (actor && definition) await this.#prepareFor(definition, actor);
       });
     }
     // The editor: each field saves as it changes.
@@ -298,10 +314,26 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
   static async #onPrepareFor(event, target) {
     const def = await this.#editingDoc();
     const actor = game.actors.get(target.closest("[data-actor-id]")?.dataset.actorId);
-    if (!def || !actor) return;
+    if (def && actor) await this.#prepareFor(def, actor);
+  }
+
+  /**
+   * Open the Loot Forge on a crawler's loot box for an achievement: nothing
+   * for one that gives no box, or whose box is opened.
+   * @param {Item} def
+   * @param {Actor} actor
+   */
+  async #prepareFor(def, actor) {
+    if (!def.system.lootBox) {
+      ui.notifications.info(game.i18n.localize("CARLRPG.Achievement.Grid.NoLootBox"));
+      return;
+    }
     const copy = awardedCopy(actor, def.uuid);
     const box = copy ? achievementBoxOf(copy) : null;
-    if (copy && !box) return;
+    if (copy && !box) {
+      ui.notifications.info(game.i18n.localize("CARLRPG.Achievement.Grid.BoxOpened"));
+      return;
+    }
     const tierKey = achievementBox(def)?.tierKey ?? def.system.grade;
     const draft = box
       ? await boxDraftForForge(box)

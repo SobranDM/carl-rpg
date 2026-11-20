@@ -157,7 +157,13 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
               ...e,
               prefix: `entries.${index}.enchantments.${j}`,
               effectIndex: j,
-              kindLabel: loc(`CARLRPG.Loot.Forge.Kind.${e.kind}`),
+              // Something Unique shows how powerful it is: xN (p.220).
+              kindLabel:
+                e.kind === "unique"
+                  ? game.i18n.format("CARLRPG.Loot.Forge.UniqueTimes", {
+                      times: e.multiplier ?? 1,
+                    })
+                  : loc(`CARLRPG.Loot.Forge.Kind.${e.kind}`),
               line: enchantmentLine(e),
               hasValue: VALUE_KINDS.includes(e.kind),
               statTarget: e.kind === "stat",

@@ -28,6 +28,7 @@ import {
   ensureAchievementLibrary,
   updateLibraryAchievement,
 } from "../../helpers/achievement-library.mjs";
+import { pickerGroups } from "../../apps/actor-picker.mjs";
 
 /**
  * Achievements (0.8.0 phase 4, docs/loot-and-achievements.md; p.21,
@@ -338,6 +339,49 @@ export default function register(quench) {
             await waitFor(() => awardedCopy(actor, def.uuid));
             await waitFor(() => cell()?.classList.contains("carl-grid-rewarded"));
           } finally {
+            await grid.close();
+            await deleteTestActor(actor);
+            await deleteLibraryAchievement(def);
+          }
+        });
+
+        it("shows crawlers whose player is offline when no player is online, until the GM chooses", async function () {
+          const grid = AchievementGrid.open();
+          try {
+            await waitFor(() => grid.rendered);
+            const noneOnline = pickerGroups().active.length === 0;
+            assert.equal((await grid._prepareContext({})).showOffline, noneOnline);
+            grid.showOffline = false;
+            assert.isFalse((await grid._prepareContext({})).showOffline, "the GM's choice stands");
+          } finally {
+            await grid.close();
+          }
+        });
+
+        it("right-clicking a trophy prepares that crawler's loot box (ruled 2026-11-19)", async function () {
+          const def = await makeDefinition();
+          const actor = await createTestCharacter("right click");
+          const grid = AchievementGrid.open();
+          const forges = () =>
+            [...foundry.applications.instances.values()].filter(
+              (app) => app.constructor.name === "LootForge" && app.recipient === actor,
+            );
+          try {
+            await waitFor(() => grid.rendered);
+            grid.showOffline = true;
+            await grid.render();
+            const cell = () =>
+              grid.element.querySelector(
+                `tr[data-uuid="${def.uuid}"] .carl-grid-cell[data-actor-id="${actor.id}"]`,
+              );
+            await waitFor(() => cell());
+            cell().dispatchEvent(
+              new MouseEvent("contextmenu", { bubbles: true, cancelable: true }),
+            );
+            await waitFor(() => forges().length === 1, { timeout: 15000 });
+            assert.isNull(awardedCopy(actor, def.uuid), "not awarded by it");
+          } finally {
+            for (const forge of forges()) await forge.close();
             await grid.close();
             await deleteTestActor(actor);
             await deleteLibraryAchievement(def);

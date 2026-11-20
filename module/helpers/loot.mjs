@@ -194,7 +194,7 @@ export async function generateMagicDraft(
       const text = uniqueTable
         ? ((await uniqueTable.roll({ recursive: false })).results[0]?.name ?? "")
         : "";
-      enchantments.push({ kind: "unique", text, multiplier: tier.rolls - i + 1 });
+      enchantments.push({ kind: "unique", text, multiplier: uniqueMultiplier(tier.rolls, i) });
       break;
     }
     const text = rolled.find((r) => r.type === "text")?.name ?? "";
@@ -212,6 +212,19 @@ export async function generateMagicDraft(
     accessoryKind: "",
   };
   return autofillMagicDraft(draft, { recipient, floor });
+}
+
+/**
+ * How powerful a Something Unique is (p.220): "Stop rolling when you roll
+ * 'Something Unique'... extra powerful for each roll you missed out on" -
+ * this roll and every one skipped. On the first of a Platinum item's three
+ * rolls it's x3; on the last roll (or an item's only one), x1.
+ * @param {number} rolls  The item's rolls (its tier's).
+ * @param {number} rollNumber  Which roll it came up on, from 1.
+ * @returns {number}
+ */
+export function uniqueMultiplier(rolls, rollNumber) {
+  return Math.max(1, rolls - rollNumber + 1);
 }
 
 /**
