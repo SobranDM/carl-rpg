@@ -466,14 +466,15 @@ export default function register(quench) {
             ]),
           });
           try {
-            await createTestItem(actor, "skill", "Lockpicking", {
+            // createTestItem names it "Quench Lockpicking <id>".
+            const owned = await createTestItem(actor, "skill", "Lockpicking", {
               system: { rank: 1, category: "utility" },
             });
             const before = forge.element.querySelector('[name="recipientId"]');
             edit(forge, "recipientId", actor.id);
             await waitFor(() => forge.recipient?.id === actor.id);
             const [stat, skill] = forge.draft.entries[0].enchantments;
-            await waitFor(() => skill.target === "Lockpicking");
+            await waitFor(() => skill.target === owned.name);
             // Let the redraw finish before closing.
             await waitFor(() => forge.element.querySelector('[name="recipientId"]') !== before);
             assert.equal(stat.value, 6, "10% of 60, worked out again");
