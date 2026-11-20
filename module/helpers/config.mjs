@@ -649,6 +649,7 @@ CARLRPG.consumableMend = {
   "": "CARLRPG.Consumable.Mend.none",
   minor: "CARLRPG.Consumable.Mend.minor",
   any: "CARLRPG.Consumable.Mend.any",
+  all: "CARLRPG.Consumable.Mend.all",
 };
 CARLRPG.consumablePermanent = {
   "": "CARLRPG.Consumable.Permanent.none",

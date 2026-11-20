@@ -15,7 +15,7 @@
       "heal": {
         "slots": 9,
         "full": false,
-        "mend": "any"
+        "mend": "all"
       },
       "mana": {
         "amount": null,

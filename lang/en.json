@@ -1454,7 +1454,8 @@
       "Mend": {
         "none": "Nothing",
         "minor": "One Minor Injury",
-        "any": "One Minor or Major Injury"
+        "any": "One Minor or Major Injury",
+        "all": "All Injuries"
       },
       "ManaAmount": "Restore Mana",
       "ManaFull": "Full Mana",
@@ -1529,6 +1530,7 @@
         "HealFull": "Heals to full",
         "MendMinor": "Mends one Minor Injury",
         "MendAny": "Mends one Minor or Major Injury",
+        "MendAll": "Mends all Injuries",
         "Mana": "Restores {amount} Mana",
         "ManaFull": "Restores full Mana",
         "Cure": "Cures {debuff}",

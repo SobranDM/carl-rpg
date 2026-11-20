@@ -50,6 +50,9 @@ import { isInCombat, noteUndo, takeAction } from "./actions.mjs";
 import { esc } from "./html.mjs";
 import { fightStamp } from "./fights.mjs";
 
+/** Every Injury a "mends all Injuries" potion ends (Table 11). */
+const ALL_INJURIES = ["minorInjury", "majorInjury", "longTermMinorInjury", "longTermMajorInjury"];
+
 // "Each crawler may only consume two Stat potions and two Skill potions
 // during the entirety of their short life" (p.218).
 export const PERMANENT_POTION_LIMIT = 2;
@@ -515,16 +518,25 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
     lines.push(gained ? fmt("Healed", { slots: gained }) : fmt("AlreadyHealthy"));
   }
 
-  // Mend one Minor Injury - or, for "any", the worse of a Major or Minor.
+  // Mend one Minor Injury - or, for "any", the worse of a Major or Minor;
+  // for "all", every Injury, Long-Term ones too ("mends all Injuries",
+  // Heal Severe Injury Potion, p.218; ruled 2026-11-19).
   // Mending is healing: The Taint stops it.
   if (heal.mend && !healBlocked()) {
-    const order = heal.mend === "any" ? ["majorInjury", "minorInjury"] : ["minorInjury"];
-    const index = order
-      .map((key) => conditions.findIndex((c) => c.key === key))
-      .find((i) => i >= 0);
-    if (index !== undefined) {
-      const [mended] = conditions.splice(index, 1);
-      lines.push(fmt("Mended", { debuff: esc(conditionLabel(mended)) }));
+    if (heal.mend === "all") {
+      const injuries = conditions.filter((c) => ALL_INJURIES.includes(c.key));
+      conditions = conditions.filter((c) => !ALL_INJURIES.includes(c.key));
+      for (const mended of injuries)
+        lines.push(fmt("Mended", { debuff: esc(conditionLabel(mended)) }));
+    } else {
+      const order = heal.mend === "any" ? ["majorInjury", "minorInjury"] : ["minorInjury"];
+      const index = order
+        .map((key) => conditions.findIndex((c) => c.key === key))
+        .find((i) => i >= 0);
+      if (index !== undefined) {
+        const [mended] = conditions.splice(index, 1);
+        lines.push(fmt("Mended", { debuff: esc(conditionLabel(mended)) }));
+      }
     }
   }
 

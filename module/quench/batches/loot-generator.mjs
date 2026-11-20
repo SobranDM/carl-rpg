@@ -18,6 +18,8 @@ import {
   deleteTestActor,
   useQuenchTimeout,
 } from "../helpers.mjs";
+import { useConsumable } from "../../helpers/consumables.mjs";
+import { addConditionToActor } from "../../helpers/conditions.mjs";
 
 /**
  * The loot generator (0.8.0, docs/loot-and-achievements.md; Loot,
@@ -250,6 +252,33 @@ export default function register(quench) {
             "Ring of Tests",
             "the draft rides along for the Forge",
           );
+        });
+      });
+
+      describe("Mending all Injuries (Heal Severe Injury Potion, p.218; ruled 2026-11-19)", function () {
+        useQuenchTimeout(this);
+
+        it("a potion that mends all ends every Injury, Long-Term ones too", async function () {
+          const actor = await createTestCharacter("mend all", { system: { hb: { value: 1 } } });
+          try {
+            for (const key of ["minorInjury", "majorInjury", "longTermMinorInjury", "blinded"]) {
+              await addConditionToActor(actor, key);
+            }
+            const potion = await createTestItem(actor, "item", "severe", {
+              system: {
+                quantity: 1,
+                consumable: { kind: "potion", heal: { slots: 9, mend: "all" } },
+              },
+            });
+            await useConsumable(actor, potion, { skipDialog: true });
+            const keys = actor.system.conditions.map((c) => c.key);
+            assert.notInclude(keys, "minorInjury");
+            assert.notInclude(keys, "majorInjury");
+            assert.notInclude(keys, "longTermMinorInjury");
+            assert.include(keys, "blinded", "other Debuffs stay");
+          } finally {
+            await deleteTestActor(actor);
+          }
         });
       });
     },

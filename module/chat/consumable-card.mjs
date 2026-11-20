@@ -30,6 +30,7 @@ export function describeConsumable(effects, itemName = "") {
   else if (heal.slots) out.push(t("Heal", { slots: heal.slots }));
   if (heal.mend === "minor") out.push(t("MendMinor"));
   else if (heal.mend === "any") out.push(t("MendAny"));
+  else if (heal.mend === "all") out.push(t("MendAll"));
   const mana = effects.mana ?? {};
   if (mana.full) out.push(t("ManaFull"));
   else if (mana.amount) out.push(t("Mana", { amount: mana.amount }));

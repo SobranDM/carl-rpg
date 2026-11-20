@@ -82,11 +82,9 @@ export default function register(quench) {
         });
 
         it("the compendium's Skills have their setting boxes ticked: Needs no weapon, No Damage Effects, Commands pets", async function () {
-          const index = await game.packs
-            .get(PACK)
-            .getIndex({
-              fields: ["system.noWeapon", "system.noDamageEffects", "system.commandsPets"],
-            });
+          const index = await game.packs.get(PACK).getIndex({
+            fields: ["system.noWeapon", "system.noDamageEffects", "system.commandsPets"],
+          });
           const ticked = (box) =>
             index
               .filter((e) => e.system?.[box])

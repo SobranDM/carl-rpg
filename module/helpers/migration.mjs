@@ -1549,12 +1549,10 @@ export async function migrateGearSlots({ fail = NO_FAIL } = {}) {
   const noteUnplaced = (where, item, owned = true) => {
     if (!unplaced.has(where)) unplaced.set(where, []);
     // Only an actor's gear is taken off (unequipMisfits).
-    unplaced
-      .get(where)
-      .push({
-        name: item.name,
-        takenOff: owned && !!item.system?.equipped && !heldOrWearable(item),
-      });
+    unplaced.get(where).push({
+      name: item.name,
+      takenOff: owned && !!item.system?.equipped && !heldOrWearable(item),
+    });
   };
   const removed = [];
 
