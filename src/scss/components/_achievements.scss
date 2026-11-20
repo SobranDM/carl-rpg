@@ -182,13 +182,14 @@
     }
   }
 
+  // Not awarded yet: dimmed, keeping its grade's colour (grayscale made
+  // Bronze read as dark silver, and every grade alike).
   .carl-grid-none img {
-    filter: grayscale(1) drop-shadow(0 0 1px rgba(255, 255, 255, 0.85));
-    opacity: 0.3;
+    opacity: 0.4;
   }
 
   .carl-grid-none:hover img {
-    opacity: 0.7;
+    opacity: 0.8;
   }
 
   // Gold: ~12:1 on the cell's dark ground.
