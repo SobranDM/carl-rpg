@@ -202,6 +202,7 @@ export function openBox(box) {
         quantity: Number(d.system?.quantity) || 1,
       })),
     };
+    await markRewarded(live);
     await live.delete();
     await postLootCard(draft, {
       actor,
@@ -212,4 +213,19 @@ export function openBox(box) {
     });
     return summary;
   });
+}
+
+/**
+ * The achievement a box came from is rewarded once the box is opened
+ * (data/achievement.mjs `rewarded`).
+ * @param {Item} box
+ * @returns {Promise<void>}
+ */
+async function markRewarded(box) {
+  const { kind, uuid } = box.system.source;
+  if (kind !== "achievement" || !uuid) return;
+  const copy = await fromUuid(uuid);
+  if (copy?.type === "achievement" && !copy.system.rewarded) {
+    await copy.update({ "system.rewarded": true });
+  }
 }

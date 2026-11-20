@@ -1,0 +1,50 @@
+{{!-- The GM's Achievements grid (module/apps/achievement-grid.mjs):
+      crawlers across, achievements down. A dimmed icon: click to award; a
+      lit one: awarded (a check once its box is opened); right-click to
+      take it back. --}}
+<div class="carl-grid">
+  <div class="carl-grid-controls">
+    <label class="checkbox">
+      <input type="checkbox" data-action="toggleOffline" {{#if showOffline}}checked{{/if}} />
+      {{localize "CARLRPG.Achievement.Grid.ShowOffline"}}
+    </label>
+    <label>
+      {{localize "CARLRPG.Achievement.Grid.Pack"}}
+      <select name="packId">{{selectOptions packChoices selected=packId localize=true}}</select>
+    </label>
+  </div>
+  {{#if columns.length}}
+  {{#if rows.length}}
+  <div class="carl-grid-scroll">
+    <table class="carl-grid-table">
+      <thead>
+        <tr>
+          <th></th>
+          {{#each columns as |c|}}
+          <th class="carl-grid-crawler"><img src="{{c.img}}" alt="" /><span>{{c.name}}</span></th>
+          {{/each}}
+        </tr>
+      </thead>
+      <tbody>
+        {{#each rows as |row|}}
+        <tr data-uuid="{{row.uuid}}">
+          <th class="carl-grid-achievement"{{itemTooltip row.tooltip}}>{{row.name}}</th>
+          {{#each row.cells as |cell|}}
+          <td class="carl-grid-cell carl-grid-{{cell.state}}" data-action="award" data-actor-id="{{cell.actorId}}"
+            {{#unless (eq cell.state "none")}}data-state="{{cell.state}}"{{/unless}} data-tooltip-text="{{cell.tooltip}}">
+            <img src="{{row.img}}" alt="" />
+            {{#if (eq cell.state "rewarded")}}<i class="fas fa-check carl-grid-check"></i>{{/if}}
+          </td>
+          {{/each}}
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  {{else}}
+  <p class="carl-hint">{{localize "CARLRPG.Achievement.Grid.NoAchievements"}}</p>
+  {{/if}}
+  {{else}}
+  <p class="carl-hint">{{localize "CARLRPG.Achievement.Grid.NoCrawlers"}}</p>
+  {{/if}}
+</div>

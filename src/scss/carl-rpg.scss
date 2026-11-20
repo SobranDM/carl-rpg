@@ -28,6 +28,7 @@
 @use "components/item-sheet";
 @use "components/loot-forge";
 @use "components/boxes";
+@use "components/achievements";
 
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
@@ -55,6 +56,7 @@
   @include item-sheet.styles;
   @include loot-forge.styles;
   @include boxes.styles;
+  @include achievements.styles;
 }
 
 /* An item's description as its Foundry tooltip (the itemTooltip helper).

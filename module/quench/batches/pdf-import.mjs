@@ -527,11 +527,17 @@ export default function register(quench) {
           it(`reads a box tilted ${angle} degrees`, function () {
             const [found] = parseAchievements([achievementPage(angle)]);
             assert.equal(found.name, "Test Pilot!");
-            const html = found.data.text.content;
-            assert.include(html, "You pressed every button in the cockpit. Some of them twice.");
-            assert.include(html, "<strong>Reward:</strong> You've received a Bronze Button Box!");
-            assert.include(html, "<strong>Contents:</strong> One big red button");
-            assert.notInclude(html, "body prose");
+            assert.equal(found.data.type, "achievement");
+            const sys = found.data.system;
+            assert.include(
+              sys.description,
+              "You pressed every button in the cockpit. Some of them twice.",
+            );
+            assert.equal(sys.reward, "You've received a Bronze Button Box!");
+            assert.equal(sys.grade, "bronze");
+            assert.isTrue(sys.lootBox, "the Reward gives a loot box");
+            assert.equal(sys.contents, "One big red button");
+            assert.notInclude(JSON.stringify(sys), "body prose");
           });
         }
       });
@@ -1600,7 +1606,7 @@ export default function register(quench) {
           assert.deepEqual(first.mobs, { created: 2, updated: 0, skipped: [] });
           assert.deepEqual(first.achievements, { created: 1, updated: 0, skipped: [] });
 
-          for (const type of ["Actor", "Item", "JournalEntry"]) {
+          for (const type of ["Actor", "Item"]) {
             const pack = findBookPack(book, type);
             assert.ok(pack, `a ${type} compendium`);
             assert.equal(pack.metadata.packageType, "world");
@@ -1642,8 +1648,13 @@ export default function register(quench) {
           const queen = await docNamed(book, "Actor", "Test Blob Queen");
           assert.isTrue(queen.prototypeToken.actorLink, "a Boss imports linked");
           assert.isFalse(blob.prototypeToken.actorLink, "a Mob imports unlinked");
-          const [journal] = await docsOf(book, "JournalEntry");
-          assert.equal(journal.pages.size, 1);
+          const pilot = await docNamed(book, "Item", "Test Pilot!");
+          assert.equal(pilot.type, "achievement", "achievements are Achievement items");
+          assert.equal(
+            itemPack.folders.get(pilot._source.folder)?.name,
+            game.i18n.localize("CARLRPG.PdfImport.Kind.achievements"),
+          );
+          assert.isNull(findBookPack(book, "JournalEntry"), "no achievements journal");
 
           const second = await importBook({ book, title, found, kinds, maps: [] });
           assert.include(second.items, { created: 0, updated: 1 });
@@ -1969,16 +1980,15 @@ export default function register(quench) {
           assert.isNull(findBookPack(undefined, "Item"), "no book, no pack");
         });
 
-        it("finds the achievements journal by its flag, not its name", async function () {
+        it("an achievement the GM edited isn't overwritten by a re-import", async function () {
           const found = { ...none, achievements: parseAchievements([achievementPage(0)]) };
           await importBook({ book, title, found, kinds: ["achievements"], maps: [] });
-          const [journal] = await docsOf(book, "JournalEntry");
-          await journal.update({ name: "Test Renamed Achievements" });
+          const pilot = await docNamed(book, "Item", "Test Pilot!");
+          await pilot.update({ "system.reward": "The GM's own reward" });
           const again = await importBook({ book, title, found, kinds: ["achievements"], maps: [] });
-          assert.equal(again.achievements.created, 0, "its pages are updated, not made again");
-          const journals = await docsOf(book, "JournalEntry");
-          assert.lengthOf(journals, 1, "no second journal");
-          assert.equal(journals[0].name, "Test Renamed Achievements");
+          assert.deepEqual(again.achievements.skipped, ["Test Pilot!"]);
+          const kept = await docNamed(book, "Item", "Test Pilot!");
+          assert.equal(kept.system.reward, "The GM's own reward");
         });
       });
     },

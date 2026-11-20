@@ -531,6 +531,7 @@
     },
     "SheetLabels": {
       "Box": "CarlRPG Box Sheet",
+      "Achievement": "CarlRPG Achievement Sheet",
       "Actor": "CarlRPG Actor Sheet",
       "Item": "CarlRPG Item Sheet",
       "LootBox": "CarlRPG Loot Box Sheet"
@@ -1929,6 +1930,39 @@
         }
       }
     },
+    "Achievement": {
+      "New": "New Achievement!",
+      "Plural": "Achievements",
+      "Reward": "Reward",
+      "RewardPlaceholder": "e.g. You've received a Bronze Crafter's Box!",
+      "Grade": "Grade",
+      "LootBox": "Gives a loot box",
+      "LootBoxHint": "Awarding it gives the crawler a loot box of its grade, titled from the Reward (\"Bronze Crafter's Box\").",
+      "Contents": "GM note (the box's contents)",
+      "AwardedOn": "Awarded on Floor {floor}.",
+      "BoxOpened": "Its loot box has been opened.",
+      "BoxUnopened": "Its loot box hasn't been opened yet.",
+      "CardSubtitle": "{name}: {achievement}",
+      "DropRefused": "Only the GM awards achievements, to a Character: drop it on their sheet, or use the Achievements grid.",
+      "Settings": {
+        "PostToChat": "Post achievements to chat",
+        "PostToChatHint": "When an achievement is awarded, post it to chat for everyone. Off: only the crawler's player sees it, in its splash."
+      },
+      "Grid": {
+        "Title": "Achievements",
+        "Button": "Achievements",
+        "Hint": "Award achievements to crawlers.",
+        "ShowOffline": "Show crawlers whose player is offline",
+        "Pack": "Also list from",
+        "NoPack": "(the Items sidebar only)",
+        "Award": "Award {achievement} to {name}",
+        "Awarded": "{name} has {achievement}. Click to read it; right-click to take it back.",
+        "RevokeTitle": "Take Back an Achievement",
+        "RevokeText": "Take {achievement} back from {name}? Its loot box goes too, if it hasn't been opened.",
+        "NoAchievements": "No achievements yet. Make some in the Items sidebar, or pick a compendium above.",
+        "NoCrawlers": "No crawlers to show. Tick \"Show crawlers whose player is offline\" to see the rest."
+      }
+    },
     "Box": {
       "Name": "{tier} Box",
       "BossName": "{tier} Boss Box",
@@ -2391,7 +2425,8 @@
       "class": "Class",
       "race": "Race",
       "mobAttack": "Mob Attack",
-      "box": "Loot Box"
+      "box": "Loot Box",
+      "achievement": "Achievement"
     }
   }
 }

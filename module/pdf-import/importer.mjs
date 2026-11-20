@@ -38,6 +38,8 @@ const SCOPE = "carl-rpg";
 const FLAG = "pdfImport";
 
 /** A book's compendium for each document type: its name suffix and label. */
+// JournalEntry: the achievements journal of an import before 0.8.0 (they're
+// Achievement items now), still found by findBookPack.
 const PACK_KINDS = { Actor: "mobs", Item: "items", JournalEntry: "achievements" };
 
 /** The flags every imported document carries (its stamp is added after the write). */
@@ -503,43 +505,6 @@ function withSkillNames(entry, match, matched) {
   return { ...entry, data: { ...entry.data, system: { ...entry.data.system, changes: named } } };
 }
 
-async function importAchievements(pack, pages, book) {
-  const name = game.i18n.localize("CARLRPG.PdfImport.Achievements");
-  const options = { pack: pack.collection };
-  // By its flag, not its name: a GM may have renamed it, or play in another language.
-  let entry = (await pack.getDocuments()).find((e) => bookOfFlag(e.getFlag(SCOPE, FLAG)) === book);
-  entry ??= await JournalEntry.implementation.create({ name, flags: importFlags(book) }, options);
-  const existing = new Map(entry.pages.map((p) => [p.name, p]));
-  const creates = [];
-  const updates = [];
-  const updated = [];
-  const skipped = [];
-  const data = new Map();
-  for (const page of dedupe(pages)) {
-    data.set(page.name, page.data);
-    const flags = importFlags(book, page.page);
-    const old = existing.get(page.name);
-    if (old) {
-      if (importState(old._source, old.flags?.[SCOPE]?.[FLAG]) !== "untouched")
-        skipped.push(old.name);
-      else {
-        updates.push({ ...page.data, flags, _id: old.id });
-        updated.push(old);
-      }
-    } else creates.push({ ...page.data, flags });
-  }
-  const made = creates.length
-    ? ((await entry.createEmbeddedDocuments("JournalEntryPage", creates)) ?? [])
-    : [];
-  if (updates.length) await entry.updateEmbeddedDocuments("JournalEntryPage", updates);
-  await stamp(
-    [...made, ...updated.map((p) => entry.pages.get(p.id) ?? p)],
-    (p) => data.get(p.name),
-    (stamps) => entry.updateEmbeddedDocuments("JournalEntryPage", stamps),
-  );
-  return { created: creates.length, updated: updates.length, skipped };
-}
-
 async function importMaps(folder, maps, { pdfDoc, book, onProgress }) {
   let created = 0;
   let updated = 0;
@@ -641,10 +606,15 @@ export async function importBook({ book, title, found, kinds, maps, pdfDoc, onPr
   }
   if (kinds.includes("achievements") && found.achievements.length) {
     step("achievements");
-    const pack = await bookPack(book, title, "JournalEntry");
-    results.achievements = await withUnlockedPack(pack, () =>
-      importAchievements(pack, found.achievements, book),
-    );
+    // Achievement items (data/achievement.mjs) in the book's Item compendium,
+    // in their own folder - the GM's Achievements grid lists them from there.
+    const pack = await bookPack(book, title, "Item");
+    results.achievements = await withUnlockedPack(pack, async () => {
+      const folder = (
+        await packFolder(pack, game.i18n.localize("CARLRPG.PdfImport.Kind.achievements"))
+      ).id;
+      return upsert(pack, found.achievements, book, { place: async () => ({ folder }) });
+    });
   }
   if (maps.length) {
     const label = game.i18n.localize("CARLRPG.PdfImport.Kind.maps");

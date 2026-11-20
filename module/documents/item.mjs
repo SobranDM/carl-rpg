@@ -68,6 +68,7 @@ export class CarlRPGItem extends Item {
     const allowed = await super._preCreate(data, options, user);
     if (allowed === false) return false;
     if (this.type === "box") return this.#preCreateBox(data, user);
+    if (this.type === "achievement") this.#gradeArt(data.img, null, this.system.grade);
     if (this.type === "spell" && this.parent && (this.system.rank ?? 0) < 1) {
       this.updateSource({ "system.rank": 1 });
     }
@@ -155,6 +156,26 @@ export class CarlRPGItem extends Item {
   }
 
   /**
+   * An Achievement's icon is its grade's (CONFIG.CARLRPG.lootBoxTiers
+   * achievementImg) - unless the GM gave it other art.
+   * @param {string|undefined} img  Its art now.
+   * @param {string|null} oldGrade  The grade it had (null: a new one).
+   * @param {string} grade
+   * @param {boolean} [apply]  Set it here (on create) or return it.
+   * @returns {string|null}  The new art, if it changes.
+   */
+  #gradeArt(img, oldGrade, grade, apply = true) {
+    const tiers = CONFIG.CARLRPG.lootBoxTiers;
+    const art = tiers[grade]?.achievementImg;
+    const ownArt = oldGrade
+      ? img !== tiers[oldGrade]?.achievementImg
+      : img && img !== Item.DEFAULT_ICON;
+    if (!art || ownArt) return null;
+    if (apply) this.updateSource({ img: art });
+    return art;
+  }
+
+  /**
    * A player can't delete a Box (opening it is what removes it).
    * @override
    */
@@ -177,6 +198,13 @@ export class CarlRPGItem extends Item {
   async _preUpdate(changed, options, user) {
     if ((await super._preUpdate(changed, options, user)) === false) return false;
     if (this.type === "box") return this.#preUpdateBox(changed, user);
+    if (this.type === "achievement") {
+      const grade = foundry.utils.getProperty(changed, "system.grade");
+      if (grade && grade !== this.system.grade && !changed.img) {
+        const art = this.#gradeArt(this.img, this.system.grade, grade, false);
+        if (art) changed.img = art;
+      }
+    }
     // Where it's worn changed while it's worn: off whatever it no longer fits.
     const slotFields = ["system.slots", "system.twoHanded", "system.accessoryKind"].some((p) =>
       foundry.utils.hasProperty(changed, p),

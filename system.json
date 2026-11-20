@@ -90,6 +90,9 @@
       },
       "box": {
         "htmlFields": ["description"]
+      },
+      "achievement": {
+        "htmlFields": ["description"]
       }
     }
   },

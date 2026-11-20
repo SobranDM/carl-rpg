@@ -1,0 +1,312 @@
+import {
+  achievementsOf,
+  awardAchievement,
+  awardedCopy,
+  definitionOf,
+  revokeAchievement,
+} from "../../helpers/achievements.mjs";
+import { rewardBox } from "../../helpers/reward-text.mjs";
+import { openBox } from "../../helpers/boxes.mjs";
+import { currentFloor } from "../../helpers/floor.mjs";
+import AchievementSplash from "../../apps/achievement-splash.mjs";
+import AchievementGrid from "../../apps/achievement-grid.mjs";
+import {
+  createTestCharacter,
+  deleteTestActor,
+  useQuenchTimeout,
+  waitFor,
+  withSetting,
+} from "../helpers.mjs";
+
+/**
+ * Achievements (0.8.0 phase 4, docs/loot-and-achievements.md; p.21,
+ * Appendix 3): definitions, awarding one (the copy, its loot box), taking it
+ * back, the splash, the chat setting and the GM's grid.
+ */
+async function makeDefinition(system = {}, name = "Quench Button Masher") {
+  return Item.implementation.create({
+    name: `${name} ${foundry.utils.randomID()}`,
+    type: "achievement",
+    system: {
+      description: "<p>You pressed every button.</p>",
+      reward: "You've received a Bronze Crafter's Box!",
+      grade: "bronze",
+      lootBox: true,
+      contents: "One big red button",
+      ...system,
+    },
+  });
+}
+
+export default function register(quench) {
+  quench.registerBatch(
+    "carl-rpg.achievements",
+    (context) => {
+      const { describe, it, assert } = context;
+
+      describe("The Reward line (helpers/reward-text.mjs)", function () {
+        it("names a loot box, its tier and its title", function () {
+          assert.deepEqual(rewardBox("You've received a Bronze Crafter's Box!"), {
+            tier: "bronze",
+            title: "Bronze Crafter's Box",
+          });
+          assert.deepEqual(rewardBox("You've received a Platinum Boss Box."), {
+            tier: "platinum",
+            title: "Platinum Boss Box",
+          });
+          assert.isNull(rewardBox("You've received a title: Button Lord."));
+          assert.isNull(rewardBox(""));
+        });
+      });
+
+      describe("Definitions", function () {
+        useQuenchTimeout(this);
+
+        it("its icon is its grade's, and follows a new grade", async function () {
+          const def = await makeDefinition({ grade: "gold" });
+          try {
+            const tiers = CONFIG.CARLRPG.lootBoxTiers;
+            assert.equal(def.img, tiers.gold.achievementImg);
+            await def.update({ "system.grade": "celestial" });
+            assert.equal(def.img, tiers.celestial.achievementImg);
+          } finally {
+            await def.delete();
+          }
+        });
+      });
+
+      describe("Awarding (GM)", function () {
+        useQuenchTimeout(this, 30000);
+
+        it("a copy on the crawler and a loot box from its Reward; not twice", async function () {
+          const def = await makeDefinition();
+          const actor = await createTestCharacter("achiever");
+          try {
+            const copy = await awardAchievement(def, actor);
+            assert.exists(copy);
+            assert.equal(definitionOf(copy), def.uuid);
+            assert.equal(awardedCopy(actor, def.uuid)?.id, copy.id);
+            assert.isFalse(copy.system.seen, "its player hasn't seen it yet");
+            assert.isFalse(copy.system.rewarded, "its box isn't opened yet");
+            assert.equal(copy.system.awardedFloor, currentFloor());
+            const box = actor.items.find((i) => i.type === "box");
+            assert.exists(box, "a loot box");
+            assert.equal(box.name, "Bronze Crafter's Box");
+            assert.equal(box.system.tier, "bronze");
+            assert.equal(box.system.source.kind, "achievement");
+            assert.equal(box.system.source.uuid, copy.uuid);
+
+            assert.isNull(await awardAchievement(def, actor), "already has it");
+            assert.lengthOf(achievementsOf(actor), 1);
+            assert.lengthOf(
+              actor.items.filter((i) => i.type === "box"),
+              1,
+            );
+          } finally {
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+
+        it("two awards at once (a double-click): awarded once, one box", async function () {
+          const def = await makeDefinition();
+          const actor = await createTestCharacter("double click");
+          try {
+            const copies = await Promise.all([
+              awardAchievement(def, actor),
+              awardAchievement(def, actor),
+            ]);
+            assert.lengthOf(copies.filter(Boolean), 1);
+            assert.lengthOf(achievementsOf(actor), 1);
+            assert.lengthOf(
+              actor.items.filter((i) => i.type === "box"),
+              1,
+            );
+          } finally {
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+
+        it("dropped on a Character's sheet by the GM: awarded, not just copied", async function () {
+          const def = await makeDefinition({ lootBox: false });
+          const actor = await createTestCharacter("dropped");
+          try {
+            await actor.sheet._onDropItem(new DragEvent("drop"), def);
+            const copy = awardedCopy(actor, def.uuid);
+            assert.exists(copy, "awarded, with its definition");
+            assert.isFalse(copy.system.seen);
+          } finally {
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+
+        it("Escape doesn't close the splash", async function () {
+          const def = await makeDefinition({ lootBox: false });
+          const actor = await createTestCharacter("escape");
+          let app = null;
+          try {
+            const copy = await awardAchievement(def, actor);
+            app = AchievementSplash.show(copy);
+            await waitFor(() => app.rendered);
+            await app.close({ closeKey: true });
+            assert.isTrue(app.rendered, "still up");
+            assert.isFalse(actor.items.get(copy.id).system.seen);
+          } finally {
+            await app?.close();
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+
+        it("one without a loot box: no box, and nothing left to reward", async function () {
+          const def = await makeDefinition({ lootBox: false, reward: "A title: Button Lord" });
+          const actor = await createTestCharacter("no box");
+          try {
+            const copy = await awardAchievement(def, actor);
+            assert.isTrue(copy.system.rewarded);
+            assert.isFalse(actor.items.some((i) => i.type === "box"));
+          } finally {
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+
+        it("opening its box marks it rewarded", async function () {
+          const def = await makeDefinition();
+          const actor = await createTestCharacter("rewarded");
+          try {
+            const copy = await awardAchievement(def, actor);
+            const box = actor.items.find((i) => i.type === "box");
+            assert.exists(await openBox(box), "the box tables are there");
+            assert.isTrue(actor.items.get(copy.id).system.rewarded);
+          } finally {
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+
+        it("taking it back takes its unopened box too", async function () {
+          const def = await makeDefinition();
+          const actor = await createTestCharacter("revoked");
+          try {
+            const copy = await awardAchievement(def, actor);
+            await revokeAchievement(copy);
+            assert.isNull(awardedCopy(actor, def.uuid));
+            assert.isFalse(actor.items.some((i) => i.type === "box"));
+          } finally {
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+
+        it("chat: none unless the setting is on, then a public card (ruled 2026-11-19)", async function () {
+          const def = await makeDefinition({ lootBox: false });
+          const actor = await createTestCharacter("chat");
+          try {
+            const before = game.messages.size;
+            await withSetting("postAchievementsToChat", false, () => awardAchievement(def, actor));
+            assert.equal(game.messages.size, before, "off: no card at all");
+            await revokeAchievement(awardedCopy(actor, def.uuid));
+            await withSetting("postAchievementsToChat", true, () => awardAchievement(def, actor));
+            assert.equal(game.messages.size, before + 1);
+            const card = game.messages.contents.at(-1);
+            assert.isEmpty(card.whisper, "public");
+            assert.include(card.content, def.name);
+          } finally {
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+      });
+
+      describe("The splash (ruled 2026-11-19)", function () {
+        useQuenchTimeout(this);
+
+        it("isn't shown to the GM who awarded it", async function () {
+          const def = await makeDefinition({ lootBox: false });
+          const actor = await createTestCharacter("splash");
+          try {
+            const copy = await awardAchievement(def, actor);
+            assert.isFalse(AchievementSplash.showsHere(copy));
+            assert.isUndefined(foundry.applications.instances.get(`carl-achievement-${copy.id}`));
+          } finally {
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+
+        it("shows the achievement, and closing it marks it seen", async function () {
+          const def = await makeDefinition({ lootBox: false, reward: "A title: Button Lord" });
+          const actor = await createTestCharacter("splash close");
+          let app = null;
+          try {
+            const copy = await awardAchievement(def, actor);
+            app = AchievementSplash.show(copy);
+            await waitFor(() => app.rendered);
+            assert.include(app.element.textContent, def.name);
+            assert.include(app.element.textContent, "A title: Button Lord");
+            await app.close();
+            await waitFor(() => actor.items.get(copy.id)?.system.seen === true);
+          } finally {
+            await app?.close();
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+      });
+
+      describe("The GM's grid", function () {
+        useQuenchTimeout(this, 30000);
+
+        it("a dimmed cell awards it; then it's lit", async function () {
+          const def = await makeDefinition({ lootBox: false });
+          const actor = await createTestCharacter("grid");
+          const grid = AchievementGrid.open();
+          try {
+            await waitFor(() => grid.rendered);
+            grid.showOffline = true;
+            await grid.render();
+            const cell = () =>
+              grid.element.querySelector(
+                `tr[data-uuid="${def.uuid}"] .carl-grid-cell[data-actor-id="${actor.id}"]`,
+              );
+            await waitFor(() => cell());
+            assert.isTrue(cell().classList.contains("carl-grid-none"));
+            cell().click();
+            await waitFor(() => awardedCopy(actor, def.uuid));
+            await waitFor(() => cell()?.classList.contains("carl-grid-rewarded"));
+          } finally {
+            await grid.close();
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+      });
+
+      describe("The Character's Details tab", function () {
+        useQuenchTimeout(this);
+
+        it("lists the crawler's achievements", async function () {
+          const def = await makeDefinition({ lootBox: false });
+          const actor = await createTestCharacter("details");
+          const sheet = actor.sheet;
+          try {
+            const copy = await awardAchievement(def, actor);
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            assert.exists(
+              sheet.element.querySelector(`.carl-achievement-row[data-item-id="${copy.id}"]`),
+            );
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+            await def.delete();
+          }
+        });
+      });
+    },
+    { displayName: "CarlRPG: achievements (awarding, splash, grid)" },
+  );
+}

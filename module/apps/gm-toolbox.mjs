@@ -31,6 +31,7 @@ import {
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import { generateLoot } from "../helpers/loot.mjs";
 import LootForge from "./loot-forge.mjs";
+import AchievementGrid from "./achievement-grid.mjs";
 import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 import { queueForActor } from "../helpers/actor-queue.mjs";
@@ -121,6 +122,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       endFloor: CarlToolbox.#onEndFloor,
       bossKilled: CarlToolbox.#onBossKilled,
       giveBox: CarlToolbox.#onGiveBox,
+      achievements: CarlToolbox.#onAchievements,
       mend: CarlToolbox.#onMend,
       floorIncrement: CarlToolbox.#onFloorIncrement,
       floorDecrement: CarlToolbox.#onFloorDecrement,
@@ -446,6 +448,11 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       subtitle: game.i18n.localize(tier.label),
       body: `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
     });
+  }
+
+  /** Achievements: the grid to award them from (apps/achievement-grid.mjs). */
+  static #onAchievements() {
+    AchievementGrid.open();
   }
 
   /**

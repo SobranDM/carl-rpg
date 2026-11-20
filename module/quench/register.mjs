@@ -67,6 +67,7 @@ import registerSkillNames from "./batches/skill-names.mjs";
 import registerRefactorRulings from "./batches/refactor-rulings.mjs";
 import registerLootGenerator from "./batches/loot-generator.mjs";
 import registerBoxes from "./batches/boxes.mjs";
+import registerAchievements from "./batches/achievements.mjs";
 import { withMessageCleanup } from "./helpers.mjs";
 
 const BATCH_REGISTRARS = [
@@ -125,6 +126,7 @@ const BATCH_REGISTRARS = [
   registerRefactorRulings,
   registerLootGenerator,
   registerBoxes,
+  registerAchievements,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

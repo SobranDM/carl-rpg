@@ -16,3 +16,4 @@ export { default as CarlRPGClass } from "./class.mjs";
 export { default as CarlRPGRace } from "./race.mjs";
 export { default as CarlRPGMobAttack } from "./mob-attack.mjs";
 export { default as CarlRPGBox } from "./box.mjs";
+export { default as CarlRPGAchievement } from "./achievement.mjs";

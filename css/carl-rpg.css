@@ -4509,6 +4509,140 @@
   object-fit: contain;
   border: none;
 }
+.carl-rpg .carl-achievement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  text-align: center;
+}
+.carl-rpg .carl-achievement-icon {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg .carl-achievement-name {
+  margin: 0;
+  border: none;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-achievement-description p:last-child {
+  margin-bottom: 0;
+}
+.carl-rpg .carl-achievement-reward-label,
+.carl-rpg .carl-achievement-note span {
+  font-weight: bold;
+}
+.carl-rpg .carl-achievement-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-achievement-item prose-mirror {
+  min-height: 80px;
+}
+.carl-rpg .carl-achievement-note {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.carl-rpg .carl-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-grid-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.carl-rpg .carl-grid-controls label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-grid-scroll {
+  max-height: 70vh;
+  overflow: auto;
+}
+.carl-rpg .carl-grid-table {
+  border-collapse: collapse;
+  margin: 0;
+}
+.carl-rpg .carl-grid-table th,
+.carl-rpg .carl-grid-table td {
+  padding: 2px 4px;
+  border: 1px solid var(--carl-border-soft);
+}
+.carl-rpg .carl-grid-crawler {
+  min-width: 64px;
+  text-align: center;
+  vertical-align: bottom;
+}
+.carl-rpg .carl-grid-crawler img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 2px;
+  object-fit: cover;
+  border: none;
+}
+.carl-rpg .carl-grid-achievement {
+  text-align: left;
+  white-space: nowrap;
+}
+.carl-rpg .carl-grid-cell {
+  position: relative;
+  text-align: center;
+  cursor: pointer;
+}
+.carl-rpg .carl-grid-cell img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg .carl-grid-none img {
+  filter: grayscale(1);
+  opacity: 0.3;
+}
+.carl-rpg .carl-grid-none:hover img {
+  opacity: 0.7;
+}
+.carl-rpg .carl-grid-check {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-achievement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.carl-rpg .carl-achievement-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.carl-rpg .carl-achievement-row img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg .carl-achievement-row-name {
+  font-weight: bold;
+}
 
 /* An item's description as its Foundry tooltip (the itemTooltip helper).
    The tooltip lives on <body>, outside any sheet. */

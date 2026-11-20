@@ -82,6 +82,7 @@ import {
 import { labelChoices } from "../helpers/html.mjs";
 import { itemFor, itemRow } from "../helpers/sheet-rows.mjs";
 import { boxTierRank } from "../helpers/boxes.mjs";
+import { achievementsOf, awardAchievement, definitionFor } from "../helpers/achievements.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -911,11 +912,13 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const damageEffects = [];
     const raceAndClass = [];
     const boxes = [];
+    const achievements = [];
 
     for (let i of context.items) {
       i.img = i.img || Item.DEFAULT_ICON;
       if (i.type === "item") gear.push(i);
       else if (i.type === "box") boxes.push(i);
+      else if (i.type === "achievement") achievements.push(i);
       else if (i.type === "feature") features.push(i);
       else if (i.type === "skill") skills.push(i);
       else if (i.type === "spell") spells.push(i);
@@ -974,6 +977,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.spells = spells;
     context.damageEffects = damageEffects;
     context.raceAndClass = raceAndClass;
+    // Awarded achievements (data/achievement.mjs), newest first.
+    const order = achievementsOf(this.actor).map((i) => i.id);
+    context.achievements = achievements.sort((a, b) => order.indexOf(a._id) - order.indexOf(b._id));
     // Unopened loot boxes (data/box.mjs), Bronze to Celestial.
     context.boxes = boxes.sort(
       (a, b) => boxTierRank(a.system.tier) - boxTierRank(b.system.tier) || byName(a, b),
@@ -1761,6 +1767,17 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   async _onDropItem(event, item) {
     if (!this.actor.isOwner) return null;
+    // An achievement is awarded, not copied: the GM drops it on a Character
+    // (helpers/achievements.mjs - its loot box, its splash).
+    if (item.type === "achievement") {
+      const definition =
+        game.user.isGM && this.actor.type === "character" ? await definitionFor(item) : null;
+      if (!definition) {
+        ui.notifications.warn(game.i18n.localize("CARLRPG.Achievement.DropRefused"));
+        return null;
+      }
+      return awardAchievement(definition, this.actor);
+    }
     // A Vehicle carries gear as Cargo; it has no Skills, Boons or Class.
     if (isVehicle(this.actor) && item.type !== "item") {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.OnlyCargo"));

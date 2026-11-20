@@ -1,0 +1,13 @@
+{{!-- The New Achievement! splash (module/apps/achievement-splash.mjs):
+      shown to the crawler's player until they close it. --}}
+<div class="carl-achievement">
+  <img class="carl-achievement-icon" src="{{img}}" alt="" />
+  <h2 class="carl-achievement-name">{{name}}</h2>
+  {{#if crawler}}<div class="carl-hint">{{crawler}}</div>{{/if}}
+  <div class="carl-achievement-description">{{{descriptionHTML}}}</div>
+  {{#if reward}}
+  <div class="carl-achievement-reward">
+    <span class="carl-achievement-reward-label">{{localize "CARLRPG.Achievement.Reward"}}:</span> {{reward}}
+  </div>
+  {{/if}}
+</div>

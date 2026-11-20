@@ -16,6 +16,9 @@ import { CarlRPGActorSheet } from "./sheets/actor-sheet.mjs";
 import { CarlRPGItemSheet } from "./sheets/item-sheet.mjs";
 import { CarlRPGLootBoxSheet } from "./sheets/loot-box-sheet.mjs";
 import { CarlRPGBoxSheet } from "./sheets/box-sheet.mjs";
+import { CarlRPGAchievementSheet } from "./sheets/achievement-sheet.mjs";
+import { registerAchievementSettings } from "./helpers/achievements.mjs";
+import AchievementSplash from "./apps/achievement-splash.mjs";
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { CARLRPG } from "./helpers/config.mjs";
 import * as models from "./data/_module.mjs";
@@ -60,6 +63,7 @@ Hooks.once("init", function () {
   registerMigrationSetting();
   // Character creation: which Stat and background methods, animal crawlers.
   registerChargenSettings();
+  registerAchievementSettings();
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
   // gameTimer tracks REAL wall-clock time (Date.now()), unrelated to
@@ -206,6 +210,7 @@ Hooks.once("init", function () {
     race: models.CarlRPGRace,
     mobAttack: models.CarlRPGMobAttack,
     box: models.CarlRPGBox,
+    achievement: models.CarlRPGAchievement,
   });
 
   foundry.applications.apps.DocumentSheetConfig.registerSheet(
@@ -238,6 +243,16 @@ Hooks.once("init", function () {
     makeDefault: true,
     label: "CARLRPG.SheetLabels.Box",
   });
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(
+    Item,
+    "carl-rpg",
+    CarlRPGAchievementSheet,
+    {
+      types: ["achievement"],
+      makeDefault: true,
+      label: "CARLRPG.SheetLabels.Achievement",
+    },
+  );
 
   return preloadHandlebarsTemplates();
 });
@@ -424,6 +439,8 @@ Hooks.once("ready", function () {
   // update permission on that ChatMessage (module/helpers/chat-socket.mjs) -
   // needs game.users/game.socket live, hence `ready` rather than `init`.
   registerChatSocket();
+  // A crawler's new achievements, shown to their player until closed.
+  AchievementSplash.registerHooks();
   // Players taking items out of a Loot Box they only observe (see
   // module/helpers/loot-box.mjs).
   registerLootBoxSocket();
