@@ -32,6 +32,7 @@ import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import { generateLoot } from "../helpers/loot.mjs";
 import LootForge from "./loot-forge.mjs";
 import AchievementGrid from "./achievement-grid.mjs";
+import OpeningSessionApp from "./opening-session.mjs";
 import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 import { queueForActor } from "../helpers/actor-queue.mjs";
@@ -47,7 +48,8 @@ import { startNewScene } from "../helpers/cooldowns.mjs";
 import { unopposedDifficulty } from "../helpers/rules.mjs";
 import { esc, labelChoices, optionsHtml } from "../helpers/html.mjs";
 import { changeConditions, conditionOps } from "../helpers/conditions.mjs";
-import { giveBox } from "../helpers/boxes.mjs";
+import { boxesOf, giveBox } from "../helpers/boxes.mjs";
+import { sessionState, startSession } from "../helpers/opening-session.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -123,6 +125,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       bossKilled: CarlToolbox.#onBossKilled,
       giveBox: CarlToolbox.#onGiveBox,
       achievements: CarlToolbox.#onAchievements,
+      openBoxes: CarlToolbox.#onOpenBoxes,
       mend: CarlToolbox.#onMend,
       floorIncrement: CarlToolbox.#onFloorIncrement,
       floorDecrement: CarlToolbox.#onFloorDecrement,
@@ -448,6 +451,74 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       subtitle: game.i18n.localize(tier.label),
       body: `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
     });
+  }
+
+  /**
+   * Open Loot Boxes: the party opens its unopened boxes together, one
+   * crawler at a time (helpers/opening-session.mjs). The GM picks who takes
+   * part and in what order - crawlers with boxes whose player is online are
+   * ticked, in the players list's order. With a session already on, this
+   * shows its window.
+   */
+  static async #onOpenBoxes() {
+    if (!game.user.isGM) return;
+    if (sessionState().active) {
+      OpeningSessionApp.sync();
+      return;
+    }
+    const players = game.users.contents.filter((u) => !u.isGM);
+    const seat = (actor) => {
+      const i = players.findIndex(
+        (u) => u.active && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+      );
+      return i < 0 ? Infinity : i;
+    };
+    const crawlers = game.actors
+      .filter((a) => a.type === "character" && boxesOf(a).length)
+      .sort((a, b) => seat(a) - seat(b) || a.name.localeCompare(b.name));
+    if (!crawlers.length) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Opening.NoBoxes"));
+      return;
+    }
+    const rows = crawlers
+      .map(
+        (a) => `<li class="carl-opening-order-row" data-actor-id="${a.id}">
+          <input type="checkbox" ${seat(a) < Infinity ? "checked" : ""} />
+          <span class="carl-opening-order-name">${esc(a.name)}</span>
+          <span class="carl-hint">${esc(game.i18n.format("CARLRPG.Opening.BoxCount", { count: boxesOf(a).length }))}</span>
+          <a class="item-control" data-move="-1" data-tooltip-text="${esc(game.i18n.localize("CARLRPG.Opening.MoveUp"))}"><i class="fas fa-arrow-up"></i></a>
+          <a class="item-control" data-move="1" data-tooltip-text="${esc(game.i18n.localize("CARLRPG.Opening.MoveDown"))}"><i class="fas fa-arrow-down"></i></a>
+        </li>`,
+      )
+      .join("");
+    const result = await showCarlDialog({
+      title: game.i18n.localize("CARLRPG.Opening.Title"),
+      content: `<div class="carl-dialog-body"><p>${esc(game.i18n.localize("CARLRPG.Opening.StartPrompt"))}</p><ol class="carl-opening-order">${rows}</ol></div>`,
+      buttons: [
+        {
+          action: "start",
+          icon: "fas fa-box-open",
+          label: "CARLRPG.Opening.Start",
+          default: true,
+          // In the list's order, as the GM left it.
+          callback: (event, button) =>
+            [...(button.form ?? button.closest("form")).querySelectorAll("[data-actor-id]")]
+              .filter((li) => li.querySelector("input").checked)
+              .map((li) => li.dataset.actorId),
+        },
+        cancelButton(),
+      ],
+      onRender: (event, dialog) => {
+        for (const control of dialog.element.querySelectorAll("[data-move]")) {
+          control.addEventListener("click", () => {
+            const row = control.closest("li");
+            if (control.dataset.move === "-1") row.previousElementSibling?.before(row);
+            else row.nextElementSibling?.after(row);
+          });
+        }
+      },
+    });
+    if (Array.isArray(result) && result.length) await startSession(result);
   }
 
   /** Achievements: the grid to award them from (apps/achievement-grid.mjs). */

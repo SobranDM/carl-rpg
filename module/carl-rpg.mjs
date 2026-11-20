@@ -19,6 +19,8 @@ import { CarlRPGBoxSheet } from "./sheets/box-sheet.mjs";
 import { CarlRPGAchievementSheet } from "./sheets/achievement-sheet.mjs";
 import { registerAchievementSettings } from "./helpers/achievements.mjs";
 import AchievementSplash from "./apps/achievement-splash.mjs";
+import OpeningSessionApp from "./apps/opening-session.mjs";
+import { registerOpeningSessionSetting, resumeSession } from "./helpers/opening-session.mjs";
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { CARLRPG } from "./helpers/config.mjs";
 import * as models from "./data/_module.mjs";
@@ -64,6 +66,8 @@ Hooks.once("init", function () {
   // Character creation: which Stat and background methods, animal crawlers.
   registerChargenSettings();
   registerAchievementSettings();
+  // The box-opening session's state: its change redraws every client's window.
+  registerOpeningSessionSetting((state) => OpeningSessionApp.sync(state));
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
   // gameTimer tracks REAL wall-clock time (Date.now()), unrelated to
@@ -441,6 +445,10 @@ Hooks.once("ready", function () {
   registerChatSocket();
   // A crawler's new achievements, shown to their player until closed.
   AchievementSplash.registerHooks();
+  // A box-opening session under way: its window, and (GM) a box left
+  // mid-opening by a reload.
+  OpeningSessionApp.sync();
+  resumeSession();
   // Players taking items out of a Loot Box they only observe (see
   // module/helpers/loot-box.mjs).
   registerLootBoxSocket();

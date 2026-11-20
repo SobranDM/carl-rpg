@@ -1,0 +1,72 @@
+{{!-- The Opening Session (module/apps/opening-session.mjs): everyone sees
+      the current crawler's boxes, each opened in turn. Only that crawler's
+      player or the GM can press Open! and Next!. --}}
+<div class="carl-opening">
+  {{#if crawler}}
+  <header class="carl-opening-crawler">
+    <img src="{{crawler.img}}" alt="" />
+    <h2>{{crawler.name}}</h2>
+    {{#if (eq step "grid")}}<span class="carl-hint">{{localize "CARLRPG.Opening.BoxCount" count=boxes.length}}</span>{{/if}}
+    {{#unless (eq step "grid")}}{{#if box}}<span class="carl-hint">{{localize "CARLRPG.Opening.BoxOf" at=count.at of=count.of}}</span>{{/if}}{{/unless}}
+  </header>
+  {{/if}}
+
+  {{#if (eq step "grid")}}
+  <div class="carl-opening-grid">
+    {{#each boxes as |b|}}
+    <div class="carl-opening-box carl-tier-{{b.tierKey}}" data-tooltip-text="{{b.name}}">
+      <img src="{{b.img}}" alt="" />
+    </div>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  {{#if (eq step "opening")}}
+  <div class="carl-opening-splash">
+    <img class="carl-opening-shake carl-tier-{{box.tierKey}}" src="{{box.img}}" alt="" />
+    <h3>{{box.name}}</h3>
+  </div>
+  {{/if}}
+
+  {{#if (eq step "revealed")}}
+  <div class="carl-opening-splash carl-opening-revealed">
+    <img class="carl-opening-open carl-tier-{{box.tierKey}}" src="{{box.img}}" alt="" />
+    <h3>{{box.name}}</h3>
+    {{#if failed}}
+    <p class="carl-hint">{{localize "CARLRPG.Opening.Failed"}}</p>
+    {{else if result.empty}}
+    <p class="carl-hint">{{localize "CARLRPG.Loot.Nothing"}}</p>
+    {{else}}
+    <ul class="carl-opening-loot">
+      {{#if result.gold}}<li class="carl-opening-gold"><i class="fas fa-coins"></i> {{localize "CARLRPG.Loot.Gold" gold=result.gold}}</li>{{/if}}
+      {{#each result.items as |item|}}
+      <li><img src="{{item.img}}" alt="" /> {{item.name}}{{#if (gt item.quantity 1)}} ×{{item.quantity}}{{/if}}</li>
+      {{/each}}
+    </ul>
+    {{/if}}
+  </div>
+  {{/if}}
+
+  {{#if (eq step "done")}}
+  <p class="carl-opening-done">{{localize "CARLRPG.Opening.Done"}}</p>
+  {{/if}}
+
+  <footer class="carl-opening-buttons">
+    {{#if (eq step "grid")}}
+    <button type="button" data-action="open" {{#unless canAdvance}}disabled{{/unless}}><i class="fas fa-box-open"></i> {{localize "CARLRPG.Opening.Open"}}</button>
+    {{/if}}
+    {{#if (eq step "revealed")}}
+    <button type="button" data-action="next" {{#unless canAdvance}}disabled{{/unless}}><i class="fas fa-forward"></i>
+      {{localize (ifThen lastBox "CARLRPG.Opening.NextCrawler" "CARLRPG.Opening.Next")}}</button>
+    {{/if}}
+    {{#if isGM}}
+    {{#unless (eq step "done")}}
+    <button type="button" data-action="skip" {{#if (eq step "opening")}}disabled{{/if}}><i class="fas fa-user-slash"></i> {{localize "CARLRPG.Opening.Skip"}}</button>
+    {{/unless}}
+    <button type="button" data-action="end"><i class="fas fa-stop"></i> {{localize "CARLRPG.Opening.End"}}</button>
+    {{/if}}
+  </footer>
+  {{#unless canAdvance}}{{#unless (eq step "done")}}
+  <p class="carl-hint carl-opening-wait">{{localize "CARLRPG.Opening.Waiting"}}</p>
+  {{/unless}}{{/unless}}
+</div>

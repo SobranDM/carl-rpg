@@ -1963,6 +1963,26 @@
         "NoCrawlers": "No crawlers to show. Tick \"Show crawlers whose player is offline\" to see the rest."
       }
     },
+    "Opening": {
+      "Title": "Opening Loot Boxes",
+      "Button": "Open Loot Boxes",
+      "Hint": "The party opens its unopened loot boxes together, one crawler at a time.",
+      "StartPrompt": "Who opens their boxes, in this order:",
+      "Start": "Start",
+      "MoveUp": "Earlier",
+      "MoveDown": "Later",
+      "NoBoxes": "No crawler has an unopened loot box.",
+      "BoxCount": "{count} box(es)",
+      "BoxOf": "Box {at} of {of}",
+      "Open": "Open!",
+      "Next": "Next!",
+      "NextCrawler": "Next Crawler!",
+      "Skip": "Skip Player",
+      "End": "End",
+      "Done": "Every box is open.",
+      "Failed": "This box couldn't be opened: something in it no longer exists. The GM can fix its contents; it stays unopened.",
+      "Waiting": "Waiting for this crawler's player (or the GM)."
+    },
     "Box": {
       "Name": "{tier} Box",
       "BossName": "{tier} Boss Box",
