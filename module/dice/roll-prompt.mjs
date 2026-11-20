@@ -232,7 +232,7 @@ export async function promptRollOptions(options = {}) {
     classes: ["carl-roll-dialog"],
     onRender: (event, dialog) => {
       const root = dialog.element ?? dialog;
-      wireRollOptions(root);
+      wireRollOptions(root, current.opposedChoice);
       if (!skillPicker || !(root instanceof HTMLElement)) return;
       setRollEnabled(root, !!selected);
       // A newer pick supersedes a load still in flight.
@@ -254,7 +254,7 @@ export async function promptRollOptions(options = {}) {
         if (ticket !== pending) return;
         root.querySelector(".carl-dialog-body")?.replaceWith(htmlToElement(html));
         restoreKeptFields(root, kept);
-        wireRollOptions(root);
+        wireRollOptions(root, current.opposedChoice);
         setRollEnabled(root, !!selected);
         dialog.setPosition?.({ height: "auto" });
       });
@@ -410,12 +410,13 @@ export function difficultyBasisOf(presets = []) {
  * Dialog wiring: the Area Attack checkbox shows/hides the Splash target list.
  * @param {HTMLElement} root
  */
-function wireRollOptions(root) {
+function wireRollOptions(root, opposedChoice = null) {
   if (!(root instanceof HTMLElement)) return;
   // Opposed (dice/opposed.mjs): sets the Difficulty and its source line.
   wireOpposed(root, {
     difficulty: root.querySelector('input[name="difficulty"]'),
     basis: root.querySelector(".carl-dialog-difficulty-basis"),
+    choice: opposedChoice,
   });
   const area = root.querySelector("[data-carl-area-toggle]");
   const splash = root.querySelector(".carl-splash-targets");

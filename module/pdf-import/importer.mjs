@@ -297,15 +297,17 @@ async function upsert(
       );
     }
   }
-  const made = creates.length ? ((await cls.createDocuments(creates, options)) ?? []) : [];
+  const made = creates.length ? ((await cls.createDocuments(creates, { ...options })) ?? []) : [];
   // An update that changed nothing isn't returned: the existing document is current.
-  const changed = updates.length ? ((await cls.updateDocuments(updates, options)) ?? []) : [];
+  const changed = updates.length
+    ? ((await cls.updateDocuments(updates, { ...options })) ?? [])
+    : [];
   const byId = new Map(changed.map((d) => [d.id, d]));
   const written = [...made, ...updated.map((d) => byId.get(d.id) ?? d)];
   await stamp(
     written,
     (d) => entries.get(keyOf(d))?.data,
-    (stamps) => cls.updateDocuments(stamps, options),
+    (stamps) => cls.updateDocuments(stamps, { ...options }),
   );
   if (afterWrite) {
     for (const doc of written) {

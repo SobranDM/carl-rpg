@@ -3,8 +3,9 @@ import {
   opposedFieldsHtml,
   opposedNote,
   readOpposed,
+  resolveOpposed,
 } from "../../dice/opposed.mjs";
-import { promptRollOptions } from "../../dice/roll-prompt.mjs";
+import { buildStatChoice, promptRollOptions } from "../../dice/roll-prompt.mjs";
 import { opposedStatOf } from "../../pdf-import/parse-spells.mjs";
 import { opposedDifficulty } from "../../helpers/rules.mjs";
 import { currentFloor } from "../../helpers/floor.mjs";
@@ -77,6 +78,27 @@ export default function register(quench) {
           assert.isNull(readOpposed({ opposed: true, opposedBy: "a" }, null));
         });
 
+        it("the hardest of several is named as the creature with that Mod", function () {
+          const choice = fakeChoice({
+            opponents: [
+              {
+                id: "targets",
+                name: "The hardest of the 2 targeted",
+                mods: { str: 5, dex: 2, con: 4, int: 3, cha: 0 },
+                names: { str: "Troll", dex: "Goblin", con: "Troll", int: "Goblin", cha: "Troll" },
+                targeted: true,
+              },
+            ],
+            selected: "targets",
+          });
+          const int = resolveOpposed(choice, { statKey: "int" });
+          assert.equal(int.name, "Goblin");
+          assert.equal(int.mod, 3);
+          assert.include(int.label, "Goblin");
+          assert.notInclude(int.label, "hardest");
+          assert.equal(resolveOpposed(choice, { statKey: "str" }).name, "Troll");
+        });
+
         it("the card's note names them and their Mod", function () {
           assert.include(opposedNote({ name: "Goblin", statKey: "int", mod: 3 }), "Goblin");
           assert.include(opposedNote({ name: "Goblin", statKey: "int", mod: 3 }), "+3");
@@ -96,6 +118,7 @@ export default function register(quench) {
           const choice = buildOpposedChoice({ statKey: "dex", base: BASE });
           if (game.user.targets.size) this.skip();
           assert.isFalse(choice.opposed);
+          assert.equal(choice.selected, "other", "a number - not whoever sorts first on the scene");
           assert.equal(choice.difficulty, BASE.value);
           assert.equal(choice.statKey, "dex");
           assert.exists(
@@ -151,6 +174,41 @@ export default function register(quench) {
           );
           assert.equal(result.difficulty, opposedDifficulty(4, floor));
           assert.deepEqual(result.opposed, { name: "Troll", statKey: "con", mod: 4 });
+        });
+      });
+
+      describe("A Difficulty typed by hand", function () {
+        useQuenchTimeout(this);
+
+        it("isn't overwritten by changing the rolled Stat while Opposed is unticked", async function () {
+          const result = await withDialog(
+            () =>
+              promptRollOptions({
+                title: "Quench Opposed typed",
+                difficulty: BASE.value,
+                showDifficulty: true,
+                statChoice: buildStatChoice("dex"),
+                opposedChoice: fakeChoice({ follow: true, statKey: "dex" }),
+              }),
+            async (dialog) => {
+              const root = dialog.element;
+              const difficulty = root.querySelector('[name="difficulty"]');
+              difficulty.value = "18";
+              const stat = root.querySelector('select[name="stat"]');
+              stat.value = "str";
+              stat.dispatchEvent(new Event("change", { bubbles: true }));
+              assert.equal(difficulty.value, "18");
+              assert.equal(
+                root.querySelector('[name="opposedStat"]').value,
+                "str",
+                "the opposing Stat still follows",
+              );
+              pressDialog(dialog, "roll");
+            },
+            "carl-roll-dialog",
+          );
+          assert.equal(result.difficulty, 18);
+          assert.isNull(result.opposed);
         });
       });
 

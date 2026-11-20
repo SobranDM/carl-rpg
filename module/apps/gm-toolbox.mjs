@@ -63,6 +63,7 @@ import {
   readOpposed,
   wireOpposed,
 } from "../dice/opposed.mjs";
+import { findSkillLikeItem } from "../helpers/race-class-grants.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -1025,11 +1026,22 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
           ),
         };
       },
-      onRender: (root) =>
-        wireOpposed(root, {
+      onRender: (root) => {
+        const opposed = wireOpposed(root, {
           difficulty: root.querySelector('input[name="carl-party-difficulty"]'),
           basis: root.querySelector(".carl-party-difficulty-basis"),
-        }),
+          choice: opposedChoice,
+        });
+        // The Skill typed: its own opposed Stat, ticked at a target - as the
+        // same Skill rolled from a sheet.
+        root
+          .querySelector('input[name="carl-party-skill"]')
+          ?.addEventListener("change", async (e) => {
+            const skill = await findSkillLikeItem(String(e.target.value ?? "").trim());
+            const statKey = skill?.system?.opposedStat;
+            if (statKey) opposed?.setStat(statKey, true);
+          });
+      },
     });
     if (!picked) return;
     const skill = String(picked.data.skill ?? "").trim();

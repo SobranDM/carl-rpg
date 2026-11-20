@@ -1094,6 +1094,88 @@ function typedMovementNote(actor) {
 }
 
 /**
+ * Every place an Item a migration patches can be: world Actors (and, with
+ * `tokens`, unlinked tokens with items of their own), the Items directory,
+ * and the world's Actor and Item compendiums (unlocked for it). For each,
+ * `visit(label, items, write, actor)` is called; `write(updates)` makes the
+ * right kind of update and resolves to the ids actually written (an Item
+ * that failed is reported through `onError`, not returned).
+ *
+ * Every write gets its own options object: updateEmbeddedDocuments writes its
+ * parent onto the options it's given, and a shared one sent the next write
+ * (the Items directory's, a compendium's) to that actor's items.
+ * @param {(label: string, items: Iterable<Item>, write: (updates: object[]) => Promise<string[]>, actor: Actor|null) => Promise<void>} visit
+ * @param {object} options
+ * @param {string} options.step  The migration's version, for the console.
+ * @param {(where: string, err: unknown) => void} options.onError  A failure (counted and reported by the caller).
+ * @param {boolean} [options.tokens]  Unlinked tokens' own items too.
+ * @returns {Promise<void>}
+ */
+async function forEachItemHolder(visit, { step, onError, tokens = false }) {
+  const options = () => ({ render: false, carlMigration: true });
+  const embedded = (actor) => async (updates) =>
+    ((await actor.updateEmbeddedDocuments("Item", updates, options())) ?? []).map((d) => d.id);
+  const unowned = (documents, extra, where) => async (updates) => {
+    const failed = new Set();
+    await updateItemsEach(documents, updates, { ...options(), ...extra }, (item, err) => {
+      if (item?.id) failed.add(item.id);
+      console.error(`carl-rpg | ${step} migration: couldn't update ${item.name}`, err);
+      onError(where ? `${item.name} (${where})` : item.name, err);
+    });
+    return updates.map((u) => u._id).filter((id) => !failed.has(id));
+  };
+
+  const actors = tokens
+    ? [
+        ...game.actors,
+        ...unlinkedTokenActors(game.scenes, (token) => !!token.delta?._source?.items?.length),
+      ]
+    : [...game.actors];
+  for (const actor of actors) {
+    const label = actor.isToken ? `${actor.name} (${actor.token?.parent?.name ?? ""})` : actor.name;
+    await visit(label, actor.items, embedded(actor), actor);
+  }
+  await visit(
+    game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"),
+    game.items,
+    unowned(game.items, {}, ""),
+    null,
+  );
+  for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
+    try {
+      await withUnlockedPack(pack, async () => {
+        const documents = await pack.getDocuments();
+        if (pack.documentName === "Actor") {
+          for (const actor of documents) {
+            await visit(`${actor.name} (${pack.title})`, actor.items, embedded(actor), actor);
+          }
+        } else {
+          await visit(
+            pack.title,
+            documents,
+            unowned(documents, { pack: pack.collection }, pack.title),
+            null,
+          );
+        }
+      });
+    } catch (err) {
+      console.error(
+        `carl-rpg | ${step} migration: couldn't update items in compendium ${pack.collection}`,
+        err,
+      );
+      onError(pack.collection, err);
+    }
+  }
+}
+
+/** The names of the Items an update list wrote, in order. */
+function writtenNames(items, updates, written) {
+  const done = new Set(written);
+  const byId = new Map([...items].map((i) => [i.id, i.name]));
+  return updates.filter((u) => done.has(u._id)).map((u) => byId.get(u._id) ?? u._id);
+}
+
+/**
  * 0.7.0 made the DR, Move, Step and Evade of some Races, Classes, Skills
  * and Spells automatic (REFRESHED_ITEMS), but every actor holds its own
  * copy of an item, made before. This brings each copy's DR, Move, Step and
@@ -1112,83 +1194,35 @@ async function migrateCompendiumCopies({ fail = NO_FAIL } = {}) {
     errors += 1;
     fail(id, missingPackError(id));
   }
-  const lines = [];
-  // A fresh object for every write: updateEmbeddedDocuments writes its
-  // parent onto the options it's given, and a shared one would send the next
-  // write (the Items directory's, a compendium's) to that actor's items.
-  const options = () => ({ render: false, carlMigration: true });
-  // An unowned Item one at a time if a batch fails (updateItemsEach).
-  const failedItem = (where) => (item, err) => {
-    console.error(`carl-rpg | 0.7.0 migration: couldn't refresh ${item.name}`, err);
-    errors += 1;
-    fail(where ? `${item.name} (${where})` : item.name, err);
-  };
-  const refresh = async (label, items, write, actor = null) => {
-    try {
-      const { updates, names, movement } = refreshUpdatesFor(items, sources);
-      if (!updates.length) return;
-      // updateItemsEach says how many it wrote; an Actor's embedded update returns its Items.
-      const written = await write(updates);
-      changed += typeof written === "number" ? written : updates.length;
-      const note = movement ? esc(typedMovementNote(actor)) : "";
-      lines.push(
-        game.i18n.format("CARLRPG.Migration.Refresh.Line", {
-          name: esc(label),
-          items: names.map(esc).join(", "),
-        }) + note,
-      );
-    } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't refresh the items of ${label}`, err);
-      errors += 1;
-      fail(label, err);
-    }
-  };
   if (!sources.length) return { changed, errors };
-
-  for (const actor of game.actors) {
-    await refresh(
-      actor.name,
-      actor.items,
-      (u) => actor.updateEmbeddedDocuments("Item", u, options()),
-      actor,
-    );
-  }
-  await refresh(game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"), game.items, (u) =>
-    updateItemsEach(game.items, u, options(), failedItem("")),
+  const lines = [];
+  const onError = (where, err) => {
+    errors += 1;
+    fail(where, err);
+  };
+  await forEachItemHolder(
+    async (label, items, write, actor) => {
+      try {
+        const { updates, movement } = refreshUpdatesFor(items, sources);
+        if (!updates.length) return;
+        const written = await write(updates);
+        changed += written.length;
+        const names = writtenNames(items, updates, written);
+        if (!names.length) return;
+        const note = movement ? esc(typedMovementNote(actor)) : "";
+        lines.push(
+          game.i18n.format("CARLRPG.Migration.Refresh.Line", {
+            name: esc(label),
+            items: names.map(esc).join(", "),
+          }) + note,
+        );
+      } catch (err) {
+        console.error(`carl-rpg | 0.7.0 migration: couldn't refresh the items of ${label}`, err);
+        onError(label, err);
+      }
+    },
+    { step: "0.7.0", onError },
   );
-  for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
-    try {
-      await withUnlockedPack(pack, async () => {
-        const documents = await pack.getDocuments();
-        if (pack.documentName === "Actor") {
-          for (const actor of documents) {
-            await refresh(
-              `${actor.name} (${pack.title})`,
-              actor.items,
-              (u) => actor.updateEmbeddedDocuments("Item", u, options()),
-              actor,
-            );
-          }
-        } else {
-          await refresh(pack.title, documents, (u) =>
-            updateItemsEach(
-              documents,
-              u,
-              { ...options(), pack: pack.collection },
-              failedItem(pack.title),
-            ),
-          );
-        }
-      });
-    } catch (err) {
-      console.error(
-        `carl-rpg | 0.7.0 migration: couldn't refresh items in compendium ${pack.collection}`,
-        err,
-      );
-      errors += 1;
-      fail(pack.collection, err);
-    }
-  }
   if (lines.length) await whisperGmList("Refresh", lines);
   return { changed, errors };
 }
@@ -2481,20 +2515,6 @@ export async function migrateVehicleSkillSettings({ fail = NO_FAIL } = {}) {
 }
 
 /* -------------------------------------------------- */
-/*  The list                                          */
-/* -------------------------------------------------- */
-
-// Last in the file, so every id and step it names is declared before it's read.
-/**
- * The migrations, oldest first. `id` never changes once released; `version`
- * is the release whose data it brings a world up to (for messages). A run
- * that returns `incomplete: true` isn't recorded, so it runs again on the
- * next load (one whose leftovers must not be stranded - the Pet tab's).
- * `run` is given {fail(where, error)}, to report a document it couldn't
- * migrate (runMigrations whispers the GM one list of them).
- * @type {{id: string, version: string, run: (context: {fail: (where: string, error: unknown) => void}) => Promise<{changed: number, errors: number, incomplete?: boolean}>}[]}
- */
-/* -------------------------------------------------- */
 /*  0.8.0: the Stat a Skill or Spell is Opposed by    */
 /* -------------------------------------------------- */
 
@@ -2518,8 +2538,9 @@ export function opposedStatUpdate(item, sources) {
  * 0.8.0 gave the system Skills and Spells the book calls Opposed ("Make an
  * Int-Opposed Skill Check") the Stat they're Opposed by, so a Check with one
  * opens Opposed at a target. Every actor holds its own copy, made before:
- * this sets the Stat on each copy that has none - on world Actors, in the
- * Items directory and in world compendiums - and whispers the GM a list.
+ * this sets the Stat on each copy that has none - on world Actors, unlinked
+ * tokens with items of their own, in the Items directory and in world
+ * compendiums - and whispers the GM a list of what was written.
  * @returns {Promise<{changed: number, errors: number}>}
  */
 async function migrateOpposedStats({ fail = NO_FAIL } = {}) {
@@ -2533,81 +2554,54 @@ async function migrateOpposedStats({ fail = NO_FAIL } = {}) {
   const sources = (await pack.getDocuments()).filter((d) => d.system?.opposedStat);
   let changed = 0;
   let errors = 0;
-  const lines = [];
-  // A fresh object for every write: updateEmbeddedDocuments writes its
-  // parent onto the options it's given, and a shared one would send the next
-  // write (the Items directory's, a compendium's) to that actor's items.
-  const options = () => ({ render: false, carlMigration: true });
-  const failedItem = (where) => (item, err) => {
-    console.error(`carl-rpg | 0.8.0 migration: couldn't update ${item.name}`, err);
-    errors += 1;
-    fail(where ? `${item.name} (${where})` : item.name, err);
-  };
-  const patch = async (label, items, write) => {
-    try {
-      const updates = [...items].map((i) => opposedStatUpdate(i, sources)).filter(Boolean);
-      if (!updates.length) return;
-      const written = await write(updates);
-      changed += typeof written === "number" ? written : updates.length;
-      const names = updates.map(
-        (u) => items.get?.(u._id)?.name ?? [...items].find((i) => i.id === u._id)?.name,
-      );
-      lines.push(
-        game.i18n.format("CARLRPG.Migration.Refresh.Line", {
-          name: esc(label),
-          items: names.filter(Boolean).map(esc).join(", "),
-        }),
-      );
-    } catch (err) {
-      console.error(`carl-rpg | 0.8.0 migration: couldn't update the items of ${label}`, err);
-      errors += 1;
-      fail(label, err);
-    }
-  };
   if (!sources.length) return { changed, errors };
-
-  for (const actor of game.actors) {
-    await patch(actor.name, actor.items, (u) =>
-      actor.updateEmbeddedDocuments("Item", u, options()),
-    );
-  }
-  await patch(game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"), game.items, (u) =>
-    updateItemsEach(game.items, u, options(), failedItem("")),
+  const lines = [];
+  const onError = (where, err) => {
+    errors += 1;
+    fail(where, err);
+  };
+  await forEachItemHolder(
+    async (label, items, write) => {
+      try {
+        const updates = [...items].map((i) => opposedStatUpdate(i, sources)).filter(Boolean);
+        if (!updates.length) return;
+        const written = await write(updates);
+        changed += written.length;
+        // Only what was written: a refused Item isn't listed as done.
+        const names = writtenNames(items, updates, written);
+        if (!names.length) return;
+        lines.push(
+          game.i18n.format("CARLRPG.Migration.Refresh.Line", {
+            name: esc(label),
+            items: names.map(esc).join(", "),
+          }),
+        );
+      } catch (err) {
+        console.error(`carl-rpg | 0.8.0 migration: couldn't update the items of ${label}`, err);
+        onError(label, err);
+      }
+    },
+    // Unlinked tokens' own copies too (a Rank edited on the token).
+    { step: "0.8.0", onError, tokens: true },
   );
-  for (const worldPack of game.packs.filter((p) => shouldMigratePack(p))) {
-    try {
-      await withUnlockedPack(worldPack, async () => {
-        const documents = await worldPack.getDocuments();
-        if (worldPack.documentName === "Actor") {
-          for (const actor of documents) {
-            await patch(`${actor.name} (${worldPack.title})`, actor.items, (u) =>
-              actor.updateEmbeddedDocuments("Item", u, options()),
-            );
-          }
-        } else {
-          await patch(worldPack.title, documents, (u) =>
-            updateItemsEach(
-              documents,
-              u,
-              { ...options(), pack: worldPack.collection },
-              failedItem(worldPack.title),
-            ),
-          );
-        }
-      });
-    } catch (err) {
-      console.error(
-        `carl-rpg | 0.8.0 migration: couldn't update items in compendium ${worldPack.collection}`,
-        err,
-      );
-      errors += 1;
-      fail(worldPack.collection, err);
-    }
-  }
   if (lines.length) await whisperGmList("OpposedStats", lines);
   return { changed, errors };
 }
 
+/* -------------------------------------------------- */
+/*  The list                                          */
+/* -------------------------------------------------- */
+
+// Last in the file, so every id and step it names is declared before it's read.
+/**
+ * The migrations, oldest first. `id` never changes once released; `version`
+ * is the release whose data it brings a world up to (for messages). A run
+ * that returns `incomplete: true` isn't recorded, so it runs again on the
+ * next load (one whose leftovers must not be stranded - the Pet tab's).
+ * `run` is given {fail(where, error)}, to report a document it couldn't
+ * migrate (runMigrations whispers the GM one list of them).
+ * @type {{id: string, version: string, run: (context: {fail: (where: string, error: unknown) => void}) => Promise<{changed: number, errors: number, incomplete?: boolean}>}[]}
+ */
 export const MIGRATIONS = [
   { id: "0.7.0-hand-to-hand-box", version: "0.7.0", run: migrateHandToHandSkills },
   { id: COMPANIONS_MIGRATION_ID, version: "0.7.0", run: migrateCompanionActors },

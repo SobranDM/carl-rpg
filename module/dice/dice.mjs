@@ -94,7 +94,7 @@ import { earlyUseNote, passCooldown, passCooldowns, startCooldown } from "../hel
 import { SPELL_TIMER_PATH, spellTimerFor } from "../helpers/spell-timers.mjs";
 import { currentFloor } from "../helpers/floor.mjs";
 import { esc } from "../helpers/html.mjs";
-import { buildOpposedChoice, opposedNote } from "./opposed.mjs";
+import { buildOpposedChoice, hardestTarget, opposedNote } from "./opposed.mjs";
 
 /**
  * Net Advantage/Disadvantage don't stack (Playing the Game, p. 60): an
@@ -585,16 +585,15 @@ function isBlockedUntrainedSpell(item, rank) {
 function buildSkillCheckPresets(skillItem) {
   const statKey = skillItem.system.opposedStat;
   const targets = Array.from(game.user.targets ?? []).filter((t) => t.actor);
-  const modOf = (t) => t.actor.system.stats?.[statKey]?.mod ?? 0;
-  const hardest = targets.reduce((best, t) => (!best || modOf(t) > modOf(best) ? t : best), null);
-  const opposed =
-    statKey && hardest
-      ? {
-          name: hardest.name,
-          stat: game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey),
-          mod: modOf(hardest),
-        }
-      : null;
+  // Several targets: the hardest to beat (dice/opposed.mjs, the same rule).
+  const hardest = statKey ? hardestTarget(targets, statKey) : null;
+  const opposed = hardest
+    ? {
+        name: hardest.name,
+        stat: game.i18n.localize(CARLRPG.statAbbreviations[statKey] ?? statKey),
+        mod: hardest.actor.system.stats?.[statKey]?.mod ?? 0,
+      }
+    : null;
   return buildDifficultyPresets({
     floor: currentFloor(),
     selected: opposed ? "opposed" : "unopposed",
@@ -1091,6 +1090,7 @@ export default class CarlDice {
             ? buildOpposedChoice({
                 statKey,
                 base: { value: base?.value ?? null, label: base?.label ?? "" },
+                self: actor,
               })
             : null,
       });
@@ -1224,6 +1224,7 @@ export default class CarlDice {
           follow: !skillSys.opposedStat,
           opposed: !!skillSys.opposedStat,
           base: { value: base?.value ?? null, label: base?.label ?? "" },
+          self: actor,
         }),
       });
       if (!prompted) return null;

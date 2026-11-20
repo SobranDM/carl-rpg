@@ -8,61 +8,87 @@ import { esc } from "../helpers/html.mjs";
  * Difficulty. Any Skill or Stat Check can be made Opposed (p.106: "Checks
  * labeled as Unopposed can, at the GM's discretion, become Opposed"):
  *
- *  - the opponent: a targeted token (several: the hardest of them), any
- *    token on the scene, or "a number" - "The Stat Mod value could be
+ *  - the opponent: a targeted token (several: the hardest of them, Stat by
+ *    Stat - its name is the creature with that Mod), another creature on the
+ *    scene the user can see, or "a number" - "The Stat Mod value could be
  *    replaced by a Spell Rank, a size class, or whatever force the crawler
- *    is up against";
+ *    is up against". With nothing targeted it starts on the number;
  *  - the Stat they oppose with: the Skill's own opposed Stat if it has one,
  *    else the Stat the crawler rolls with (a chase's "Running Skill Check is
  *    Opposed by the quarry's Dex Mod", p.75), following it while the crawler
  *    changes theirs (Off-Stat) until the opposing one is picked.
  *
  * The controls (opposedFieldsHtml) sit under a Difficulty field and set it
- * live (wireOpposed); unticked, it goes back to the roll's own Difficulty.
- * Used by the roll dialog (dice/roll-prompt.mjs) and the GM Toolbox's Party
- * Skill Check.
+ * live (wireOpposed); unticking goes back to the roll's own Difficulty. One
+ * function (resolveOpposed) works out the Mod, the Difficulty and the words
+ * for the first draw, every change and the card. Used by the roll dialog
+ * (dice/roll-prompt.mjs) and the GM Toolbox's Party Skill Check.
  */
 
 const STATS = () => Object.keys(CONFIG.CARLRPG.stats);
+
+/** Does this actor have Stats to oppose with (not a Loot Box or a vehicle)? */
+function hasStats(actor) {
+  return STATS().some((k) => Number.isFinite(actor?.system?.stats?.[k]?.mod));
+}
 
 /** An actor's Stat Mods, by Stat. */
 function modsOf(actor) {
   return Object.fromEntries(STATS().map((k) => [k, actor?.system?.stats?.[k]?.mod ?? 0]));
 }
 
-/** The highest of several actors' Mods, Stat by Stat (the hardest to beat). */
-function hardestMods(actors) {
-  return Object.fromEntries(
-    STATS().map((k) => [k, Math.max(...actors.map((a) => a.system?.stats?.[k]?.mod ?? 0))]),
-  );
+/**
+ * The hardest of several tokens to beat with one Stat: the one with the
+ * highest Mod (ruled 2026-11-20, #44). The dice's own Opposed presets use it
+ * too.
+ * @param {Token[]} tokens
+ * @param {string} statKey
+ * @returns {Token|null}
+ */
+export function hardestTarget(tokens, statKey) {
+  const modOf = (t) => t.actor?.system?.stats?.[statKey]?.mod ?? 0;
+  return tokens.reduce((best, t) => (!best || modOf(t) > modOf(best) ? t : best), null);
 }
 
 /**
  * Who a Check can be Opposed by: the targeted tokens - with two or more, the
- * hardest of them first (#44) - then the scene's other tokens, then "a
- * number".
- * @returns {{id: string, name: string, mods: Record<string, number>|null, targeted: boolean}[]}
+ * hardest of them first - then the other creatures on the scene this user
+ * can see (not the roller's own), then "a number".
+ * @param {Actor|null} [self]  The roller, left out of the list.
+ * @returns {{id: string, name: string, mods: Record<string, number>|null,
+ *   names?: Record<string, string>, targeted: boolean}[]}
  */
-export function opposedOpponents() {
-  const targets = [...(game.user.targets ?? [])].filter((t) => t.actor);
+export function opposedOpponents(self = null) {
+  const targets = [...(game.user.targets ?? [])].filter((t) => hasStats(t.actor));
   const targetIds = new Set(targets.map((t) => t.id));
   const others =
     (canvas?.ready ? canvas.tokens?.placeables : [])
-      ?.filter((t) => t.actor && !targetIds.has(t.id))
+      ?.filter(
+        (t) =>
+          hasStats(t.actor) &&
+          !targetIds.has(t.id) &&
+          t.actor !== self &&
+          (game.user.isGM || !t.document.hidden),
+      )
       .sort((a, b) => a.name.localeCompare(b.name)) ?? [];
   const list = [];
   if (targets.length > 1) {
+    // Stat by Stat, the hardest - and who that is, for the card.
+    const hardest = Object.fromEntries(STATS().map((k) => [k, hardestTarget(targets, k)]));
     list.push({
       id: "targets",
       name: game.i18n.format("CARLRPG.Opposed.Hardest", { count: targets.length }),
-      mods: hardestMods(targets.map((t) => t.actor)),
+      mods: Object.fromEntries(STATS().map((k) => [k, modsOf(hardest[k].actor)[k]])),
+      names: Object.fromEntries(STATS().map((k) => [k, hardest[k].name])),
       targeted: true,
     });
   }
-  for (const t of targets)
+  for (const t of targets) {
     list.push({ id: t.id, name: t.name, mods: modsOf(t.actor), targeted: true });
-  for (const t of others)
+  }
+  for (const t of others) {
     list.push({ id: t.id, name: t.name, mods: modsOf(t.actor), targeted: false });
+  }
   list.push({
     id: "other",
     name: game.i18n.localize("CARLRPG.Opposed.Other"),
@@ -79,54 +105,72 @@ export function opposedOpponents() {
  * @param {boolean} [options.follow]  Follow the rolled Stat (no opposed Stat of its own).
  * @param {boolean} [options.opposed]  Start ticked (a Skill that's Opposed, at a target).
  * @param {{value: number|null, label: string}} options.base  The roll's own Difficulty, unticked.
- * @returns {object}  For opposedFieldsHtml / readOpposed.
+ * @param {Actor|null} [options.self]  The roller (not an opponent of their own).
+ * @returns {object}  For opposedFieldsHtml / wireOpposed / readOpposed.
  */
-export function buildOpposedChoice({ statKey = "", follow = false, opposed = false, base }) {
-  const opponents = opposedOpponents();
+export function buildOpposedChoice({
+  statKey = "",
+  follow = false,
+  opposed = false,
+  base,
+  self = null,
+}) {
+  const opponents = opposedOpponents(self);
   const firstTarget = opponents.find((o) => o.targeted);
-  const selected = firstTarget?.id ?? opponents[0].id;
-  const stat = statKey && STATS().includes(statKey) ? statKey : "int";
   const choice = {
     opponents,
-    selected,
-    statKey: stat,
+    // Nothing targeted: a number, not whoever sorts first on the scene.
+    selected: firstTarget?.id ?? "other",
+    statKey: statKey && STATS().includes(statKey) ? statKey : "int",
     follow,
     floor: currentFloor(),
     opposed: opposed && !!firstTarget,
     base: { value: base?.value ?? null, label: base?.label ?? "" },
   };
-  choice.difficulty = choice.opposed ? opposedValue(choice) : choice.base.value;
-  choice.label = choice.opposed ? opposedLabel(choice) : choice.base.label;
+  const now = resolveOpposed(choice);
+  choice.difficulty = choice.opposed ? now.value : choice.base.value;
+  choice.label = choice.opposed ? now.label : choice.base.label;
   return choice;
 }
 
-/** The Mod the picked opponent opposes with. */
-function pickedMod(choice, opponentId = choice.selected, statKey = choice.statKey, number = 0) {
+/**
+ * Who opposes it, with what Mod, the Difficulty that makes, and the words
+ * for it: "Opposed vs. Goblin's INT: 15", "Opposed by 3: 16".
+ * @param {object} choice  buildOpposedChoice's.
+ * @param {{opponentId?: string, statKey?: string, number?: number|string}} [picked]
+ * @returns {{name: string|null, statKey: string|null, mod: number, value: number, label: string}|null}
+ */
+export function resolveOpposed(choice, picked = {}) {
+  const opponentId = picked.opponentId ?? choice.selected;
+  const statKey = STATS().includes(picked.statKey) ? picked.statKey : choice.statKey;
   const opponent = choice.opponents.find((o) => o.id === opponentId);
-  if (!opponent?.mods) return Number(number) || 0;
-  return opponent.mods[statKey] ?? 0;
-}
-
-/** The Opposed Difficulty for the choice as it stands. */
-function opposedValue(choice) {
-  return opposedDifficulty(pickedMod(choice), choice.floor);
-}
-
-/** "Opposed vs. Goblin's INT: 15" (or "vs. 3: 16" for a number). */
-function opposedLabel(
-  choice,
-  { opponentId = choice.selected, statKey = choice.statKey, number = 0 } = {},
-) {
-  const opponent = choice.opponents.find((o) => o.id === opponentId);
-  const value = opposedDifficulty(pickedMod(choice, opponentId, statKey, number), choice.floor);
-  if (!opponent?.mods) {
-    return game.i18n.format("CARLRPG.Opposed.LabelNumber", { number: Number(number) || 0, value });
+  if (!opponent) return null;
+  if (!opponent.mods) {
+    const mod = Number(picked.number) || 0;
+    const value = opposedDifficulty(mod, choice.floor);
+    return {
+      name: null,
+      statKey: null,
+      mod,
+      value,
+      label: game.i18n.format("CARLRPG.Opposed.LabelNumber", { number: mod, value }),
+    };
   }
-  return game.i18n.format("CARLRPG.Dialog.Preset.Opposed", {
-    name: opponent.name,
-    stat: game.i18n.localize(CONFIG.CARLRPG.statAbbreviations[statKey] ?? statKey),
+  const mod = opponent.mods[statKey] ?? 0;
+  const value = opposedDifficulty(mod, choice.floor);
+  // The hardest of several: named as the creature with that Mod.
+  const name = opponent.names?.[statKey] ?? opponent.name;
+  return {
+    name,
+    statKey,
+    mod,
     value,
-  });
+    label: game.i18n.format("CARLRPG.Dialog.Preset.Opposed", {
+      name,
+      stat: game.i18n.localize(CONFIG.CARLRPG.statAbbreviations[statKey] ?? statKey),
+      value,
+    }),
+  };
 }
 
 /**
@@ -139,9 +183,7 @@ export function opposedFieldsHtml(choice) {
   if (!choice) return "";
   const i18n = game.i18n;
   const opt = (o) =>
-    `<option value="${esc(o.id)}"${o.id === choice.selected ? " selected" : ""}${
-      o.mods ? ` data-mods="${esc(JSON.stringify(o.mods))}"` : ""
-    }>${esc(o.name)}</option>`;
+    `<option value="${esc(o.id)}"${o.id === choice.selected ? " selected" : ""}>${esc(o.name)}</option>`;
   const targeted = choice.opponents.filter((o) => o.targeted);
   const others = choice.opponents.filter((o) => !o.targeted && o.mods);
   const other = choice.opponents.find((o) => o.id === "other");
@@ -158,10 +200,8 @@ export function opposedFieldsHtml(choice) {
     )
     .join("");
   const off = choice.opposed ? "" : " disabled";
-  return `<div class="form-group carl-dialog-opposed" data-carl-opposed data-floor="${choice.floor}"
-      data-base-value="${esc(choice.base.value ?? "")}" data-base-label="${esc(choice.base.label)}"${
-        choice.follow ? " data-follow" : ""
-      }>
+  const isNumber = choice.selected === "other";
+  return `<div class="form-group carl-dialog-opposed" data-carl-opposed${choice.follow ? " data-follow" : ""}>
     <label class="checkbox" data-tooltip-text="${esc(i18n.localize("CARLRPG.Opposed.Hint"))}">
       <input type="checkbox" name="opposed"${choice.opposed ? " checked" : ""} />
       ${esc(i18n.localize("CARLRPG.Opposed.Label"))}
@@ -171,69 +211,76 @@ export function opposedFieldsHtml(choice) {
         ${group("CARLRPG.Opposed.Targeted", targeted)}${group("CARLRPG.Opposed.Scene", others)}${other ? opt(other) : ""}
       </select>
       <select name="opposedStat" aria-label="${esc(i18n.localize("CARLRPG.Opposed.Stat"))}"${off}${
-        choice.selected === "other" ? " hidden" : ""
+        isNumber ? " hidden" : ""
       }>${stats}</select>
       <input type="number" name="opposedNumber" value="0" class="carl-w-tiny"
         aria-label="${esc(i18n.localize("CARLRPG.Opposed.Number"))}"
         data-tooltip-text="${esc(i18n.localize("CARLRPG.Opposed.NumberHint"))}"${off}${
-          choice.selected === "other" ? "" : " hidden"
+          isNumber ? "" : " hidden"
         } />
     </div>
   </div>`;
 }
 
 /**
- * Wire the controls: every change sets the Difficulty field and its "where
- * it came from" line; unticked, they go back to the roll's own.
+ * Wire the controls: ticking, or changing who or which Stat, sets the
+ * Difficulty field and its "where it came from" line; unticking puts the
+ * roll's own Difficulty back. A Difficulty typed by hand stays until one of
+ * those changes.
  * @param {HTMLElement} root
- * @param {{difficulty: HTMLInputElement|null, basis: HTMLElement|null}} fields
+ * @param {{difficulty: HTMLInputElement|null, basis: HTMLElement|null, choice: object|null}} fields
+ * @returns {{setStat: (statKey: string, tick?: boolean) => void}|null}  To pick
+ *   the Stat from outside (the Party Check, once its Skill is known).
  */
-export function wireOpposed(root, { difficulty, basis }) {
+export function wireOpposed(root, { difficulty, basis, choice }) {
   const box = root?.querySelector?.("[data-carl-opposed]");
-  if (!box) return;
+  if (!box || !choice) return null;
   const on = box.querySelector('[name="opposed"]');
   const by = box.querySelector('[name="opposedBy"]');
   const stat = box.querySelector('[name="opposedStat"]');
   const number = box.querySelector('[name="opposedNumber"]');
-  const floor = Number(box.dataset.floor) || 0;
   const update = () => {
     const isNumber = by.value === "other";
     stat.hidden = isNumber;
     number.hidden = !isNumber;
     for (const field of [by, stat, number]) field.disabled = !on.checked;
     if (!on.checked) {
-      if (difficulty) difficulty.value = box.dataset.baseValue;
-      if (basis) basis.textContent = box.dataset.baseLabel;
+      if (difficulty) difficulty.value = choice.base.value ?? "";
+      if (basis) basis.textContent = choice.base.label;
       return;
     }
-    const mods = isNumber ? null : JSON.parse(by.selectedOptions[0]?.dataset.mods ?? "{}");
-    const mod = isNumber ? Number(number.value) || 0 : (mods[stat.value] ?? 0);
-    const value = opposedDifficulty(mod, floor);
-    if (difficulty) difficulty.value = value;
-    if (basis) {
-      basis.textContent = isNumber
-        ? game.i18n.format("CARLRPG.Opposed.LabelNumber", { number: mod, value })
-        : game.i18n.format("CARLRPG.Dialog.Preset.Opposed", {
-            name: by.selectedOptions[0]?.textContent ?? "",
-            stat: stat.selectedOptions[0]?.textContent ?? "",
-            value,
-          });
-    }
+    const now = resolveOpposed(choice, {
+      opponentId: by.value,
+      statKey: stat.value,
+      number: number.value,
+    });
+    if (!now) return;
+    if (difficulty) difficulty.value = now.value;
+    if (basis) basis.textContent = now.label;
   };
   for (const field of [on, by, stat]) field.addEventListener("change", update);
   number.addEventListener("input", update);
   // No opposed Stat of its own: it follows the Stat rolled (Off-Stat) until
-  // the opposing one is picked.
+  // the opposing one is picked - and only changes the Difficulty while
+  // ticked, so a Difficulty typed by hand isn't lost.
+  let picked = false;
+  stat.addEventListener("change", () => (picked = true));
   const rolled = root.querySelector('select[name="stat"]');
   if (rolled && box.hasAttribute("data-follow")) {
-    let picked = false;
-    stat.addEventListener("change", () => (picked = true));
     rolled.addEventListener("change", () => {
       if (picked || !rolled.value) return;
       stat.value = rolled.value;
-      update();
+      if (on.checked) update();
     });
   }
+  return {
+    setStat(statKey, tick = false) {
+      if (!STATS().includes(statKey) || picked) return;
+      stat.value = statKey;
+      if (tick && choice.opponents.some((o) => o.targeted)) on.checked = true;
+      if (on.checked) update();
+    },
+  };
 }
 
 /**
@@ -241,17 +288,16 @@ export function wireOpposed(root, { difficulty, basis }) {
  * note. Null when it wasn't Opposed.
  * @param {{opposed?: boolean, opposedBy?: string, opposedStat?: string, opposedNumber?: number|string}} values
  * @param {object|null} choice  buildOpposedChoice's.
- * @returns {{name: string, statKey: string|null, mod: number}|null}
+ * @returns {{name: string|null, statKey: string|null, mod: number}|null}
  */
 export function readOpposed(values, choice) {
   if (!choice || !values?.opposed) return null;
-  const opponent = choice.opponents.find((o) => o.id === values.opposedBy);
-  if (!opponent) return null;
-  if (!opponent.mods) {
-    return { name: null, statKey: null, mod: Number(values.opposedNumber) || 0 };
-  }
-  const statKey = STATS().includes(values.opposedStat) ? values.opposedStat : choice.statKey;
-  return { name: opponent.name, statKey, mod: opponent.mods[statKey] ?? 0 };
+  const now = resolveOpposed(choice, {
+    opponentId: values.opposedBy,
+    statKey: values.opposedStat,
+    number: values.opposedNumber,
+  });
+  return now ? { name: now.name, statKey: now.statKey, mod: now.mod } : null;
 }
 
 /**
