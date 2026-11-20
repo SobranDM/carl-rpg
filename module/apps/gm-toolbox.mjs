@@ -29,7 +29,8 @@ import {
   endOfFloorPopularityDelta,
 } from "../helpers/floor.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
-import { rollMagicItem } from "../helpers/loot.mjs";
+import { generateLoot } from "../helpers/loot.mjs";
+import LootForge from "./loot-forge.mjs";
 import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 import { queueForActor } from "../helpers/actor-queue.mjs";
@@ -827,22 +828,30 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   /**
-   * Roll Loot: prompts for a loot box tier, then runs the full Randomized
-   * Magic Item pipeline (Item Type -> matching sub-table x N rolls, with
-   * the Something Unique early-stop/power-multiplier rule) via
-   * module/helpers/loot.mjs's rollMagicItem, which posts the one
-   * consolidated result card itself.
+   * Roll Loot: a loot box's contents at a tier (helpers/loot.mjs
+   * generateLoot - gold, consumables, mundane items, a magic item from
+   * Silver up), auto-filled for the recipient if one is picked, opened in
+   * the Loot Forge to adjust, then given to a character, made in the world
+   * or posted to chat.
    */
   static async #onRollLoot(event, target) {
     if (!game.user.isGM) return;
 
-    const options = optionsHtml(labelChoices(CONFIG.CARLRPG.lootBoxTiers));
+    const tiers = optionsHtml(labelChoices(CONFIG.CARLRPG.lootBoxTiers));
+    const crawlers = optionsHtml({
+      "": "CARLRPG.Loot.Forge.NoRecipient",
+      ...Object.fromEntries(
+        game.actors.filter((a) => a.type === "character").map((a) => [a.id, a.name]),
+      ),
+    });
     const result = await showCarlDialog({
       title: game.i18n.localize("CARLRPG.Toolbox.RollLootTitle"),
-      content: `<div class="carl-dialog-body"><div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.LootTierLabel")}</label><select name="tier">${options}</select></div></div>`,
+      content: `<div class="carl-dialog-body"><div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.LootTierLabel")}</label><select name="tier">${tiers}</select></div><div class="form-group"><label>${game.i18n.localize("CARLRPG.Loot.Forge.Recipient")}</label><select name="recipient">${crawlers}</select></div></div>`,
       buttons: [rollButton(), cancelButton()],
     });
     if (!result) return;
-    await rollMagicItem(result.tier);
+    const recipient = game.actors.get(result.recipient) ?? null;
+    const draft = await generateLoot(result.tier, { recipient });
+    if (draft) await LootForge.open({ draft, mode: "loot", recipient });
   }
 }

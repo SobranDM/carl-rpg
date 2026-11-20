@@ -1,11 +1,17 @@
 import {
   autofillMagicDraft,
   buildMagicItemData,
+  createLootInWorld,
   generateLoot,
+  generateMagicDraft,
+  grantLoot,
   lootItemData,
   lootTable,
+  magicItemUpdate,
+  rerollEnchantment,
   statBonus,
 } from "../../helpers/loot.mjs";
+import LootForge from "../../apps/loot-forge.mjs";
 import {
   enchantmentKind,
   itemTypeKind,
@@ -17,6 +23,7 @@ import {
   createTestItem,
   deleteTestActor,
   useQuenchTimeout,
+  waitFor,
 } from "../helpers.mjs";
 import { useConsumable } from "../../helpers/consumables.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
@@ -252,6 +259,148 @@ export default function register(quench) {
             "Ring of Tests",
             "the draft rides along for the Forge",
           );
+        });
+      });
+
+      describe("Handing loot out (the Loot Forge's Give, Create in World, Reforge)", function () {
+        useQuenchTimeout(this, 60000);
+
+        it("grantLoot: the items on the character, the gold added to theirs", async function () {
+          const actor = await createTestCharacter("loot taker");
+          try {
+            const before = actor.system.details.gold ?? 0;
+            const { items, gold } = await grantLoot(
+              {
+                tierKey: "bronze",
+                gold: 7,
+                entries: [
+                  {
+                    kind: "text",
+                    name: "Quench Coupon",
+                    img: "icons/svg/item-bag.svg",
+                    quantity: 2,
+                  },
+                ],
+              },
+              actor,
+            );
+            assert.lengthOf(items, 1);
+            assert.equal(actor.items.getName("Quench Coupon").system.quantity, 2);
+            assert.equal(gold, 7);
+            assert.equal(actor.system.details.gold, before + 7);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("createLootInWorld: the items in the world's Loot folder", async function () {
+          const name = game.i18n.localize("CARLRPG.Loot.Folder");
+          const hadFolder = !!game.folders.find(
+            (f) => f.type === "Item" && f.name === name && !f.folder,
+          );
+          const items = await createLootInWorld({
+            tierKey: "bronze",
+            gold: 5,
+            entries: [
+              {
+                kind: "text",
+                name: "Quench World Loot",
+                img: "icons/svg/item-bag.svg",
+                quantity: 1,
+              },
+            ],
+          });
+          try {
+            assert.lengthOf(items, 1);
+            assert.equal(items[0].folder?.name, name);
+          } finally {
+            const folder = items[0]?.folder;
+            for (const item of items) await item.delete();
+            if (!hadFolder && folder) await folder.delete();
+          }
+        });
+
+        it("one effect rerolled: the others are kept", async function () {
+          const draft = await generateMagicDraft("legendary", { floor: 3 });
+          assert.exists(draft, "the magic item tables are there");
+          const kept = foundry.utils.deepClone(draft.enchantments.slice(1));
+          await rerollEnchantment(draft, 0, { floor: 3 });
+          assert.isNotEmpty(draft.enchantments[0].kind);
+          assert.deepEqual(
+            draft.enchantments.slice(1).map((e) => e.text),
+            kept.map((e) => e.text),
+          );
+        });
+
+        it("Reforge: saving rewrites the item's name and Bonuses, and keeps its image", async function () {
+          const actor = await createTestCharacter("reforge");
+          let forge = null;
+          try {
+            const data = buildMagicItemData({
+              kind: "magic",
+              tierKey: "gold",
+              itemType: "accessory",
+              typeLabel: "Enchanted Accessory",
+              name: "Ring of Before",
+              slots: ["accessory"],
+              accessoryKind: "",
+              enchantments: [{ kind: "stat", target: "dex", value: 3 }],
+            });
+            const [item] = await actor.createEmbeddedDocuments("Item", [
+              { ...data, img: "icons/svg/sun.svg" },
+            ]);
+            forge = await LootForge.reforge(item);
+            assert.exists(forge, "a GM can reforge a rolled magic item");
+            const entry = forge.draft.entries[0];
+            entry.name = "Ring of After";
+            entry.enchantments[0].target = "str";
+            entry.enchantments[0].value = 4;
+            forge.element.querySelector('[data-action="save"]').click();
+            await waitFor(() => actor.items.get(item.id)?.name === "Ring of After");
+            const after = actor.items.get(item.id);
+            assert.equal(after.img, "icons/svg/sun.svg");
+            assert.lengthOf(after.system.changes, 1);
+            assert.equal(after.system.changes[0].target, "str");
+            assert.equal(after.system.changes[0].value, "4");
+            assert.equal(after.getFlag("carl-rpg", "magicDraft").name, "Ring of After");
+          } finally {
+            await forge?.close();
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("magicItemUpdate drops the old draft's enchantments", function () {
+          const update = magicItemUpdate({
+            kind: "magic",
+            tierKey: "silver",
+            itemType: "mundane",
+            typeLabel: "x",
+            name: "Stick",
+            slots: ["held"],
+            accessoryKind: "",
+            enchantments: [{ kind: "dr", value: 1 }],
+          });
+          assert.equal(update.name, "Stick");
+          assert.lengthOf(update["system.changes"], 1);
+          assert.deepEqual(update["system.slots"], ["held"]);
+        });
+
+        it("the Forge draws a rolled box: a row per entry, its gold", async function () {
+          const draft = await generateLoot("silver", { floor: 2 });
+          const forge = await LootForge.open({ draft });
+          try {
+            assert.lengthOf(
+              forge.element.querySelectorAll(".carl-forge-entry"),
+              draft.entries.length,
+            );
+            assert.equal(
+              Number(forge.element.querySelector('input[name="gold"]').value),
+              draft.gold,
+            );
+            assert.isNotNull(forge.element.querySelector('[data-action="give"]'));
+          } finally {
+            await forge.close();
+          }
         });
       });
 

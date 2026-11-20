@@ -9,6 +9,7 @@ import { isConsumable, isShield, isTwoHanded, isWeapon, slotsOf } from "../helpe
 import { effectiveRank, shieldDrState } from "../helpers/modifiers.mjs";
 import { repairShield } from "../helpers/shield-block.mjs";
 import { enrichDescription } from "../helpers/rich-text.mjs";
+import LootForge from "../apps/loot-forge.mjs";
 
 const ATTRIBUTES_TEMPLATES = {
   item: "systems/carl-rpg/templates/item/parts/attributes-item.hbs",
@@ -65,8 +66,31 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       removeCure: CarlRPGItemSheet.#onRemoveCure,
       toggleWornSlot: CarlRPGItemSheet.#onToggleWornSlot,
       repairShield: CarlRPGItemSheet.#onRepairShield,
+      reforge: CarlRPGItemSheet.#onReforge,
     },
   };
+
+  /**
+   * A rolled magic item (one with a magic draft, helpers/loot.mjs) gets a
+   * Reforge control for the GM: the Loot Forge, to change its enchantments.
+   * @override
+   */
+  _getHeaderControls() {
+    const controls = super._getHeaderControls();
+    if (game.user.isGM && this.item.getFlag("carl-rpg", "magicDraft")) {
+      controls.push({
+        action: "reforge",
+        icon: "fas fa-hammer",
+        label: "CARLRPG.Loot.Forge.Reforge",
+      });
+    }
+    return controls;
+  }
+
+  /** @private */
+  static async #onReforge() {
+    await LootForge.reforge(this.item);
+  }
 
   /**
    * Optional parts of an Upgrade tier shown from its add bar before they

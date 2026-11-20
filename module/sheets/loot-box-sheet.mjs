@@ -1,6 +1,7 @@
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 import DragDropMixin from "./mixins/drag-drop-mixin.mjs";
+import LootForge from "../apps/loot-forge.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import {
   generateLootBoxItems,
@@ -34,6 +35,7 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(HandlebarsApplicationMixi
       takeItem: CarlRPGLootBoxSheet.#onTakeItem,
       editItem: CarlRPGLootBoxSheet.#onEditItem,
       deleteItem: CarlRPGLootBoxSheet.#onDeleteItem,
+      reforgeItem: CarlRPGLootBoxSheet.#onReforgeItem,
     },
   };
 
@@ -68,6 +70,8 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(HandlebarsApplicationMixi
         name: item.name,
         img: item.img || Item.DEFAULT_ICON,
         tierLabel: CONFIG.CARLRPG.lootBoxTiers[item.getFlag("carl-rpg", "lootTier")]?.label ?? "",
+        // A rolled magic item: the GM can reroll or reforge it.
+        isMagic: !!item.getFlag("carl-rpg", "magicDraft"),
         // A loot item's GM Secrets are the GM's, even to a player who owns the box.
         descriptionHTML: await enrichDescription(item.system.description, item, {
           secrets: game.user.isGM,
@@ -172,6 +176,13 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(HandlebarsApplicationMixi
   static #onEditItem(event, target) {
     event.preventDefault();
     this.#itemFor(target)?.sheet.render(true);
+  }
+
+  /** @private */
+  static async #onReforgeItem(event, target) {
+    event.preventDefault();
+    const item = this.#itemFor(target);
+    if (item) await LootForge.reforge(item);
   }
 
   /** @private */

@@ -4361,6 +4361,94 @@
   font-size: 10px;
   opacity: 0.8;
 }
+.carl-rpg .carl-forge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-forge-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.carl-rpg .carl-forge-head label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 0;
+}
+.carl-rpg .carl-forge-head input[type=number] {
+  width: 100%;
+}
+.carl-rpg .carl-forge-head button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-forge-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.carl-rpg .carl-forge-entry {
+  padding: 4px 6px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-forge-magic {
+  border-color: var(--carl-gold);
+}
+.carl-rpg .carl-forge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-forge-row select {
+  flex: 0 1 auto;
+  width: auto;
+}
+.carl-rpg .carl-forge-icon {
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-forge-name,
+.carl-rpg .carl-forge-label,
+.carl-rpg .carl-forge-text {
+  flex: 1 1 auto;
+}
+.carl-rpg .carl-forge-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+.carl-rpg .carl-forge-kind {
+  flex: 0 0 110px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-forge-drop {
+  margin: 0;
+  text-align: center;
+}
+.carl-rpg .carl-forge-footer {
+  display: flex;
+  gap: 6px;
+}
+.carl-rpg .carl-forge-footer button {
+  flex: 1 1 0;
+  white-space: nowrap;
+}
+.carl-rpg .carl-loot-gold {
+  color: var(--carl-gold);
+  white-space: nowrap;
+}
 
 /* An item's description as its Foundry tooltip (the itemTooltip helper).
    The tooltip lives on <body>, outside any sheet. */

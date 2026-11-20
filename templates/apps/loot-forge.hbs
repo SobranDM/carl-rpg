@@ -1,0 +1,105 @@
+{{!-- The Loot Forge (module/apps/loot-forge.mjs): a rolled box's gold and
+      items, and each magic item's name, slot and enchantments. --}}
+<div class="carl-forge">
+  {{#unless single}}
+  <div class="carl-forge-head">
+    <label>{{localize "CARLRPG.Loot.Forge.Tier"}}
+      <select name="tierKey">{{selectOptions tierChoices selected=tierKey localize=true}}</select>
+    </label>
+    <label>{{localize "CARLRPG.Loot.Forge.Gold"}}
+      <input type="number" name="gold" value="{{gold}}" min="0" step="1" />
+    </label>
+    {{#if showRecipient}}
+    <label>{{localize "CARLRPG.Loot.Forge.Recipient"}}
+      <select name="recipientId">{{selectOptions recipientChoices selected=recipientId}}</select>
+    </label>
+    {{/if}}
+    <button type="button" data-action="rerollAll" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.RerollAll'}}">
+      <i class="fas fa-dice"></i>
+    </button>
+  </div>
+  {{/unless}}
+
+  <ol class="carl-forge-entries">
+    {{#each entries as |entry|}}
+    <li class="carl-forge-entry{{#if entry.isMagic}} carl-forge-magic{{/if}}" data-index="{{entry.index}}">
+      {{#if entry.isMagic}}
+      <div class="carl-forge-row">
+        <i class="fas fa-wand-sparkles carl-forge-icon"></i>
+        <input type="text" class="carl-forge-name" name="entries.{{entry.index}}.name" value="{{entry.name}}" />
+        <select name="entries.{{entry.index}}.slot" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.Slot'}}">
+          {{selectOptions @root.slotChoices selected=entry.slot localize=true}}
+        </select>
+        {{#if entry.isAccessory}}
+        <select name="entries.{{entry.index}}.accessoryKind" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.AccessoryKind'}}">
+          {{selectOptions @root.accessoryChoices selected=entry.accessoryKind localize=true}}
+        </select>
+        {{/if}}
+        <a class="item-control" data-action="rerollEntry" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.RerollItem'}}"><i class="fas fa-rotate"></i></a>
+        {{#unless @root.single}}
+        <a class="item-control" data-action="removeEntry" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.Remove'}}"><i class="fas fa-trash"></i></a>
+        {{/unless}}
+      </div>
+      <div class="carl-hint">{{entry.typeLabel}}</div>
+      <ol class="carl-forge-effects">
+        {{#each entry.enchantments as |e|}}
+        <li class="carl-forge-row" data-effect="{{e.effectIndex}}" data-tooltip-text="{{e.line}}">
+          <span class="carl-forge-kind">{{e.kindLabel}}</span>
+          {{#if e.hasValue}}
+          <input type="number" class="carl-w-tiny" name="{{e.prefix}}.value" value="{{e.value}}" step="1" />
+          {{/if}}
+          {{#if e.percentNote}}<span class="carl-hint">{{e.percent}}%</span>{{/if}}
+          {{#if e.statTarget}}
+          <select name="{{e.prefix}}.target">{{selectOptions @root.statChoices selected=e.target localize=true}}</select>
+          {{/if}}
+          {{#if e.skillTarget}}
+          <input type="text" name="{{e.prefix}}.target" value="{{e.target}}" list="carl-forge-skills-{{@root.appId}}"
+            placeholder="{{localize 'CARLRPG.Loot.Forge.SkillPlaceholder'}}" />
+          {{/if}}
+          {{#if e.damageTarget}}
+          <select name="{{e.prefix}}.target">{{selectOptions @root.damageChoices selected=e.target localize=true}}</select>
+          {{/if}}
+          {{#if e.spellTarget}}
+          <input type="text" name="{{e.prefix}}.target" value="{{e.target}}" placeholder="{{localize 'CARLRPG.Loot.Forge.SpellPlaceholder'}}" />
+          {{/if}}
+          {{#if e.textField}}
+          <input type="text" class="carl-forge-text" name="{{e.prefix}}.text" value="{{e.text}}" />
+          {{/if}}
+          <a class="item-control" data-action="rerollEffect" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.RerollEffect'}}"><i class="fas fa-rotate"></i></a>
+        </li>
+        {{/each}}
+      </ol>
+      {{else}}
+      <div class="carl-forge-row">
+        <img src="{{entry.img}}" alt="" width="24" height="24" />
+        <span class="carl-forge-label">{{entry.label}}</span>
+        {{#if entry.qtyEditable}}
+        <input type="number" class="carl-w-tiny" name="entries.{{entry.index}}.quantity" value="{{entry.quantity}}" min="1" step="1"
+          data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.Quantity'}}" />
+        {{/if}}
+        <a class="item-control" data-action="removeEntry" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.Remove'}}"><i class="fas fa-trash"></i></a>
+      </div>
+      {{/if}}
+    </li>
+    {{else}}
+    <li class="carl-hint">{{localize "CARLRPG.Loot.Nothing"}}</li>
+    {{/each}}
+  </ol>
+  {{#unless single}}<p class="carl-hint carl-forge-drop">{{localize "CARLRPG.Loot.Forge.DropHint"}}</p>{{/unless}}
+
+  <datalist id="carl-forge-skills-{{appId}}">{{#each skillNames}}<option value="{{this}}"></option>{{/each}}</datalist>
+
+  <footer class="carl-forge-footer">
+    {{#unless single}}
+    <button type="button" data-action="addMagic"><i class="fas fa-wand-sparkles"></i> {{localize "CARLRPG.Loot.Forge.AddMagic"}}</button>
+    {{/unless}}
+    {{#if lootMode}}
+    <button type="button" data-action="postChat"><i class="fas fa-comment"></i> {{localize "CARLRPG.Loot.Forge.PostChat"}}</button>
+    <button type="button" data-action="createWorld"><i class="fas fa-folder-plus"></i> {{localize "CARLRPG.Loot.Forge.CreateWorld"}}</button>
+    <button type="button" data-action="give" {{#unless canGive}}disabled{{/unless}}><i class="fas fa-gift"></i> {{localize "CARLRPG.Loot.Forge.Give"}}</button>
+    {{/if}}
+    {{#if saveMode}}
+    <button type="button" data-action="save"><i class="fas fa-save"></i> {{localize "CARLRPG.Loot.Forge.Save"}}</button>
+    {{/if}}
+  </footer>
+</div>

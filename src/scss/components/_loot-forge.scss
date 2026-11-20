@@ -1,0 +1,109 @@
+// The Loot Forge (apps/loot-forge.mjs, templates/apps/loot-forge.hbs): a
+// rolled box's gold and items, and each magic item's enchantments.
+@mixin styles {
+  .carl-forge {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .carl-forge-head {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1 1 0;
+    }
+
+    input[type="number"] {
+      width: 100%;
+    }
+
+    button {
+      flex: 0 0 auto;
+      width: auto;
+    }
+  }
+
+  .carl-forge-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 60vh;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .carl-forge-entry {
+    padding: 4px 6px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 4px;
+    background: var(--carl-panel-bg);
+  }
+
+  .carl-forge-magic {
+    border-color: var(--carl-gold);
+  }
+
+  .carl-forge-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    select {
+      flex: 0 1 auto;
+      width: auto;
+    }
+  }
+
+  .carl-forge-icon {
+    color: var(--carl-gold);
+  }
+
+  .carl-forge-name,
+  .carl-forge-label,
+  .carl-forge-text {
+    flex: 1 1 auto;
+  }
+
+  .carl-forge-effects {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 4px 0 0 18px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .carl-forge-kind {
+    flex: 0 0 110px;
+    color: var(--carl-text-muted);
+  }
+
+  .carl-forge-drop {
+    margin: 0;
+    text-align: center;
+  }
+
+  .carl-forge-footer {
+    display: flex;
+    gap: 6px;
+
+    button {
+      flex: 1 1 0;
+      white-space: nowrap;
+    }
+  }
+
+  .carl-loot-gold {
+    color: var(--carl-gold);
+    white-space: nowrap;
+  }
+}
