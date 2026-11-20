@@ -11,7 +11,8 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * offline" is ticked - and achievements down the side: the Items sidebar's,
  * and one compendium's. Each cell is the achievement's icon: dimmed until
  * the crawler has it (click to award it), lit once awarded, with a check
- * once its loot box is opened. Right-click an awarded one to take it back.
+ * once its loot box is opened. Click (or right-click) an awarded one to take
+ * it back, after a confirmation.
  */
 export default class AchievementGrid extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @override */
@@ -170,15 +171,14 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     return { actor, definition };
   }
 
-  /** A dimmed cell: award it. A lit one: its copy's sheet. */
+  /**
+   * A dimmed cell: award it. A lit one: take it back, after asking (ruled
+   * 2026-11-19 - a left-click as well as a right-click).
+   */
   static async #onAward(event, target) {
     const { actor, definition } = await AchievementGrid.#cellTargets(target);
     if (!actor || !definition) return;
-    const copy = awardedCopy(actor, definition.uuid);
-    if (copy) {
-      copy.sheet.render(true);
-      return;
-    }
+    if (awardedCopy(actor, definition.uuid)) return this.#onRevoke(target);
     await awardAchievement(definition, actor);
   }
 

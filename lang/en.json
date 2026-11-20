@@ -1956,7 +1956,7 @@
         "Pack": "Also list from",
         "NoPack": "(the Items sidebar only)",
         "Award": "Award {achievement} to {name}",
-        "Awarded": "{name} has {achievement}. Click to read it; right-click to take it back.",
+        "Awarded": "{name} has {achievement}. Click to take it back.",
         "RevokeTitle": "Take Back an Achievement",
         "RevokeText": "Take {achievement} back from {name}? Its loot box goes too, if it hasn't been opened.",
         "NoAchievements": "No achievements yet. Make some in the Items sidebar, or pick a compendium above.",
