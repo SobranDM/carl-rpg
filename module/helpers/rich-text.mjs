@@ -83,14 +83,13 @@ export function enrichDescription(html, doc, { rollData, secrets } = {}) {
 }
 
 /**
- * Each item's description, as the tooltip shown on hovering it (the
- * `itemTooltip` Handlebars helper; ruled 2026-11-19: the description only).
- * Plain HTML is used as it is; one with links, inline rolls or GM Secrets is
- * enriched first (enrichDescription).
+ * Each item's description as tooltip HTML, by item id - plain HTML as it
+ * is; one with links, inline rolls or GM Secrets enriched first
+ * (enrichDescription). An item without one isn't listed.
  * @param {Iterable<Item>} items
- * @returns {Promise<Record<string, string>>}  HTML by item id; none without a description.
+ * @returns {Promise<Record<string, string>>}
  */
-export async function itemTooltips(items) {
+export async function itemDescriptions(items) {
   const out = {};
   await Promise.all([...items].map(async (item) => {
     const html = String(item.system?.description ?? "").trim();
@@ -100,18 +99,31 @@ export async function itemTooltips(items) {
   return out;
 }
 
+/** An item's name as a tooltip's heading. */
+function tooltipName(item) {
+  return `<strong class="carl-tooltip-name">${esc(item.name)}</strong>`;
+}
+
 /**
- * Item tooltips that also name the item (ruled 2026-11-19, for the
- * Equipment Doll and the Hotlist, where a name can be cut short): the name
- * above the description, or the name alone for an item without one.
+ * The tooltip shown on hovering an item in a list (the `itemTooltip`
+ * Handlebars helper; ruled 2026-11-19): its description - or, for an item
+ * without one, its name.
  * @param {Iterable<Item>} items
- * @param {Record<string, string>} described  itemTooltips' result.
+ * @param {Record<string, string>} descriptions  itemDescriptions' result.
  * @returns {Record<string, string>}  HTML by item id.
  */
-export function namedItemTooltips(items, described) {
-  const out = {};
-  for (const item of items) {
-    out[item.id] = `<strong class="carl-tooltip-name">${esc(item.name)}</strong>${described[item.id] ?? ""}`;
-  }
-  return out;
+export function itemTooltips(items, descriptions) {
+  return Object.fromEntries([...items].map((item) => [item.id, descriptions[item.id] ?? tooltipName(item)]));
+}
+
+/**
+ * The tooltip on the Equipment Doll and the Hotlist, where a name can be
+ * cut short (ruled 2026-11-19): the name above the description, or the
+ * name alone.
+ * @param {Iterable<Item>} items
+ * @param {Record<string, string>} descriptions  itemDescriptions' result.
+ * @returns {Record<string, string>}  HTML by item id.
+ */
+export function namedItemTooltips(items, descriptions) {
+  return Object.fromEntries([...items].map((item) => [item.id, tooltipName(item) + (descriptions[item.id] ?? "")]));
 }

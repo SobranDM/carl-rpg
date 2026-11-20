@@ -45,7 +45,7 @@ import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-ar
 import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
 import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
 import { currentFloor } from "../helpers/floor.mjs";
-import { enrichDescription, itemTooltips, namedItemTooltips } from "../helpers/rich-text.mjs";
+import { enrichDescription, itemDescriptions, itemTooltips, namedItemTooltips } from "../helpers/rich-text.mjs";
 import { labelChoices } from "../helpers/html.mjs";
 import { itemFor, itemRow } from "../helpers/sheet-rows.mjs";
 
@@ -500,8 +500,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
 
     const enrich = (html) => enrichDescription(html, actor, { rollData: context.rollData });
     context.biographyHTML = await enrich(actor.system.biography);
-    context.itemTooltips = await itemTooltips(actor.items);
-    context.namedItemTooltips = namedItemTooltips(actor.items, context.itemTooltips);
+    const descriptions = await itemDescriptions(actor.items);
+    context.itemTooltips = itemTooltips(actor.items, descriptions);
+    context.namedItemTooltips = namedItemTooltips(actor.items, descriptions);
     context.drawerHTML = await this.#prepareDrawerDescriptions(context);
     if (context.isMob) {
       context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);

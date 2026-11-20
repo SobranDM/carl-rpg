@@ -7,7 +7,7 @@ import { bareSkillLikeData, cleanSkillLikeCopy, findSkillLikeItem } from "../../
 import { copyData, PACKS } from "../../helpers/packs.mjs";
 import { fightOf } from "../../helpers/fights.mjs";
 import { resolveCombatantFor } from "../../helpers/token-resolution.mjs";
-import { itemTooltips, namedItemTooltips } from "../../helpers/rich-text.mjs";
+import { itemDescriptions, itemTooltips, namedItemTooltips } from "../../helpers/rich-text.mjs";
 import { useConsumable } from "../../helpers/consumables.mjs";
 import {
   createTestCharacter, createTestCombat, createTestMob, createTestItem, deleteTestActor, deleteTestCombat, useQuenchTimeout, waitFor, withFakeTargets,
@@ -249,14 +249,15 @@ export default function register(quench) {
       describe("Item descriptions as tooltips (#11)", function () {
         useQuenchTimeout(this);
 
-        it("an item's description, and nothing for one without", async function () {
+        it("an item's description, and its name for one without (ruled 2026-11-19)", async function () {
           const actor = await createTestCharacter("tooltips");
           try {
             const described = await createTestItem(actor, "item", "described", { system: { description: "<p>A sturdy rope.</p>" } });
             const plain = await createTestItem(actor, "item", "plain");
-            const tips = await itemTooltips(actor.items);
+            const tips = itemTooltips(actor.items, await itemDescriptions(actor.items));
             assert.include(tips[described.id], "A sturdy rope.");
-            assert.notProperty(tips, plain.id);
+            assert.notInclude(tips[described.id], "carl-tooltip-name", "the description alone");
+            assert.equal(tips[plain.id], `<strong class="carl-tooltip-name">${plain.name}</strong>`);
           } finally {
             await deleteTestActor(actor);
           }
@@ -277,7 +278,7 @@ export default function register(quench) {
             const cell = (item) => sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name`);
             assert.equal(cell(described).dataset.tooltipHtml, quoted, "the description, quotes and all");
             assert.equal(cell(described).dataset.tooltipClass, "carl-item-tooltip");
-            assert.isUndefined(cell(plain).dataset.tooltipHtml, "no description, no tooltip");
+            assert.include(cell(plain).dataset.tooltipHtml ?? "", plain.name, "no description: its name");
             const skillName = sheet.element.querySelector(`li[data-item-id="${skill.id}"] h4`);
             assert.include(skillName?.dataset.tooltipHtml ?? "", "content-link", "a Skill's name shows its enriched description");
             assert.isNull(sheet.element.querySelector("li[data-item-id] [title], li[data-item-id][title]"), "no browser title= tooltips on rows");
@@ -287,7 +288,7 @@ export default function register(quench) {
           }
         });
 
-        it("hovering an Inventory row's name shows Foundry's tooltip with the description; a bare item shows none", async function () {
+        it("hovering an Inventory row's name shows Foundry's tooltip: the description, or a bare item's name", async function () {
           const actor = await createTestCharacter("tooltip hover");
           const sheet = actor.sheet;
           const hover = async (element) => {
@@ -306,7 +307,8 @@ export default function register(quench) {
             assert.equal(game.tooltip.element, name(described).closest(".item-name"), "the name cell's tooltip is up");
             assert.include(game.tooltip.tooltip.innerHTML, "A sturdy rope.");
             await hover(name(bare).closest(".item-name"));
-            assert.notEqual(game.tooltip.element, name(bare).closest(".item-name"), "an item with no description has none");
+            assert.equal(game.tooltip.element, name(bare).closest(".item-name"));
+            assert.include(game.tooltip.tooltip.innerHTML, "lighter", "an item with no description: its name");
           } finally {
             game.tooltip.deactivate();
             await sheet.close();
