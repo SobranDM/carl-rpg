@@ -1,3 +1,4 @@
+import { esc } from "./html.mjs";
 /**
  * Building rich-text (HTML) notes out of plain lines - used to fold the
  * Character's old single-line slot lists into the Details tab's text boxes
@@ -96,5 +97,21 @@ export async function itemTooltips(items) {
     if (!html) return;
     out[item.id] = /@|\[\[|secret/.test(html) ? await enrichDescription(html, item) : html;
   }));
+  return out;
+}
+
+/**
+ * Item tooltips that also name the item (ruled 2026-11-19, for the
+ * Equipment Doll and the Hotlist, where a name can be cut short): the name
+ * above the description, or the name alone for an item without one.
+ * @param {Iterable<Item>} items
+ * @param {Record<string, string>} described  itemTooltips' result.
+ * @returns {Record<string, string>}  HTML by item id.
+ */
+export function namedItemTooltips(items, described) {
+  const out = {};
+  for (const item of items) {
+    out[item.id] = `<strong class="carl-tooltip-name">${esc(item.name)}</strong>${described[item.id] ?? ""}`;
+  }
   return out;
 }

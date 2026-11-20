@@ -45,8 +45,8 @@ import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-ar
 import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
 import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
 import { currentFloor } from "../helpers/floor.mjs";
-import { enrichDescription, itemTooltips } from "../helpers/rich-text.mjs";
-import { esc, labelChoices } from "../helpers/html.mjs";
+import { enrichDescription, itemTooltips, namedItemTooltips } from "../helpers/rich-text.mjs";
+import { labelChoices } from "../helpers/html.mjs";
 import { itemFor, itemRow } from "../helpers/sheet-rows.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
@@ -501,6 +501,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const enrich = (html) => enrichDescription(html, actor, { rollData: context.rollData });
     context.biographyHTML = await enrich(actor.system.biography);
     context.itemTooltips = await itemTooltips(actor.items);
+    context.namedItemTooltips = namedItemTooltips(actor.items, context.itemTooltips);
     context.drawerHTML = await this.#prepareDrawerDescriptions(context);
     if (context.isMob) {
       context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);
@@ -566,8 +567,6 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.evadeTotal = evadeModifier(sys);
     // Evade, DR, Move and Step with their source tooltips (bonus-sources.mjs).
     context.defenses = describeDefenses(sys);
-    // The Evade button's tooltip: what it rolls, then where its bonus comes from, on two lines.
-    context.defenses.evade.tooltipHtml = `${esc(game.i18n.localize("CARLRPG.Actor.EvadeTotalHint"))}<br>${esc(context.defenses.evade.tooltip)}`;
     context.resistanceSummary = resistanceSummary(sys);
     context.potions = {
       limit: PERMANENT_POTION_LIMIT,

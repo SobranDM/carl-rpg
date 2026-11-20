@@ -4362,6 +4362,10 @@
 #tooltip.carl-item-tooltip p {
   margin: 0 0 0.4em;
 }
+#tooltip.carl-item-tooltip .carl-tooltip-name {
+  display: block;
+  margin-bottom: 0.3em;
+}
 #tooltip.carl-item-tooltip p:last-child {
   margin-bottom: 0;
 }

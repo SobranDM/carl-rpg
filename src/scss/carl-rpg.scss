@@ -62,5 +62,8 @@
   text-align: left;
 
   p { margin: 0 0 0.4em; }
+
+  // The item's name above its description (Equipment Doll, Hotlist).
+  .carl-tooltip-name { display: block; margin-bottom: 0.3em; }
   p:last-child { margin-bottom: 0; }
 }

@@ -21,7 +21,7 @@
         <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
         <div class="carl-defenses-row">
           <button type="button" class="carl-evade-button" data-action="rollEvade"
-            data-tooltip-html="{{defenses.evade.tooltipHtml}}">
+            data-tooltip-text="{{localize 'CARLRPG.Actor.EvadeTotalHint'}}&#10;{{defenses.evade.tooltip}}">
             <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
             <span class="carl-evade-total">{{numberFormat evadeTotal sign=true}}{{defenses.evade.dice}}</span>
           </button>

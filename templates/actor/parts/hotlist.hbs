@@ -25,7 +25,7 @@
       <div class="carl-hotlist-use carl-hotlist-idle">
       {{/if}}
         {{#if slot.img}}<img src="{{slot.img}}" alt="" width="22" height="22" />{{/if}}
-        <span class="carl-hotlist-name"{{itemTooltip (lookup @root.itemTooltips slot.itemId)}}>{{slot.name}}</span>
+        <span class="carl-hotlist-name"{{itemTooltip (lookup @root.namedItemTooltips slot.itemId)}}>{{slot.name}}</span>
         <span class="carl-hotlist-detail">
           {{#if (eq slot.kind "spell")}}R{{slot.rank}} · {{slot.manaCost}} MP{{#if slot.active}} <i class="fas fa-bolt" data-tooltip-text="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}{{/if}}
           {{#if (eq slot.kind "skill")}}R{{slot.rank}}{{/if}}

@@ -7,7 +7,7 @@ import { bareSkillLikeData, cleanSkillLikeCopy, findSkillLikeItem } from "../../
 import { copyData, PACKS } from "../../helpers/packs.mjs";
 import { fightOf } from "../../helpers/fights.mjs";
 import { resolveCombatantFor } from "../../helpers/token-resolution.mjs";
-import { itemTooltips } from "../../helpers/rich-text.mjs";
+import { itemTooltips, namedItemTooltips } from "../../helpers/rich-text.mjs";
 import { useConsumable } from "../../helpers/consumables.mjs";
 import {
   createTestCharacter, createTestCombat, createTestMob, createTestItem, deleteTestActor, deleteTestCombat, useQuenchTimeout, waitFor, withFakeTargets,
@@ -285,6 +285,40 @@ export default function register(quench) {
             await sheet.close();
             await deleteTestActor(actor);
           }
+        });
+
+        it("hovering an Inventory row's name shows Foundry's tooltip with the description; a bare item shows none", async function () {
+          const actor = await createTestCharacter("tooltip hover");
+          const sheet = actor.sheet;
+          const hover = async (element) => {
+            game.tooltip.deactivate();
+            element.dispatchEvent(new PointerEvent("pointerenter", { bubbles: false }));
+            // TooltipManager waits TOOLTIP_ACTIVATION_MS (500) for intent.
+            await new Promise((resolve) => setTimeout(resolve, (game.tooltip.constructor.TOOLTIP_ACTIVATION_MS ?? 500) + 200));
+          };
+          try {
+            const described = await createTestItem(actor, "item", "rope", { system: { description: "<p>A sturdy rope.</p>" } });
+            const bare = await createTestItem(actor, "item", "lighter");
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered && sheet.element.querySelector(`li[data-item-id="${described.id}"]`));
+            const name = (item) => sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name h4`);
+            await hover(name(described).closest(".item-name"));
+            assert.equal(game.tooltip.element, name(described).closest(".item-name"), "the name cell's tooltip is up");
+            assert.include(game.tooltip.tooltip.innerHTML, "A sturdy rope.");
+            await hover(name(bare).closest(".item-name"));
+            assert.notEqual(game.tooltip.element, name(bare).closest(".item-name"), "an item with no description has none");
+          } finally {
+            game.tooltip.deactivate();
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("the Equipment Doll and Hotlist name the item above its description", async function () {
+          const items = [{ id: "a", name: "Rope & Hook" }, { id: "b", name: "Lighter" }];
+          const named = namedItemTooltips(items, { a: "<p>Sturdy.</p>" });
+          assert.equal(named.a, '<strong class="carl-tooltip-name">Rope &amp; Hook</strong><p>Sturdy.</p>');
+          assert.equal(named.b, '<strong class="carl-tooltip-name">Lighter</strong>', "the name alone without a description");
         });
       });
 
