@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## 0.8.0
+
+Mostly behind-the-scenes tidying to make future work easier, plus:
+
+### Sheets
+
+- **Item tooltips:** Hover over an item's icon or name to see its description, or its name if it has none. On the Equipment Doll and the Hotlist, the name sits above the description.
+- **Every tooltip is now Foundry's tooltip helper** instead of HTML titles.
+- **Descriptions of Races, Classes, Features and Mob Attacks** on the character sheet now show links and inline rolls as their own sheets do.
+- **Clearing the Crawler's number on a Loot Box** no longer resets it.
+
+### Combat and rolls
+
+- **Debuff changes are never lost:** When a player and the GM change the same creature's Debuffs at once (a potion as a round ends), both stick. A player's change now waits for the GM's client to apply it; with no GM logged in, it's made as before.
+- **Opposed Checks that aren't Actions** (Party Skill Checks, Driving Checks, ramming) no longer suffer or use up Queasy and Staggered.
+- **A negative Rank counts as untrained** and roll with Disadvantage.
+- **A Natural 20 Evade's Advantage** follows the fight the crawler is in, resolving issues when multiple fights are running.
+
+### Characters and items
+
+- **The Taint stops mending too:** Mending an injury counts as healing, so a potion that heals or mends is kept, and a Heal Spell's Mend Debuff is refused, while The Taint lasts.
+- **Items copied from a compendium** remember where they came from, so later updates can refresh them.
+- **The GM Toolbox's Grind dialog** shows names with symbols in them correctly.
+
 ## 0.7.0
 
 ### Before you update
