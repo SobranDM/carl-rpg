@@ -341,8 +341,17 @@ export function enchantmentLine(e) {
   const key = `CARLRPG.Loot.Enchantment.${e.kind}`;
   switch (e.kind) {
     case "stat":
-      return e.value === null || e.value === undefined
-        ? i18n.format(`${key}Percent`, { percent: e.percent, stat: stat(e.target) })
+      // A percentage is set as a number when the crawler gets the item
+      // (p.220); the line says where the number came from.
+      if (e.value === null || e.value === undefined) {
+        return i18n.format(`${key}Percent`, { percent: e.percent, stat: stat(e.target) });
+      }
+      return e.percent
+        ? i18n.format(`${key}FromPercent`, {
+            value: e.value,
+            percent: e.percent,
+            stat: stat(e.target),
+          })
         : i18n.format(key, { value: e.value, stat: stat(e.target) });
     case "skill":
       return e.target

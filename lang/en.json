@@ -1867,6 +1867,7 @@
     "Loot": {
       "Enchantment": {
         "stat": "+{value} {stat}",
+        "statFromPercent": "+{value} {stat} ({percent}% of their {stat} when gained)",
         "statPercent": "+{percent}% {stat} (of the Stat, set when gained)",
         "skill": "+{value} {skill} Skill",
         "skillChoice": "+{value} to a Skill of your choice",

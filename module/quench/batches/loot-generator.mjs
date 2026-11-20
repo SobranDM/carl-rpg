@@ -1,6 +1,7 @@
 import {
   autofillMagicDraft,
   buildMagicItemData,
+  enchantmentLine,
   generateLoot,
   generateMagicDraft,
   grantLoot,
@@ -90,6 +91,19 @@ export default function register(quench) {
             "accessory",
           );
           assert.equal(itemTypeKind("Enchanted Mundane Item or Weapon"), "mundane");
+        });
+      });
+
+      describe("A percentage Stat's line (p.220)", function () {
+        it("says the number and the percentage it came from", function () {
+          const dex = game.i18n.localize(CONFIG.CARLRPG.stats.dex);
+          const line = enchantmentLine({ kind: "stat", target: "dex", value: 4, percent: 10 });
+          assert.include(line, `+4 ${dex}`);
+          assert.include(line, "10%");
+          assert.notInclude(
+            enchantmentLine({ kind: "stat", target: "dex", value: 3, percent: null }),
+            "%",
+          );
         });
       });
 

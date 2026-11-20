@@ -4581,6 +4581,7 @@
 }
 .carl-rpg.carl-achievement-grid {
   min-width: 640px;
+  min-height: 650px;
 }
 .carl-rpg .carl-achievement-boxes {
   display: flex;

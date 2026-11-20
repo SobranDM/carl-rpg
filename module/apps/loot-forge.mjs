@@ -184,7 +184,8 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
               damageTarget: e.kind === "resistance",
               spellTarget: e.kind === "inherentSpell",
               textField: TEXT_KINDS.includes(e.kind),
-              percentNote: e.kind === "stat" && (e.value === null || e.value === undefined),
+              // A percentage Stat: its % beside the number it came to.
+              percentNote: e.kind === "stat" && !!e.percent,
             }))
           : [],
       };
