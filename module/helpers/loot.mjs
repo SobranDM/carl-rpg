@@ -423,7 +423,9 @@ export function buildMagicItemData(draft) {
     img: "icons/svg/item-bag.svg",
     system: {
       description: `<p>${esc(draft.typeLabel)}</p><ul>${lines}</ul>`,
-      slots: [...(draft.slots ?? [])],
+      // A weapon is wielded with its Skill, and Held (gear.mjs slotsOf).
+      weaponSkill: draft.weaponSkill ?? "",
+      slots: draft.weaponSkill ? ["held"] : [...(draft.slots ?? [])],
       accessoryKind: draft.accessoryKind ?? "",
       changes,
     },
@@ -629,6 +631,7 @@ export function magicItemUpdate(draft) {
     name: data.name,
     "system.description": data.system.description,
     "system.slots": data.system.slots,
+    "system.weaponSkill": data.system.weaponSkill,
     "system.accessoryKind": data.system.accessoryKind,
     "system.changes": data.system.changes,
     "flags.carl-rpg.lootTier": draft.tierKey,

@@ -22,9 +22,13 @@
       <div class="carl-forge-row">
         <i class="fas fa-wand-sparkles carl-forge-icon"></i>
         <input type="text" class="carl-forge-name" name="entries.{{entry.index}}.name" value="{{entry.name}}" />
+        {{#if entry.isWeapon}}
+        <span class="carl-hint" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.WeaponHeld'}}">{{localize "CARLRPG.WearSlot.held"}}</span>
+        {{else}}
         <select name="entries.{{entry.index}}.slot" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.Slot'}}">
           {{selectOptions @root.slotChoices selected=entry.slot localize=true}}
         </select>
+        {{/if}}
         {{#if entry.isAccessory}}
         <select name="entries.{{entry.index}}.accessoryKind" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.AccessoryKind'}}">
           {{selectOptions @root.accessoryChoices selected=entry.accessoryKind localize=true}}
@@ -36,6 +40,14 @@
         {{/unless}}
       </div>
       <div class="carl-hint">{{entry.typeLabel}}</div>
+      {{#if entry.canBeWeapon}}
+      {{!-- A weapon: the Attack Skill it's wielded with (as the item sheet). --}}
+      <div class="carl-forge-row" data-tooltip-text="{{localize 'CARLRPG.Weapon.SkillHint'}}">
+        <span class="carl-forge-kind">{{localize "CARLRPG.Weapon.Skill"}}</span>
+        <input type="text" name="entries.{{entry.index}}.weaponSkill" value="{{entry.weaponSkill}}"
+          list="carl-forge-weapons-{{@root.appId}}" placeholder="{{localize 'CARLRPG.Weapon.NotAWeapon'}}" />
+      </div>
+      {{/if}}
       <ol class="carl-forge-effects">
         {{#each entry.enchantments as |e|}}
         <li class="carl-forge-row" data-effect="{{e.effectIndex}}" data-tooltip-text="{{e.line}}">
@@ -83,6 +95,7 @@
   {{#unless single}}<p class="carl-hint carl-forge-drop">{{localize "CARLRPG.Loot.Forge.DropHint"}}</p>{{/unless}}
 
   <datalist id="carl-forge-skills-{{appId}}">{{#each skillNames}}<option value="{{this}}"></option>{{/each}}</datalist>
+  <datalist id="carl-forge-weapons-{{appId}}">{{#each weaponSkillNames}}<option value="{{this}}"></option>{{/each}}</datalist>
 
   <footer class="carl-forge-footer">
     {{#unless single}}

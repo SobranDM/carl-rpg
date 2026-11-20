@@ -355,6 +355,22 @@ export default function register(quench) {
           }
         });
 
+        it("a magic weapon: its Weapon Skill set, and Held", function () {
+          const data = buildMagicItemData({
+            kind: "magic",
+            tierKey: "silver",
+            itemType: "mundane",
+            typeLabel: "Enchanted Mundane Item or Weapon",
+            name: "Tire Iron of the Sweaty Goblin",
+            slots: ["accessory"],
+            accessoryKind: "",
+            weaponSkill: "Club",
+            enchantments: [{ kind: "dr", value: 1 }],
+          });
+          assert.equal(data.system.weaponSkill, "Club");
+          assert.deepEqual(data.system.slots, ["held"]);
+        });
+
         it("magicItemUpdate drops the old draft's enchantments", function () {
           const update = magicItemUpdate({
             kind: "magic",

@@ -1905,6 +1905,7 @@
         "AddMagic": "Add Magic Item",
         "Save": "Save",
         "UniqueTimes": "Something Unique ×{times}",
+        "WeaponHeld": "A weapon is held in a hand.",
         "NoMagicAtTier": "This tier has no magic items. Pick Silver or higher.",
         "Kind": {
           "stat": "+X Stat",

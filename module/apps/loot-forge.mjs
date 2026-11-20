@@ -142,6 +142,16 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       .filter((i) => ["skill", "spell"].includes(i.type))
       .map((i) => i.name)
       .sort((a, b) => a.localeCompare(b));
+    // A weapon's Skill: the book's weapon Skills and the recipient's own
+    // Attack Skills, as the item sheet offers.
+    const weaponSkillNames = [
+      ...new Set([
+        ...cfg.weaponSkills,
+        ...(this.recipient?.items ?? [])
+          .filter((i) => i.type === "skill" && i.system.category === "attack")
+          .map((i) => i.name),
+      ]),
+    ].sort((a, b) => a.localeCompare(b));
     const entries = this.draft.entries.map((entry, index) => {
       const isMagic = entry.kind === "magic";
       return {
@@ -149,6 +159,9 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
         index,
         isMagic,
         slot: entry.slots?.[0] ?? "",
+        // "Enchanted Mundane Item or Weapon" (Table 38) can be a weapon.
+        canBeWeapon: isMagic && entry.itemType === "mundane",
+        isWeapon: isMagic && !!entry.weaponSkill,
         isAccessory: entry.slots?.[0] === "accessory",
         label: isMagic ? entry.name : entryLabel(entry),
         qtyEditable: entry.kind === "item" || entry.kind === "text",
@@ -184,6 +197,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       gold: this.draft.gold,
       entries,
       skillNames,
+      weaponSkillNames,
       statChoices: cfg.stats,
       damageChoices: cfg.damageTypes,
       slotChoices: { "": "CARLRPG.Loot.Forge.NoSlot", ...cfg.wearSlots },
@@ -234,6 +248,11 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       if (changes.quantity !== undefined)
         entry.quantity = Math.max(1, Math.floor(Number(changes.quantity) || 1));
       if (changes.slot !== undefined) entry.slots = changes.slot ? [changes.slot] : [];
+      // A weapon is wielded with its Skill, so it's Held (gear.mjs slotsOf).
+      if (changes.weaponSkill !== undefined) {
+        entry.weaponSkill = String(changes.weaponSkill).trim();
+        if (entry.weaponSkill) entry.slots = ["held"];
+      }
       if (changes.accessoryKind !== undefined) entry.accessoryKind = changes.accessoryKind;
       if (entry.slots?.[0] !== "accessory") entry.accessoryKind = "";
       for (const [j, e] of Object.entries(changes.enchantments ?? {})) {
@@ -249,7 +268,8 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
         if (e.text !== undefined) ench.text = String(e.text);
       }
     }
-    if (event?.target instanceof HTMLSelectElement) this.#redraw();
+    const weaponChanged = event?.target?.name?.endsWith(".weaponSkill");
+    if (event?.target instanceof HTMLSelectElement || weaponChanged) this.#redraw();
   }
 
   /**
