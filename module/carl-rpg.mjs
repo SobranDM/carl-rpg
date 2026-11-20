@@ -263,31 +263,27 @@ Hooks.once("init", function () {
   return preloadHandlebarsTemplates();
 });
 
-// Left-edge scene control icon that opens/closes the GM Toolbox - the only
-// reopen affordance once a GM has closed it (the singleton itself survives
-// close, only its window is torn down). No persisted toggle state is
-// needed: the button always fires (it's deliberately left out of
-// `activeTool` - see module/apps/gm-toolbox.mjs docs) and just checks the
-// toolbox's own `.rendered` state each click.
+// The GM Toolbox's button in Token Controls (the scene controls' first
+// category): opens or closes it - the only way back once a GM has closed it
+// (the singleton survives close, only its window is torn down). A button
+// tool, so it never becomes the active tool; each click just checks the
+// toolbox's own `.rendered` state.
 Hooks.on("getSceneControlButtons", (controls) => {
-  if (!game.user.isGM) return;
-  controls.carlrpg = {
-    name: "carlrpg",
+  if (!game.user.isGM || !controls.tokens) return;
+  // A tool in Token Controls, after Foundry's own (not a category of its own).
+  const tools = controls.tokens.tools;
+  const last = Math.max(0, ...Object.values(tools).map((t) => t.order ?? 0));
+  tools.carlToolbox = {
+    name: "carlToolbox",
+    order: last + 1,
     title: "CARLRPG.Toolbox.Title",
     icon: "fas fa-dice-d20",
+    button: true,
     visible: true,
-    tools: {
-      toolbox: {
-        name: "toolbox",
-        title: "CARLRPG.Toolbox.Title",
-        icon: "fas fa-dice-d20",
-        button: true,
-        onChange: () => {
-          const toolbox = game.carlrpg.toolbox;
-          if (toolbox.rendered) toolbox.close();
-          else toolbox.render({ force: true });
-        },
-      },
+    onChange: () => {
+      const toolbox = game.carlrpg.toolbox;
+      if (toolbox.rendered) toolbox.close();
+      else toolbox.render({ force: true });
     },
   };
 });
