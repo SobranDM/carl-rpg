@@ -928,6 +928,41 @@ export default function register(quench) {
           );
         });
 
+        it("runs on world actors and then world compendiums: the compendium's own items are updated (a reused options object sent them to an actor)", async function () {
+          useQuenchTimeout(this, 60000);
+          const system = game.packs.get("carl-rpg.skills-and-spells");
+          assert.exists(system, "run npm run build:packs with the world closed");
+          const actor = await createTestCharacter("opposed migration");
+          const pack = await foundry.documents.collections.CompendiumCollection.createCompendium({
+            type: "Item",
+            label: "Quench Opposed Migration",
+            name: `quench-opposed-${foundry.utils.randomID().toLowerCase()}`,
+          });
+          try {
+            await createTestItem(actor, "skill", "Stealth", {
+              name: "Stealth",
+              system: { rank: 4 },
+            });
+            const [packed] = await Item.implementation.createDocuments(
+              [{ name: "Stealth", type: "skill", system: { rank: 2 } }],
+              { pack: pack.collection },
+            );
+            const failures = [];
+            const step = MIGRATIONS.find((m) => m.id === OPPOSED_STATS_MIGRATION_ID);
+            await step.run({ fail: (where, err) => failures.push(`${where}: ${err?.message}`) });
+            assert.isEmpty(failures, failures.join("; "));
+            const own = actor.items.getName("Stealth");
+            assert.equal(own.system.opposedStat, "int", "the actor's copy");
+            assert.equal(own.system.rank, 4, "its Rank kept");
+            const after = await pack.getDocument(packed.id);
+            assert.equal(after.system.opposedStat, "int", "the compendium's copy");
+            assert.equal(after.system.rank, 2);
+          } finally {
+            await deleteTestActor(actor);
+            await pack.deleteCompendium();
+          }
+        });
+
         it("a Stat already set (the GM's) is kept; anything else is left alone", function () {
           assert.isNull(
             opposedStatUpdate(copy("Stealth", "skill", { opposedStat: "dex" }), sources),

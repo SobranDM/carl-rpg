@@ -404,12 +404,12 @@ export async function updateItemsEach(documents, updates, options, onFail = null
   };
   const thrown = new Set();
   try {
-    keep(await cls.updateDocuments(updates, options));
+    keep(await cls.updateDocuments(updates, { ...options }));
   } catch (batchErr) {
     if (!onFail) throw batchErr;
     for (const update of updates) {
       try {
-        keep(await cls.updateDocuments([update], options));
+        keep(await cls.updateDocuments([update], { ...options }));
       } catch (err) {
         thrown.add(update._id);
         onFail(byId.get(update._id) ?? { name: update._id }, err);
@@ -435,7 +435,7 @@ export async function updateItemsEach(documents, updates, options, onFail = null
     .filter((s) => s[key]);
   if (stamps.length) {
     try {
-      await cls.updateDocuments(stamps, options);
+      await cls.updateDocuments(stamps, { ...options });
     } catch (err) {
       if (!onFail) throw err;
       onFail({ name: stamps.map((s) => byId.get(s._id)?.name ?? s._id).join(", ") }, err);
@@ -1113,7 +1113,10 @@ async function migrateCompendiumCopies({ fail = NO_FAIL } = {}) {
     fail(id, missingPackError(id));
   }
   const lines = [];
-  const options = { render: false, carlMigration: true };
+  // A fresh object for every write: updateEmbeddedDocuments writes its
+  // parent onto the options it's given, and a shared one would send the next
+  // write (the Items directory's, a compendium's) to that actor's items.
+  const options = () => ({ render: false, carlMigration: true });
   // An unowned Item one at a time if a batch fails (updateItemsEach).
   const failedItem = (where) => (item, err) => {
     console.error(`carl-rpg | 0.7.0 migration: couldn't refresh ${item.name}`, err);
@@ -1146,12 +1149,12 @@ async function migrateCompendiumCopies({ fail = NO_FAIL } = {}) {
     await refresh(
       actor.name,
       actor.items,
-      (u) => actor.updateEmbeddedDocuments("Item", u, options),
+      (u) => actor.updateEmbeddedDocuments("Item", u, options()),
       actor,
     );
   }
   await refresh(game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"), game.items, (u) =>
-    updateItemsEach(game.items, u, options, failedItem("")),
+    updateItemsEach(game.items, u, options(), failedItem("")),
   );
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
     try {
@@ -1162,7 +1165,7 @@ async function migrateCompendiumCopies({ fail = NO_FAIL } = {}) {
             await refresh(
               `${actor.name} (${pack.title})`,
               actor.items,
-              (u) => actor.updateEmbeddedDocuments("Item", u, options),
+              (u) => actor.updateEmbeddedDocuments("Item", u, options()),
               actor,
             );
           }
@@ -1171,7 +1174,7 @@ async function migrateCompendiumCopies({ fail = NO_FAIL } = {}) {
             updateItemsEach(
               documents,
               u,
-              { ...options, pack: pack.collection },
+              { ...options(), pack: pack.collection },
               failedItem(pack.title),
             ),
           );
@@ -2531,7 +2534,10 @@ async function migrateOpposedStats({ fail = NO_FAIL } = {}) {
   let changed = 0;
   let errors = 0;
   const lines = [];
-  const options = { render: false, carlMigration: true };
+  // A fresh object for every write: updateEmbeddedDocuments writes its
+  // parent onto the options it's given, and a shared one would send the next
+  // write (the Items directory's, a compendium's) to that actor's items.
+  const options = () => ({ render: false, carlMigration: true });
   const failedItem = (where) => (item, err) => {
     console.error(`carl-rpg | 0.8.0 migration: couldn't update ${item.name}`, err);
     errors += 1;
@@ -2561,10 +2567,12 @@ async function migrateOpposedStats({ fail = NO_FAIL } = {}) {
   if (!sources.length) return { changed, errors };
 
   for (const actor of game.actors) {
-    await patch(actor.name, actor.items, (u) => actor.updateEmbeddedDocuments("Item", u, options));
+    await patch(actor.name, actor.items, (u) =>
+      actor.updateEmbeddedDocuments("Item", u, options()),
+    );
   }
   await patch(game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"), game.items, (u) =>
-    updateItemsEach(game.items, u, options, failedItem("")),
+    updateItemsEach(game.items, u, options(), failedItem("")),
   );
   for (const worldPack of game.packs.filter((p) => shouldMigratePack(p))) {
     try {
@@ -2573,7 +2581,7 @@ async function migrateOpposedStats({ fail = NO_FAIL } = {}) {
         if (worldPack.documentName === "Actor") {
           for (const actor of documents) {
             await patch(`${actor.name} (${worldPack.title})`, actor.items, (u) =>
-              actor.updateEmbeddedDocuments("Item", u, options),
+              actor.updateEmbeddedDocuments("Item", u, options()),
             );
           }
         } else {
@@ -2581,7 +2589,7 @@ async function migrateOpposedStats({ fail = NO_FAIL } = {}) {
             updateItemsEach(
               documents,
               u,
-              { ...options, pack: worldPack.collection },
+              { ...options(), pack: worldPack.collection },
               failedItem(worldPack.title),
             ),
           );
