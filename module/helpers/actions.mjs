@@ -95,7 +95,8 @@ export function baseBudget(combat, combatant) {
   // A Mob.
   const override = actor.system.actionsPerRound;
   if (Number.isInteger(override) && override >= 0) return { move: 0, action: override };
-  if (actor.system.mobTier || actor.system.isElite) return { move: 0, action: Math.max(1, crawlerCount(combat)) };
+  if (actor.system.mobTier || actor.system.isElite)
+    return { move: 0, action: Math.max(1, crawlerCount(combat)) };
   return { move: 1, action: 1 };
 }
 
@@ -137,14 +138,19 @@ export function actionRecord(combat, combatantId) {
 export function actionBubbles(combat, combatant) {
   const budget = baseBudget(combat, combatant);
   const rec = actionRecord(combat, combatant.id);
-  const counts = { move: budget.move, action: Math.max(0, budget.action + rec.bonus), favor: rec.favor ? 1 : 0 };
+  const counts = {
+    move: budget.move,
+    action: Math.max(0, budget.action + rec.bonus),
+    favor: rec.favor ? 1 : 0,
+  };
   const byPool = { move: [], action: [], favor: [] };
   for (const entry of rec.spent) (byPool[entry.pool] ??= []).push(entry);
   const bubbles = [];
   for (const pool of ["move", "action", "favor"]) {
     for (let i = 0; i < counts[pool]; i++) bubbles.push({ pool, spent: byPool[pool][i] ?? null });
     // Spent beyond the budget (a GM took one away after it was used): still shown.
-    for (let i = counts[pool]; i < byPool[pool].length; i++) bubbles.push({ pool, spent: byPool[pool][i] });
+    for (let i = counts[pool]; i < byPool[pool].length; i++)
+      bubbles.push({ pool, spent: byPool[pool][i] });
   }
   return bubbles;
 }
@@ -163,7 +169,12 @@ export function actionBubbles(combat, combatant) {
 export function payingPool(combat, combatant, kind, pool = null) {
   const free = { move: 0, action: 0, favor: 0 };
   for (const b of actionBubbles(combat, combatant)) if (!b.spent) free[b.pool] += 1;
-  const order = kind === "attack" ? ["action"] : kind === "move" ? ["move", "action", "favor"] : ["action", "favor"];
+  const order =
+    kind === "attack"
+      ? ["action"]
+      : kind === "move"
+        ? ["move", "action", "favor"]
+        : ["action", "favor"];
   const allowed = pool ? order.filter((p) => p === pool) : order;
   return allowed.find((p) => free[p] > 0) ?? null;
 }
@@ -186,8 +197,10 @@ export function canAct(actor, kind = "other", { warn = true } = {}) {
   if (!fight) return true;
   if (payingPool(fight.combat, fight.combatant, kind)) return true;
   if (warn) {
-    const key = kind === "attack" && payingPool(fight.combat, fight.combatant, "other")
-      ? "CARLRPG.Actions.NoAttackLeft" : "CARLRPG.Actions.NoneLeft";
+    const key =
+      kind === "attack" && payingPool(fight.combat, fight.combatant, "other")
+        ? "CARLRPG.Actions.NoAttackLeft"
+        : "CARLRPG.Actions.NoneLeft";
     ui.notifications.warn(game.i18n.format(key, { name: actor.name }));
   }
   return false;
@@ -212,7 +225,12 @@ export async function spendAction(actor, kind, label, { tag = null, id = null, u
   if (!fight) return null;
   id ||= foundry.utils.randomID();
   const applied = await sendOp(fight.combat, "spend", {
-    combatantId: fight.combatant.id, kind, label: String(label ?? ""), tag, id, undo,
+    combatantId: fight.combatant.id,
+    kind,
+    label: String(label ?? ""),
+    tag,
+    id,
+    undo,
   });
   return applied === false ? null : id;
 }
@@ -288,7 +306,13 @@ const scopes = new Map();
  *   the context of the Action this is part of.
  * @returns {Promise<*>}  What `fn` returned, or null if refused.
  */
-export async function takeAction(actor, kind, label, fn, { tag = null, optional = false, within = null } = {}) {
+export async function takeAction(
+  actor,
+  kind,
+  label,
+  fn,
+  { tag = null, optional = false, within = null } = {},
+) {
   if (within) {
     const outer = within.scope ?? null;
     if (outer && !optional && STRICTNESS[kind] > STRICTNESS[outer.kind]) {
@@ -308,11 +332,19 @@ export async function takeAction(actor, kind, label, fn, { tag = null, optional 
       tracked: true,
       scope,
       id: scope.id,
-      use: () => { scope.used = true; },
-      free: () => { scope.used = false; },
+      use: () => {
+        scope.used = true;
+      },
+      free: () => {
+        scope.used = false;
+      },
       require: () => canAct(actor, scope.kind),
-      get label() { return scope.label; },
-      set label(value) { scope.label = value; },
+      get label() {
+        return scope.label;
+      },
+      set label(value) {
+        scope.label = value;
+      },
     };
     scopes.set(actor.uuid, scope);
     let result;
@@ -322,7 +354,11 @@ export async function takeAction(actor, kind, label, fn, { tag = null, optional 
       scopes.delete(actor.uuid);
     }
     if (!(scope.used ?? !!result)) return result;
-    const spent = await spendAction(actor, scope.kind, scope.label, { tag: scope.tag, id: scope.id, undo: scope.undo });
+    const spent = await spendAction(actor, scope.kind, scope.label, {
+      tag: scope.tag,
+      id: scope.id,
+      undo: scope.undo,
+    });
     // Refused on the GM's own client (another click got there first): take it
     // back. (Not when the fight ended meanwhile - then there's nothing to pay.)
     if (!spent && combatantInFight(actor)) await undoHandlers.rollback?.(scope.undo);
@@ -346,7 +382,15 @@ function inTurn(actor, task) {
  * @returns {object}
  */
 function partContext(outer) {
-  return { tracked: false, scope: outer, id: null, use() {}, free() {}, require: () => true, label: "" };
+  return {
+    tracked: false,
+    scope: outer,
+    id: null,
+    use() {},
+    free() {},
+    require: () => true,
+    label: "",
+  };
 }
 
 /** The context of a roll that's no Action at all (a card's Evade, a free Evade). */
@@ -400,9 +444,13 @@ export function gearRecord(actor) {
     t: "gear",
     uuid: actor.uuid,
     slots: foundry.utils.deepClone({
-      gearSlots: sys.gearSlots ?? {}, accessories: [...(sys.accessories ?? [])], hotlist: [...(sys.hotlist ?? [])],
+      gearSlots: sys.gearSlots ?? {},
+      accessories: [...(sys.accessories ?? [])],
+      hotlist: [...(sys.hotlist ?? [])],
     }),
-    equipped: Object.fromEntries(actor.items.filter((i) => i.type === "item").map((i) => [i.id, !!i.system.equipped])),
+    equipped: Object.fromEntries(
+      actor.items.filter((i) => i.type === "item").map((i) => [i.id, !!i.system.equipped]),
+    ),
   };
 }
 
@@ -546,7 +594,9 @@ export async function resetActions(combat, combatantId) {
  */
 export async function spendBubble(combat, combatantId, pool) {
   const kind = pool === "move" ? "move" : "other";
-  const label = game.i18n.localize(pool === "move" ? "CARLRPG.Actions.Move" : "CARLRPG.Actions.Other");
+  const label = game.i18n.localize(
+    pool === "move" ? "CARLRPG.Actions.Move" : "CARLRPG.Actions.Other",
+  );
   await sendOp(combat, "spend", { combatantId, kind, label, pool, id: foundry.utils.randomID() });
 }
 
@@ -575,7 +625,8 @@ export function registerActionSocket() {
     if (!user) return;
     // An undo runs outside the Actions queue: it may wait on a declaration's
     // or a Reaction card's own queue, which may be waiting on this one.
-    if (payload.type === UNDO_OP) void undoHandlers.undo?.(payload.combatId, payload.combatantId, payload.entryId, user);
+    if (payload.type === UNDO_OP)
+      void undoHandlers.undo?.(payload.combatId, payload.combatantId, payload.entryId, user);
     else void applyActionOp(payload.combatId, payload.op, payload.data ?? {}, user);
   });
 }
@@ -614,8 +665,12 @@ async function applyNow(combatId, op, data, user) {
         return false;
       }
       rec.spent.push({
-        id: String(data.id || foundry.utils.randomID()), kind: data.kind, label: String(data.label ?? ""),
-        tag: data.tag ? String(data.tag) : null, pool, by: user.id,
+        id: String(data.id || foundry.utils.randomID()),
+        kind: data.kind,
+        label: String(data.label ?? ""),
+        tag: data.tag ? String(data.tag) : null,
+        pool,
+        by: user.id,
         undo: Array.isArray(data.undo) ? data.undo : [],
       });
       break;
@@ -626,9 +681,13 @@ async function applyNow(combatId, op, data, user) {
       if (index < 0) return false;
       const [entry] = rec.spent.splice(index, 1);
       if (!user.isGM) {
-        ui.notifications.info(game.i18n.format("CARLRPG.Actions.Refunded", {
-          user: user.name, name: combatant.name, label: entry.label || game.i18n.localize("CARLRPG.Actions.Other"),
-        }));
+        ui.notifications.info(
+          game.i18n.format("CARLRPG.Actions.Refunded", {
+            user: user.name,
+            name: combatant.name,
+            label: entry.label || game.i18n.localize("CARLRPG.Actions.Other"),
+          }),
+        );
       }
       break;
     }

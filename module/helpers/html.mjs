@@ -28,5 +28,7 @@ export function labelChoices(defs) {
  * @returns {string}  HTML.
  */
 export function optionsHtml(choices) {
-  return Object.entries(choices).map(([key, label]) => `<option value="${esc(key)}">${esc(game.i18n.localize(label))}</option>`).join("");
+  return Object.entries(choices)
+    .map(([key, label]) => `<option value="${esc(key)}">${esc(game.i18n.localize(label))}</option>`)
+    .join("");
 }

@@ -19,7 +19,7 @@ export async function onAddArrayItem(event, target, document) {
   if (!path) return;
   let template = {};
   try {
-    template = JSON.parse(target.dataset.template ?? '{}');
+    template = JSON.parse(target.dataset.template ?? "{}");
   } catch (e) {
     template = {};
   }
@@ -38,7 +38,11 @@ export async function onDeleteArrayItem(event, target, document) {
   const index = Number(target.dataset.index);
   if (!path || !Number.isInteger(index)) return;
   const current = storedArray(document, path);
-  await writeArrayField(document, path, current.filter((_, i) => i !== index));
+  await writeArrayField(
+    document,
+    path,
+    current.filter((_, i) => i !== index),
+  );
 }
 
 /**
@@ -86,8 +90,11 @@ async function writeArrayField(document, path, updatedArray) {
     return;
   }
   const [, topField] = match;
-  const currentTopValue = foundry.utils.getProperty(document._source ?? document, `system.${topField}`);
+  const currentTopValue = foundry.utils.getProperty(
+    document._source ?? document,
+    `system.${topField}`,
+  );
   const clone = { [topField]: foundry.utils.deepClone(currentTopValue) };
-  foundry.utils.setProperty(clone, path.slice('system.'.length), updatedArray);
+  foundry.utils.setProperty(clone, path.slice("system.".length), updatedArray);
   await document.update({ [`system.${topField}`]: clone[topField] });
 }

@@ -9,13 +9,14 @@ import CarlRPGItemBase from "./item-base.mjs";
  * DCC-native now instead of the generic boilerplate "Feature" framing.
  */
 export default class CarlRPGFeature extends CarlRPGItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const schema = super.defineSchema();
 
     schema.tier = new fields.StringField({
-      required: false, blank: true, initial: "",
+      required: false,
+      blank: true,
+      initial: "",
       choices: () => ["", ...Object.keys(CONFIG.CARLRPG.featureTiers)],
     });
 

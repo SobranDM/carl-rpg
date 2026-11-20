@@ -125,7 +125,8 @@ const BATCH_REGISTRARS = [
 
 export function registerCarlRpgQuenchTests(quench) {
   const withCleanup = {
-    registerBatch: (key, fn, options) => quench.registerBatch(key, withMessageCleanup(key, fn), options),
+    registerBatch: (key, fn, options) =>
+      quench.registerBatch(key, withMessageCleanup(key, fn), options),
   };
   for (const register of BATCH_REGISTRARS) register(withCleanup);
   console.log(`CarlRPG | Registered ${BATCH_REGISTRARS.length} Quench batches`);

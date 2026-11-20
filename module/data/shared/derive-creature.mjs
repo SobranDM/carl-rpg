@@ -126,7 +126,9 @@ export function deriveResourceCaps(sys) {
   sys.mana.max = (sys.stats.int?.effective ?? 0) + (sys.bonuses?.["mana.max"] ?? 0);
 
   sys.shield.slotValue = sys.stats.con?.mod ?? 0;
-  sys.shield.effectiveMax = computeActiveShieldSlots(sys.parent?.items ? Array.from(sys.parent.items) : []);
+  sys.shield.effectiveMax = computeActiveShieldSlots(
+    sys.parent?.items ? Array.from(sys.parent.items) : [],
+  );
   if (sys.shield.value > sys.shield.effectiveMax) sys.shield.value = sys.shield.effectiveMax;
 }
 

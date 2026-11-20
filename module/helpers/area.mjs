@@ -9,7 +9,8 @@ import { unlockedTiers } from "./modifiers.mjs";
  * final word either way.
  */
 
-const AREA_PATTERN = /\d+\s*(?:ft|feet|foot)\.?\s*(?:Blast|Burst|Cone|Line)\b|\+\s*\d+\s*(?:ft|feet|foot)\.?\s*Splash\b/i;
+const AREA_PATTERN =
+  /\d+\s*(?:ft|feet|foot)\.?\s*(?:Blast|Burst|Cone|Line)\b|\+\s*\d+\s*(?:ft|feet|foot)\.?\s*Splash\b/i;
 
 /**
  * Whether a piece of text describes an area of effect.
@@ -17,7 +18,13 @@ const AREA_PATTERN = /\d+\s*(?:ft|feet|foot)\.?\s*(?:Blast|Burst|Cone|Line)\b|\+
  * @returns {boolean}
  */
 export function textDescribesArea(...texts) {
-  return texts.some((text) => AREA_PATTERN.test(String(text ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")));
+  return texts.some((text) =>
+    AREA_PATTERN.test(
+      String(text ?? "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " "),
+    ),
+  );
 }
 
 /**

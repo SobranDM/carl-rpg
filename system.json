@@ -40,7 +40,15 @@
   "documentTypes": {
     "Actor": {
       "character": {
-        "htmlFields": ["biography", "story", "importantKills", "clubs", "deity.notes", "sponsors", "personalSpace.notes"]
+        "htmlFields": [
+          "biography",
+          "story",
+          "importantKills",
+          "clubs",
+          "deity.notes",
+          "sponsors",
+          "personalSpace.notes"
+        ]
       },
       "mob": {
         "htmlFields": ["biography"]

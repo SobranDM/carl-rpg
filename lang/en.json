@@ -99,7 +99,7 @@
         "NotRolled": "Roll your Stats.",
         "ArrayIncomplete": "Place a score in every Stat.",
         "ArrayOnce": "Use each of 2, 3, 4, 5 and 6 once.",
-      "AlreadyDone": "{name} has already been through character creation."
+        "AlreadyDone": "{name} has already been through character creation."
       },
       "Summary": {
         "Title": "New crawler: {name}",
@@ -247,7 +247,7 @@
         "AttackWith": "Swap weapon and Attack with {skill} (free)",
         "InProgress": "Finish the swap that's under way first.",
         "UndoSkipped": "The Attack didn't happen, but your hands or Hotlist changed meanwhile, so the swap stands (an Action).",
-      "Failed": "{item} couldn't go into your Main Hand: nothing was swapped."
+        "Failed": "{item} couldn't go into your Main Hand: nothing was swapped."
       },
       "ReadyTitle": "Hotlist",
       "Readied": "{name} readies {item}.",
@@ -1119,7 +1119,12 @@
       "Cap": "max {cap}",
       "OnlyWhen": "Only when: {conditions}",
       "FromLevel": "From Level {level}",
-      "Resist": { "none": "None", "resist": "Resistant", "vulnerable": "Vulnerable", "immune": "Immune" },
+      "Resist": {
+        "none": "None",
+        "resist": "Resistant",
+        "vulnerable": "Vulnerable",
+        "immune": "Immune"
+      },
       "Kind": {
         "stat": "Stat",
         "skillRank": "Skill Rank",
@@ -1144,7 +1149,12 @@
       "OnlyWithOrHandToHand": "Only with: {skills} or any Hand-to-Hand Attack",
       "AddSkill": "Add a Skill",
       "RemoveSkill": "Remove this Skill",
-      "Trigger": { "hit": "On a hit", "crit": "Critical Hit", "amazing": "Amazing Success", "both": "Crit + Amazing" },
+      "Trigger": {
+        "hit": "On a hit",
+        "crit": "Critical Hit",
+        "amazing": "Amazing Success",
+        "both": "Crit + Amazing"
+      },
       "TriggerHint": {
         "hit": "Lands on any hit the target doesn't Evade.",
         "crit": "Lands only on a Critical Hit.",
@@ -1180,7 +1190,12 @@
       "AddHealing": "Healing",
       "AddShieldSlots": "Shield slots",
       "AddVehicle": "Vehicle",
-      "Count": { "Bonus": "{n} Bonus", "Bonuses": "{n} Bonuses", "Debuff": "{n} Debuff", "Debuffs": "{n} Debuffs" },
+      "Count": {
+        "Bonus": "{n} Bonus",
+        "Bonuses": "{n} Bonuses",
+        "Debuff": "{n} Debuff",
+        "Debuffs": "{n} Debuffs"
+      },
       "ManaChip": "{n} Mana",
       "RankChip": "Rank {n}",
       "MarkedHint": "Marked for an Advancement Check",
@@ -1188,7 +1203,12 @@
       "AlsoBar": "Also:",
       "ConsumableUse": "Consumable use",
       "WeaponChip": "Weapon · {skill}",
-      "KindChip": { "potion": "Potion", "scroll": "Scroll", "spellbook": "Spellbook", "other": "Single-use" },
+      "KindChip": {
+        "potion": "Potion",
+        "scroll": "Scroll",
+        "spellbook": "Spellbook",
+        "other": "Single-use"
+      },
       "Consumable": {
         "Heals": "Heals",
         "Mana": "Restores Mana",

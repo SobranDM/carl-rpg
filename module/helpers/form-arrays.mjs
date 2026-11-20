@@ -29,7 +29,9 @@ const isPlainObject = (value) => foundry.utils.getType(value) === "Object";
  */
 export function mergeSubmitted(stored, submitted, whole = false) {
   if (Array.isArray(stored) && isPlainObject(submitted)) {
-    const merged = stored.map((entry, i) => (i in submitted ? mergeSubmitted(entry, submitted[i], true) : entry));
+    const merged = stored.map((entry, i) =>
+      i in submitted ? mergeSubmitted(entry, submitted[i], true) : entry,
+    );
     for (const [key, value] of Object.entries(submitted)) {
       const i = Number(key);
       if (Number.isInteger(i) && i >= stored.length) merged[i] = value;

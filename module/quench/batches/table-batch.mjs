@@ -11,14 +11,38 @@ import { applyRow } from "../../chat/attack-targets-card.mjs";
 import { setDefeated } from "../../helpers/defeat.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
 import {
-  createTestCharacter, createTestMob, createTestItem, createTestCombat, deleteTestActor, deleteTestCombat,
-  settle, waitFor, withFakeTargets, withPinnedDice, PIN_D20_MID, withSetting, useQuenchTimeout,
+  createTestCharacter,
+  createTestMob,
+  createTestItem,
+  createTestCombat,
+  deleteTestActor,
+  deleteTestCombat,
+  settle,
+  waitFor,
+  withFakeTargets,
+  withPinnedDice,
+  PIN_D20_MID,
+  withSetting,
+  useQuenchTimeout,
 } from "../helpers.mjs";
 
 const keys = (actor) => (actor.system.conditions ?? []).map((c) => c.key);
-const row = (extra = {}) => ({ id: "t0", hit: true, zone: "full", amazing: false, evade: null, ...extra });
+const row = (extra = {}) => ({
+  id: "t0",
+  hit: true,
+  zone: "full",
+  amazing: false,
+  evade: null,
+  ...extra,
+});
 /** A conditions write, the kind round-end makes every round. */
-const addConditionToActorSafe = (actor) => actor.update({ "system.conditions": [...(actor.system.toObject().conditions ?? []), { key: "custom", label: "Test", stacks: 1 }] });
+const addConditionToActorSafe = (actor) =>
+  actor.update({
+    "system.conditions": [
+      ...(actor.system.toObject().conditions ?? []),
+      { key: "custom", label: "Test", stacks: 1 },
+    ],
+  });
 
 export default function register(quench) {
   quench.registerBatch(
@@ -37,12 +61,20 @@ export default function register(quench) {
         });
         it("uses the Area of Effect keyword, and only unlocked Upgrade tiers", function () {
           assert.isTrue(isAreaItem({ system: { castingKeywords: ["attack", "areaOfEffect"] } }));
-          const fear = { system: { rank: 3, range: "50 feet", upgrades: [{ rankThreshold: 5, description: "+5ft Blast radius" }] } };
+          const fear = {
+            system: {
+              rank: 3,
+              range: "50 feet",
+              upgrades: [{ rankThreshold: 5, description: "+5ft Blast radius" }],
+            },
+          };
           assert.isFalse(isAreaItem(fear));
           assert.isTrue(isAreaItem(fear, 5));
         });
         it("reads a Mob Attack's stat line", function () {
-          assert.isTrue(isAreaMobAttack({ name: "Sonic Screech", damage: "2d10+4", range: "30ft Cone" }));
+          assert.isTrue(
+            isAreaMobAttack({ name: "Sonic Screech", damage: "2d10+4", range: "30ft Cone" }),
+          );
           assert.isFalse(isAreaMobAttack({ name: "Bite", damage: "1d4", range: "5ft" }));
         });
       });
@@ -57,26 +89,63 @@ export default function register(quench) {
         it("full / Splash / Evaded area / Splash + Evaded", function () {
           assert.deepEqual(rowOutcome(row(), card).damage, { fire: 20, "": 3 });
           assert.deepEqual(rowOutcome(row({ zone: "splash" }), card).damage, { fire: 10, "": 1 });
-          assert.deepEqual(rowOutcome(row({ evade: { degree: "standardSuccess", success: true } }), card).damage, { fire: 10, "": 1 });
-          assert.deepEqual(rowOutcome(row({ zone: "splash", evade: { degree: "standardSuccess", success: true } }), card).damage, { fire: 5 });
+          assert.deepEqual(
+            rowOutcome(row({ evade: { degree: "standardSuccess", success: true } }), card).damage,
+            { fire: 10, "": 1 },
+          );
+          assert.deepEqual(
+            rowOutcome(
+              row({ zone: "splash", evade: { degree: "standardSuccess", success: true } }),
+              card,
+            ).damage,
+            { fire: 5 },
+          );
         });
         it("an Evaded non-area Attack deals nothing and applies no effects", function () {
-          const out = rowOutcome(row({ evade: { degree: "amazingSuccess", success: true } }), { ...card, isArea: false });
+          const out = rowOutcome(row({ evade: { degree: "amazingSuccess", success: true } }), {
+            ...card,
+            isArea: false,
+          });
           assert.deepEqual(out.damage, {});
           assert.isFalse(out.effects);
         });
         it("Evade Major Fail adds the Floor; Critical Fail doubles", function () {
           const flat = { damageByType: { fire: 10 }, isArea: false, floor: 3 };
-          assert.deepEqual(rowOutcome(row({ evade: { degree: "majorFail", success: false } }), flat).damage, { fire: 10, "": 3 });
-          assert.deepEqual(rowOutcome(row({ evade: { degree: "criticalFail", success: false } }), flat).damage, { fire: 20 });
+          assert.deepEqual(
+            rowOutcome(row({ evade: { degree: "majorFail", success: false } }), flat).damage,
+            { fire: 10, "": 3 },
+          );
+          assert.deepEqual(
+            rowOutcome(row({ evade: { degree: "criticalFail", success: false } }), flat).damage,
+            { fire: 20 },
+          );
         });
         it("a missed row takes nothing; an Amazing row adds the Floor", function () {
           assert.deepEqual(rowOutcome(row({ hit: false }), card).damage, {});
-          assert.deepEqual(rowOutcome(row({ amazing: true }), { damageByType: { fire: 4 }, isArea: false, floor: 2 }).damage, { fire: 4, "": 2 });
+          assert.deepEqual(
+            rowOutcome(row({ amazing: true }), {
+              damageByType: { fire: 4 },
+              isArea: false,
+              floor: 2,
+            }).damage,
+            { fire: 4, "": 2 },
+          );
         });
         it("PvP: a crawler's Evade rolls against the attacker's total (p.87)", function () {
-          assert.equal(rowEvadeDifficulty(row({ isCharacter: true, difficulty: 13 }), { attackerType: "character", attackTotal: 21 }), 21);
-          assert.equal(rowEvadeDifficulty(row({ isCharacter: true, difficulty: 13 }), { attackerType: "mob", attackTotal: 13 }), 13);
+          assert.equal(
+            rowEvadeDifficulty(row({ isCharacter: true, difficulty: 13 }), {
+              attackerType: "character",
+              attackTotal: 21,
+            }),
+            21,
+          );
+          assert.equal(
+            rowEvadeDifficulty(row({ isCharacter: true, difficulty: 13 }), {
+              attackerType: "mob",
+              attackTotal: 13,
+            }),
+            13,
+          );
         });
       });
 
@@ -85,15 +154,31 @@ export default function register(quench) {
 
         it("a single-target Attack is checked against each target's own Evade", async function () {
           const actor = await createTestCharacter();
-          const nimble = await createTestMob("nimble", { system: { stats: { dex: { value: 10 } } } }); // mod 4 -> 15
-          const clumsy = await createTestMob("clumsy", { system: { stats: { dex: { value: 3 } } } }); // mod 2 -> 13
+          const nimble = await createTestMob("nimble", {
+            system: { stats: { dex: { value: 10 } } },
+          }); // mod 4 -> 15
+          const clumsy = await createTestMob("clumsy", {
+            system: { stats: { dex: { value: 3 } } },
+          }); // mod 2 -> 13
           try {
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Punch",
+              system: {
+                category: "attack",
+                isHandToHand: true,
+                rank: 3,
+                governingStat: "",
+                baseDamage: { dice: "1d6" },
+              },
             });
             // d20 pinned to 10 + Rank 3 = 13.
-            const message = await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([{ actor: clumsy }, { actor: nimble }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
+            const message = await withSetting("currentFloor", 1, () =>
+              withPinnedDice(PIN_D20_MID, () =>
+                withFakeTargets([{ actor: clumsy }, { actor: nimble }], () =>
+                  CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+                ),
+              ),
+            );
             const rows = message.getFlag("carl-rpg", "targetRows");
             assert.isTrue(rows.t0.hit, "13 vs. 13");
             assert.isFalse(rows.t1.hit, "13 vs. 15");
@@ -112,10 +197,22 @@ export default function register(quench) {
           try {
             await addConditionToActor(held, "held");
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Punch",
+              system: {
+                category: "attack",
+                isHandToHand: true,
+                rank: 3,
+                governingStat: "",
+                baseDamage: { dice: "1d6" },
+              },
             });
-            const message = await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([{ actor: free }, { actor: held }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
+            const message = await withSetting("currentFloor", 1, () =>
+              withPinnedDice(PIN_D20_MID, () =>
+                withFakeTargets([{ actor: free }, { actor: held }], () =>
+                  CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+                ),
+              ),
+            );
             assert.equal(message.rolls[1]?.formula, "1d20", "the extra die for the Held target");
           } finally {
             await deleteTestActor(actor);
@@ -126,13 +223,27 @@ export default function register(quench) {
 
         it("a targeted Attack that misses everyone still rolls damage, for a Taunt to redirect", async function () {
           const actor = await createTestCharacter();
-          const nimble = await createTestMob("nimble", { system: { stats: { dex: { value: 10 } } } }); // Evade 15
+          const nimble = await createTestMob("nimble", {
+            system: { stats: { dex: { value: 10 } } },
+          }); // Evade 15
           try {
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Punch",
+              system: {
+                category: "attack",
+                isHandToHand: true,
+                rank: 3,
+                governingStat: "",
+                baseDamage: { dice: "1d6" },
+              },
             });
-            const message = await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([{ actor: nimble }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
+            const message = await withSetting("currentFloor", 1, () =>
+              withPinnedDice(PIN_D20_MID, () =>
+                withFakeTargets([{ actor: nimble }], () =>
+                  CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+                ),
+              ),
+            );
             assert.isFalse(message.getFlag("carl-rpg", "targetRows").t0.hit);
             assert.isNotEmpty(message.getFlag("carl-rpg", "damageByType"));
           } finally {
@@ -143,14 +254,31 @@ export default function register(quench) {
 
         it("an Area Attack lands on everyone when it hits the chosen foe", async function () {
           const actor = await createTestCharacter();
-          const nimble = await createTestMob("nimble", { system: { stats: { dex: { value: 10 } } } });
-          const clumsy = await createTestMob("clumsy", { system: { stats: { dex: { value: 3 } } } });
+          const nimble = await createTestMob("nimble", {
+            system: { stats: { dex: { value: 10 } } },
+          });
+          const clumsy = await createTestMob("clumsy", {
+            system: { stats: { dex: { value: 3 } } },
+          });
           try {
             const skill = await createTestItem(actor, "skill", "Breath", {
-              name: "Breath", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", range: "15ft Cone", baseDamage: { dice: "1d6" } },
+              name: "Breath",
+              system: {
+                category: "attack",
+                isHandToHand: true,
+                rank: 3,
+                governingStat: "",
+                range: "15ft Cone",
+                baseDamage: { dice: "1d6" },
+              },
             });
-            const message = await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([{ actor: clumsy }, { actor: nimble }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
+            const message = await withSetting("currentFloor", 1, () =>
+              withPinnedDice(PIN_D20_MID, () =>
+                withFakeTargets([{ actor: clumsy }, { actor: nimble }], () =>
+                  CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+                ),
+              ),
+            );
             const rows = message.getFlag("carl-rpg", "targetRows");
             assert.isTrue(message.getFlag("carl-rpg", "isArea"));
             assert.isTrue(rows.t0.hit);
@@ -174,16 +302,36 @@ export default function register(quench) {
           try {
             const slot = a.system.hb.slotValue;
             const rowFor = (id, actor, extra = {}) => ({
-              id, uuid: actor.uuid, name: actor.name, isCharacter: true, zone: "full", difficulty: 13,
-              hit: true, amazing: false, freeEvade: false, freeUsed: false, evade: null, applied: false, replaced: false, ...extra,
+              id,
+              uuid: actor.uuid,
+              name: actor.name,
+              isCharacter: true,
+              zone: "full",
+              difficulty: 13,
+              hit: true,
+              amazing: false,
+              freeEvade: false,
+              freeUsed: false,
+              evade: null,
+              applied: false,
+              replaced: false,
+              ...extra,
             });
             message = await ChatMessage.create({
               content: '<div class="carl-chat-card"></div>',
-              flags: { "carl-rpg": {
-                isArea: true, floor: 1, damageIsMagic: true, damageByType: { "": slot * 4 },
-                targetUuids: [a.uuid, b.uuid],
-                targetRows: { t0: rowFor("t0", a), t1: rowFor("t1", b, { evade: { degree: "standardSuccess", success: true } }) },
-              } },
+              flags: {
+                "carl-rpg": {
+                  isArea: true,
+                  floor: 1,
+                  damageIsMagic: true,
+                  damageByType: { "": slot * 4 },
+                  targetUuids: [a.uuid, b.uuid],
+                  targetRows: {
+                    t0: rowFor("t0", a),
+                    t1: rowFor("t1", b, { evade: { degree: "standardSuccess", success: true } }),
+                  },
+                },
+              },
             });
             const rows = () => message.getFlag("carl-rpg", "targetRows");
             await applyRow(message, rows().t0);
@@ -226,7 +374,9 @@ export default function register(quench) {
             let combatant;
             ({ combat, combatant } = await createTestCombat(mob));
             await mob.update({ "system.hb.value": 0 });
-            await waitFor(() => combat.combatants.get(combatant.id)?.defeated === true, { message: "the Mob's combatant was never marked defeated" });
+            await waitFor(() => combat.combatants.get(combatant.id)?.defeated === true, {
+              message: "the Mob's combatant was never marked defeated",
+            });
             assert.isTrue(mob.statuses.has(CONFIG.specialStatusEffects.DEFEATED));
           } finally {
             await deleteTestCombat(combat);
@@ -262,19 +412,34 @@ export default function register(quench) {
         });
 
         it("Difficulty presets at Floor 3 (p.59)", function () {
-          const presets = buildDifficultyPresets({ floor: 3, selected: "opposed", opposed: { name: "Goblin", stat: "INT", mod: 2 } });
+          const presets = buildDifficultyPresets({
+            floor: 3,
+            selected: "opposed",
+            opposed: { name: "Goblin", stat: "INT", mod: 2 },
+          });
           const value = (key) => presets.find((p) => p.key === key)?.value;
           assert.equal(value("unopposed"), 16);
           assert.equal(value("stat"), 13);
           assert.equal(value("opposed"), 15);
           assert.equal(selectedPresetValue(presets), 15);
-          assert.isNull(selectedPresetValue(buildDifficultyPresets({ floor: 3 })), "Custom by default");
+          assert.isNull(
+            selectedPresetValue(buildDifficultyPresets({ floor: 3 })),
+            "Custom by default",
+          );
         });
 
         it("hourly mending: +1 HB and +5 Mana per hour, clamped (p.95)", function () {
-          const actor = { system: { hb: { value: 7, effectiveMax: 10 }, mana: { value: 2, max: 20 } } };
-          assert.deepEqual(mendingUpdates(actor, 2), { "system.hb.value": 9, "system.mana.value": 12 });
-          assert.deepEqual(mendingUpdates(actor, 10), { "system.hb.value": 10, "system.mana.value": 20 });
+          const actor = {
+            system: { hb: { value: 7, effectiveMax: 10 }, mana: { value: 2, max: 20 } },
+          };
+          assert.deepEqual(mendingUpdates(actor, 2), {
+            "system.hb.value": 9,
+            "system.mana.value": 12,
+          });
+          assert.deepEqual(mendingUpdates(actor, 10), {
+            "system.hb.value": 10,
+            "system.mana.value": 20,
+          });
         });
 
         it("end-of-floor Popularity from the Charisma score (p.280) and collapse timers (p.63)", function () {
@@ -287,7 +452,9 @@ export default function register(quench) {
         });
 
         it("grinding hours equal to the Level grant a Level, and any Level gain resets them (p.171)", async function () {
-          const actor = await createTestCharacter("grinder", { system: { attributes: { level: { value: 3 } } } });
+          const actor = await createTestCharacter("grinder", {
+            system: { attributes: { level: { value: 3 } } },
+          });
           try {
             await addGrindLevelHours(actor, 2);
             assert.equal(actor.system.grindLevelHours, 2);

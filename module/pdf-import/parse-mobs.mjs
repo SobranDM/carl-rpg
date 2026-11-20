@@ -42,7 +42,8 @@ const ATTACK_RE =
   /^([^:]{1,60}):\s*(\d+(?:\s*\+\s*(?:F|\d+))*\s*to hit|\d+(?:\s*\+\s*(?:F|\d+))+(?=\s*,)|See below|None|Auto)\b,?\s*(.*)$/i;
 // The colon is sometimes missing in print ("Bite 14+F to hit, ..."): then
 // only with "to hit".
-const ATTACK_NO_COLON_RE = /^([A-Z][A-Za-z'’ -]{1,40}?)\s+(\d+(?:\s*\+\s*(?:F|\d+))*\s*to hit)\b,?\s*(.*)$/;
+const ATTACK_NO_COLON_RE =
+  /^([A-Z][A-Za-z'’ -]{1,40}?)\s+(\d+(?:\s*\+\s*(?:F|\d+))*\s*to hit)\b,?\s*(.*)$/;
 const NOTES_RE = /^Notes:\s*(.*)$/;
 const NOTE_TITLE_RE = /^([A-Z][\w’'!?,()&. -]{1,40})—/;
 const EFFECT_START_RE = /^(On an?y? |Any |Make a |If |Each |\(Secret!?\))/;
@@ -130,7 +131,8 @@ function toMob(rawName, classLine, body, flavor) {
   if (/^Vehicle$/i.test(kind)) return null;
   const name = rawName.trim();
   const tierWord = kind.match(/^(\w+) Boss$/)?.[1]?.toLowerCase();
-  const mobTier = TIERS.includes(tierWord) ? tierWord
+  const mobTier = TIERS.includes(tierWord)
+    ? tierWord
     : (tierWord && BOSS_TIER_BY_NAME[name.toLowerCase().replace(/\s+/g, " ")]) || "";
   const system = {
     mobTier,
@@ -142,7 +144,8 @@ function toMob(rawName, classLine, body, flavor) {
     // "Small (2) to Huge (6)" takes the first.
     size: parseSizeText(`${size} (${sizeN})`),
     // A bespoke tier keeps its printed kind ("Humanoid Quest Boss").
-    creatureType: /^(Mob|Boss|Elite)$/i.test(kind) || TIERS.includes(tierWord) ? type : `${type} ${kind}`,
+    creatureType:
+      /^(Mob|Boss|Elite)$/i.test(kind) || TIERS.includes(tierWord) ? type : `${type} ${kind}`,
     attacks: [],
     biography: "",
   };
@@ -234,7 +237,9 @@ function toMob(rawName, classLine, body, flavor) {
     // A Boss or Elite is one unique creature: its token is linked (ruled
     // 2026-11-18). Only when first created - kept out of `data`, so it isn't
     // part of the re-import fingerprint and a GM's later choice stands.
-    ...(system.mobTier || system.isElite ? { createData: { prototypeToken: { actorLink: true } } } : {}),
+    ...(system.mobTier || system.isElite
+      ? { createData: { prototypeToken: { actorLink: true } } }
+      : {}),
   };
 }
 

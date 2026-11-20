@@ -17,25 +17,68 @@ import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
 import { slotsOf } from "../../helpers/gear.mjs";
 import { shieldDrState } from "../../helpers/modifiers.mjs";
 import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
-import { crawlerKey, hitBlockable, hitEvadable, hitList, hitStatus } from "../../helpers/reaction-state.mjs";
-import { damageBlockingShields, postDamageCard, rollAttackOnCard } from "../../helpers/reaction-resolve.mjs";
+import {
+  crawlerKey,
+  hitBlockable,
+  hitEvadable,
+  hitList,
+  hitStatus,
+} from "../../helpers/reaction-state.mjs";
+import {
+  damageBlockingShields,
+  postDamageCard,
+  rollAttackOnCard,
+} from "../../helpers/reaction-resolve.mjs";
 import { boardVehicle } from "../../helpers/vehicles.mjs";
 import {
-  attackIsMagical, BLOCK_TAG, bashDice, bashOffered, blockableAttack, blockReduction, buildShieldBash, keptBlockRoll, repairShield,
-  rollBlockAgain, rollShieldBash, shieldBlocker, shieldLossFor,
+  attackIsMagical,
+  BLOCK_TAG,
+  bashDice,
+  bashOffered,
+  blockableAttack,
+  blockReduction,
+  buildShieldBash,
+  keptBlockRoll,
+  repairShield,
+  rollBlockAgain,
+  rollShieldBash,
+  shieldBlocker,
+  shieldLossFor,
 } from "../../helpers/shield-block.mjs";
 import {
-  createTestCharacter, createTestItem, createTestMob, createTestVehicle, deleteTestActor, deleteTestCombat, PIN_D20_MID, settle, useQuenchTimeout,
-  waitFor, withFakeTargets, withPinnedDice, withSetting,
+  createTestCharacter,
+  createTestItem,
+  createTestMob,
+  createTestVehicle,
+  deleteTestActor,
+  deleteTestCombat,
+  PIN_D20_MID,
+  settle,
+  useQuenchTimeout,
+  waitFor,
+  withFakeTargets,
+  withPinnedDice,
+  withSetting,
 } from "../helpers.mjs";
 
-const drChange = (value) => ({ targetType: "resource", target: "dr", mode: "add", value: String(value) });
+const drChange = (value) => ({
+  targetType: "resource",
+  target: "dr",
+  mode: "add",
+  value: String(value),
+});
 const keys = (actor) => (actor.system.conditions ?? []).map((c) => c.key);
 
 /** Give a crawler the Shield Block Skill at a Rank and a Shield (DR `dr`) in its Off Hand. */
 async function arm(actor, { rank = 3, dr = 3, skill = true, inHand = true } = {}) {
-  if (skill) await createTestItem(actor, "skill", "Shield Block", { name: "Shield Block", system: { rank, governingStat: "str" } });
-  const shield = await createTestItem(actor, "item", "Shield", { system: { shield: true, slots: [], changes: [drChange(dr)] } });
+  if (skill)
+    await createTestItem(actor, "skill", "Shield Block", {
+      name: "Shield Block",
+      system: { rank, governingStat: "str" },
+    });
+  const shield = await createTestItem(actor, "item", "Shield", {
+    system: { shield: true, slots: [], changes: [drChange(dr)] },
+  });
   if (inHand) await assignItemToSlot(actor, { slotType: "gear", slotKey: "offHand" }, shield);
   return actor.items.get(shield.id);
 }
@@ -44,7 +87,18 @@ async function arm(actor, { rank = 3, dr = 3, skill = true, inHand = true } = {}
 function oneHit({ isArea = false, damage = "10", damageIsMagic = false, hit = {} } = {}) {
   return {
     attacks: { a: { id: "a", isArea, damage, damageIsMagic } },
-    hits: { h: { id: "h", attackId: "a", row: { hit: true, isCharacter: true, difficulty: 15 }, caughtBy: null, free: null, evade: null, block: null, ...hit } },
+    hits: {
+      h: {
+        id: "h",
+        attackId: "a",
+        row: { hit: true, isCharacter: true, difficulty: 15 },
+        caughtBy: null,
+        free: null,
+        evade: null,
+        block: null,
+        ...hit,
+      },
+    },
   };
 }
 
@@ -59,8 +113,14 @@ export default function register(quench) {
 
         it("physical, non-Area, with damage; magical only from Rank 5", function () {
           assert.isTrue(blockableAttack({ isArea: false, hasDamage: true, magical: false }, 1));
-          assert.isFalse(blockableAttack({ isArea: true, hasDamage: true, magical: false }, 15), "never Area");
-          assert.isFalse(blockableAttack({ isArea: false, hasDamage: false, magical: false }, 15), "nothing to halve");
+          assert.isFalse(
+            blockableAttack({ isArea: true, hasDamage: true, magical: false }, 15),
+            "never Area",
+          );
+          assert.isFalse(
+            blockableAttack({ isArea: false, hasDamage: false, magical: false }, 15),
+            "nothing to halve",
+          );
           assert.isFalse(blockableAttack({ magical: true }, 4), "magical below Rank 5");
           assert.isTrue(blockableAttack({ magical: true }, 5), "magical at Rank 5");
         });
@@ -93,9 +153,17 @@ export default function register(quench) {
 
         it("a Reaction card hit: not a Near Miss on a crawler riding a vehicle - it hits the vehicle (p.72)", function () {
           const nearMiss = { evade: { success: false, degree: "nearMissFail" } };
-          const riding = oneHit({ hit: { ...nearMiss, row: { hit: true, isCharacter: true, difficulty: 15, vehicleUuid: "Actor.ride" } } });
+          const riding = oneHit({
+            hit: {
+              ...nearMiss,
+              row: { hit: true, isCharacter: true, difficulty: 15, vehicleUuid: "Actor.ride" },
+            },
+          });
           assert.isFalse(hitBlockable(riding, riding.hits.h), "redirected to the vehicle");
-          assert.isTrue(hitBlockable(oneHit({ hit: nearMiss }), oneHit({ hit: nearMiss }).hits.h), "on foot, a Near Miss can still be blocked");
+          assert.isTrue(
+            hitBlockable(oneHit({ hit: nearMiss }), oneHit({ hit: nearMiss }).hits.h),
+            "on foot, a Near Miss can still be blocked",
+          );
         });
 
         it("Lock: a failed block on a hit a Near Miss sent to the vehicle costs the Shield nothing", async function () {
@@ -106,13 +174,28 @@ export default function register(quench) {
             assert.isTrue(await boardVehicle(ride, pc), "seated");
             const state = (degree) => ({
               attacks: { a: { id: "a", isArea: false, damage: "10", damageIsMagic: false } },
-              hits: { h: {
-                id: "h", attackId: "a", targetUuid: pc.uuid, row: { hit: true, isCharacter: true, vehicleUuid: ride.uuid },
-                caughtBy: null, free: null, evade: { success: false, degree }, block: { success: false, degree: "criticalFail", shieldId: shield.id },
-              } },
+              hits: {
+                h: {
+                  id: "h",
+                  attackId: "a",
+                  targetUuid: pc.uuid,
+                  row: { hit: true, isCharacter: true, vehicleUuid: ride.uuid },
+                  caughtBy: null,
+                  free: null,
+                  evade: { success: false, degree },
+                  block: { success: false, degree: "criticalFail", shieldId: shield.id },
+                },
+              },
             });
-            assert.deepEqual(await damageBlockingShields(state("nearMissFail")), {}, "the vehicle took it: no Shield DR lost");
-            assert.exists((await damageBlockingShields(state("standardFail"))).h, "a plain failed Evade: the failed block costs DR");
+            assert.deepEqual(
+              await damageBlockingShields(state("nearMissFail")),
+              {},
+              "the vehicle took it: no Shield DR lost",
+            );
+            assert.exists(
+              (await damageBlockingShields(state("standardFail"))).h,
+              "a plain failed Evade: the failed block costs DR",
+            );
           } finally {
             await deleteTestActor(ride);
             await deleteTestActor(pc);
@@ -139,10 +222,18 @@ export default function register(quench) {
         });
 
         it("one block's later Checks: the d20 again with the rest of the first one's total", async function () {
-          assert.deepEqual(keptBlockRoll({ formula: "2d20kh", natural: 14, total: 21 }), { formula: "2d20kh", rest: 7 });
-          assert.isNull(keptBlockRoll({ formula: "1d20 + 5", natural: 14, total: 21 }), "only a bare d20 expression");
+          assert.deepEqual(keptBlockRoll({ formula: "2d20kh", natural: 14, total: 21 }), {
+            formula: "2d20kh",
+            rest: 7,
+          });
+          assert.isNull(
+            keptBlockRoll({ formula: "1d20 + 5", natural: 14, total: 21 }),
+            "only a bare d20 expression",
+          );
           assert.isNull(keptBlockRoll({ formula: "1d20", natural: null, total: 21 }));
-          const again = await withPinnedDice(PIN_D20_MID, () => rollBlockAgain({ formula: "1d20", rest: 7 }, 16));
+          const again = await withPinnedDice(PIN_D20_MID, () =>
+            rollBlockAgain({ formula: "1d20", rest: 7 }, 16),
+          );
           assert.equal(again.total, again.naturalRoll + 7);
           assert.equal(again.formula, "1d20", "the d20 part, as an AI Reroll needs it");
           assert.equal(again.difficulty, 16, "against its own Attack's to-hit");
@@ -161,9 +252,14 @@ export default function register(quench) {
 
       describe("the damage", function () {
         it("half before DR: 30 against DR 3 is 12, not 13", function () {
-          const target = { system: { drEffective: 3, resistancesEffective: {}, hb: { slotValue: 1 } } };
+          const target = {
+            system: { drEffective: 3, resistancesEffective: {}, hb: { slotValue: 1 } },
+          };
           assert.deepEqual(blockedDamage({ "": 30 }), { "": 15 });
-          assert.equal(computeDamageApplication(blockedDamage({ "": 30 }), target, false).totalFinalDamage, 12);
+          assert.equal(
+            computeDamageApplication(blockedDamage({ "": 30 }), target, false).totalFinalDamage,
+            12,
+          );
         });
 
         it("Rank 15: the STR Mod off after halving (the book's 30 -> 15 -> 10)", function () {
@@ -171,7 +267,11 @@ export default function register(quench) {
           const strong = { system: { stats: { str: { mod: 5 } } } };
           assert.equal(blockReduction(strong, 14), 0);
           assert.equal(blockReduction(strong, 15), 5);
-          assert.equal(blockReduction({ system: { stats: { str: { mod: -2 } } } }, 15), 0, "never adds damage");
+          assert.equal(
+            blockReduction({ system: { stats: { str: { mod: -2 } } } }, 15),
+            0,
+            "never adds damage",
+          );
         });
 
         it("each damage type keeps its share", function () {
@@ -208,7 +308,14 @@ export default function register(quench) {
       describe("the Reaction card", function () {
         useQuenchTimeout(this);
 
-        const rolled = (total, naturalRoll, difficulty) => ({ total, naturalRoll, difficulty, formula: "1d20", breakdown: "", roll: null });
+        const rolled = (total, naturalRoll, difficulty) => ({
+          total,
+          naturalRoll,
+          difficulty,
+          formula: "1d20",
+          breakdown: "",
+          roll: null,
+        });
         const EFFECTS = [
           { debuffKey: "burned", stacks: 1, trigger: "hit", label: "" },
           { debuffKey: "poisoned", stacks: 1, trigger: "majorFail", label: "" },
@@ -222,9 +329,31 @@ export default function register(quench) {
           mob = await createTestMob("sb-mob", {
             system: {
               attacks: [
-                { name: "Maul", toHit: "16", damage: "30", damageType: "bludgeoning", range: "", effect: "" },
-                { name: "Flame", toHit: "16", damage: "10", damageType: "fire", range: "", effect: "" },
-                { name: "Slam", toHit: "16", damage: "10", damageType: "bludgeoning", range: "", effect: "", isArea: true },
+                {
+                  name: "Maul",
+                  toHit: "16",
+                  damage: "30",
+                  damageType: "bludgeoning",
+                  range: "",
+                  effect: "",
+                },
+                {
+                  name: "Flame",
+                  toHit: "16",
+                  damage: "10",
+                  damageType: "fire",
+                  range: "",
+                  effect: "",
+                },
+                {
+                  name: "Slam",
+                  toHit: "16",
+                  damage: "10",
+                  damageType: "bludgeoning",
+                  range: "",
+                  effect: "",
+                  isArea: true,
+                },
               ],
               actionsPerRound: 6,
             },
@@ -237,9 +366,14 @@ export default function register(quench) {
         });
         afterEach(async function () {
           await settle(150);
-          const ids = game.messages.filter((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat?.id
-            || m.getFlag("carl-rpg", "reaction")?.combatId === combat?.id
-            || m.getFlag("carl-rpg", "reactionDamage")?.combatId === combat?.id).map((m) => m.id);
+          const ids = game.messages
+            .filter(
+              (m) =>
+                m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat?.id ||
+                m.getFlag("carl-rpg", "reaction")?.combatId === combat?.id ||
+                m.getFlag("carl-rpg", "reactionDamage")?.combatId === combat?.id,
+            )
+            .map((m) => m.id);
           if (ids.length) await ChatMessage.deleteDocuments(ids);
           await deleteTestCombat(combat);
           for (const actor of [mob, pc1, pc2]) await deleteTestActor(actor);
@@ -248,28 +382,48 @@ export default function register(quench) {
         // Started once the crawlers are armed: equipping in a fight takes an Action.
         const begin = async () => {
           combat = await Combat.create({});
-          await combat.createEmbeddedDocuments("Combatant", [mob, pc1, pc2].map((a) => ({ actorId: a.id })));
+          await combat.createEmbeddedDocuments(
+            "Combatant",
+            [mob, pc1, pc2].map((a) => ({ actorId: a.id })),
+          );
           await combat.startCombat();
         };
-        const declareOn = (target, index = 0) => withSetting("currentFloor", 1, () =>
-          withFakeTargets([{ actor: target }], () => CarlDice.rollMobAttack(mob, index, { skipDialog: true })));
+        const declareOn = (target, index = 0) =>
+          withSetting("currentFloor", 1, () =>
+            withFakeTargets([{ actor: target }], () =>
+              CarlDice.rollMobAttack(mob, index, { skipDialog: true }),
+            ),
+          );
         const startReaction = async () => {
-          await waitFor(() => game.messages.some((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id),
-            { message: "no round-start notice" });
+          await waitFor(
+            () =>
+              game.messages.some(
+                (m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id,
+              ),
+            { message: "no round-start notice" },
+          );
           await combat.nextTurn();
           return reactionCardFor(combat);
         };
         const state = (card) => card.getFlag("carl-rpg", "reaction");
         const op = (card, name, data) => applyOp(card.id, name, data, game.user);
         const hits = (card) => hitList(state(card));
-        const spent = (actor) => actionRecord(combat, combat.combatants.find((c) => c.actor === actor).id).spent.length;
+        const spent = (actor) =>
+          actionRecord(combat, combat.combatants.find((c) => c.actor === actor).id).spent.length;
         // One Shield Block Action: a Check per hit (`check`, or one each from an array).
-        const block = (card, actor, list, check) => op(card, "block", {
-          uuid: actor.uuid, checks: Object.fromEntries(list.map((hit, i) => [hit.id, Array.isArray(check) ? check[i] : check])),
-        });
+        const block = (card, actor, list, check) =>
+          op(card, "block", {
+            uuid: actor.uuid,
+            checks: Object.fromEntries(
+              list.map((hit, i) => [hit.id, Array.isArray(check) ? check[i] : check]),
+            ),
+          });
         const blockOn = (card, hit) => state(card).hits[hit.id].block ?? null;
         const blocker = (card, actor) => state(card).crawlers[crawlerKey(actor.uuid)] ?? {};
-        const tags = (actor) => actionRecord(combat, combat.combatants.find((c) => c.actor === actor).id).spent.map((e) => e.tag);
+        const tags = (actor) =>
+          actionRecord(combat, combat.combatants.find((c) => c.actor === actor).id).spent.map(
+            (e) => e.tag,
+          );
         const resolve = async (card) => {
           const damage = await postDamageCard(combat, state(card));
           const data = () => damage.getFlag("carl-rpg", "reactionDamage");
@@ -286,19 +440,39 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           const list = hits(card);
-          assert.isTrue(await block(card, pc1, list, [rolled(20, 15, 16), rolled(5, 2, 16), rolled(18, 13, 16)]));
+          assert.isTrue(
+            await block(card, pc1, list, [
+              rolled(20, 15, 16),
+              rolled(5, 2, 16),
+              rolled(18, 13, 16),
+            ]),
+          );
           assert.equal(spent(pc1), 1, "one Action");
           assert.deepEqual(tags(pc1), [BLOCK_TAG]);
-          assert.deepEqual(list.map((h) => blockOn(card, h)?.total), [20, 5, 18], "a separate Check against each");
-          assert.deepEqual(list.map((h) => hitStatus(state(card), state(card).hits[h.id]).status), ["blocked", "hit", "blocked"]);
+          assert.deepEqual(
+            list.map((h) => blockOn(card, h)?.total),
+            [20, 5, 18],
+            "a separate Check against each",
+          );
+          assert.deepEqual(
+            list.map((h) => hitStatus(state(card), state(card).hits[h.id]).status),
+            ["blocked", "hit", "blocked"],
+          );
           assert.isTrue(blocker(card, pc1).blocked);
-          assert.deepEqual(blocker(card, pc1).blockRoll, { formula: "1d20", rest: 5 }, "kept for later Attacks");
+          assert.deepEqual(
+            blocker(card, pc1).blockRoll,
+            { formula: "1d20", rest: 5 },
+            "kept for later Attacks",
+          );
           assert.isFalse(await block(card, pc1, list, rolled(20, 15, 16)), "nothing left to block");
           assert.equal(spent(pc1), 1);
         });
 
         it("skips what it can't block: Area, magic below Rank 5, a Caught hit; no Shield, no block", async function () {
-          await createTestItem(pc2, "skill", "Shield Block", { name: "Shield Block", system: { rank: 3 } });
+          await createTestItem(pc2, "skill", "Shield Block", {
+            name: "Shield Block",
+            system: { rank: 3 },
+          });
           await arm(pc1, { rank: 3 });
           await createTestItem(pc1, "skill", "Catcher", { name: "Catcher", system: { rank: 1 } });
           await begin();
@@ -309,7 +483,9 @@ export default function register(quench) {
           const card = await startReaction();
           const [maul, flame, slam, onPc2] = hits(card);
           assert.isFalse(await block(card, pc2, [onPc2], rolled(20, 15, 16)), "no Shield");
-          assert.isTrue(await op(card, "catch", { byUuid: pc1.uuid, byName: pc1.name, hitId: onPc2.id }));
+          assert.isTrue(
+            await op(card, "catch", { byUuid: pc1.uuid, byName: pc1.name, hitId: onPc2.id }),
+          );
           assert.equal(state(card).hits[onPc2.id].targetUuid, pc1.uuid);
           const all = hits(card).filter((h) => h.targetUuid === pc1.uuid);
           assert.lengthOf(all, 4);
@@ -350,14 +526,29 @@ export default function register(quench) {
           const card = await startReaction();
           const [own, onPc2] = hits(card);
           assert.isTrue(await block(card, pc1, [own], rolled(20, 15, 16)));
-          assert.isTrue(await op(card, "taunt", { byUuid: pc1.uuid, byName: pc1.name, mobUuid: mob.uuid, rank: 1, check: rolled(25, 15, 20) }));
+          assert.isTrue(
+            await op(card, "taunt", {
+              byUuid: pc1.uuid,
+              byName: pc1.name,
+              mobUuid: mob.uuid,
+              rank: 1,
+              check: rolled(25, 15, 20),
+            }),
+          );
           const pulled = state(card).hits[onPc2.id];
           assert.equal(pulled.targetUuid, pc1.uuid, "Taunted onto them");
           assert.isOk(pulled.block, "blocked on arrival");
           assert.isTrue(pulled.block.auto);
-          assert.equal(pulled.block.total, pulled.block.natural + 5, "the first Check's numbers, the d20 again");
+          assert.equal(
+            pulled.block.total,
+            pulled.block.natural + 5,
+            "the first Check's numbers, the d20 again",
+          );
           assert.equal(spent(pc1), 2, "the block and the Taunt - nothing for the new Attack");
-          assert.deepEqual(tags(pc1).filter((t) => t === BLOCK_TAG), [BLOCK_TAG]);
+          assert.deepEqual(
+            tags(pc1).filter((t) => t === BLOCK_TAG),
+            [BLOCK_TAG],
+          );
         });
 
         it("undo gives the one Action back and clears every block it made", async function () {
@@ -372,7 +563,10 @@ export default function register(quench) {
           await undoAction(combat, combatant.id, actionRecord(combat, combatant.id).spent[0].id);
           await settle(100);
           assert.equal(spent(pc1), 0, "the Action is back");
-          assert.isTrue(list.every((h) => blockOn(card, h) === null), "no blocks left");
+          assert.isTrue(
+            list.every((h) => blockOn(card, h) === null),
+            "no blocks left",
+          );
           assert.isNotOk(blocker(card, pc1).blocked);
           assert.isTrue(await block(card, pc1, list, rolled(20, 15, 16)), "and it can block again");
           assert.equal(spent(pc1), 1);
@@ -387,13 +581,20 @@ export default function register(quench) {
           const card = await startReaction();
           const [h1, h2] = hits(card);
           assert.isTrue(await block(card, pc1, [h1, h2], rolled(20, 15, 16)));
-          assert.isTrue(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: h1.id }));
+          assert.isTrue(
+            await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: h1.id }),
+          );
           await settle(100);
           assert.isNull(blockOn(card, h1), "the Caught one's block is gone");
           assert.isOk(blockOn(card, h2), "the other stays");
           assert.equal(spent(pc1), 1, "still covers one");
-          assert.isFalse(await block(card, pc2, [state(card).hits[h1.id]], rolled(20, 15, 16)), "the Catcher can't block it");
-          assert.isTrue(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: h2.id }));
+          assert.isFalse(
+            await block(card, pc2, [state(card).hits[h1.id]], rolled(20, 15, 16)),
+            "the Catcher can't block it",
+          );
+          assert.isTrue(
+            await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: h2.id }),
+          );
           await settle(100);
           assert.equal(spent(pc1), 0, "blocks nothing now: its Action came back");
           assert.isNotOk(blocker(card, pc1).blocked);
@@ -407,9 +608,20 @@ export default function register(quench) {
           const card = await startReaction();
           const list = hits(card);
           assert.isTrue(await block(card, pc1, list, rolled(20, 15, 16)));
-          assert.isTrue(await op(card, "taunt", { byUuid: pc2.uuid, byName: pc2.name, mobUuid: mob.uuid, rank: 1, check: rolled(25, 15, 20) }));
+          assert.isTrue(
+            await op(card, "taunt", {
+              byUuid: pc2.uuid,
+              byName: pc2.name,
+              mobUuid: mob.uuid,
+              rank: 1,
+              check: rolled(25, 15, 20),
+            }),
+          );
           await settle(100);
-          assert.isTrue(list.every((h) => state(card).hits[h.id].targetUuid === pc2.uuid), "Taunted away");
+          assert.isTrue(
+            list.every((h) => state(card).hits[h.id].targetUuid === pc2.uuid),
+            "Taunted away",
+          );
           assert.isTrue(list.every((h) => blockOn(card, h) === null));
           assert.equal(spent(pc1), 0);
           assert.isNotOk(blocker(card, pc1).blocked);
@@ -476,19 +688,32 @@ export default function register(quench) {
           await block(card, pc1, [h1, h2], [rolled(30, 20, 16), rolled(30, 19, 16)]);
           const b1 = state(card).hits[h1.id].block;
           assert.isTrue(bashOffered(b1, b1.rank));
-          assert.isFalse(bashOffered(state(card).hits[h2.id].block, 10), "a 19 isn't a Critical Hit");
+          assert.isFalse(
+            bashOffered(state(card).hits[h2.id].block, 10),
+            "a 19 isn't a Critical Hit",
+          );
           assert.isFalse(bashOffered(b1, 9), "below Rank 10");
           assert.equal(bashDice(10), "3d6");
           assert.equal(bashDice(15), "4d6");
           const before = spent(pc1);
           const bash = await withPinnedDice(PIN_D20_MID, () =>
-            rollShieldBash(pc1, { targetUuid: state(card).attacks[h1.attackId].mobUuid, rank: 10, skipDialog: true }));
+            rollShieldBash(pc1, {
+              targetUuid: state(card).attacks[h1.attackId].mobUuid,
+              rank: 10,
+              skipDialog: true,
+            }),
+          );
           assert.ok(bash, "the Attack card");
           assert.equal(spent(pc1), before, "free - no Action");
-          assert.deepEqual(bash.getFlag("carl-rpg", "targetUuids"), [state(card).attacks[h1.attackId].mobUuid]);
+          assert.deepEqual(bash.getFlag("carl-rpg", "targetUuids"), [
+            state(card).attacks[h1.attackId].mobUuid,
+          ]);
           assert.isTrue(await op(card, "bash", { uuid: pc1.uuid, hitId: h1.id }));
           assert.isFalse(await op(card, "bash", { uuid: pc1.uuid, hitId: h1.id }), "once");
-          assert.isFalse(await op(card, "bash", { uuid: pc1.uuid, hitId: h2.id }), "not without a Natural 20");
+          assert.isFalse(
+            await op(card, "bash", { uuid: pc1.uuid, hitId: h2.id }),
+            "not without a Natural 20",
+          );
           await bash.delete();
         });
       });
@@ -499,21 +724,60 @@ export default function register(quench) {
         /** A Mob Attack card with one row on `pc`, `damage` untyped-physical, and its row. */
         async function card(pc, { damage = { bludgeoning: 20 }, row = {}, flags = {} } = {}) {
           const base = {
-            id: "t0", uuid: pc.uuid, name: pc.name, isCharacter: true, zone: "full", difficulty: 16, role: "target",
-            hit: true, amazing: false, freeEvade: false, freeUsed: false, evade: null, applied: false, replaced: false,
+            id: "t0",
+            uuid: pc.uuid,
+            name: pc.name,
+            isCharacter: true,
+            zone: "full",
+            difficulty: 16,
+            role: "target",
+            hit: true,
+            amazing: false,
+            freeEvade: false,
+            freeUsed: false,
+            evade: null,
+            applied: false,
+            replaced: false,
           };
           return ChatMessage.create({
             content: '<div class="carl-chat-card"></div>',
-            flags: { "carl-rpg": {
-              isArea: false, floor: 1, damageIsMagic: false, damageByType: damage, attackerType: "mob",
-              targetEffects: [{ id: "te0", debuffKey: "burned", stacks: 1, trigger: "hit", label: "", sourceLabel: "Test" }],
-              targetUuids: [pc.uuid], targetRows: { t0: { ...base, ...row } }, ...flags,
-            } },
+            flags: {
+              "carl-rpg": {
+                isArea: false,
+                floor: 1,
+                damageIsMagic: false,
+                damageByType: damage,
+                attackerType: "mob",
+                targetEffects: [
+                  {
+                    id: "te0",
+                    debuffKey: "burned",
+                    stacks: 1,
+                    trigger: "hit",
+                    label: "",
+                    sourceLabel: "Test",
+                  },
+                ],
+                targetUuids: [pc.uuid],
+                targetRows: { t0: { ...base, ...row } },
+                ...flags,
+              },
+            },
           });
         }
         const blockCheck = (shield, degree, success, rank = 3) => ({
-          id: "c", kind: "block", natural: 10, base: 10, total: 10, difficulty: 16, degree, success, interventions: [],
-          shieldId: shield.id, shieldName: shield.name, rank,
+          id: "c",
+          kind: "block",
+          natural: 10,
+          base: 10,
+          total: 10,
+          difficulty: 16,
+          degree,
+          success,
+          interventions: [],
+          shieldId: shield.id,
+          shieldName: shield.name,
+          rank,
         });
 
         it("offered to a target with the Skill and a Shield - not for magic, Area or after an Evade", async function () {
@@ -528,13 +792,21 @@ export default function register(quench) {
             assert.isTrue(rowBlockable(row(), plain.flags["carl-rpg"]));
             const magic = await card(pc, { flags: { damageIsMagic: true } });
             messages.push(magic);
-            assert.isFalse(rowBlockable(magic.getFlag("carl-rpg", "targetRows").t0, magic.flags["carl-rpg"]));
+            assert.isFalse(
+              rowBlockable(magic.getFlag("carl-rpg", "targetRows").t0, magic.flags["carl-rpg"]),
+            );
             const area = await card(pc, { flags: { isArea: true } });
             messages.push(area);
-            assert.isFalse(rowBlockable(area.getFlag("carl-rpg", "targetRows").t0, area.flags["carl-rpg"]));
-            const evaded = await card(pc, { row: { evade: { degree: "standardSuccess", success: true } } });
+            assert.isFalse(
+              rowBlockable(area.getFlag("carl-rpg", "targetRows").t0, area.flags["carl-rpg"]),
+            );
+            const evaded = await card(pc, {
+              row: { evade: { degree: "standardSuccess", success: true } },
+            });
             messages.push(evaded);
-            assert.isFalse(rowBlockable(evaded.getFlag("carl-rpg", "targetRows").t0, evaded.flags["carl-rpg"]));
+            assert.isFalse(
+              rowBlockable(evaded.getFlag("carl-rpg", "targetRows").t0, evaded.flags["carl-rpg"]),
+            );
           } finally {
             for (const m of messages) await m.delete();
             await deleteTestActor(pc);
@@ -548,12 +820,21 @@ export default function register(quench) {
             const shield = await arm(pc, { rank: 4 });
             message = await card(pc);
             await withPinnedDice(PIN_D20_MID, () => blockRow(message, "t0", { skipDialog: true }));
-            await waitFor(() => !!message.getFlag("carl-rpg", "targetRows").t0.checks?.block, { message: "no block on the row" });
+            await waitFor(() => !!message.getFlag("carl-rpg", "targetRows").t0.checks?.block, {
+              message: "no block on the row",
+            });
             const row = message.getFlag("carl-rpg", "targetRows").t0;
             assert.equal(row.checks.block.shieldId, shield.id);
             assert.equal(row.checks.block.rank, 4);
-            assert.equal(row.checks.block.difficulty, 16, "against what its Evade would roll against");
-            assert.deepEqual(row.block, { degree: row.checks.block.degree, success: row.checks.block.success });
+            assert.equal(
+              row.checks.block.difficulty,
+              16,
+              "against what its Evade would roll against",
+            );
+            assert.deepEqual(row.block, {
+              degree: row.checks.block.degree,
+              success: row.checks.block.success,
+            });
             assert.isFalse(rowBlockable(row, message.flags["carl-rpg"]), "once");
           } finally {
             await message?.delete();
@@ -569,19 +850,31 @@ export default function register(quench) {
           try {
             await arm(pc);
             combat = await Combat.create({});
-            await combat.createEmbeddedDocuments("Combatant", [mob, pc].map((a) => ({ actorId: a.id })));
+            await combat.createEmbeddedDocuments(
+              "Combatant",
+              [mob, pc].map((a) => ({ actorId: a.id })),
+            );
             await combat.startCombat();
-            const spentTags = () => actionRecord(combat, combat.combatants.find((c) => c.actor === pc).id).spent.map((e) => e.tag);
+            const spentTags = () =>
+              actionRecord(combat, combat.combatants.find((c) => c.actor === pc).id).spent.map(
+                (e) => e.tag,
+              );
             messages.push(await card(pc), await card(pc));
             for (const message of messages) {
-              await withPinnedDice(PIN_D20_MID, () => blockRow(message, "t0", { skipDialog: true }));
-              await waitFor(() => !!message.getFlag("carl-rpg", "targetRows").t0.checks?.block, { message: "no block on the row" });
+              await withPinnedDice(PIN_D20_MID, () =>
+                blockRow(message, "t0", { skipDialog: true }),
+              );
+              await waitFor(() => !!message.getFlag("carl-rpg", "targetRows").t0.checks?.block, {
+                message: "no block on the row",
+              });
             }
             assert.deepEqual(spentTags(), [BLOCK_TAG], "the first card paid; the second was free");
           } finally {
             await settle(150);
             for (const m of messages) await m.delete();
-            const notices = game.messages.filter((m) => combat && m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id).map((m) => m.id);
+            const notices = game.messages
+              .filter((m) => combat && m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id)
+              .map((m) => m.id);
             if (notices.length) await ChatMessage.deleteDocuments(notices);
             await deleteTestCombat(combat);
             await deleteTestActor(mob);
@@ -596,12 +889,18 @@ export default function register(quench) {
             const shield = await arm(pc, { dr: 2 });
             const dr = pc.system.drEffective;
             message = await card(pc, {
-              row: { checks: { block: blockCheck(shield, "standardSuccess", true) }, block: { degree: "standardSuccess", success: true } },
+              row: {
+                checks: { block: blockCheck(shield, "standardSuccess", true) },
+                block: { degree: "standardSuccess", success: true },
+              },
             });
             const lines = await applyRow(message, message.getFlag("carl-rpg", "targetRows").t0);
             await settle();
             const total = Math.max(0, 10 - dr);
-            assert.isTrue(lines.some((l) => l.includes(`= ${total} total`)), `20 halved to 10, then DR: ${lines.join(" | ")}`);
+            assert.isTrue(
+              lines.some((l) => l.includes(`= ${total} total`)),
+              `20 halved to 10, then DR: ${lines.join(" | ")}`,
+            );
             assert.include(keys(pc), "burned", "still a hit");
           } finally {
             await message?.delete();
@@ -615,7 +914,10 @@ export default function register(quench) {
           try {
             const shield = await arm(pc, { dr: 3 });
             message = await card(pc, {
-              row: { checks: { block: blockCheck(shield, "criticalFail", false) }, block: { degree: "criticalFail", success: false } },
+              row: {
+                checks: { block: blockCheck(shield, "criticalFail", false) },
+                block: { degree: "criticalFail", success: false },
+              },
             });
             await applyRow(message, message.getFlag("carl-rpg", "targetRows").t0);
             await settle();
@@ -633,7 +935,10 @@ export default function register(quench) {
             const { item } = buildShieldBash(pc, 10);
             assert.equal(item.system.category, "attack");
             assert.equal(item.system.governingStat, "str");
-            assert.deepEqual({ ...item.system.baseDamage }, { dice: "3d6", stat: "str", damageType: "bludgeoning" });
+            assert.deepEqual(
+              { ...item.system.baseDamage },
+              { dice: "3d6", stat: "str", damageType: "bludgeoning" },
+            );
             assert.isFalse(item.system.isMagicDamage);
             assert.isUndefined(pc.items.get(item.id), "not saved on the crawler");
           } finally {

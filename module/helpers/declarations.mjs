@@ -69,7 +69,9 @@ export function declaredAttacks(combat) {
  * @returns {Declaration[]}
  */
 export function declarationsByMob(combat, { tokenUuid = null, actorUuid = null }) {
-  return declaredAttacks(combat).filter((d) => (tokenUuid && d.mobUuid === tokenUuid) || (actorUuid && d.mobUuid === actorUuid));
+  return declaredAttacks(combat).filter(
+    (d) => (tokenUuid && d.mobUuid === tokenUuid) || (actorUuid && d.mobUuid === actorUuid),
+  );
 }
 
 /** Pending writes per combat id: one at a time, so they can't overwrite each other. */
@@ -101,9 +103,10 @@ export function recordDeclaration(combat, data) {
     const id = foundry.utils.randomID();
     const declaration = { ...data, id, round: combat.round, createdAt: Date.now() };
     const store = combat.getFlag(SCOPE, "declared");
-    const declared = store?.round === combat.round
-      ? { attacks: { [id]: declaration } }
-      : ForcedReplacement.create({ round: combat.round, attacks: { [id]: declaration } });
+    const declared =
+      store?.round === combat.round
+        ? { attacks: { [id]: declaration } }
+        : ForcedReplacement.create({ round: combat.round, attacks: { [id]: declaration } });
     await combat.update({ flags: { [SCOPE]: { declared } } });
     return declaration;
   });
@@ -122,10 +125,13 @@ export function removeDeclaration(combat, id) {
     const declaration = declaredAttacks(combat).find((d) => d.id === id);
     if (!game.user.isGM || !declaration) return;
     const { ForcedDeletion } = foundry.data.operators;
-    await combat.update({ flags: { [SCOPE]: { declared: { attacks: { [id]: new ForcedDeletion() } } } } });
+    await combat.update({
+      flags: { [SCOPE]: { declared: { attacks: { [id]: new ForcedDeletion() } } } },
+    });
     await restoreSpentConditions(declaration);
     // And the Action it spent (helpers/actions.mjs).
-    if (declaration.action) await refundAction(combat, declaration.action.combatantId, declaration.action.id);
+    if (declaration.action)
+      await refundAction(combat, declaration.action.combatantId, declaration.action.id);
   });
 }
 
@@ -149,6 +155,11 @@ async function restoreSpentConditions(declaration) {
  * @returns {string}
  */
 export function describeDeclaration(declaration) {
-  const targets = Object.values(declaration.targetRows ?? {}).map((row) => row.name).join(", ");
-  return game.i18n.format("CARLRPG.Declare.Summary", { attack: declaration.attackName, targets: targets || "-" });
+  const targets = Object.values(declaration.targetRows ?? {})
+    .map((row) => row.name)
+    .join(", ");
+  return game.i18n.format("CARLRPG.Declare.Summary", {
+    attack: declaration.attackName,
+    targets: targets || "-",
+  });
 }

@@ -4,7 +4,11 @@ import { opposedDifficulty, staticEvade } from "../helpers/rules.mjs";
 import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
 import {
-  defineStatsField, deriveStats, deriveDefenses, deriveResourceCaps, creatureRollData,
+  defineStatsField,
+  deriveStats,
+  deriveDefenses,
+  deriveResourceCaps,
+  creatureRollData,
 } from "./shared/derive-creature.mjs";
 import { currentFloor } from "../helpers/floor.mjs";
 
@@ -29,10 +33,13 @@ export default class CarlRPGPet extends CarlRPGActorBase {
     const requiredInteger = { required: true, nullable: false, integer: true };
     // A choice of a CONFIG map's keys; "" (none) is allowed unless the
     // initial value is a real key that must always be set.
-    const choice = (map, initial) => new fields.StringField({
-      required: true, blank: initial === "", initial,
-      choices: [...(initial === "" ? [""] : []), ...Object.keys(map)],
-    });
+    const choice = (map, initial) =>
+      new fields.StringField({
+        required: true,
+        blank: initial === "",
+        initial,
+        choices: [...(initial === "" ? [""] : []), ...Object.keys(map)],
+      });
     const schema = super.defineSchema();
 
     // Same path as a Character's, so the +3 banked Stat Points per Level in
@@ -74,19 +81,33 @@ export default class CarlRPGPet extends CarlRPGActorBase {
     schema.earthBorn = new fields.BooleanField({ initial: false });
 
     schema.size = new fields.NumberField({
-      ...requiredInteger, initial: 3, min: 1, max: 8,
+      ...requiredInteger,
+      initial: 3,
+      min: 1,
+      max: 8,
       choices: Object.keys(CONFIG.CARLRPG.sizes).map(Number),
     });
     schema.creatureType = new fields.StringField({ required: true, blank: true, initial: "" });
     // "Speed 20+S" (p.231) - Move plus Step, as a crawler's.
     schema.move = new fields.NumberField({ ...requiredInteger, initial: 20, min: 0 });
     schema.step = new fields.NumberField({ ...requiredInteger, initial: 10, min: 0 });
-    schema.hbSlotsOverride = new fields.NumberField({ required: false, nullable: true, integer: true, min: 1, initial: null });
+    schema.hbSlotsOverride = new fields.NumberField({
+      required: false,
+      nullable: true,
+      integer: true,
+      min: 1,
+      initial: null,
+    });
 
     schema.command = new fields.SchemaField({
       state: choice(CONFIG.CARLRPG.petCommandStates, ""),
       combatId: new fields.StringField({ required: true, blank: true, initial: "" }),
-      round: new fields.NumberField({ required: false, nullable: true, integer: true, initial: null }),
+      round: new fields.NumberField({
+        required: false,
+        nullable: true,
+        integer: true,
+        initial: null,
+      }),
     });
 
     return schema;
@@ -167,8 +188,11 @@ export default class CarlRPGPet extends CarlRPGActorBase {
 
     const abilities = this.specialAbilities;
     this.specialAbilityCount = [
-      abilities.move60, abilities.tauntOrCatcher, abilities.altMove,
-      abilities.heightenedSenses, abilities.resistance,
+      abilities.move60,
+      abilities.tauntOrCatcher,
+      abilities.altMove,
+      abilities.heightenedSenses,
+      abilities.resistance,
     ].filter(Boolean).length;
     this.specialAbilityAllowed = CONFIG.CARLRPG.petSpecialAbilityAllowance[this.role] ?? 0;
     this.intWarning = this.earthBorn && this.stats.int.value >= 2;
@@ -194,7 +218,12 @@ export default class CarlRPGPet extends CarlRPGActorBase {
       const label = game.i18n.localize("CARLRPG.Pet.Roles.aggressive");
       for (const entry of Object.values(this.skills ?? {})) {
         if (entry.itemType !== "skill" || entry.category !== "attack") continue;
-        entry.damage.flatBonuses.push({ formula: String(floor), label, mode: "add", damageType: "" });
+        entry.damage.flatBonuses.push({
+          formula: String(floor),
+          label,
+          mode: "add",
+          damageType: "",
+        });
       }
     }
     const resisted = this.specialAbilities.resistance;

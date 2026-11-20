@@ -9,10 +9,33 @@
  * own when someone makes a new Character from the Actors sidebar.
  */
 import {
-  ANIMAL_SIZES, BASE_COMBAT_SKILL, COMBAT_OPTIONS, CRAWLER_NUMBER_RANGE, PAST_TABLES, SKILLS_PER_BACKGROUND, SPELL_MIN_INT,
-  STANDARD_ARRAY, STARTING_SETS, STAT_ORDER, allChargenProblems, applyChargen, backgroundOptions, canRollBackground, chargenMethods,
-  chargenProblems, chargenSkills, chargenTable, chosenStats, combatChoice, drawText, newChargenState,
-  parseBackgroundResult, rollStats, skillsTakenElsewhere, stagesFor, tableTexts,
+  ANIMAL_SIZES,
+  BASE_COMBAT_SKILL,
+  COMBAT_OPTIONS,
+  CRAWLER_NUMBER_RANGE,
+  PAST_TABLES,
+  SKILLS_PER_BACKGROUND,
+  SPELL_MIN_INT,
+  STANDARD_ARRAY,
+  STARTING_SETS,
+  STAT_ORDER,
+  allChargenProblems,
+  applyChargen,
+  backgroundOptions,
+  canRollBackground,
+  chargenMethods,
+  chargenProblems,
+  chargenSkills,
+  chargenTable,
+  chosenStats,
+  combatChoice,
+  drawText,
+  newChargenState,
+  parseBackgroundResult,
+  rollStats,
+  skillsTakenElsewhere,
+  stagesFor,
+  tableTexts,
 } from "../helpers/chargen.mjs";
 import { slugifySkillName } from "../helpers/modifiers.mjs";
 import { getStatMod } from "../helpers/rules.mjs";
@@ -27,9 +50,15 @@ const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
  * the problems list and Next/Create are brought up to date.
  */
 const TEXT_FIELDS = [
-  "name", "pronouns", "crawlerNumber", "combat.weaponName",
+  "name",
+  "pronouns",
+  "crawlerNumber",
+  "combat.weaponName",
   ...Object.keys(PAST_TABLES).map((key) => `past.${key}`),
-  "stuff.clothing", "stuff.weapon", "stuff.item", "stuff.weird",
+  "stuff.clothing",
+  "stuff.weapon",
+  "stuff.item",
+  "stuff.weird",
 ];
 
 /** The draft without its text fields: what a redraw depends on. */
@@ -115,8 +144,12 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
       Promise.all(pasts.map(([, name]) => chargenTable(name))),
     ]);
     const tables = {};
-    stages.forEach((stage, i) => { tables[stage.key] = backgroundOptions(stageTables[i]); });
-    pasts.forEach(([key], i) => { tables[key] = tableTexts(pastTables[i]); });
+    stages.forEach((stage, i) => {
+      tables[stage.key] = backgroundOptions(stageTables[i]);
+    });
+    pasts.forEach(([key], i) => {
+      tables[key] = tableTexts(pastTables[i]);
+    });
     this.tables = tables;
     return tables;
   }
@@ -127,7 +160,8 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
     const state = this.draft;
     const methods = chargenMethods();
     const loc = (key) => game.i18n.localize(key);
-    const problems = this.stepKey === "review" ? allChargenProblems(state) : chargenProblems(state, this.stepKey);
+    const problems =
+      this.stepKey === "review" ? allChargenProblems(state) : chargenProblems(state, this.stepKey);
 
     const stages = stagesFor(state).map((stage) => {
       const picked = state.stages[stage.key] ?? {};
@@ -165,7 +199,8 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
     const choice = combatChoice(state);
     const weaponChoices = {};
     for (const [group, names] of Object.entries(COMBAT_OPTIONS.weapons)) {
-      for (const name of names) weaponChoices[name] = `${name} (${loc(`CARLRPG.Chargen.WeaponGroup.${group}`)})`;
+      for (const name of names)
+        weaponChoices[name] = `${name} (${loc(`CARLRPG.Chargen.WeaponGroup.${group}`)})`;
     }
 
     return {
@@ -181,7 +216,9 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
       methods,
       isAnimal: state.kind === "animal",
       kindChoices: { human: "CARLRPG.Chargen.Human", animal: "CARLRPG.Chargen.Animal" },
-      sizeChoices: Object.fromEntries(ANIMAL_SIZES.map((n) => [n, `${loc(CONFIG.CARLRPG.sizes[n])} (${n})`])),
+      sizeChoices: Object.fromEntries(
+        ANIMAL_SIZES.map((n) => [n, `${loc(CONFIG.CARLRPG.sizes[n])} (${n})`]),
+      ),
       stages,
       baseCombat: BASE_COMBAT_SKILL[state.kind === "animal" ? "animal" : "human"],
       combatTypes: {
@@ -193,10 +230,16 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
       strikeChoices: Object.fromEntries(COMBAT_OPTIONS.animalStrikes.map((n) => [n, n])),
       weaponChoices,
       spellChoices: Object.fromEntries(COMBAT_OPTIONS.spells.map((n) => [n, n])),
-      handToHandChoices: Object.fromEntries(Object.entries(COMBAT_OPTIONS.handToHand).map(([s, d]) => [s, `${s} + ${d}`])),
+      handToHandChoices: Object.fromEntries(
+        Object.entries(COMBAT_OPTIONS.handToHand).map(([s, d]) => [s, `${s} + ${d}`]),
+      ),
       spellMinInt: SPELL_MIN_INT,
       statRows: STAT_ORDER.map((key) => {
-        const value = stats?.[key] ?? (state.statMethod === "roll" ? state.rolledStats?.[key] : Number(state.arrayStats[key]) || null);
+        const value =
+          stats?.[key] ??
+          (state.statMethod === "roll"
+            ? state.rolledStats?.[key]
+            : Number(state.arrayStats[key]) || null);
         return {
           key,
           label: loc(CONFIG.CARLRPG.stats[key]),
@@ -210,24 +253,35 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
         ...(methods.statArray ? [["array", "CARLRPG.Chargen.StatArray"]] : []),
         ...(methods.statRoll ? [["roll", "CARLRPG.Chargen.StatRoll"]] : []),
       ]),
-      derived: stats ? {
-        hbSlot: getStatMod(stats.con),
-        mana: stats.int,
-        evade: getStatMod(stats.dex),
-      } : null,
+      derived: stats
+        ? {
+            hbSlot: getStatMod(stats.con),
+            mana: stats.int,
+            evade: getStatMod(stats.dex),
+          }
+        : null,
       past: Object.keys(PAST_TABLES).map((key) => ({
         key,
         label: loc(STORY_SECTIONS.find((s) => s.field === key)?.key ?? key),
         value: state.past[key] ?? "",
         choices: { "": "", ...Object.fromEntries(tables[key].map((text) => [text, text])) },
       })),
-      startingSets: Object.keys(STARTING_SETS).map((key) => ({ key, label: loc(`CARLRPG.Chargen.Set.${key}`) })),
+      startingSets: Object.keys(STARTING_SETS).map((key) => ({
+        key,
+        label: loc(`CARLRPG.Chargen.Set.${key}`),
+      })),
       showWeaponStuff: state.combat.type === "weapon",
-      review: this.stepKey === "review" ? {
-        skills: chargenSkills(state),
-        stats: STAT_ORDER.map((k) => ({ label: loc(CONFIG.CARLRPG.stats[k]), value: stats?.[k] ?? "-" })),
-        combat: choice,
-      } : null,
+      review:
+        this.stepKey === "review"
+          ? {
+              skills: chargenSkills(state),
+              stats: STAT_ORDER.map((k) => ({
+                label: loc(CONFIG.CARLRPG.stats[k]),
+                value: stats?.[k] ?? "-",
+              })),
+              combat: choice,
+            }
+          : null,
     };
   }
 
@@ -245,7 +299,8 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
     const before = layoutOf(state);
     // Picking a Past from its list fills that text box: a redraw shows it.
     const picked = Object.values(data.pastPick ?? {}).some(Boolean);
-    for (const key of ["name", "pronouns", "crawlerNumber"]) if (key in data) state[key] = String(data[key] ?? "");
+    for (const key of ["name", "pronouns", "crawlerNumber"])
+      if (key in data) state[key] = String(data[key] ?? "");
     if ("kind" in data && data.kind !== state.kind) {
       state.kind = data.kind;
       state.stages = {};
@@ -280,16 +335,21 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
   #refreshNav() {
     const el = this.element;
     if (!el) return;
-    const problems = this.stepKey === "review" ? allChargenProblems(this.draft) : chargenProblems(this.draft, this.stepKey);
+    const problems =
+      this.stepKey === "review"
+        ? allChargenProblems(this.draft)
+        : chargenProblems(this.draft, this.stepKey);
     const list = el.querySelector(".carl-chargen-problems");
     if (list) {
-      list.replaceChildren(...problems.map((problem) => {
-        const li = document.createElement("li");
-        const icon = document.createElement("i");
-        icon.className = "fas fa-exclamation-triangle";
-        li.append(icon, " ", problem);
-        return li;
-      }));
+      list.replaceChildren(
+        ...problems.map((problem) => {
+          const li = document.createElement("li");
+          const icon = document.createElement("i");
+          icon.className = "fas fa-exclamation-triangle";
+          li.append(icon, " ", problem);
+          return li;
+        }),
+      );
       list.hidden = !problems.length;
     }
     for (const button of el.querySelectorAll('[data-action="next"], [data-action="create"]')) {
@@ -319,7 +379,10 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
       .filter((s, i) => value.skill[i] && !taken.has(slugifySkillName(s.name)))
       .map((s) => s.name);
     // Keep the earlier picks first, so a third tick is the one dropped.
-    const ordered = [...current.skills.filter((n) => wanted.includes(n)), ...wanted.filter((n) => !current.skills.includes(n))];
+    const ordered = [
+      ...current.skills.filter((n) => wanted.includes(n)),
+      ...wanted.filter((n) => !current.skills.includes(n)),
+    ];
     state.stages[key] = { ...current, skills: ordered.slice(0, SKILLS_PER_BACKGROUND) };
   }
 
@@ -351,7 +414,8 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
   static async #onRollBackground(event, target) {
     const key = target.dataset.stage;
     const stage = stagesFor(this.draft).find((s) => s.key === key);
-    const current = this.tables?.[key]?.find((o) => o.name === this.draft.stages[key]?.background) ?? null;
+    const current =
+      this.tables?.[key]?.find((o) => o.name === this.draft.stages[key]?.background) ?? null;
     if (!stage || !canRollBackground(this.draft, key, current)) return;
     const table = await chargenTable(stage.table);
     if (!table) return;
@@ -385,7 +449,8 @@ export default class CrawlerCreation extends HandlebarsApplicationMixin(Applicat
     const { weaponSkill, ...stuff } = set;
     Object.assign(this.draft.stuff, stuff);
     // The set's weapon is only kept when it's the crawler's weapon Skill.
-    if (this.draft.combat.type !== "weapon" || this.draft.combat.weapon !== weaponSkill) this.draft.stuff.weapon = "";
+    if (this.draft.combat.type !== "weapon" || this.draft.combat.weapon !== weaponSkill)
+      this.draft.stuff.weapon = "";
     this.render();
   }
 

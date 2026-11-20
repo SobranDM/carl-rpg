@@ -23,7 +23,13 @@
  * card's queue). With no GM online the roller's own reroll still applies on
  * their client, as far as it can.
  */
-import CarlDice, { checkSubtitle, evadeFailNote, interventionRolls, rerollNote, withManaCostSubtitle } from "../dice/dice.mjs";
+import CarlDice, {
+  checkSubtitle,
+  evadeFailNote,
+  interventionRolls,
+  rerollNote,
+  withManaCostSubtitle,
+} from "../dice/dice.mjs";
 import { degreeBadge, getDegreeOfSuccess, interventionTotal } from "../helpers/rules.mjs";
 import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { canAct, payAction } from "../helpers/actions.mjs";
@@ -35,7 +41,15 @@ import { canDrive, drivingOpen, reviseDriving, upgradeReady } from "../helpers/v
 import { updateVehicle } from "../helpers/vehicles.mjs";
 import { renderRollCard } from "./chat-card.mjs";
 import { isCardLocked } from "./taunt-card.mjs";
-import { reviseRow, rowAt, rowCheck, rowCheckOpen, rowInterveneOpen, rowInterveners, rowRerollSources } from "./row-evade.mjs";
+import {
+  reviseRow,
+  rowAt,
+  rowCheck,
+  rowCheckOpen,
+  rowInterveneOpen,
+  rowInterveners,
+  rowRerollSources,
+} from "./row-evade.mjs";
 import { esc } from "../helpers/html.mjs";
 import { actorFromUuid } from "../helpers/token-resolution.mjs";
 import { currentFloor } from "../helpers/floor.mjs";
@@ -51,7 +65,10 @@ const OP = "checkRevision";
  */
 const KINDS = {
   check: { open: () => true, revise: async (message, change) => reviseCheck(message, change) },
-  attack: { open: (message) => !isCardLocked(message), revise: (message, change) => CarlDice.reviseAttack(message, change) },
+  attack: {
+    open: (message) => !isCardLocked(message),
+    revise: (message, change) => CarlDice.reviseAttack(message, change),
+  },
   driving: { open: drivingOpen, revise: reviseDriving },
 };
 
@@ -115,10 +132,12 @@ export function rerollSources(message, user = game.user) {
   const sources = [];
   const spec = flags.aiReroll;
   const actor = spec ? actorFromUuid(spec.actorUuid) : null;
-  if (aiRerollAllowed(spec, actor, user)) sources.push({ key: "favor", actor, favor: actor.system.details?.aiFavor ?? 0 });
+  if (aiRerollAllowed(spec, actor, user))
+    sources.push({ key: "favor", actor, favor: actor.system.details?.aiFavor ?? 0 });
   if (flags.driving) {
     const vehicle = resolveOccupant(flags.driving.vehicleUuid);
-    if (vehicle && canDrive(vehicle, user) && upgradeReady(vehicle, "fuzzyDice")) sources.push({ key: "fuzzyDice", vehicle });
+    if (vehicle && canDrive(vehicle, user) && upgradeReady(vehicle, "fuzzyDice"))
+      sources.push({ key: "fuzzyDice", vehicle });
   }
   return sources;
 }
@@ -136,7 +155,6 @@ export function interventionsOf(message) {
 export function revisedInPlace(message) {
   return !!kindOf(message);
 }
-
 
 /**
  * The fight a card was rolled in, while it's still on that round - or null.
@@ -191,11 +209,13 @@ export function fightHelpers(combat, rollerUuid, user) {
   if (!combat) return [];
   const roller = actorFromUuid(rollerUuid);
   const seen = new Set();
-  return combat.combatants.map((c) => c.actor).filter((actor) => {
-    if (!actor || !isCrawler(actor) || actor === roller || seen.has(actor.uuid)) return false;
-    seen.add(actor.uuid);
-    return user.isGM || actor.testUserPermission(user, "OWNER");
-  });
+  return combat.combatants
+    .map((c) => c.actor)
+    .filter((actor) => {
+      if (!actor || !isCrawler(actor) || actor === roller || seen.has(actor.uuid)) return false;
+      seen.add(actor.uuid);
+      return user.isGM || actor.testUserPermission(user, "OWNER");
+    });
 }
 
 /* -------------------------------------------- */
@@ -213,8 +233,11 @@ export function decorateIntervene(message, html) {
   const roller = actorFromUuid(specOf(message).actorUuid);
   const hint = esc(game.i18n.format("CARLRPG.Intervene.Hint", { name: roller?.name ?? "?" }));
   // The handshake icon, named in its tooltip - beside the Reroll d20.
-  rollIcons(html)?.insertAdjacentHTML("afterbegin", `<button type="button" class="carl-status-icon carl-intervene-button" data-action="intervene"
-      data-tooltip="${hint}" aria-label="${hint}"><i class="fa-solid fa-handshake-angle" aria-hidden="true"></i></button>`);
+  rollIcons(html)?.insertAdjacentHTML(
+    "afterbegin",
+    `<button type="button" class="carl-status-icon carl-intervene-button" data-action="intervene"
+      data-tooltip="${hint}" aria-label="${hint}"><i class="fa-solid fa-handshake-angle" aria-hidden="true"></i></button>`,
+  );
 }
 
 /**
@@ -244,13 +267,18 @@ export function rollIcons(html) {
 /** Pick one of several crawlers (none asked with one). */
 async function pickIntervener(list) {
   if (list.length <= 1) return list[0] ?? null;
-  const options = list.map((a) => `<option value="${esc(a.uuid)}">${esc(a.name)}</option>`).join("");
+  const options = list
+    .map((a) => `<option value="${esc(a.uuid)}">${esc(a.name)}</option>`)
+    .join("");
   const uuid = await foundry.applications.api.DialogV2.prompt({
     window: { title: game.i18n.localize("CARLRPG.Intervene.Button") },
     classes: ["carl-intervene-pick"],
     content: `<div class="form-group"><label>${esc(game.i18n.localize("CARLRPG.Reaction.Who"))}</label>
       <div class="form-fields"><select name="who">${options}</select></div></div>`,
-    ok: { label: game.i18n.localize("CARLRPG.Reaction.Choose"), callback: (event, button) => button.form.elements.who.value },
+    ok: {
+      label: game.i18n.localize("CARLRPG.Reaction.Choose"),
+      callback: (event, button) => button.form.elements.who.value,
+    },
     rejectClose: false,
   });
   return list.find((a) => a.uuid === uuid) ?? null;
@@ -264,7 +292,13 @@ async function pickIntervener(list) {
  * @returns {Promise<boolean>}
  */
 export async function intervene(message, { intervener = null, roll = null } = {}) {
-  return sendIntervention(message, interveneOpen(message), () => interveners(message), {}, { intervener, roll });
+  return sendIntervention(
+    message,
+    interveneOpen(message),
+    () => interveners(message),
+    {},
+    { intervener, roll },
+  );
 }
 
 /**
@@ -283,15 +317,21 @@ async function sendIntervention(message, open, helpers, where, { intervener, rol
     ui.notifications.warn(game.i18n.localize("CARLRPG.Intervene.Closed"));
     return false;
   }
-  const who = intervener ?? await pickIntervener(helpers());
+  const who = intervener ?? (await pickIntervener(helpers()));
   if (!who || !canAct(who, "other")) return false;
   if (!game.users.activeGM) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
     return false;
   }
-  const d6 = roll ?? await new Roll("1d6").evaluate();
+  const d6 = roll ?? (await new Roll("1d6").evaluate());
   if (game.dice3d && !roll) await game.dice3d.showForRoll(d6, game.user, true);
-  return sendRevision(message, "intervene", { ...where, byUuid: who.uuid, byName: who.name, value: d6.total, roll: d6.toJSON() });
+  return sendRevision(message, "intervene", {
+    ...where,
+    byUuid: who.uuid,
+    byName: who.name,
+    value: d6.total,
+    roll: d6.toJSON(),
+  });
 }
 
 function onIntervene(event, message) {
@@ -310,8 +350,13 @@ function onIntervene(event, message) {
  * @returns {Promise<boolean>}
  */
 export async function interveneRow(message, rowId, which, { intervener = null, roll = null } = {}) {
-  return sendIntervention(message, rowInterveneOpen(message, rowId, which), () => rowInterveners(message, rowId, which),
-    { rowId, which }, { intervener, roll });
+  return sendIntervention(
+    message,
+    rowInterveneOpen(message, rowId, which),
+    () => rowInterveners(message, rowId, which),
+    { rowId, which },
+    { intervener, roll },
+  );
 }
 
 /** Registry entry for module/chat/chat-listener.mjs (drawn by decorateIntervene). */
@@ -333,7 +378,8 @@ export const interveneActionEntries = [{ action: "intervene", custom: true, onCl
 export async function sendRevision(message, op, data) {
   if (game.users.activeGM?.isSelf) return applyRevision(message.id, op, data, game.user);
   if (!game.users.activeGM) {
-    if (op === "reroll" && message.canUserModify(game.user, "update")) return applyRevision(message.id, op, data, game.user);
+    if (op === "reroll" && message.canUserModify(game.user, "update"))
+      return applyRevision(message.id, op, data, game.user);
     ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
     return false;
   }
@@ -404,7 +450,13 @@ async function reviseNow(cardId, op, data, user) {
       const value = Math.trunc(Number(data.value));
       if (!actor || !(value >= 1 && value <= 6)) return false;
       if (!target.interveners(user).includes(actor)) return false;
-      const entry = { id: foundry.utils.randomID(), byUuid: actor.uuid, byName: String(data.byName ?? actor.name), value, roll: data.roll ?? null };
+      const entry = {
+        id: foundry.utils.randomID(),
+        byUuid: actor.uuid,
+        byName: String(data.byName ?? actor.name),
+        value,
+        roll: data.roll ?? null,
+      };
       interventions.push(entry);
       pay = { actor, entry };
       break;
@@ -440,9 +492,12 @@ async function reviseNow(cardId, op, data, user) {
   // none left. Undoing it takes this d6 back off (helpers/action-undo.mjs).
   if (pay) {
     const roller = actorFromUuid(target.rollerUuid);
-    const label = game.i18n.format("CARLRPG.Actions.Label.Intervene", { name: roller?.name ?? "?" });
+    const label = game.i18n.format("CARLRPG.Actions.Label.Intervene", {
+      name: roller?.name ?? "?",
+    });
     const { paid } = await payAction(pay.actor, "other", label, {
-      undo: [{ t: "intervene", messageId: cardId, id: pay.entry.id, ...target.undoWhere }], user,
+      undo: [{ t: "intervene", messageId: cardId, id: pay.entry.id, ...target.undoWhere }],
+      user,
     });
     if (!paid) return TOLD;
   }
@@ -451,7 +506,12 @@ async function reviseNow(cardId, op, data, user) {
   if (source?.key === "favor") {
     if (!(await spendAiFavor(source.actor))) return false;
   } else if (source?.key === "fuzzyDice") {
-    if (!await updateVehicle(source.vehicle, { "system.upgrades.fuzzyDice.usedFloor": currentFloor() })) return false;
+    if (
+      !(await updateVehicle(source.vehicle, {
+        "system.upgrades.fuzzyDice.usedFloor": currentFloor(),
+      }))
+    )
+      return false;
   }
   await revised.write();
   return true;
@@ -478,7 +538,12 @@ function revisionTarget(message, data) {
       interveneOpen: () => rowInterveneOpen(message, rowId, which),
       interveners: (user) => rowInterveners(message, rowId, which, user),
       rerollSources: (user) => rowRerollSources(message, rowId, which, user),
-      rerollOf: (d) => ({ natural: Number(d.natural), total: Number(d.total), roll: d.roll ?? null, breakdown: d.breakdown }),
+      rerollOf: (d) => ({
+        natural: Number(d.natural),
+        total: Number(d.total),
+        roll: d.roll ?? null,
+        breakdown: d.breakdown,
+      }),
       revise: (change) => reviseRow(message, rowId, which, change),
       stillOpen: () => rowCheckOpen(message, rowId, which),
     };
@@ -492,15 +557,22 @@ function revisionTarget(message, data) {
     interveneOpen: () => interveneOpen(message),
     interveners: (user) => interveners(message, user),
     rerollSources: (user) => rerollSources(message, user),
-    rerollOf: (d, source) => ({ natural: Number(d.natural), total: Number(d.total), roll: d.roll, source: source.key }),
+    rerollOf: (d, source) => ({
+      natural: Number(d.natural),
+      total: Number(d.total),
+      roll: d.roll,
+      source: source.key,
+    }),
     revise: async (change) => {
       const parts = await KINDS[kind].revise(message, change);
-      return parts && {
-        write: async () => {
-          await writeCard(message, parts);
-          if (parts.after) await parts.after();
-        },
-      };
+      return (
+        parts && {
+          write: async () => {
+            await writeCard(message, parts);
+            if (parts.after) await parts.after();
+          },
+        }
+      );
     },
     stillOpen: () => cardOpen(message),
   };
@@ -534,7 +606,11 @@ function reviseCheck(message, { interventions, reroll }) {
   return {
     rolls: [base, ...d6.rolls],
     rollMeta: [
-      { label: spec.label, detail: spec.used ? game.i18n.localize("CARLRPG.Reroll.Detail") : "", breakdown: spec.breakdown },
+      {
+        label: spec.label,
+        detail: spec.used ? game.i18n.localize("CARLRPG.Reroll.Detail") : "",
+        breakdown: spec.breakdown,
+      },
       ...d6.meta,
     ],
     extraRollRows: d6.totalRow(total),
@@ -557,8 +633,15 @@ function reviseCheck(message, { interventions, reroll }) {
 async function writeCard(message, parts) {
   const { ForcedReplacement } = foundry.data.operators;
   const content = await renderRollCard(parts, !!message.blind);
-  const flags = { ...parts.flags, interventions: ForcedReplacement.create(parts.flags.interventions ?? []) };
-  if (flags.driving?.rerolledBy) flags.driving = { ...flags.driving, rerolledBy: ForcedReplacement.create(flags.driving.rerolledBy) };
+  const flags = {
+    ...parts.flags,
+    interventions: ForcedReplacement.create(parts.flags.interventions ?? []),
+  };
+  if (flags.driving?.rerolledBy)
+    flags.driving = {
+      ...flags.driving,
+      rerolledBy: ForcedReplacement.create(flags.driving.rerolledBy),
+    };
   if (flags.targetRows) flags.targetRows = ForcedReplacement.create(flags.targetRows);
   if (flags.attackDice) flags.attackDice = ForcedReplacement.create(flags.attackDice);
   const { ForcedDeletion } = foundry.data.operators;

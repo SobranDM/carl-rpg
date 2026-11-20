@@ -1,4 +1,4 @@
-@use '../utils/variables' as *;
+@use "../utils/variables" as *;
 
 // Mob's stat-block reference row (Surprise/Evade/Move/DR - abilities-mob.hbs)
 // and the Attacks list's per-column widths - everything else on that layout
@@ -56,11 +56,19 @@
   }
 
   .carl-attacks-list {
-    .item-name { flex: 2; }
+    .item-name {
+      flex: 2;
+    }
     .carl-attack-tohit,
     .carl-attack-damage,
-    .carl-attack-range { flex: 0 0 70px; }
-    .carl-attack-damage-type { flex: 0 0 100px; }
-    .carl-attack-effect { flex: 3; }
+    .carl-attack-range {
+      flex: 0 0 70px;
+    }
+    .carl-attack-damage-type {
+      flex: 0 0 100px;
+    }
+    .carl-attack-effect {
+      flex: 3;
+    }
   }
 }

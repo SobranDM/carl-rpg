@@ -1,19 +1,63 @@
 import {
-  announceWeaponSkill, backfillDeityTier, BASE_DR_MIGRATION_ID, COMPENDIUM_REFRESH_ID, DEITY_MIGRATION_ID,
-  DEITY_TIER_MIGRATION_ID, inferDeityTier, MIGRATIONS, migrationPlan, needsHandToHand, persistDeityBlock,
-  refreshedItemUpdate, tickHandToHandOn, WEAPON_SKILL_NOTICE_ID, zeroCharacterBaseDr,
-  CHARGEN_DONE_MIGRATION_ID, madeBeforeChargen, markChargenDone, refreshSourceFor,
-  RENAMED_MIGRATION_IDS, currentMigrationIds, MOB_ATTACKS_MIGRATION_ID,
-  MOB_SIZE_MIGRATION_ID, saveMobSizes, GEAR_SLOTS_MIGRATION_ID, WEAPON_SKILL_GUESS_ID, loadWeaponSkillSources,
-  guessWeaponSkill, guessActorWeaponSkills, guessItemWeaponSkills, looksLikeWeapon, postWeaponSkillNotice,
-  gearSlotUpdate, inferActorGear, BASE_MULTIPLIER_MIGRATION_ID, baseMultiplierUpdate,
-  migratePack, migrationFailure, whisperMigrationFailures, unequipMisfits,
-  SKILL_SETTING_BOXES_ID, skillSettingBoxUpdate, handToHandOnlyUpdate, isBookHandToHandList, applySkillSettingBoxesOn,
-  VEHICLE_SKILL_MIGRATION_ID, driveSkillName, vehicleSkillUpdate, fixVehicleSkillsOn, saveDriveSkills,
+  announceWeaponSkill,
+  backfillDeityTier,
+  BASE_DR_MIGRATION_ID,
+  COMPENDIUM_REFRESH_ID,
+  DEITY_MIGRATION_ID,
+  DEITY_TIER_MIGRATION_ID,
+  inferDeityTier,
+  MIGRATIONS,
+  migrationPlan,
+  needsHandToHand,
+  persistDeityBlock,
+  refreshedItemUpdate,
+  tickHandToHandOn,
+  WEAPON_SKILL_NOTICE_ID,
+  zeroCharacterBaseDr,
+  CHARGEN_DONE_MIGRATION_ID,
+  madeBeforeChargen,
+  markChargenDone,
+  refreshSourceFor,
+  RENAMED_MIGRATION_IDS,
+  currentMigrationIds,
+  MOB_ATTACKS_MIGRATION_ID,
+  MOB_SIZE_MIGRATION_ID,
+  saveMobSizes,
+  GEAR_SLOTS_MIGRATION_ID,
+  WEAPON_SKILL_GUESS_ID,
+  loadWeaponSkillSources,
+  guessWeaponSkill,
+  guessActorWeaponSkills,
+  guessItemWeaponSkills,
+  looksLikeWeapon,
+  postWeaponSkillNotice,
+  gearSlotUpdate,
+  inferActorGear,
+  BASE_MULTIPLIER_MIGRATION_ID,
+  baseMultiplierUpdate,
+  migratePack,
+  migrationFailure,
+  whisperMigrationFailures,
+  unequipMisfits,
+  SKILL_SETTING_BOXES_ID,
+  skillSettingBoxUpdate,
+  handToHandOnlyUpdate,
+  isBookHandToHandList,
+  applySkillSettingBoxesOn,
+  VEHICLE_SKILL_MIGRATION_ID,
+  driveSkillName,
+  vehicleSkillUpdate,
+  fixVehicleSkillsOn,
+  saveDriveSkills,
 } from "../../helpers/migration.mjs";
 import { FINGERPRINT_VERSION, importStamp, importState } from "../../pdf-import/fingerprint.mjs";
 import {
-  blockEntered, legacyCompanionsOf, migrateCompanionsOf, parseSize, petDataFrom, vehicleDataFrom,
+  blockEntered,
+  legacyCompanionsOf,
+  migrateCompanionsOf,
+  parseSize,
+  petDataFrom,
+  vehicleDataFrom,
 } from "../../helpers/companion-migration.mjs";
 import { deityBenefitApplies } from "../../helpers/worship.mjs";
 import {
@@ -26,7 +70,10 @@ import {
 
 /** An Attack Skill with this exact name. */
 function attackSkill(actor, name, system = {}) {
-  return createTestItem(actor, "skill", name, { name, system: { category: "attack", rank: 2, ...system } });
+  return createTestItem(actor, "skill", name, {
+    name,
+    system: { category: "attack", rank: 2, ...system },
+  });
 }
 
 /** Migration ids, in order. */
@@ -73,15 +120,33 @@ export default function register(quench) {
           }
           const oldIds = Object.keys(RENAMED_MIGRATION_IDS);
           const renamed = Object.values(RENAMED_MIGRATION_IDS);
-          assert.includeMembers(MIGRATIONS.map((m) => m.id), renamed, "every old id maps to a migration");
+          assert.includeMembers(
+            MIGRATIONS.map((m) => m.id),
+            renamed,
+            "every old id maps to a migration",
+          );
           // Migrations added after the renaming never had an old id.
           const added = MIGRATIONS.map((m) => m.id).filter((id) => !renamed.includes(id));
-          assert.sameMembers(added, [BASE_MULTIPLIER_MIGRATION_ID, WEAPON_SKILL_GUESS_ID, MOB_ATTACKS_MIGRATION_ID, MOB_SIZE_MIGRATION_ID, GEAR_SLOTS_MIGRATION_ID,
-            SKILL_SETTING_BOXES_ID, VEHICLE_SKILL_MIGRATION_ID]);
+          assert.sameMembers(added, [
+            BASE_MULTIPLIER_MIGRATION_ID,
+            WEAPON_SKILL_GUESS_ID,
+            MOB_ATTACKS_MIGRATION_ID,
+            MOB_SIZE_MIGRATION_ID,
+            GEAR_SLOTS_MIGRATION_ID,
+            SKILL_SETTING_BOXES_ID,
+            VEHICLE_SKILL_MIGRATION_ID,
+          ]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
-          assert.sameMembers(ids(p.run), added, "nothing runs twice - only what's been added since");
-          assert.sameMembers(currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),
-            [...renamed, "some-later-fix"], "read as the new ids, without duplicates");
+          assert.sameMembers(
+            ids(p.run),
+            added,
+            "nothing runs twice - only what's been added since",
+          );
+          assert.sameMembers(
+            currentMigrationIds([...oldIds, "0.7.0-deity-block", "some-later-fix"]),
+            [...renamed, "some-later-fix"],
+            "read as the new ids, without duplicates",
+          );
         });
 
         it("the list (declared last in its module) names a defined id and step for each", function () {
@@ -110,13 +175,32 @@ export default function register(quench) {
           const original = cls.updateDocuments;
           let message = null;
           try {
-            const skill = (name) => ({ name, type: "skill", system: { category: "attack", isHandToHand: false } });
+            const skill = (name) => ({
+              name,
+              type: "skill",
+              system: { category: "attack", isHandToHand: false },
+            });
             const [bad, good, imported] = await cls.createDocuments(
-              [skill("Pugilism"), skill("Wrasslin'"), skill("Unarmed Combat")], { pack: pack.collection });
+              [skill("Pugilism"), skill("Wrasslin'"), skill("Unarmed Combat")],
+              { pack: pack.collection },
+            );
             // As a rulebook import stamps it (fingerprint.mjs), the box among what it wrote.
-            const written = { name: imported.name, type: "skill", system: { category: "attack", isHandToHand: false } };
-            await imported.update({ "flags.carl-rpg.pdfImport": { book: "quench-test", ...importStamp(imported._source, written) } });
-            assert.equal(importState(imported._source, imported.flags["carl-rpg"].pdfImport), "untouched", "test setup");
+            const written = {
+              name: imported.name,
+              type: "skill",
+              system: { category: "attack", isHandToHand: false },
+            };
+            await imported.update({
+              "flags.carl-rpg.pdfImport": {
+                book: "quench-test",
+                ...importStamp(imported._source, written),
+              },
+            });
+            assert.equal(
+              importState(imported._source, imported.flags["carl-rpg"].pdfImport),
+              "untouched",
+              "test setup",
+            );
 
             // The server refuses one document.
             cls.updateDocuments = async function (updates, options) {
@@ -124,7 +208,9 @@ export default function register(quench) {
               return original.call(this, updates, options);
             };
             const failures = [];
-            const ticked = await migratePack(pack, (where, err) => failures.push(migrationFailure("0.7.0-hand-to-hand-box", where, err)));
+            const ticked = await migratePack(pack, (where, err) =>
+              failures.push(migrationFailure("0.7.0-hand-to-hand-box", where, err)),
+            );
             restore();
 
             assert.equal(ticked, 2, "the other two were still ticked");
@@ -138,7 +224,11 @@ export default function register(quench) {
 
             const flag = docs.get(imported.id).flags["carl-rpg"].pdfImport;
             assert.equal(flag.v, FINGERPRINT_VERSION, "re-stamped");
-            assert.equal(importState(docs.get(imported.id)._source, flag), "untouched", "the migration's write isn't a GM edit");
+            assert.equal(
+              importState(docs.get(imported.id)._source, flag),
+              "untouched",
+              "the migration's write isn't a GM edit",
+            );
 
             message = await whisperMigrationFailures(failures);
             const text = message.content.replace(/<[^>]+>/g, " ");
@@ -176,7 +266,9 @@ export default function register(quench) {
         it("a consumable held in a hand comes out of it quietly: unequipped, not listed", async function () {
           const actor = await createTestCharacter("consumable hand");
           try {
-            const potion = await createTestItem(actor, "item", "Potion", { system: { consumable: { kind: "potion" } } });
+            const potion = await createTestItem(actor, "item", "Potion", {
+              system: { consumable: { kind: "potion" } },
+            });
             // As an old world could have it: equipped, in the Main Hand.
             await potion.update({ "system.equipped": true }, { carlMigration: true });
             await actor.update({ "system.gearSlots.mainHand": potion.id }, { carlMigration: true });
@@ -197,23 +289,39 @@ export default function register(quench) {
         it("moves old Powerful Strike / Magic Missile multipliers to base, own and Upgrade; leaves others alone", async function () {
           const actor = await createTestCharacter("base-mult");
           try {
-            const mult = (value, kind = "multiplier") => ({ targetType: "skillDamage", target: "", mode: "multiply", value, damageDiceKind: kind });
+            const mult = (value, kind = "multiplier") => ({
+              targetType: "skillDamage",
+              target: "",
+              mode: "multiply",
+              value,
+              damageDiceKind: kind,
+            });
             const strike = await createTestItem(actor, "damageEffect", "Powerful Strike", {
-              name: "Powerful Strike", system: { changes: [mult("@rank")] },
+              name: "Powerful Strike",
+              system: { changes: [mult("@rank")] },
             });
             const missile = await createTestItem(actor, "spell", "Magic Missile", {
-              name: "Magic Missile", system: { upgrades: [{ rankThreshold: 15, description: "", changes: [mult("3")] }] },
+              name: "Magic Missile",
+              system: { upgrades: [{ rankThreshold: 15, description: "", changes: [mult("3")] }] },
             });
             const smush = await createTestItem(actor, "damageEffect", "Smush", {
-              name: "Smush", system: { changes: [mult("2")] },
+              name: "Smush",
+              system: { changes: [mult("2")] },
             });
             const u1 = baseMultiplierUpdate(strike);
             assert.equal(u1?.["system.changes"][0].damageDiceKind, "base");
             const u2 = baseMultiplierUpdate(missile);
-            assert.equal(u2?.["system.upgrades"][0].changes[0].damageDiceKind, "base", "an Upgrade tier's too");
-            assert.isNull(baseMultiplierUpdate(smush), "x total effects keep \"multiplier\"");
+            assert.equal(
+              u2?.["system.upgrades"][0].changes[0].damageDiceKind,
+              "base",
+              "an Upgrade tier's too",
+            );
+            assert.isNull(baseMultiplierUpdate(smush), 'x total effects keep "multiplier"');
             await strike.update({ "system.changes": u1["system.changes"] });
-            assert.isNull(baseMultiplierUpdate(actor.items.get(strike.id)), "already base: nothing to do");
+            assert.isNull(
+              baseMultiplierUpdate(actor.items.get(strike.id)),
+              "already base: nothing to do",
+            );
             assert.isTrue(MIGRATIONS.some((m) => m.id === BASE_MULTIPLIER_MIGRATION_ID));
           } finally {
             await deleteTestActor(actor);
@@ -229,7 +337,10 @@ export default function register(quench) {
           try {
             assert.isTrue(needsHandToHand(await attackSkill(actor, "Pugilism")));
             assert.isTrue(needsHandToHand(await attackSkill(actor, "WRASSLIN'")));
-            assert.isFalse(needsHandToHand(await attackSkill(actor, "Unarmed Combat", { isHandToHand: true })), "already ticked");
+            assert.isFalse(
+              needsHandToHand(await attackSkill(actor, "Unarmed Combat", { isHandToHand: true })),
+              "already ticked",
+            );
             assert.isFalse(needsHandToHand(await attackSkill(actor, "Flying Elbow")), "homebrew");
             assert.isFalse(needsHandToHand(await attackSkill(actor, "Longsword")));
           } finally {
@@ -248,7 +359,10 @@ export default function register(quench) {
             assert.equal(await tickHandToHandOn(actor), 2);
             assert.isTrue(actor.items.get(pugilism.id).system.isHandToHand);
             assert.isTrue(actor.items.get(unarmed.id).system.isHandToHand);
-            assert.isFalse(actor.items.get(elbow.id).system.isHandToHand, "homebrew left for its owner to tick");
+            assert.isFalse(
+              actor.items.get(elbow.id).system.isHandToHand,
+              "homebrew left for its owner to tick",
+            );
             const after = actor.items.get(pugilism.id).toObject();
             assert.equal(after.system.rank, before.system.rank);
             assert.equal(after.name, before.name);
@@ -267,23 +381,35 @@ export default function register(quench) {
           const actor = await createTestCharacter("setting boxes");
           try {
             const boxes = {
-              "Improvised Weapons": "noWeapon", "BITE": "noWeapon", "Back Claw": "noWeapon", "slice attack": "noWeapon",
+              "Improvised Weapons": "noWeapon",
+              BITE: "noWeapon",
+              "Back Claw": "noWeapon",
+              "slice attack": "noWeapon",
               "Unarmed Combat": "noDamageEffects",
             };
             const made = {};
             for (const name of Object.keys(boxes)) made[name] = await attackSkill(actor, name);
             const handling = await createTestItem(actor, "skill", "Animal Handling", {
-              name: "Animal Handling", system: { category: "utility", rank: 3 },
+              name: "Animal Handling",
+              system: { category: "utility", rank: 3 },
             });
             const swipe = await attackSkill(actor, "Tail Swipe");
             for (const [name, box] of Object.entries(boxes)) {
-              assert.deepEqual(skillSettingBoxUpdate(made[name]), { _id: made[name].id, [`system.${box}`]: true }, name);
+              assert.deepEqual(
+                skillSettingBoxUpdate(made[name]),
+                { _id: made[name].id, [`system.${box}`]: true },
+                name,
+              );
             }
             assert.isNull(skillSettingBoxUpdate(swipe), "homebrew left for its owner to tick");
 
             assert.equal(await applySkillSettingBoxesOn(actor), 6);
-            for (const [name, box] of Object.entries(boxes)) assert.isTrue(actor.items.get(made[name].id).system[box], name);
-            assert.isFalse(actor.items.get(made["Unarmed Combat"].id).system.noWeapon, "only its own box");
+            for (const [name, box] of Object.entries(boxes))
+              assert.isTrue(actor.items.get(made[name].id).system[box], name);
+            assert.isFalse(
+              actor.items.get(made["Unarmed Combat"].id).system.noWeapon,
+              "only its own box",
+            );
             assert.isTrue(actor.items.get(handling.id).system.commandsPets);
             assert.equal(actor.items.get(handling.id).system.rank, 3, "nothing else changed");
             assert.isFalse(actor.items.get(swipe.id).system.noWeapon);
@@ -298,15 +424,35 @@ export default function register(quench) {
         it("gives gear Debuffs listing exactly the five hand-to-hand Skills the Hand-to-Hand box - not a partial list", async function () {
           const actor = await createTestCharacter("h2h debuffs");
           try {
-            const five = ["Foot Soldier", "Noggin Nocker", "Pugilism", "Unarmed Combat", "Wrasslin'"];
-            const te = (skills) => ({ debuffKey: "woozy", stacks: 1, critOnly: false, amazingSuccessOnly: true, label: "", skills });
+            const five = [
+              "Foot Soldier",
+              "Noggin Nocker",
+              "Pugilism",
+              "Unarmed Combat",
+              "Wrasslin'",
+            ];
+            const te = (skills) => ({
+              debuffKey: "woozy",
+              stacks: 1,
+              critOnly: false,
+              amazingSuccessOnly: true,
+              label: "",
+              skills,
+            });
             const knuckles = await createTestItem(actor, "item", "knuckles", {
               system: { targetEffects: [te([...five].reverse()), te(["Longsword"])] },
             });
-            const partial = await createTestItem(actor, "item", "partial", { system: { targetEffects: [te(five.slice(0, 4))] } });
-            const extra = await createTestItem(actor, "item", "extra", { system: { targetEffects: [te([...five, "Longsword"])] } });
+            const partial = await createTestItem(actor, "item", "partial", {
+              system: { targetEffects: [te(five.slice(0, 4))] },
+            });
+            const extra = await createTestItem(actor, "item", "extra", {
+              system: { targetEffects: [te([...five, "Longsword"])] },
+            });
 
-            assert.isTrue(isBookHandToHandList(five.map((n) => n.toUpperCase())), "any order, any case");
+            assert.isTrue(
+              isBookHandToHandList(five.map((n) => n.toUpperCase())),
+              "any order, any case",
+            );
             assert.isNull(handToHandOnlyUpdate(partial), "four of the five");
             assert.isNull(handToHandOnlyUpdate(extra), "the five and another");
 
@@ -314,10 +460,17 @@ export default function register(quench) {
             const [converted, sword] = actor.items.get(knuckles.id).system.targetEffects;
             assert.isTrue(converted.handToHandOnly);
             assert.isEmpty(converted.skills, "the list cleared");
-            assert.include(converted, { debuffKey: "woozy", amazingSuccessOnly: true }, "the rest kept");
+            assert.include(
+              converted,
+              { debuffKey: "woozy", amazingSuccessOnly: true },
+              "the rest kept",
+            );
             assert.deepEqual(sword.skills, ["Longsword"]);
             assert.isFalse(sword.handToHandOnly);
-            assert.deepEqual(actor.items.get(partial.id).system.targetEffects[0].skills, five.slice(0, 4));
+            assert.deepEqual(
+              actor.items.get(partial.id).system.targetEffects[0].skills,
+              five.slice(0, 4),
+            );
             assert.isFalse(actor.items.get(partial.id).system.targetEffects[0].handToHandOnly);
           } finally {
             await deleteTestActor(actor);
@@ -325,9 +478,16 @@ export default function register(quench) {
         });
 
         it("ticks a named copy in the Items directory too", async function () {
-          const bite = await Item.implementation.create({ name: "Bite", type: "skill", system: { category: "attack" } });
+          const bite = await Item.implementation.create({
+            name: "Bite",
+            type: "skill",
+            system: { category: "attack" },
+          });
           try {
-            assert.deepEqual(skillSettingBoxUpdate(bite), { _id: bite.id, "system.noWeapon": true });
+            assert.deepEqual(skillSettingBoxUpdate(bite), {
+              _id: bite.id,
+              "system.noWeapon": true,
+            });
           } finally {
             await bite.delete();
           }
@@ -344,7 +504,9 @@ export default function register(quench) {
         });
 
         it("saves a Character's whole Deity block (old notes included) as a forced replacement; skips other actors", async function () {
-          const actor = await createTestCharacter("deity block", { system: { deity: "<p>Apito - a single tear</p>" } });
+          const actor = await createTestCharacter("deity block", {
+            system: { deity: "<p>Apito - a single tear</p>" },
+          });
           const mob = await createTestMob("deity block");
           let sent;
           const hookId = Hooks.on("preUpdateActor", (doc, changes) => {
@@ -396,12 +558,19 @@ export default function register(quench) {
               json.system.deity = legacy;
               sent = undefined;
               await actor.importFromJSON(JSON.stringify(json));
-              assert.isObject(sent, `the import sends a block (${Array.isArray(legacy) ? "array" : "string"})`);
+              assert.isObject(
+                sent,
+                `the import sends a block (${Array.isArray(legacy) ? "array" : "string"})`,
+              );
               assert.notInstanceOf(sent, Array);
               assert.include(sent.notes, "a single tear", "with the old text as its notes");
 
               await actor.update({ "system.deity.name": "Apito" });
-              assert.include(actor.system.deity.notes, "a single tear", "a partial edit keeps the notes");
+              assert.include(
+                actor.system.deity.notes,
+                "a single tear",
+                "a partial edit keeps the notes",
+              );
             }
           } finally {
             delete actor.update;
@@ -417,23 +586,42 @@ export default function register(quench) {
           const index = MIGRATIONS.findIndex((m) => m.id === DEITY_TIER_MIGRATION_ID);
           assert.isAtLeast(index, 0);
           assert.equal(MIGRATIONS[index].version, "0.7.0");
-          assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID));
-          const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
-          assert.include(p.run.map((m) => m.id), DEITY_TIER_MIGRATION_ID, "a world that had the earlier ones still gets it");
+          assert.isAbove(
+            index,
+            MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID),
+          );
+          const p = migrationPlan({
+            done: MIGRATIONS.slice(0, index).map((m) => m.id),
+            hasContent: true,
+          });
+          assert.include(
+            p.run.map((m) => m.id),
+            DEITY_TIER_MIGRATION_ID,
+            "a world that had the earlier ones still gets it",
+          );
         });
 
         it("sets a Character's blank Tier to its highest Boon's, so its Boons keep applying; once", async function () {
-          const actor = await createTestCharacter("deity tier", { system: { deity: { name: "Apito", notes: "<p>kept</p>" } } });
-          const set = await createTestCharacter("deity tier set", { system: { deity: { tier: "acolyte" } } });
+          const actor = await createTestCharacter("deity tier", {
+            system: { deity: { name: "Apito", notes: "<p>kept</p>" } },
+          });
+          const set = await createTestCharacter("deity tier set", {
+            system: { deity: { tier: "acolyte" } },
+          });
           const none = await createTestCharacter("deity tier none");
           const mob = await createTestMob("deity tier");
           try {
             await createTestItem(actor, "feature", "acolyte boon", { system: { tier: "acolyte" } });
-            const devotee = await createTestItem(actor, "feature", "devotee boon", { system: { tier: "devotee" } });
+            const devotee = await createTestItem(actor, "feature", "devotee boon", {
+              system: { tier: "devotee" },
+            });
             await createTestItem(actor, "feature", "untiered");
             await createTestItem(set, "feature", "zealot boon", { system: { tier: "zealot" } });
             await createTestItem(none, "feature", "untiered");
-            assert.isFalse(deityBenefitApplies(devotee, actor.system.deity), "off before the backfill");
+            assert.isFalse(
+              deityBenefitApplies(devotee, actor.system.deity),
+              "off before the backfill",
+            );
 
             assert.equal(inferDeityTier(actor), "devotee");
             assert.equal(await backfillDeityTier(actor), "devotee");
@@ -459,7 +647,13 @@ export default function register(quench) {
 
         /** A change entry as content authors it. */
         const change = (targetType, target, value, mode = "add", extra = {}) => ({
-          id: foundry.utils.randomID(), targetType, target, mode, value: String(value), conditions: [], ...extra,
+          id: foundry.utils.randomID(),
+          targetType,
+          target,
+          mode,
+          value: String(value),
+          conditions: [],
+          ...extra,
         });
         /** An Upgrade tier. */
         const tier = (rankThreshold, changes) => ({ rankThreshold, changes });
@@ -469,30 +663,49 @@ export default function register(quench) {
             const index = MIGRATIONS.findIndex((m) => m.id === id);
             assert.isAtLeast(index, 0, id);
             assert.equal(MIGRATIONS[index].version, "0.7.0");
-            assert.isBelow(index, MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID));
-            const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
-            assert.include(p.run.map((m) => m.id), id);
+            assert.isBelow(
+              index,
+              MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID),
+            );
+            const p = migrationPlan({
+              done: MIGRATIONS.slice(0, index).map((m) => m.id),
+              hasContent: true,
+            });
+            assert.include(
+              p.run.map((m) => m.id),
+              id,
+            );
           }
         });
 
         it("an old Dodge copy's overriding tiers become the compendium's adds; its Rank and other changes stay", function () {
           const copy = {
-            type: "skill", name: "Dodge",
+            type: "skill",
+            name: "Dodge",
             system: {
-              rank: 12, marked: true,
+              rank: 12,
+              marked: true,
               changes: [change("rollMode", "evadeBonus", 1)],
               upgrades: [
                 tier(5, [change("rollMode", "evadeBonus", 1, "override")]),
-                tier(10, [change("rollMode", "evadeBonus", 2, "override"), change("custom", "houseRule", 1)]),
+                tier(10, [
+                  change("rollMode", "evadeBonus", 2, "override"),
+                  change("custom", "houseRule", 1),
+                ]),
                 tier(15, [change("rollMode", "evadeBonus", 2, "override")]),
               ],
             },
           };
           const source = {
-            type: "skill", name: "Dodge",
+            type: "skill",
+            name: "Dodge",
             system: {
               changes: [change("rollMode", "evadeBonus", 1)],
-              upgrades: [tier(5, []), tier(10, [change("rollMode", "evadeBonus", 1)]), tier(15, [])],
+              upgrades: [
+                tier(5, []),
+                tier(10, [change("rollMode", "evadeBonus", 1)]),
+                tier(15, []),
+              ],
             },
           };
           const update = refreshedItemUpdate(copy, source);
@@ -500,11 +713,20 @@ export default function register(quench) {
           assert.notProperty(update, "system.rank");
           const [r5, r10, r15] = update["system.upgrades"];
           assert.deepEqual(r5.changes, []);
-          assert.deepEqual(r10.changes.map((c) => [c.target, c.mode, c.value]), [["houseRule", "add", "1"], ["evadeBonus", "add", "1"]],
-            "the house rule is kept, the override becomes the add");
+          assert.deepEqual(
+            r10.changes.map((c) => [c.target, c.mode, c.value]),
+            [
+              ["houseRule", "add", "1"],
+              ["evadeBonus", "add", "1"],
+            ],
+            "the house rule is kept, the override becomes the add",
+          );
           assert.deepEqual(r15.changes, []);
 
-          const refreshed = { ...copy, system: { ...copy.system, upgrades: update["system.upgrades"] } };
+          const refreshed = {
+            ...copy,
+            system: { ...copy.system, upgrades: update["system.upgrades"] },
+          };
           assert.isNull(refreshedItemUpdate(refreshed, source), "a second run changes nothing");
         });
 
@@ -512,18 +734,37 @@ export default function register(quench) {
           const actor = await createTestCharacter("refresh race");
           try {
             const race = await createTestItem(actor, "race", "Tigran", {
-              name: "Tigran", system: { changes: [change("stat", "dex", 3), change("resource", "dr", 1, "add", { label: "DR Buff" })] },
+              name: "Tigran",
+              system: {
+                changes: [
+                  change("stat", "dex", 3),
+                  change("resource", "dr", 1, "add", { label: "DR Buff" }),
+                ],
+              },
             });
             await new Promise((r) => setTimeout(r, 200));
             const dex = actor.system.stats.dex.value;
             const source = {
-              type: "race", name: "Tigran",
-              system: { changes: [{ ...change("stat", "dex", 3), id: "" }, change("resource", "dr", 1, "add", { label: "DR Buff" }), change("resource", "move", 10)] },
+              type: "race",
+              name: "Tigran",
+              system: {
+                changes: [
+                  { ...change("stat", "dex", 3), id: "" },
+                  change("resource", "dr", 1, "add", { label: "DR Buff" }),
+                  change("resource", "move", 10),
+                ],
+              },
             };
             const update = refreshedItemUpdate(race, source);
             const statEntry = update["system.changes"].find((c) => c.targetType === "stat");
-            assert.equal(statEntry.id, race.system.changes.find((c) => c.targetType === "stat").id, "the Stat grant keeps its id");
-            await actor.updateEmbeddedDocuments("Item", [{ _id: race.id, ...update }], { carlMigration: true });
+            assert.equal(
+              statEntry.id,
+              race.system.changes.find((c) => c.targetType === "stat").id,
+              "the Stat grant keeps its id",
+            );
+            await actor.updateEmbeddedDocuments("Item", [{ _id: race.id, ...update }], {
+              carlMigration: true,
+            });
             await new Promise((r) => setTimeout(r, 200));
             assert.equal(actor.system.stats.dex.value, dex, "DEX isn't raised a second time");
             assert.equal(actor.system.moveEffective, 30);
@@ -537,33 +778,110 @@ export default function register(quench) {
         it("a copy is matched to the compendium item it came from; a homebrew one isn't touched", function () {
           const dodge = { type: "skill", name: "Dodge", id: "nce3YZYxqQKS22mU" };
           const sources = [dodge];
-          assert.strictEqual(refreshSourceFor({ type: "skill", name: "Dodge" }, sources), dodge, "no source: by name");
-          assert.strictEqual(refreshSourceFor({ type: "skill", name: "Dodge", _stats: { compendiumSource: "Compendium.carl-rpg.skills-and-spells.Item.nce3YZYxqQKS22mU" } }, sources), dodge);
-          assert.strictEqual(refreshSourceFor({ type: "skill", name: "Dodge", flags: { core: { sourceId: "Compendium.carl-rpg.skills-and-spells.nce3YZYxqQKS22mU" } } }, sources), dodge, "an older source id");
-          assert.isNull(refreshSourceFor({ type: "skill", name: "Dodge", _stats: { compendiumSource: "Compendium.world.homebrew.Item.abcdefghijklmnop" } }, sources),
-            "a homebrew Dodge from a world compendium");
-          assert.isNull(refreshSourceFor({ type: "spell", name: "Dodge" }, sources), "same name, other type");
+          assert.strictEqual(
+            refreshSourceFor({ type: "skill", name: "Dodge" }, sources),
+            dodge,
+            "no source: by name",
+          );
+          assert.strictEqual(
+            refreshSourceFor(
+              {
+                type: "skill",
+                name: "Dodge",
+                _stats: {
+                  compendiumSource: "Compendium.carl-rpg.skills-and-spells.Item.nce3YZYxqQKS22mU",
+                },
+              },
+              sources,
+            ),
+            dodge,
+          );
+          assert.strictEqual(
+            refreshSourceFor(
+              {
+                type: "skill",
+                name: "Dodge",
+                flags: {
+                  core: { sourceId: "Compendium.carl-rpg.skills-and-spells.nce3YZYxqQKS22mU" },
+                },
+              },
+              sources,
+            ),
+            dodge,
+            "an older source id",
+          );
+          assert.isNull(
+            refreshSourceFor(
+              {
+                type: "skill",
+                name: "Dodge",
+                _stats: { compendiumSource: "Compendium.world.homebrew.Item.abcdefghijklmnop" },
+              },
+              sources,
+            ),
+            "a homebrew Dodge from a world compendium",
+          );
+          assert.isNull(
+            refreshSourceFor({ type: "spell", name: "Dodge" }, sources),
+            "same name, other type",
+          );
         });
 
         it("a tier the compendium lacks is kept; a compendium tier the copy lacks is added", function () {
           const copy = {
-            type: "skill", name: "Running",
-            system: { changes: [], upgrades: [tier(7, [change("rollMode", "evadeBonus", 1)]), tier(10, [change("resource", "move", 10)])] },
+            type: "skill",
+            name: "Running",
+            system: {
+              changes: [],
+              upgrades: [
+                tier(7, [change("rollMode", "evadeBonus", 1)]),
+                tier(10, [change("resource", "move", 10)]),
+              ],
+            },
           };
           const source = {
-            type: "skill", name: "Running",
-            system: { changes: [], upgrades: [tier(5, [change("resource", "move", 5)]), tier(10, [change("resource", "move", 10)])] },
+            type: "skill",
+            name: "Running",
+            system: {
+              changes: [],
+              upgrades: [
+                tier(5, [change("resource", "move", 5)]),
+                tier(10, [change("resource", "move", 10)]),
+              ],
+            },
           };
           const upgrades = refreshedItemUpdate(copy, source)["system.upgrades"];
-          assert.deepEqual(upgrades.map((t) => t.rankThreshold), [5, 7, 10], "Rank 5 added, in order");
-          assert.equal(upgrades.find((t) => t.rankThreshold === 7).changes[0].target, "evadeBonus", "the homebrew Rank 7 kept");
+          assert.deepEqual(
+            upgrades.map((t) => t.rankThreshold),
+            [5, 7, 10],
+            "Rank 5 added, in order",
+          );
+          assert.equal(
+            upgrades.find((t) => t.rankThreshold === 7).changes[0].target,
+            "evadeBonus",
+            "the homebrew Rank 7 kept",
+          );
           assert.equal(upgrades.find((t) => t.rankThreshold === 5).changes[0].value, "5");
         });
 
         it("an Oakhide copy becomes a toggled Spell, and loses its 'apply by hand' note", function () {
-          const note = "<p><em>Note: DR has no temporary/conditional-bonus mechanism in this system - apply this bonus by hand while the buff is active.</em></p>";
-          const copy = { type: "spell", name: "Oakhide", system: { isToggled: false, active: false, description: `<p>Bark.</p>${note}`, changes: [] } };
-          const source = { type: "spell", name: "Oakhide", system: { isToggled: true, changes: [change("resource", "dr", 2)] } };
+          const note =
+            "<p><em>Note: DR has no temporary/conditional-bonus mechanism in this system - apply this bonus by hand while the buff is active.</em></p>";
+          const copy = {
+            type: "spell",
+            name: "Oakhide",
+            system: {
+              isToggled: false,
+              active: false,
+              description: `<p>Bark.</p>${note}`,
+              changes: [],
+            },
+          };
+          const source = {
+            type: "spell",
+            name: "Oakhide",
+            system: { isToggled: true, changes: [change("resource", "dr", 2)] },
+          };
           const update = refreshedItemUpdate(copy, source);
           assert.isTrue(update["system.isToggled"]);
           assert.notProperty(update, "system.active");
@@ -599,9 +917,18 @@ export default function register(quench) {
           const index = MIGRATIONS.findIndex((m) => m.id === CHARGEN_DONE_MIGRATION_ID);
           assert.isAtLeast(index, 0);
           assert.equal(MIGRATIONS[index].version, "0.7.0");
-          assert.isBelow(index, MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID));
-          const p = migrationPlan({ done: MIGRATIONS.slice(0, index).map((m) => m.id), hasContent: true });
-          assert.include(p.run.map((m) => m.id), CHARGEN_DONE_MIGRATION_ID);
+          assert.isBelow(
+            index,
+            MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID),
+          );
+          const p = migrationPlan({
+            done: MIGRATIONS.slice(0, index).map((m) => m.id),
+            hasContent: true,
+          });
+          assert.include(
+            p.run.map((m) => m.id),
+            CHARGEN_DONE_MIGRATION_ID,
+          );
         });
 
         it("marks a Character with Skills as created, once; leaves a blank one, a done one and a Mob", async function () {
@@ -609,7 +936,9 @@ export default function register(quench) {
           const caster = await createTestCharacter("old caster");
           const blank = await createTestCharacter("blank crawler");
           const gearOnly = await createTestCharacter("gear only");
-          const done = await createTestCharacter("wizard crawler", { flags: { "carl-rpg": { chargen: { done: true, kind: "human" } } } });
+          const done = await createTestCharacter("wizard crawler", {
+            flags: { "carl-rpg": { chargen: { done: true, kind: "human" } } },
+          });
           const mob = await createTestMob("old mob");
           try {
             await attackSkill(built, "Longsword");
@@ -641,10 +970,15 @@ export default function register(quench) {
         /** Nothing to guess from but an owner's Skills. */
         const none = () => ({ gear: new Map(), notWeapons: new Set(), skills: new Map() });
         /** Gear with this exact name and a blank Weapon Skill, unless given. */
-        const gear = (actor, name, system = {}) => createTestItem(actor, "item", name, { name, system: { weaponSkill: "", ...system } });
+        const gear = (actor, name, system = {}) =>
+          createTestItem(actor, "item", name, { name, system: { weaponSkill: "", ...system } });
         /** A sidebar Item with this exact name. */
         const worldItem = (name, system = {}) =>
-          Item.implementation.create({ name, type: "item", system: { weaponSkill: "", slots: [], ...system } });
+          Item.implementation.create({
+            name,
+            type: "item",
+            system: { weaponSkill: "", slots: [], ...system },
+          });
         /** The system packs, which these need built (`npm run build:packs`). */
         const packSources = async () => {
           const sources = await loadWeaponSkillSources();
@@ -659,8 +993,15 @@ export default function register(quench) {
           assert.equal(MIGRATIONS[guess].version, "0.7.0");
           assert.isBelow(guess, index(GEAR_SLOTS_MIGRATION_ID));
           assert.isBelow(guess, index(WEAPON_SKILL_NOTICE_ID));
-          assert.isAbove(index(WEAPON_SKILL_NOTICE_ID), index(GEAR_SLOTS_MIGRATION_ID), "the notice sees where gear is worn");
-          const p = migrationPlan({ done: ids(MIGRATIONS).filter((id) => id !== WEAPON_SKILL_GUESS_ID), hasContent: true });
+          assert.isAbove(
+            index(WEAPON_SKILL_NOTICE_ID),
+            index(GEAR_SLOTS_MIGRATION_ID),
+            "the notice sees where gear is worn",
+          );
+          const p = migrationPlan({
+            done: ids(MIGRATIONS).filter((id) => id !== WEAPON_SKILL_GUESS_ID),
+            hasContent: true,
+          });
           assert.deepEqual(ids(p.run), [WEAPON_SKILL_GUESS_ID]);
         });
 
@@ -669,7 +1010,10 @@ export default function register(quench) {
           try {
             await attackSkill(actor, "Flying Spear");
             const spear = await gear(actor, "flying SPEAR!");
-            assert.deepEqual(guessWeaponSkill(spear, none()), { weaponSkill: "Flying Spear", from: "owner" });
+            assert.deepEqual(guessWeaponSkill(spear, none()), {
+              weaponSkill: "Flying Spear",
+              from: "owner",
+            });
             assert.equal(await guessActorWeaponSkills(actor, none()), 1);
             assert.equal(actor.items.get(spear.id).system.weaponSkill, "Flying Spear");
             assert.equal(await guessActorWeaponSkills(actor, none()), 0, "once");
@@ -682,7 +1026,10 @@ export default function register(quench) {
           const sources = await packSources();
           const greatsword = await worldItem("Greatsword");
           try {
-            assert.deepEqual(guessWeaponSkill(greatsword, sources), { weaponSkill: "Longsword", from: "gear" });
+            assert.deepEqual(guessWeaponSkill(greatsword, sources), {
+              weaponSkill: "Longsword",
+              from: "gear",
+            });
             assert.equal(await guessItemWeaponSkills([greatsword], sources), 1);
             assert.equal(game.items.get(greatsword.id).system.weaponSkill, "Longsword");
           } finally {
@@ -695,7 +1042,10 @@ export default function register(quench) {
           const sources = { ...(await packSources()), gear: new Map() };
           const rapier = await worldItem("RAPIER");
           try {
-            assert.deepEqual(guessWeaponSkill(rapier, sources), { weaponSkill: "Rapier", from: "skills" });
+            assert.deepEqual(guessWeaponSkill(rapier, sources), {
+              weaponSkill: "Rapier",
+              from: "skills",
+            });
             assert.equal(await guessItemWeaponSkills([rapier], sources), 1);
             assert.equal(game.items.get(rapier.id).system.weaponSkill, "Rapier");
           } finally {
@@ -714,7 +1064,8 @@ export default function register(quench) {
             // CJK names: each its own slug, matching nothing in the packs.
             await attackSkill(actor, "斧");
             const unlatin = await gear(actor, "剣");
-            for (const item of [set, odd, tonic, unlatin]) assert.isNull(guessWeaponSkill(item, sources), item.name);
+            for (const item of [set, odd, tonic, unlatin])
+              assert.isNull(guessWeaponSkill(item, sources), item.name);
             assert.equal(await guessActorWeaponSkills(actor, sources), 0);
             assert.equal(actor.items.get(set.id).system.weaponSkill, "Rapier");
             assert.equal(actor.items.get(odd.id).system.weaponSkill, "");
@@ -735,13 +1086,25 @@ export default function register(quench) {
             await attackSkill(actor, "Rapier", { isHandToHand: true });
             const noSources = { ...sources, gear: new Map() };
             await attackSkill(actor, "Tail Swipe", { noWeapon: true });
-            assert.isNull(guessWeaponSkill(await gear(actor, "Tail Swipe"), noSources), "a homebrew Skill with Needs no weapon");
+            assert.isNull(
+              guessWeaponSkill(await gear(actor, "Tail Swipe"), noSources),
+              "a homebrew Skill with Needs no weapon",
+            );
             assert.isNull(guessWeaponSkill(await gear(actor, "Pugilism"), sources), "hand-to-hand");
-            assert.isNull(guessWeaponSkill(await gear(actor, "Improvised Weapons"), sources), "weaponless");
+            assert.isNull(
+              guessWeaponSkill(await gear(actor, "Improvised Weapons"), sources),
+              "weaponless",
+            );
             assert.isNull(guessWeaponSkill(bite, sources), "a natural attack, unowned");
-            assert.isNull(guessWeaponSkill(await gear(actor, "Rapier"), noSources), "its owner's Rapier is the one meant");
-            assert.deepEqual(guessWeaponSkill(await gear(actor, "Rapier"), sources), { weaponSkill: "Rapier", from: "gear" },
-              "the Gear compendium's Rapier still says what it is");
+            assert.isNull(
+              guessWeaponSkill(await gear(actor, "Rapier"), noSources),
+              "its owner's Rapier is the one meant",
+            );
+            assert.deepEqual(
+              guessWeaponSkill(await gear(actor, "Rapier"), sources),
+              { weaponSkill: "Rapier", from: "gear" },
+              "the Gear compendium's Rapier still says what it is",
+            );
           } finally {
             await deleteTestActor(actor);
             await bite.delete();
@@ -753,7 +1116,10 @@ export default function register(quench) {
           try {
             await attackSkill(actor, "Flying Spear");
             const spear = await gear(actor, "Flying Spear", { slots: [] });
-            assert.isNull(gearSlotUpdate(spear), "with no Weapon Skill, nothing tells where it goes");
+            assert.isNull(
+              gearSlotUpdate(spear),
+              "with no Weapon Skill, nothing tells where it goes",
+            );
             await guessActorWeaponSkills(actor, none());
             await inferActorGear(actor);
             assert.deepEqual(actor.items.get(spear.id).system.slots, ["held"]);
@@ -769,14 +1135,21 @@ export default function register(quench) {
         /** A notice's text, tags out. */
         const text = (message) => message.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
         /** A gear item with this exact name. */
-        const gear = (actor, name, system = {}) => createTestItem(actor, "item", name, { name, system: { weaponSkill: "", ...system } });
+        const gear = (actor, name, system = {}) =>
+          createTestItem(actor, "item", name, { name, system: { weaponSkill: "", ...system } });
 
         it("is the last 0.7.0 migration, after the gear slots'", function () {
           const index = MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID);
           assert.isAtLeast(index, 0);
           assert.equal(MIGRATIONS[index].version, "0.7.0");
-          assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID));
-          assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === GEAR_SLOTS_MIGRATION_ID));
+          assert.isAbove(
+            index,
+            MIGRATIONS.findIndex((m) => m.id === DEITY_MIGRATION_ID),
+          );
+          assert.isAbove(
+            index,
+            MIGRATIONS.findIndex((m) => m.id === GEAR_SLOTS_MIGRATION_ID),
+          );
           // A world that already had the earlier ones still gets it.
           const earlier = MIGRATIONS.slice(0, index).map((m) => m.id);
           const p = migrationPlan({ done: earlier, hasContent: true });
@@ -790,7 +1163,10 @@ export default function register(quench) {
             const sources = { notWeapons: new Set(["torch"]) };
             const inHand = await gear(actor, "Odd Stick", { slots: [] });
             const heldOnly = await gear(actor, "Odd Blade", { slots: ["held"] });
-            const weapon = await gear(actor, "Longsword", { slots: ["held"], weaponSkill: "Longsword" });
+            const weapon = await gear(actor, "Longsword", {
+              slots: ["held"],
+              weaponSkill: "Longsword",
+            });
             const buckler = await gear(actor, "Buckler", { slots: ["held"] });
             const shield = await gear(actor, "Round Thing", { slots: ["held"], shield: true });
             const torch = await gear(actor, "Torch", { slots: ["held"] });
@@ -799,7 +1175,8 @@ export default function register(quench) {
             await actor.update({ "system.gearSlots.mainHand": inHand.id });
             const listed = actor.items.filter((i) => looksLikeWeapon(i, sources)).map((i) => i.id);
             assert.sameMembers(listed, [inHand.id, heldOnly.id]);
-            for (const item of [weapon, buckler, shield, torch, pack, rope]) assert.notInclude(listed, item.id, item.name);
+            for (const item of [weapon, buckler, shield, torch, pack, rope])
+              assert.notInclude(listed, item.id, item.name);
           } finally {
             await deleteTestActor(actor);
           }
@@ -807,17 +1184,26 @@ export default function register(quench) {
 
         it("says how many were filled in, to everyone; the ones left go to the GM, by who has them", async function () {
           const { notice, list } = await postWeaponSkillNotice({
-            filled: 7, remaining: new Map([["Carl", ["Odd Stick"]], ["Ghoul", ["Bone Thing", "Rusty Hook"]]]),
+            filled: 7,
+            remaining: new Map([
+              ["Carl", ["Odd Stick"]],
+              ["Ghoul", ["Bone Thing", "Rusty Hook"]],
+            ]),
           });
           try {
             assert.lengthOf(notice.whisper, 0, "the notice isn't whispered");
             assert.include(text(notice), game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"));
-            assert.include(text(notice), game.i18n.format("CARLRPG.Migration.WeaponSkill.Filled", { count: 7 }));
+            assert.include(
+              text(notice),
+              game.i18n.format("CARLRPG.Migration.WeaponSkill.Filled", { count: 7 }),
+            );
             assert.include(text(notice), game.i18n.localize("CARLRPG.Migration.WeaponSkill.Left"));
-            for (const name of ["Carl", "Odd Stick", "Ghoul"]) assert.notInclude(text(notice), name, "names only in the GM's list");
+            for (const name of ["Carl", "Odd Stick", "Ghoul"])
+              assert.notInclude(text(notice), name, "names only in the GM's list");
             assert.exists(list);
             assert.isAbove(list.whisper.length, 0, "the list is the GM's");
-            for (const name of ["Carl", "Odd Stick", "Ghoul", "Bone Thing", "Rusty Hook"]) assert.include(text(list), name);
+            for (const name of ["Carl", "Odd Stick", "Ghoul", "Bone Thing", "Rusty Hook"])
+              assert.include(text(list), name);
           } finally {
             await notice.delete();
             await list?.delete();
@@ -828,7 +1214,10 @@ export default function register(quench) {
           const { notice, list } = await postWeaponSkillNotice({ filled: 2, remaining: new Map() });
           try {
             assert.isNull(list);
-            assert.include(text(notice), game.i18n.localize("CARLRPG.Migration.WeaponSkill.NoneLeft"));
+            assert.include(
+              text(notice),
+              game.i18n.localize("CARLRPG.Migration.WeaponSkill.NoneLeft"),
+            );
           } finally {
             await notice.delete();
           }
@@ -844,9 +1233,15 @@ export default function register(quench) {
             assert.equal(result.changed, 0);
             const notices = posted.filter((m) => !m.whisper.length);
             assert.lengthOf(notices, 1, "one notice everyone sees");
-            assert.include(notices[0].content, game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"));
+            assert.include(
+              notices[0].content,
+              game.i18n.localize("CARLRPG.Migration.WeaponSkill.Title"),
+            );
             for (const m of posted.filter((m) => m.whisper.length)) {
-              assert.isTrue(m.whisper.every((id) => game.users.get(id)?.isGM), "anything else is the GM's");
+              assert.isTrue(
+                m.whisper.every((id) => game.users.get(id)?.isGM),
+                "anything else is the GM's",
+              );
             }
           } finally {
             Hooks.off("createChatMessage", hookId);
@@ -860,18 +1255,37 @@ export default function register(quench) {
 
         // The old blocks as a pre-0.7.0 Character stored them.
         const oldPet = () => ({
-          name: "Rex", level: 300, str: 3, int: null, con: null, dex: 0, cha: null, dr: 2, evade: 14, move: 30,
-          size: "Large (5)", attacks: ["Bite 1d6", ""], special: "Fetches", hb: { value: 6, max: 8 },
+          name: "Rex",
+          level: 300,
+          str: 3,
+          int: null,
+          con: null,
+          dex: 0,
+          cha: null,
+          dr: 2,
+          evade: 14,
+          move: 30,
+          size: "Large (5)",
+          attacks: ["Bite 1d6", ""],
+          special: "Fetches",
+          hb: { value: 6, max: 8 },
         });
         const oldMount = () => ({
-          name: "Truck", size: "Huge", move: 60, occupants: 0, dr: 3, accessories: "Roof rack", hb: { value: 12, max: 12 },
+          name: "Truck",
+          size: "Huge",
+          move: 60,
+          occupants: 0,
+          dr: 3,
+          accessories: "Roof rack",
+          hb: { value: 12, max: 12 },
         });
         const labels = (notes) => notes.map((n) => n.label);
 
         it("the safety net keeps the old blocks before Foundry drops them", function () {
           // Unsaved: built from raw data, as a world load builds each Actor.
           const doc = new Actor.implementation({
-            name: "Quench legacy", type: "character",
+            name: "Quench legacy",
+            type: "character",
             system: { pet: { name: "Rex", dex: 4 }, mount: { name: "Car" } },
           });
           assert.notProperty(doc._source.system, "pet", "pruned from the system");
@@ -883,7 +1297,8 @@ export default function register(quench) {
 
           // A Character already converted doesn't get it back.
           const done = new Actor.implementation({
-            name: "Quench converted", type: "character",
+            name: "Quench converted",
+            type: "character",
             flags: { "carl-rpg": { companionsMigrated: true } },
             system: { pet: { name: "Rex" } },
           });
@@ -902,7 +1317,9 @@ export default function register(quench) {
         });
 
         it("a block counts as entered for any value - but not the untouched 10/10 Health Bar", function () {
-          assert.isFalse(blockEntered({ name: "", attacks: ["", ""], level: null, hb: { value: 10, max: 10 } }));
+          assert.isFalse(
+            blockEntered({ name: "", attacks: ["", ""], level: null, hb: { value: 10, max: 10 } }),
+          );
           assert.isTrue(blockEntered({ hb: { value: 6, max: 10 } }));
           assert.isTrue(blockEntered({ attacks: ["", "Bite"] }));
           assert.isTrue(blockEntered({ special: "Fetches" }));
@@ -931,7 +1348,11 @@ export default function register(quench) {
               game.i18n.localize("CARLRPG.Migration.Companions.Special"),
               game.i18n.localize("CARLRPG.Actor.HealthBar"),
             ]);
-            assert.notInclude(labels(notes), game.i18n.format("CARLRPG.Migration.Companions.Attack", { n: 2 }), "a blank Attack isn't noted");
+            assert.notInclude(
+              labels(notes),
+              game.i18n.format("CARLRPG.Migration.Companions.Attack", { n: 2 }),
+              "a blank Attack isn't noted",
+            );
             assert.include(s.biography, game.i18n.localize("CARLRPG.Migration.Companions.Heading"));
             assert.include(s.biography, "Bite 1d6");
 
@@ -942,7 +1363,8 @@ export default function register(quench) {
             assert.include(packed.data.system.biography, character.name);
 
             // An untouched 10/10: the rule's HB, no override.
-            const plain = petDataFrom(character, { name: "Pip", hb: { value: 10, max: 10 } }).data.system;
+            const plain = petDataFrom(character, { name: "Pip", hb: { value: 10, max: 10 } }).data
+              .system;
             assert.notProperty(plain, "hbSlotsOverride");
             assert.notProperty(plain, "hb");
           } finally {
@@ -962,8 +1384,14 @@ export default function register(quench) {
             assert.equal(s.occupancy, 1, "clamped");
             assert.equal(s.dr, 3);
             assert.equal(s.hb.value, 10, "clamped to 10 slots");
-            assert.includeMembers(labels(notes), [game.i18n.localize("CARLRPG.Migration.Companions.Accessories")]);
-            assert.lengthOf(labels(notes).filter((l) => l === game.i18n.localize("CARLRPG.Actor.HealthBar")), 1, "one Health Bar note");
+            assert.includeMembers(labels(notes), [
+              game.i18n.localize("CARLRPG.Migration.Companions.Accessories"),
+            ]);
+            assert.lengthOf(
+              labels(notes).filter((l) => l === game.i18n.localize("CARLRPG.Actor.HealthBar")),
+              1,
+              "one Health Bar note",
+            );
             assert.include(s.biography, "Roof rack");
           } finally {
             await deleteTestActor(character);
@@ -972,8 +1400,11 @@ export default function register(quench) {
 
         it("creates the actors, checks them, clears the old data - and a second run makes nothing new", async function () {
           const legacy = { pet: oldPet(), mount: oldMount() };
-          const character = await createTestCharacter("pet tab", { flags: { "carl-rpg": { legacyCompanions: legacy } } });
-          const made = () => game.actors.filter((a) => a.flags?.["carl-rpg"]?.migratedFrom?.uuid === character.uuid);
+          const character = await createTestCharacter("pet tab", {
+            flags: { "carl-rpg": { legacyCompanions: legacy } },
+          });
+          const made = () =>
+            game.actors.filter((a) => a.flags?.["carl-rpg"]?.migratedFrom?.uuid === character.uuid);
           try {
             const result = await migrateCompanionsOf(character);
             assert.isTrue(result.ok, result.error);
@@ -985,14 +1416,22 @@ export default function register(quench) {
             assert.equal(pet._source.system.hbSlotsOverride, 8);
             assert.equal(vehicle._source.system.move, 60);
             assert.include(pet.system.biography, "Fetches");
-            assert.equal(pet.flags["carl-rpg"].migratedFrom.original.evade, 14, "the old block is kept verbatim");
+            assert.equal(
+              pet.flags["carl-rpg"].migratedFrom.original.evade,
+              14,
+              "the old block is kept verbatim",
+            );
             assert.isNull(legacyCompanionsOf(character), "the old data is cleared");
             assert.isTrue(character.flags["carl-rpg"].companionsMigrated);
             // Only the Character's own players (none here) own the Vehicle.
             const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
             for (const [id, level] of Object.entries(vehicle.ownership)) {
               if (id === "default" || id === game.user.id || level < OWNER) continue;
-              assert.isAtLeast(character.ownership[id] ?? 0, OWNER, `${id} doesn't own the Character`);
+              assert.isAtLeast(
+                character.ownership[id] ?? 0,
+                OWNER,
+                `${id} doesn't own the Character`,
+              );
             }
 
             // Run again (the flag back, as if interrupted before the clear),
@@ -1016,7 +1455,10 @@ export default function register(quench) {
           const index = MIGRATIONS.findIndex((m) => m.id === MOB_SIZE_MIGRATION_ID);
           assert.isAtLeast(index, 0);
           assert.equal(MIGRATIONS[index].version, "0.7.0");
-          assert.isAbove(index, MIGRATIONS.findIndex((m) => m.id === MOB_ATTACKS_MIGRATION_ID));
+          assert.isAbove(
+            index,
+            MIGRATIONS.findIndex((m) => m.id === MOB_ATTACKS_MIGRATION_ID),
+          );
         });
 
         it("saves a Mob's Size as read, and only Mobs", async function () {
@@ -1047,7 +1489,11 @@ export default function register(quench) {
           assert.equal(driveSkillName("chopperPilot"), "Chopper Pilot");
           assert.equal(driveSkillName("Mech Pilot"), "Mech Pilot", "a name is kept");
           assert.isUndefined(driveSkillName(undefined));
-          const vehicle = await Actor.create({ name: "Quench old drive key", type: "vehicle", system: { driveSkill: "chopperPilot" } });
+          const vehicle = await Actor.create({
+            name: "Quench old drive key",
+            type: "vehicle",
+            system: { driveSkill: "chopperPilot" },
+          });
           const pc = await createTestCharacter("drive key pc");
           try {
             assert.equal(vehicle.system.driveSkill, "Chopper Pilot", "read as the name on load");
@@ -1061,28 +1507,59 @@ export default function register(quench) {
 
         it("merges the perks into Driving's and Chopper Pilot's tiers by Rank, ticks Lance; homebrew is left alone; once", async function () {
           const actor = await createTestCharacter("vehicle skills");
-          const tier = (rankThreshold, extra = {}) => ({ rankThreshold, description: `Rank ${rankThreshold} text`, ...extra });
+          const tier = (rankThreshold, extra = {}) => ({
+            rankThreshold,
+            description: `Rank ${rankThreshold} text`,
+            ...extra,
+          });
           const bonus = { targetType: "resource", target: "move", mode: "add", value: "1" };
           try {
             const driving = await attackSkill(actor, "Driving", {
-              category: "utility", rank: 7,
+              category: "utility",
+              rank: 7,
               upgrades: [tier(5), tier(10, { changes: [bonus] }), tier(15)],
             });
             // A copy missing its Rank 15 tier gets a bare one.
-            const chopper = await attackSkill(actor, "Chopper Pilot", { category: "utility", upgrades: [tier(5), tier(10)] });
+            const chopper = await attackSkill(actor, "Chopper Pilot", {
+              category: "utility",
+              upgrades: [tier(5), tier(10)],
+            });
             const lance = await attackSkill(actor, "Lance");
-            const mech = await attackSkill(actor, "Mech Pilot", { category: "utility", upgrades: [tier(5)] });
+            const mech = await attackSkill(actor, "Mech Pilot", {
+              category: "utility",
+              upgrades: [tier(5)],
+            });
             const ids = actor.items.get(driving.id).system.upgrades.map((u) => u.id);
             assert.isNull(vehicleSkillUpdate(mech), "homebrew");
 
             assert.equal(await fixVehicleSkillsOn(actor), 3);
-            const perks = (item) => actor.items.get(item.id).system.upgrades
-              .map((u) => [u.rankThreshold, u.vehicleMove, u.vehicleAttackOk, u.vehicleEvadeAdvantage, u.vehicleStuntAdvantage])
-              .sort((a, b) => a[0] - b[0]);
-            assert.deepEqual(perks(driving), [[5, 0, true, false, false], [10, 5, false, true, false], [15, 5, false, false, true]]);
-            assert.deepEqual(perks(chopper), [[5, 5, false, false, false], [10, 0, true, false, false], [15, 5, false, false, true]]);
+            const perks = (item) =>
+              actor.items
+                .get(item.id)
+                .system.upgrades.map((u) => [
+                  u.rankThreshold,
+                  u.vehicleMove,
+                  u.vehicleAttackOk,
+                  u.vehicleEvadeAdvantage,
+                  u.vehicleStuntAdvantage,
+                ])
+                .sort((a, b) => a[0] - b[0]);
+            assert.deepEqual(perks(driving), [
+              [5, 0, true, false, false],
+              [10, 5, false, true, false],
+              [15, 5, false, false, true],
+            ]);
+            assert.deepEqual(perks(chopper), [
+              [5, 5, false, false, false],
+              [10, 0, true, false, false],
+              [15, 5, false, false, true],
+            ]);
             const after = actor.items.get(driving.id).system;
-            assert.deepEqual(after.upgrades.map((u) => u.id), ids, "the same tiers");
+            assert.deepEqual(
+              after.upgrades.map((u) => u.id),
+              ids,
+              "the same tiers",
+            );
             assert.equal(after.upgrades[1].description, "Rank 10 text", "their text kept");
             assert.equal(after.upgrades[1].changes[0]?.target, "move", "their Bonuses kept");
             assert.equal(after.rank, 7);

@@ -5,8 +5,22 @@
  */
 import CarlDice from "../../dice/dice.mjs";
 import {
-  actionBubbles, actionRecord, adjustActions, baseBudget, buyFavorAction, canAct, combatantInFight, evadeIsFree, hasSpent,
-  isInCombat, payingPool, refundAction, resetActions, spendAction, spendBubble, undoAction,
+  actionBubbles,
+  actionRecord,
+  adjustActions,
+  baseBudget,
+  buyFavorAction,
+  canAct,
+  combatantInFight,
+  evadeIsFree,
+  hasSpent,
+  isInCombat,
+  payingPool,
+  refundAction,
+  resetActions,
+  spendAction,
+  spendBubble,
+  undoAction,
 } from "../../helpers/actions.mjs";
 import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
@@ -37,7 +51,10 @@ import { queueForCard as withCard } from "../../helpers/actor-queue.mjs";
 /** An unstarted combat with these actors as combatants. */
 async function combatOf(...actors) {
   const combat = await Combat.create({});
-  await combat.createEmbeddedDocuments("Combatant", actors.map((a) => ({ actorId: a.id })));
+  await combat.createEmbeddedDocuments(
+    "Combatant",
+    actors.map((a) => ({ actorId: a.id })),
+  );
   return combat;
 }
 
@@ -45,10 +62,16 @@ async function combatOf(...actors) {
 async function deleteCards(combat) {
   if (!combat?.id) return;
   await settle(150);
-  const ids = game.messages.filter((m) => {
-    const f = m.flags?.["carl-rpg"] ?? {};
-    return f.phaseNotice?.combatId === combat.id || f.reaction?.combatId === combat.id || f.reactionDamage?.combatId === combat.id;
-  }).map((m) => m.id);
+  const ids = game.messages
+    .filter((m) => {
+      const f = m.flags?.["carl-rpg"] ?? {};
+      return (
+        f.phaseNotice?.combatId === combat.id ||
+        f.reaction?.combatId === combat.id ||
+        f.reactionDamage?.combatId === combat.id
+      );
+    })
+    .map((m) => m.id);
   if (ids.length) await ChatMessage.deleteDocuments(ids);
 }
 
@@ -87,7 +110,11 @@ export default function register(quench) {
           await combat.startCombat();
           assert.deepEqual(baseBudget(combat, of(pc1)), { move: 0, action: 2 });
           assert.deepEqual(baseBudget(combat, of(mob)), { move: 1, action: 1 });
-          assert.deepEqual(baseBudget(combat, of(boss)), { move: 0, action: 2 }, "two crawlers in the fight");
+          assert.deepEqual(
+            baseBudget(combat, of(boss)),
+            { move: 0, action: 2 },
+            "two crawlers in the fight",
+          );
           const pools = actionBubbles(combat, of(mob)).map((b) => b.pool);
           assert.deepEqual(pools, ["move", "action"], "one yellow, one green");
         });
@@ -110,15 +137,22 @@ export default function register(quench) {
 
         it("a Pet that hasn't been commanded has none but Evades free; a Mount has one", async function () {
           const pet = await createTestPet("budget-pet", { system: { ownerId: pc1.id } });
-          const mount = await createTestPet("budget-mount", { system: { ownerId: pc1.id, isMount: true } });
+          const mount = await createTestPet("budget-mount", {
+            system: { ownerId: pc1.id, isMount: true },
+          });
           try {
-            await combat.createEmbeddedDocuments("Combatant", [pet, mount].map((a) => ({ actorId: a.id })));
+            await combat.createEmbeddedDocuments(
+              "Combatant",
+              [pet, mount].map((a) => ({ actorId: a.id })),
+            );
             await combat.startCombat();
             assert.deepEqual(baseBudget(combat, of(pet)), { move: 0, action: 0 });
             assert.deepEqual(baseBudget(combat, of(mount)), { move: 0, action: 1 });
             assert.isTrue(evadeIsFree(pet), "an uncommanded Pet still Evades, for free");
             assert.isFalse(evadeIsFree(mount), "a Mount pays with its Action");
-            await pet.update({ "system.command": { state: "restricted", combatId: combat.id, round: 1 } });
+            await pet.update({
+              "system.command": { state: "restricted", combatId: combat.id, round: 1 },
+            });
             assert.deepEqual(baseBudget(combat, of(pet)), { move: 0, action: 2 }, "commanded: two");
             assert.isFalse(evadeIsFree(pet), "commanded: Evade is an Action again");
           } finally {
@@ -135,7 +169,13 @@ export default function register(quench) {
         let pc;
         let combat;
         beforeEach(async function () {
-          mob = await createTestMob("spend-mob", { system: { attacks: [{ name: "Bite", toHit: "14", damage: "3", damageType: "", range: "", effect: "" }] } });
+          mob = await createTestMob("spend-mob", {
+            system: {
+              attacks: [
+                { name: "Bite", toHit: "14", damage: "3", damageType: "", range: "", effect: "" },
+              ],
+            },
+          });
           pc = await createTestCharacter("spend-pc");
           combat = await combatOf(mob, pc);
           await combat.startCombat();
@@ -168,7 +208,10 @@ export default function register(quench) {
           await spendAction(pc, "other", "Cast: B");
           assert.lengthOf(free(combat, of(pc)), 0);
           assert.isFalse(canAct(pc, "other", { warn: false }));
-          assert.deepEqual(actionRecord(combat, of(pc).id).spent.map((e) => e.label), ["Attack: A", "Cast: B"]);
+          assert.deepEqual(
+            actionRecord(combat, of(pc).id).spent.map((e) => e.label),
+            ["Attack: A", "Cast: B"],
+          );
         });
 
         it("a Mob's Move-only Action can't pay for an Attack, but can for a Move", async function () {
@@ -220,13 +263,22 @@ export default function register(quench) {
         });
 
         it("a Skill Check spends one by default; a Stat Check doesn't", async function () {
-          const skill = await createTestItem(pc, "skill", "Climbing", { system: { category: "utility", rank: 1 } });
+          const skill = await createTestItem(pc, "skill", "Climbing", {
+            system: { category: "utility", rank: 1 },
+          });
           await CarlDice.rollStatCheck(pc, "str", { skipDialog: true });
-          assert.lengthOf(actionRecord(combat, of(pc).id).spent, 0, "a Stat Check is usually the GM's call");
+          assert.lengthOf(
+            actionRecord(combat, of(pc).id).spent,
+            0,
+            "a Stat Check is usually the GM's call",
+          );
           await CarlDice.rollSkillCheck(pc, skill, { skipDialog: true });
           assert.lengthOf(actionRecord(combat, of(pc).id).spent, 1);
           await CarlDice.rollSkillCheck(pc, skill, { skipDialog: true });
-          assert.isNull(await CarlDice.rollSkillCheck(pc, skill, { skipDialog: true }), "refused with none left");
+          assert.isNull(
+            await CarlDice.rollSkillCheck(pc, skill, { skipDialog: true }),
+            "refused with none left",
+          );
         });
 
         it("putting gear in the Hotlist, or on, is the Retrieve Action", async function () {
@@ -241,10 +293,14 @@ export default function register(quench) {
         });
 
         it("a declared Mob Attack spends the Mob's Action; withdrawing it refunds it", async function () {
-          await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+          await withFakeTargets([{ actor: pc }], () =>
+            CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+          );
           assert.lengthOf(declaredAttacks(combat), 1);
           assert.isFalse(canAct(mob, "attack", { warn: false }));
-          const second = await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+          const second = await withFakeTargets([{ actor: pc }], () =>
+            CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+          );
           assert.isNull(second);
           assert.lengthOf(declaredAttacks(combat), 1, "no second declaration");
           await removeDeclaration(combat, declaredAttacks(combat)[0].id);
@@ -253,12 +309,27 @@ export default function register(quench) {
 
         it("the Reaction card's Evade spends one Action, however many Attacks", async function () {
           await mob.update({ "system.actionsPerRound": 2 });
-          await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
-          await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+          await withFakeTargets([{ actor: pc }], () =>
+            CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+          );
+          await withFakeTargets([{ actor: pc }], () =>
+            CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+          );
           await combat.nextTurn();
           const card = reactionCardFor(combat);
-          const checks = Object.fromEntries(hitList(card.getFlag("carl-rpg", "reaction"))
-            .map((h) => [h.id, { total: 20, naturalRoll: 12, difficulty: 14, formula: "1d20", breakdown: "", roll: null }]));
+          const checks = Object.fromEntries(
+            hitList(card.getFlag("carl-rpg", "reaction")).map((h) => [
+              h.id,
+              {
+                total: 20,
+                naturalRoll: 12,
+                difficulty: 14,
+                formula: "1d20",
+                breakdown: "",
+                roll: null,
+              },
+            ]),
+          );
           assert.isTrue(await applyOp(card.id, "evade", { uuid: pc.uuid, checks }, game.user));
           const spent = actionRecord(combat, of(pc).id).spent;
           assert.lengthOf(spent, 1, "one Evade Action");
@@ -270,11 +341,18 @@ export default function register(quench) {
           await spendAction(pc, "attack", "Attack: A");
           await combat.activate();
           await ui.combat.render({ force: true, combat });
-          await waitFor(() => ui.combat.element?.querySelector(".carl-action-bubble"), { message: "no bubbles" });
-          const row = (actor) => ui.combat.element.querySelector(`[data-combatant-id="${of(actor).id}"]`);
+          await waitFor(() => ui.combat.element?.querySelector(".carl-action-bubble"), {
+            message: "no bubbles",
+          });
+          const row = (actor) =>
+            ui.combat.element.querySelector(`[data-combatant-id="${of(actor).id}"]`);
           assert.lengthOf(row(pc).querySelectorAll(".carl-action-bubble"), 2);
           assert.lengthOf(row(pc).querySelectorAll(".carl-action-bubble.spent"), 1, "one red");
-          assert.lengthOf(row(mob).querySelectorAll(".carl-action-bubble.move"), 1, "the Mob's yellow");
+          assert.lengthOf(
+            row(mob).querySelectorAll(".carl-action-bubble.move"),
+            1,
+            "the Mob's yellow",
+          );
         });
       });
 
@@ -287,10 +365,21 @@ export default function register(quench) {
         let skill;
         let blade;
         beforeEach(async function () {
-          mob = await createTestMob("hotlist-mob", { system: { actionsPerRound: 4, attacks: [{ name: "Bite", toHit: "14", damage: "3", damageType: "", range: "", effect: "" }] } });
+          mob = await createTestMob("hotlist-mob", {
+            system: {
+              actionsPerRound: 4,
+              attacks: [
+                { name: "Bite", toHit: "14", damage: "3", damageType: "", range: "", effect: "" },
+              ],
+            },
+          });
           pc = await createTestCharacter("hotlist-pc");
-          skill = await createTestItem(pc, "skill", "Longsword", { system: { category: "attack", rank: 1 } });
-          blade = await createTestItem(pc, "item", "blade", { system: { weaponSkill: skill.name } });
+          skill = await createTestItem(pc, "skill", "Longsword", {
+            system: { category: "attack", rank: 1 },
+          });
+          blade = await createTestItem(pc, "item", "blade", {
+            system: { weaponSkill: skill.name },
+          });
           // Set up before the fight, where it costs nothing.
           await placeInHotlist(pc, 0, blade);
           combat = await combatOf(mob, pc);
@@ -303,7 +392,8 @@ export default function register(quench) {
           await deleteTestActor(pc);
         });
 
-        const spent = () => actionRecord(combat, combat.combatants.find((c) => c.actor === pc).id).spent;
+        const spent = () =>
+          actionRecord(combat, combat.combatants.find((c) => c.actor === pc).id).spent;
 
         it("Swap from the Hotlist alone is one Action (Use a Hotlist Item)", async function () {
           await useHotlistSlot(pc, 0, { skipDialog: true });
@@ -333,7 +423,11 @@ export default function register(quench) {
         });
 
         it("a cancelled swap-and-Attack costs nothing", async function () {
-          const result = await withDialog(() => CarlDice.rollAttack(pc, skill), (dialog) => pressDialog(dialog, "cancel"), "carl-roll-dialog");
+          const result = await withDialog(
+            () => CarlDice.rollAttack(pc, skill),
+            (dialog) => pressDialog(dialog, "cancel"),
+            "carl-roll-dialog",
+          );
           assert.isNull(result);
           assert.lengthOf(spent(), 0);
           assert.equal(pc.system.hotlist[0], blade.id, "nothing swapped");
@@ -343,11 +437,27 @@ export default function register(quench) {
           // A Taunt needs an Attack aimed at someone else to pull.
           const ally = await createTestCharacter("spend-ally");
           try {
-            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await withFakeTargets([{ actor: ally }], () =>
+              CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+            );
             await combat.nextTurn();
             const card = reactionCardFor(combat);
-            const check = { total: 25, naturalRoll: 15, difficulty: 12, formula: "1d20", breakdown: "", roll: null };
-            assert.isTrue(await applyOp(card.id, "taunt", { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check }, game.user));
+            const check = {
+              total: 25,
+              naturalRoll: 15,
+              difficulty: 12,
+              formula: "1d20",
+              breakdown: "",
+              roll: null,
+            };
+            assert.isTrue(
+              await applyOp(
+                card.id,
+                "taunt",
+                { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check },
+                game.user,
+              ),
+            );
             assert.lengthOf(spent(), 1, "the Taunt");
             await combat.previousTurn();
             assert.equal(currentPhase(combat), "declare");
@@ -360,13 +470,29 @@ export default function register(quench) {
       describe("Paying once, and undoing", function () {
         useQuenchTimeout(this);
 
-        const bite = { name: "Bite", toHit: "14", damage: "3", damageType: "", range: "", effect: "" };
-        const check = { total: 25, naturalRoll: 15, difficulty: 12, formula: "1d20", breakdown: "", roll: null };
+        const bite = {
+          name: "Bite",
+          toHit: "14",
+          damage: "3",
+          damageType: "",
+          range: "",
+          effect: "",
+        };
+        const check = {
+          total: 25,
+          naturalRoll: 15,
+          difficulty: 12,
+          formula: "1d20",
+          breakdown: "",
+          roll: null,
+        };
         let mob;
         let pc;
         let combat;
         beforeEach(async function () {
-          mob = await createTestMob("undo-mob", { system: { actionsPerRound: 4, attacks: [bite] } });
+          mob = await createTestMob("undo-mob", {
+            system: { actionsPerRound: 4, attacks: [bite] },
+          });
           pc = await createTestCharacter("undo-pc");
           combat = await combatOf(mob, pc);
           await combat.startCombat();
@@ -393,7 +519,10 @@ export default function register(quench) {
           await resetActions(combat, of(pc).id);
           const hat = await createTestItem(pc, "item", "Hat");
           const boots = await createTestItem(pc, "item", "Boots");
-          await pc.updateEmbeddedDocuments("Item", [{ _id: hat.id, "system.equipped": true }, { _id: boots.id, "system.equipped": true }]);
+          await pc.updateEmbeddedDocuments("Item", [
+            { _id: hat.id, "system.equipped": true },
+            { _id: boots.id, "system.equipped": true },
+          ]);
           assert.lengthOf(spentBy(pc), 1, "two Equipped boxes in one update: one Action");
         });
 
@@ -412,7 +541,9 @@ export default function register(quench) {
           const max = pc.system.mana.max;
           assert.isAtLeast(max, 4, "room to spend");
           await pc.update({ "system.mana.value": max });
-          const zap = await createTestItem(pc, "spell", "Zap", { system: { rank: 1, manaCost: 2, governingStat: "int" } });
+          const zap = await createTestItem(pc, "spell", "Zap", {
+            system: { rank: 1, manaCost: 2, governingStat: "int" },
+          });
           const message = await CarlDice.rollSkillCheck(pc, zap, { skipDialog: true });
           assert.exists(message);
           assert.equal(pc.system.mana.value, max - 2);
@@ -424,7 +555,9 @@ export default function register(quench) {
         });
 
         it("undoing a declared Attack withdraws it", async function () {
-          await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+          await withFakeTargets([{ actor: pc }], () =>
+            CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+          );
           assert.lengthOf(declaredAttacks(combat), 1);
           assert.lengthOf(spentBy(mob), 1);
           await undoLast(mob);
@@ -433,12 +566,19 @@ export default function register(quench) {
         });
 
         it("two declarations started at once are two Actions - the second waits its turn", async function () {
-          const declare = () => withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+          const declare = () =>
+            withFakeTargets([{ actor: pc }], () =>
+              CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+            );
           await Promise.all([declare(), declare()]);
           const declared = declaredAttacks(combat);
           assert.lengthOf(declared, 2);
           assert.lengthOf(spentBy(mob), 2, "each paid for");
-          assert.sameMembers(declared.map((d) => d.action?.id), spentBy(mob).map((e) => e.id), "each tied to its own Action");
+          assert.sameMembers(
+            declared.map((d) => d.action?.id),
+            spentBy(mob).map((e) => e.id),
+            "each tied to its own Action",
+          );
 
           await resetActions(combat, of(mob).id);
           for (const d of declaredAttacks(combat)) await removeDeclaration(combat, d.id);
@@ -451,7 +591,9 @@ export default function register(quench) {
         it("undoing a declaration gives its one-shot Debuff back once", async function () {
           await addConditionToActor(mob, "queasy");
           const queasy = () => mob.system.conditions.filter((c) => c.key === "queasy").length;
-          await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+          await withFakeTargets([{ actor: pc }], () =>
+            CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+          );
           assert.equal(queasy(), 0, "spent on the declared Attack");
           await undoLast(mob);
           assert.equal(queasy(), 1, "back - once");
@@ -476,11 +618,19 @@ export default function register(quench) {
           // A Taunt needs an Attack aimed at someone else to pull.
           const ally = await createTestCharacter("undo-ally");
           try {
-            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await withFakeTargets([{ actor: ally }], () =>
+              CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+            );
             await combat.nextTurn();
             const card = reactionCardFor(combat);
             const taunts = () => Object.keys(card.getFlag("carl-rpg", "reaction").taunts ?? {});
-            const taunt = (made) => applyOp(card.id, "taunt", { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check: made }, game.user);
+            const taunt = (made) =>
+              applyOp(
+                card.id,
+                "taunt",
+                { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check: made },
+                game.user,
+              );
             assert.isTrue(await taunt(check));
             assert.lengthOf(taunts(), 1);
             await undoLast(pc);
@@ -490,7 +640,12 @@ export default function register(quench) {
             assert.isTrue(await taunt({ ...check, total: 5, naturalRoll: 3 }));
             const [tauntId] = taunts();
             // The card moves on: the ally helps the (still failed) Taunt.
-            await applyOp(card.id, "intervene", { byUuid: ally.uuid, byName: ally.name, ref: { type: "taunt", tauntId }, value: 1 }, game.user);
+            await applyOp(
+              card.id,
+              "intervene",
+              { byUuid: ally.uuid, byName: ally.name, ref: { type: "taunt", tauntId }, value: 1 },
+              game.user,
+            );
             await undoLast(pc);
             assert.lengthOf(taunts(), 1, "refused: the card changed since");
             assert.lengthOf(spentBy(pc), 1);
@@ -505,30 +660,59 @@ export default function register(quench) {
           const warned = [];
           let release = () => {};
           try {
-            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await withFakeTargets([{ actor: ally }], () =>
+              CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+            );
             await combat.nextTurn();
             const card = reactionCardFor(combat);
             const taunts = () => Object.keys(card.getFlag("carl-rpg", "reaction").taunts ?? {});
-            assert.isTrue(await applyOp(card.id, "taunt", {
-              byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check: { ...check, total: 5, naturalRoll: 3 },
-            }, game.user));
+            assert.isTrue(
+              await applyOp(
+                card.id,
+                "taunt",
+                {
+                  byUuid: pc.uuid,
+                  byName: pc.name,
+                  mobUuid: mob.uuid,
+                  rank: 1,
+                  check: { ...check, total: 5, naturalRoll: 3 },
+                },
+                game.user,
+              ),
+            );
             const [tauntId] = taunts();
             // Hold the card's queue, so what follows waits in it, in order:
             // the ally's Intervene, then the undo - checked (and passed)
             // before the Intervene has changed anything.
-            const gate = new Promise((resolve) => { release = resolve; });
+            const gate = new Promise((resolve) => {
+              release = resolve;
+            });
             const held = withCard(card.id, () => gate);
-            const intervened = applyOp(card.id, "intervene", {
-              byUuid: ally.uuid, byName: ally.name, ref: { type: "taunt", tauntId }, value: 1,
-            }, game.user);
-            ui.notifications.warn = (text) => { warned.push(String(text)); };
+            const intervened = applyOp(
+              card.id,
+              "intervene",
+              {
+                byUuid: ally.uuid,
+                byName: ally.name,
+                ref: { type: "taunt", tauntId },
+                value: 1,
+              },
+              game.user,
+            );
+            ui.notifications.warn = (text) => {
+              warned.push(String(text));
+            };
             const undone = undoLast(pc);
             release();
             await Promise.all([held, intervened, undone]);
             await settle();
             assert.lengthOf(taunts(), 1, "the Taunt stays on the card");
             assert.lengthOf(spentBy(pc), 1, "and its Action stays spent - no free Taunt");
-            assert.include(warned, game.i18n.localize("CARLRPG.Actions.Undo.ReactionChanged"), "the asker is told why");
+            assert.include(
+              warned,
+              game.i18n.localize("CARLRPG.Actions.Undo.ReactionChanged"),
+              "the asker is told why",
+            );
           } finally {
             release();
             ui.notifications.warn = warn;
@@ -539,15 +723,25 @@ export default function register(quench) {
         it("undoing a Reaction-card Taunt takes back the roll's advancement mark and cooldown", async function () {
           const ally = await createTestCharacter("undo-mark-ally");
           try {
-            const tauntSkill = await createTestItem(pc, "skill", "Taunt", { system: { rank: 1, cooldown: "5 minutes", governingStat: "cha" } });
-            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            const tauntSkill = await createTestItem(pc, "skill", "Taunt", {
+              system: { rank: 1, cooldown: "5 minutes", governingStat: "cha" },
+            });
+            await withFakeTargets([{ actor: ally }], () =>
+              CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+            );
             await combat.nextTurn();
             const card = reactionCardFor(combat);
             const item = () => pc.items.get(tauntSkill.id);
             assert.isFalse(!!item().system.marked, "not marked yet");
             // Rolled as the card's Taunt button rolls it (on the taunter's client), then applied.
             const taunter = { uuid: pc.uuid, name: pc.name, actor: pc };
-            assert.isTrue(await rollTaunt(card, { taunter, item: item(), rank: 1, mob, mobUuid: mob.uuid }, { skipDialog: true }));
+            assert.isTrue(
+              await rollTaunt(
+                card,
+                { taunter, item: item(), rank: 1, mob, mobUuid: mob.uuid },
+                { skipDialog: true },
+              ),
+            );
             assert.lengthOf(spentBy(pc), 1, "the Taunt's Action");
             assert.isTrue(item().system.marked, "the roll marked Taunt");
             assert.exists(item().getFlag("carl-rpg", "cooldown"), "and started its cooldown");
@@ -555,7 +749,11 @@ export default function register(quench) {
             assert.equal(kinds.at(-1), "reaction", "the card's record last, so it runs first");
             await undoLast(pc);
             assert.lengthOf(spentBy(pc), 0, "the Action is back");
-            assert.lengthOf(Object.keys(card.getFlag("carl-rpg", "reaction").taunts ?? {}), 0, "the Taunt is off the card");
+            assert.lengthOf(
+              Object.keys(card.getFlag("carl-rpg", "reaction").taunts ?? {}),
+              0,
+              "the Taunt is off the card",
+            );
             assert.isFalse(!!item().system.marked, "the mark is gone");
             assert.notExists(item().getFlag("carl-rpg", "cooldown"), "and the cooldown");
           } finally {
@@ -577,18 +775,49 @@ export default function register(quench) {
             return emit.call(this, name, payload, ...rest);
           };
           try {
-            await withFakeTargets([{ actor: ally }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            await withFakeTargets([{ actor: ally }], () =>
+              CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+            );
             await combat.nextTurn();
             const card = reactionCardFor(combat);
-            assert.isFalse(await applyOp(card.id, "catch", { byUuid: pc.uuid, byName: pc.name, hitId: "gone" }, asker));
-            assert.deepEqual(notices.map((n) => [n.userId, n.key]), [[asker.id, "CARLRPG.Reaction.Refused"]], "told it didn't go through");
+            assert.isFalse(
+              await applyOp(
+                card.id,
+                "catch",
+                { byUuid: pc.uuid, byName: pc.name, hitId: "gone" },
+                asker,
+              ),
+            );
+            assert.deepEqual(
+              notices.map((n) => [n.userId, n.key]),
+              [[asker.id, "CARLRPG.Reaction.Refused"]],
+              "told it didn't go through",
+            );
             notices.length = 0;
             await spendAction(pc, "other", "A");
             await spendAction(pc, "other", "B");
-            assert.isFalse(await applyOp(card.id, "taunt", { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check }, asker));
-            assert.deepEqual(notices.map((n) => n.key), ["CARLRPG.Actions.NoneLeft"], "told why - and only that");
+            assert.isFalse(
+              await applyOp(
+                card.id,
+                "taunt",
+                { byUuid: pc.uuid, byName: pc.name, mobUuid: mob.uuid, rank: 1, check },
+                asker,
+              ),
+            );
+            assert.deepEqual(
+              notices.map((n) => n.key),
+              ["CARLRPG.Actions.NoneLeft"],
+              "told why - and only that",
+            );
             notices.length = 0;
-            assert.isFalse(await applyOp(card.id, "catch", { byUuid: pc.uuid, byName: pc.name, hitId: "gone" }, game.user));
+            assert.isFalse(
+              await applyOp(
+                card.id,
+                "catch",
+                { byUuid: pc.uuid, byName: pc.name, hitId: "gone" },
+                game.user,
+              ),
+            );
             assert.lengthOf(notices, 0, "the GM's own op: nothing sent");
           } finally {
             game.socket.emit = emit;
@@ -600,21 +829,36 @@ export default function register(quench) {
           await spendAction(pc, "other", "Mystery", { undo: [{ t: "mystery" }] });
           const warn = ui.notifications.warn;
           const warned = [];
-          ui.notifications.warn = (text) => { warned.push(String(text)); };
+          ui.notifications.warn = (text) => {
+            warned.push(String(text));
+          };
           try {
             await undoLast(pc);
           } finally {
             ui.notifications.warn = warn;
           }
           assert.lengthOf(spentBy(pc), 1, "still spent");
-          assert.include(warned, game.i18n.localize("CARLRPG.Actions.Undo.Blocked"), "and the asker is told");
-          assert.equal(await runRecords([{ t: "mystery" }], { stopOnRefusal: true }), "Blocked", "run anyway, it refuses");
+          assert.include(
+            warned,
+            game.i18n.localize("CARLRPG.Actions.Undo.Blocked"),
+            "and the asker is told",
+          );
+          assert.equal(
+            await runRecords([{ t: "mystery" }], { stopOnRefusal: true }),
+            "Blocked",
+            "run anyway, it refuses",
+          );
         });
 
         it("undo is refused once the Action's card has been acted on", async function () {
-          const message = await ChatMessage.create({ content: "quench", flags: { "carl-rpg": { damageApplied: true } } });
+          const message = await ChatMessage.create({
+            content: "quench",
+            flags: { "carl-rpg": { damageApplied: true } },
+          });
           try {
-            await spendAction(pc, "attack", "Attack: x", { undo: [{ t: "message", id: message.id }] });
+            await spendAction(pc, "attack", "Attack: x", {
+              undo: [{ t: "message", id: message.id }],
+            });
             await undoLast(pc);
             assert.lengthOf(spentBy(pc), 1, "still spent");
             assert.exists(game.messages.get(message.id), "the card stays");
@@ -626,7 +870,10 @@ export default function register(quench) {
         it("an Attack Scroll is an Attack: AI Favor's Action can't pay for it", async function () {
           const MAGIC_MISSILE = "Compendium.carl-rpg.skills-and-spells.Item.mK52l4gB8AAiWOCw";
           const scroll = await createTestItem(pc, "item", "Scroll of Magic Missile", {
-            system: { quantity: 1, consumable: { kind: "scroll", spell: { uuid: MAGIC_MISSILE, rank: 5 } } },
+            system: {
+              quantity: 1,
+              consumable: { kind: "scroll", spell: { uuid: MAGIC_MISSILE, rank: 5 } },
+            },
           });
           await pc.update({ "system.hotlist": [scroll.id], "system.details.aiFavor": 1 });
           await spendAction(pc, "attack", "A");
@@ -644,7 +891,9 @@ export default function register(quench) {
           try {
             assert.isNull(combatantInFight(vehicle), "not tracked");
             assert.isTrue(canAct(vehicle, "attack", { warn: false }));
-            message = await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(vehicle, 0, { skipDialog: true }));
+            message = await withFakeTargets([{ actor: pc }], () =>
+              CarlDice.rollMobAttack(vehicle, 0, { skipDialog: true }),
+            );
             assert.exists(message, "it fires");
           } finally {
             await message?.delete();

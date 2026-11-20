@@ -15,11 +15,24 @@ import CarlDice from "../../dice/dice.mjs";
 import { rowOutcome } from "../../helpers/attack-targets.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
 import { assignItemToSlot, clearSlot } from "../../helpers/equip-slots.mjs";
-import { attackIsArmorPiercing, effectiveRank, slugifySkillName } from "../../helpers/modifiers.mjs";
+import {
+  attackIsArmorPiercing,
+  effectiveRank,
+  slugifySkillName,
+} from "../../helpers/modifiers.mjs";
 import { getRankDamageDie } from "../../helpers/rules.mjs";
 import {
-  createTestCharacter, createTestItem, createTestMob, deleteTestActor, deleteTestCombat, settle,
-  PIN_D20_MID, useQuenchTimeout, withFakeTargets, withPinnedDice, withSetting,
+  createTestCharacter,
+  createTestItem,
+  createTestMob,
+  deleteTestActor,
+  deleteTestCombat,
+  settle,
+  PIN_D20_MID,
+  useQuenchTimeout,
+  withFakeTargets,
+  withPinnedDice,
+  withSetting,
 } from "../helpers.mjs";
 
 /** STR 10: Mod 4 (statModTable). */
@@ -30,7 +43,10 @@ function fists(actor, name) {
   return createTestItem(actor, "skill", name, {
     name,
     system: {
-      category: "attack", isHandToHand: true, rank: 1, governingStat: "str",
+      category: "attack",
+      isHandToHand: true,
+      rank: 1,
+      governingStat: "str",
       baseDamage: { dice: "1d6", stat: "str", damageType: "bludgeoning" },
     },
   });
@@ -49,12 +65,20 @@ async function unitForMax() {
 const damageOf = (message) => message.getFlag("carl-rpg", "damageByType") ?? {};
 
 /** The ids of the actor's conditional modifiers from one item. */
-const conditionalIdsFrom = (actor, item) => (actor.system.conditionalModifiers ?? [])
-  .filter((cm) => cm.sourceItemId === item.id).map((cm) => cm.id);
+const conditionalIdsFrom = (actor, item) =>
+  (actor.system.conditionalModifiers ?? [])
+    .filter((cm) => cm.sourceItemId === item.id)
+    .map((cm) => cm.id);
 
 /** Roll options as the dialog would return them. */
 const preset = (overrides = {}) => ({
-  advantage: "normal", difficulty: null, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null, ...overrides,
+  advantage: "normal",
+  difficulty: null,
+  modifier: 0,
+  checked: new Set(),
+  manaCostChoice: 0,
+  checkedDebuffs: null,
+  ...overrides,
 });
 
 export default function register(quench) {
@@ -75,15 +99,27 @@ export default function register(quench) {
             const de = await createTestItem(actor, "damageEffect", name, {
               name,
               system: {
-                rank: 5, parentSkills: [skill.name],
+                rank: 5,
+                parentSkills: [skill.name],
                 // As packs-source/skills-and-spells/powerful-strike.json.
-                changes: [{ targetType: "skillDamage", target: name, mode: "multiply", value: "@rank", damageDiceKind: "base" }],
+                changes: [
+                  {
+                    targetType: "skillDamage",
+                    target: name,
+                    mode: "multiply",
+                    value: "@rank",
+                    damageDiceKind: "base",
+                  },
+                ],
               },
             });
             await settle();
             assert.equal(actor.system.stats.str.mod, 4, "sanity: STR Mod 4");
             message = await withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([], () => CarlDice.rollAttack(actor, skill, { skipDialog: true, damageEffectItem: de })));
+              withFakeTargets([], () =>
+                CarlDice.rollAttack(actor, skill, { skipDialog: true, damageEffectItem: de }),
+              ),
+            );
             assert.equal(damageOf(message).bludgeoning, 19);
           } finally {
             await message?.delete();
@@ -100,11 +136,25 @@ export default function register(quench) {
             const de = await createTestItem(actor, "damageEffect", name, {
               name,
               system: {
-                rank: 1, parentSkills: [skill.name],
+                rank: 1,
+                parentSkills: [skill.name],
                 changes: [
-                  { targetType: "skillDamage", target: name, mode: "add", value: "1d4", damageDiceKind: "base", damageType: "fire" },
-                  { targetType: "skillDamage", target: name, mode: "multiply", value: "2", damageDiceKind: "multiplier",
-                    conditions: [{ label: "Target at 10% Health Bar or less?" }] },
+                  {
+                    targetType: "skillDamage",
+                    target: name,
+                    mode: "add",
+                    value: "1d4",
+                    damageDiceKind: "base",
+                    damageType: "fire",
+                  },
+                  {
+                    targetType: "skillDamage",
+                    target: name,
+                    mode: "multiply",
+                    value: "2",
+                    damageDiceKind: "multiplier",
+                    conditions: [{ label: "Target at 10% Health Bar or less?" }],
+                  },
                 ],
               },
             });
@@ -112,10 +162,15 @@ export default function register(quench) {
             const checked = new Set(conditionalIdsFrom(actor, de));
             assert.lengthOf([...checked], 1, "sanity: the box");
             // d20 10 + Rank 1 + STR 4 = 15 vs. 1: an Amazing Success, at no one.
-            message = await withSetting("currentFloor", 2, () => withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([], () => CarlDice.rollAttack(actor, skill, {
-                presetOptions: preset({ difficulty: 1, checked, damageEffectId: de.id }),
-              }))));
+            message = await withSetting("currentFloor", 2, () =>
+              withPinnedDice(PIN_D20_MID, () =>
+                withFakeTargets([], () =>
+                  CarlDice.rollAttack(actor, skill, {
+                    presetOptions: preset({ difficulty: 1, checked, damageEffectId: de.id }),
+                  }),
+                ),
+              ),
+            );
             const damage = damageOf(message);
             assert.equal(damage.bludgeoning, (3 + 4) * 2, "d6 3 + STR 4, x2");
             assert.equal(damage.fire, 2 * 2, "the Damage Effect's own d4 2 (Fire), x2");
@@ -129,8 +184,17 @@ export default function register(quench) {
 
         it("a target row's Amazing Success +Floor takes the Attack's total multiplier", function () {
           const row = { hit: true, amazing: true, zone: "full", damageFactor: 2 };
-          assert.equal(rowOutcome(row, { damageByType: { fire: 4 }, isArea: false, floor: 3 }).damage[""], 6);
-          assert.equal(rowOutcome({ ...row, damageFactor: undefined }, { damageByType: {}, isArea: false, floor: 3 }).damage[""], 3);
+          assert.equal(
+            rowOutcome(row, { damageByType: { fire: 4 }, isArea: false, floor: 3 }).damage[""],
+            6,
+          );
+          assert.equal(
+            rowOutcome(
+              { ...row, damageFactor: undefined },
+              { damageByType: {}, isArea: false, floor: 3 },
+            ).damage[""],
+            3,
+          );
         });
       });
 
@@ -141,7 +205,13 @@ export default function register(quench) {
         async function skullcracker(actor, unit) {
           const skill = createTestItem(actor, "skill", "Noggin QA", {
             name: "Noggin QA",
-            system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "", baseDamage: { dice: "1d6", damageType: "bludgeoning" } },
+            system: {
+              category: "attack",
+              isHandToHand: true,
+              rank: 1,
+              governingStat: "",
+              baseDamage: { dice: "1d6", damageType: "bludgeoning" },
+            },
           });
           const skillItem = await skill;
           const name = "Skullcracker QA";
@@ -149,19 +219,45 @@ export default function register(quench) {
           const de = await createTestItem(actor, "damageEffect", name, {
             name,
             system: {
-              rank: 10, parentSkills: [skillItem.name],
-              changes: [{ targetType: "skillDamage", target: name, mode: "add", value: "1d4", damageDiceKind: "base", conditions: sameSize() }],
-              upgrades: [{ rankThreshold: 10, changes: [
-                { targetType: "skillDamage", target: name, mode: "add", value: "", damageDiceKind: "rankDie", conditions: sameSize() },
-              ] }],
+              rank: 10,
+              parentSkills: [skillItem.name],
+              changes: [
+                {
+                  targetType: "skillDamage",
+                  target: name,
+                  mode: "add",
+                  value: "1d4",
+                  damageDiceKind: "base",
+                  conditions: sameSize(),
+                },
+              ],
+              upgrades: [
+                {
+                  rankThreshold: 10,
+                  changes: [
+                    {
+                      targetType: "skillDamage",
+                      target: name,
+                      mode: "add",
+                      value: "",
+                      damageDiceKind: "rankDie",
+                      conditions: sameSize(),
+                    },
+                  ],
+                },
+              ],
             },
           });
           await settle();
           const checked = new Set(conditionalIdsFrom(actor, de));
           assert.lengthOf([...checked], 2, "sanity: both boxes");
-          return withPinnedDice(unit, () => withFakeTargets([], () => CarlDice.rollAttack(actor, skillItem, {
-            presetOptions: preset({ checked, damageEffectId: de.id }),
-          })));
+          return withPinnedDice(unit, () =>
+            withFakeTargets([], () =>
+              CarlDice.rollAttack(actor, skillItem, {
+                presetOptions: preset({ checked, damageEffectId: de.id }),
+              }),
+            ),
+          );
         }
 
         it("Skullcracker Rank 10's 'add 1 Rank damage die' box adds its die (p.180)", async function () {
@@ -184,8 +280,15 @@ export default function register(quench) {
           let message;
           try {
             message = await skullcracker(actor, await unitForMax());
-            assert.equal(message.getFlag("carl-rpg", "aiReroll")?.natural ?? 20, 20, "sanity: a natural 20");
-            const formula = message.rolls.slice(1).map((r) => r.formula).join(" ");
+            assert.equal(
+              message.getFlag("carl-rpg", "aiReroll")?.natural ?? 20,
+              20,
+              "sanity: a natural 20",
+            );
+            const formula = message.rolls
+              .slice(1)
+              .map((r) => r.formula)
+              .join(" ");
             assert.include(formula, "2d4", "the ticked base d4 doubled");
             assert.include(formula, "1d10", "the Rank die not doubled");
             // 2d6 12 + 2d4 8 + 1d10 10.
@@ -204,10 +307,23 @@ export default function register(quench) {
           const actor = await createTestCharacter("untrained");
           const made = [];
           try {
-            const skill = await createTestItem(actor, "skill", "Lockpicking", { system: { category: "utility", rank: 0 } });
-            made.push(await withSetting("currentFloor", 3, () => CarlDice.rollSkillCheck(actor, skill, { skipDialog: true })));
-            assert.isFalse(actor.items.get(skill.id).system.marked, "Floor 3: no new Skill this way");
-            made.push(await withSetting("currentFloor", 1, () => CarlDice.rollSkillCheck(actor, skill, { skipDialog: true })));
+            const skill = await createTestItem(actor, "skill", "Lockpicking", {
+              system: { category: "utility", rank: 0 },
+            });
+            made.push(
+              await withSetting("currentFloor", 3, () =>
+                CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }),
+              ),
+            );
+            assert.isFalse(
+              actor.items.get(skill.id).system.marked,
+              "Floor 3: no new Skill this way",
+            );
+            made.push(
+              await withSetting("currentFloor", 1, () =>
+                CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }),
+              ),
+            );
             assert.isTrue(actor.items.get(skill.id).system.marked, "a Tutorial Floor");
           } finally {
             for (const m of made) await m?.delete();
@@ -226,9 +342,14 @@ export default function register(quench) {
           let combat;
           try {
             combat = await Combat.create({});
-            await combat.createEmbeddedDocuments("Combatant", [mob, pc].map((a) => ({ actorId: a.id })));
+            await combat.createEmbeddedDocuments(
+              "Combatant",
+              [mob, pc].map((a) => ({ actorId: a.id })),
+            );
             await combat.startCombat();
-            const skill = await createTestItem(pc, "skill", "Climbing", { system: { category: "utility", rank: 1 } });
+            const skill = await createTestItem(pc, "skill", "Climbing", {
+              system: { category: "utility", rank: 1 },
+            });
             await addConditionToActor(pc, "queasy");
             const queasy = () => pc.system.conditions.some((c) => c.key === "queasy");
 
@@ -261,15 +382,31 @@ export default function register(quench) {
             const dagger = await createTestItem(actor, "skill", name, {
               name,
               system: {
-                category: "attack", rank: 4,
+                category: "attack",
+                rank: 4,
                 baseDamage: { dice: "1d4", damageType: "piercing" },
-                upgrades: [{ rankThreshold: 5, armorPiercing: true, changes: [
-                  { targetType: "skillDamage", target: name, mode: "add", value: "1d4", damageDiceKind: "base" },
-                ] }],
+                upgrades: [
+                  {
+                    rankThreshold: 5,
+                    armorPiercing: true,
+                    changes: [
+                      {
+                        targetType: "skillDamage",
+                        target: name,
+                        mode: "add",
+                        value: "1d4",
+                        damageDiceKind: "base",
+                      },
+                    ],
+                  },
+                ],
               },
             });
             const charm = await createTestItem(actor, "item", "Dagger charm", {
-              system: { slots: ["head"], changes: [{ targetType: "skillRank", target: name, mode: "add", value: "1" }] },
+              system: {
+                slots: ["head"],
+                changes: [{ targetType: "skillRank", target: name, mode: "add", value: "1" }],
+              },
             });
             const entry = () => actor.system.skills[slugifySkillName(name)];
             assert.isFalse(attackIsArmorPiercing(actor, dagger), "Rank 4");
@@ -279,7 +416,11 @@ export default function register(quench) {
             assert.equal(effectiveRank(dagger), 5);
             assert.isTrue(attackIsArmorPiercing(actor, dagger), "Rank 5 with the charm worn");
             assert.lengthOf(entry().damage.baseDice, 2, "the Rank 5 tier's +1d4 too");
-            assert.equal(dagger.system.rank, 4, "the Skill's own Rank - what Advancement reads - is unchanged");
+            assert.equal(
+              dagger.system.rank,
+              4,
+              "the Skill's own Rank - what Advancement reads - is unchanged",
+            );
 
             await clearSlot(actor, { slotType: "gear", slotKey: "head" });
             assert.equal(entry().rank, 4);
@@ -291,6 +432,9 @@ export default function register(quench) {
         });
       });
     },
-    { displayName: "CarlRPG: Review fixes (damage multipliers, conditional dice, untrained use, non-Action Checks, gear Rank)" },
+    {
+      displayName:
+        "CarlRPG: Review fixes (damage multipliers, conditional dice, untrained use, non-Action Checks, gear Rank)",
+    },
   );
 }

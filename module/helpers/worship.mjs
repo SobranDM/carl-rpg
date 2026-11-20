@@ -144,10 +144,14 @@ export async function receiveBoon(actor) {
     changes: [],
   };
   const worshipDays = Math.max(0, (actor.system.deity.worshipDays ?? 0) - BOON_DAYS);
-  await changeConditions(actor, [{ op: "push", entry: boon }], { updates: { "system.deity.worshipDays": worshipDays } });
+  await changeConditions(actor, [{ op: "push", entry: boon }], {
+    updates: { "system.deity.worshipDays": worshipDays },
+  });
 
   const description = result.description
-    ? await foundry.applications.ux.TextEditor.implementation.enrichHTML(result.description, { relativeTo: actor })
+    ? await foundry.applications.ux.TextEditor.implementation.enrichHTML(result.description, {
+        relativeTo: actor,
+      })
     : "";
   await createCardMessage({
     title: game.i18n.localize("CARLRPG.Deity.BoonCardTitle"),

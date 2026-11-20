@@ -25,26 +25,44 @@ export default function register(quench) {
       describe("System dialogs", function () {
         useQuenchTimeout(this);
 
-        const plainDialog = (buttons) => () => showCarlDialog({ title: "buttons", content: "<p>x</p>", classes: ["carl-test-dialog"], buttons });
+        const plainDialog = (buttons) => () =>
+          showCarlDialog({
+            title: "buttons",
+            content: "<p>x</p>",
+            classes: ["carl-test-dialog"],
+            buttons,
+          });
 
         it("Cancel resolves null", async function () {
-          const result = await withDialog(plainDialog([{ action: "go", label: "Go", callback: () => 1 }, cancelButton()]),
-            (dialog) => press(dialog, "cancel"), "carl-test-dialog");
+          const result = await withDialog(
+            plainDialog([{ action: "go", label: "Go", callback: () => 1 }, cancelButton()]),
+            (dialog) => press(dialog, "cancel"),
+            "carl-test-dialog",
+          );
           assert.isNull(result);
         });
 
         it("a callback that returns nothing resolves null, not its action", async function () {
-          const result = await withDialog(plainDialog([{ action: "read", label: "Read", callback: () => null }]),
-            (dialog) => press(dialog, "read"), "carl-test-dialog");
+          const result = await withDialog(
+            plainDialog([{ action: "read", label: "Read", callback: () => null }]),
+            (dialog) => press(dialog, "read"),
+            "carl-test-dialog",
+          );
           assert.isNull(result);
         });
 
         it("a falsy answer (0) and a button with no callback still come through", async function () {
-          const zero = await withDialog(plainDialog([{ action: "first", label: "First", callback: () => 0 }]),
-            (dialog) => press(dialog, "first"), "carl-test-dialog");
+          const zero = await withDialog(
+            plainDialog([{ action: "first", label: "First", callback: () => 0 }]),
+            (dialog) => press(dialog, "first"),
+            "carl-test-dialog",
+          );
           assert.strictEqual(zero, 0);
-          const bare = await withDialog(plainDialog([{ action: "self", label: "Self" }]),
-            (dialog) => press(dialog, "self"), "carl-test-dialog");
+          const bare = await withDialog(
+            plainDialog([{ action: "self", label: "Self" }]),
+            (dialog) => press(dialog, "self"),
+            "carl-test-dialog",
+          );
           assert.equal(bare, "self");
         });
       });
@@ -57,7 +75,10 @@ export default function register(quench) {
           try {
             const skill = await createTestItem(actor, "skill", "climb", { system: { rank: 2 } });
             const before = game.messages.size;
-            const result = await withDialog(() => CarlDice.rollSkillCheck(actor, skill), (dialog) => press(dialog, "cancel"));
+            const result = await withDialog(
+              () => CarlDice.rollSkillCheck(actor, skill),
+              (dialog) => press(dialog, "cancel"),
+            );
             assert.isNull(result, "cancelled");
             await settle(100);
             assert.equal(game.messages.size, before, "no card posted");
@@ -71,12 +92,18 @@ export default function register(quench) {
           let message;
           try {
             const skill = await createTestItem(actor, "skill", "climb", { system: { rank: 2 } });
-            message = await withDialog(() => CarlDice.rollSkillCheck(actor, skill), (dialog) => {
-              dialog.element.querySelector('input[name="difficulty"]').value = "17";
-              press(dialog, "roll");
-            });
+            message = await withDialog(
+              () => CarlDice.rollSkillCheck(actor, skill),
+              (dialog) => {
+                dialog.element.querySelector('input[name="difficulty"]').value = "17";
+                press(dialog, "roll");
+              },
+            );
             assert.exists(message);
-            assert.include(message.content, game.i18n.format("CARLRPG.Roll.VsDifficulty", { difficulty: 17 }));
+            assert.include(
+              message.content,
+              game.i18n.format("CARLRPG.Roll.VsDifficulty", { difficulty: 17 }),
+            );
           } finally {
             await message?.delete();
             await deleteTestActor(actor);
@@ -85,35 +112,69 @@ export default function register(quench) {
 
         it("has no Roll label, no preset dropdown or modifier, a help icon citing p.59, and the Difficulty's source as a hint", async function () {
           const difficultyPresets = buildDifficultyPresets({
-            floor: 3, selected: "unopposed", opposed: { name: "Mordecai", stat: "DEX", mod: 2 },
+            floor: 3,
+            selected: "unopposed",
+            opposed: { name: "Mordecai", stat: "DEX", mod: 2 },
           });
-          await withDialog(() => promptRollOptions({ title: "layout", difficultyPresets }), (dialog) => {
-            const el = dialog.element;
-            assert.equal(el.querySelector(".carl-dialog-roll-mode > label")?.textContent.trim(),
-              game.i18n.localize("CARLRPG.Dialog.Advantage"), "labeled Advantage");
-            const advantage = el.querySelector('.carl-dialog-roll-mode select[name="advantage"]');
-            assert.deepEqual([...advantage.options].map((o) => o.value), ["normal", "advantage", "disadvantage"], "a dropdown");
-            assert.equal(advantage.value, "normal");
-            const help = el.querySelector(".carl-dialog-help");
-            assert.include(help?.dataset.tooltipHtml ?? "", "p.59");
-            assert.equal(help?.getAttribute("tabindex"), "0", "reachable from the keyboard");
-            assert.include(help?.getAttribute("aria-label") ?? "", "10 + 2 x Floor", "the formulas, without hovering");
-            assert.isNull(el.querySelector('select[name="difficultyPreset"]'), "no Difficulty type dropdown");
-            assert.isNull(el.querySelector('input[name="modifier"]'), "no situational modifier (ruled 2026-11-18)");
-            assert.equal(el.querySelector(".carl-dialog-difficulty-basis")?.textContent.trim(),
-              game.i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: 16 }), "the hint names the formula used");
-            assert.isAtLeast(dialog.position.width, 480);
-            press(dialog, "cancel");
-          });
+          await withDialog(
+            () => promptRollOptions({ title: "layout", difficultyPresets }),
+            (dialog) => {
+              const el = dialog.element;
+              assert.equal(
+                el.querySelector(".carl-dialog-roll-mode > label")?.textContent.trim(),
+                game.i18n.localize("CARLRPG.Dialog.Advantage"),
+                "labeled Advantage",
+              );
+              const advantage = el.querySelector('.carl-dialog-roll-mode select[name="advantage"]');
+              assert.deepEqual(
+                [...advantage.options].map((o) => o.value),
+                ["normal", "advantage", "disadvantage"],
+                "a dropdown",
+              );
+              assert.equal(advantage.value, "normal");
+              const help = el.querySelector(".carl-dialog-help");
+              assert.include(help?.dataset.tooltipHtml ?? "", "p.59");
+              assert.equal(help?.getAttribute("tabindex"), "0", "reachable from the keyboard");
+              assert.include(
+                help?.getAttribute("aria-label") ?? "",
+                "10 + 2 x Floor",
+                "the formulas, without hovering",
+              );
+              assert.isNull(
+                el.querySelector('select[name="difficultyPreset"]'),
+                "no Difficulty type dropdown",
+              );
+              assert.isNull(
+                el.querySelector('input[name="modifier"]'),
+                "no situational modifier (ruled 2026-11-18)",
+              );
+              assert.equal(
+                el.querySelector(".carl-dialog-difficulty-basis")?.textContent.trim(),
+                game.i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: 16 }),
+                "the hint names the formula used",
+              );
+              assert.isAtLeast(dialog.position.width, 480);
+              press(dialog, "cancel");
+            },
+          );
         });
 
         it("offers Damage Effects as radios, None by default", async function () {
-          const damageEffectChoices = [{ id: "smush", name: "Smush", rank: 2 }, { id: "choke", name: "Choke Out", rank: 1 }];
-          const start = () => promptRollOptions({ title: "effects", showDifficulty: false, damageEffectChoices });
+          const damageEffectChoices = [
+            { id: "smush", name: "Smush", rank: 2 },
+            { id: "choke", name: "Choke Out", rank: 1 },
+          ];
+          const start = () =>
+            promptRollOptions({ title: "effects", showDifficulty: false, damageEffectChoices });
 
           const none = await withDialog(start, (dialog) => {
-            assert.isNull(dialog.element.querySelector('select[name="damageEffectId"]'), "not a dropdown");
-            const radios = [...dialog.element.querySelectorAll('input[type="radio"][name="damageEffectId"]')];
+            assert.isNull(
+              dialog.element.querySelector('select[name="damageEffectId"]'),
+              "not a dropdown",
+            );
+            const radios = [
+              ...dialog.element.querySelectorAll('input[type="radio"][name="damageEffectId"]'),
+            ];
             assert.lengthOf(radios, 3);
             assert.equal(radios.find((r) => r.checked)?.value, "", "None");
             press(dialog, "roll");
@@ -121,17 +182,21 @@ export default function register(quench) {
           assert.isNull(none?.damageEffectId);
 
           const choke = await withDialog(start, (dialog) => {
-            dialog.element.querySelector('input[name="damageEffectId"][value="choke"]').checked = true;
+            dialog.element.querySelector('input[name="damageEffectId"][value="choke"]').checked =
+              true;
             press(dialog, "roll");
           });
           assert.equal(choke?.damageEffectId, "choke");
         });
 
         it("an emptied Difficulty box means no Difficulty, not 0", async function () {
-          const result = await withDialog(() => promptRollOptions({ title: "empty", difficulty: 12 }), (dialog) => {
-            dialog.element.querySelector('input[name="difficulty"]').value = "";
-            press(dialog, "roll");
-          });
+          const result = await withDialog(
+            () => promptRollOptions({ title: "empty", difficulty: 12 }),
+            (dialog) => {
+              dialog.element.querySelector('input[name="difficulty"]').value = "";
+              press(dialog, "roll");
+            },
+          );
           assert.isNull(result.difficulty);
         });
 
@@ -139,7 +204,10 @@ export default function register(quench) {
           const success = game.i18n.localize(CONFIG.CARLRPG.degreesOfSuccess.standardSuccess);
           assert.equal(checkSubtitle("standardSuccess", null), success);
           assert.equal(checkSubtitle("standardSuccess", Number.NaN), success, "a bad flag value");
-          assert.include(checkSubtitle("standardSuccess", 12), game.i18n.format("CARLRPG.Roll.VsDifficulty", { difficulty: 12 }));
+          assert.include(
+            checkSubtitle("standardSuccess", 12),
+            game.i18n.format("CARLRPG.Roll.VsDifficulty", { difficulty: 12 }),
+          );
         });
       });
     },

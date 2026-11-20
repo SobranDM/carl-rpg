@@ -25,7 +25,9 @@
     background: transparent;
     color: var(--carl-text-muted);
     cursor: pointer;
-    transition: background 0.1s ease, transform 0.1s ease;
+    transition:
+      background 0.1s ease,
+      transform 0.1s ease;
 
     &:hover {
       transform: scale(1.08);

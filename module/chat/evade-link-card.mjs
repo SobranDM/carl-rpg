@@ -28,7 +28,6 @@ export async function resolveTargetActor(uuid) {
   return doc instanceof Actor ? doc : (doc.actor ?? null);
 }
 
-
 /**
  * @param {ChatMessage} message
  * @param {string} flagKey  A flag holding either one UUID or an array of them.
@@ -49,8 +48,15 @@ export function canActOnUuidFlag(message, flagKey) {
  * @param {{attackerType: string, defenderType: string, attackTotal: number, targetDifficulty: number|null}} args
  * @returns {number|null}
  */
-export function resolveEvadeDifficulty({ attackerType, defenderType, attackTotal, targetDifficulty }) {
-  return (rollsLikeCrawler(attackerType) && rollsLikeCrawler(defenderType)) ? attackTotal : targetDifficulty;
+export function resolveEvadeDifficulty({
+  attackerType,
+  defenderType,
+  attackTotal,
+  targetDifficulty,
+}) {
+  return rollsLikeCrawler(attackerType) && rollsLikeCrawler(defenderType)
+    ? attackTotal
+    : targetDifficulty;
 }
 
 /**
@@ -70,7 +76,12 @@ async function onAddEvadeDebuff(event, message) {
     return;
   }
 
-  if (!(await addConditionToActor(actor, debuffKey, { source: game.i18n.localize("CARLRPG.Roll.Evade") }))) return;
+  if (
+    !(await addConditionToActor(actor, debuffKey, {
+      source: game.i18n.localize("CARLRPG.Roll.Evade"),
+    }))
+  )
+    return;
   await updateCardMessage(message, { flags: { "carl-rpg": { debuffAdded: true } } });
   ui.notifications.info(game.i18n.format("CARLRPG.Evade.DebuffAddedNotice", { name: actor.name }));
 }
@@ -96,7 +107,8 @@ export const evadeActionEntries = [
     wrapperSelector: ".carl-evade-consequence",
     canAct: (m) => canActOnUuidFlag(m, "debuffActorUuid"),
     doneFlag: "debuffAdded",
-    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Evade.DebuffAdded")}`,
+    doneLabel: () =>
+      `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Evade.DebuffAdded")}`,
     onClick: onAddEvadeDebuff,
   },
 ];

@@ -19,7 +19,11 @@ export default function register(quench) {
         });
 
         it("distributes any remainder one point at a time to the first types in order", function () {
-          assert.deepEqual(splitDamageEvenly(10, ["fire", "force", "ice"]), { fire: 4, force: 3, ice: 3 });
+          assert.deepEqual(splitDamageEvenly(10, ["fire", "force", "ice"]), {
+            fire: 4,
+            force: 3,
+            ice: 3,
+          });
         });
 
         it("handles zero total and an empty type list", function () {
@@ -65,7 +69,11 @@ export default function register(quench) {
         });
 
         it("passes through unchanged with no shield capacity", function () {
-          assert.deepEqual(reduceViaShield(12, { value: 0, slotValue: 5 }), { remaining: 12, slotsLost: 0, absorbed: 0 });
+          assert.deepEqual(reduceViaShield(12, { value: 0, slotValue: 5 }), {
+            remaining: 12,
+            slotsLost: 0,
+            absorbed: 0,
+          });
         });
 
         it("caps slots lost at the shield's remaining value, carrying overflow forward", function () {
@@ -78,7 +86,15 @@ export default function register(quench) {
 
       describe("computeDamageApplication (full pipeline)", function () {
         function target(overrides = {}) {
-          return { system: { drEffective: 0, resistancesEffective: {}, hb: { slotValue: 5 }, shield: { value: 0, slotValue: 0 }, ...overrides } };
+          return {
+            system: {
+              drEffective: 0,
+              resistancesEffective: {},
+              hb: { slotValue: 5 },
+              shield: { value: 0, slotValue: 0 },
+              ...overrides,
+            },
+          };
         }
 
         it("magic damage (the default) skips the Shield pool entirely", function () {
@@ -113,8 +129,15 @@ export default function register(quench) {
         });
 
         it("splitDamageProportionally keeps every point and each type's share", function () {
-          assert.deepEqual(splitDamageProportionally(12, { fire: 10, force: 6 }), { fire: 8, force: 4 });
-          assert.deepEqual(splitDamageProportionally(10, { a: 1, b: 1, c: 1 }), { a: 4, b: 3, c: 3 });
+          assert.deepEqual(splitDamageProportionally(12, { fire: 10, force: 6 }), {
+            fire: 8,
+            force: 4,
+          });
+          assert.deepEqual(splitDamageProportionally(10, { a: 1, b: 1, c: 1 }), {
+            a: 4,
+            b: 3,
+            c: 3,
+          });
           assert.deepEqual(splitDamageProportionally(5, { fire: 0, ice: 3 }), { ice: 5 });
           assert.deepEqual(splitDamageProportionally(0, { fire: 3 }), { fire: 0 });
         });
@@ -127,7 +150,9 @@ export default function register(quench) {
         });
 
         it("falls back to raw dr/resistances when *Effective fields are absent", function () {
-          const t = { system: { dr: 2, resistances: { fire: "vulnerable" }, hb: { slotValue: 5 } } };
+          const t = {
+            system: { dr: 2, resistances: { fire: "vulnerable" }, hb: { slotValue: 5 } },
+          };
           const result = computeDamageApplication({ fire: 10 }, t, true);
           assert.equal(result.perType[0].afterDr, 8);
           assert.equal(result.perType[0].final, 16);

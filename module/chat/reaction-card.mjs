@@ -34,7 +34,16 @@
 import CarlDice, { extractNaturalD20 } from "../dice/dice.mjs";
 import { createCardMessage } from "./chat-card.mjs";
 import {
-  checkDetail, checkNotes, d6CouldChange, headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, versusNum,
+  checkDetail,
+  checkNotes,
+  d6CouldChange,
+  headerProgress,
+  iconButton,
+  rememberOpenRows,
+  statusChip,
+  statusRow,
+  statusSection,
+  versusNum,
 } from "./status-rows.mjs";
 import { aiRerollAllowed, rerollFormula, spendAiFavor } from "../helpers/ai-favor.mjs";
 import { askGM, registerAskHandler, tellUser } from "../helpers/chat-socket.mjs";
@@ -45,11 +54,52 @@ import { ownedSkill } from "../helpers/modifiers.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
 import { currentPhase } from "../helpers/combat-phases.mjs";
 import { declaredAttacks } from "../helpers/declarations.mjs";
-import { canAct, evadeIsFree, hasSpent, payAction, refundAction, takeAction, undoHandlers } from "../helpers/actions.mjs";
 import {
-  BLOCK_TAG, bashOffered, blockNotes, keptBlockRoll, rollBlockAgain, rollShieldBash, shieldBlocker,
+  canAct,
+  evadeIsFree,
+  hasSpent,
+  payAction,
+  refundAction,
+  takeAction,
+  undoHandlers,
+} from "../helpers/actions.mjs";
+import {
+  BLOCK_TAG,
+  bashOffered,
+  blockNotes,
+  keptBlockRoll,
+  rollBlockAgain,
+  rollShieldBash,
+  shieldBlocker,
 } from "../helpers/shield-block.mjs";
-import { applyAiReroll, blockableHitsFor, buildReactionState, cardProgress, catchableHits, checkAt, checkList, crawlerKey, evadableHitsFor, gradeCheck, hitBlockable, hitEvadable, hitLabel, hitList, hitStatus, idleBlockers, idleEvaders, intervenableChecks, makeCheck, pullableAreaAttacks, pullableHits, rerollableChecks, sectionCounts, sectionsOf, tauntableMobs, unevadedNames } from "../helpers/reaction-state.mjs";
+import {
+  applyAiReroll,
+  blockableHitsFor,
+  buildReactionState,
+  cardProgress,
+  catchableHits,
+  checkAt,
+  checkList,
+  crawlerKey,
+  evadableHitsFor,
+  gradeCheck,
+  hitBlockable,
+  hitEvadable,
+  hitLabel,
+  hitList,
+  hitStatus,
+  idleBlockers,
+  idleEvaders,
+  intervenableChecks,
+  makeCheck,
+  pullableAreaAttacks,
+  pullableHits,
+  rerollableChecks,
+  sectionCounts,
+  sectionsOf,
+  tauntableMobs,
+  unevadedNames,
+} from "../helpers/reaction-state.mjs";
 import { opposedDifficulty } from "../helpers/rules.mjs";
 import { esc } from "../helpers/html.mjs";
 import { actorFromUuid } from "../helpers/token-resolution.mjs";
@@ -62,7 +112,6 @@ const GREAT = ["criticalHit", "amazingSuccess"];
 /* -------------------------------------------- */
 /*  Lookups                                     */
 /* -------------------------------------------- */
-
 
 /** This round's Reaction card for a combat, if it has one. */
 export function reactionCardFor(combat) {
@@ -95,8 +144,12 @@ function skillOf(actor, name) {
 /** The roll data a Check sends to the GM. */
 function checkPayload(result) {
   return {
-    formula: result.formula, naturalRoll: result.naturalRoll, total: result.total,
-    difficulty: result.difficulty, breakdown: result.breakdown, roll: result.roll?.toJSON?.() ?? null,
+    formula: result.formula,
+    naturalRoll: result.naturalRoll,
+    total: result.total,
+    difficulty: result.difficulty,
+    breakdown: result.breakdown,
+    roll: result.roll?.toJSON?.() ?? null,
   };
 }
 
@@ -123,7 +176,10 @@ export async function startReaction(combat) {
   const state = buildReactionState(combat, declarations);
   // "the targeted crawler(s) gain a free Evade Check against the
   // Disadvantaged Attack" (p.61) - rolled now, so a miss shows before anyone reacts.
-  await rollFreeEvades(state, hitList(state).filter((hit) => hit.row.freeEvade && hitEvadable(hit)));
+  await rollFreeEvades(
+    state,
+    hitList(state).filter((hit) => hit.row.freeEvade && hitEvadable(hit)),
+  );
   const message = await createCardMessage({
     title: game.i18n.format("CARLRPG.Reaction.Title", { round: combat.round }),
     subtitle: game.i18n.localize("CARLRPG.Phase.Step.react"),
@@ -164,7 +220,10 @@ async function rollFreeEvades(state, hits, { advantage = "normal" } = {}) {
     const actor = actorFromUuid(hit.targetUuid);
     if (!actor) continue;
     const result = await CarlDice.rollEvadeCheck(actor, {
-      difficulty: hit.row.difficulty, post: false, isAction: false, preset: { advantage },
+      difficulty: hit.row.difficulty,
+      post: false,
+      isAction: false,
+      preset: { advantage },
     });
     if (!result) continue;
     showDice(result.roll);
@@ -197,7 +256,9 @@ async function takeEvadeAdvantage(state, hit) {
 /** A hit's target's combatant, and the Mob whose Attack it is. */
 function evaderAndMob(state, hit) {
   const combat = game.combats.get(state.combatId);
-  const combatant = hit ? combat?.combatants.find((c) => (c.token?.uuid ?? c.actor?.uuid) === hit.targetUuid) : null;
+  const combatant = hit
+    ? combat?.combatants.find((c) => (c.token?.uuid ?? c.actor?.uuid) === hit.targetUuid)
+    : null;
   return { combatant: combatant ?? null, mobUuid: state.attacks?.[hit?.attackId]?.mobUuid ?? null };
 }
 
@@ -232,7 +293,9 @@ async function sendOp(message, op, data) {
 }
 
 // The GM's side of sendOp: `user` is the server-supplied sender.
-registerAskHandler(OP, async ({ cardId, op, data } = {}, user) => ({ ok: await applyOp(cardId, op, data ?? {}, user) }));
+registerAskHandler(OP, async ({ cardId, op, data } = {}, user) => ({
+  ok: await applyOp(cardId, op, data ?? {}, user),
+}));
 
 /**
  * Send an op rolled on this client with what undoing its roll needs
@@ -264,12 +327,18 @@ async function sendRolledOp(message, op, data, undo) {
  */
 export async function rollForOp(actor, label, roll) {
   let undo = [];
-  const result = await takeAction(actor, "other", label, async (ctx) => {
-    ctx.free();
-    const out = await roll();
-    undo = [...(ctx.scope?.undo ?? [])];
-    return out;
-  }, { optional: true });
+  const result = await takeAction(
+    actor,
+    "other",
+    label,
+    async (ctx) => {
+      ctx.free();
+      const out = await roll();
+      undo = [...(ctx.scope?.undo ?? [])];
+      return out;
+    },
+    { optional: true },
+  );
   return { result: result ?? null, undo };
 }
 
@@ -296,14 +365,30 @@ export function applyOp(cardId, op, data, user) {
     let changed = false;
     try {
       switch (op) {
-        case "taunt": changed = await opTaunt(state, data, owns); break;
-        case "pullArea": changed = user.isGM && await opPullArea(state, data); break;
-        case "catch": changed = await opCatch(state, data, owns); break;
-        case "evade": changed = await opEvade(state, data, owns); break;
-        case "intervene": changed = await opIntervene(state, data, owns); break;
-        case "reroll": changed = await opReroll(state, data, owns, user); break;
-        case "block": changed = await opBlock(state, data, owns); break;
-        case "bash": changed = opBash(state, data, owns); break;
+        case "taunt":
+          changed = await opTaunt(state, data, owns);
+          break;
+        case "pullArea":
+          changed = user.isGM && (await opPullArea(state, data));
+          break;
+        case "catch":
+          changed = await opCatch(state, data, owns);
+          break;
+        case "evade":
+          changed = await opEvade(state, data, owns);
+          break;
+        case "intervene":
+          changed = await opIntervene(state, data, owns);
+          break;
+        case "reroll":
+          changed = await opReroll(state, data, owns, user);
+          break;
+        case "block":
+          changed = await opBlock(state, data, owns);
+          break;
+        case "bash":
+          changed = opBash(state, data, owns);
+          break;
       }
     } catch (err) {
       console.error(`CarlRPG | Reaction card: "${op}" failed`, err);
@@ -329,15 +414,20 @@ export function applyOp(cardId, op, data, user) {
  * @returns {false}
  */
 function refused(asked) {
-  if (!asked.told && asked.user && !asked.user.isSelf) tellUser(asked.user, "CARLRPG.Reaction.Refused");
+  if (!asked.told && asked.user && !asked.user.isSelf)
+    tellUser(asked.user, "CARLRPG.Reaction.Refused");
   return false;
 }
 
 /** A Check record from what a client sent (its own fields only). */
 function receivedCheck(kind, data) {
   return makeCheck(kind, {
-    roll: data?.roll ?? null, total: data?.total, naturalRoll: data?.naturalRoll ?? null,
-    formula: data?.formula ?? null, difficulty: data?.difficulty ?? null, breakdown: String(data?.breakdown ?? ""),
+    roll: data?.roll ?? null,
+    total: data?.total,
+    naturalRoll: data?.naturalRoll ?? null,
+    formula: data?.formula ?? null,
+    difficulty: data?.difficulty ?? null,
+    breakdown: String(data?.breakdown ?? ""),
   });
 }
 
@@ -354,8 +444,15 @@ async function opTaunt(state, { byUuid, byName, mobUuid, rank, check }, owns) {
   if (!mob || !tauntableMobs(state, byUuid).some((m) => m.mobUuid === mobUuid)) return false;
   if (!(await payFor(state, byUuid, "CARLRPG.Reaction.Op.taunt"))) return false;
   const taunt = {
-    id: foundry.utils.randomID(), order: state.nextOrder++, byUuid, byName: String(byName ?? "?"),
-    mobUuid, mobName: mob.mobName, rank: Number(rank) || 0, check: receivedCheck("taunt", check), pulled: [],
+    id: foundry.utils.randomID(),
+    order: state.nextOrder++,
+    byUuid,
+    byName: String(byName ?? "?"),
+    mobUuid,
+    mobName: mob.mobName,
+    rank: Number(rank) || 0,
+    check: receivedCheck("taunt", check),
+    pulled: [],
   };
   state.taunts[taunt.id] = taunt;
   crawlerEntry(state, byUuid, taunt.byName);
@@ -380,7 +477,11 @@ async function pullTaunt(state, taunt) {
   const pulled = [];
   for (const hit of pullableHits(state, taunt.mobUuid, taunt.byUuid)) {
     // Its target's Evade and Shield Block of it drop off (refundIdle*).
-    pullHit(state, taunt, actor, hit, { zone: hit.row.zone, tauntedBy: true, extra: { block: null } });
+    pullHit(state, taunt, actor, hit, {
+      zone: hit.row.zone,
+      tauntedBy: true,
+      extra: { block: null },
+    });
     pulled.push(hit);
   }
   await afterPull(state, taunt, pulled, { blocks: true });
@@ -399,10 +500,19 @@ async function pullTaunt(state, taunt) {
 function pullHit(state, taunt, actor, hit, { zone, tauntedBy, extra = {} }) {
   const attack = state.attacks[hit.attackId];
   const { row } = mobAttackRow({
-    id: hit.row.id, target: { uuid: taunt.byUuid, actor }, base: attack.mobBase, ownRows: attack.mobOwnRows ?? [], zone,
+    id: hit.row.id,
+    target: { uuid: taunt.byUuid, actor },
+    base: attack.mobBase,
+    ownRows: attack.mobOwnRows ?? [],
+    zone,
   });
   Object.assign(hit, {
-    row, targetUuid: taunt.byUuid, targetName: taunt.byName, free: null, evade: null, ...extra,
+    row,
+    targetUuid: taunt.byUuid,
+    targetName: taunt.byName,
+    free: null,
+    evade: null,
+    ...extra,
     ...(tauntedBy ? { tauntedBy: { uuid: taunt.byUuid, name: taunt.byName } } : {}),
   });
   taunt.pulled.push(hit.id);
@@ -444,7 +554,10 @@ async function evadeArrivals(state, hits) {
     const actor = actorFromUuid(hit.targetUuid);
     if (!actor) continue;
     const result = await CarlDice.rollEvadeCheck(actor, {
-      difficulty: hit.row.difficulty, post: false, isAction: false, preset: presetFrom(crawler.evadePreset),
+      difficulty: hit.row.difficulty,
+      post: false,
+      isAction: false,
+      preset: presetFrom(crawler.evadePreset),
     });
     if (!result) continue;
     showDice(result.roll);
@@ -460,7 +573,11 @@ async function evadeArrivals(state, hits) {
  * @param {object} state
  */
 async function refundIdleEvades(state) {
-  await refundIdle(state, idleEvaders(state), "evadeSpent", { evaded: false, evadePreset: null, evadeSpent: null });
+  await refundIdle(state, idleEvaders(state), "evadeSpent", {
+    evaded: false,
+    evadePreset: null,
+    evadeSpent: null,
+  });
 }
 
 /**
@@ -511,19 +628,31 @@ async function blockArrivals(state, hits) {
  * @param {object} state
  */
 async function refundIdleBlocks(state) {
-  await refundIdle(state, idleBlockers(state), "blockSpent", { blocked: false, blockRoll: null, blockSpent: null });
+  await refundIdle(state, idleBlockers(state), "blockSpent", {
+    blocked: false,
+    blockRoll: null,
+    blockSpent: null,
+  });
 }
 
 /** A hit's block record: its Check, and the Shield and Rank it was made with. */
 function blockOf(check, blocker) {
-  return { ...check, shieldId: blocker.shield.id, shieldName: blocker.shield.name, rank: blocker.rank, bashed: false };
+  return {
+    ...check,
+    shieldId: blocker.shield.id,
+    shieldName: blocker.shield.name,
+    rank: blocker.rank,
+    bashed: false,
+  };
 }
 
 /** An Evade dialog's choices, as kept on the card (Sets as arrays). */
 function presetData(preset) {
   const list = (value) => (value ? [...value].map(String) : null);
   return {
-    advantage: ["advantage", "disadvantage"].includes(preset?.advantage) ? preset.advantage : "normal",
+    advantage: ["advantage", "disadvantage"].includes(preset?.advantage)
+      ? preset.advantage
+      : "normal",
     modifier: Number(preset?.modifier) || 0,
     checked: list(preset?.checked) ?? [],
     checkedDebuffs: list(preset?.checkedDebuffs),
@@ -533,7 +662,11 @@ function presetData(preset) {
 /** The kept choices, as rollEvadeCheck's `preset` takes them. */
 function presetFrom(data) {
   const kept = presetData(data);
-  return { ...kept, checked: new Set(kept.checked), checkedDebuffs: kept.checkedDebuffs ? new Set(kept.checkedDebuffs) : null };
+  return {
+    ...kept,
+    checked: new Set(kept.checked),
+    checkedDebuffs: kept.checkedDebuffs ? new Set(kept.checkedDebuffs) : null,
+  };
 }
 
 /**
@@ -582,7 +715,14 @@ async function opCatch(state, { byUuid, byName, hitId }, owns) {
   // The ally's failed Evade of it (if any) drops off: the Catcher takes it,
   // and can't Evade it. The ally's Shield Block of it drops off too - its
   // Action comes back if it now blocks nothing.
-  Object.assign(hit, { caughtBy: { uuid: byUuid, name }, targetUuid: byUuid, targetName: name, free: null, evade: null, block: null });
+  Object.assign(hit, {
+    caughtBy: { uuid: byUuid, name },
+    targetUuid: byUuid,
+    targetName: name,
+    free: null,
+    evade: null,
+    block: null,
+  });
   crawlerEntry(state, byUuid, name);
   await refundIdleEvades(state);
   await refundIdleBlocks(state);
@@ -611,10 +751,16 @@ async function opBlock(state, { uuid, checks }, owns) {
   for (const hit of rolled) hit.block = blockOf(receivedCheck("block", checks[hit.id]), blocker);
   const first = rolled[0].block;
   crawler.blocked = true;
-  crawler.blockRoll = keptBlockRoll({ formula: first.formula, natural: first.natural, total: first.base }) ?? crawler.blockRoll ?? null;
+  crawler.blockRoll =
+    keptBlockRoll({ formula: first.formula, natural: first.natural, total: first.base }) ??
+    crawler.blockRoll ??
+    null;
   if (paid.spent) crawler.blockSpent = paid.spent;
   // Any that landed on them while it was being rolled.
-  await blockArrivals(state, hits.filter((hit) => !hit.block));
+  await blockArrivals(
+    state,
+    hits.filter((hit) => !hit.block),
+  );
   return true;
 }
 
@@ -714,17 +860,30 @@ async function payFor(state, uuid, labelKey, { tag = null } = {}) {
   const actor = actorFromUuid(uuid);
   const free = { spent: null };
   if (!actor) return free;
-  if (tag === "evade" ? (evadeIsFree(actor) || hasSpent(actor, tag)) : (tag && hasSpent(actor, tag))) return free;
+  if (tag === "evade" ? evadeIsFree(actor) || hasSpent(actor, tag) : tag && hasSpent(actor, tag))
+    return free;
   // Undoing it puts the card back as it was before this op - if nothing
   // has changed on it since (helpers/action-undo.mjs).
   // The roll's own undo records (rollForOp: Debuffs it used up, a mark, a
   // cooldown) come first: the card's record, which can refuse, runs first.
   const card = opBefore.get(state);
-  const undo = card ? [...rollRecords(card.undo, actor), {
-    t: "reaction", messageId: card.messageId, before: foundry.utils.deepClone(card.before), rev: (card.before.rev ?? 0) + 1,
-  }] : [];
+  const undo = card
+    ? [
+        ...rollRecords(card.undo, actor),
+        {
+          t: "reaction",
+          messageId: card.messageId,
+          before: foundry.utils.deepClone(card.before),
+          rev: (card.before.rev ?? 0) + 1,
+        },
+      ]
+    : [];
   // Refused: payAction has told the asker why.
-  const { paid, id, fight } = await payAction(actor, "other", game.i18n.localize(labelKey), { tag, undo, user: card?.user ?? null });
+  const { paid, id, fight } = await payAction(actor, "other", game.i18n.localize(labelKey), {
+    tag,
+    undo,
+    user: card?.user ?? null,
+  });
   if (!paid) {
     if (card) card.told = true;
     return false;
@@ -745,13 +904,16 @@ async function payFor(state, uuid, labelKey, { tag = null } = {}) {
  */
 function rollRecords(records, actor) {
   if (!Array.isArray(records)) return [];
-  const own = (uuid) => typeof uuid === "string" && (uuid === actor.uuid || uuid.startsWith(`${actor.uuid}.Item.`));
-  return records.filter((r) => ["conditions", "set"].includes(r?.t) && own(r.uuid)).map((r) => foundry.utils.deepClone(r));
+  const own = (uuid) =>
+    typeof uuid === "string" && (uuid === actor.uuid || uuid.startsWith(`${actor.uuid}.Item.`));
+  return records
+    .filter((r) => ["conditions", "set"].includes(r?.t) && own(r.uuid))
+    .map((r) => foundry.utils.deepClone(r));
 }
 
 function sameRef(a, b) {
   if (!a || !b || a.type !== b.type) return false;
-  return a.type === "taunt" ? a.tauntId === b.tauntId : (a.hitId === b.hitId && a.which === b.which);
+  return a.type === "taunt" ? a.tauntId === b.tauntId : a.hitId === b.hitId && a.which === b.which;
 }
 
 /* -------------------------------------------- */
@@ -768,18 +930,27 @@ function sameRef(a, b) {
 async function pick(title, label, options) {
   if (!options.length) return null;
   if (options.length === 1) return options[0].value;
-  const choices = options.map((o) => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join("");
+  const choices = options
+    .map((o) => `<option value="${esc(o.value)}">${esc(o.label)}</option>`)
+    .join("");
   return foundry.applications.api.DialogV2.prompt({
     window: { title },
     content: `<div class="form-group"><label>${esc(label)}</label><div class="form-fields"><select name="choice">${choices}</select></div></div>`,
-    ok: { label: game.i18n.localize("CARLRPG.Reaction.Choose"), callback: (event, button) => button.form.elements.choice.value },
+    ok: {
+      label: game.i18n.localize("CARLRPG.Reaction.Choose"),
+      callback: (event, button) => button.form.elements.choice.value,
+    },
     rejectClose: false,
   });
 }
 
 /** Pick one of the user's reactors from a filtered list. */
 async function pickReactor(list, title) {
-  const uuid = await pick(title, game.i18n.localize("CARLRPG.Reaction.Who"), list.map((r) => ({ value: r.uuid, label: r.name })));
+  const uuid = await pick(
+    title,
+    game.i18n.localize("CARLRPG.Reaction.Who"),
+    list.map((r) => ({ value: r.uuid, label: r.name })),
+  );
   return list.find((r) => r.uuid === uuid) ?? null;
 }
 
@@ -789,12 +960,16 @@ async function pickReactor(list, title) {
 
 /** This viewer's crawlers who could Taunt now. */
 function taunters(state) {
-  return reactors(state).filter((r) => skillOf(r.actor, "Taunt") && tauntableMobs(state, r.uuid).length);
+  return reactors(state).filter(
+    (r) => skillOf(r.actor, "Taunt") && tauntableMobs(state, r.uuid).length,
+  );
 }
 
 /** This viewer's crawlers who could Catch now (Catcher Rank 1+). */
 function catchers(state) {
-  return reactors(state).filter((r) => (skillOf(r.actor, "Catcher")?.rank ?? 0) >= 1 && catchableHits(state, r.uuid).length);
+  return reactors(state).filter(
+    (r) => (skillOf(r.actor, "Catcher")?.rank ?? 0) >= 1 && catchableHits(state, r.uuid).length,
+  );
 }
 
 /** This viewer's crawler whose section this is, if they have Attacks to Evade. */
@@ -805,13 +980,20 @@ function evaderFor(state, uuid) {
 
 /** This viewer's crawlers who could Intervene on this Check (not their own). */
 function helpersFor(state, ref) {
-  return reactors(state).filter((r) => intervenableChecks(state, r.uuid).some((c) => sameRef(c.ref, ref)));
+  return reactors(state).filter((r) =>
+    intervenableChecks(state, r.uuid).some((c) => sameRef(c.ref, ref)),
+  );
 }
 
 /** This viewer's crawler who could AI Reroll this Check: its own, with AI Favor. */
 function rerollerFor(state, ref) {
-  return reactors(state).find((r) => rerollableChecks(state, r.uuid)
-    .some((c) => sameRef(c.ref, ref) && aiRerollAllowed(c.check, r.actor))) ?? null;
+  return (
+    reactors(state).find((r) =>
+      rerollableChecks(state, r.uuid).some(
+        (c) => sameRef(c.ref, ref) && aiRerollAllowed(c.check, r.actor),
+      ),
+    ) ?? null
+  );
 }
 
 async function onTaunt(message, state) {
@@ -822,12 +1004,22 @@ async function onTaunt(message, state) {
   // "Enemies within 30 feet of you" - 60 at Rank 10 (p.200). Measured now,
   // taunter to Mob; one out of range is marked and asked about, not refused.
   const range = tauntRange(rank);
-  const mobs = tauntableMobs(state, taunter.uuid).map((m) => ({ ...m, distance: tokenDistance(taunter.uuid, m.mobUuid) }));
-  const label = (m) => (m.distance === null ? m.mobName
-    : game.i18n.format(m.distance > range ? "CARLRPG.Reaction.TauntOutOfRange" : "CARLRPG.Reaction.TauntInRange",
-      { mob: m.mobName, distance: m.distance }));
-  const mobUuid = await pick(game.i18n.localize("CARLRPG.Reaction.Op.taunt"), game.i18n.localize("CARLRPG.Reaction.WhichMob"),
-    mobs.map((m) => ({ value: m.mobUuid, label: label(m) })));
+  const mobs = tauntableMobs(state, taunter.uuid).map((m) => ({
+    ...m,
+    distance: tokenDistance(taunter.uuid, m.mobUuid),
+  }));
+  const label = (m) =>
+    m.distance === null
+      ? m.mobName
+      : game.i18n.format(
+          m.distance > range ? "CARLRPG.Reaction.TauntOutOfRange" : "CARLRPG.Reaction.TauntInRange",
+          { mob: m.mobName, distance: m.distance },
+        );
+  const mobUuid = await pick(
+    game.i18n.localize("CARLRPG.Reaction.Op.taunt"),
+    game.i18n.localize("CARLRPG.Reaction.WhichMob"),
+    mobs.map((m) => ({ value: m.mobUuid, label: label(m) })),
+  );
   const chosen = mobs.find((m) => m.mobUuid === mobUuid);
   const mob = actorFromUuid(mobUuid);
   if (!mob || !chosen) return;
@@ -835,9 +1027,14 @@ async function onTaunt(message, state) {
     const anyway = await foundry.applications.api.DialogV2.confirm({
       window: { title: game.i18n.localize("CARLRPG.Reaction.Op.taunt") },
       classes: ["carl-taunt-range"],
-      content: `<p>${esc(game.i18n.format("CARLRPG.Reaction.TauntRangeConfirm", {
-        mob: chosen.mobName, name: taunter.name, distance: chosen.distance, range,
-      }))}</p>`,
+      content: `<p>${esc(
+        game.i18n.format("CARLRPG.Reaction.TauntRangeConfirm", {
+          mob: chosen.mobName,
+          name: taunter.name,
+          distance: chosen.distance,
+          range,
+        }),
+      )}</p>`,
       rejectClose: false,
     });
     if (!anyway) return;
@@ -853,21 +1050,48 @@ async function onTaunt(message, state) {
  * @param {{skipDialog?: boolean}} [options]
  * @returns {Promise<boolean|null>}  As sendOp; null too if not rolled.
  */
-export async function rollTaunt(message, { taunter, item, rank, mob, mobUuid }, { skipDialog = false } = {}) {
+export async function rollTaunt(
+  message,
+  { taunter, item, rank, mob, mobUuid },
+  { skipDialog = false } = {},
+) {
   const statKey = item.system.opposedStat || "int";
   const difficulty = opposedDifficulty(mob.system.stats?.[statKey]?.mod, currentFloor());
-  const { result, undo } = await rollForOp(taunter.actor, game.i18n.localize("CARLRPG.Reaction.Op.taunt"),
-    () => CarlDice.rollOpposedSkillCheck(taunter.actor, item, { difficulty, opponent: mob, post: false, skipDialog }));
+  const { result, undo } = await rollForOp(
+    taunter.actor,
+    game.i18n.localize("CARLRPG.Reaction.Op.taunt"),
+    () =>
+      CarlDice.rollOpposedSkillCheck(taunter.actor, item, {
+        difficulty,
+        opponent: mob,
+        post: false,
+        skipDialog,
+      }),
+  );
   if (!result) return null;
   showDice(result.roll);
-  return sendRolledOp(message, "taunt", { byUuid: taunter.uuid, byName: taunter.name, mobUuid, rank, check: checkPayload(result) }, undo);
+  return sendRolledOp(
+    message,
+    "taunt",
+    { byUuid: taunter.uuid, byName: taunter.name, mobUuid, rank, check: checkPayload(result) },
+    undo,
+  );
 }
 
 async function onCatch(message, state) {
-  const catcher = await pickReactor(catchers(state), game.i18n.localize("CARLRPG.Reaction.Op.catch"));
+  const catcher = await pickReactor(
+    catchers(state),
+    game.i18n.localize("CARLRPG.Reaction.Op.catch"),
+  );
   if (!catcher || !canAct(catcher.actor, "other")) return;
-  const hitId = await pick(game.i18n.localize("CARLRPG.Reaction.Op.catch"), game.i18n.localize("CARLRPG.Reaction.WhichAttack"),
-    catchableHits(state, catcher.uuid).map((hit) => ({ value: hit.id, label: hitLabel(state, hit) })));
+  const hitId = await pick(
+    game.i18n.localize("CARLRPG.Reaction.Op.catch"),
+    game.i18n.localize("CARLRPG.Reaction.WhichAttack"),
+    catchableHits(state, catcher.uuid).map((hit) => ({
+      value: hit.id,
+      label: hitLabel(state, hit),
+    })),
+  );
   if (hitId) await sendOp(message, "catch", { byUuid: catcher.uuid, byName: catcher.name, hitId });
 }
 
@@ -880,31 +1104,48 @@ async function onCatch(message, state) {
 async function onEvade(message, state, uuid) {
   const evader = evaderFor(state, uuid);
   if (!evader) return;
-  if (!evadeIsFree(evader.actor) && !hasSpent(evader.actor, "evade") && !canAct(evader.actor, "other")) return;
+  if (
+    !evadeIsFree(evader.actor) &&
+    !hasSpent(evader.actor, "evade") &&
+    !canAct(evader.actor, "other")
+  )
+    return;
   const hits = evadableHitsFor(state, evader.uuid);
   const checks = {};
   let preset = null;
   // The "next Action" Debuffs the first Check uses up come back if its Action is undone (rollForOp).
-  const { undo } = await rollForOp(evader.actor, game.i18n.localize("CARLRPG.Roll.Evade"), async () => {
-    for (const hit of hits) {
-      const result = await CarlDice.rollEvadeCheck(evader.actor, {
-        difficulty: hit.row.difficulty, post: false, isAction: !preset, preset,
-      });
-      if (!result) {
-        if (!preset) return null; // the dialog was cancelled
-        continue;
+  const { undo } = await rollForOp(
+    evader.actor,
+    game.i18n.localize("CARLRPG.Roll.Evade"),
+    async () => {
+      for (const hit of hits) {
+        const result = await CarlDice.rollEvadeCheck(evader.actor, {
+          difficulty: hit.row.difficulty,
+          post: false,
+          isAction: !preset,
+          preset,
+        });
+        if (!result) {
+          if (!preset) return null; // the dialog was cancelled
+          continue;
+        }
+        if (!preset) {
+          const { difficulty, ...rest } = result.options ?? {};
+          preset = rest;
+        }
+        showDice(result.roll);
+        checks[hit.id] = checkPayload(result);
       }
-      if (!preset) {
-        const { difficulty, ...rest } = result.options ?? {};
-        preset = rest;
-      }
-      showDice(result.roll);
-      checks[hit.id] = checkPayload(result);
-    }
-    return true;
-  });
+      return true;
+    },
+  );
   if (!preset) return;
-  await sendRolledOp(message, "evade", { uuid: evader.uuid, checks, preset: presetData(preset) }, undo);
+  await sendRolledOp(
+    message,
+    "evade",
+    { uuid: evader.uuid, checks, preset: presetData(preset) },
+    undo,
+  );
 }
 
 /** A row's Intervene: pick who (if several), roll their d6, send it. */
@@ -916,8 +1157,20 @@ async function onIntervene(message, state, ref) {
   const roll = await new Roll("1d6").evaluate();
   showDice(roll);
   // Said once the GM's client has taken it (refused, the GM's client says why).
-  const ok = await sendOp(message, "intervene", { byUuid: helper.uuid, byName: helper.name, ref, value: roll.total });
-  if (ok) ui.notifications.info(game.i18n.format("CARLRPG.Reaction.Intervened", { name: helper.name, value: roll.total, target: owner?.ownerName ?? "?" }));
+  const ok = await sendOp(message, "intervene", {
+    byUuid: helper.uuid,
+    byName: helper.name,
+    ref,
+    value: roll.total,
+  });
+  if (ok)
+    ui.notifications.info(
+      game.i18n.format("CARLRPG.Reaction.Intervened", {
+        name: helper.name,
+        value: roll.total,
+        target: owner?.ownerName ?? "?",
+      }),
+    );
 }
 
 /**
@@ -954,12 +1207,23 @@ async function onBlock(message, state, uuid) {
   // The to-hit already carries the Mob's own Debuff rows (mobAttackRow), so
   // no opponent here. Its Debuffs used up, mark and cooldown come back if
   // its Action is undone (rollForOp).
-  const { result, undo } = await rollForOp(who.actor, game.i18n.localize("CARLRPG.ShieldBlock.Name"),
-    () => CarlDice.rollOpposedSkillCheck(who.actor, who.blocker.skill, { difficulty: first.row.difficulty, post: false }));
+  const { result, undo } = await rollForOp(
+    who.actor,
+    game.i18n.localize("CARLRPG.ShieldBlock.Name"),
+    () =>
+      CarlDice.rollOpposedSkillCheck(who.actor, who.blocker.skill, {
+        difficulty: first.row.difficulty,
+        post: false,
+      }),
+  );
   if (!result) return;
   showDice(result.roll);
   const checks = { [first.id]: checkPayload(result) };
-  const kept = keptBlockRoll({ formula: result.formula, natural: result.naturalRoll, total: result.total });
+  const kept = keptBlockRoll({
+    formula: result.formula,
+    natural: result.naturalRoll,
+    total: result.total,
+  });
   for (const hit of kept ? rest : []) {
     const again = await rollBlockAgain(kept, hit.row.difficulty);
     showDice(again.roll);
@@ -983,11 +1247,19 @@ async function onReroll(message, state, ref) {
   if (!rerollerFor(state, ref)) return;
   const check = checkAt(state, ref);
   if (!check) return;
-  const roll = await new Roll(rerollFormula({ formula: check.formula, natural: check.natural, total: check.base })).evaluate();
+  const roll = await new Roll(
+    rerollFormula({ formula: check.formula, natural: check.natural, total: check.base }),
+  ).evaluate();
   showDice(roll);
   await sendOp(message, "reroll", {
-    ref, naturalRoll: extractNaturalD20(roll), total: roll.total, roll: roll.toJSON(),
-    breakdown: game.i18n.format("CARLRPG.Reaction.RerollBreakdown", { formula: roll.formula, total: roll.total }),
+    ref,
+    naturalRoll: extractNaturalD20(roll),
+    total: roll.total,
+    roll: roll.toJSON(),
+    breakdown: game.i18n.format("CARLRPG.Reaction.RerollBreakdown", {
+      formula: roll.formula,
+      total: roll.total,
+    }),
   });
 }
 
@@ -1026,13 +1298,27 @@ async function onReactionButton(event, message, button) {
   button.disabled = true;
   try {
     switch (op) {
-      case "taunt": if (taunters(state).length) await onTaunt(message, state); break;
-      case "catch": if (catchers(state).length) await onCatch(message, state); break;
-      case "evade": await onEvade(message, state, button.dataset.uuid); break;
-      case "intervene": if (refOf(button)) await onIntervene(message, state, refOf(button)); break;
-      case "reroll": if (refOf(button)) await onReroll(message, state, refOf(button)); break;
-      case "block": await onBlock(message, state, button.dataset.uuid); break;
-      case "bash": await onBash(message, state, button.dataset.hitId); break;
+      case "taunt":
+        if (taunters(state).length) await onTaunt(message, state);
+        break;
+      case "catch":
+        if (catchers(state).length) await onCatch(message, state);
+        break;
+      case "evade":
+        await onEvade(message, state, button.dataset.uuid);
+        break;
+      case "intervene":
+        if (refOf(button)) await onIntervene(message, state, refOf(button));
+        break;
+      case "reroll":
+        if (refOf(button)) await onReroll(message, state, refOf(button));
+        break;
+      case "block":
+        await onBlock(message, state, button.dataset.uuid);
+        break;
+      case "bash":
+        await onBash(message, state, button.dataset.hitId);
+        break;
     }
   } finally {
     button.disabled = false;
@@ -1040,7 +1326,9 @@ async function onReactionButton(event, message, button) {
 }
 
 /** Registry entries for module/chat/chat-listener.mjs. */
-export const reactionActionEntries = [{ action: "reactionCard", custom: true, onClick: onReactionButton }];
+export const reactionActionEntries = [
+  { action: "reactionCard", custom: true, onClick: onReactionButton },
+];
 
 /* -------------------------------------------- */
 /*  Drawing the card                            */
@@ -1053,16 +1341,29 @@ export const reactionActionEntries = [{ action: "reactionCard", custom: true, on
  */
 const openRows = new Set();
 
-
 /** A row's Intervene and AI Reroll icons, for this viewer. */
 function checkActions(state, ref) {
   if (!ref || state.locked) return "";
   const data = { action: "reactionCard", ref: JSON.stringify(ref) };
   const acts = [];
-  if (rerollerFor(state, ref)) acts.push(iconButton("fa-dice-d20", game.i18n.localize("CARLRPG.Reaction.Op.reroll"), { ...data, op: "reroll" }));
+  if (rerollerFor(state, ref))
+    acts.push(
+      iconButton("fa-dice-d20", game.i18n.localize("CARLRPG.Reaction.Op.reroll"), {
+        ...data,
+        op: "reroll",
+      }),
+    );
   // Only where a d6 could still change the result (the op itself allows any).
-  if (d6CouldChange(checkAt(state, ref), { taunt: ref.type === "taunt" }) && helpersFor(state, ref).length) {
-    acts.push(iconButton("fa-handshake-angle", game.i18n.localize("CARLRPG.Intervene.Button"), { ...data, op: "intervene" }));
+  if (
+    d6CouldChange(checkAt(state, ref), { taunt: ref.type === "taunt" }) &&
+    helpersFor(state, ref).length
+  ) {
+    acts.push(
+      iconButton("fa-handshake-angle", game.i18n.localize("CARLRPG.Intervene.Button"), {
+        ...data,
+        op: "intervene",
+      }),
+    );
   }
   return acts.join("");
 }
@@ -1081,13 +1382,15 @@ function attackWhat(attack) {
  */
 export function attackLine(attack, difficulty = null) {
   const line = [attack?.attackName ?? "?"];
-  if (difficulty !== null && difficulty !== undefined) line.push(game.i18n.format("CARLRPG.Reaction.Sub.evade", { difficulty }));
+  if (difficulty !== null && difficulty !== undefined)
+    line.push(game.i18n.format("CARLRPG.Reaction.Sub.evade", { difficulty }));
   return line;
 }
 
 function effectFlag(attack) {
   return attack?.effect
-    ? `<i class="fas fa-scroll carl-status-flag" data-tooltip="${esc(game.i18n.localize("CARLRPG.Reaction.HasEffect"))}"></i>` : "";
+    ? `<i class="fas fa-scroll carl-status-flag" data-tooltip="${esc(game.i18n.localize("CARLRPG.Reaction.HasEffect"))}"></i>`
+    : "";
 }
 
 /** One Attack on one defender. */
@@ -1096,30 +1399,59 @@ function hitRow(state, hit, messageId) {
   const attack = state.attacks[hit.attackId] ?? {};
   const { status, check, which } = hitStatus(state, hit);
   // The Evade target: a creature that Evades, and isn't Caught (it can't).
-  const evadeTarget = hit.row?.isCharacter && hit.row?.hit && !hit.caughtBy ? (check?.difficulty ?? hit.row.difficulty) : null;
+  const evadeTarget =
+    hit.row?.isCharacter && hit.row?.hit && !hit.caughtBy
+      ? (check?.difficulty ?? hit.row.difficulty)
+      : null;
   const sub = attackLine(attack, evadeTarget);
   if (attack.isArea) sub.push(i18n.localize("CARLRPG.Reaction.Sub.area"));
   if (hit.row?.zone === "splash") sub.push(i18n.localize("CARLRPG.Targets.Splash"));
   if (hit.tauntedBy) sub.push(i18n.format("CARLRPG.Reaction.Sub.from", { name: hit.originalName }));
   if (hit.caughtBy) sub.push(i18n.format("CARLRPG.Reaction.CaughtFor", { name: hit.originalName }));
-  if (which === "free") sub.push(check.success ? i18n.localize("CARLRPG.Reaction.FreeEvade") : i18n.format("CARLRPG.Reaction.Sub.freeFailed", { total: check.total }));
-  if (which === "evade" && check.degree === "nearMissFail") sub.push(i18n.localize(CARLRPG.degreesOfSuccess.nearMissFail));
+  if (which === "free")
+    sub.push(
+      check.success
+        ? i18n.localize("CARLRPG.Reaction.FreeEvade")
+        : i18n.format("CARLRPG.Reaction.Sub.freeFailed", { total: check.total }),
+    );
+  if (which === "evade" && check.degree === "nearMissFail")
+    sub.push(i18n.localize(CARLRPG.degreesOfSuccess.nearMissFail));
   if (which === "block") sub.push(...blockNotes(check));
   sub.push(...checkNotes(check));
-  if (check?.auto) sub.push(i18n.localize(which === "block" ? "CARLRPG.ShieldBlock.Sub.auto" : "CARLRPG.Reaction.Sub.auto"));
-  if (status === "hit" && hit.row?.isCharacter && !hit.evade && !hit.block) sub.push(i18n.localize("CARLRPG.Reaction.Sub.notEvaded"));
+  if (check?.auto)
+    sub.push(
+      i18n.localize(
+        which === "block" ? "CARLRPG.ShieldBlock.Sub.auto" : "CARLRPG.Reaction.Sub.auto",
+      ),
+    );
+  if (status === "hit" && hit.row?.isCharacter && !hit.evade && !hit.block)
+    sub.push(i18n.localize("CARLRPG.Reaction.Sub.notEvaded"));
 
   // The roll's total; its target is on the line under the name.
-  const num = check && (which === "evade" || status !== "incoming") ? `<b>${esc(check.total)}</b>` : "";
+  const num =
+    check && (which === "evade" || status !== "incoming") ? `<b>${esc(check.total)}</b>` : "";
   const key = `hit:${hit.id}`;
   const detail = `${checkDetail(check)}${attackDetails(attack)}`;
   const acts = [which ? checkActions(state, { type: "hit", hitId: hit.id, which }) : ""];
   if (!state.locked && basherFor(state, hit)) {
-    acts.push(iconButton("fa-shield-halved", i18n.localize("CARLRPG.ShieldBlock.BashButton"), { action: "reactionCard", op: "bash", "hit-id": hit.id }));
+    acts.push(
+      iconButton("fa-shield-halved", i18n.localize("CARLRPG.ShieldBlock.BashButton"), {
+        action: "reactionCard",
+        op: "bash",
+        "hit-id": hit.id,
+      }),
+    );
   }
   return statusRow({
-    chip: statusChip(status), what: attackWhat(attack), flag: effectFlag(attack), sub, num,
-    acts: acts.join(""), detail, key, open: openRows.has(`${messageId}:${key}`),
+    chip: statusChip(status),
+    what: attackWhat(attack),
+    flag: effectFlag(attack),
+    sub,
+    num,
+    acts: acts.join(""),
+    detail,
+    key,
+    open: openRows.has(`${messageId}:${key}`),
   });
 }
 
@@ -1130,24 +1462,40 @@ function movedRow(state, hit) {
   const where = hit.caughtBy
     ? i18n.format("CARLRPG.Reaction.Sub.caughtBy", { name: hit.targetName })
     : i18n.format("CARLRPG.Reaction.Sub.tauntedTo", { name: hit.targetName });
-  return statusRow({ chip: statusChip("moved"), what: attackWhat(attack), sub: [...attackLine(attack), where], ghost: true });
+  return statusRow({
+    chip: statusChip("moved"),
+    what: attackWhat(attack),
+    sub: [...attackLine(attack), where],
+    ghost: true,
+  });
 }
 
 /** One Taunt Check - with, for the GM, "Pull Area Attacks too" while it can. */
 function tauntRow(state, taunt, messageId) {
   const i18n = game.i18n;
   const success = taunt.check.success;
-  const sub = [success
-    ? i18n.format("CARLRPG.Reaction.Sub.pulled", { count: taunt.pulled.length })
-    : i18n.localize("CARLRPG.StatusChip.tauntFailed")];
+  const sub = [
+    success
+      ? i18n.format("CARLRPG.Reaction.Sub.pulled", { count: taunt.pulled.length })
+      : i18n.localize("CARLRPG.StatusChip.tauntFailed"),
+  ];
   if (taunt.areaPulled) {
-    sub.push(taunt.spared?.length
-      ? i18n.format("CARLRPG.Reaction.AreaPulledSpared", { name: taunt.byName, spared: taunt.spared.join(", ") })
-      : i18n.format("CARLRPG.Reaction.AreaPulled", { name: taunt.byName }));
+    sub.push(
+      taunt.spared?.length
+        ? i18n.format("CARLRPG.Reaction.AreaPulledSpared", {
+            name: taunt.byName,
+            spared: taunt.spared.join(", "),
+          })
+        : i18n.format("CARLRPG.Reaction.AreaPulled", { name: taunt.byName }),
+    );
   }
   sub.push(...checkNotes(taunt.check));
-  const canPullArea = game.user.isGM && !state.locked && success && !taunt.areaPulled
-    && pullableAreaAttacks(state, taunt.mobUuid, taunt.byUuid).length;
+  const canPullArea =
+    game.user.isGM &&
+    !state.locked &&
+    success &&
+    !taunt.areaPulled &&
+    pullableAreaAttacks(state, taunt.mobUuid, taunt.byUuid).length;
   const pullArea = canPullArea
     ? `<button type="button" class="carl-pull-area" data-action="reactionCard" data-op="pullArea" data-taunt-id="${esc(taunt.id)}"
         data-tooltip="${esc(i18n.format("CARLRPG.Reaction.PullAreaHint", { name: taunt.byName }))}">
@@ -1155,11 +1503,17 @@ function tauntRow(state, taunt, messageId) {
     : "";
   const key = `taunt:${taunt.id}`;
   return statusRow({
-    chip: statusChip(success ? "taunt" : "tauntFailed", success ? {} : { label: i18n.localize("CARLRPG.StatusChip.taunt") }),
-    what: `<strong>${esc(taunt.mobName)}</strong>`, sub,
+    chip: statusChip(
+      success ? "taunt" : "tauntFailed",
+      success ? {} : { label: i18n.localize("CARLRPG.StatusChip.taunt") },
+    ),
+    what: `<strong>${esc(taunt.mobName)}</strong>`,
+    sub,
     num: versusNum(taunt.check.total, taunt.check.difficulty),
     acts: checkActions(state, { type: "taunt", tauntId: taunt.id }),
-    detail: checkDetail(taunt.check), key, open: openRows.has(`${messageId}:${key}`),
+    detail: checkDetail(taunt.check),
+    key,
+    open: openRows.has(`${messageId}:${key}`),
     after: pullArea,
   });
 }
@@ -1174,9 +1528,12 @@ function sectionSummary(state, section) {
     if (counts[key]) parts.push(i18n.format(`CARLRPG.Reaction.Sum.${key}`, { n: counts[key] }));
   }
   const pending = counts.hit + counts.incoming + counts.caught + counts.half;
-  if (!pending && (section.hits.length || section.moved.length)) parts.push(i18n.localize("CARLRPG.Reaction.Sum.clear"));
-  if (!state.locked && state.crawlers?.[crawlerKey(section.uuid)]?.evaded) parts.push(i18n.localize("CARLRPG.Reaction.EvadeUsed"));
-  if (!state.locked && state.crawlers?.[crawlerKey(section.uuid)]?.blocked) parts.push(i18n.localize("CARLRPG.ShieldBlock.Used"));
+  if (!pending && (section.hits.length || section.moved.length))
+    parts.push(i18n.localize("CARLRPG.Reaction.Sum.clear"));
+  if (!state.locked && state.crawlers?.[crawlerKey(section.uuid)]?.evaded)
+    parts.push(i18n.localize("CARLRPG.Reaction.EvadeUsed"));
+  if (!state.locked && state.crawlers?.[crawlerKey(section.uuid)]?.blocked)
+    parts.push(i18n.localize("CARLRPG.ShieldBlock.Used"));
   return parts.join(" · ");
 }
 
@@ -1207,7 +1564,10 @@ function sectionBlock(state, section) {
 export function attackDetails(attack) {
   const i18n = game.i18n;
   const parts = [];
-  if (attack?.range) parts.push(`<div class="carl-attack-range">${esc(i18n.localize("CARLRPG.Attack.Range"))}: ${esc(attack.range)}</div>`);
+  if (attack?.range)
+    parts.push(
+      `<div class="carl-attack-range">${esc(i18n.localize("CARLRPG.Attack.Range"))}: ${esc(attack.range)}</div>`,
+    );
   if (attack?.effect) parts.push(`<div class="carl-attack-effect">${esc(attack.effect)}</div>`);
   return parts.join("");
 }
@@ -1240,7 +1600,7 @@ function sceneToken(uuid) {
   const doc = uuid ? fromUuidSync(uuid) : null;
   if (!doc || !canvas?.ready) return null;
   const token = doc.documentName === "Token" ? doc : doc.getActiveTokens?.(false, true)?.[0];
-  return token?.parent === canvas.scene ? token.object ?? null : null;
+  return token?.parent === canvas.scene ? (token.object ?? null) : null;
 }
 
 /**
@@ -1261,7 +1621,10 @@ export function decorateReactionCard(message, html) {
   // The header: "3 of 5 settled", or Locked (and Resolution's name).
   const { settled, total } = cardProgress(state);
   if (state.locked) {
-    headerProgress(html, i18n.localize("CARLRPG.Reaction.Locked"), { locked: true, subtitle: i18n.localize("CARLRPG.Phase.Step.resolve") });
+    headerProgress(html, i18n.localize("CARLRPG.Reaction.Locked"), {
+      locked: true,
+      subtitle: i18n.localize("CARLRPG.Phase.Step.resolve"),
+    });
   } else {
     headerProgress(html, i18n.format("CARLRPG.Reaction.Progress", { settled, total }));
   }
@@ -1277,22 +1640,27 @@ export function decorateReactionCard(message, html) {
     }
   }
 
-  const sections = sectionsOf(state).map((section) => statusSection({
-    name: section.name,
-    summary: sectionSummary(state, section),
-    rows: [
-      ...section.taunts.map((taunt) => tauntRow(state, taunt, message.id)),
-      ...section.moved.map((hit) => movedRow(state, hit)),
-      ...section.hits.map((hit) => hitRow(state, hit, message.id)),
-    ],
-    actions: `${sectionEvade(state, section)}${sectionBlock(state, section)}`,
-  })).join("");
+  const sections = sectionsOf(state)
+    .map((section) =>
+      statusSection({
+        name: section.name,
+        summary: sectionSummary(state, section),
+        rows: [
+          ...section.taunts.map((taunt) => tauntRow(state, taunt, message.id)),
+          ...section.moved.map((hit) => movedRow(state, hit)),
+          ...section.hits.map((hit) => hitRow(state, hit, message.id)),
+        ],
+        actions: `${sectionEvade(state, section)}${sectionBlock(state, section)}`,
+      }),
+    )
+    .join("");
 
   const foot = [];
   if (!state.locked) {
     if (taunters(state).length) foot.push(footButton("taunt", "fa-bullhorn"));
     if (catchers(state).length) foot.push(footButton("catch", "fa-hand"));
-    if (game.user.isGM) foot.push(`<span class="carl-status-gm">${footButton("lock", "fa-lock")}</span>`);
+    if (game.user.isGM)
+      foot.push(`<span class="carl-status-gm">${footButton("lock", "fa-lock")}</span>`);
   }
   container.innerHTML = `${lead}${sections}${foot.length ? `<div class="carl-status-foot">${foot.join("")}</div>` : ""}`;
   rememberOpenRows(container, message.id, openRows);

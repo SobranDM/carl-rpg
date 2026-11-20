@@ -37,7 +37,8 @@ const NOT_WRITTEN = new Set(["_id", "folder", "sort", "flags", "ownership", "_st
 const isPlainObject = (value) => !!value && typeof value === "object" && !Array.isArray(value);
 
 /** An array followed into its elements: one holding objects (or arrays). */
-const isDeepArray = (value) => Array.isArray(value) && value.some((e) => e && typeof e === "object");
+const isDeepArray = (value) =>
+  Array.isArray(value) && value.some((e) => e && typeof e === "object");
 
 /**
  * Push the paths of one value: an object's leaves, a deep array's elements

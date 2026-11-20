@@ -2,7 +2,14 @@ import { processRoundEnd, processCombatEnd } from "../helpers/round-end.mjs";
 import { resetPetCommands } from "../helpers/pet-command.mjs";
 import { isCrawler, isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import {
-  currentPhase, isPhased, nextPhase, postPhaseNotice, previousPhase, roundStartPhase, syncPhaseState, usesPhases,
+  currentPhase,
+  isPhased,
+  nextPhase,
+  postPhaseNotice,
+  previousPhase,
+  roundStartPhase,
+  syncPhaseState,
+  usesPhases,
 } from "../helpers/combat-phases.mjs";
 
 /**
@@ -45,9 +52,18 @@ export class CarlRPGCombat extends Combat {
   async _preUpdate(changed, options, user) {
     const allowed = await super._preUpdate(changed, options, user);
     if (allowed === false) return false;
-    if (typeof changed.round === "number" && changed.round !== this.round && changed.round >= 1 && usesPhases(this)) {
+    if (
+      typeof changed.round === "number" &&
+      changed.round !== this.round &&
+      changed.round >= 1 &&
+      usesPhases(this)
+    ) {
       const surprise = this.round === 0 && !!this.getFlag("carl-rpg", "surprise");
-      foundry.utils.setProperty(changed, "flags.carl-rpg.phase", roundStartPhase(changed.round, surprise));
+      foundry.utils.setProperty(
+        changed,
+        "flags.carl-rpg.phase",
+        roundStartPhase(changed.round, surprise),
+      );
       changed.turn = null;
     }
   }
@@ -95,7 +111,9 @@ export class CarlRPGCombat extends Combat {
    * (which are never combatants anyway - see CarlRPGCombatant).
    */
   get isPvP() {
-    const combatants = this.combatants.contents.filter((c) => !isPet(c.actor) && !isVehicle(c.actor));
+    const combatants = this.combatants.contents.filter(
+      (c) => !isPet(c.actor) && !isVehicle(c.actor),
+    );
     return combatants.length > 0 && combatants.every((c) => isCrawler(c.actor));
   }
 
@@ -125,11 +143,15 @@ export class CarlRPGCombat extends Combat {
     await super._onStartRound(context);
     if (this.isPvP) {
       // Re-rolled every round (p.87); only the active GM runs this hook.
-      await this.rollInitiative(this.combatants.map((c) => c.id), { updateTurn: false });
+      await this.rollInitiative(
+        this.combatants.map((c) => c.id),
+        { updateTurn: false },
+      );
     } else {
       await this.syncPveInitiative();
       // A new phased round opens at its first step - say so in chat.
-      if (isPhased(this) && !context?.skipped) await postPhaseNotice(this, currentPhase(this), { roundStart: true });
+      if (isPhased(this) && !context?.skipped)
+        await postPhaseNotice(this, currentPhase(this), { roundStart: true });
     }
   }
 
@@ -166,13 +188,16 @@ export class CarlRPGCombatant extends Combatant {
     // "They do not have Actions" (Vehicles, p.72): the people in it fight,
     // the vehicle doesn't take turns.
     if (isVehicle(this.actor)) {
-      ui.notifications.warn(game.i18n.format("CARLRPG.Vehicle.NotACombatant", { name: this.actor.name }));
+      ui.notifications.warn(
+        game.i18n.format("CARLRPG.Vehicle.NotACombatant", { name: this.actor.name }),
+      );
       return false;
     }
     if (this.initiative !== null && this.initiative !== undefined) return;
     const combat = this.parent;
-    const pve = !rollsLikeCrawler(this.actor)
-      || combat?.combatants.some((c) => !rollsLikeCrawler(c.actor) && !isVehicle(c.actor));
+    const pve =
+      !rollsLikeCrawler(this.actor) ||
+      combat?.combatants.some((c) => !rollsLikeCrawler(c.actor) && !isVehicle(c.actor));
     if (pve) this.updateSource({ initiative: pveInitiativeFor(this.actor) });
   }
 

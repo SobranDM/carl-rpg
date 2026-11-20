@@ -40,7 +40,8 @@ export function legacyCompanionsOf(actor) {
   return actor?.flags?.[SCOPE]?.legacyCompanions ?? null;
 }
 
-const isBlank = (value) => value === null || value === undefined || (typeof value === "string" && !value.trim());
+const isBlank = (value) =>
+  value === null || value === undefined || (typeof value === "string" && !value.trim());
 
 /** A whole number from a stored value, or null if there isn't one. */
 function toInt(value) {
@@ -106,13 +107,19 @@ function builder() {
 
 /** The tag a new actor carries: where it came from, and the old block verbatim. */
 function migratedFlags(character, block, original) {
-  return { [SCOPE]: { migratedFrom: { uuid: character.uuid, block, original: foundry.utils.deepClone(original) } } };
+  return {
+    [SCOPE]: {
+      migratedFrom: { uuid: character.uuid, block, original: foundry.utils.deepClone(original) },
+    },
+  };
 }
 
 /** Its Biography: the "From the old Pet tab" list, or "" when nothing was left over. */
 function biographyFor(character, notes) {
   if (!notes.length) return "";
-  const items = notes.map((n) => `<li><strong>${esc(n.label)}:</strong> ${esc(n.value)}</li>`).join("");
+  const items = notes
+    .map((n) => `<li><strong>${esc(n.label)}:</strong> ${esc(n.value)}</li>`)
+    .join("");
   return `<h3>${esc(loc("Heading"))}</h3><p>${esc(loc("Intro", { name: character.name }))}</p><ul>${items}</ul>`;
 }
 
@@ -131,9 +138,16 @@ export function petDataFrom(character, pet, { inPack = false } = {}) {
   const L = (key) => game.i18n.localize(key);
   if (inPack) b.note(loc("Crawler"), character.name);
   else b.set("ownerId", character.id);
-  const level = b.setInt("attributes.level.value", pet.level, { min: 1, max: 250, label: L("CARLRPG.Actor.Level") });
+  const level = b.setInt("attributes.level.value", pet.level, {
+    min: 1,
+    max: 250,
+    label: L("CARLRPG.Actor.Level"),
+  });
   for (const key of Object.keys(CONFIG.CARLRPG.stats)) {
-    b.setInt(`stats.${key}.value`, pet[key], { min: 1, label: L(CONFIG.CARLRPG.statAbbreviations?.[key] ?? key) });
+    b.setInt(`stats.${key}.value`, pet[key], {
+      min: 1,
+      label: L(CONFIG.CARLRPG.statAbbreviations?.[key] ?? key),
+    });
   }
   b.setInt("dr", pet.dr, { min: 0, label: "DR" });
   b.setInt("move", pet.move, { min: 0, label: L("CARLRPG.Actor.Move") });
@@ -161,11 +175,19 @@ export function petDataFrom(character, pet, { inPack = false } = {}) {
     b.note(L("CARLRPG.Actor.HealthBar"), `${pet.hb.value ?? "-"}/${pet.hb.max ?? "-"}`);
   }
 
-  const name = isBlank(pet.name) ? loc("PetName", { name: character.name }) : String(pet.name).trim();
+  const name = isBlank(pet.name)
+    ? loc("PetName", { name: character.name })
+    : String(pet.name).trim();
   const biography = biographyFor(character, b.notes);
   // Checked for presence only - its HTML may be tidied when saved.
   if (biography) foundry.utils.setProperty(b.system, "biography", biography);
-  const data = { name, type: "pet", folder: character.folder?.id ?? null, system: b.system, flags: migratedFlags(character, "pet", pet) };
+  const data = {
+    name,
+    type: "pet",
+    folder: character.folder?.id ?? null,
+    system: b.system,
+    flags: migratedFlags(character, "pet", pet),
+  };
   return { data, notes: b.notes, expected: { name, ...b.expected } };
 }
 
@@ -194,7 +216,10 @@ export function vehicleDataFrom(character, mount) {
     if (value !== null) b.set("hb.value", value);
     // One note: the slots a Vehicle can't have, or else a clamped value.
     if (max !== null && max !== 10) {
-      b.note(L("CARLRPG.Actor.HealthBar"), loc("VehicleSlots", { value: mount.hb.value ?? "-", max }));
+      b.note(
+        L("CARLRPG.Actor.HealthBar"),
+        loc("VehicleSlots", { value: mount.hb.value ?? "-", max }),
+      );
     } else if (value !== raw && raw !== null) {
       b.note(L("CARLRPG.Actor.HealthBar"), loc("Clamped", { value: raw, now: value }));
     }
@@ -202,14 +227,23 @@ export function vehicleDataFrom(character, mount) {
 
   // The Character's players can drive it - set here, not by Vehicle
   // _preCreate (which would add the migrating GM's own crawler's players).
-  const ownership = withOwners({ default: character.ownership?.default ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE }, ownerIds(character));
+  const ownership = withOwners(
+    { default: character.ownership?.default ?? CONST.DOCUMENT_OWNERSHIP_LEVELS.NONE },
+    ownerIds(character),
+  );
 
-  const name = isBlank(mount.name) ? loc("VehicleName", { name: character.name }) : String(mount.name).trim();
+  const name = isBlank(mount.name)
+    ? loc("VehicleName", { name: character.name })
+    : String(mount.name).trim();
   const biography = biographyFor(character, b.notes);
   // Checked for presence only - its HTML may be tidied when saved.
   if (biography) foundry.utils.setProperty(b.system, "biography", biography);
   const data = {
-    name, type: "vehicle", folder: character.folder?.id ?? null, ownership, system: b.system,
+    name,
+    type: "vehicle",
+    folder: character.folder?.id ?? null,
+    ownership,
+    system: b.system,
     flags: migratedFlags(character, "mount", mount),
   };
   return { data, notes: b.notes, expected: { name, ...b.expected } };
@@ -257,7 +291,11 @@ export async function migrateCompanionsOf(character, { pack = null } = {}) {
     let actor = await findMigrated(character, block, pack);
     let madeNow = false;
     if (!actor) {
-      actor = await Actor.implementation.create(data, { pack, carlMigration: true, renderSheet: false });
+      actor = await Actor.implementation.create(data, {
+        pack,
+        carlMigration: true,
+        renderSheet: false,
+      });
       madeNow = true;
     }
     if (!actor) return { ok: false, created, error: `couldn't create the ${block} actor` };
@@ -270,7 +308,11 @@ export async function migrateCompanionsOf(character, { pack = null } = {}) {
       if (data.system.biography && !actor._source.system?.biography) wrong.push("system.biography");
       if (wrong.length) {
         await actor.delete();
-        return { ok: false, created, error: `the new ${block} actor didn't keep ${wrong.join(", ")}` };
+        return {
+          ok: false,
+          created,
+          error: `the new ${block} actor didn't keep ${wrong.join(", ")}`,
+        };
       }
       // A new Pet learns its Slice Attack here, awaited - not in the
       // background as usual (CarlRPGActor#_onCreate skips a migration's), so
@@ -291,26 +333,35 @@ export async function migrateCompanionsOf(character, { pack = null } = {}) {
   // update can't, as the client strips keys the schema doesn't know. diff:
   // false, or the client would see no difference and send nothing.
   const { ForcedReplacement, ForcedDeletion } = foundry.data.operators;
-  await character.update({
-    system: ForcedReplacement.create(character.system.toObject()),
-    flags: { [SCOPE]: { legacyCompanions: new ForcedDeletion(), companionsMigrated: true } },
-  }, { diff: false, render: false, carlMigration: true });
+  await character.update(
+    {
+      system: ForcedReplacement.create(character.system.toObject()),
+      flags: { [SCOPE]: { legacyCompanions: new ForcedDeletion(), companionsMigrated: true } },
+    },
+    { diff: false, render: false, carlMigration: true },
+  );
   return { ok: true, created };
 }
 
 /** Post the GM a summary: what was made from whose Pet tab, and what went to a Biography. */
 async function postSummary(rows, failed) {
   if (!rows.length && !failed.length) return;
-  const link = (actor) => `<a class="content-link" draggable="true" data-link data-uuid="${actor.uuid}" data-type="Actor">`
-    + `<i class="fas fa-user"></i>${esc(actor.name)}</a>`;
+  const link = (actor) =>
+    `<a class="content-link" draggable="true" data-link data-uuid="${actor.uuid}" data-type="Actor">` +
+    `<i class="fas fa-user"></i>${esc(actor.name)}</a>`;
   const lines = rows.map(({ character, created }) => {
-    const made = created.map(({ actor, notes }) => {
-      const kept = notes.length ? ` - ${esc(loc("ToBiography", { fields: notes.map((n) => n.label).join(", ") }))}` : "";
-      return `<li>${link(actor)}${kept}</li>`;
-    }).join("");
+    const made = created
+      .map(({ actor, notes }) => {
+        const kept = notes.length
+          ? ` - ${esc(loc("ToBiography", { fields: notes.map((n) => n.label).join(", ") }))}`
+          : "";
+        return `<li>${link(actor)}${kept}</li>`;
+      })
+      .join("");
     return `<p><strong>${esc(character.name)}</strong></p><ul>${made}</ul>`;
   });
-  if (failed.length) lines.push(`<p class="carl-hint">${esc(loc("Failed", { names: failed.join(", ") }))}</p>`);
+  if (failed.length)
+    lines.push(`<p class="carl-hint">${esc(loc("Failed", { names: failed.join(", ") }))}</p>`);
   await createCardMessage({
     title: loc("CardTitle"),
     body: lines.join(""),
@@ -320,7 +371,9 @@ async function postSummary(rows, failed) {
 
 /** The world's Characters that still have old Pet tab data. */
 function flaggedWorldCharacters() {
-  return game.actors.filter((a) => a.type === "character" && legacyCompanionsOf(a)).map((character) => ({ character }));
+  return game.actors
+    .filter((a) => a.type === "character" && legacyCompanionsOf(a))
+    .map((character) => ({ character }));
 }
 
 /**
@@ -352,7 +405,8 @@ async function convertAll(entries) {
   } catch (err) {
     console.error("carl-rpg | 0.7.0 migration: couldn't post its summary card", err);
   }
-  if (failed.length) ui.notifications.warn(loc("Failed", { names: failed.join(", ") }), { permanent: true });
+  if (failed.length)
+    ui.notifications.warn(loc("Failed", { names: failed.join(", ") }), { permanent: true });
   return { changed, errors: failed.length, incomplete: failed.length > 0 };
 }
 
@@ -364,18 +418,29 @@ async function convertAll(entries) {
  */
 export async function migrateCompanionActors() {
   const entries = flaggedWorldCharacters();
-  const packs = game.packs.filter((p) => p.documentName === "Actor" && p.metadata.packageType === "world");
+  const packs = game.packs.filter(
+    (p) => p.documentName === "Actor" && p.metadata.packageType === "world",
+  );
   const relock = [];
   try {
     for (const pack of packs) {
       // The index is the stored data, before the safety net: a Character
       // with old Pet tab data still shows system.pet / system.mount there.
-      const index = await pack.getIndex({ fields: ["system.pet", "system.mount", `flags.${SCOPE}.companionsMigrated`] });
+      const index = await pack.getIndex({
+        fields: ["system.pet", "system.mount", `flags.${SCOPE}.companionsMigrated`],
+      });
       const ids = index
-        .filter((e) => e.type === "character" && !e.flags?.[SCOPE]?.companionsMigrated && (e.system?.pet || e.system?.mount))
+        .filter(
+          (e) =>
+            e.type === "character" &&
+            !e.flags?.[SCOPE]?.companionsMigrated &&
+            (e.system?.pet || e.system?.mount),
+        )
         .map((e) => e._id);
       if (!ids.length) continue;
-      const flagged = (await pack.getDocuments({ _id__in: ids })).filter((a) => legacyCompanionsOf(a));
+      const flagged = (await pack.getDocuments({ _id__in: ids })).filter((a) =>
+        legacyCompanionsOf(a),
+      );
       if (!flagged.length) continue;
       if (pack.locked) {
         await pack.configure({ locked: false });

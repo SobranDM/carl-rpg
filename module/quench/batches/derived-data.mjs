@@ -1,4 +1,11 @@
-import { createTestCharacter, createTestMob, createTestItem, deleteTestActor, settle, useQuenchTimeout } from "../helpers.mjs";
+import {
+  createTestCharacter,
+  createTestMob,
+  createTestItem,
+  deleteTestActor,
+  settle,
+  useQuenchTimeout,
+} from "../helpers.mjs";
 
 export default function register(quench) {
   quench.registerBatch(
@@ -10,7 +17,9 @@ export default function register(quench) {
         useQuenchTimeout(this);
 
         it("derives stats.<key>.mod from the effective (base+bonus) value via getStatMod", async function () {
-          const actor = await createTestCharacter("character", { system: { stats: { con: { value: 8 } } } });
+          const actor = await createTestCharacter("character", {
+            system: { stats: { con: { value: 8 } } },
+          });
           try {
             assert.equal(actor.system.stats.con.mod, 3); // getStatMod(8) -> [6,9,3] band
           } finally {
@@ -19,7 +28,9 @@ export default function register(quench) {
         });
 
         it("hb.slotValue mirrors CON Mod on both Character and Mob", async function () {
-          const actor = await createTestCharacter("character", { system: { stats: { con: { value: 8 } } } });
+          const actor = await createTestCharacter("character", {
+            system: { stats: { con: { value: 8 } } },
+          });
           const mob = await createTestMob("mob", { system: { stats: { con: { value: 8 } } } });
           try {
             assert.equal(actor.system.hb.slotValue, 3);
@@ -33,7 +44,12 @@ export default function register(quench) {
         it("hb.effectiveMax includes a 'resource' ChangeEntry bonus targeting hb.max", async function () {
           const actor = await createTestCharacter();
           try {
-            await createTestItem(actor, "item", "gear", { system: { equipped: true, changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "5" }] } });
+            await createTestItem(actor, "item", "gear", {
+              system: {
+                equipped: true,
+                changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "5" }],
+              },
+            });
             await settle();
             assert.equal(actor.system.hb.effectiveMax, 15); // 10 base + 5 bonus
           } finally {
@@ -44,7 +60,11 @@ export default function register(quench) {
         it("unequipped gear grants nothing until it's equipped (p.98)", async function () {
           const actor = await createTestCharacter();
           try {
-            const gear = await createTestItem(actor, "item", "gear", { system: { changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "5" }] } });
+            const gear = await createTestItem(actor, "item", "gear", {
+              system: {
+                changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "5" }],
+              },
+            });
             await settle();
             assert.equal(actor.system.hb.effectiveMax, 10);
             await gear.update({ "system.equipped": true });
@@ -56,16 +76,40 @@ export default function register(quench) {
         });
 
         it("Mana Max uses the effective (bonused) INT on both Character and Mob (p.110's 'Enhanced' Stat)", async function () {
-          const actor = await createTestCharacter("character", { system: { stats: { int: { value: 10 } } } });
+          const actor = await createTestCharacter("character", {
+            system: { stats: { int: { value: 10 } } },
+          });
           const mob = await createTestMob("mob", { system: { stats: { int: { value: 10 } } } });
           try {
-            await createTestItem(actor, "item", "gear", { system: { equipped: true, changes: [{ targetType: "stat", target: "int", mode: "add", value: "5" }] } });
+            await createTestItem(actor, "item", "gear", {
+              system: {
+                equipped: true,
+                changes: [{ targetType: "stat", target: "int", mode: "add", value: "5" }],
+              },
+            });
             await settle();
-            assert.equal(actor.system.mana.max, 15, "Character: Mana Max should track the live INT bonus");
+            assert.equal(
+              actor.system.mana.max,
+              15,
+              "Character: Mana Max should track the live INT bonus",
+            );
 
-            await mob.createEmbeddedDocuments("Item", [{ name: "gear", type: "item", system: { equipped: true, changes: [{ targetType: "stat", target: "int", mode: "add", value: "5" }] } }]);
+            await mob.createEmbeddedDocuments("Item", [
+              {
+                name: "gear",
+                type: "item",
+                system: {
+                  equipped: true,
+                  changes: [{ targetType: "stat", target: "int", mode: "add", value: "5" }],
+                },
+              },
+            ]);
             await settle();
-            assert.equal(mob.system.mana.max, 15, "Mob: Mana Max should track the live INT bonus too (mob.mjs matches character.mjs)");
+            assert.equal(
+              mob.system.mana.max,
+              15,
+              "Mob: Mana Max should track the live INT bonus too (mob.mjs matches character.mjs)",
+            );
           } finally {
             await deleteTestActor(actor);
             await deleteTestActor(mob);
@@ -75,7 +119,9 @@ export default function register(quench) {
         it("toggling a shield spell on/off recomputes shield.effectiveMax and clamps shield.value down", async function () {
           const actor = await createTestCharacter();
           try {
-            const spell = await createTestItem(actor, "spell", "Shield", { system: { isToggled: true, active: true, rank: 5, shieldSlots: 4 } });
+            const spell = await createTestItem(actor, "spell", "Shield", {
+              system: { isToggled: true, active: true, rank: 5, shieldSlots: 4 },
+            });
             await settle();
             assert.equal(actor.system.shield.effectiveMax, 4);
 
@@ -83,18 +129,34 @@ export default function register(quench) {
             await spell.update({ "system.active": false });
             await settle();
             assert.equal(actor.system.shield.effectiveMax, 0);
-            assert.equal(actor.system.shield.value, 0, "value must clamp down to the new (lower) effectiveMax");
+            assert.equal(
+              actor.system.shield.value,
+              0,
+              "value must clamp down to the new (lower) effectiveMax",
+            );
           } finally {
             await deleteTestActor(actor);
           }
         });
 
         it("a granted 'resistance' ChangeEntry overrides the base value for its damage type only", async function () {
-          const actor = await createTestCharacter("character", { system: { resistances: { fire: "resist" } } });
+          const actor = await createTestCharacter("character", {
+            system: { resistances: { fire: "resist" } },
+          });
           try {
-            await createTestItem(actor, "race", "race", { system: { changes: [{ targetType: "resistance", target: "fire", mode: "override", value: "immune" }] } });
+            await createTestItem(actor, "race", "race", {
+              system: {
+                changes: [
+                  { targetType: "resistance", target: "fire", mode: "override", value: "immune" },
+                ],
+              },
+            });
             await settle();
-            assert.equal(actor.system.resistancesEffective.fire, "immune", "the granted override should win over the base 'resist'");
+            assert.equal(
+              actor.system.resistancesEffective.fire,
+              "immune",
+              "the granted override should win over the base 'resist'",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -115,23 +177,39 @@ export default function register(quench) {
       describe("church benefits (Boons with a Tier) apply only when earned", function () {
         useQuenchTimeout(this);
 
-        const strBoon = (actor, label, tier) => createTestItem(actor, "feature", label, {
-          system: { tier, changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }] },
-        });
+        const strBoon = (actor, label, tier) =>
+          createTestItem(actor, "feature", label, {
+            system: {
+              tier,
+              changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }],
+            },
+          });
 
         it("a tiered Boon applies at or below the crawler's Tier, not above it and not while worship is suspended", async function () {
-          const actor = await createTestCharacter("church", { system: { deity: { name: "Apito", tier: "acolyte" } } });
+          const actor = await createTestCharacter("church", {
+            system: { deity: { name: "Apito", tier: "acolyte" } },
+          });
           try {
             await strBoon(actor, "zealot perk", "zealot");
             await strBoon(actor, "untiered title", "");
-            assert.equal(actor.system.stats.str.bonus, 2, "only the untiered Boon, the Zealot one is above Acolyte");
+            assert.equal(
+              actor.system.stats.str.bonus,
+              2,
+              "only the untiered Boon, the Zealot one is above Acolyte",
+            );
 
             await actor.update({ "system.deity.tier": "zealot" });
             assert.equal(actor.system.stats.str.bonus, 4, "Zealot reached");
 
             for (const suspend of [{ shunned: true }, { fallen: true }, { missedOfferings: 1 }]) {
-              await actor.update({ "system.deity": { shunned: false, fallen: false, missedOfferings: 0, ...suspend } });
-              assert.equal(actor.system.stats.str.bonus, 2, `suspended by ${Object.keys(suspend)[0]}`);
+              await actor.update({
+                "system.deity": { shunned: false, fallen: false, missedOfferings: 0, ...suspend },
+              });
+              assert.equal(
+                actor.system.stats.str.bonus,
+                2,
+                `suspended by ${Object.keys(suspend)[0]}`,
+              );
             }
           } finally {
             await deleteTestActor(actor);

@@ -14,7 +14,8 @@ const ROOT = path.dirname(fileURLToPath(import.meta.url)) + "/..";
 const SRC_ROOT = path.join(ROOT, "packs-source");
 const DEST_ROOT = path.join(ROOT, "packs");
 
-const packNames = fs.readdirSync(SRC_ROOT, { withFileTypes: true })
+const packNames = fs
+  .readdirSync(SRC_ROOT, { withFileTypes: true })
   .filter((e) => e.isDirectory())
   .map((e) => e.name);
 

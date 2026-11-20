@@ -12,13 +12,20 @@ export function defineSkillChoiceGrantSchema() {
   const fields = foundry.data.fields;
   return {
     id: new fields.StringField({
-      required: true, blank: false,
+      required: true,
+      blank: false,
       initial: () => foundry.utils.randomID(),
     }),
     /** Free-text hint from the book, e.g. "crafting", "Weapon", "Reach Weapon". Not a closed category list. */
     category: new fields.StringField({ required: false, blank: true, initial: "" }),
     // Never null: a cleared input keeps the stored Amount (keepStoredForBlankNumbers).
-    amount: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 1, min: 1 }),
+    amount: new fields.NumberField({
+      required: true,
+      nullable: false,
+      integer: true,
+      initial: 1,
+      min: 1,
+    }),
   };
 }
 

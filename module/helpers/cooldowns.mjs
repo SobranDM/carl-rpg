@@ -75,13 +75,18 @@ export function tracksCooldown(item) {
  * @param {{now?: number, fight?: Combat|null}} [context]
  * @returns {object|null}
  */
-export function cooldownToStart(item, { now = game.time.worldTime, fight = fightOf(item?.actor) } = {}) {
+export function cooldownToStart(
+  item,
+  { now = game.time.worldTime, fight = fightOf(item?.actor) } = {},
+) {
   const text = item?.system?.cooldown ?? "";
   const parsed = parseTimerText(text);
   if (!parsed || parsed.manual) return null;
   const base = { kind: null, endsAt: null, combatId: null, round: null, epoch: null, text };
-  if (parsed.perRound) return fight ? { ...base, kind: "round", combatId: fight.id, round: fight.round } : null;
-  if (parsed.perScene) return { ...base, kind: "scene", combatId: fight?.id ?? null, epoch: sceneEpoch() };
+  if (parsed.perRound)
+    return fight ? { ...base, kind: "round", combatId: fight.id, round: fight.round } : null;
+  if (parsed.perScene)
+    return { ...base, kind: "scene", combatId: fight?.id ?? null, epoch: sceneEpoch() };
   const actor = item.actor;
   const seconds = resolveTimerSeconds(parsed, {
     rank: actor ? ownedRank(actor, item) : (item.system.rank ?? 0),
@@ -128,9 +133,16 @@ export function cooldownLabel(state) {
   const left = Math.max(0, Number(state.left) || 0);
   let amount;
   let unit;
-  if (left < 60) { amount = Math.ceil(left); unit = "Seconds"; }
-  else if (left < 3600) { amount = Math.ceil(left / 60); unit = "Minutes"; }
-  else { amount = Math.round(left / 360) / 10; unit = "Hours"; }
+  if (left < 60) {
+    amount = Math.ceil(left);
+    unit = "Seconds";
+  } else if (left < 3600) {
+    amount = Math.ceil(left / 60);
+    unit = "Minutes";
+  } else {
+    amount = Math.round(left / 360) / 10;
+    unit = "Hours";
+  }
   return game.i18n.format(`CARLRPG.Cooldown.Chip.${unit}`, { amount });
 }
 
@@ -164,7 +176,12 @@ export async function passCooldown(item) {
     content: `<div class="carl-dialog-body"><p>${game.i18n.format("CARLRPG.Cooldown.AskBody", { name, left: esc(cooldownLabel(state)) })}</p></div>`,
     classes: ["carl-cooldown-confirm"],
     buttons: [
-      { action: "useAnyway", icon: "fa-solid fa-hourglass-end", label: "CARLRPG.Cooldown.UseAnyway", callback: () => true },
+      {
+        action: "useAnyway",
+        icon: "fa-solid fa-hourglass-end",
+        label: "CARLRPG.Cooldown.UseAnyway",
+        callback: () => true,
+      },
       { ...cancelButton(), default: true },
     ],
   });
@@ -266,7 +283,10 @@ export function registerCooldowns() {
     default: 0,
     onChange: () => refreshCooldownSheets(),
   });
-  Handlebars.registerHelper("cooldownChip", (item) => new Handlebars.SafeString(item ? cooldownChipHtml(item) : ""));
+  Handlebars.registerHelper(
+    "cooldownChip",
+    (item) => new Handlebars.SafeString(item ? cooldownChipHtml(item) : ""),
+  );
   Hooks.on("updateWorldTime", () => refreshCooldownSheets());
   Hooks.on("updateCombat", (combat, changed) => {
     if (foundry.utils.hasProperty(changed, "round")) refreshCooldownSheets();

@@ -18,7 +18,11 @@
  * an Area Attack reduces the damage by 50%. A successful Evade in the splash
  * zone reduces the damage by another 50% so only 25%... rounded down".
  */
-import { collectDebuffRows, collectAdvantageAgainstRows, resolveDifficultyRows } from "./debuff-effects.mjs";
+import {
+  collectDebuffRows,
+  collectAdvantageAgainstRows,
+  resolveDifficultyRows,
+} from "./debuff-effects.mjs";
 import { getDegreeOfSuccess, isHitDegree, staticEvade } from "./rules.mjs";
 import { scaleDamageByType } from "./damage-pipeline.mjs";
 import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
@@ -63,7 +67,9 @@ export function rowResolved(row, isArea) {
 
 /** The next free row id ("t3" after t0-t2). */
 export function nextRowId(targetRows) {
-  const ids = Object.keys(targetRows ?? {}).map((id) => Number(id.slice(1))).filter(Number.isFinite);
+  const ids = Object.keys(targetRows ?? {})
+    .map((id) => Number(id.slice(1)))
+    .filter(Number.isFinite);
   return `t${ids.length ? Math.max(...ids) + 1 : 0}`;
 }
 
@@ -116,7 +122,11 @@ export function attackDifficultyParts(actor, floor) {
     return { base: status.attackDifficulty, rows: vehicleHeadOnRows(actor, status, -1) };
   }
   const sys = actor.system;
-  const rows = collectDebuffRows(sys, "evade", { ownerName: actor.name, idPrefix: "target", ownAction: false });
+  const rows = collectDebuffRows(sys, "evade", {
+    ownerName: actor.name,
+    idPrefix: "target",
+    ownAction: false,
+  });
   const used = rollsLikeCrawler(actor)
     ? rows.filter((r) => r.kind === "noDex")
     : [...rows, ...collectVehicleRows(actor, "evade", { mode: "difficulty" })];
@@ -135,11 +145,19 @@ export function attackDifficultyParts(actor, floor) {
 function vehicleHeadOnRows(vehicle, status, sign) {
   const value = status.attackDifficulty - status.headOnDifficulty;
   if (value <= 0) return [];
-  return [{
-    id: "vehicle-headon", key: "vehicle", conditionId: null, kind: "penalty", value: sign * value,
-    defaultOn: false, consume: false, situational: true,
-    label: game.i18n.format("CARLRPG.Vehicle.Rows.HeadOn", { vehicle: vehicle.name }),
-  }];
+  return [
+    {
+      id: "vehicle-headon",
+      key: "vehicle",
+      conditionId: null,
+      kind: "penalty",
+      value: sign * value,
+      defaultOn: false,
+      consume: false,
+      situational: true,
+      label: game.i18n.format("CARLRPG.Vehicle.Rows.HeadOn", { vehicle: vehicle.name }),
+    },
+  ];
 }
 
 /**
@@ -166,15 +184,33 @@ export function mobVsVehicleRows(actor) {
  * @returns {TargetRow}
  */
 export function crawlerAttackRow({
-  id, target, difficulty, attackTotal, naturalRoll, zone = "full", shared = null, vehicle = undefined, redirect = true,
+  id,
+  target,
+  difficulty,
+  attackTotal,
+  naturalRoll,
+  zone = "full",
+  shared = null,
+  vehicle = undefined,
+  redirect = true,
 }) {
   const degree = getDegreeOfSuccess(naturalRoll, attackTotal, difficulty);
-  const hit = shared ? shared.hit : (difficulty === null ? degree !== "criticalFail" : isHitDegree(degree));
+  const hit = shared
+    ? shared.hit
+    : difficulty === null
+      ? degree !== "criticalFail"
+      : isHitDegree(degree);
   const ride = vehicle === undefined ? seatVehicle(target.actor) : vehicle;
   const row = baseRow({
-    id, target, zone, difficulty, hit,
+    id,
+    target,
+    zone,
+    difficulty,
+    hit,
     amazing: shared ? shared.amazing : degree === "amazingSuccess",
-    degree, natural: naturalRoll, vehicle: ride,
+    degree,
+    natural: naturalRoll,
+    vehicle: ride,
   });
   // "A Near Miss targeting an occupant hits the vehicle" (p.72): it's a hit,
   // on the vehicle - so there's nothing for the occupant to Evade (the card
@@ -216,18 +252,38 @@ export function mobAttackRow({ id, target, base, ownRows, checked = null, zone =
   // vehicle's Difficulty (10 + Move ÷ 5), and misses otherwise.
   if (isVehicle(target.actor)) {
     const status = vehicleStatus(target.actor);
-    const resolved = resolveDifficultyRows(base, [...ownRows, ...mobVsVehicleRows(target.actor)], checked);
+    const resolved = resolveDifficultyRows(
+      base,
+      [...ownRows, ...mobVsVehicleRows(target.actor)],
+      checked,
+    );
     const hit = resolved.difficulty === null || resolved.difficulty >= status.attackDifficulty;
-    const row = baseRow({ id, target, zone, difficulty: status.attackDifficulty, hit, amazing: false });
+    const row = baseRow({
+      id,
+      target,
+      zone,
+      difficulty: status.attackDifficulty,
+      hit,
+      amazing: false,
+    });
     row.toHit = resolved.difficulty;
     return { row, applied: resolved.applied };
   }
   const defenderRows = target.actor
-    ? collectAdvantageAgainstRows(target.actor.system, { ownerName: target.actor.name, idPrefix: "target" })
+    ? collectAdvantageAgainstRows(target.actor.system, {
+        ownerName: target.actor.name,
+        idPrefix: "target",
+      })
     : [];
   const resolved = resolveDifficultyRows(base, [...ownRows, ...defenderRows], checked);
   const row = baseRow({
-    id, target, zone, difficulty: resolved.difficulty, hit: true, amazing: false, vehicle: seatVehicle(target.actor),
+    id,
+    target,
+    zone,
+    difficulty: resolved.difficulty,
+    hit: true,
+    amazing: false,
+    vehicle: seatVehicle(target.actor),
   });
   row.freeEvade = resolved.netAdvantage < 0;
   return { row, applied: resolved.applied };
@@ -245,8 +301,18 @@ export function mobAttackRow({ id, target, base, ownRows, checked = null, zone =
  * @returns {TargetRow}
  */
 export function baseRow({
-  id, target, zone = "full", difficulty, hit, amazing, degree = null, natural = null, vehicle = null,
-  canEvade = rollsLikeCrawler(target.actor), role = "target", damageOverride = null,
+  id,
+  target,
+  zone = "full",
+  difficulty,
+  hit,
+  amazing,
+  degree = null,
+  natural = null,
+  vehicle = null,
+  canEvade = rollsLikeCrawler(target.actor),
+  role = "target",
+  damageOverride = null,
 }) {
   return {
     id,
@@ -292,7 +358,9 @@ export function rowOutcome(row, { damageByType, isArea, floor }) {
   // A row with its own damage (a ram's recoil and occupants, an explosion):
   // exactly that, with no Debuffs. Only skipped by a successful Evade.
   if (row.damageOverride) {
-    return row.evade?.success ? { damage: {}, effects: false } : { damage: { ...row.damageOverride }, effects: false };
+    return row.evade?.success
+      ? { damage: {}, effects: false }
+      : { damage: { ...row.damageOverride }, effects: false };
   }
   const evaded = row.evade?.success === true;
   if (evaded && !isArea) return { damage: {}, effects: false };

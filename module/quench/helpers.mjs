@@ -55,7 +55,10 @@ export async function settle(ms = 30) {
  * @param {() => *} predicate
  * @param {{timeout?: number, interval?: number, message?: string}} [options]
  */
-export async function waitFor(predicate, { timeout = 5000, interval = 25, message = "waitFor: condition never became true" } = {}) {
+export async function waitFor(
+  predicate,
+  { timeout = 5000, interval = 25, message = "waitFor: condition never became true" } = {},
+) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
     if (predicate()) return;
@@ -130,16 +133,25 @@ export async function createTestItem(actor, type, label = type, data = {}) {
   // (docs/gear-slots.md: gear with no slot can't be worn). Tests of the
   // slot rules set `system.slots` themselves.
   if (type === "item" && data.system?.slots === undefined && !data.system?.consumable?.kind) {
-    data = { ...data, system: { ...(data.system ?? {}), slots: Object.keys(CONFIG.CARLRPG.wearSlots) } };
+    data = {
+      ...data,
+      system: { ...(data.system ?? {}), slots: Object.keys(CONFIG.CARLRPG.wearSlots) },
+    };
   }
   // `system.equipped: true` here is a test's shortcut for worn gear (or, in
   // the migration tests, gear equipped the old way): kept, where a real
   // copy arriving on a Character starts unequipped (CarlRPGItem#_preCreate).
-  const [item] = await actor.createEmbeddedDocuments("Item", [{
-    name: `Quench ${label} ${foundry.utils.randomID()}`,
-    type,
-    ...data,
-  }], { carlKeepEquipped: true });
+  const [item] = await actor.createEmbeddedDocuments(
+    "Item",
+    [
+      {
+        name: `Quench ${label} ${foundry.utils.randomID()}`,
+        type,
+        ...data,
+      },
+    ],
+    { carlKeepEquipped: true },
+  );
   return item;
 }
 
@@ -181,11 +193,13 @@ export async function deleteTestCombat(combat) {
  */
 export async function createTestCombat(actor, token = null) {
   const combat = await Combat.create({});
-  const [combatant] = await combat.createEmbeddedDocuments("Combatant", [{
-    actorId: actor.id,
-    tokenId: token?.id ?? null,
-    sceneId: token?.parent?.id ?? null,
-  }]);
+  const [combatant] = await combat.createEmbeddedDocuments("Combatant", [
+    {
+      actorId: actor.id,
+      tokenId: token?.id ?? null,
+      sceneId: token?.parent?.id ?? null,
+    },
+  ]);
   return { combat, combatant };
 }
 
@@ -222,12 +236,23 @@ export async function withFakeTargets(fakeTargets, fn) {
   if (fakeTargetState.depth++ === 0) {
     fakeTargetState.userDesc = Object.getOwnPropertyDescriptor(user, "targets");
     fakeTargetState.tokens = tokens;
-    fakeTargetState.controlledDesc = tokens ? Object.getOwnPropertyDescriptor(tokens, "controlled") : undefined;
+    fakeTargetState.controlledDesc = tokens
+      ? Object.getOwnPropertyDescriptor(tokens, "controlled")
+      : undefined;
   }
   // Each call reads its own set while it runs; overlapping calls share the
   // stub, so the latest-started call's set is what game.user.targets shows.
-  Object.defineProperty(user, "targets", { configurable: true, enumerable: true, get: () => fakeSet });
-  if (tokens) Object.defineProperty(tokens, "controlled", { configurable: true, enumerable: true, get: () => [] });
+  Object.defineProperty(user, "targets", {
+    configurable: true,
+    enumerable: true,
+    get: () => fakeSet,
+  });
+  if (tokens)
+    Object.defineProperty(tokens, "controlled", {
+      configurable: true,
+      enumerable: true,
+      get: () => [],
+    });
 
   try {
     return await fn();
@@ -338,7 +363,9 @@ export function withMessageCleanup(key, fn) {
     context.before(function () {
       before = new Set(game.messages.keys());
       combatDeleted = false;
-      hookId = Hooks.on("deleteCombat", () => { combatDeleted = true; });
+      hookId = Hooks.on("deleteCombat", () => {
+        combatDeleted = true;
+      });
     });
     context.after(async function () {
       this.timeout?.(QUENCH_DEFAULT_TIMEOUT_MS);
@@ -392,12 +419,18 @@ export function mockD20Roll(d20Results) {
  */
 export async function openDialog(cssClass) {
   let dialog;
-  await waitFor(() => {
-    dialog = [...foundry.applications.instances.values()].find(
-      (app) => app instanceof foundry.applications.api.DialogV2 && app.rendered && app.element.classList.contains(cssClass),
-    );
-    return !!dialog;
-  }, { message: `no .${cssClass} dialog opened` });
+  await waitFor(
+    () => {
+      dialog = [...foundry.applications.instances.values()].find(
+        (app) =>
+          app instanceof foundry.applications.api.DialogV2 &&
+          app.rendered &&
+          app.element.classList.contains(cssClass),
+      );
+      return !!dialog;
+    },
+    { message: `no .${cssClass} dialog opened` },
+  );
   return dialog;
 }
 

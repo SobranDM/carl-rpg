@@ -39,7 +39,13 @@ import { landDebuffs } from "./land-debuffs.mjs";
 import { resolveTargetEffectLabel } from "./conditions.mjs";
 import { debuffLandsOn } from "./modifiers.mjs";
 import { attackDetails, attackLine, reactionCardFor, writeState } from "../chat/reaction-card.mjs";
-import { headerProgress, rememberOpenRows, statusChip, statusRow, statusSection } from "../chat/status-rows.mjs";
+import {
+  headerProgress,
+  rememberOpenRows,
+  statusChip,
+  statusRow,
+  statusSection,
+} from "../chat/status-rows.mjs";
 import { rowOutcome } from "./attack-targets.mjs";
 import { vehicleSeatOf } from "./vehicle-state.mjs";
 import { decidingEvade, hitList, nearMissOnVehicle, unevadedNames } from "./reaction-state.mjs";
@@ -144,11 +150,19 @@ export function buildDamageState(combat, state, { shields = {} } = {}) {
   const data = { combatId: combat.id, round: combat.round, attacks: {}, rows: {} };
   for (const attack of Object.values(state.attacks ?? {})) {
     data.attacks[attack.id] = {
-      id: attack.id, mobUuid: attack.mobUuid, mobName: attack.mobName, attackName: attack.attackName,
-      damage: attack.damage ?? "", damageType: attack.damageType ?? "", damageIsMagic: attack.damageIsMagic ?? true,
+      id: attack.id,
+      mobUuid: attack.mobUuid,
+      mobName: attack.mobName,
+      attackName: attack.attackName,
+      damage: attack.damage ?? "",
+      damageType: attack.damageType ?? "",
+      damageIsMagic: attack.damageIsMagic ?? true,
       armorPiercing: !!attack.armorPiercing,
-      isArea: !!attack.isArea, floor: attack.floor ?? currentFloor(), rolled: null,
-      effect: attack.effect ?? "", range: attack.range ?? "",
+      isArea: !!attack.isArea,
+      floor: attack.floor ?? currentFloor(),
+      rolled: null,
+      effect: attack.effect ?? "",
+      range: attack.range ?? "",
       targetEffects: attack.targetEffects ?? [],
     };
   }
@@ -164,16 +178,20 @@ export function buildDamageState(combat, state, { shields = {} } = {}) {
 
     const tags = [];
     const notes = [];
-    if (hit.tauntedBy) tags.push({ key: "CARLRPG.Reaction.TauntedFrom", data: { name: hit.originalName } });
-    if (hit.caughtBy) tags.push({ key: "CARLRPG.Reaction.CaughtFor", data: { name: hit.originalName } });
+    if (hit.tauntedBy)
+      tags.push({ key: "CARLRPG.Reaction.TauntedFrom", data: { name: hit.originalName } });
+    if (hit.caughtBy)
+      tags.push({ key: "CARLRPG.Reaction.CaughtFor", data: { name: hit.originalName } });
     const catcher = hit.caughtBy ? actorFromUuid(hit.caughtBy.uuid) : null;
     const extraDr = catcher ? catcherDr(catcher) : 0;
     if (extraDr) tags.push({ key: "CARLRPG.Resolve.CatcherDr", data: { dr: extraDr } });
     // "Ignore any Debuffs attached to this damage" (Catcher Rank 15, p.187).
     const ignoreDebuffs = !!catcher && catcherRank(catcher) >= 15;
-    if (ignoreDebuffs && attack.targetEffects.length) tags.push({ key: "CARLRPG.Resolve.CatcherNoDebuffs", data: {} });
+    if (ignoreDebuffs && attack.targetEffects.length)
+      tags.push({ key: "CARLRPG.Resolve.CatcherNoDebuffs", data: {} });
     if (hit.row?.zone === "splash") tags.push({ key: "CARLRPG.Targets.Splash", data: {} });
-    if (status === "pending" && evade?.success) tags.push({ key: "CARLRPG.Resolve.EvadedHalf", data: {} });
+    if (status === "pending" && evade?.success)
+      tags.push({ key: "CARLRPG.Resolve.EvadedHalf", data: {} });
 
     let applyUuid = hit.targetUuid;
     // "A Near Miss targeting an occupant hits the vehicle" (p.72) - not an
@@ -188,36 +206,60 @@ export function buildDamageState(combat, state, { shields = {} } = {}) {
     let block = null;
     if (hit.block) {
       const blocked = hit.block.success && applyUuid === hit.targetUuid;
-      const reduction = blocked ? blockReduction(actorFromUuid(hit.targetUuid), hit.block.rank ?? 0) : 0;
+      const reduction = blocked
+        ? blockReduction(actorFromUuid(hit.targetUuid), hit.block.rank ?? 0)
+        : 0;
       block = { success: blocked, degree: hit.block.degree, reduction };
       if (blocked) {
-        tags.push(reduction
-          ? { key: "CARLRPG.ShieldBlock.Tag.halfLess", data: { reduction } }
-          : { key: "CARLRPG.ShieldBlock.Tag.half", data: {} });
+        tags.push(
+          reduction
+            ? { key: "CARLRPG.ShieldBlock.Tag.halfLess", data: { reduction } }
+            : { key: "CARLRPG.ShieldBlock.Tag.half", data: {} },
+        );
       }
       const hurt = shields[hit.id];
       if (hurt) {
-        tags.push(hurt.broken
-          ? { key: "CARLRPG.ShieldBlock.Tag.broken", data: { shield: hurt.name } }
-          : { key: "CARLRPG.ShieldBlock.Tag.loss", data: { shield: hurt.name, amount: hurt.amount, dr: hurt.dr } });
+        tags.push(
+          hurt.broken
+            ? { key: "CARLRPG.ShieldBlock.Tag.broken", data: { shield: hurt.name } }
+            : {
+                key: "CARLRPG.ShieldBlock.Tag.loss",
+                data: { shield: hurt.name, amount: hurt.amount, dr: hurt.dr },
+              },
+        );
       }
     }
     // Injuries land "after combat, once the adrenaline wears off" (p.80).
-    if (evade?.degree === "majorFail") notes.push({ key: "CARLRPG.Resolve.MinorInjury", data: { name: hit.targetName } });
-    if (evade?.degree === "criticalFail") notes.push({ key: "CARLRPG.Resolve.MajorInjury", data: { name: hit.targetName } });
+    if (evade?.degree === "majorFail")
+      notes.push({ key: "CARLRPG.Resolve.MinorInjury", data: { name: hit.targetName } });
+    if (evade?.degree === "criticalFail")
+      notes.push({ key: "CARLRPG.Resolve.MajorInjury", data: { name: hit.targetName } });
 
     data.rows[hit.id] = {
-      id: hit.id, order: order++, attackId: hit.attackId, tableUuid: hit.targetUuid, tableName: hit.targetName,
-      applyUuid, status, caught: !!hit.caughtBy, extraDr, ignoreDebuffs, block,
+      id: hit.id,
+      order: order++,
+      attackId: hit.attackId,
+      tableUuid: hit.targetUuid,
+      tableName: hit.targetName,
+      applyUuid,
+      status,
+      caught: !!hit.caughtBy,
+      extraDr,
+      ignoreDebuffs,
+      block,
       // The Evade it called for, shown under the Mob's name.
-      difficulty: hit.row?.isCharacter && hit.row?.hit && !hit.caughtBy ? (hit.row.difficulty ?? null) : null,
+      difficulty:
+        hit.row?.isCharacter && hit.row?.hit && !hit.caughtBy ? (hit.row.difficulty ?? null) : null,
       row: { hit: !!hit.row?.hit, zone: hit.row?.zone ?? "full", amazing: false },
       evade: evade ? { degree: evade.degree, success: evade.success } : null,
-      tags, notes, result: null,
+      tags,
+      notes,
+      result: null,
     };
     // No damage, but Debuffs that would land: the GM applies them (an
     // Apply button in place of a roll).
-    if (status === "noDamage" && rowDebuffs(data.rows[hit.id], attack).length) data.rows[hit.id].status = "pending";
+    if (status === "noDamage" && rowDebuffs(data.rows[hit.id], attack).length)
+      data.rows[hit.id].status = "pending";
   }
   return data;
 }
@@ -251,7 +293,9 @@ export function catcherRank(actor) {
  */
 export function rowDebuffs(row, attack) {
   if (row.ignoreDebuffs || !row.row?.hit || row.evade?.success) return [];
-  return (attack.targetEffects ?? []).filter((te) => te.debuffKey && debuffLandsOn(te, { ...row.row, evade: row.evade }));
+  return (attack.targetEffects ?? []).filter(
+    (te) => te.debuffKey && debuffLandsOn(te, { ...row.row, evade: row.evade }),
+  );
 }
 
 /**
@@ -312,7 +356,11 @@ export async function postDamageCard(combat, state) {
 /** Ids of the Attacks with rows still waiting on their damage roll. */
 export function unrolledAttacks(data) {
   if (!data) return [];
-  const ids = new Set(Object.values(data.rows ?? {}).filter((r) => r.status === "pending").map((r) => r.attackId));
+  const ids = new Set(
+    Object.values(data.rows ?? {})
+      .filter((r) => r.status === "pending")
+      .map((r) => r.attackId),
+  );
   return [...ids].filter((id) => !data.attacks[id]?.rolled);
 }
 
@@ -338,26 +386,44 @@ export function rollAttackOnCard(message, attackId) {
     const hasDamage = !!String(attack.damage ?? "").trim();
     const rolled = hasDamage ? await rollAttackDamage(attack) : { total: 0, breakdown: "" };
     if (!rolled) return false;
-    if (hasDamage && game.dice3d) void game.dice3d.showForRoll(rolled.roll, game.user, true).catch(() => {});
+    if (hasDamage && game.dice3d)
+      void game.dice3d.showForRoll(rolled.roll, game.user, true).catch(() => {});
     attack.rolled = { total: rolled.total, breakdown: rolled.breakdown };
 
     const damageByType = hasDamage ? { [attack.damageType]: rolled.total } : {};
-    const rows = Object.values(data.rows).filter((r) => r.attackId === attackId && r.status === "pending");
+    const rows = Object.values(data.rows).filter(
+      (r) => r.attackId === attackId && r.status === "pending",
+    );
     for (const row of rows) {
       row.status = "rolled";
-      const outcome = rowOutcome({ ...row.row, evade: row.evade }, { damageByType, isArea: attack.isArea, floor: attack.floor });
+      const outcome = rowOutcome(
+        { ...row.row, evade: row.evade },
+        { damageByType, isArea: attack.isArea, floor: attack.floor },
+      );
       const raw = Object.values(outcome.damage).reduce((sum, v) => sum + (v || 0), 0);
       const actor = actorFromUuid(row.applyUuid);
       if (!actor) {
         row.result = { missing: true };
         continue;
       }
-      row.result = { raw: 0, final: 0, slots: 0, shieldSlots: 0, dying: false, extra: [], debuffs: [] };
+      row.result = {
+        raw: 0,
+        final: 0,
+        slots: 0,
+        shieldSlots: 0,
+        dying: false,
+        extra: [],
+        debuffs: [],
+      };
       // A Shield Block: half before DR, less the STR Mod at Rank 15 (p.198).
-      const damage = row.block?.success ? blockedDamage(outcome.damage, row.block.reduction ?? 0) : outcome.damage;
+      const damage = row.block?.success
+        ? blockedDamage(outcome.damage, row.block.reduction ?? 0)
+        : outcome.damage;
       if (raw > 0) {
         const applied = await applyDamageWithResult(actor, damage, attack.damageIsMagic, {
-          noShield: row.caught, extraDr: row.extraDr ?? 0, armorPiercing: !!attack.armorPiercing,
+          noShield: row.caught,
+          extraDr: row.extraDr ?? 0,
+          armorPiercing: !!attack.armorPiercing,
         });
         Object.assign(row.result, {
           raw,
@@ -372,8 +438,16 @@ export function rollAttackOnCard(message, attackId) {
       // Its Debuffs, each by its trigger (not on an Evade; not for a
       // Catcher at Rank 15).
       if (outcome.effects && !row.ignoreDebuffs) {
-        const { landed, lines } = await landDebuffs(actor, attack.targetEffects, { ...row.row, evade: row.evade }, damageByType);
-        row.result.debuffs = landed.map((te) => ({ label: resolveTargetEffectLabel(te), stacks: te.stacks ?? 1 }));
+        const { landed, lines } = await landDebuffs(
+          actor,
+          attack.targetEffects,
+          { ...row.row, evade: row.evade },
+          damageByType,
+        );
+        row.result.debuffs = landed.map((te) => ({
+          label: resolveTargetEffectLabel(te),
+          stacks: te.stacks ?? 1,
+        }));
         row.result.extra.push(...lines);
       }
     }
@@ -389,7 +463,8 @@ export function rollAttackOnCard(message, attackId) {
  * @returns {Promise<void>}
  */
 export async function rollAllDamage(message) {
-  for (const attackId of unrolledAttacks(message.getFlag(SCOPE, FLAG))) await rollAttackOnCard(message, attackId);
+  for (const attackId of unrolledAttacks(message.getFlag(SCOPE, FLAG)))
+    await rollAttackOnCard(message, attackId);
 }
 
 /**
@@ -435,9 +510,12 @@ function damageNum(row, attack) {
   const i18n = game.i18n;
   const muted = (text) => `<span class="carl-status-vs">${esc(text)}</span>`;
   switch (row.status) {
-    case "missed": return "";
-    case "evaded": return muted(i18n.localize("CARLRPG.Resolve.None"));
-    case "noDamage": return muted(i18n.localize("CARLRPG.Resolve.NoDamage"));
+    case "missed":
+      return "";
+    case "evaded":
+      return muted(i18n.localize("CARLRPG.Resolve.None"));
+    case "noDamage":
+      return muted(i18n.localize("CARLRPG.Resolve.NoDamage"));
     case "pending": {
       // Debuffs and no damage: the GM applies them.
       if (!String(attack.damage ?? "").trim()) {
@@ -447,7 +525,8 @@ function damageNum(row, attack) {
         <i class="fas fa-skull-crossbones"></i> ${esc(label)}</button>`;
       }
       const formula = displayFormula(attack);
-      if (!game.user.isGM) return `<span class="carl-status-vs" data-tooltip="${esc(i18n.format("CARLRPG.Resolve.Waiting", { formula }))}">${esc(formula)}</span>`;
+      if (!game.user.isGM)
+        return `<span class="carl-status-vs" data-tooltip="${esc(i18n.format("CARLRPG.Resolve.Waiting", { formula }))}">${esc(formula)}</span>`;
       return `<button type="button" class="carl-status-button is-primary carl-damage-roll-button" data-action="reactionDamage" data-attack-id="${esc(row.attackId)}">
         <i class="fas fa-dice"></i> ${esc(formula)}</button>`;
     }
@@ -455,10 +534,18 @@ function damageNum(row, attack) {
   const r = row.result ?? {};
   if (r.missing) return muted(i18n.localize("CARLRPG.Resolve.TargetGone"));
   // A Debuffs-only Attack that dealt nothing: its "Gains" line says it all.
-  if (!String(attack.damage ?? "").trim() && !r.final && !r.dying) return muted(i18n.localize("CARLRPG.Resolve.NoDamage"));
-  const slots = r.dying ? esc(i18n.localize("CARLRPG.Resolve.Dying"))
-    : esc(i18n.format(r.slots === 1 ? "CARLRPG.Resolve.OneSlot" : "CARLRPG.Resolve.SlotCount", { count: r.slots ?? 0 }));
-  const shield = r.shieldSlots ? ` ${esc(i18n.format("CARLRPG.Resolve.ShieldSlots", { count: r.shieldSlots }))}` : "";
+  if (!String(attack.damage ?? "").trim() && !r.final && !r.dying)
+    return muted(i18n.localize("CARLRPG.Resolve.NoDamage"));
+  const slots = r.dying
+    ? esc(i18n.localize("CARLRPG.Resolve.Dying"))
+    : esc(
+        i18n.format(r.slots === 1 ? "CARLRPG.Resolve.OneSlot" : "CARLRPG.Resolve.SlotCount", {
+          count: r.slots ?? 0,
+        }),
+      );
+  const shield = r.shieldSlots
+    ? ` ${esc(i18n.format("CARLRPG.Resolve.ShieldSlots", { count: r.shieldSlots }))}`
+    : "";
   return `<b class="carl-damage-amount">${esc(r.final ?? 0)}</b> <span class="carl-status-vs">· <span class="carl-damage-slots">${slots}${shield}</span></span>`;
 }
 
@@ -466,11 +553,15 @@ function damageNum(row, attack) {
 function damageSummary(rows) {
   const i18n = game.i18n;
   const parts = [];
-  const taken = rows.reduce((sum, row) => sum + (row.status === "rolled" ? (row.result?.final ?? 0) : 0), 0);
+  const taken = rows.reduce(
+    (sum, row) => sum + (row.status === "rolled" ? (row.result?.final ?? 0) : 0),
+    0,
+  );
   const pending = rows.filter((row) => row.status === "pending").length;
   if (taken) parts.push(i18n.format("CARLRPG.Resolve.Taken", { n: taken }));
   if (pending) parts.push(i18n.format("CARLRPG.Resolve.ToRoll", { n: pending }));
-  if (rows.some((row) => row.result?.dying)) parts.push(i18n.localize("CARLRPG.Resolve.DyingShort"));
+  if (rows.some((row) => row.result?.dying))
+    parts.push(i18n.localize("CARLRPG.Resolve.DyingShort"));
   if (!parts.length) parts.push(i18n.localize("CARLRPG.Reaction.Sum.clear"));
   return parts.join(" · ");
 }
@@ -490,57 +581,91 @@ export function decorateDamageCard(message, html) {
   if (!container || !data) return;
   const i18n = game.i18n;
 
-  const rolling = new Set(Object.values(data.rows ?? {}).filter((r) => ["pending", "rolled"].includes(r.status)).map((r) => r.attackId));
+  const rolling = new Set(
+    Object.values(data.rows ?? {})
+      .filter((r) => ["pending", "rolled"].includes(r.status))
+      .map((r) => r.attackId),
+  );
   const rolled = [...rolling].filter((id) => data.attacks[id]?.rolled).length;
-  headerProgress(html, rolling.size
-    ? i18n.format("CARLRPG.Resolve.Progress", { rolled, total: rolling.size })
-    : i18n.localize("CARLRPG.Resolve.NothingToRoll"));
+  headerProgress(
+    html,
+    rolling.size
+      ? i18n.format("CARLRPG.Resolve.Progress", { rolled, total: rolling.size })
+      : i18n.localize("CARLRPG.Resolve.NothingToRoll"),
+  );
 
   const sections = new Map();
   for (const row of Object.values(data.rows ?? {}).sort((a, b) => a.order - b.order)) {
-    if (!sections.has(row.tableUuid)) sections.set(row.tableUuid, { name: row.tableName, rows: [] });
+    if (!sections.has(row.tableUuid))
+      sections.set(row.tableUuid, { name: row.tableName, rows: [] });
     sections.get(row.tableUuid).rows.push(row);
   }
-  container.innerHTML = [...sections.values()].map((section) => {
-    const notes = [];
-    const rows = section.rows.map((row) => {
-      const attack = data.attacks[row.attackId] ?? {};
-      for (const note of row.notes ?? []) notes.push(esc(i18n.format(note.key, note.data)));
-      // Already HTML: the damage pipeline's lines (a Dying countdown, a Debuff the hit ended).
-      for (const line of row.result?.extra ?? []) notes.push(line);
-      // Under the Mob's name: its Attack and Evade target, then the notes
-      // (the chip says it was Evaded).
-      const sub = [
-        ...attackLine(attack, row.difficulty ?? null),
-        ...(row.tags ?? []).filter((t) => t.key !== "CARLRPG.Resolve.EvadedHalf").map((t) => i18n.format(t.key, t.data)),
-      ];
-      // Its Debuffs: what will land once rolled, then what did.
-      const named = (list) => list.map((d) => `${d.label} ×${d.stacks ?? 1}`).join(", ");
-      if (row.status === "pending") {
-        const coming = rowDebuffs(row, attack).map((te) => ({ label: resolveTargetEffectLabel(te), stacks: te.stacks }));
-        if (coming.length) sub.push(i18n.format("CARLRPG.Resolve.WillGain", { debuffs: named(coming) }));
-      } else if (row.result?.debuffs?.length) {
-        sub.push(i18n.format("CARLRPG.Resolve.Gained", { debuffs: named(row.result.debuffs) }));
-      }
-      const r = row.result;
-      const tip = row.status === "rolled" && r && !r.missing
-        ? i18n.format("CARLRPG.Resolve.RolledTip", { rolled: attack.rolled?.total ?? "-", raw: r.raw ?? 0, final: r.final ?? 0 }) : "";
-      const detail = [
-        attack.rolled ? `<div>${esc(attack.rolled.breakdown ?? "")}</div>` : "",
-        tip ? `<div>${esc(tip)}</div>` : "",
-        attackDetails(attack),
-      ].join("");
-      const key = `damage:${row.id}`;
-      return statusRow({
-        id: row.id, key, open: openRows.has(`${message.id}:${key}`),
-        chip: statusChip(damageStatus(row)),
-        what: `<strong>${esc(attack.mobName ?? "?")}</strong>`,
-        flag: attack.effect ? `<i class="fas fa-scroll carl-status-flag" data-tooltip="${esc(i18n.localize("CARLRPG.Reaction.HasEffect"))}"></i>` : "",
-        sub, num: damageNum(row, attack), numTip: tip, detail,
+  container.innerHTML = [...sections.values()]
+    .map((section) => {
+      const notes = [];
+      const rows = section.rows.map((row) => {
+        const attack = data.attacks[row.attackId] ?? {};
+        for (const note of row.notes ?? []) notes.push(esc(i18n.format(note.key, note.data)));
+        // Already HTML: the damage pipeline's lines (a Dying countdown, a Debuff the hit ended).
+        for (const line of row.result?.extra ?? []) notes.push(line);
+        // Under the Mob's name: its Attack and Evade target, then the notes
+        // (the chip says it was Evaded).
+        const sub = [
+          ...attackLine(attack, row.difficulty ?? null),
+          ...(row.tags ?? [])
+            .filter((t) => t.key !== "CARLRPG.Resolve.EvadedHalf")
+            .map((t) => i18n.format(t.key, t.data)),
+        ];
+        // Its Debuffs: what will land once rolled, then what did.
+        const named = (list) => list.map((d) => `${d.label} ×${d.stacks ?? 1}`).join(", ");
+        if (row.status === "pending") {
+          const coming = rowDebuffs(row, attack).map((te) => ({
+            label: resolveTargetEffectLabel(te),
+            stacks: te.stacks,
+          }));
+          if (coming.length)
+            sub.push(i18n.format("CARLRPG.Resolve.WillGain", { debuffs: named(coming) }));
+        } else if (row.result?.debuffs?.length) {
+          sub.push(i18n.format("CARLRPG.Resolve.Gained", { debuffs: named(row.result.debuffs) }));
+        }
+        const r = row.result;
+        const tip =
+          row.status === "rolled" && r && !r.missing
+            ? i18n.format("CARLRPG.Resolve.RolledTip", {
+                rolled: attack.rolled?.total ?? "-",
+                raw: r.raw ?? 0,
+                final: r.final ?? 0,
+              })
+            : "";
+        const detail = [
+          attack.rolled ? `<div>${esc(attack.rolled.breakdown ?? "")}</div>` : "",
+          tip ? `<div>${esc(tip)}</div>` : "",
+          attackDetails(attack),
+        ].join("");
+        const key = `damage:${row.id}`;
+        return statusRow({
+          id: row.id,
+          key,
+          open: openRows.has(`${message.id}:${key}`),
+          chip: statusChip(damageStatus(row)),
+          what: `<strong>${esc(attack.mobName ?? "?")}</strong>`,
+          flag: attack.effect
+            ? `<i class="fas fa-scroll carl-status-flag" data-tooltip="${esc(i18n.localize("CARLRPG.Reaction.HasEffect"))}"></i>`
+            : "",
+          sub,
+          num: damageNum(row, attack),
+          numTip: tip,
+          detail,
+        });
       });
-    });
-    return statusSection({ name: section.name, summary: damageSummary(section.rows), rows, notes });
-  }).join("");
+      return statusSection({
+        name: section.name,
+        summary: damageSummary(section.rows),
+        rows,
+        notes,
+      });
+    })
+    .join("");
   rememberOpenRows(container, message.id, openRows);
 }
 
@@ -562,4 +687,6 @@ async function onRollDamage(event, message, button) {
 }
 
 /** Registry entries for module/chat/chat-listener.mjs. */
-export const damageCardActionEntries = [{ action: "reactionDamage", custom: true, onClick: onRollDamage }];
+export const damageCardActionEntries = [
+  { action: "reactionDamage", custom: true, onClick: onRollDamage },
+];

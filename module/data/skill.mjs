@@ -8,19 +8,22 @@ import CarlRPGRankedItemBase from "./ranked-item-base.mjs";
  * extra Base Damage line (Skills, Spells & Gear, p. 173).
  */
 export default class CarlRPGSkill extends CarlRPGRankedItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const requiredInteger = { required: true, nullable: false, integer: true };
     const schema = super.defineSchema();
 
     schema.category = new fields.StringField({
-      required: true, blank: false, initial: "utility",
+      required: true,
+      blank: false,
+      initial: "utility",
       choices: () => Object.keys(CONFIG.CARLRPG.skillCategories),
     });
 
     schema.attackType = new fields.StringField({
-      required: false, blank: true, initial: "",
+      required: false,
+      blank: true,
+      initial: "",
       choices: () => ["", ...Object.keys(CONFIG.CARLRPG.attackTypes)],
     });
     schema.range = new fields.StringField({ required: false, blank: true, initial: "" });
@@ -51,7 +54,12 @@ export default class CarlRPGSkill extends CarlRPGRankedItemBase {
     schema.mounted = new fields.BooleanField({ required: true, initial: false });
 
     // Only relevant to low-damage weapons that grant AI Favor when not maximized.
-    schema.aiFavor = new fields.NumberField({ ...requiredInteger, required: false, initial: 0, min: 0 });
+    schema.aiFavor = new fields.NumberField({
+      ...requiredInteger,
+      required: false,
+      initial: 0,
+      min: 0,
+    });
 
     schema.cooldown = new fields.StringField({ required: false, blank: true, initial: "" });
     schema.limitations = new fields.StringField({ required: false, blank: true, initial: "" });

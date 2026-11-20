@@ -67,7 +67,8 @@ export const markChoiceActionEntries = [
     wrapperSelector: ".carl-mark-choice",
     canAct: (m) => canActOnUuidFlag(m, "markChoiceSkillUuid"),
     doneFlag: "markChoiceDone",
-    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.MarkChoice.Done")}`,
+    doneLabel: () =>
+      `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.MarkChoice.Done")}`,
     onClick: (event, message) => onMarkChoice(event, message, "markChoiceSkillUuid"),
   },
   {
@@ -76,7 +77,8 @@ export const markChoiceActionEntries = [
     wrapperSelector: ".carl-mark-choice",
     canAct: (m) => canActOnUuidFlag(m, "markChoiceDamageEffectUuid"),
     doneFlag: "markChoiceDone",
-    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.MarkChoice.Done")}`,
+    doneLabel: () =>
+      `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.MarkChoice.Done")}`,
     onClick: (event, message) => onMarkChoice(event, message, "markChoiceDamageEffectUuid"),
   },
 ];

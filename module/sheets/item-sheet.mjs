@@ -1,24 +1,24 @@
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
-import { onAddArrayItem, onDeleteArrayItem } from '../helpers/array-editor.mjs';
-import CarlDice from '../dice/dice.mjs';
-import { injectBloodSplatter } from '../helpers/window-chrome.mjs';
-import { needsWeapon } from '../helpers/weapons.mjs';
+import { onAddArrayItem, onDeleteArrayItem } from "../helpers/array-editor.mjs";
+import CarlDice from "../dice/dice.mjs";
+import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
+import { needsWeapon } from "../helpers/weapons.mjs";
 import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-arrays.mjs";
-import { isConsumable, isShield, isTwoHanded, isWeapon, slotsOf } from '../helpers/gear.mjs';
-import { effectiveRank, shieldDrState } from '../helpers/modifiers.mjs';
-import { repairShield } from '../helpers/shield-block.mjs';
+import { isConsumable, isShield, isTwoHanded, isWeapon, slotsOf } from "../helpers/gear.mjs";
+import { effectiveRank, shieldDrState } from "../helpers/modifiers.mjs";
+import { repairShield } from "../helpers/shield-block.mjs";
 import { enrichDescription } from "../helpers/rich-text.mjs";
 
 const ATTRIBUTES_TEMPLATES = {
-  item: 'systems/carl-rpg/templates/item/parts/attributes-item.hbs',
-  feature: 'systems/carl-rpg/templates/item/parts/attributes-feature.hbs',
-  skill: 'systems/carl-rpg/templates/item/parts/attributes-skill.hbs',
-  damageEffect: 'systems/carl-rpg/templates/item/parts/attributes-damage-effect.hbs',
-  spell: 'systems/carl-rpg/templates/item/parts/attributes-spell.hbs',
-  class: 'systems/carl-rpg/templates/item/parts/attributes-class.hbs',
-  race: 'systems/carl-rpg/templates/item/parts/attributes-race.hbs',
-  mobAttack: 'systems/carl-rpg/templates/item/parts/attributes-mob-attack.hbs',
+  item: "systems/carl-rpg/templates/item/parts/attributes-item.hbs",
+  feature: "systems/carl-rpg/templates/item/parts/attributes-feature.hbs",
+  skill: "systems/carl-rpg/templates/item/parts/attributes-skill.hbs",
+  damageEffect: "systems/carl-rpg/templates/item/parts/attributes-damage-effect.hbs",
+  spell: "systems/carl-rpg/templates/item/parts/attributes-spell.hbs",
+  class: "systems/carl-rpg/templates/item/parts/attributes-class.hbs",
+  race: "systems/carl-rpg/templates/item/parts/attributes-race.hbs",
+  mobAttack: "systems/carl-rpg/templates/item/parts/attributes-mob-attack.hbs",
 };
 
 /**
@@ -26,13 +26,18 @@ const ATTRIBUTES_TEMPLATES = {
  * gear (docs/skill-item-sheets.md). Their part isn't a `.tab` section, so
  * _onRender has no tab to activate.
  */
-const SINGLE_PAGE_TYPES = ['mobAttack', 'item'];
+const SINGLE_PAGE_TYPES = ["mobAttack", "item"];
 
-const RANKED_TYPES = ['skill', 'spell', 'damageEffect'];
+const RANKED_TYPES = ["skill", "spell", "damageEffect"];
 
 /** Does this Upgrade tier set any driving perk (module/data/shared/upgrade-tier.mjs)? */
 function hasVehiclePerk(upgrade) {
-  return !!(Number(upgrade.vehicleMove) || upgrade.vehicleAttackOk || upgrade.vehicleEvadeAdvantage || upgrade.vehicleStuntAdvantage);
+  return !!(
+    Number(upgrade.vehicleMove) ||
+    upgrade.vehicleAttackOk ||
+    upgrade.vehicleEvadeAdvantage ||
+    upgrade.vehicleStuntAdvantage
+  );
 }
 
 /**
@@ -43,10 +48,10 @@ function hasVehiclePerk(upgrade) {
 export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   /** @override */
   static DEFAULT_OPTIONS = {
-    classes: ['carl-rpg', 'sheet', 'item'],
+    classes: ["carl-rpg", "sheet", "item"],
     position: { width: 560, height: 620 },
     form: {
-      submitOnChange: true
+      submitOnChange: true,
     },
     actions: {
       roll: CarlRPGItemSheet.#onRoll,
@@ -60,7 +65,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       removeCure: CarlRPGItemSheet.#onRemoveCure,
       toggleWornSlot: CarlRPGItemSheet.#onToggleWornSlot,
       repairShield: CarlRPGItemSheet.#onRepairShield,
-    }
+    },
   };
 
   /**
@@ -118,7 +123,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // A cleared number input keeps the stored value (form-arrays.mjs).
     keepStoredForBlankNumbers(formData.object, this.item.system, form);
     const data = super._processFormData(event, form, formData);
-    if (data.system && typeof data.system === "object") data.system = mergeSystemSubmit(this.item.system, data.system);
+    if (data.system && typeof data.system === "object")
+      data.system = mergeSystemSubmit(this.item.system, data.system);
     return data;
   }
 
@@ -143,21 +149,21 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
    * @override
    */
   _getTabsConfig(group) {
-    if (group === 'primary' && SINGLE_PAGE_TYPES.includes(this.item?.type)) {
-      return { tabs: [{ id: 'attributes', label: 'CARLRPG.Tab.Main' }], initial: 'attributes' };
+    if (group === "primary" && SINGLE_PAGE_TYPES.includes(this.item?.type)) {
+      return { tabs: [{ id: "attributes", label: "CARLRPG.Tab.Main" }], initial: "attributes" };
     }
-    if (group === 'primary' && RANKED_TYPES.includes(this.item?.type)) {
+    if (group === "primary" && RANKED_TYPES.includes(this.item?.type)) {
       // Each Rank tab says whether its Upgrades apply at the current Rank -
       // the live one (gear's "+1 Rank" counts), as the tab content shows.
       const rank = effectiveRank(this.item);
       const tier = (n) => ({
         id: `rank${n}`,
         label: `CARLRPG.Ranked.Rank${n}`,
-        icon: rank >= n ? 'fas fa-lock-open' : 'fas fa-lock',
+        icon: rank >= n ? "fas fa-lock-open" : "fas fa-lock",
       });
       return {
-        tabs: [{ id: 'main', label: 'CARLRPG.Tab.Main' }, tier(5), tier(10), tier(15)],
-        initial: 'main',
+        tabs: [{ id: "main", label: "CARLRPG.Tab.Main" }, tier(5), tier(10), tier(15)],
+        initial: "main",
       };
     }
     return super._getTabsConfig(group);
@@ -200,7 +206,7 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // below for all of them - leaving every tab content section's
     // `context.tab` unset and, for rank-tab.hbs (which needs `tab.id` for
     // its `data-tab` attribute), its section permanently un-selectable.
-    if (partId === 'tabs' && context.tabs) {
+    if (partId === "tabs" && context.tabs) {
       return { ...context, tabs: Object.values(context.tabs) };
     }
     // For tab content parts, provide the tab context
@@ -213,9 +219,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // by #groupUpgradesByRank in _prepareContext) and the matching
     // rankThreshold (for the tab's own "Add Upgrade" link), since the
     // shared template has no other way to know which of the 3 it is.
-    if (partId === 'rank5' || partId === 'rank10' || partId === 'rank15') {
+    if (partId === "rank5" || partId === "rank10" || partId === "rank15") {
       context.entries = context[partId];
-      context.rankThreshold = Number(partId.slice('rank'.length));
+      context.rankThreshold = Number(partId.slice("rank".length));
       context.tierUnlocked = context.liveRank >= context.rankThreshold;
     }
     return context;
@@ -252,9 +258,12 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // exist separately from category - an audit found every authored
     // Skill kept the two in lockstep, so it was removed as pure
     // duplication (see module/documents/item.mjs's roll() routing).
-    context.isAttackFlavored = item.type === "skill" ? item.system.category === "attack"
-      : item.type === "spell" ? !!item.system.castingKeywords?.includes("attack")
-      : item.type === "damageEffect"; // always attack-flavored, no heal concept
+    context.isAttackFlavored =
+      item.type === "skill"
+        ? item.system.category === "attack"
+        : item.type === "spell"
+          ? !!item.system.castingKeywords?.includes("attack")
+          : item.type === "damageEffect"; // always attack-flavored, no heal concept
     if (context.isRanked) {
       Object.assign(context, this.#groupUpgradesByRank(itemData.system.upgrades));
       // The live Rank decides what's unlocked: on an actor, the effective
@@ -273,11 +282,11 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // Empty for an unowned/compendium item, which has no actor to source
     // names from - the target field still accepts free text either way.
     context.actorSkillNames = item.actor
-      ? [...new Set(
-          item.actor.items
-            .filter(i => RANKED_TYPES.includes(i.type))
-            .map(i => i.name)
-        )].sort()
+      ? [
+          ...new Set(
+            item.actor.items.filter((i) => RANKED_TYPES.includes(i.type)).map((i) => i.name),
+          ),
+        ].sort()
       : [];
 
     // Suggestions for a gear item's Weapon Skill: the rulebook's Weapon
@@ -285,7 +294,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // (homebrew). Free text either way.
     if (item.type === "item") {
       const owned = item.actor
-        ? item.actor.items.filter((i) => i.type === "skill" && needsWeapon(item.actor, i)).map((i) => i.name)
+        ? item.actor.items
+            .filter((i) => i.type === "skill" && needsWeapon(item.actor, i))
+            .map((i) => i.name)
         : [];
       context.weaponSkillNames = [...new Set([...CONFIG.CARLRPG.weaponSkills, ...owned])].sort();
       context.gear = this.#gearContext(item, itemData, context.weaponSkillNames);
@@ -293,13 +304,15 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     }
 
     // Template convenience variables
-    context.cssClass = this.options.classes.join(' ');
+    context.cssClass = this.options.classes.join(" ");
     context.owner = item.isOwner;
 
     // Retrieve the roll data for TinyMCE editors.
     context.rollData = item.getRollData();
 
-    context.descriptionHTML = await enrichDescription(item.system.description, item, { rollData: context.rollData });
+    context.descriptionHTML = await enrichDescription(item.system.description, item, {
+      rollData: context.rollData,
+    });
 
     return context;
   }
@@ -338,18 +351,26 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         const blank = all.findLast((entry) => !entry.value);
         if (blank) damageTypeEntries.push(blank);
       }
-      const showHeal = !!(upgrade.healDice || upgrade.healToFull || upgrade.healMend || upgrade.healAllTargets)
-        || this.#revealed.has(`heal-${upgrade.id}`);
+      const showHeal =
+        !!(upgrade.healDice || upgrade.healToFull || upgrade.healMend || upgrade.healAllTargets) ||
+        this.#revealed.has(`heal-${upgrade.id}`);
       // Once shown, it stays for this sheet's session (cleared mid-edit).
       if (showHeal) this.#revealed.add(`heal-${upgrade.id}`);
       // A Spell's Shield slots from this Rank (only a Spell's sheet offers it).
-      const showShield = Number(upgrade.shieldSlots) > 0 || this.#revealed.has(`shield-${upgrade.id}`);
+      const showShield =
+        Number(upgrade.shieldSlots) > 0 || this.#revealed.has(`shield-${upgrade.id}`);
       if (showShield) this.#revealed.add(`shield-${upgrade.id}`);
       // A driving Skill's vehicle perks from this Rank (only a Skill's sheet offers it).
       const showVehicle = hasVehiclePerk(upgrade) || this.#revealed.has(`vehicle-${upgrade.id}`);
       if (showVehicle) this.#revealed.add(`vehicle-${upgrade.id}`);
       (buckets[key] ?? buckets.rank5).push({
-        upgrade, index, damageTypeEntries, showHeal, showShield, showVehicle, showDamageTypes: damageTypeEntries.length > 0,
+        upgrade,
+        index,
+        damageTypeEntries,
+        showHeal,
+        showShield,
+        showVehicle,
+        showDamageTypes: damageTypeEntries.length > 0,
       });
     });
     return buckets;
@@ -368,12 +389,25 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const i18n = game.i18n;
     const count = (n, one, many) => (n ? i18n.format(n === 1 ? one : many, { n }) : null);
     const sumUp = ({ upgrade, damageTypeEntries, showHeal, showShield, showVehicle }) => {
-      const line = String(upgrade.description ?? "").split(/\r?\n/).map((s) => s.trim()).find(Boolean);
+      const line = String(upgrade.description ?? "")
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .find(Boolean);
       if (line) return line;
       const parts = [
-        count(upgrade.changes?.length ?? 0, "CARLRPG.ItemSheet.Count.Bonus", "CARLRPG.ItemSheet.Count.Bonuses"),
-        count(upgrade.targetEffects?.length ?? 0, "CARLRPG.ItemSheet.Count.Debuff", "CARLRPG.ItemSheet.Count.Debuffs"),
-        damageTypeEntries.some((e) => e.value) ? i18n.localize("CARLRPG.Ranked.DamageTypeSplit") : null,
+        count(
+          upgrade.changes?.length ?? 0,
+          "CARLRPG.ItemSheet.Count.Bonus",
+          "CARLRPG.ItemSheet.Count.Bonuses",
+        ),
+        count(
+          upgrade.targetEffects?.length ?? 0,
+          "CARLRPG.ItemSheet.Count.Debuff",
+          "CARLRPG.ItemSheet.Count.Debuffs",
+        ),
+        damageTypeEntries.some((e) => e.value)
+          ? i18n.localize("CARLRPG.Ranked.DamageTypeSplit")
+          : null,
         showHeal ? i18n.localize("CARLRPG.ItemSheet.Group.Healing") : null,
         showShield ? i18n.localize("CARLRPG.Spell.ShieldSlots") : null,
         showVehicle ? i18n.localize("CARLRPG.Ranked.Vehicle.Title") : null,
@@ -388,7 +422,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         label: `CARLRPG.Ranked.Rank${n}`,
         unlocked: rank >= n,
         count: entries.length,
-        summary: entries.length ? entries.map(sumUp).join(" · ") : i18n.localize("CARLRPG.ItemSheet.NoUpgrade"),
+        summary: entries.length
+          ? entries.map(sumUp).join(" · ")
+          : i18n.localize("CARLRPG.ItemSheet.NoUpgrade"),
       };
     });
   }
@@ -408,25 +444,50 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const chips = [];
     if (item.type === "skill") {
       if (sys.category) {
-        chips.push({ label: t(cfg.skillCategories[sys.category] ?? sys.category), tone: sys.category === "attack" ? "accent" : "neutral" });
+        chips.push({
+          label: t(cfg.skillCategories[sys.category] ?? sys.category),
+          tone: sys.category === "attack" ? "accent" : "neutral",
+        });
       }
       if (context.isAttackFlavored && sys.attackType) {
-        chips.push({ label: t(cfg.attackTypes[sys.attackType] ?? sys.attackType), tone: sys.attackType === "ranged" ? "blue" : "neutral" });
+        chips.push({
+          label: t(cfg.attackTypes[sys.attackType] ?? sys.attackType),
+          tone: sys.attackType === "ranged" ? "blue" : "neutral",
+        });
       }
     }
     if (item.type === "spell" && Number(sys.manaCost) > 0) {
-      chips.push({ label: game.i18n.format("CARLRPG.ItemSheet.ManaChip", { n: sys.manaCost }), tone: "blue" });
+      chips.push({
+        label: game.i18n.format("CARLRPG.ItemSheet.ManaChip", { n: sys.manaCost }),
+        tone: "blue",
+      });
     }
-    chips.push({ label: game.i18n.format("CARLRPG.ItemSheet.RankChip", { n: context.liveRank }), tone: "neutral" });
+    chips.push({
+      label: game.i18n.format("CARLRPG.ItemSheet.RankChip", { n: context.liveRank }),
+      tone: "neutral",
+    });
     if (sys.governingStat) {
-      chips.push({ label: t(cfg.statAbbreviations[sys.governingStat] ?? sys.governingStat), tone: "neutral" });
+      chips.push({
+        label: t(cfg.statAbbreviations[sys.governingStat] ?? sys.governingStat),
+        tone: "neutral",
+      });
     }
     if (sys.marked) {
-      chips.push({ label: t("CARLRPG.Ranked.Marked"), tone: "gold", icon: "fas fa-bookmark", tooltip: t("CARLRPG.ItemSheet.MarkedHint") });
+      chips.push({
+        label: t("CARLRPG.Ranked.Marked"),
+        tone: "gold",
+        icon: "fas fa-bookmark",
+        tooltip: t("CARLRPG.ItemSheet.MarkedHint"),
+      });
     }
     // A CrawlerForge import's own invention (helpers/crawlerforge-import.mjs).
     if (item.getFlag("carl-rpg", "crawlerforge")?.notInRulebook) {
-      chips.push({ label: t("CARLRPG.CrawlerForge.NotInRulebook"), tone: "gold", icon: "fas fa-triangle-exclamation", tooltip: t("CARLRPG.CrawlerForge.NotInRulebookHint") });
+      chips.push({
+        label: t("CARLRPG.CrawlerForge.NotInRulebook"),
+        tone: "gold",
+        icon: "fas fa-triangle-exclamation",
+        tooltip: t("CARLRPG.CrawlerForge.NotInRulebookHint"),
+      });
     }
     return chips;
   }
@@ -453,10 +514,17 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       mana: set(c.mana?.amount) || !!c.mana?.full,
       cures: (c.cures ?? []).length > 0,
       permanent: !!c.permanent?.kind,
-      buff: !!(c.buff?.label || c.buff?.duration || (c.buff?.changes ?? []).length
-        || set(c.buff?.perRound?.hb) || set(c.buff?.perRound?.mana)),
+      buff: !!(
+        c.buff?.label ||
+        c.buff?.duration ||
+        (c.buff?.changes ?? []).length ||
+        set(c.buff?.perRound?.hb) ||
+        set(c.buff?.perRound?.mana)
+      ),
     };
-    const parts = Object.fromEntries(Object.entries(used).map(([k, v]) => [k, v || shown(`c-${k}`)]));
+    const parts = Object.fromEntries(
+      Object.entries(used).map(([k, v]) => [k, v || shown(`c-${k}`)]),
+    );
     // Once shown, a part stays for this sheet's session: clearing its only
     // value mid-edit doesn't whisk it away.
     for (const [k, v] of Object.entries(parts)) if (v) this.#revealed.add(`c-${k}`);
@@ -464,7 +532,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const cures = (c.cures ?? []).map((key) => ({ key, label: debuffName(key) }));
     const weaponSkill = String(sys.weaponSkill ?? "").trim();
     const ownedAttacks = item.actor
-      ? item.actor.items.filter((i) => i.type === "skill" && i.system.category === "attack").map((i) => i.name)
+      ? item.actor.items
+          .filter((i) => i.type === "skill" && i.system.category === "attack")
+          .map((i) => i.name)
       : [];
     const showBonuses = (sys.changes ?? []).length > 0;
     const showDebuffs = (sys.targetEffects ?? []).length > 0;
@@ -475,7 +545,10 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const weapon = isWeapon(item);
     const shield = isShield(item);
     const wearSlots = Object.entries(cfg.wearSlots).map(([key, label]) => ({
-      key, label: game.i18n.localize(label), on: worn.has(key), locked: key === "held" && (weapon || shield),
+      key,
+      label: game.i18n.localize(label),
+      on: worn.has(key),
+      locked: key === "held" && (weapon || shield),
       lockedHint: weapon ? "CARLRPG.Gear.HeldByWeapon" : "CARLRPG.Gear.HeldByShield",
     }));
     return {
@@ -494,16 +567,23 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
       addBar: !showBonuses || !showDebuffs || !showConsumable,
       potionLike: c.kind === "potion" || c.kind === "other",
       spellLike: c.kind === "scroll" || c.kind === "spellbook",
-      consumableSummary: c.kind === "potion" ? game.i18n.localize("CARLRPG.ItemSheet.Consumable.SicknessNote") : "",
+      consumableSummary:
+        c.kind === "potion" ? game.i18n.localize("CARLRPG.ItemSheet.Consumable.SicknessNote") : "",
       parts,
       partsHidden: Object.values(parts).some((v) => !v),
       cures,
-      cureChoices: Object.keys(cfg.debuffs).filter((key) => !(c.cures ?? []).includes(key))
+      cureChoices: Object.keys(cfg.debuffs)
+        .filter((key) => !(c.cures ?? []).includes(key))
         .map((key) => ({ key, label: debuffName(key) })),
       onlyWithNames: [...new Set([...weaponSkillNames, ...ownedAttacks])].sort(),
       debuffTemplate: JSON.stringify({
-        debuffKey: "", stacks: 1, critOnly: false, amazingSuccessOnly: !!weaponSkill, label: "",
-        skills: weaponSkill ? [weaponSkill] : [], handToHandOnly: false,
+        debuffKey: "",
+        stacks: 1,
+        critOnly: false,
+        amazingSuccessOnly: !!weaponSkill,
+        label: "",
+        skills: weaponSkill ? [weaponSkill] : [],
+        handToHandOnly: false,
       }),
     };
   }
@@ -519,24 +599,41 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const t = (key, data) => (data ? game.i18n.format(key, data) : game.i18n.localize(key));
     const chips = [];
     const weaponSkill = String(sys.weaponSkill ?? "").trim();
-    if (weaponSkill) chips.push({ label: t("CARLRPG.ItemSheet.WeaponChip", { skill: weaponSkill }), tone: "accent" });
+    if (weaponSkill)
+      chips.push({
+        label: t("CARLRPG.ItemSheet.WeaponChip", { skill: weaponSkill }),
+        tone: "accent",
+      });
     // Where it's worn: "Head", "Held · Two-handed", "Belt".
     const worn = slotsOf(item).filter((s) => !(s === "held" && weaponSkill));
     if (worn.length && worn.length < Object.keys(CONFIG.CARLRPG.wearSlots).length) {
-      const names = worn.map((s) => (s === "accessory" && sys.accessoryKind
-        ? t(CONFIG.CARLRPG.accessoryKinds[sys.accessoryKind]) : t(CONFIG.CARLRPG.wearSlots[s])));
+      const names = worn.map((s) =>
+        s === "accessory" && sys.accessoryKind
+          ? t(CONFIG.CARLRPG.accessoryKinds[sys.accessoryKind])
+          : t(CONFIG.CARLRPG.wearSlots[s]),
+      );
       chips.push({ label: names.join(" / "), tone: "neutral" });
     } else if (worn.length) {
       chips.push({ label: t("CARLRPG.Gear.AnySlot"), tone: "neutral" });
     }
     if (isTwoHanded(item)) chips.push({ label: t("CARLRPG.Gear.TwoHanded"), tone: "neutral" });
     if (isShield(item)) {
-      chips.push({ label: t("CARLRPG.ShieldBlock.ShieldChip"), tone: "neutral", icon: "fas fa-shield" });
-      if (shieldDrState(item).broken) chips.push({ label: t("CARLRPG.ShieldBlock.Broken"), tone: "accent", icon: "fas fa-heart-crack" });
+      chips.push({
+        label: t("CARLRPG.ShieldBlock.ShieldChip"),
+        tone: "neutral",
+        icon: "fas fa-shield",
+      });
+      if (shieldDrState(item).broken)
+        chips.push({
+          label: t("CARLRPG.ShieldBlock.Broken"),
+          tone: "accent",
+          icon: "fas fa-heart-crack",
+        });
     }
     const kind = sys.consumable?.kind;
     if (kind) chips.push({ label: t(`CARLRPG.ItemSheet.KindChip.${kind}`), tone: "blue" });
-    if (sys.equipped) chips.push({ label: t("CARLRPG.Item.Equipped"), tone: "good", icon: "fas fa-check" });
+    if (sys.equipped)
+      chips.push({ label: t("CARLRPG.Item.Equipped"), tone: "good", icon: "fas fa-check" });
     chips.push({ label: `×${sys.quantity ?? 1}`, tone: "neutral" });
     return chips;
   }
@@ -551,7 +648,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     if (!base) return "";
     const stat = base.stat ? game.i18n.localize(cfg.statAbbreviations[base.stat] ?? base.stat) : "";
     const roll = [base.dice, stat].filter(Boolean).join(" + ");
-    const type = base.damageType ? game.i18n.localize(cfg.damageTypes[base.damageType] ?? base.damageType) : "";
+    const type = base.damageType
+      ? game.i18n.localize(cfg.damageTypes[base.damageType] ?? base.damageType)
+      : "";
     return [roll, type].filter(Boolean).join(" · ");
   }
 
@@ -575,10 +674,16 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     // the current value doesn't match an actual rendered tab, not just
     // when it's unset, or no tab ever ends up active.
     let activeTab = this.tabGroups?.primary;
-    if (!activeTab || !this.element.querySelector(`.tab[data-group="primary"][data-tab="${activeTab}"]`)) {
-      activeTab = this._getTabsConfig('primary')?.initial;
+    if (
+      !activeTab ||
+      !this.element.querySelector(`.tab[data-group="primary"][data-tab="${activeTab}"]`)
+    ) {
+      activeTab = this._getTabsConfig("primary")?.initial;
     }
-    if (activeTab && this.element.querySelector(`.tab[data-group="primary"][data-tab="${activeTab}"]`)) {
+    if (
+      activeTab &&
+      this.element.querySelector(`.tab[data-group="primary"][data-tab="${activeTab}"]`)
+    ) {
       this.changeTab(activeTab, "primary", { force: true, updatePosition: false });
     }
 
@@ -600,7 +705,8 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
         const path = input.dataset.addTo;
         if (!value || !path) return;
         const current = foundry.utils.getProperty(this.item, path) ?? [];
-        if (current.some((s) => String(s).trim().toLowerCase() === value.toLowerCase())) return this.render();
+        if (current.some((s) => String(s).trim().toLowerCase() === value.toLowerCase()))
+          return this.render();
         onAddArrayItem(event, { dataset: { path, template: JSON.stringify(value) } }, this.item);
       });
     }
@@ -689,7 +795,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     event.preventDefault();
     if (!isShield(this.item) || !this.item.system.shieldDamage) return;
     await repairShield(this.item);
-    ui.notifications.info(game.i18n.format("CARLRPG.ShieldBlock.Repaired", { name: this.item.name }));
+    ui.notifications.info(
+      game.i18n.format("CARLRPG.ShieldBlock.Repaired", { name: this.item.name }),
+    );
   }
 
   /** A Cure pill's ×: the consumable no longer cures that Debuff. */
@@ -751,20 +859,23 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     const input = this.element.querySelector(`[data-skill-choice-input="${index}"]`);
     const skillName = input?.value?.trim();
     if (!skillName) {
-      ui.notifications.warn(game.i18n.localize('CARLRPG.SkillChoice.NeedName'));
+      ui.notifications.warn(game.i18n.localize("CARLRPG.SkillChoice.NeedName"));
       return;
     }
     const newChange = {
-      targetType: 'skillRank',
+      targetType: "skillRank",
       target: skillName,
-      mode: 'add',
+      mode: "add",
       value: String(Number(grant.amount) || 1),
       label: grant.category
-        ? game.i18n.format('CARLRPG.SkillChoice.ResolvedLabel', { category: grant.category })
-        : '',
+        ? game.i18n.format("CARLRPG.SkillChoice.ResolvedLabel", { category: grant.category })
+        : "",
     };
     const changes = [...foundry.utils.deepClone(this.item._source.system.changes ?? []), newChange];
     const remainingGrants = grants.filter((_, i) => i !== index);
-    await this.item.update({ 'system.changes': changes, 'system.skillChoiceGrants': remainingGrants });
+    await this.item.update({
+      "system.changes": changes,
+      "system.skillChoiceGrants": remainingGrants,
+    });
   }
 }

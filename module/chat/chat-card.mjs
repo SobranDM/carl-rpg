@@ -20,12 +20,30 @@ export function getCarlSpeaker(actor, token = null) {
 }
 
 async function renderShell({
-  title, subtitle, img, badge = null, body = "", footer = null,
-  rolls = [], rollMeta = [], extraRollRows = [], description = "", isPrivate = false,
+  title,
+  subtitle,
+  img,
+  badge = null,
+  body = "",
+  footer = null,
+  rolls = [],
+  rollMeta = [],
+  extraRollRows = [],
+  description = "",
+  isPrivate = false,
 }) {
   const { renderTemplate } = foundry.applications.handlebars;
   const rollRows = await buildRollRows(rolls, rollMeta, { isPrivate, extraRows: extraRollRows });
-  return renderTemplate(SHELL_TEMPLATE, { title, subtitle, img, badge, body, footer, rollRows, description });
+  return renderTemplate(SHELL_TEMPLATE, {
+    title,
+    subtitle,
+    img,
+    badge,
+    body,
+    footer,
+    rollRows,
+    description,
+  });
 }
 
 /**
@@ -36,10 +54,34 @@ async function renderShell({
  * @param {boolean} [isPrivate]  A blind roll's card hides its numbers.
  * @returns {Promise<string>}
  */
-export function renderRollCard({
-  rolls = [], rollMeta = [], extraRollRows = [], title, subtitle, img, badge, body = "", footer, description = "",
-}, isPrivate = false) {
-  return renderShell({ title, subtitle, img, badge, body, footer, rolls, rollMeta, extraRollRows, description, isPrivate });
+export function renderRollCard(
+  {
+    rolls = [],
+    rollMeta = [],
+    extraRollRows = [],
+    title,
+    subtitle,
+    img,
+    badge,
+    body = "",
+    footer,
+    description = "",
+  },
+  isPrivate = false,
+) {
+  return renderShell({
+    title,
+    subtitle,
+    img,
+    badge,
+    body,
+    footer,
+    rolls,
+    rollMeta,
+    extraRollRows,
+    description,
+    isPrivate,
+  });
 }
 
 /**
@@ -63,14 +105,40 @@ export function renderRollCard({
  * @param {string[]} [options.whisper]
  */
 export async function createRollMessage({
-  rolls = [], rollMeta = [], extraRollRows = [], title, subtitle, img, badge, body = "", footer, description = "",
-  actor, token, flags = {}, whisper, messageMode, speaker,
+  rolls = [],
+  rollMeta = [],
+  extraRollRows = [],
+  title,
+  subtitle,
+  img,
+  badge,
+  body = "",
+  footer,
+  description = "",
+  actor,
+  token,
+  flags = {},
+  whisper,
+  messageMode,
+  speaker,
 } = {}) {
   // v14: ChatMessage#applyRollMode/CONST.DICE_ROLL_MODES are deprecated in
   // favor of ChatMessage.applyMode's "public"|"self"|"gm"|"blind" modes.
   const mode = messageMode ?? game.settings.get("core", "messageMode");
   const isPrivate = mode === "blind";
-  const content = await renderShell({ title, subtitle, img, badge, body, footer, rolls, rollMeta, extraRollRows, description, isPrivate });
+  const content = await renderShell({
+    title,
+    subtitle,
+    img,
+    badge,
+    body,
+    footer,
+    rolls,
+    rollMeta,
+    extraRollRows,
+    description,
+    isPrivate,
+  });
   const messageData = {
     speaker: speaker ?? getCarlSpeaker(actor, token),
     rolls,
@@ -99,7 +167,17 @@ function noted(actor, message) {
  * Create a non-roll card (item descriptions, GM notices, etc.).
  */
 export async function createCardMessage({
-  title, subtitle, img, badge, body = "", footer, actor, token, flags = {}, whisper, speaker,
+  title,
+  subtitle,
+  img,
+  badge,
+  body = "",
+  footer,
+  actor,
+  token,
+  flags = {},
+  whisper,
+  speaker,
 } = {}) {
   const content = await renderShell({ title, subtitle, img, badge, body, footer });
   const messageData = {
@@ -128,12 +206,24 @@ export async function createCardMessage({
  * @param {string[]} [options.whisper]
  */
 export async function createNoticeMessage({
-  title, subtitle, img, body = "", bodyHtml, actor, token, flags = {}, whisper,
+  title,
+  subtitle,
+  img,
+  body = "",
+  bodyHtml,
+  actor,
+  token,
+  flags = {},
+  whisper,
 } = {}) {
   return createCardMessage({
-    title, subtitle, img,
+    title,
+    subtitle,
+    img,
     body: bodyHtml ?? (body ? `<p>${foundry.utils.escapeHTML(body)}</p>` : ""),
-    actor, token, whisper,
+    actor,
+    token,
+    whisper,
     flags: { kind: "notice", ...flags },
   });
 }

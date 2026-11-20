@@ -12,7 +12,6 @@ import CarlRPGRankedItemBase from "./ranked-item-base.mjs";
  * not here.
  */
 export default class CarlRPGDamageEffect extends CarlRPGRankedItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const schema = super.defineSchema();
@@ -22,7 +21,7 @@ export default class CarlRPGDamageEffect extends CarlRPGRankedItemBase {
     // empty row) and dropped from the prepared list (prepareBaseData).
     schema.parentSkills = new fields.ArrayField(
       new fields.StringField({ required: true, blank: true }),
-      { required: false, initial: [] }
+      { required: false, initial: [] },
     );
 
     schema.cooldown = new fields.StringField({ required: false, blank: true, initial: "" });

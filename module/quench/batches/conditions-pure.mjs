@@ -33,7 +33,10 @@ export default function register(quench) {
 
       describe("resolveTargetEffectLabel", function () {
         it("an explicit label override wins", function () {
-          assert.equal(resolveTargetEffectLabel({ label: "Custom Text", debuffKey: "poisoned" }), "Custom Text");
+          assert.equal(
+            resolveTargetEffectLabel({ label: "Custom Text", debuffKey: "poisoned" }),
+            "Custom Text",
+          );
         });
 
         it("falls back to the localized CONFIG.CARLRPG.debuffs label", function () {
@@ -43,7 +46,10 @@ export default function register(quench) {
         });
 
         it("falls back to the raw key for an unknown debuffKey", function () {
-          assert.equal(resolveTargetEffectLabel({ debuffKey: "totally-made-up" }), "totally-made-up");
+          assert.equal(
+            resolveTargetEffectLabel({ debuffKey: "totally-made-up" }),
+            "totally-made-up",
+          );
         });
       });
     },

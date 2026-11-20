@@ -31,8 +31,19 @@ import { fileURLToPath } from "node:url";
 
 // The modern pdf.js build needs built-ins Node may lack; in place before it loads.
 import "../../module/pdf-import/pdf-polyfills.mjs";
-import { imageToRGBA, imageTransform, loadMapImage, orientRGBA } from "../../module/pdf-import/maps.mjs";
-import { buildMatcher, MATCH_TYPES, matchKind, SYSTEM_PACKS, TIERS } from "../../module/pdf-import/compendium-match.mjs";
+import {
+  imageToRGBA,
+  imageTransform,
+  loadMapImage,
+  orientRGBA,
+} from "../../module/pdf-import/maps.mjs";
+import {
+  buildMatcher,
+  MATCH_TYPES,
+  matchKind,
+  SYSTEM_PACKS,
+  TIERS,
+} from "../../module/pdf-import/compendium-match.mjs";
 import { parseDebuffText } from "../../module/pdf-import/debuff-text.mjs";
 import { sectionFolders } from "../../module/pdf-import/sections.mjs";
 import { checkImageQuality } from "../../module/pdf-import/quality.mjs";
@@ -78,7 +89,10 @@ function encodePng({ width, height, data }) {
   const rows = Buffer.alloc((width * 4 + 1) * height);
   for (let y = 0; y < height; y++) {
     rows[y * (width * 4 + 1)] = 0;
-    Buffer.from(data.buffer, data.byteOffset + y * width * 4, width * 4).copy(rows, y * (width * 4 + 1) + 1);
+    Buffer.from(data.buffer, data.byteOffset + y * width * 4, width * 4).copy(
+      rows,
+      y * (width * 4 + 1) + 1,
+    );
   }
   return Buffer.concat([
     Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
@@ -103,7 +117,9 @@ async function writeMaps(pdfDoc, OPS, maps, dir) {
     const upright = orientRGBA(imageToRGBA(img), img.width, img.height, t);
     const file = path.join(dir, `p${String(map.page).padStart(3, "0")}-${slugify(map.name)}.png`);
     fs.writeFileSync(file, encodePng(upright));
-    console.log(`  p${map.page} ${upright.width}x${upright.height} (stored ${img.width}x${img.height}, kind ${img.kind}) -> ${path.basename(file)}`);
+    console.log(
+      `  p${map.page} ${upright.width}x${upright.height} (stored ${img.width}x${img.height}, kind ${img.kind}) -> ${path.basename(file)}`,
+    );
     page.cleanup();
   }
 }
@@ -137,19 +153,27 @@ function systemPackCandidates() {
 function summarize(found) {
   const attacks = found.mobs.flatMap((m) => m.data.system.attacks ?? []);
   const byTrigger = {};
-  for (const te of attacks.flatMap((a) => a.targetEffects ?? [])) byTrigger[te.trigger] = (byTrigger[te.trigger] ?? 0) + 1;
+  for (const te of attacks.flatMap((a) => a.targetEffects ?? []))
+    byTrigger[te.trigger] = (byTrigger[te.trigger] ?? 0) + 1;
   const textOnly = {};
   for (const a of attacks) {
-    for (const t of parseDebuffText(a.effect).textOnly) textOnly[t.reason] = (textOnly[t.reason] ?? 0) + 1;
+    for (const t of parseDebuffText(a.effect).textOnly)
+      textOnly[t.reason] = (textOnly[t.reason] ?? 0) + 1;
   }
-  console.log(`attacks: ${attacks.length}; with Debuffs: ${attacks.filter((a) => a.targetEffects?.length).length}`);
+  console.log(
+    `attacks: ${attacks.length}; with Debuffs: ${attacks.filter((a) => a.targetEffects?.length).length}`,
+  );
   console.log(`  Debuffs by trigger: ${JSON.stringify(byTrigger)}`);
   console.log(`  Armor-Piercing attacks: ${attacks.filter((a) => a.armorPiercing).length}`);
   const total = Object.values(textOnly).reduce((s, n) => s + n, 0);
   console.log(`  text-only Debuffs: ${total} ${JSON.stringify(textOnly)}`);
   const gearDebuffs = found.gear.flatMap((g) => g.data.system.targetEffects ?? []);
-  const upgradeDebuffs = found.spells.flatMap((s) => s.data.system.upgrades.flatMap((u) => u.targetEffects ?? []));
-  console.log(`gear Debuffs: ${gearDebuffs.length}; spell upgrade Debuffs: ${upgradeDebuffs.length}`);
+  const upgradeDebuffs = found.spells.flatMap((s) =>
+    s.data.system.upgrades.flatMap((u) => u.targetEffects ?? []),
+  );
+  console.log(
+    `gear Debuffs: ${gearDebuffs.length}; spell upgrade Debuffs: ${upgradeDebuffs.length}`,
+  );
 
   // Where the importer files each Mob (sections.mjs), in book order.
   const labels = {
@@ -160,13 +184,17 @@ function summarize(found) {
   };
   const filed = new Map();
   for (const mob of found.mobs) {
-    const key = sectionFolders(mob.section, labels).map((f) => f.name).join(" / ");
+    const key = sectionFolders(mob.section, labels)
+      .map((f) => f.name)
+      .join(" / ");
     if (!filed.has(key)) filed.set(key, []);
     filed.get(key).push(mob.page);
   }
   console.log("mob folders:");
   for (const [key, pages] of filed)
-    console.log(`  ${String(pages.length).padStart(3)}  ${key}  (pp. ${Math.min(...pages)}-${Math.max(...pages)})`);
+    console.log(
+      `  ${String(pages.length).padStart(3)}  ${key}  (pp. ${Math.min(...pages)}-${Math.max(...pages)})`,
+    );
 
   const match = buildMatcher(systemPackCandidates());
   const matched = { spells: 0, skills: 0, consumables: 0, gear: 0 };
@@ -195,7 +223,9 @@ async function main() {
   const withMaps = args.includes("--maps");
   const [pdf, outArg] = args.filter((a) => a !== "--maps");
   if (!pdf || !fs.existsSync(pdf)) {
-    console.error("Usage: node tools/pdf-import/extract-rulebook.mjs <rulebook.pdf> [outDir] [--maps]");
+    console.error(
+      "Usage: node tools/pdf-import/extract-rulebook.mjs <rulebook.pdf> [outDir] [--maps]",
+    );
     process.exit(1);
   }
   const pdfjs = await import("../../module/vendor/pdfjs/pdf.mjs");
@@ -216,9 +246,13 @@ async function main() {
   const outDir = path.resolve(outArg ?? path.join(ROOT, "pdf_local", known.id));
 
   const quality = await checkImageQuality(pdfDoc, pdfjs.OPS);
-  console.log(`image quality: median ${quality.ppi === null ? "n/a" : Math.round(quality.ppi)} ppi over ${quality.images} pictures`);
+  console.log(
+    `image quality: median ${quality.ppi === null ? "n/a" : Math.round(quality.ppi)} ppi over ${quality.images} pictures`,
+  );
   if (quality.lowQuality) {
-    console.error(localize("CARLRPG.PdfImport.LowQuality", { title: book, ppi: Math.round(quality.ppi) }));
+    console.error(
+      localize("CARLRPG.PdfImport.LowQuality", { title: book, ppi: Math.round(quality.ppi) }),
+    );
     process.exit(2);
   }
 
@@ -230,7 +264,10 @@ async function main() {
     fs.rmSync(dir, { recursive: true, force: true });
     fs.mkdirSync(dir, { recursive: true });
     for (const doc of docs) {
-      const file = path.join(dir, `p${String(doc.page).padStart(3, "0")}-${slugify(doc.name)}.json`);
+      const file = path.join(
+        dir,
+        `p${String(doc.page).padStart(3, "0")}-${slugify(doc.name)}.json`,
+      );
       fs.writeFileSync(file, JSON.stringify(doc.data, null, 2) + "\n");
     }
     console.log(`${kind}: ${docs.length}`);

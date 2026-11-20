@@ -26,7 +26,9 @@ export async function promptParentSkillChoice(damageEffectItem, candidates) {
   }));
   buttons.push(cancelButton());
   return showCarlDialog({
-    title: game.i18n.format("CARLRPG.Dialog.ChooseParentSkillTitle", { name: damageEffectItem.name }),
+    title: game.i18n.format("CARLRPG.Dialog.ChooseParentSkillTitle", {
+      name: damageEffectItem.name,
+    }),
     content: `<p>${game.i18n.format("CARLRPG.Dialog.ChooseParentSkillBody", { name: damageEffectItem.name })}</p>`,
     buttons,
   });
@@ -51,7 +53,11 @@ export async function promptParentSkillChoice(damageEffectItem, candidates) {
  * @param {string[]} [extraSourceItemIds]
  * @returns {object[]}
  */
-export function collectApplicableConditionalModifiers(actorSystem, skillName = null, extraSourceItemIds = []) {
+export function collectApplicableConditionalModifiers(
+  actorSystem,
+  skillName = null,
+  extraSourceItemIds = [],
+) {
   const list = actorSystem?.conditionalModifiers ?? [];
   const skillKey = skillName ? slugifySkillName(skillName) : null;
   return list.filter((cm) => {
@@ -75,9 +81,16 @@ export function buildStatChoice(governing = "") {
   const stats = CONFIG.CARLRPG.stats ?? {};
   const keys = [...(governing && !(governing in stats) ? [governing] : []), ...Object.keys(stats)];
   const options = keys.map((key) => ({
-    key, label: game.i18n.localize(stats[key] ?? key), selected: key === governing,
+    key,
+    label: game.i18n.localize(stats[key] ?? key),
+    selected: key === governing,
   }));
-  if (!governing) options.unshift({ key: "", label: game.i18n.localize("CARLRPG.Dialog.NoStat"), selected: true });
+  if (!governing)
+    options.unshift({
+      key: "",
+      label: game.i18n.localize("CARLRPG.Dialog.NoStat"),
+      selected: true,
+    });
   return { selected: governing, governing, options };
 }
 
@@ -101,9 +114,15 @@ export function chosenStat(options, governing = "") {
  */
 export function offStatNote(statKey, governing = "") {
   if ((statKey ?? "") === (governing ?? "")) return "";
-  const abbr = (key) => (key ? game.i18n.localize(CONFIG.CARLRPG.statAbbreviations?.[key] ?? key) : game.i18n.localize("CARLRPG.Dialog.NoStat"));
+  const abbr = (key) =>
+    key
+      ? game.i18n.localize(CONFIG.CARLRPG.statAbbreviations?.[key] ?? key)
+      : game.i18n.localize("CARLRPG.Dialog.NoStat");
   const text = governing
-    ? game.i18n.format("CARLRPG.Dialog.OffStatNote", { stat: abbr(statKey), governing: abbr(governing) })
+    ? game.i18n.format("CARLRPG.Dialog.OffStatNote", {
+        stat: abbr(statKey),
+        governing: abbr(governing),
+      })
     : game.i18n.format("CARLRPG.Dialog.OffStatNoteNoGoverning", { stat: abbr(statKey) });
   return `<p class="carl-off-stat-note"><i class="fas fa-shuffle" aria-hidden="true"></i> ${foundry.utils.escapeHTML(text)}</p>`;
 }
@@ -164,16 +183,28 @@ export async function promptRollOptions(options = {}) {
   let selected = skillPicker?.selected ?? null;
   const contextFor = (args) => ({
     // The help icon's tooltip as plain text, for screen readers.
-    difficultyHelpText: game.i18n.localize("CARLRPG.Dialog.DifficultyPresetHelp").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
-    difficulty: args.difficulty, showDifficulty: args.showDifficulty, defaultAdvantage: args.defaultAdvantage,
-    conditions: args.conditionalModifiers, damageEffectChoices: args.damageEffectChoices,
-    manaCostChoices: args.manaCostChoices, debuffRows: args.debuffRows, showRollMode: args.showRollMode,
+    difficultyHelpText: game.i18n
+      .localize("CARLRPG.Dialog.DifficultyPresetHelp")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+    difficulty: args.difficulty,
+    showDifficulty: args.showDifficulty,
+    defaultAdvantage: args.defaultAdvantage,
+    conditions: args.conditionalModifiers,
+    damageEffectChoices: args.damageEffectChoices,
+    manaCostChoices: args.manaCostChoices,
+    debuffRows: args.debuffRows,
+    showRollMode: args.showRollMode,
     difficultyLabel: args.difficultyLabel,
     // Where the pre-filled Difficulty came from ("Unopposed: 16"), or nothing.
     difficultyBasis: difficultyBasisOf(args.difficultyPresets),
-    areaTargets: args.areaTargets, isArea: args.isArea, weaponNote: args.weaponNote,
+    areaTargets: args.areaTargets,
+    isArea: args.isArea,
+    weaponNote: args.weaponNote,
     // In a fight: whether this roll spends one of the roller's Actions.
-    showUsesAction: args.usesAction !== null, usesAction: !!args.usesAction,
+    showUsesAction: args.usesAction !== null,
+    usesAction: !!args.usesAction,
     statChoice: args.statChoice,
     // Woozy's "no DEX Mod" row only matters while DEX is picked.
     statIsDex: (args.statChoice?.selected ?? "dex") === "dex",
@@ -207,7 +238,10 @@ export async function promptRollOptions(options = {}) {
         const kept = readKeptFields(root);
         selected = args ? id : null;
         current = withDefaults({ ...(args ?? {}), title });
-        const html = await foundry.applications.handlebars.renderTemplate(ROLL_OPTIONS_TEMPLATE, contextFor(current));
+        const html = await foundry.applications.handlebars.renderTemplate(
+          ROLL_OPTIONS_TEMPLATE,
+          contextFor(current),
+        );
         if (ticket !== pending) return;
         root.querySelector(".carl-dialog-body")?.replaceWith(htmlToElement(html));
         restoreKeptFields(root, kept);
@@ -230,23 +264,35 @@ export async function promptRollOptions(options = {}) {
     if (Object.values(changeConditions).some(Boolean)) checked.add(cm.id);
   }
 
-  const checkedDebuffs = new Set(debuffRows.filter((row) => result.debuffs?.[row.id]).map((row) => row.id));
+  const checkedDebuffs = new Set(
+    debuffRows.filter((row) => result.debuffs?.[row.id]).map((row) => row.id),
+  );
 
   return {
     checkedDebuffs,
     advantage: result.advantage ?? "normal",
     // An emptied number box comes back null (FormDataExtended): no Difficulty.
-    difficulty: Number.isFinite(Number(result.difficulty ?? NaN)) && result.difficulty !== "" ? Number(result.difficulty) : null,
+    difficulty:
+      Number.isFinite(Number(result.difficulty ?? NaN)) && result.difficulty !== ""
+        ? Number(result.difficulty)
+        : null,
     modifier: Number(result.modifier) || 0,
     checked,
     damageEffectId: result.damageEffectId || null,
-    manaCostChoice: result.manaCostChoice !== undefined && result.manaCostChoice !== "" ? Number(result.manaCostChoice) : 0,
+    manaCostChoice:
+      result.manaCostChoice !== undefined && result.manaCostChoice !== ""
+        ? Number(result.manaCostChoice)
+        : 0,
     isArea: areaTargets.length ? !!result.isArea : false,
-    splash: new Set(areaTargets.map((_, i) => i).filter((i) => result.isArea && result.splash?.[i])),
+    splash: new Set(
+      areaTargets.map((_, i) => i).filter((i) => result.isArea && result.splash?.[i]),
+    ),
     // null when the box wasn't offered (not in a fight).
     usesAction: usesAction === null ? null : !!result.usesAction,
     // The Stat picked (Off-Stat), when the dialog offered one.
-    ...(statChoice ? { statKey: typeof result.stat === "string" ? result.stat : statChoice.selected } : {}),
+    ...(statChoice
+      ? { statKey: typeof result.stat === "string" ? result.stat : statChoice.selected }
+      : {}),
     ...(skillPicker ? { skillId: selected } : {}),
   };
 }
@@ -255,15 +301,40 @@ const ROLL_OPTIONS_TEMPLATE = "systems/carl-rpg/templates/dialog/roll-options.hb
 
 /** promptRollOptions' arguments with their defaults filled in. */
 function withDefaults({
-  title, difficulty = null, showDifficulty = true, defaultAdvantage = null,
-  conditionalModifiers = [], damageEffectChoices = [], manaCostChoices = [],
-  debuffRows = [], showRollMode = true, difficultyLabel = null,
-  difficultyPresets = [], areaTargets = [], isArea = false, weaponNote = "", usesAction = null, statChoice = null,
+  title,
+  difficulty = null,
+  showDifficulty = true,
+  defaultAdvantage = null,
+  conditionalModifiers = [],
+  damageEffectChoices = [],
+  manaCostChoices = [],
+  debuffRows = [],
+  showRollMode = true,
+  difficultyLabel = null,
+  difficultyPresets = [],
+  areaTargets = [],
+  isArea = false,
+  weaponNote = "",
+  usesAction = null,
+  statChoice = null,
 } = {}) {
   return {
-    title, difficulty, showDifficulty, defaultAdvantage, conditionalModifiers, damageEffectChoices,
-    manaCostChoices, debuffRows, showRollMode, difficultyLabel, difficultyPresets, areaTargets, isArea, weaponNote,
-    usesAction, statChoice,
+    title,
+    difficulty,
+    showDifficulty,
+    defaultAdvantage,
+    conditionalModifiers,
+    damageEffectChoices,
+    manaCostChoices,
+    debuffRows,
+    showRollMode,
+    difficultyLabel,
+    difficultyPresets,
+    areaTargets,
+    isArea,
+    weaponNote,
+    usesAction,
+    statChoice,
   };
 }
 
@@ -329,7 +400,10 @@ function wireRollOptions(root) {
   if (!(root instanceof HTMLElement)) return;
   const area = root.querySelector("[data-carl-area-toggle]");
   const splash = root.querySelector(".carl-splash-targets");
-  if (area && splash) area.addEventListener("change", () => { splash.style.display = area.checked ? "" : "none"; });
+  if (area && splash)
+    area.addEventListener("change", () => {
+      splash.style.display = area.checked ? "" : "none";
+    });
   // Off-Stat: Woozy's "no DEX Mod" row only while DEX is the Stat rolled.
   const stat = root.querySelector('select[name="stat"]');
   if (stat) {

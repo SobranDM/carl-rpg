@@ -27,7 +27,10 @@ const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/target-effects-footer.h
  */
 export async function buildTargetEffectsFooter(targetEffects) {
   const { renderTemplate } = foundry.applications.handlebars;
-  const effects = targetEffects.map((te) => ({ ...te, displayLabel: resolveTargetEffectLabel(te) }));
+  const effects = targetEffects.map((te) => ({
+    ...te,
+    displayLabel: resolveTargetEffectLabel(te),
+  }));
   return renderTemplate(FOOTER_TEMPLATE, { effects });
 }
 
@@ -82,11 +85,15 @@ export async function onApplyTargetEffects(event, message) {
   for (const actor of actors.values()) {
     // An Immunity to the whole hit also ignores its Debuffs (p.93).
     if (isImmuneToAllDamage(damageByType, actor)) {
-      ui.notifications.info(game.i18n.format("CARLRPG.Targets.ImmuneNoEffects", { name: actor.name }));
+      ui.notifications.info(
+        game.i18n.format("CARLRPG.Targets.ImmuneNoEffects", { name: actor.name }),
+      );
       continue;
     }
     if (!takesConditions(actor)) {
-      ui.notifications.info(game.i18n.format("CARLRPG.Vehicle.ImmuneToDebuffs", { name: actor.name }));
+      ui.notifications.info(
+        game.i18n.format("CARLRPG.Vehicle.ImmuneToDebuffs", { name: actor.name }),
+      );
       continue;
     }
     for (const te of targetEffects) {
@@ -101,7 +108,9 @@ export async function onApplyTargetEffects(event, message) {
   }
 
   await updateCardMessage(message, { flags: { "carl-rpg": { targetEffectsApplied: true } } });
-  ui.notifications.info(game.i18n.format("CARLRPG.TargetEffects.AppliedNotice", { count: actors.size }));
+  ui.notifications.info(
+    game.i18n.format("CARLRPG.TargetEffects.AppliedNotice", { count: actors.size }),
+  );
 }
 
 /**
@@ -111,14 +120,18 @@ export async function onApplyTargetEffects(event, message) {
  * disabled state for whenever a linked Evade roll (module/chat/
  * evade-link-card.mjs) has determined the real outcome instead.
  */
-export const targetEffectsActionEntries = [{
-  action: "applyTargetEffects",
-  buttonSelector: ".carl-apply-target-effects",
-  wrapperSelector: ".carl-target-effects",
-  canAct: canApplyTargetEffects,
-  doneFlag: "targetEffectsApplied",
-  doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Applied")}`,
-  supersededFlag: "targetEffectsSuperseded",
-  supersededLabel: () => `<i class="fas fa-ban"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Superseded")}`,
-  onClick: onApplyTargetEffects,
-}];
+export const targetEffectsActionEntries = [
+  {
+    action: "applyTargetEffects",
+    buttonSelector: ".carl-apply-target-effects",
+    wrapperSelector: ".carl-target-effects",
+    canAct: canApplyTargetEffects,
+    doneFlag: "targetEffectsApplied",
+    doneLabel: () =>
+      `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Applied")}`,
+    supersededFlag: "targetEffectsSuperseded",
+    supersededLabel: () =>
+      `<i class="fas fa-ban"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Superseded")}`,
+    onClick: onApplyTargetEffects,
+  },
+];

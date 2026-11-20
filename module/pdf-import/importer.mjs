@@ -57,7 +57,10 @@ async function sceneFolder(book, title) {
   const found =
     top.find((f) => bookOfFlag(f.getFlag(SCOPE, FLAG)) === book) ??
     top.find((f) => f.name === title) ??
-    top.find((f) => !f.getFlag(SCOPE, FLAG) && slugify(f.name) !== book && bookIdOf(slugify(f.name)) === book);
+    top.find(
+      (f) =>
+        !f.getFlag(SCOPE, FLAG) && slugify(f.name) !== book && bookIdOf(slugify(f.name)) === book,
+    );
   if (found) {
     if (!found.getFlag(SCOPE, FLAG)) await found.setFlag(SCOPE, FLAG, { book });
     return found;
@@ -76,12 +79,18 @@ async function sceneFolder(book, title) {
 export function findBookPack(book, documentName) {
   // No book, no pack (an unflagged pack's undefined would match).
   if (!book) return null;
-  const world = game.packs.filter((p) => p.metadata.packageType === "world" && p.documentName === documentName);
+  const world = game.packs.filter(
+    (p) => p.metadata.packageType === "world" && p.documentName === documentName,
+  );
   const named = (p) => {
     const m = p.metadata.name.match(/^pdf-import-(.+)-([a-z]+)$/);
     return !!m && m[2] === PACK_KINDS[documentName] && bookIdOf(m[1]) === book;
   };
-  return world.find((p) => bookOfFlag(p.metadata.flags?.[SCOPE]?.[FLAG]) === book) ?? world.find(named) ?? null;
+  return (
+    world.find((p) => bookOfFlag(p.metadata.flags?.[SCOPE]?.[FLAG]) === book) ??
+    world.find(named) ??
+    null
+  );
 }
 
 function packName(book, documentName) {
@@ -105,8 +114,14 @@ async function bookPack(book, title, documentName) {
   });
   // Grouped in the Compendiums sidebar under the book's name.
   const folder =
-    game.folders.find((f) => f.type === "Compendium" && bookOfFlag(f.getFlag(SCOPE, FLAG)) === book) ??
-    (await Folder.implementation.create({ name: title, type: "Compendium", flags: importFlags(book) }));
+    game.folders.find(
+      (f) => f.type === "Compendium" && bookOfFlag(f.getFlag(SCOPE, FLAG)) === book,
+    ) ??
+    (await Folder.implementation.create({
+      name: title,
+      type: "Compendium",
+      flags: importFlags(book),
+    }));
   await pack.configure({ folder: folder.id });
   return pack;
 }
@@ -173,8 +188,13 @@ async function mobPlaces(pack, mobs, book) {
   const places = new Map();
   for (const [folder, list] of byFolder) {
     list
-      .sort((a, b) => (a.data.system?.level ?? 0) - (b.data.system?.level ?? 0) || a.name.localeCompare(b.name))
-      .forEach((mob, i) => places.set(`${mob.data.type}:${mob.name}`, { folder, sort: (i + 1) * 1000 }));
+      .sort(
+        (a, b) =>
+          (a.data.system?.level ?? 0) - (b.data.system?.level ?? 0) || a.name.localeCompare(b.name),
+      )
+      .forEach((mob, i) =>
+        places.set(`${mob.data.type}:${mob.name}`, { folder, sort: (i + 1) * 1000 }),
+      );
   }
   return places;
 }
@@ -229,7 +249,12 @@ async function stamp(written, dataOf, update) {
  *   each document created or updated (an unchanged one too), with its entry.
  * @returns {Promise<{created: number, updated: number, skipped: string[]}>}
  */
-async function upsert(pack, docs, book, { place = async () => ({}), moveExisting = false, afterWrite = null } = {}) {
+async function upsert(
+  pack,
+  docs,
+  book,
+  { place = async () => ({}), moveExisting = false, afterWrite = null } = {},
+) {
   const cls = pack.documentClass;
   const options = { pack: pack.collection };
   const keyOf = (d) => `${d.type}:${d.name}`;
@@ -242,7 +267,9 @@ async function upsert(pack, docs, book, { place = async () => ({}), moveExisting
   for (const doc of dedupe(docs)) {
     const key = keyOf(doc.data);
     entries.set(key, doc);
-    const flags = foundry.utils.mergeObject(doc.data.flags ?? {}, importFlags(book, doc.page), { inplace: false });
+    const flags = foundry.utils.mergeObject(doc.data.flags ?? {}, importFlags(book, doc.page), {
+      inplace: false,
+    });
     const old = existing.get(key);
     if (old) {
       // Only what the import made and the GM left alone; a GM's own
@@ -260,7 +287,9 @@ async function upsert(pack, docs, book, { place = async () => ({}), moveExisting
       const data = { ...doc.data, folder: null, ...(await place(doc)), flags };
       // createData (a Boss's linked token) is sent on create only; it isn't
       // part of what's fingerprinted.
-      creates.push(doc.createData ? foundry.utils.mergeObject(data, doc.createData, { inplace: false }) : data);
+      creates.push(
+        doc.createData ? foundry.utils.mergeObject(data, doc.createData, { inplace: false }) : data,
+      );
     }
   }
   const made = creates.length ? ((await cls.createDocuments(creates, options)) ?? []) : [];
@@ -268,7 +297,11 @@ async function upsert(pack, docs, book, { place = async () => ({}), moveExisting
   const changed = updates.length ? ((await cls.updateDocuments(updates, options)) ?? []) : [];
   const byId = new Map(changed.map((d) => [d.id, d]));
   const written = [...made, ...updated.map((d) => byId.get(d.id) ?? d)];
-  await stamp(written, (d) => entries.get(keyOf(d))?.data, (stamps) => cls.updateDocuments(stamps, options));
+  await stamp(
+    written,
+    (d) => entries.get(keyOf(d))?.data,
+    (stamps) => cls.updateDocuments(stamps, options),
+  );
   if (afterWrite) {
     for (const doc of written) {
       const entry = entries.get(keyOf(doc));
@@ -298,9 +331,12 @@ function attackData(item) {
 export async function syncAttacks(actor, attacks) {
   const startSort = Math.max(0, ...actor.items.map((i) => i.sort ?? 0));
   const fresh = legacyAttackItems(attacks ?? [], { startSort });
-  const indexOf = (item) => (item.getFlag ? item.getFlag(SCOPE, LEGACY_FLAG) : item.flags?.[SCOPE]?.[LEGACY_FLAG]);
+  const indexOf = (item) =>
+    item.getFlag ? item.getFlag(SCOPE, LEGACY_FLAG) : item.flags?.[SCOPE]?.[LEGACY_FLAG];
   const freshByIndex = new Map(fresh.map((item) => [indexOf(item), item]));
-  const listed = actor.items.filter((i) => i.type === MOB_ATTACK_TYPE && Number.isInteger(indexOf(i)));
+  const listed = actor.items.filter(
+    (i) => i.type === MOB_ATTACK_TYPE && Number.isInteger(indexOf(i)),
+  );
   const taken = new Set();
   const updates = [];
   const deletes = [];
@@ -368,11 +404,22 @@ export async function matchCandidates(book) {
     const system = SYSTEM_PACKS.indexOf(pack.collection);
     // Another book's import (by its flag, else its name, as findBookPack),
     // else anything else (a module's, the GM's own).
-    const rulebook = !!ofBook || (pack.metadata.packageType === "world" && pack.metadata.name.startsWith("pdf-import-"));
+    const rulebook =
+      !!ofBook ||
+      (pack.metadata.packageType === "world" && pack.metadata.name.startsWith("pdf-import-"));
     const tier = system >= 0 ? TIERS.system : rulebook ? TIERS.rulebook : TIERS.other;
     let index;
     try {
-      index = await pack.getIndex({ fields: ["type", "system.consumable.kind", "system.weaponSkill", "system.category", "system.isHandToHand", "system.noWeapon"] });
+      index = await pack.getIndex({
+        fields: [
+          "type",
+          "system.consumable.kind",
+          "system.weaponSkill",
+          "system.category",
+          "system.isHandToHand",
+          "system.noWeapon",
+        ],
+      });
     } catch (err) {
       console.warn(`CarlRPG | rulebook import: couldn't read ${pack.collection}`, err);
       continue;
@@ -473,14 +520,17 @@ async function importAchievements(pack, pages, book) {
     const flags = importFlags(book, page.page);
     const old = existing.get(page.name);
     if (old) {
-      if (importState(old._source, old.flags?.[SCOPE]?.[FLAG]) !== "untouched") skipped.push(old.name);
+      if (importState(old._source, old.flags?.[SCOPE]?.[FLAG]) !== "untouched")
+        skipped.push(old.name);
       else {
         updates.push({ ...page.data, flags, _id: old.id });
         updated.push(old);
       }
     } else creates.push({ ...page.data, flags });
   }
-  const made = creates.length ? ((await entry.createEmbeddedDocuments("JournalEntryPage", creates)) ?? []) : [];
+  const made = creates.length
+    ? ((await entry.createEmbeddedDocuments("JournalEntryPage", creates)) ?? [])
+    : [];
   if (updates.length) await entry.updateEmbeddedDocuments("JournalEntryPage", updates);
   await stamp(
     [...made, ...updated.map((p) => entry.pages.get(p.id) ?? p)],
@@ -562,10 +612,14 @@ export async function importBook({ book, title, found, kinds, maps, pdfDoc, onPr
     const { entries, matched } = await preferCompendiumCopies(items, book);
     const folders = {};
     const folderFor = async (kind) =>
-      (folders[kind] ??= (await packFolder(pack, game.i18n.localize(`CARLRPG.PdfImport.Kind.${kind}`))).id);
+      (folders[kind] ??= (
+        await packFolder(pack, game.i18n.localize(`CARLRPG.PdfImport.Kind.${kind}`))
+      ).id);
     results.items = await withUnlockedPack(pack, () =>
       upsert(pack, entries, book, {
-        place: async (doc) => ({ folder: await folderFor(doc.data.type === "spell" ? "spells" : "gear") }),
+        place: async (doc) => ({
+          folder: await folderFor(doc.data.type === "spell" ? "spells" : "gear"),
+        }),
       }),
     );
     results.items.matched = matched;
@@ -588,7 +642,9 @@ export async function importBook({ book, title, found, kinds, maps, pdfDoc, onPr
   if (kinds.includes("achievements") && found.achievements.length) {
     step("achievements");
     const pack = await bookPack(book, title, "JournalEntry");
-    results.achievements = await withUnlockedPack(pack, () => importAchievements(pack, found.achievements, book));
+    results.achievements = await withUnlockedPack(pack, () =>
+      importAchievements(pack, found.achievements, book),
+    );
   }
   if (maps.length) {
     const label = game.i18n.localize("CARLRPG.PdfImport.Kind.maps");

@@ -82,7 +82,9 @@ export function canCommandPet(pet, user = game.user) {
   if (!isPet(pet) || pet.system.isMount || isMinion(pet)) return false;
   const owner = petOwner(pet);
   if (!owner) return false;
-  return user.isGM || (pet.testUserPermission(user, "OWNER") && owner.testUserPermission(user, "OWNER"));
+  return (
+    user.isGM || (pet.testUserPermission(user, "OWNER") && owner.testUserPermission(user, "OWNER"))
+  );
 }
 
 /**
@@ -124,7 +126,10 @@ export function commandSkillFor(owner) {
     const best = boxed.reduce((a, b) => (effectiveRank(b) > effectiveRank(a) ? b : a));
     return Promise.resolve({ skill: best, trained: true });
   }
-  return skillOrUntrainedCopy(owner, "Animal Handling", { img: "icons/svg/pawprint.svg", system: { governingStat: "cha" } });
+  return skillOrUntrainedCopy(owner, "Animal Handling", {
+    img: "icons/svg/pawprint.svg",
+    system: { governingStat: "cha" },
+  });
 }
 
 /**
@@ -139,7 +144,9 @@ export async function commandPet(pet, { skipDialog = false } = {}) {
   if (!isPet(pet) || pet.system.isMount) return null;
   const owner = petOwner(pet);
   const warn = (key, data) => {
-    ui.notifications.warn(game.i18n.format(`CARLRPG.Pet.Command.${key}`, { name: pet.name, ...data }));
+    ui.notifications.warn(
+      game.i18n.format(`CARLRPG.Pet.Command.${key}`, { name: pet.name, ...data }),
+    );
     return null;
   };
   // "One command spurs them all into action" (p.233): no Check to roll.
@@ -150,7 +157,9 @@ export async function commandPet(pet, { skipDialog = false } = {}) {
   if (!combat) return warn("NeedsCombat");
   const current = pet.system.command;
   if (current.combatId === combat.id && SETTLED_STATES.includes(current.state)) {
-    return warn("AlreadyResolved", { state: game.i18n.localize(CARLRPG.petCommandStates[current.state].label) });
+    return warn("AlreadyResolved", {
+      state: game.i18n.localize(CARLRPG.petCommandStates[current.state].label),
+    });
   }
 
   // Commanding is the crawler's Action (p.232; helpers/actions.mjs).
@@ -163,7 +172,11 @@ async function rollCommand(owner, pet, combat, { skipDialog }) {
   const { skill, trained } = await commandSkillFor(owner);
   const difficulty = commandDifficulty(pet);
   const result = await CarlDice.rollOpposedSkillCheck(owner, skill, {
-    difficulty, opponent: null, skipDialog, post: false, markUse: trained,
+    difficulty,
+    opponent: null,
+    skipDialog,
+    post: false,
+    markUse: trained,
   });
   if (!result) return null;
 
@@ -171,7 +184,9 @@ async function rollCommand(owner, pet, combat, { skipDialog }) {
   const stateLabel = game.i18n.localize(CARLRPG.petCommandStates[state].label);
   const body = [
     `<p><strong>${esc(stateLabel)}</strong>: ${esc(game.i18n.localize(`CARLRPG.Pet.Command.Rules.${state}`))}</p>`,
-    trained ? "" : `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Pet.Command.Untrained"))}</p>`,
+    trained
+      ? ""
+      : `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Pet.Command.Untrained"))}</p>`,
     result.debuffNote ?? "",
   ].join("");
   await createRollMessage({
@@ -185,7 +200,11 @@ async function rollCommand(owner, pet, combat, { skipDialog }) {
     actor: owner,
   });
   // Undone: the Pet back to how it was before.
-  noteUndo(owner, { t: "set", uuid: pet.uuid, data: { "system.command": foundry.utils.deepClone(pet.system.toObject().command) } });
+  noteUndo(owner, {
+    t: "set",
+    uuid: pet.uuid,
+    data: { "system.command": foundry.utils.deepClone(pet.system.toObject().command) },
+  });
   await pet.update({ "system.command": { state, combatId: combat.id, round: combat.round } });
   return state;
 }

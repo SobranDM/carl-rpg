@@ -94,7 +94,8 @@ export class RollParts {
   /** Substitute `@attr` from roll data so tooltips show numbers, not `@stats.str.mod`. */
   #resolveAtRefs(value) {
     if (typeof value !== "string" || !value.includes("@") || !this.rollData) return value;
-    const ReplaceFn = foundry?.dice?.Roll?.replaceFormulaData ?? globalThis.Roll?.replaceFormulaData;
+    const ReplaceFn =
+      foundry?.dice?.Roll?.replaceFormulaData ?? globalThis.Roll?.replaceFormulaData;
     if (typeof ReplaceFn !== "function") return value;
     const replaced = ReplaceFn(value, this.rollData, { missing: "0" });
     return normalizeRollPart(replaced);

@@ -2,13 +2,29 @@ import { CarlRPGActorSheet } from "../../sheets/actor-sheet.mjs";
 import CarlSpendStatPointsDialog from "../../apps/spend-stat-points-dialog.mjs";
 import CarlDice from "../../dice/dice.mjs";
 import { PVE_INITIATIVE } from "../../documents/combat.mjs";
-import { isCrawler, isMinion, isPet, rollsLikeCrawler, diesAtZeroHb } from "../../helpers/actor-kinds.mjs";
+import {
+  isCrawler,
+  isMinion,
+  isPet,
+  rollsLikeCrawler,
+  diesAtZeroHb,
+} from "../../helpers/actor-kinds.mjs";
 import { petLevelAfter, bondedPets } from "../../helpers/pets.mjs";
 import {
-  canCommandPet, commandSkillFor, commandStateForDegree, commandDifficulty, commandPet, describePetCommand, petFight,
+  canCommandPet,
+  commandSkillFor,
+  commandStateForDegree,
+  commandDifficulty,
+  commandPet,
+  describePetCommand,
+  petFight,
 } from "../../helpers/pet-command.mjs";
 import { baseBudget } from "../../helpers/actions.mjs";
-import { crawlerAttackDifficulty, mobAttackRow, rowEvadeDifficulty } from "../../helpers/attack-targets.mjs";
+import {
+  crawlerAttackDifficulty,
+  mobAttackRow,
+  rowEvadeDifficulty,
+} from "../../helpers/attack-targets.mjs";
 import { shouldBeDefeated } from "../../helpers/defeat.mjs";
 import {
   createTestCharacter,
@@ -32,7 +48,10 @@ const owned = (actor, name) => actor.items.find((i) => i.name === name);
 /** A started combat with these actors as combatants. */
 async function startedCombat(...actors) {
   const combat = await Combat.create({});
-  await combat.createEmbeddedDocuments("Combatant", actors.map((a) => ({ actorId: a.id })));
+  await combat.createEmbeddedDocuments(
+    "Combatant",
+    actors.map((a) => ({ actorId: a.id })),
+  );
   await combat.startCombat();
   return combat;
 }
@@ -55,20 +74,25 @@ export default function register(quench) {
               Object.fromEntries(Object.entries(sys.stats).map(([k, s]) => [k, s.value])),
               { str: 2, dex: 2, con: 2, int: 1, cha: 1 },
             );
-            for (const stat of Object.values(sys.stats)) assert.equal(stat.mod, 1, "every Mod is +1");
+            for (const stat of Object.values(sys.stats))
+              assert.equal(stat.mod, 1, "every Mod is +1");
             assert.equal(sys.attitude, "calm");
             assert.isFalse(sys.isMount);
             assert.isTrue(pet.prototypeToken.actorLink);
             assert.equal(sys.hb.max, 3, "Size 3 at Level 1");
             assert.equal(sys.hb.value, 3, "starts at full HB");
-            await waitFor(() => owned(pet, "Slice Attack"), { message: "Slice Attack never granted" });
+            await waitFor(() => owned(pet, "Slice Attack"), {
+              message: "Slice Attack never granted",
+            });
           } finally {
             await deleteTestActor(pet);
           }
         });
 
         it("HB slots: Size + Level - 1, up to 10; a mount stays at its Size; the override wins", async function () {
-          const pet = await createTestPet("hb", { system: { size: 3, attributes: { level: { value: 5 } } } });
+          const pet = await createTestPet("hb", {
+            system: { size: 3, attributes: { level: { value: 5 } } },
+          });
           try {
             assert.equal(pet.system.hb.max, 7);
             await pet.update({ "system.size": 5, "system.attributes.level.value": 10 });
@@ -93,9 +117,14 @@ export default function register(quench) {
               await pet.update({ "system.role": "aggressive" });
               assert.equal(pet.system.drEffective, 1);
               assert.equal(pet.system.specialAbilityAllowed, 0);
-              await waitFor(() => owned(pet, "Bite") && owned(pet, "Back Claw"), { message: "Bite / Back Claw never granted" });
+              await waitFor(() => owned(pet, "Bite") && owned(pet, "Back Claw"), {
+                message: "Bite / Back Claw never granted",
+              });
               const bite = pet.system.skills.bite;
-              assert.exists(bite.damage.flatBonuses.find((t) => t.formula === "4"), "+F damage on Bite");
+              assert.exists(
+                bite.damage.flatBonuses.find((t) => t.formula === "4"),
+                "+F damage on Bite",
+              );
 
               await pet.update({ "system.role": "utility" });
               assert.equal(pet.system.specialAbilityAllowed, 2);
@@ -145,8 +174,12 @@ export default function register(quench) {
                 { rankThreshold: 10, description: "ten", changes: [] },
                 { rankThreshold: 15, description: "fifteen", changes: [] },
               ];
-              const petSkill = await createTestItem(pet, "skill", "pet bite", { system: { rank: 0, category: "attack", upgrades } });
-              const crawlerSkill = await createTestItem(crawler, "skill", "crawler bite", { system: { rank: 2, category: "attack", upgrades } });
+              const petSkill = await createTestItem(pet, "skill", "pet bite", {
+                system: { rank: 0, category: "attack", upgrades },
+              });
+              const crawlerSkill = await createTestItem(crawler, "skill", "crawler bite", {
+                system: { rank: 2, category: "attack", upgrades },
+              });
               assert.equal(petSkill.system.rank, 7);
               assert.equal(petSkill.system.unlockedUpgrades.length, 1, "the Rank 5 Upgrade only");
               assert.equal(petSkill._source.system.rank, 0, "nothing is written");
@@ -166,7 +199,9 @@ export default function register(quench) {
         it("a Pet's Skills never advance: no use-mark, no Advancement Check", async function () {
           const pet = await createTestPet("advance");
           try {
-            const skill = await createTestItem(pet, "skill", "pet trick", { system: { category: "utility" } });
+            const skill = await createTestItem(pet, "skill", "pet trick", {
+              system: { category: "utility" },
+            });
             assert.isFalse(CarlDice.isAdvancedByUse(skill));
             await CarlDice.markForAdvancement(skill);
             assert.isFalse(pet.items.get(skill.id).system.marked);
@@ -194,12 +229,19 @@ export default function register(quench) {
           const owner = await createTestCharacter("owner");
           const other = await createTestCharacter("other");
           const pet = await createTestPet("levels", { system: { ownerId: owner.id } });
-          const mount = await createTestPet("mount", { system: { ownerId: owner.id, isMount: true } });
+          const mount = await createTestPet("mount", {
+            system: { ownerId: owner.id, isMount: true },
+          });
           const stranger = await createTestPet("stranger", { system: { ownerId: other.id } });
           try {
-            assert.sameMembers(bondedPets(owner).map((p) => p.id), [pet.id, mount.id]);
+            assert.sameMembers(
+              bondedPets(owner).map((p) => p.id),
+              [pet.id, mount.id],
+            );
             await owner.update({ "system.attributes.level.value": 2 });
-            await waitFor(() => pet.system.attributes.level.value === 3, { message: "the Pet never levelled" });
+            await waitFor(() => pet.system.attributes.level.value === 3, {
+              message: "the Pet never levelled",
+            });
             assert.equal(pet.system.bankedStatPoints, 6, "3 Stat Points per Pet Level");
             await settle(100);
             assert.equal(mount.system.attributes.level.value, 1);
@@ -263,13 +305,22 @@ export default function register(quench) {
           try {
             pve = await Combat.create({});
             await pve.createEmbeddedDocuments("Combatant", [{ actorId: mob.id }]);
-            await pve.createEmbeddedDocuments("Combatant", [crawler, pet].map((a) => ({ actorId: a.id })));
+            await pve.createEmbeddedDocuments(
+              "Combatant",
+              [crawler, pet].map((a) => ({ actorId: a.id })),
+            );
             await settle(150);
             assert.isFalse(pve.isPvP);
-            assert.equal(pve.combatants.find((c) => c.actorId === pet.id).initiative, PVE_INITIATIVE.character);
+            assert.equal(
+              pve.combatants.find((c) => c.actorId === pet.id).initiative,
+              PVE_INITIATIVE.character,
+            );
 
             pvp = await Combat.create({});
-            await pvp.createEmbeddedDocuments("Combatant", [crawler, pet].map((a) => ({ actorId: a.id })));
+            await pvp.createEmbeddedDocuments(
+              "Combatant",
+              [crawler, pet].map((a) => ({ actorId: a.id })),
+            );
             assert.isTrue(pvp.isPvP);
           } finally {
             await deleteTestCombat(pve);
@@ -281,12 +332,23 @@ export default function register(quench) {
         it("a Mob's Attack on a Pet offers the owner Roll Evade; a Pet's own Attack counts as a crawler's", async function () {
           const pet = await createTestPet("target");
           try {
-            const { row } = mobAttackRow({ id: "t0", target: { uuid: pet.uuid, actor: pet }, base: 14, ownRows: [] });
+            const { row } = mobAttackRow({
+              id: "t0",
+              target: { uuid: pet.uuid, actor: pet },
+              base: 14,
+              ownRows: [],
+            });
             assert.isTrue(row.isCharacter, "defends like a crawler");
             const evade = crawlerAttackDifficulty(pet, 1);
             assert.equal(evade.difficulty, 10 + pet.system.stats.dex.mod + 1);
-            assert.equal(rowEvadeDifficulty({ isCharacter: true, difficulty: 9 }, { attackerType: "pet", attackTotal: 17 }), 17,
-              "a Pet attacking a crawler uses the PvP Evade rule");
+            assert.equal(
+              rowEvadeDifficulty(
+                { isCharacter: true, difficulty: 9 },
+                { attackerType: "pet", attackTotal: 17 },
+              ),
+              17,
+              "a Pet attacking a crawler uses the PvP Evade rule",
+            );
           } finally {
             await deleteTestActor(pet);
           }
@@ -318,21 +380,28 @@ export default function register(quench) {
           await withSetting("currentFloor", 1, async () => {
             const owner = await createTestCharacter("handler");
             const pet = await createTestPet("trained", { system: { ownerId: owner.id } });
-            const [skill] = await owner.createEmbeddedDocuments("Item", [{
-              name: "Animal Handling", type: "skill", system: { rank: 10, governingStat: "cha", category: "utility" },
-            }]);
+            const [skill] = await owner.createEmbeddedDocuments("Item", [
+              {
+                name: "Animal Handling",
+                type: "skill",
+                system: { rank: 10, governingStat: "cha", category: "utility" },
+              },
+            ]);
             const combat = await startedCombat(owner);
             try {
               assert.strictEqual(petFight(pet), combat, "the fight its crawler is in");
               // d20 10 + Rank 10 + CHA +2 = 22 vs 12: Amazing Success.
-              const state = await withPinnedDice(PIN_D20_MID, () => commandPet(pet, { skipDialog: true }));
+              const state = await withPinnedDice(PIN_D20_MID, () =>
+                commandPet(pet, { skipDialog: true }),
+              );
               assert.equal(state, "free");
               assert.equal(pet.system.command.state, "free");
               assert.equal(pet.system.command.combatId, combat.id);
               assert.isTrue(describePetCommand(pet).active);
               assert.isTrue(owner.items.get(skill.id).system.marked, "the crawler's Skill is used");
-              await waitFor(() => pet.statuses.has(CONFIG.CARLRPG.petCommandStates.free.status),
-                { message: "the token status never turned on" });
+              await waitFor(() => pet.statuses.has(CONFIG.CARLRPG.petCommandStates.free.status), {
+                message: "the token status never turned on",
+              });
 
               const again = await commandPet(pet, { skipDialog: true });
               assert.isNull(again, "already settled for this fight");
@@ -351,19 +420,37 @@ export default function register(quench) {
             // Created together: the results don't come back in input order, so
             // each is found by name afterwards.
             await owner.createEmbeddedDocuments("Item", [
-              { name: "Animal Handling", type: "skill", system: { rank: 1, governingStat: "cha", category: "utility" } },
-              { name: "Beast Mastery", type: "skill", system: { rank: 10, governingStat: "cha", category: "utility", commandsPets: true } },
-              { name: "Pet Whispering", type: "skill", system: { rank: 2, governingStat: "cha", category: "utility", commandsPets: true } },
+              {
+                name: "Animal Handling",
+                type: "skill",
+                system: { rank: 1, governingStat: "cha", category: "utility" },
+              },
+              {
+                name: "Beast Mastery",
+                type: "skill",
+                system: { rank: 10, governingStat: "cha", category: "utility", commandsPets: true },
+              },
+              {
+                name: "Pet Whispering",
+                type: "skill",
+                system: { rank: 2, governingStat: "cha", category: "utility", commandsPets: true },
+              },
             ]);
             const named = (name) => owner.items.find((i) => i.name === name);
-            const [handling, mastery, whisper] = ["Animal Handling", "Beast Mastery", "Pet Whispering"].map(named);
+            const [handling, mastery, whisper] = [
+              "Animal Handling",
+              "Beast Mastery",
+              "Pet Whispering",
+            ].map(named);
             const combat = await startedCombat(owner);
             try {
               const picked = await commandSkillFor(owner);
               assert.equal(picked.skill.id, mastery.id, "the highest Rank with the box");
               assert.isTrue(picked.trained);
               // d20 10 + Rank 10 + CHA +2 = 22 vs 12: Amazing Success.
-              const state = await withPinnedDice(PIN_D20_MID, () => commandPet(pet, { skipDialog: true }));
+              const state = await withPinnedDice(PIN_D20_MID, () =>
+                commandPet(pet, { skipDialog: true }),
+              );
               assert.equal(state, "free");
               assert.isTrue(owner.items.get(mastery.id).system.marked, "Beast Mastery was rolled");
               assert.isFalse(owner.items.get(handling.id).system.marked, "not Animal Handling");
@@ -398,10 +485,14 @@ export default function register(quench) {
             try {
               const itemsBefore = owner.items.size;
               // 2d20kl, both 10, + CHA +2 = 12 vs 15: a Standard Fail - stays out.
-              const state = await withPinnedDice(PIN_D20_MID, () => commandPet(pet, { skipDialog: true }));
+              const state = await withPinnedDice(PIN_D20_MID, () =>
+                commandPet(pet, { skipDialog: true }),
+              );
               assert.equal(state, "stayingOut");
               assert.equal(owner.items.size, itemsBefore);
-              const retry = await withPinnedDice(PIN_D20_MID, () => commandPet(pet, { skipDialog: true }));
+              const retry = await withPinnedDice(PIN_D20_MID, () =>
+                commandPet(pet, { skipDialog: true }),
+              );
               assert.equal(retry, "stayingOut", "staying out may be tried again");
             } finally {
               await deleteTestCombat(combat);
@@ -417,7 +508,9 @@ export default function register(quench) {
           const orphan = await createTestPet("orphan");
           // A GM with an assigned crawler becomes a new Pet's crawler by default.
           await orphan.update({ "system.ownerId": "" });
-          const mount = await createTestPet("mount", { system: { ownerId: owner.id, isMount: true } });
+          const mount = await createTestPet("mount", {
+            system: { ownerId: owner.id, isMount: true },
+          });
           try {
             assert.isNull(await commandPet(pet, { skipDialog: true }));
             assert.equal(pet.system.command.state, "");
@@ -433,12 +526,17 @@ export default function register(quench) {
           const pet = await createTestPet("reset", { system: { ownerId: owner.id } });
           const combat = await startedCombat(owner);
           try {
-            await pet.update({ "system.command": { state: "hiding", combatId: combat.id, round: 1 } });
+            await pet.update({
+              "system.command": { state: "hiding", combatId: combat.id, round: 1 },
+            });
             await waitFor(() => pet.statuses.has(CONFIG.CARLRPG.petCommandStates.hiding.status));
             await deleteTestCombat(combat);
-            await waitFor(() => pet.system.command.state === "", { message: "the result was never cleared" });
-            await waitFor(() => !pet.statuses.has(CONFIG.CARLRPG.petCommandStates.hiding.status),
-              { message: "the token status never turned off" });
+            await waitFor(() => pet.system.command.state === "", {
+              message: "the result was never cleared",
+            });
+            await waitFor(() => !pet.statuses.has(CONFIG.CARLRPG.petCommandStates.hiding.status), {
+              message: "the token status never turned off",
+            });
           } finally {
             await deleteTestCombat(combat);
             await deleteTestActor(pet);
@@ -449,7 +547,9 @@ export default function register(quench) {
         it("a result from a fight that no longer exists shows as none", async function () {
           const pet = await createTestPet("stale");
           try {
-            await pet.update({ "system.command": { state: "restricted", combatId: "notARealCombat1", round: 2 } });
+            await pet.update({
+              "system.command": { state: "restricted", combatId: "notARealCombat1", round: 2 },
+            });
             assert.isFalse(describePetCommand(pet).active);
           } finally {
             await deleteTestActor(pet);
@@ -476,14 +576,20 @@ export default function register(quench) {
 
         it("no Command Check: it's refused, and the minion fights with its two Actions anyway", async function () {
           const owner = await createTestCharacter("controller");
-          const minion = await createTestPet("minion", { system: { ownerId: owner.id, isMinion: true } });
+          const minion = await createTestPet("minion", {
+            system: { ownerId: owner.id, isMinion: true },
+          });
           const pet = await createTestPet("pet", { system: { ownerId: owner.id } });
           const combat = await startedCombat(owner, minion, pet);
           try {
             assert.isFalse(canCommandPet(minion));
             assert.isNull(await commandPet(minion, { skipDialog: true }));
             assert.equal(minion.system.command.state, "", "nothing recorded");
-            const budget = (actor) => baseBudget(combat, combat.combatants.find((c) => c.actor === actor)).action;
+            const budget = (actor) =>
+              baseBudget(
+                combat,
+                combat.combatants.find((c) => c.actor === actor),
+              ).action;
             assert.equal(budget(minion), 2, "a minion: two Actions");
             assert.equal(budget(pet), 0, "an uncommanded Pet: none");
           } finally {
@@ -514,11 +620,24 @@ export default function register(quench) {
             const detailsTab = sheet.element.querySelector('nav [data-tab="pet"]');
             assert.include(detailsTab.textContent, game.i18n.localize("CARLRPG.Tab.Details"));
             const details = sheet.element.querySelector('section.tab[data-tab="pet"]');
-            for (const name of ["system.ownerId", "system.attitude", "system.role", "system.size", "system.isMount", "system.move"]) {
+            for (const name of [
+              "system.ownerId",
+              "system.attitude",
+              "system.role",
+              "system.size",
+              "system.isMount",
+              "system.move",
+            ]) {
               assert.exists(details.querySelector(`[name="${name}"]`), `${name} on Details`);
-              assert.notExists(sheet.element.querySelector(`.carl-pet-header [name="${name}"]`), `${name} not in the header`);
+              assert.notExists(
+                sheet.element.querySelector(`.carl-pet-header [name="${name}"]`),
+                `${name} not in the header`,
+              );
             }
-            assert.exists(sheet.element.querySelector(".carl-pet-header .carl-pet-command"), "Command Pet stays in the header");
+            assert.exists(
+              sheet.element.querySelector(".carl-pet-header .carl-pet-command"),
+              "Command Pet stays in the header",
+            );
             assert.notExists(sheet.element.querySelector('[data-action="toggleMark"]'));
           } finally {
             await sheet.close();
@@ -528,7 +647,10 @@ export default function register(quench) {
 
         it("refuses a Class or Race drop", async function () {
           const pet = await createTestPet("drop");
-          const race = await Item.create({ name: `Quench race ${foundry.utils.randomID()}`, type: "race" });
+          const race = await Item.create({
+            name: `Quench race ${foundry.utils.randomID()}`,
+            type: "race",
+          });
           const sheet = pet.sheet;
           try {
             await sheet.render({ force: true });
@@ -549,11 +671,16 @@ export default function register(quench) {
         // The HB clamp used to run against the base slot count, before gear's
         // "hb.max" bonus was added in (derive-creature.mjs deriveResourceCaps).
         it("a Pet with +1 hb.max from gear heals to 6 and keeps it", async function () {
-          const pet = await createTestPet("bonus slots", { system: { size: 3, attributes: { level: { value: 3 } } } });
+          const pet = await createTestPet("bonus slots", {
+            system: { size: 3, attributes: { level: { value: 3 } } },
+          });
           try {
             assert.equal(pet.system.hb.max, 5, "test setup: Size 3, Level 3 is 5 slots");
             await createTestItem(pet, "item", "sturdy collar", {
-              system: { equipped: true, changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "1" }] },
+              system: {
+                equipped: true,
+                changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "1" }],
+              },
             });
             assert.equal(pet.system.hb.bonusMax, 1, "test setup: the gear's bonus applies");
             assert.equal(pet.system.hb.effectiveMax, 6);
@@ -568,11 +695,16 @@ export default function register(quench) {
 
         // Core's modifyTokenAttribute clamps a bar edit to hb.max, the base.
         it("the token bar fills it to 6 too, and shows 6 as its max", async function () {
-          const pet = await createTestPet("bonus slots bar", { system: { size: 3, attributes: { level: { value: 3 } } } });
+          const pet = await createTestPet("bonus slots bar", {
+            system: { size: 3, attributes: { level: { value: 3 } } },
+          });
           const scene = await Scene.create({ name: `Quench pet bar ${foundry.utils.randomID()}` });
           try {
             await createTestItem(pet, "item", "sturdy collar", {
-              system: { equipped: true, changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "1" }] },
+              system: {
+                equipped: true,
+                changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "1" }],
+              },
             });
             assert.equal(pet.system.hb.effectiveMax, 6, "test setup: 5 base + 1");
             await pet.update({ "system.hb.value": 5 });
@@ -582,7 +714,9 @@ export default function register(quench) {
             assert.equal(pet.system.hb.value, 6, "an absolute 9 clamps to the effective max");
             assert.equal(pet._source.system.hb.value, 6, "stored");
 
-            const [token] = await scene.createEmbeddedDocuments("Token", [{ actorId: pet.id, actorLink: true, bar1: { attribute: "hb" } }]);
+            const [token] = await scene.createEmbeddedDocuments("Token", [
+              { actorId: pet.id, actorLink: true, bar1: { attribute: "hb" } },
+            ]);
             const bar = token.getBarAttribute("bar1");
             assert.equal(bar.value, 6);
             assert.equal(bar.max, 6, "the bar's max is hb.effectiveMax");

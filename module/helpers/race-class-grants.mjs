@@ -107,8 +107,12 @@ export async function findSkillLikeItem(name, types = SKILL_LIKE_TYPES) {
   // The same Skill slug first, best source first, so "Name (Base Skill)"
   // isn't taken for "Name"; then the importer's looser name match.
   const slug = slugifySkillName(name);
-  const exact = buildMatcher(candidates.filter((c) => slugifySkillName(c.name) === slug), { slug: slugifySkillName });
-  const match = exact(name, types) ?? buildMatcher(candidates, { slug: slugifySkillName })(name, types);
+  const exact = buildMatcher(
+    candidates.filter((c) => slugifySkillName(c.name) === slug),
+    { slug: slugifySkillName },
+  );
+  const match =
+    exact(name, types) ?? buildMatcher(candidates, { slug: slugifySkillName })(name, types);
   return match ? ((await fromUuid(match.ref)) ?? null) : null;
 }
 
@@ -138,7 +142,10 @@ export function findOwnedSkillLike(actor, name, types = SKILL_LIKE_TYPES) {
 export function cleanSkillLikeCopy(source, rank) {
   // A document is copied with its source (packs.mjs copyData); plain data
   // keeps only a source it already names.
-  const data = typeof source.toObject === "function" ? copyData(source) : stripCopyFields(foundry.utils.deepClone(source));
+  const data =
+    typeof source.toObject === "function"
+      ? copyData(source)
+      : stripCopyFields(foundry.utils.deepClone(source));
   const compendiumSource = data._stats?.compendiumSource;
   if (compendiumSource) data._stats = { compendiumSource };
   else delete data._stats;
@@ -157,7 +164,11 @@ export function cleanSkillLikeCopy(source, rank) {
  * @returns {object}
  */
 export function bareSkillLikeData(name, rank, { type = "skill", img, system = {}, flags } = {}) {
-  const data = { name, type, system: { rank, ...(type === "skill" ? { category: "utility" } : {}), ...system } };
+  const data = {
+    name,
+    type,
+    system: { rank, ...(type === "skill" ? { category: "utility" } : {}), ...system },
+  };
   if (img) data.img = img;
   if (flags) data.flags = flags;
   return data;
@@ -177,9 +188,14 @@ export async function skillOrUntrainedCopy(actor, name, fallback = {}) {
   const owned = findOwnedSkillLike(actor, name, ["skill"]);
   if (owned) return { skill: owned, trained: true };
   const source = await findSkillLikeItem(name);
-  const data = cleanSkillLikeCopy(source ?? bareSkillLikeData(name, 0, {
-    img: fallback.img ?? "icons/svg/d20.svg", system: fallback.system,
-  }), 0);
+  const data = cleanSkillLikeCopy(
+    source ??
+      bareSkillLikeData(name, 0, {
+        img: fallback.img ?? "icons/svg/d20.svg",
+        system: fallback.system,
+      }),
+    0,
+  );
   data._id = foundry.utils.randomID();
   return { skill: new CONFIG.Item.documentClass(data, { parent: actor }), trained: false };
 }
@@ -194,9 +210,7 @@ export async function skillOrUntrainedCopy(actor, name, fallback = {}) {
  */
 export async function learnSkillLike(actor, name, rank) {
   const found = await findSkillLikeItem(name);
-  const data = found
-    ? cleanSkillLikeCopy(found, rank)
-    : bareSkillLikeData(name, rank);
+  const data = found ? cleanSkillLikeCopy(found, rank) : bareSkillLikeData(name, rank);
   const [created] = await actor.createEmbeddedDocuments("Item", [data]);
   return created ?? null;
 }

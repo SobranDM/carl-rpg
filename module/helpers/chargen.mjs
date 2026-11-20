@@ -11,7 +11,12 @@
  * rolling, or both) and allowAnimalCrawlers.
  */
 import { slugifySkillName } from "./modifiers.mjs";
-import { bareSkillLikeData, cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem } from "./race-class-grants.mjs";
+import {
+  bareSkillLikeData,
+  cleanSkillLikeCopy,
+  findOwnedSkillLike,
+  findSkillLikeItem,
+} from "./race-class-grants.mjs";
 import { assignItemToSlot, slotHolds } from "./equip-slots.mjs";
 import { isInHotlist, toggleHotlist } from "./hotlist.mjs";
 import { headedSectionsToHtml, STORY_SECTIONS } from "./rich-text.mjs";
@@ -65,7 +70,7 @@ export const COMBAT_OPTIONS = {
   },
   spells: ["Dirt Clod", "Fire Fingers", "Frost Scar", "Shock Treatment", "Soul Collector"],
   handToHand: {
-    "Pugilism": "Iron Punch",
+    Pugilism: "Iron Punch",
     "Foot Soldier": "Smush",
     "Noggin Nocker": "Skullcracker",
     "Wrasslin'": "Toss",
@@ -103,10 +108,34 @@ export const PAST_TABLES = {
 
 /** Step 10's example starting equipment sets. */
 export const STARTING_SETS = {
-  athlete: { clothing: "Jogging attire", weapon: "Barbell", weaponSkill: "Club", item: "Headphones, music player", weird: "A 3-pack of condoms" },
-  gamingGeek: { clothing: "T-shirt, hoodie, and jeans", weapon: "Boffer sword", weaponSkill: "Longsword", item: "Game book or novel", weird: "A pack of 12 googly eyes and a single Lego minifig" },
-  militant: { clothing: "Military fatigues", weapon: "Handgun", weaponSkill: "Handgun", item: "2 snack bars", weird: "A morale patch that reads, \"No Plan Survives First Contact\"" },
-  outdoorsy: { clothing: "Apparel appropriate for your location's climate and an orange safety jacket", weapon: "Bow and arrow", weaponSkill: "Bow", item: "Lighter", weird: "A duck call on a leather cord" },
+  athlete: {
+    clothing: "Jogging attire",
+    weapon: "Barbell",
+    weaponSkill: "Club",
+    item: "Headphones, music player",
+    weird: "A 3-pack of condoms",
+  },
+  gamingGeek: {
+    clothing: "T-shirt, hoodie, and jeans",
+    weapon: "Boffer sword",
+    weaponSkill: "Longsword",
+    item: "Game book or novel",
+    weird: "A pack of 12 googly eyes and a single Lego minifig",
+  },
+  militant: {
+    clothing: "Military fatigues",
+    weapon: "Handgun",
+    weaponSkill: "Handgun",
+    item: "2 snack bars",
+    weird: 'A morale patch that reads, "No Plan Survives First Contact"',
+  },
+  outdoorsy: {
+    clothing: "Apparel appropriate for your location's climate and an orange safety jacket",
+    weapon: "Bow and arrow",
+    weaponSkill: "Bow",
+    item: "Lighter",
+    weird: "A duck call on a leather cord",
+  },
 };
 
 /* -------------------------------------------------- */
@@ -178,17 +207,22 @@ export function chargenMethods() {
  * @returns {{name: string, skills: {name: string, stat: string}[]}|null}  null if it isn't one.
  */
 export function parseBackgroundResult(text) {
-  const plain = String(text ?? "").replace(/<[^>]*>/g, "").trim();
+  const plain = String(text ?? "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
   const colon = plain.indexOf(":");
   if (colon < 0) return null;
   const name = plain.slice(0, colon).trim();
-  const skills = plain.slice(colon + 1)
+  const skills = plain
+    .slice(colon + 1)
     .split(/,|\bor\b/)
     .map((part) => part.trim())
     .filter(Boolean)
     .map((part) => {
       const match = part.match(/^(.*?)\s*\(([^)]*)\)\s*$/);
-      return match ? { name: match[1].trim(), stat: match[2].trim().toLowerCase() } : { name: part, stat: "" };
+      return match
+        ? { name: match[1].trim(), stat: match[2].trim().toLowerCase() }
+        : { name: part, stat: "" };
     })
     .filter((s) => s.name);
   return name && skills.length ? { name, skills } : null;
@@ -233,7 +267,11 @@ export function backgroundOptions(table) {
 export function tableTexts(table) {
   return [...(table?.results ?? [])]
     .sort((a, b) => a.range[0] - b.range[0])
-    .map((r) => resultText(r).replace(/<[^>]*>/g, "").trim())
+    .map((r) =>
+      resultText(r)
+        .replace(/<[^>]*>/g, "")
+        .trim(),
+    )
     .filter(Boolean);
 }
 
@@ -244,7 +282,9 @@ export function tableTexts(table) {
  */
 export async function drawText(table) {
   const { results } = await table.draw({ displayChat: true });
-  return resultText(results?.[0]).replace(/<[^>]*>/g, "").trim();
+  return resultText(results?.[0])
+    .replace(/<[^>]*>/g, "")
+    .trim();
 }
 
 /* -------------------------------------------------- */
@@ -265,7 +305,10 @@ export async function rollStats(actor = null) {
     rolls.push(roll);
     stats[key] = roll.total;
   }
-  const lines = STAT_ORDER.map((key) => `<li>${esc(game.i18n.localize(CONFIG.CARLRPG.stats[key]))}: <strong>${stats[key]}</strong></li>`);
+  const lines = STAT_ORDER.map(
+    (key) =>
+      `<li>${esc(game.i18n.localize(CONFIG.CARLRPG.stats[key]))}: <strong>${stats[key]}</strong></li>`,
+  );
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
     content: `<p>${esc(game.i18n.localize("CARLRPG.Chargen.RolledStats"))}</p><ul>${lines.join("")}</ul>`,
@@ -311,7 +354,11 @@ export function newChargenState(actor) {
     // Per stage key: {background: name, rolled: boolean, skills: [names]}.
     stages: {},
     combat: {
-      type: "weapon", weapon: "Club", weaponName: "", spell: COMBAT_OPTIONS.spells[0], handToHand: "Pugilism",
+      type: "weapon",
+      weapon: "Club",
+      weaponName: "",
+      spell: COMBAT_OPTIONS.spells[0],
+      handToHand: "Pugilism",
       strike: COMBAT_OPTIONS.animalStrikes[0],
     },
     statMethod: methods.statArray ? "array" : "roll",
@@ -336,8 +383,14 @@ export function stagesFor(state) {
 export function combatChoice(state) {
   const c = state.combat ?? {};
   if (c.type === "spell") return { skill: c.spell, damageEffect: null, spell: true };
-  if (c.type === "handToHand") return { skill: c.handToHand, damageEffect: COMBAT_OPTIONS.handToHand[c.handToHand] ?? null, spell: false };
-  if (c.type === "strike") return { skill: state.kind === "animal" ? c.strike : "", damageEffect: null, spell: false };
+  if (c.type === "handToHand")
+    return {
+      skill: c.handToHand,
+      damageEffect: COMBAT_OPTIONS.handToHand[c.handToHand] ?? null,
+      spell: false,
+    };
+  if (c.type === "strike")
+    return { skill: state.kind === "animal" ? c.strike : "", damageEffect: null, spell: false };
   return { skill: c.weapon, damageEffect: null, spell: false };
 }
 
@@ -350,12 +403,18 @@ export function combatChoice(state) {
 export function chargenSkills(state) {
   const out = [];
   for (const stage of stagesFor(state)) {
-    for (const name of state.stages?.[stage.key]?.skills ?? []) out.push({ name, rank: stage.rank, source: stage.key });
+    for (const name of state.stages?.[stage.key]?.skills ?? [])
+      out.push({ name, rank: stage.rank, source: stage.key });
   }
-  out.push({ name: BASE_COMBAT_SKILL[state.kind === "animal" ? "animal" : "human"], rank: COMBAT_RANK, source: "combat" });
+  out.push({
+    name: BASE_COMBAT_SKILL[state.kind === "animal" ? "animal" : "human"],
+    rank: COMBAT_RANK,
+    source: "combat",
+  });
   const choice = combatChoice(state);
   if (choice.skill) out.push({ name: choice.skill, rank: COMBAT_RANK, source: "combat" });
-  if (choice.damageEffect) out.push({ name: choice.damageEffect, rank: COMBAT_RANK, source: "combat" });
+  if (choice.damageEffect)
+    out.push({ name: choice.damageEffect, rank: COMBAT_RANK, source: "combat" });
   // "All crawlers start with the Heal Spell" - Rank 1 (max).
   out.push({ name: "Heal", rank: 1, source: "heal" });
   return out;
@@ -369,7 +428,11 @@ export function chargenSkills(state) {
  * @returns {Set<string>}  Slugs.
  */
 export function skillsTakenElsewhere(state, stageKey) {
-  return new Set(chargenSkills(state).filter((s) => s.source !== stageKey).map((s) => slugifySkillName(s.name)));
+  return new Set(
+    chargenSkills(state)
+      .filter((s) => s.source !== stageKey)
+      .map((s) => slugifySkillName(s.name)),
+  );
 }
 
 /**
@@ -405,14 +468,17 @@ export function chargenProblems(state, step) {
   if (step === "crawler") {
     if (!String(state.name ?? "").trim()) out.push(t("Name"));
     if (state.kind === "animal" && !methods.animals) out.push(t("NoAnimals"));
-    if (state.kind === "animal" && !ANIMAL_SIZES.includes(Number(state.size))) out.push(t("AnimalSize"));
+    if (state.kind === "animal" && !ANIMAL_SIZES.includes(Number(state.size)))
+      out.push(t("AnimalSize"));
   } else if (step === "backgrounds") {
     for (const stage of stagesFor(state)) {
       const picked = state.stages?.[stage.key];
       const label = game.i18n.localize(`CARLRPG.Chargen.Stage.${stage.key}`);
       if (!picked?.background) out.push(t("NoBackground", { stage: label }));
-      else if ((picked.skills ?? []).length !== SKILLS_PER_BACKGROUND) out.push(t("PickTwo", { stage: label }));
-      if (picked?.background && !picked.rolled && !methods.chooseBackground) out.push(t("MustRoll", { stage: label }));
+      else if ((picked.skills ?? []).length !== SKILLS_PER_BACKGROUND)
+        out.push(t("PickTwo", { stage: label }));
+      if (picked?.background && !picked.rolled && !methods.chooseBackground)
+        out.push(t("MustRoll", { stage: label }));
     }
     out.push(...duplicateProblems(state, t));
   } else if (step === "combat") {
@@ -421,7 +487,8 @@ export function chargenProblems(state, step) {
     // A combat Skill a background already gave (Problem Child's Pugilism).
     out.push(...duplicateProblems(state, t));
     const stats = chosenStats(state);
-    if (choice.spell && stats && stats.int < SPELL_MIN_INT) out.push(t("SpellInt", { min: SPELL_MIN_INT }));
+    if (choice.spell && stats && stats.int < SPELL_MIN_INT)
+      out.push(t("SpellInt", { min: SPELL_MIN_INT }));
   } else if (step === "stats") {
     if (state.statMethod === "array" && !methods.statArray) out.push(t("MethodOff"));
     if (state.statMethod === "roll" && !methods.statRoll) out.push(t("MethodOff"));
@@ -434,7 +501,8 @@ export function chargenProblems(state, step) {
     }
     const choice = combatChoice(state);
     const stats = chosenStats(state);
-    if (choice.spell && stats && stats.int < SPELL_MIN_INT) out.push(t("SpellInt", { min: SPELL_MIN_INT }));
+    if (choice.spell && stats && stats.int < SPELL_MIN_INT)
+      out.push(t("SpellInt", { min: SPELL_MIN_INT }));
   }
   return out;
 }
@@ -453,7 +521,11 @@ function duplicateProblems(state, t) {
 
 /** Every step's problems, for the Review page and applyChargen. */
 export function allChargenProblems(state) {
-  return [...new Set(["crawler", "backgrounds", "combat", "stats"].flatMap((step) => chargenProblems(state, step)))];
+  return [
+    ...new Set(
+      ["crawler", "backgrounds", "combat", "stats"].flatMap((step) => chargenProblems(state, step)),
+    ),
+  ];
 }
 
 /* -------------------------------------------------- */
@@ -481,9 +553,14 @@ async function manaPotionData() {
 export async function weaponData(name, skill) {
   const pack = game.packs.get(PACKS.gear);
   const index = (await pack?.getIndex({ fields: ["system.weaponSkill"] })) ?? [];
-  const lower = (s) => String(s ?? "").trim().toLowerCase();
+  const lower = (s) =>
+    String(s ?? "")
+      .trim()
+      .toLowerCase();
   const forSkill = index.filter((e) => lower(e.system?.weaponSkill) === lower(skill));
-  const entry = forSkill.find((e) => lower(e.name) === lower(name)) ?? forSkill.find((e) => lower(e.name) === lower(skill));
+  const entry =
+    forSkill.find((e) => lower(e.name) === lower(name)) ??
+    forSkill.find((e) => lower(e.name) === lower(skill));
   const doc = entry ? await pack.getDocument(entry._id) : null;
   if (!doc) return gearData(name, { weaponSkill: skill });
   const data = copyData(doc);
@@ -509,7 +586,9 @@ async function skillWrites(actor, state) {
   const create = [];
   const raise = [];
   const wanted = chargenSkills(state);
-  const sources = await Promise.all(wanted.map(({ name }) => (findOwnedSkillLike(actor, name) ? null : findSkillLikeItem(name))));
+  const sources = await Promise.all(
+    wanted.map(({ name }) => (findOwnedSkillLike(actor, name) ? null : findSkillLikeItem(name))),
+  );
   const { damageEffect } = combatChoice(state);
   wanted.forEach(({ name, rank, source }, i) => {
     const owned = findOwnedSkillLike(actor, name);
@@ -519,8 +598,15 @@ async function skillWrites(actor, state) {
     }
     // Missing from every compendium: a bare item of what it is - the Heal
     // Spell a Spell, the chosen Damage Effect a Damage Effect.
-    const type = source === "heal" ? "spell" : (source === "combat" && name === damageEffect ? "damageEffect" : "skill");
-    create.push(sources[i] ? cleanSkillLikeCopy(sources[i], rank) : bareSkillLikeData(name, rank, { type }));
+    const type =
+      source === "heal"
+        ? "spell"
+        : source === "combat" && name === damageEffect
+          ? "damageEffect"
+          : "skill";
+    create.push(
+      sources[i] ? cleanSkillLikeCopy(sources[i], rank) : bareSkillLikeData(name, rank, { type }),
+    );
   });
   return { create, raise };
 }
@@ -540,13 +626,17 @@ async function gearWrites(state) {
   // equipped when applyChargen puts it in the slot.
   if (stuff.clothing) gear.clothing = gearData(stuff.clothing, { slots: ["torso"] });
   if (state.combat.type === "weapon") {
-    gear.weapon = await weaponData(stuff.weapon || state.combat.weaponName || choice.skill, choice.skill);
+    gear.weapon = await weaponData(
+      stuff.weapon || state.combat.weaponName || choice.skill,
+      choice.skill,
+    );
   }
   if (stuff.item) gear.item = gearData(stuff.item);
   if (stuff.weird) gear.weird = gearData(stuff.weird);
   if (choice.spell) {
     const potion = await manaPotionData();
-    if (potion) gear.potions = { ...potion, system: { ...potion.system, quantity: SPELL_MANA_POTIONS } };
+    if (potion)
+      gear.potions = { ...potion, system: { ...potion.system, quantity: SPELL_MANA_POTIONS } };
   }
   for (const [key, data] of Object.entries(gear)) {
     data.flags = foundry.utils.mergeObject(data.flags ?? {}, { [SCOPE]: { chargenGear: key } });
@@ -589,7 +679,10 @@ export async function applyChargen(actor, state) {
     // Ends and Regrets (the Story box's own headings).
     const story = headedSectionsToHtml([
       { key: "CARLRPG.Chargen.Background", fallback: "Background", text: backgroundLines },
-      ...STORY_SECTIONS.filter((s) => s.field !== "notes").map((s) => ({ ...s, text: state.past?.[s.field] ?? "" })),
+      ...STORY_SECTIONS.filter((s) => s.field !== "notes").map((s) => ({
+        ...s,
+        text: state.past?.[s.field] ?? "",
+      })),
     ]);
     const update = {
       name: String(state.name).trim(),
@@ -620,11 +713,15 @@ export async function applyChargen(actor, state) {
   }
   const missing = Object.keys(gear).filter((key) => !made[key]);
   if (missing.length) {
-    const created = await actor.createEmbeddedDocuments("Item", missing.map((key) => gear[key]));
+    const created = await actor.createEmbeddedDocuments(
+      "Item",
+      missing.map((key) => gear[key]),
+    );
     // Matched by their chargenGear flag, not by position: the documents
     // don't always come back in the order asked for (by id, it seems), and
     // a position match put the clothes in the Main Hand.
-    for (const key of missing) made[key] = created.find((i) => i.getFlag(SCOPE, "chargenGear") === key) ?? null;
+    for (const key of missing)
+      made[key] = created.find((i) => i.getFlag(SCOPE, "chargenGear") === key) ?? null;
   }
   if (made.weapon && actor.system.gearSlots.mainHand !== made.weapon.id) {
     await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, made.weapon);

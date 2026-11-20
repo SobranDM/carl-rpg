@@ -24,7 +24,10 @@ import { cleanSkillLikeCopy } from "./race-class-grants.mjs";
 export function buildScrollCast(actor, spellData, rank) {
   const data = cleanSkillLikeCopy(spellData, rank);
   data.system.active = false;
-  const item = new Item.implementation({ ...data, _id: foundry.utils.randomID() }, { parent: actor });
+  const item = new Item.implementation(
+    { ...data, _id: foundry.utils.randomID() },
+    { parent: actor },
+  );
   const { skillEntry, conditionalModifiers } = buildItemSkillEntry(actor.system, item);
   return { item, castAs: { skillEntry, conditionalModifiers, free: true, spellData: data, rank } };
 }

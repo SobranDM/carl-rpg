@@ -41,10 +41,14 @@ export function linesToHtml(lines) {
  * @returns {string}
  */
 export function headedSectionsToHtml(sections) {
-  return sections.map(({ key, fallback, text }) => {
-    const body = linesToHtml(text);
-    return body ? `<p><strong>${foundry.utils.escapeHTML(label(key, fallback))}</strong></p>${body}` : "";
-  }).join("");
+  return sections
+    .map(({ key, fallback, text }) => {
+      const body = linesToHtml(text);
+      return body
+        ? `<p><strong>${foundry.utils.escapeHTML(label(key, fallback))}</strong></p>${body}`
+        : "";
+    })
+    .join("");
 }
 
 /** The Story box's headings, in order (the old story.* fields). */
@@ -78,7 +82,9 @@ export function storyToHtml(parts) {
  */
 export function enrichDescription(html, doc, { rollData, secrets } = {}) {
   return foundry.applications.ux.TextEditor.implementation.enrichHTML(html ?? "", {
-    relativeTo: doc, secrets: secrets ?? !!doc?.isOwner, rollData: rollData ?? doc?.getRollData?.() ?? {},
+    relativeTo: doc,
+    secrets: secrets ?? !!doc?.isOwner,
+    rollData: rollData ?? doc?.getRollData?.() ?? {},
   });
 }
 
@@ -91,11 +97,13 @@ export function enrichDescription(html, doc, { rollData, secrets } = {}) {
  */
 export async function itemDescriptions(items) {
   const out = {};
-  await Promise.all([...items].map(async (item) => {
-    const html = String(item.system?.description ?? "").trim();
-    if (!html) return;
-    out[item.id] = /@|\[\[|secret/.test(html) ? await enrichDescription(html, item) : html;
-  }));
+  await Promise.all(
+    [...items].map(async (item) => {
+      const html = String(item.system?.description ?? "").trim();
+      if (!html) return;
+      out[item.id] = /@|\[\[|secret/.test(html) ? await enrichDescription(html, item) : html;
+    }),
+  );
   return out;
 }
 
@@ -113,7 +121,9 @@ function tooltipName(item) {
  * @returns {Record<string, string>}  HTML by item id.
  */
 export function itemTooltips(items, descriptions) {
-  return Object.fromEntries([...items].map((item) => [item.id, descriptions[item.id] ?? tooltipName(item)]));
+  return Object.fromEntries(
+    [...items].map((item) => [item.id, descriptions[item.id] ?? tooltipName(item)]),
+  );
 }
 
 /**
@@ -125,5 +135,7 @@ export function itemTooltips(items, descriptions) {
  * @returns {Record<string, string>}  HTML by item id.
  */
 export function namedItemTooltips(items, descriptions) {
-  return Object.fromEntries([...items].map((item) => [item.id, tooltipName(item) + (descriptions[item.id] ?? "")]));
+  return Object.fromEntries(
+    [...items].map((item) => [item.id, tooltipName(item) + (descriptions[item.id] ?? "")]),
+  );
 }

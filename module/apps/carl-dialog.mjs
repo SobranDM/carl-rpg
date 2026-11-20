@@ -44,7 +44,16 @@ function wrapButton(button) {
  *   null/undefined.
  */
 export async function showCarlDialog({
-  title, content, template, context = {}, buttons, onRender, rejectClose = false, classes = [], position, trusted = false,
+  title,
+  content,
+  template,
+  context = {},
+  buttons,
+  onRender,
+  rejectClose = false,
+  classes = [],
+  position,
+  trusted = false,
 } = {}) {
   if (template) {
     content = await foundry.applications.handlebars.renderTemplate(template, context);
@@ -62,7 +71,9 @@ export async function showCarlDialog({
     buttons: (buttons ?? [rollButton()]).map(wrapButton),
     rejectClose,
     render: onRender,
-  }).then((result) => (result === NO_RESULT ? null : result)).catch(() => null);
+  })
+    .then((result) => (result === NO_RESULT ? null : result))
+    .catch(() => null);
 }
 
 /**
@@ -90,7 +101,8 @@ export function formButton({ action, icon, label }) {
     icon,
     label,
     default: true,
-    callback: (event, button) => foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(button.form).object),
+    callback: (event, button) =>
+      foundry.utils.expandObject(new foundry.applications.ux.FormDataExtended(button.form).object),
   };
 }
 

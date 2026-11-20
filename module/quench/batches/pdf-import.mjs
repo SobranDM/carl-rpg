@@ -28,10 +28,22 @@ import {
   restamp,
   writtenFields,
 } from "../../pdf-import/fingerprint.mjs";
-import { BOOKS, bookIdOf, identifyBook, identifyPdf, UnknownBookError } from "../../pdf-import/books.mjs";
+import {
+  BOOKS,
+  bookIdOf,
+  identifyBook,
+  identifyPdf,
+  UnknownBookError,
+} from "../../pdf-import/books.mjs";
 import * as scan from "../../pdf-import/scan.mjs";
 import { findSections, floorNumber, sectionFolders } from "../../pdf-import/sections.mjs";
-import { imageDraws, imageToRGBA, imageTransform, orientRGBA, pickMapDraw } from "../../pdf-import/maps.mjs";
+import {
+  imageDraws,
+  imageToRGBA,
+  imageTransform,
+  orientRGBA,
+  pickMapDraw,
+} from "../../pdf-import/maps.mjs";
 import {
   imagePpis,
   judgeImageQuality,
@@ -253,7 +265,9 @@ const DEBUFF_GEAR_PAGE = page([
   ["TEST KNUCKLES OF BONKING", 16],
   ["Gear Slot: Hands"],
   ["Knuckles for testing."],
-  ["• On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff"],
+  [
+    "• On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff",
+  ],
   ["• On a Critical Hit with any Test Poke Attack you make, the target gains the Blinded Debuff"],
   ["• AS: Target gains Burned"],
 ]);
@@ -285,20 +299,44 @@ const CORE_STYLE_BOOK = [
     { page: 1 },
   ),
   page([["EXAMPLE MOBS", 16], ...mobRows("Test Sample", 1)], { page: 2 }),
-  page([["Chapter 7", 41], ["The Third Floor: The Test City", 32]], { page: 3 }),
-  page([["Neighborhood: Testville", 32], ["Floor: 3 – Theme: Placeholders", 15], ...mobRows("Test Imp", 4)], {
-    page: 4,
-  }),
-  page([["Quest: Find the Test", 32], ["Floor: 3 – Theme: More placeholders", 15], ...mobRows("Test Seeker", 5)], {
-    page: 5,
-  }),
+  page(
+    [
+      ["Chapter 7", 41],
+      ["The Third Floor: The Test City", 32],
+    ],
+    { page: 3 },
+  ),
+  page(
+    [
+      ["Neighborhood: Testville", 32],
+      ["Floor: 3 – Theme: Placeholders", 15],
+      ...mobRows("Test Imp", 4),
+    ],
+    {
+      page: 4,
+    },
+  ),
+  page(
+    [
+      ["Quest: Find the Test", 32],
+      ["Floor: 3 – Theme: More placeholders", 15],
+      ...mobRows("Test Seeker", 5),
+    ],
+    {
+      page: 5,
+    },
+  ),
   {
     ...page([["CHAPTER 8CHAPTER 8", 90.9]], { page: 6 }),
     // The Floor's title drawn where no line holds it.
-    items: [{ str: "The Fourth Floor: The TEST TANGLE", x: 100, y: 120, size: 32, angle: 0, width: 300 }],
+    items: [
+      { str: "The Fourth Floor: The TEST TANGLE", x: 100, y: 120, size: 32, angle: 0, width: 300 },
+    ],
   },
   page([["RIVAL TESTERS", 20], ...mobRows("Test Rival", 6)], { page: 7 }),
-  page([["Neighborhood: Backyard Test", 32], ["(Land Quadrant)", 32], ...mobRows("Test Ant", 7)], { page: 8 }),
+  page([["Neighborhood: Backyard Test", 32], ["(Land Quadrant)", 32], ...mobRows("Test Ant", 7)], {
+    page: 8,
+  }),
   page([["Appendix 1: Test Gear", 32], ...mobRows("Test Mascot", 2)], { page: 9 }),
 ];
 
@@ -308,16 +346,40 @@ const CORE_STYLE_BOOK = [
  * three lines), and an appendix of Mobs listed by Floor.
  */
 const TOOLKIT_STYLE_BOOK = [
-  page([["First Floor Tests 136", 13], ["ADVERSARIES", 20], ...mobRows("Test Rat", 1)], { page: 1 }),
+  page([["First Floor Tests 136", 13], ["ADVERSARIES", 20], ...mobRows("Test Rat", 1)], {
+    page: 1,
+  }),
   page([["The First Floor", 25]], { page: 2 }),
-  page([["NEIGHBORHOOD: TEST BOGS", 20], ...mobRows("Test Bogling", 5), ...mobRows("Test Bog Brute", 2), ...mobRows("Test Bog Ace", 2)], {
-    page: 3,
+  page(
+    [
+      ["NEIGHBORHOOD: TEST BOGS", 20],
+      ...mobRows("Test Bogling", 5),
+      ...mobRows("Test Bog Brute", 2),
+      ...mobRows("Test Bog Ace", 2),
+    ],
+    {
+      page: 3,
+    },
+  ),
+  page(
+    [["QUEST:", 20], ["PASSIVE (TESTING)", 20], ["PERCEPTION", 20], ...mobRows("Test Watcher", 3)],
+    { page: 4 },
+  ),
+  page([["The Second Floor", 25], ["THE ANNOUNCEMENT", 20], ...mobRows("Test Herald", 6)], {
+    page: 5,
   }),
-  page([["QUEST:", 20], ["PASSIVE (TESTING)", 20], ["PERCEPTION", 20], ...mobRows("Test Watcher", 3)], { page: 4 }),
-  page([["The Second Floor", 25], ["THE ANNOUNCEMENT", 20], ...mobRows("Test Herald", 6)], { page: 5 }),
-  page([["Threat Appendix", 25], ["RIVAL CRAWLERS", 20], ...mobRows("Test Bruiser", 3), ["FIRST FLOOR MOBS", 20], ...mobRows("Test Bogling Again", 5)], {
-    page: 6,
-  }),
+  page(
+    [
+      ["Threat Appendix", 25],
+      ["RIVAL CRAWLERS", 20],
+      ...mobRows("Test Bruiser", 3),
+      ["FIRST FLOOR MOBS", 20],
+      ...mobRows("Test Bogling Again", 5),
+    ],
+    {
+      page: 6,
+    },
+  ),
 ];
 
 /** A pdf.js-like text item at (x, y). */
@@ -481,7 +543,9 @@ export default function register(quench) {
             assert.isTrue(isBoilerplate(stamp), stamp);
           }
           assert.isTrue(
-            isDrmText("Downloaded by Jo O'Neil-Smith Jr. on 2030-01-02. Unauthorized distribution prohibited."),
+            isDrmText(
+              "Downloaded by Jo O'Neil-Smith Jr. on 2030-01-02. Unauthorized distribution prohibited.",
+            ),
           );
         });
 
@@ -528,10 +592,21 @@ export default function register(quench) {
         it("reads class lines with a comma, no separator, a stray comma or a size range", function () {
           assert.sameMembers(
             mobs.map((m) => m.name),
-            ["Comma Golem", "Gap Rat", "Test Captain", "Shifty Blob", "Test Questmaster", "Kibril Atheras Darkoak"],
+            [
+              "Comma Golem",
+              "Gap Rat",
+              "Test Captain",
+              "Shifty Blob",
+              "Test Questmaster",
+              "Kibril Atheras Darkoak",
+            ],
             "the Vehicle is skipped",
           );
-          assert.include(byName("Comma Golem"), { size: 5, creatureType: "Construct", isElite: false });
+          assert.include(byName("Comma Golem"), {
+            size: 5,
+            creatureType: "Construct",
+            isElite: false,
+          });
           assert.include(byName("Gap Rat"), { size: 3, creatureType: "Animal" });
           assert.include(byName("Test Captain"), {
             size: 4,
@@ -572,7 +647,12 @@ export default function register(quench) {
             damageType: "acid",
             range: "5ft",
           });
-          assert.include(glare, { name: "Glare", toHit: "14+F", damage: "1d4", damageType: "psychic" });
+          assert.include(glare, {
+            name: "Glare",
+            toHit: "14+F",
+            damage: "1d4",
+            damageType: "psychic",
+          });
           assert.include(wink, {
             name: "Wink",
             toHit: "",
@@ -631,9 +711,15 @@ export default function register(quench) {
         });
 
         it("refuses a median under the threshold, and never judges too few pictures", function () {
-          assert.isFalse(judgeImageQuality(Array(30).fill(200)).lowQuality, "full quality (200 ppi)");
+          assert.isFalse(
+            judgeImageQuality(Array(30).fill(200)).lowQuality,
+            "full quality (200 ppi)",
+          );
           assert.isTrue(judgeImageQuality(Array(30).fill(72)).lowQuality, "Core LQ (72 ppi)");
-          assert.isTrue(judgeImageQuality(Array(30).fill(100)).lowQuality, "Starter Set LQ (100 ppi)");
+          assert.isTrue(
+            judgeImageQuality(Array(30).fill(100)).lowQuality,
+            "Starter Set LQ (100 ppi)",
+          );
           assert.isFalse(
             judgeImageQuality([...Array(20).fill(200), ...Array(9).fill(72)]).lowQuality,
             "a few low pictures",
@@ -652,7 +738,10 @@ export default function register(quench) {
         });
 
         it("reports a localised error", function () {
-          const message = game.i18n.format("CARLRPG.PdfImport.LowQuality", { title: "Test Book", ppi: 72 });
+          const message = game.i18n.format("CARLRPG.PdfImport.LowQuality", {
+            title: "Test Book",
+            ppi: 72,
+          });
           assert.include(message, "Test Book");
           // The wording may or may not show the measured resolution ({ppi}).
           assert.notInclude(message, "{ppi}", "no unfilled placeholder");
@@ -705,11 +794,30 @@ export default function register(quench) {
 
         it("reads RGB, RGBA and 1-bit pixels and applies a turn", function () {
           // A 2x1 image: red, then blue.
-          const rgb = imageToRGBA({ width: 2, height: 1, kind: 2, data: new Uint8Array([255, 0, 0, 0, 0, 255]) });
+          const rgb = imageToRGBA({
+            width: 2,
+            height: 1,
+            kind: 2,
+            data: new Uint8Array([255, 0, 0, 0, 0, 255]),
+          });
           assert.deepEqual([...rgb], [255, 0, 0, 255, 0, 0, 255, 255]);
-          const rgba = imageToRGBA({ width: 1, height: 1, kind: 3, data: new Uint8Array([1, 2, 3, 4]) });
-          assert.deepEqual([...rgba], [1, 2, 3, 4], "alpha kept (a soft mask pdf.js already applied)");
-          const bits = imageToRGBA({ width: 2, height: 1, kind: 1, data: new Uint8Array([0b01000000]) });
+          const rgba = imageToRGBA({
+            width: 1,
+            height: 1,
+            kind: 3,
+            data: new Uint8Array([1, 2, 3, 4]),
+          });
+          assert.deepEqual(
+            [...rgba],
+            [1, 2, 3, 4],
+            "alpha kept (a soft mask pdf.js already applied)",
+          );
+          const bits = imageToRGBA({
+            width: 2,
+            height: 1,
+            kind: 1,
+            data: new Uint8Array([0b01000000]),
+          });
           assert.deepEqual([...bits], [0, 0, 0, 255, 255, 255, 255, 255]);
           // Drawn a quarter turn clockwise: red on top, blue below.
           const out = orientRGBA(rgb, 2, 1, imageTransform([0, -100, 50, 0, 0, 100], 2, 1));
@@ -723,19 +831,28 @@ export default function register(quench) {
         const summary = (r) => r.effects.map((e) => `${e.trigger}:${e.debuffKey}`);
 
         it("reads a Mob Attack's Debuffs and when they land", function () {
-          assert.deepEqual(summary(mob("On an Evade Major Fail or worse, the target gains the Poison Debuff.")), [
-            "majorFail:poisoned",
-          ]);
-          assert.deepEqual(summary(mob("On an Evade Major Fail or Worse, the crawler gains the Burning Debuff.")), [
-            "majorFail:burned",
-          ]);
-          assert.deepEqual(summary(mob("Any hit crawler gains the Shocked and Take Down Debuffs.")), [
-            "hit:shocked",
-            "hit:takeDown",
-          ]);
-          assert.deepEqual(summary(mob("Any crawler who fails to Evade gains The Taint Debuff for a bit.")), ["hit:theTaint"]);
           assert.deepEqual(
-            summary(mob("On an Evade Critical Fail, the crawler gains the Long-Term Minor Injury Debuff.")),
+            summary(mob("On an Evade Major Fail or worse, the target gains the Poison Debuff.")),
+            ["majorFail:poisoned"],
+          );
+          assert.deepEqual(
+            summary(mob("On an Evade Major Fail or Worse, the crawler gains the Burning Debuff.")),
+            ["majorFail:burned"],
+          );
+          assert.deepEqual(
+            summary(mob("Any hit crawler gains the Shocked and Take Down Debuffs.")),
+            ["hit:shocked", "hit:takeDown"],
+          );
+          assert.deepEqual(
+            summary(mob("Any crawler who fails to Evade gains The Taint Debuff for a bit.")),
+            ["hit:theTaint"],
+          );
+          assert.deepEqual(
+            summary(
+              mob(
+                "On an Evade Critical Fail, the crawler gains the Long-Term Minor Injury Debuff.",
+              ),
+            ),
             ["criticalFail:longTermMinorInjury"],
           );
           assert.deepEqual(
@@ -746,9 +863,10 @@ export default function register(quench) {
             ),
             ["hit:held", "majorFail:stunned", "majorFail:woozy", "majorFail:soreAsShit"],
           );
-          assert.deepEqual(summary(mob("(test form only) On hit, target gains a Major Injury Debuff (ouch).")), [
-            "hit:majorInjury",
-          ]);
+          assert.deepEqual(
+            summary(mob("(test form only) On hit, target gains a Major Injury Debuff (ouch).")),
+            ["hit:majorInjury"],
+          );
         });
 
         it("leaves other Debuffs, and gated ones, as text only", function () {
@@ -757,16 +875,28 @@ export default function register(quench) {
               "On an Evade Major Fail or worse, the crawler gains the Gooey Test Debuff: Take 1d6+F Acid and gain the Held Debuff.",
               "custom",
             ],
-            ["Any hit crawler gains the Blinded Debuff: Roll with Disadvantage on everything until healed.", "redefined"],
-            ["Any hit crawler must make a Str Stat Check. On a Fail, they gain the Held Debuff.", "check"],
-            ["The target must make a free Dex Stat Check vs Difficulty 12 or gains the Stunned Debuff.", "check"],
+            [
+              "Any hit crawler gains the Blinded Debuff: Roll with Disadvantage on everything until healed.",
+              "redefined",
+            ],
+            [
+              "Any hit crawler must make a Str Stat Check. On a Fail, they gain the Held Debuff.",
+              "check",
+            ],
+            [
+              "The target must make a free Dex Stat Check vs Difficulty 12 or gains the Stunned Debuff.",
+              "check",
+            ],
             ["Any hit crawler gains the Muted or Queasy Debuff (the goblin's choice).", "choice"],
             [
               "On an Evade Major Fail or worse, the crawler gains one of the following Debuffs: Woozy, Stunned, or Blood Trail.",
               "choice",
             ],
             ["Any crawler who loses 4+ HB slots gains the Muted Debuff.", "hb"],
-            ["If the test goblin moved this round, any hit crawler gains the Take Down Debuff.", "if"],
+            [
+              "If the test goblin moved this round, any hit crawler gains the Take Down Debuff.",
+              "if",
+            ],
             ["The goblin cackles, and the crawler gains the Woozy Debuff.", "trigger"],
           ];
           for (const [text, reason] of cases) {
@@ -774,7 +904,9 @@ export default function register(quench) {
             assert.isEmpty(read.effects, text);
             assert.equal(read.textOnly[0]?.reason, reason, text);
           }
-          assert.isEmpty(mob("This attack automatically hits any crawler with the Held Debuff.").effects);
+          assert.isEmpty(
+            mob("This attack automatically hits any crawler with the Held Debuff.").effects,
+          );
           // A second Attack's line run into this one's effect isn't this one's.
           assert.deepEqual(
             summary(
@@ -791,35 +923,55 @@ export default function register(quench) {
           const fist = gear(
             "On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff",
           );
-          assert.include(fist, { debuffKey: "woozy", amazingSuccessOnly: true, critOnly: false, handToHandOnly: true });
+          assert.include(fist, {
+            debuffKey: "woozy",
+            amazingSuccessOnly: true,
+            critOnly: false,
+            handToHandOnly: true,
+          });
           assert.deepEqual(fist.skills, [], "the Hand-to-Hand box, not a list of names");
-          const [entry] = itemTargetEffects("On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff", "gear");
+          const [entry] = itemTargetEffects(
+            "On an Amazing Success with any Hand-to-Hand Attack you make, the target gains the Woozy Debuff",
+            "gear",
+          );
           assert.include(entry, { debuffKey: "woozy", handToHandOnly: true });
           assert.deepEqual(entry.skills, []);
-          const any = gear("On an Amazing Success with any Attack you make, the target gains the Queasy Debuff");
+          const any = gear(
+            "On an Amazing Success with any Attack you make, the target gains the Queasy Debuff",
+          );
           assert.include(any, { debuffKey: "queasy", amazingSuccessOnly: true });
           assert.deepEqual(any.skills, [], "any Attack");
-          const crit = gear("On a Critical Hit with any Test Poke Attack you make, the target gains the Blinded Debuff");
+          const crit = gear(
+            "On a Critical Hit with any Test Poke Attack you make, the target gains the Blinded Debuff",
+          );
           assert.include(crit, { debuffKey: "blinded", critOnly: true, amazingSuccessOnly: false });
           assert.deepEqual(crit.skills, ["Test Poke"]);
-          assert.include(gear("AS: Target gains Burned"), { debuffKey: "burned", amazingSuccessOnly: true });
+          assert.include(gear("AS: Target gains Burned"), {
+            debuffKey: "burned",
+            amazingSuccessOnly: true,
+          });
         });
 
         it("reads a Spell Upgrade's Debuffs", function () {
           const spell = (text) => parseDebuffText(text, { context: "spell" });
-          assert.include(spell("+1d3 base damage, and the target gains the Shocked Debuff.").effects[0], {
-            debuffKey: "shocked",
-            critOnly: false,
-            amazingSuccessOnly: false,
-          });
           assert.include(
-            spell("+10ft Cone, and on a Critical Hit, the affected creatures gain the Muted Debuff.").effects[0],
+            spell("+1d3 base damage, and the target gains the Shocked Debuff.").effects[0],
+            {
+              debuffKey: "shocked",
+              critOnly: false,
+              amazingSuccessOnly: false,
+            },
+          );
+          assert.include(
+            spell(
+              "+10ft Cone, and on a Critical Hit, the affected creatures gain the Muted Debuff.",
+            ).effects[0],
             { debuffKey: "muted", critOnly: true },
           );
           assert.isEmpty(spell("You heal 1d4 slots and mend a Minor Injury Debuff.").effects);
           assert.equal(
-            spell("Those who lose 2 or more Health Bar slots to this test gain the Queasy Debuff.").textOnly[0]
-              ?.reason,
+            spell("Those who lose 2 or more Health Bar slots to this test gain the Queasy Debuff.")
+              .textOnly[0]?.reason,
             "hb",
           );
         });
@@ -836,23 +988,37 @@ export default function register(quench) {
         });
 
         it("reads Armor-Piercing off an Attack's range", function () {
-          assert.deepEqual(splitArmorPiercing("5ft, Armor-Piercing"), { range: "5ft", armorPiercing: true });
-          assert.deepEqual(splitArmorPiercing("10ft, Armor Piercing"), { range: "10ft", armorPiercing: true });
+          assert.deepEqual(splitArmorPiercing("5ft, Armor-Piercing"), {
+            range: "5ft",
+            armorPiercing: true,
+          });
+          assert.deepEqual(splitArmorPiercing("10ft, Armor Piercing"), {
+            range: "10ft",
+            armorPiercing: true,
+          });
           assert.deepEqual(splitArmorPiercing("30ft"), { range: "30ft", armorPiercing: false });
         });
 
         it("puts them on parsed Mob Attacks and their Attack items", function () {
           const [stabber] = parseMobs([DEBUFF_MOB_PAGE]);
           const [stab, kick, glare] = stabber.data.system.attacks;
-          const triggers = (attack) => attack.targetEffects.map((te) => `${te.trigger}:${te.debuffKey}`);
+          const triggers = (attack) =>
+            attack.targetEffects.map((te) => `${te.trigger}:${te.debuffKey}`);
           assert.include(stab, { name: "Stab", range: "5ft", armorPiercing: true });
           assert.deepEqual(triggers(stab), ["majorFail:poisoned"]);
-          assert.include(kick, { name: "Kick", toHit: "11+F", damage: "1d6" }, "a to-hit line missing its colon");
+          assert.include(
+            kick,
+            { name: "Kick", toHit: "11+F", damage: "1d6" },
+            "a to-hit line missing its colon",
+          );
           assert.deepEqual(triggers(kick), ["hit:staggered", "hit:woozy"]);
           assert.isEmpty(glare.targetEffects, "behind a Stat Check: text only");
           assert.include(glare.effect, "Woozy Debuff", "and still in the text");
 
-          const items = legacyAttackItems([stab, { ...kick, targetEffects: [{ debuffKey: "notADebuff", trigger: "hit" }] }]);
+          const items = legacyAttackItems([
+            stab,
+            { ...kick, targetEffects: [{ debuffKey: "notADebuff", trigger: "hit" }] },
+          ]);
           assert.isTrue(items[0].system.armorPiercing);
           assert.deepEqual(
             items[0].system.targetEffects.map((te) => te.debuffKey),
@@ -865,7 +1031,10 @@ export default function register(quench) {
           const [knuckles] = parseGear([DEBUFF_GEAR_PAGE]);
           const effects = knuckles.data.system.targetEffects;
           assert.deepEqual(
-            effects.map((te) => `${te.debuffKey}:${te.amazingSuccessOnly}:${te.critOnly}:${te.skills.join("/")}:${te.handToHandOnly}`),
+            effects.map(
+              (te) =>
+                `${te.debuffKey}:${te.amazingSuccessOnly}:${te.critOnly}:${te.skills.join("/")}:${te.handToHandOnly}`,
+            ),
             [
               "woozy:true:false::true",
               "blinded:false:true:Test Poke:false",
@@ -887,11 +1056,30 @@ export default function register(quench) {
             { name: "Test Bolt", type: "spell", tier: TIERS.other, source: "module" },
             { name: "Test Bolt", type: "spell", tier: TIERS.world, source: "world" },
             { name: "Test Bolt", type: "spell", tier: TIERS.rulebook, source: "other book" },
-            { name: "Test Bolt", type: "item", tier: TIERS.system, order: 0, source: "system item" },
-            { name: "Test Bolt", type: "spell", tier: TIERS.system, order: 2, source: "system gear pack" },
-            { name: "test bolt", type: "spell", tier: TIERS.system, order: 0, source: "system spells pack" },
+            {
+              name: "Test Bolt",
+              type: "item",
+              tier: TIERS.system,
+              order: 0,
+              source: "system item",
+            },
+            {
+              name: "Test Bolt",
+              type: "spell",
+              tier: TIERS.system,
+              order: 2,
+              source: "system gear pack",
+            },
+            {
+              name: "test bolt",
+              type: "spell",
+              tier: TIERS.system,
+              order: 0,
+              source: "system spells pack",
+            },
           ];
-          const best = (list, types = ["spell"]) => buildMatcher(list)("Test Bolt", types)?.source ?? null;
+          const best = (list, types = ["spell"]) =>
+            buildMatcher(list)("Test Bolt", types)?.source ?? null;
           assert.equal(best(sources), "system spells pack");
           assert.equal(best(sources.slice(0, 5)), "system gear pack");
           assert.equal(best(sources.slice(0, 3)), "other book");
@@ -906,7 +1094,12 @@ export default function register(quench) {
         const labels = { floor: (n) => `Floor ${n}`, other: "Not on a Floor" };
         const filed = (book) =>
           Object.fromEntries(
-            parseMobs(book).map((m) => [m.name, sectionFolders(m.section, labels).map((f) => f.name).join(" / ")]),
+            parseMobs(book).map((m) => [
+              m.name,
+              sectionFolders(m.section, labels)
+                .map((f) => f.name)
+                .join(" / "),
+            ]),
           );
 
         it("reads Core-style chapter openers and section headings, not the contents page", function () {
@@ -919,7 +1112,11 @@ export default function register(quench) {
             "Test Mascot": "Not on a Floor",
           });
           const sectionAt = findSections(CORE_STYLE_BOOK);
-          assert.include(sectionAt(1, 3), { floor: null, kind: "" }, "a contents line is no heading");
+          assert.include(
+            sectionAt(1, 3),
+            { floor: null, kind: "" },
+            "a contents line is no heading",
+          );
         });
 
         it("reads Toolkit-style Floor titles, capitalised and wrapped headings, and Floor lists", function () {
@@ -945,7 +1142,13 @@ export default function register(quench) {
 
       describe("import fingerprint", function () {
         it("covers only what the import wrote", function () {
-          const data = { name: "X", type: "item", folder: "f", flags: { a: 1 }, system: { a: 1, b: { c: [1, 2] } } };
+          const data = {
+            name: "X",
+            type: "item",
+            folder: "f",
+            flags: { a: 1 },
+            system: { a: 1, b: { c: [1, 2] } },
+          };
           assert.deepEqual(writtenFields(data), ["name", "system.a", "system.b.c", "type"]);
         });
 
@@ -954,9 +1157,17 @@ export default function register(quench) {
           const flag = importStamp(source, { name: "X", type: "item", system: { a: 1 } });
           assert.equal(flag.v, FINGERPRINT_VERSION);
           assert.equal(importState(source, flag), "untouched");
-          assert.equal(importState({ ...source, system: { a: 1, b: 9 } }, flag), "untouched", "a field it didn't write");
+          assert.equal(
+            importState({ ...source, system: { a: 1, b: 9 } }, flag),
+            "untouched",
+            "a field it didn't write",
+          );
           assert.equal(importState({ ...source, system: { a: 5, b: 2 } }, flag), "edited");
-          assert.equal(importState({ ...source, system: { a: 5 } }, { hash: "old" }), "untouched", "pre-0.7.0: once");
+          assert.equal(
+            importState({ ...source, system: { a: 5 } }, { hash: "old" }),
+            "untouched",
+            "pre-0.7.0: once",
+          );
           assert.equal(importState(source, undefined), "notImported");
         });
 
@@ -966,7 +1177,12 @@ export default function register(quench) {
           type: "skill",
           system: {
             changes: [{ targetType: "stat", target: "dex", mode: "add", value: "1" }],
-            upgrades: [{ rankThreshold: 5, changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }] }],
+            upgrades: [
+              {
+                rankThreshold: 5,
+                changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }],
+              },
+            ],
           },
         };
         // As stored: the data model filled in an id.
@@ -996,7 +1212,13 @@ export default function register(quench) {
           edited.system.upgrades[0].changes[0].value = "3";
           assert.equal(importState(edited, flag), "edited");
           const added = stored();
-          added.system.changes.push({ id: "cccc", targetType: "stat", target: "int", mode: "add", value: "1" });
+          added.system.changes.push({
+            id: "cccc",
+            targetType: "stat",
+            target: "int",
+            mode: "add",
+            value: "1",
+          });
           assert.equal(importState(added, flag), "edited", "a bonus the GM added");
         });
 
@@ -1007,7 +1229,11 @@ export default function register(quench) {
           assert.equal(importState(source, v1), "untouched");
           const edited = stored();
           edited.system.changes[0].value = "4";
-          assert.equal(importState(edited, v1), "edited", "a v1 edit isn't forgiven by the version bump");
+          assert.equal(
+            importState(edited, v1),
+            "edited",
+            "a v1 edit isn't forgiven by the version bump",
+          );
 
           const v2 = restamp(source, v1);
           assert.equal(v2.v, FINGERPRINT_VERSION);
@@ -1025,11 +1251,21 @@ export default function register(quench) {
           const flag = importStamp(source, sent);
           const migrated = stored();
           migrated.system.changes[0].value = "2";
-          migrated.system.changes.push({ id: "dddd", targetType: "resource", target: "dr", mode: "add", value: "1" });
+          migrated.system.changes.push({
+            id: "dddd",
+            targetType: "resource",
+            target: "dr",
+            mode: "add",
+            value: "1",
+          });
           assert.equal(importState(migrated, flag), "edited", "without a restamp");
           const again = restamp(migrated, flag);
           assert.equal(importState(migrated, again), "untouched");
-          assert.include(again.fields, "system.changes.1.value", "the array is re-read as it is now");
+          assert.include(
+            again.fields,
+            "system.changes.1.value",
+            "the array is re-read as it is now",
+          );
           const gm = foundry.utils.deepClone(migrated);
           gm.system.changes[1].value = "5";
           assert.equal(importState(gm, again), "edited");
@@ -1039,9 +1275,24 @@ export default function register(quench) {
       describe("which book (books.mjs)", function () {
         // Made-up title pages in the books' layout (no book text): big,
         // slightly slanted cover titles, drawn twice like the real ones.
-        const item = (str, size, y, angle = 0) => ({ str, x: 60, y, size, width: str.length * size * 0.5, angle, font: "" });
-        const coreCover = [item("CORE RULEBOOK", 51, 93, 7), item("CORE RULEBOOK", 51, 93, 7), item("TEST EDITION", 30, 53, 7)];
-        const toolkitCover = [item("GAME MASTER’S", 61, 87, 4.5), item("CAMPAIGN TOOLKIT", 49, 40, 4.5)];
+        const item = (str, size, y, angle = 0) => ({
+          str,
+          x: 60,
+          y,
+          size,
+          width: str.length * size * 0.5,
+          angle,
+          font: "",
+        });
+        const coreCover = [
+          item("CORE RULEBOOK", 51, 93, 7),
+          item("CORE RULEBOOK", 51, 93, 7),
+          item("TEST EDITION", 30, 53, 7),
+        ];
+        const toolkitCover = [
+          item("GAME MASTER’S", 61, 87, 4.5),
+          item("CAMPAIGN TOOLKIT", 49, 40, 4.5),
+        ];
         const otherCover = [item("CRAWLERS &", 80, 85), item("CUSTOMIZATION", 60, 30)];
         const credits = [item("Test text for the Dungeon Crawler Carl Roleplaying Game.", 10, 600)];
         /** A pdf.js document stand-in: these pages' text, nothing else (no file, no name). */
@@ -1053,8 +1304,14 @@ export default function register(quench) {
                 str: i.str,
                 width: i.width,
                 fontName: "",
-                transform: [i.size * Math.cos((i.angle * Math.PI) / 180), i.size * Math.sin((i.angle * Math.PI) / 180),
-                  -i.size * Math.sin((i.angle * Math.PI) / 180), i.size * Math.cos((i.angle * Math.PI) / 180), i.x, i.y],
+                transform: [
+                  i.size * Math.cos((i.angle * Math.PI) / 180),
+                  i.size * Math.sin((i.angle * Math.PI) / 180),
+                  -i.size * Math.sin((i.angle * Math.PI) / 180),
+                  i.size * Math.cos((i.angle * Math.PI) / 180),
+                  i.x,
+                  i.y,
+                ],
               })),
             }),
             cleanup: () => {},
@@ -1066,7 +1323,11 @@ export default function register(quench) {
           assert.equal(identifyBook([toolkitCover, credits]), BOOKS.toolkit);
           assert.equal(BOOKS.core.id, "core");
           assert.equal(BOOKS.toolkit.id, "toolkit");
-          assert.equal((await identifyPdf(fakePdf([coreCover, credits]))).id, "core", "from pdf.js text");
+          assert.equal(
+            (await identifyPdf(fakePdf([coreCover, credits]))).id,
+            "core",
+            "from pdf.js text",
+          );
           assert.equal((await identifyPdf(fakePdf([toolkitCover, [], credits]))).id, "toolkit");
         });
 
@@ -1081,14 +1342,25 @@ export default function register(quench) {
             error = err;
           }
           assert.instanceOf(error, UnknownBookError);
-          assert.notInclude(error.message.toUpperCase(), "CUSTOMIZATION", "nothing read from the PDF");
-          assert.notEqual(game.i18n.localize("CARLRPG.PdfImport.UnknownBook"), "CARLRPG.PdfImport.UnknownBook");
+          assert.notInclude(
+            error.message.toUpperCase(),
+            "CUSTOMIZATION",
+            "nothing read from the PDF",
+          );
+          assert.notEqual(
+            game.i18n.localize("CARLRPG.PdfImport.UnknownBook"),
+            "CARLRPG.PdfImport.UnknownBook",
+          );
         });
 
         it("never reads the file name: the same pages are the same book, and the old helper is gone", async function () {
           // identifyPdf is given only the document; whatever the file was
           // called, the same title page gives the same id.
-          for (const name of ["Carl RPG.pdf", "renamed-anything.pdf", "Starter Set - Gamemaster's Toolkit.pdf"]) {
+          for (const name of [
+            "Carl RPG.pdf",
+            "renamed-anything.pdf",
+            "Starter Set - Gamemaster's Toolkit.pdf",
+          ]) {
             const pdf = Object.assign(fakePdf([coreCover, credits]), { name });
             assert.equal((await identifyPdf(pdf)).id, "core", name);
           }
@@ -1100,7 +1372,11 @@ export default function register(quench) {
           assert.equal(bookIdOf("starter-set-gamemaster-s-toolkit"), "toolkit");
           assert.equal(bookIdOf("gamemasters-toolkit"), "toolkit");
           assert.equal(bookIdOf("core"), "core");
-          assert.equal(bookIdOf("carlrpg-starter-set-crawlers"), "carlrpg-starter-set-crawlers", "not a book of ours");
+          assert.equal(
+            bookIdOf("carlrpg-starter-set-crawlers"),
+            "carlrpg-starter-set-crawlers",
+            "not a book of ours",
+          );
           assert.isUndefined(bookIdOf(undefined));
         });
       });
@@ -1111,22 +1387,54 @@ export default function register(quench) {
         it("selects all or no maps at once", async function () {
           const found = { gear: [{}], spells: [], mobs: [], achievements: [] };
           const maps = [
-            { page: 3, name: "Test Map A", likely: true, thumb: URL.createObjectURL(new Blob(["a"], { type: "image/png" })) },
-            { page: 7, name: "Test Map B", likely: false, thumb: URL.createObjectURL(new Blob(["b"], { type: "image/png" })) },
+            {
+              page: 3,
+              name: "Test Map A",
+              likely: true,
+              thumb: URL.createObjectURL(new Blob(["a"], { type: "image/png" })),
+            },
+            {
+              page: 7,
+              name: "Test Map B",
+              likely: false,
+              thumb: URL.createObjectURL(new Blob(["b"], { type: "image/png" })),
+            },
           ];
-          const boxes = (dialog) => [...dialog.element.querySelectorAll('.carl-pdf-import-map input[type="checkbox"]')];
-          const choice = await withDialog(() => chooseContent("Quench Test Book", found, maps), async (dialog) => {
-            // The blob: thumbnails survive into the dialog (Foundry's HTML
-            // cleaning would strip them from string content).
-            const srcs = [...dialog.element.querySelectorAll(".carl-pdf-import-map img")].map((i) => i.getAttribute("src"));
-            assert.deepEqual(srcs, maps.map((m) => m.thumb), "the thumbnails' blob: URLs are kept");
-            assert.deepEqual(boxes(dialog).map((b) => b.checked), [true, false], "likely maps start checked");
-            dialog.element.querySelector('[data-map-select="all"]').click();
-            assert.isTrue(boxes(dialog).every((b) => b.checked), "Select all");
-            dialog.element.querySelector('[data-map-select="none"]').click();
-            assert.isTrue(boxes(dialog).every((b) => !b.checked), "Select none");
-            pressDialog(dialog, "import");
-          }, "carl-pdf-import-dialog");
+          const boxes = (dialog) => [
+            ...dialog.element.querySelectorAll('.carl-pdf-import-map input[type="checkbox"]'),
+          ];
+          const choice = await withDialog(
+            () => chooseContent("Quench Test Book", found, maps),
+            async (dialog) => {
+              // The blob: thumbnails survive into the dialog (Foundry's HTML
+              // cleaning would strip them from string content).
+              const srcs = [...dialog.element.querySelectorAll(".carl-pdf-import-map img")].map(
+                (i) => i.getAttribute("src"),
+              );
+              assert.deepEqual(
+                srcs,
+                maps.map((m) => m.thumb),
+                "the thumbnails' blob: URLs are kept",
+              );
+              assert.deepEqual(
+                boxes(dialog).map((b) => b.checked),
+                [true, false],
+                "likely maps start checked",
+              );
+              dialog.element.querySelector('[data-map-select="all"]').click();
+              assert.isTrue(
+                boxes(dialog).every((b) => b.checked),
+                "Select all",
+              );
+              dialog.element.querySelector('[data-map-select="none"]').click();
+              assert.isTrue(
+                boxes(dialog).every((b) => !b.checked),
+                "Select none",
+              );
+              pressDialog(dialog, "import");
+            },
+            "carl-pdf-import-dialog",
+          );
           for (const m of maps) URL.revokeObjectURL(m.thumb);
           assert.isFalse(Object.values(choice.map ?? {}).some(Boolean), "no maps chosen");
           assert.isTrue(choice.kind?.gear, "the content choice is untouched");
@@ -1135,13 +1443,17 @@ export default function register(quench) {
         it("keeps every map thumbnail made before a later page fails, so each can be revoked", async function () {
           const page = {
             view: [0, 0, 612, 792],
-            getOperatorList: async () => opList([
-              ["save"],
-              ["transform", [560, 0, 0, 700, 20, 40]],
-              ["paintImageXObject", ["img_map", 2, 2]],
-              ["restore"],
-            ]),
-            objs: { get: (id, done) => done({ width: 2, height: 2, kind: 3, data: new Uint8Array(16).fill(200) }) },
+            getOperatorList: async () =>
+              opList([
+                ["save"],
+                ["transform", [560, 0, 0, 700, 20, 40]],
+                ["paintImageXObject", ["img_map", 2, 2]],
+                ["restore"],
+              ]),
+            objs: {
+              get: (id, done) =>
+                done({ width: 2, height: 2, kind: 3, data: new Uint8Array(16).fill(200) }),
+            },
             commonObjs: { get: () => {} },
             cleanup() {},
           };
@@ -1151,7 +1463,10 @@ export default function register(quench) {
               throw new Error("Quench: page unreadable");
             },
           };
-          const candidates = [{ page: 1, name: "Test Map A" }, { page: 2, name: "Test Map B" }];
+          const candidates = [
+            { page: 1, name: "Test Map A" },
+            { page: 2, name: "Test Map B" },
+          ];
           const maps = [];
           let error = null;
           try {
@@ -1172,7 +1487,13 @@ export default function register(quench) {
 
         it("closes a document through its loading task (pdf.js 6 documents have no destroy)", async function () {
           let destroyed = 0;
-          const pdfDoc = { loadingTask: { destroy: async () => { destroyed += 1; } } };
+          const pdfDoc = {
+            loadingTask: {
+              destroy: async () => {
+                destroyed += 1;
+              },
+            },
+          };
           await closePdfDocument(pdfDoc);
           assert.equal(destroyed, 1);
         });
@@ -1183,7 +1504,13 @@ export default function register(quench) {
           const warn = console.warn;
           console.warn = () => {};
           try {
-            await closePdfDocument({ loadingTask: { destroy: async () => { throw new Error("Quench: close failed"); } } });
+            await closePdfDocument({
+              loadingTask: {
+                destroy: async () => {
+                  throw new Error("Quench: close failed");
+                },
+              },
+            });
           } finally {
             console.warn = warn;
           }
@@ -1230,7 +1557,8 @@ export default function register(quench) {
         const otherBook = "quench-pdf-import-other-book";
         const worldItems = [];
         const docsOf = async (b, type) => (await findBookPack(b, type)?.getDocuments()) ?? [];
-        const docNamed = async (b, type, name) => (await docsOf(b, type)).find((d) => d.name === name);
+        const docNamed = async (b, type, name) =>
+          (await docsOf(b, type)).find((d) => d.name === name);
         const parsedItem = (name, type, description = "<p>parsed</p>") => ({
           name,
           page: 2,
@@ -1251,7 +1579,8 @@ export default function register(quench) {
             ))
               await folder.delete();
           }
-          for (const folder of game.folders.filter((f) => [title, otherTitle].includes(f.name))) await folder.delete();
+          for (const folder of game.folders.filter((f) => [title, otherTitle].includes(f.name)))
+            await folder.delete();
           for (const item of worldItems.splice(0)) if (game.items.get(item.id)) await item.delete();
         }
         before(cleanUp);
@@ -1278,18 +1607,28 @@ export default function register(quench) {
             assert.include(pack.metadata.label, title);
           }
           assert.isFalse(
-            game.folders.some((f) => f.name === title && ["Actor", "Item", "JournalEntry"].includes(f.type)),
+            game.folders.some(
+              (f) => f.name === title && ["Actor", "Item", "JournalEntry"].includes(f.type),
+            ),
             "no world folders",
           );
-          assert.isFalse(game.actors.some((a) => a.getFlag("carl-rpg", "pdfImport")?.book === book), "nothing in the world");
           assert.isFalse(
-            game.packs.get("carl-rpg.gear").index.some((e) => e.name === "Test Widget of Never-Ending Doom"),
+            game.actors.some((a) => a.getFlag("carl-rpg", "pdfImport")?.book === book),
+            "nothing in the world",
+          );
+          assert.isFalse(
+            game.packs
+              .get("carl-rpg.gear")
+              .index.some((e) => e.name === "Test Widget of Never-Ending Doom"),
             "the system's packs are untouched",
           );
 
           const itemPack = findBookPack(book, "Item");
           const widget = await docNamed(book, "Item", "Test Widget of Never-Ending Doom");
-          assert.equal(itemPack.folders.get(widget._source.folder)?.name, game.i18n.localize("CARLRPG.PdfImport.Kind.gear"));
+          assert.equal(
+            itemPack.folders.get(widget._source.folder)?.name,
+            game.i18n.localize("CARLRPG.PdfImport.Kind.gear"),
+          );
           const blob = await docNamed(book, "Actor", "Test Blob");
           assert.equal(blob.system.hb.max, 3);
           assert.equal(blob.flags["carl-rpg"].pdfImport.book, book);
@@ -1310,7 +1649,11 @@ export default function register(quench) {
           assert.include(second.items, { created: 0, updated: 1 });
           assert.deepEqual(second.mobs, { created: 0, updated: 2, skipped: [] });
           assert.deepEqual(second.achievements, { created: 0, updated: 1, skipped: [] });
-          assert.lengthOf(mobAttacksOf(await docNamed(book, "Actor", "Test Blob")), printed.length, "not doubled");
+          assert.lengthOf(
+            mobAttacksOf(await docNamed(book, "Actor", "Test Blob")),
+            printed.length,
+            "not doubled",
+          );
         });
 
         it("refreshes the Attacks the GM didn't edit, keeps the ones they did, and remakes deleted ones", async function () {
@@ -1329,13 +1672,23 @@ export default function register(quench) {
           );
           const stabId = stab.id;
           // The GM edits Kick, and adds an Attack of their own.
-          await kick.update({ "system.targetEffects": [{ debuffKey: "held", trigger: "majorFail" }] });
-          await stabber.createEmbeddedDocuments("Item", [{ name: "GM Bite", type: "mobAttack", system: { damage: "1d4" } }]);
+          await kick.update({
+            "system.targetEffects": [{ debuffKey: "held", trigger: "majorFail" }],
+          });
+          await stabber.createEmbeddedDocuments("Item", [
+            { name: "GM Bite", type: "mobAttack", system: { damage: "1d4" } },
+          ]);
 
           // A later parse changes every Attack.
           const reprint = parseMobs([DEBUFF_MOB_PAGE]);
           for (const attack of reprint[0].data.system.attacks) attack.damage = "2d6";
-          const again = await importBook({ book, title, found: { ...none, mobs: reprint }, kinds: ["mobs"], maps: [] });
+          const again = await importBook({
+            book,
+            title,
+            found: { ...none, mobs: reprint },
+            kinds: ["mobs"],
+            maps: [],
+          });
           assert.equal(again.mobs.updated, 1);
           stabber = await docNamed(book, "Actor", "Test Stabber");
           const byName = Object.fromEntries(mobAttacksOf(stabber).map((a) => [a.name, a]));
@@ -1348,9 +1701,18 @@ export default function register(quench) {
           assert.lengthOf(mobAttacksOf(stabber), 4);
 
           await stabber.deleteEmbeddedDocuments("Item", [stabId]);
-          await importBook({ book, title, found: { ...none, mobs: reprint }, kinds: ["mobs"], maps: [] });
+          await importBook({
+            book,
+            title,
+            found: { ...none, mobs: reprint },
+            kinds: ["mobs"],
+            maps: [],
+          });
           stabber = await docNamed(book, "Actor", "Test Stabber");
-          assert.ok(mobAttacksOf(stabber).find((a) => a.name === "Stab"), "made again once deleted");
+          assert.ok(
+            mobAttacksOf(stabber).find((a) => a.name === "Stab"),
+            "made again once deleted",
+          );
           assert.lengthOf(mobAttacksOf(stabber), 4);
         });
 
@@ -1358,14 +1720,28 @@ export default function register(quench) {
           const found = { ...none, gear: parseGear([GEAR_PAGE]), mobs: parseMobs([MOB_PAGE]) };
           const older = parseMobs([MOB_PAGE]);
           for (const m of older) delete m.data.system.move;
-          await importBook({ book, title, found: { ...found, mobs: older }, kinds: ["gear", "mobs"], maps: [] });
+          await importBook({
+            book,
+            title,
+            found: { ...found, mobs: older },
+            kinds: ["gear", "mobs"],
+            maps: [],
+          });
           const blob = await docNamed(book, "Actor", "Test Blob");
           await blob.update({ "system.stats.con.value": 9 });
 
           const again = await importBook({ book, title, found, kinds: ["gear", "mobs"], maps: [] });
           assert.deepEqual(again.mobs.skipped, ["Test Blob"]);
-          assert.equal(again.mobs.updated, 1, "the unedited Mob still updates, though the parse now writes Move");
-          assert.equal((await docNamed(book, "Actor", "Test Blob")).system.stats.con.value, 9, "the GM's edit survives");
+          assert.equal(
+            again.mobs.updated,
+            1,
+            "the unedited Mob still updates, though the parse now writes Move",
+          );
+          assert.equal(
+            (await docNamed(book, "Actor", "Test Blob")).system.stats.con.value,
+            9,
+            "the GM's edit survives",
+          );
         });
 
         it("treats a pre-0.7.0 import as untouched once, and leaves the GM's own documents alone", async function () {
@@ -1382,18 +1758,40 @@ export default function register(quench) {
             ],
             { pack: pack.collection },
           );
-          const gear = [parsedItem("Test Old Import", "item", "<p>new</p>"), parsedItem("Test GM Item", "item")];
-          const first = await importBook({ book, title, found: { ...none, gear }, kinds: ["gear"], maps: [] });
+          const gear = [
+            parsedItem("Test Old Import", "item", "<p>new</p>"),
+            parsedItem("Test GM Item", "item"),
+          ];
+          const first = await importBook({
+            book,
+            title,
+            found: { ...none, gear },
+            kinds: ["gear"],
+            maps: [],
+          });
           assert.equal(first.items.updated, 1);
           assert.deepEqual(first.items.skipped, ["Test GM Item"]);
           const old = await docNamed(book, "Item", "Test Old Import");
           assert.equal(old.system.description, "<p>new</p>");
           assert.equal(old.flags["carl-rpg"].pdfImport.v, FINGERPRINT_VERSION, "re-baselined");
-          assert.equal((await docNamed(book, "Item", "Test GM Item")).system.description, "<p>mine</p>");
+          assert.equal(
+            (await docNamed(book, "Item", "Test GM Item")).system.description,
+            "<p>mine</p>",
+          );
 
           await old.update({ "system.description": "<p>the GM's</p>" });
-          const second = await importBook({ book, title, found: { ...none, gear }, kinds: ["gear"], maps: [] });
-          assert.sameMembers(second.items.skipped, ["Test Old Import", "Test GM Item"], "only once");
+          const second = await importBook({
+            book,
+            title,
+            found: { ...none, gear },
+            kinds: ["gear"],
+            maps: [],
+          });
+          assert.sameMembers(
+            second.items.skipped,
+            ["Test Old Import", "Test GM Item"],
+            "only once",
+          );
         });
 
         it("prefers compendium copies: the system's packs, then another book's, then world Items", async function () {
@@ -1401,15 +1799,26 @@ export default function register(quench) {
           await importBook({
             book: otherBook,
             title: otherTitle,
-            found: { ...none, gear: [parsedItem("Quench Test Ranked", "item", "<p>other book</p>")] },
+            found: {
+              ...none,
+              gear: [parsedItem("Quench Test Ranked", "item", "<p>other book</p>")],
+            },
             kinds: ["gear"],
             maps: [],
           });
           worldItems.push(
             ...(await Item.implementation.createDocuments([
               { name: "Fear", type: "spell", system: { description: "<p>world copy</p>" } },
-              { name: "Quench Test Ranked", type: "item", system: { description: "<p>world copy</p>" } },
-              { name: "Quench Test Copyable", type: "item", system: { description: "<p>world copy</p>" } },
+              {
+                name: "Quench Test Ranked",
+                type: "item",
+                system: { description: "<p>world copy</p>" },
+              },
+              {
+                name: "Quench Test Copyable",
+                type: "item",
+                system: { description: "<p>world copy</p>" },
+              },
               {
                 name: "Quench Test Own",
                 type: "item",
@@ -1420,8 +1829,14 @@ export default function register(quench) {
           );
 
           const sources = await matchCandidates(book);
-          assert.isFalse(sources.some((s) => s.name === "Quench Test Own"), "never this book's own import");
-          assert.isFalse(sources.some((s) => s.source === findBookPack(book, "Item").collection), "or its compendium");
+          assert.isFalse(
+            sources.some((s) => s.name === "Quench Test Own"),
+            "never this book's own import",
+          );
+          assert.isFalse(
+            sources.some((s) => s.source === findBookPack(book, "Item").collection),
+            "or its compendium",
+          );
 
           const result = await importBook({
             book,
@@ -1440,8 +1855,13 @@ export default function register(quench) {
           });
           assert.include(result.items.matched, { spells: 1, gear: 2 });
 
-          const source = async (name) => (await docNamed(book, "Item", name))?._stats?.compendiumSource ?? "";
-          assert.match(await source("Fear"), /^Compendium\.carl-rpg\.skills-and-spells\./, "the system's Spell");
+          const source = async (name) =>
+            (await docNamed(book, "Item", name))?._stats?.compendiumSource ?? "";
+          assert.match(
+            await source("Fear"),
+            /^Compendium\.carl-rpg\.skills-and-spells\./,
+            "the system's Spell",
+          );
           const fear = await docNamed(book, "Item", "Fear");
           assert.notInclude(fear.system.description, "world copy");
           assert.isTrue(
@@ -1452,7 +1872,11 @@ export default function register(quench) {
             findBookPack(book, "Item").folders.get(fear._source.folder)?.name,
             game.i18n.localize("CARLRPG.PdfImport.Kind.spells"),
           );
-          assert.include(await source("Quench Test Ranked"), findBookPack(otherBook, "Item").collection, "another book's");
+          assert.include(
+            await source("Quench Test Ranked"),
+            findBookPack(otherBook, "Item").collection,
+            "another book's",
+          );
           const copyable = worldItems.find((i) => i.name === "Quench Test Copyable");
           assert.equal(await source("Quench Test Copyable"), copyable.uuid, "a world Item");
           assert.equal(
@@ -1473,16 +1897,22 @@ export default function register(quench) {
             }
             return names.join(" / ");
           };
-          const named = async () => Object.fromEntries((await docsOf(book, "Actor")).map((d) => [d.name, d]));
+          const named = async () =>
+            Object.fromEntries((await docsOf(book, "Actor")).map((d) => [d.name, d]));
           const floor = (n) => game.i18n.format("CARLRPG.PdfImport.FloorFolder", { n });
           const other = game.i18n.localize("CARLRPG.PdfImport.OtherMobs");
           let mobs = await named();
           assert.equal(pathOf(mobs["Test Bogling"]), `${floor(1)} / Neighborhood: Test Bogs`);
-          assert.equal(pathOf(mobs["Test Watcher"]), `${floor(1)} / Quest: Passive (Testing) Perception`);
+          assert.equal(
+            pathOf(mobs["Test Watcher"]),
+            `${floor(1)} / Quest: Passive (Testing) Perception`,
+          );
           assert.equal(pathOf(mobs["Test Herald"]), floor(2));
           assert.equal(pathOf(mobs["Test Bogling Again"]), floor(1));
           assert.equal(pathOf(mobs["Test Bruiser"]), other);
-          const [ace, brute, bogling] = ["Test Bog Ace", "Test Bog Brute", "Test Bogling"].map((n) => mobs[n].sort);
+          const [ace, brute, bogling] = ["Test Bog Ace", "Test Bog Brute", "Test Bogling"].map(
+            (n) => mobs[n].sort,
+          );
           assert.isBelow(ace, brute, "same Level: by name");
           assert.isBelow(brute, bogling, "by Level");
           const top = (name) => pack.folders.find((f) => f.name === name && !f._source.folder);
@@ -1508,9 +1938,18 @@ export default function register(quench) {
         it("never matches Mobs across books by name", async function () {
           const higher = parseMobs([DEBUFF_MOB_PAGE]);
           higher[0].data.system.level = 65;
-          const other = await importBook({ book: otherBook, title: otherTitle, found: { ...none, mobs: higher }, kinds: ["mobs"], maps: [] });
+          const other = await importBook({
+            book: otherBook,
+            title: otherTitle,
+            found: { ...none, mobs: higher },
+            kinds: ["mobs"],
+            maps: [],
+          });
           assert.equal(other.mobs.created, 1, "its own Mob, not the other book's");
-          assert.notEqual(findBookPack(otherBook, "Actor").collection, findBookPack(book, "Actor").collection);
+          assert.notEqual(
+            findBookPack(otherBook, "Actor").collection,
+            findBookPack(book, "Actor").collection,
+          );
           assert.equal((await docNamed(otherBook, "Actor", "Test Stabber")).system.level, 65);
           assert.equal((await docNamed(book, "Actor", "Test Stabber")).system.level, 3);
         });
@@ -1518,8 +1957,14 @@ export default function register(quench) {
         it("with no book given, matches every source (nothing is taken for the book's own)", async function () {
           for (const noBook of [undefined, null]) {
             const sources = await matchCandidates(noBook);
-            assert.isTrue(sources.some((s) => s.source === "carl-rpg.skills-and-spells" && s.name === "Fear"), `system packs (${noBook})`);
-            assert.isTrue(sources.some((s) => s.source === findBookPack(book, "Item").collection), "a book's compendium too");
+            assert.isTrue(
+              sources.some((s) => s.source === "carl-rpg.skills-and-spells" && s.name === "Fear"),
+              `system packs (${noBook})`,
+            );
+            assert.isTrue(
+              sources.some((s) => s.source === findBookPack(book, "Item").collection),
+              "a book's compendium too",
+            );
           }
           assert.isNull(findBookPack(undefined, "Item"), "no book, no pack");
         });

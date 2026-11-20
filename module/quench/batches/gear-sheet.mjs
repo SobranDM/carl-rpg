@@ -37,9 +37,25 @@ async function rerendered(sheet, check, message) {
   await waitFor(() => sheet.rendered && check(sheet.element), { message });
 }
 
-const entry = (te) => ({ id: foundry.utils.randomID(), stacks: 1, critOnly: false, amazingSuccessOnly: false, label: "", skills: [], ...te });
-const gearOf = (name, equipped, targetEffects) => ({ type: "item", name, system: { equipped, targetEffects } });
-const skillOf = (name, targetEffects = []) => ({ type: "skill", name, system: { rank: 1, targetEffects, upgrades: [] } });
+const entry = (te) => ({
+  id: foundry.utils.randomID(),
+  stacks: 1,
+  critOnly: false,
+  amazingSuccessOnly: false,
+  label: "",
+  skills: [],
+  ...te,
+});
+const gearOf = (name, equipped, targetEffects) => ({
+  type: "item",
+  name,
+  system: { equipped, targetEffects },
+});
+const skillOf = (name, targetEffects = []) => ({
+  type: "skill",
+  name,
+  system: { rank: 1, targetEffects, upgrades: [] },
+});
 
 export default function register(quench) {
   quench.registerBatch(
@@ -49,46 +65,112 @@ export default function register(quench) {
 
       describe("what an Attack carries", function () {
         it("held or worn gear's Debuffs come with any Attack; unequipped gear's don't", function () {
-          const actor = { items: [
-            gearOf("Smoking Ring", true, [entry({ debuffKey: "burned" })]),
-            gearOf("Packed Ring", false, [entry({ debuffKey: "poisoned" })]),
-          ] };
-          const found = attackTargetEffects(actor, skillOf("Pugilism"), { isCrit: false, isAmazingSuccess: false });
-          assert.deepEqual(found.map((t) => t.debuffKey), ["burned"]);
+          const actor = {
+            items: [
+              gearOf("Smoking Ring", true, [entry({ debuffKey: "burned" })]),
+              gearOf("Packed Ring", false, [entry({ debuffKey: "poisoned" })]),
+            ],
+          };
+          const found = attackTargetEffects(actor, skillOf("Pugilism"), {
+            isCrit: false,
+            isAmazingSuccess: false,
+          });
+          assert.deepEqual(
+            found.map((t) => t.debuffKey),
+            ["burned"],
+          );
           assert.equal(found[0].sourceLabel, "Smoking Ring");
         });
 
-        it("\"Only with\" limits an entry to its listed Attack Skills, by name in any case", function () {
-          const actor = { items: [gearOf("Blazing Longsword", true, [entry({ debuffKey: "burned", skills: ["longsword"] })])] };
-          assert.lengthOf(attackTargetEffects(actor, skillOf("Longsword"), { isAmazingSuccess: false }), 1);
-          assert.lengthOf(attackTargetEffects(actor, skillOf("Dagger"), { isAmazingSuccess: false }), 0);
+        it('"Only with" limits an entry to its listed Attack Skills, by name in any case', function () {
+          const actor = {
+            items: [
+              gearOf("Blazing Longsword", true, [
+                entry({ debuffKey: "burned", skills: ["longsword"] }),
+              ]),
+            ],
+          };
+          assert.lengthOf(
+            attackTargetEffects(actor, skillOf("Longsword"), { isAmazingSuccess: false }),
+            1,
+          );
+          assert.lengthOf(
+            attackTargetEffects(actor, skillOf("Dagger"), { isAmazingSuccess: false }),
+            0,
+          );
         });
 
-        it("\"With any Hand-to-Hand Attack\" fits any Skill with the Hand-to-Hand box, homebrew included - not a Longsword", function () {
-          const actor = { items: [gearOf("Brass Knuckles", true, [entry({ debuffKey: "woozy", handToHandOnly: true })])] };
-          const elbow = { ...skillOf("Flying Elbow"), system: { ...skillOf("Flying Elbow").system, isHandToHand: true } };
-          assert.deepEqual(attackTargetEffects(actor, elbow, { isAmazingSuccess: false }).map((t) => t.debuffKey), ["woozy"],
-            "a homebrew hand-to-hand Skill");
-          assert.lengthOf(attackTargetEffects(actor, skillOf("Longsword"), { isAmazingSuccess: false }), 0, "a Weapon Skill");
-          assert.lengthOf(attackTargetEffects(actor, skillOf("Pugilism"), { isAmazingSuccess: false }), 0,
-            "a book name without the box doesn't count");
+        it('"With any Hand-to-Hand Attack" fits any Skill with the Hand-to-Hand box, homebrew included - not a Longsword', function () {
+          const actor = {
+            items: [
+              gearOf("Brass Knuckles", true, [entry({ debuffKey: "woozy", handToHandOnly: true })]),
+            ],
+          };
+          const elbow = {
+            ...skillOf("Flying Elbow"),
+            system: { ...skillOf("Flying Elbow").system, isHandToHand: true },
+          };
+          assert.deepEqual(
+            attackTargetEffects(actor, elbow, { isAmazingSuccess: false }).map((t) => t.debuffKey),
+            ["woozy"],
+            "a homebrew hand-to-hand Skill",
+          );
+          assert.lengthOf(
+            attackTargetEffects(actor, skillOf("Longsword"), { isAmazingSuccess: false }),
+            0,
+            "a Weapon Skill",
+          );
+          assert.lengthOf(
+            attackTargetEffects(actor, skillOf("Pugilism"), { isAmazingSuccess: false }),
+            0,
+            "a book name without the box doesn't count",
+          );
           // With Skills named too, either fits.
-          const both = { items: [gearOf("Spiked Club", true, [entry({ debuffKey: "woozy", handToHandOnly: true, skills: ["Club"] })])] };
-          assert.lengthOf(attackTargetEffects(both, skillOf("Club"), { isAmazingSuccess: false }), 1, "a listed Skill");
-          assert.lengthOf(attackTargetEffects(both, elbow, { isAmazingSuccess: false }), 1, "any hand-to-hand one");
-          assert.lengthOf(attackTargetEffects(both, skillOf("Longsword"), { isAmazingSuccess: false }), 0);
+          const both = {
+            items: [
+              gearOf("Spiked Club", true, [
+                entry({ debuffKey: "woozy", handToHandOnly: true, skills: ["Club"] }),
+              ]),
+            ],
+          };
+          assert.lengthOf(
+            attackTargetEffects(both, skillOf("Club"), { isAmazingSuccess: false }),
+            1,
+            "a listed Skill",
+          );
+          assert.lengthOf(
+            attackTargetEffects(both, elbow, { isAmazingSuccess: false }),
+            1,
+            "any hand-to-hand one",
+          );
+          assert.lengthOf(
+            attackTargetEffects(both, skillOf("Longsword"), { isAmazingSuccess: false }),
+            0,
+          );
         });
 
         it("the Skill's, its Damage Effect's and gear's together", function () {
           const actor = { items: [gearOf("Ring", true, [entry({ debuffKey: "burned" })])] };
-          const found = attackTargetEffects(actor, skillOf("Pugilism", [entry({ debuffKey: "staggered" })]), {
-            damageEffectItem: skillOf("Venom Strike", [entry({ debuffKey: "poisoned" })]), isAmazingSuccess: false,
-          });
-          assert.deepEqual(found.map((t) => t.debuffKey), ["staggered", "poisoned", "burned"]);
+          const found = attackTargetEffects(
+            actor,
+            skillOf("Pugilism", [entry({ debuffKey: "staggered" })]),
+            {
+              damageEffectItem: skillOf("Venom Strike", [entry({ debuffKey: "poisoned" })]),
+              isAmazingSuccess: false,
+            },
+          );
+          assert.deepEqual(
+            found.map((t) => t.debuffKey),
+            ["staggered", "poisoned", "burned"],
+          );
         });
 
         it("an Amazing-Success-only entry: decided now, or kept for each target", function () {
-          const actor = { items: [gearOf("Blade", true, [entry({ debuffKey: "burned", amazingSuccessOnly: true })])] };
+          const actor = {
+            items: [
+              gearOf("Blade", true, [entry({ debuffKey: "burned", amazingSuccessOnly: true })]),
+            ],
+          };
           const skill = skillOf("Longsword");
           assert.lengthOf(attackTargetEffects(actor, skill, { isAmazingSuccess: false }), 0);
           assert.lengthOf(attackTargetEffects(actor, skill, { isAmazingSuccess: true }), 1);
@@ -101,9 +183,23 @@ export default function register(quench) {
         });
 
         it("a Critical-Hit-only entry needs a natural 20", function () {
-          const actor = { items: [gearOf("Blade", true, [entry({ debuffKey: "stunned", critOnly: true })])] };
-          assert.lengthOf(attackTargetEffects(actor, skillOf("Longsword"), { isCrit: false, isAmazingSuccess: null }), 0);
-          assert.lengthOf(attackTargetEffects(actor, skillOf("Longsword"), { isCrit: true, isAmazingSuccess: null }), 1);
+          const actor = {
+            items: [gearOf("Blade", true, [entry({ debuffKey: "stunned", critOnly: true })])],
+          };
+          assert.lengthOf(
+            attackTargetEffects(actor, skillOf("Longsword"), {
+              isCrit: false,
+              isAmazingSuccess: null,
+            }),
+            0,
+          );
+          assert.lengthOf(
+            attackTargetEffects(actor, skillOf("Longsword"), {
+              isCrit: true,
+              isAmazingSuccess: null,
+            }),
+            1,
+          );
         });
       });
 
@@ -116,22 +212,40 @@ export default function register(quench) {
           try {
             const skill = await createTestItem(actor, "skill", "Gear Debuff Punch", {
               name: "Gear Debuff Punch",
-              system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "", baseDamage: { dice: "1d4", stat: "", damageType: "" } },
+              system: {
+                category: "attack",
+                isHandToHand: true,
+                rank: 1,
+                governingStat: "",
+                baseDamage: { dice: "1d4", stat: "", damageType: "" },
+              },
             });
             await createTestItem(actor, "item", "Smoking Ring", {
-              name: "Smoking Ring", system: { equipped: true, targetEffects: [{ debuffKey: "burned" }] },
+              name: "Smoking Ring",
+              system: { equipped: true, targetEffects: [{ debuffKey: "burned" }] },
             });
             await createTestItem(actor, "item", "Packed Ring", {
-              name: "Packed Ring", system: { equipped: false, targetEffects: [{ debuffKey: "poisoned" }] },
+              name: "Packed Ring",
+              system: { equipped: false, targetEffects: [{ debuffKey: "poisoned" }] },
             });
             await createTestItem(actor, "item", "Dagger Charm", {
-              name: "Dagger Charm", system: { equipped: true, targetEffects: [{ debuffKey: "staggered", skills: ["Dagger"] }] },
+              name: "Dagger Charm",
+              system: {
+                equipped: true,
+                targetEffects: [{ debuffKey: "staggered", skills: ["Dagger"] }],
+              },
             });
             await settle();
             const message = await withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([{ actor: target }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true })));
+              withFakeTargets([{ actor: target }], () =>
+                CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+              ),
+            );
             const effects = message.getFlag("carl-rpg", "targetEffects") ?? [];
-            assert.deepEqual(effects.map((t) => t.debuffKey), ["burned"]);
+            assert.deepEqual(
+              effects.map((t) => t.debuffKey),
+              ["burned"],
+            );
             assert.equal(effects[0].sourceLabel, "Smoking Ring");
           } finally {
             await deleteTestActor(actor);
@@ -146,17 +260,31 @@ export default function register(quench) {
           try {
             const skill = await createTestItem(actor, "skill", "Longsword", {
               name: "Longsword",
-              system: { category: "attack", rank: 1, governingStat: "", baseDamage: { dice: "1d4", stat: "", damageType: "" } },
+              system: {
+                category: "attack",
+                rank: 1,
+                governingStat: "",
+                baseDamage: { dice: "1d4", stat: "", damageType: "" },
+              },
             });
             const sword = await createTestItem(actor, "item", "Blazing Longsword", {
               name: "Blazing Longsword",
-              system: { weaponSkill: "Longsword", targetEffects: [{ debuffKey: "burned", amazingSuccessOnly: true, skills: ["Longsword"] }] },
+              system: {
+                weaponSkill: "Longsword",
+                targetEffects: [
+                  { debuffKey: "burned", amazingSuccessOnly: true, skills: ["Longsword"] },
+                ],
+              },
             });
-            if (place === "hand") await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, sword);
+            if (place === "hand")
+              await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, sword);
             else await placeInHotlist(actor, 0, sword);
             await settle();
             const message = await withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([{ actor: target }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true })));
+              withFakeTargets([{ actor: target }], () =>
+                CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+              ),
+            );
             assert.exists(message, "the Attack was made");
             assert.isTrue(actor.items.get(sword.id).system.equipped, "the sword is in hand");
             const effects = message.getFlag("carl-rpg", "targetEffects") ?? [];
@@ -179,24 +307,53 @@ export default function register(quench) {
         });
 
         it("each Debuff is named, with its source, and marked if only on an Amazing Success", function () {
-          const html = buildAttackTargetsFooter({ targetEffects: [
-            { debuffKey: "burned", stacks: 1, label: "", sourceLabel: "Blazing Longsword", amazingSuccessOnly: true },
-          ] });
-          const pill = new DOMParser().parseFromString(html, "text/html").querySelector(".carl-target-effect-pill");
+          const html = buildAttackTargetsFooter({
+            targetEffects: [
+              {
+                debuffKey: "burned",
+                stacks: 1,
+                label: "",
+                sourceLabel: "Blazing Longsword",
+                amazingSuccessOnly: true,
+              },
+            ],
+          });
+          const pill = new DOMParser()
+            .parseFromString(html, "text/html")
+            .querySelector(".carl-target-effect-pill");
           const text = pill.textContent;
-          assert.include(text, game.i18n.localize(CONFIG.CARLRPG.debuffs.burned.label), "named, though its label is blank");
+          assert.include(
+            text,
+            game.i18n.localize(CONFIG.CARLRPG.debuffs.burned.label),
+            "named, though its label is blank",
+          );
           assert.include(text, "Blazing Longsword");
           assert.include(text, game.i18n.localize("CARLRPG.OnHitDebuff.OnAmazing"));
           assert.isFalse(pill.classList.contains("is-dim"));
         });
 
         it("dimmed when the Attack had targets and was an Amazing Success against none", function () {
-          const te = { debuffKey: "burned", stacks: 1, label: "", sourceLabel: "Blade", amazingSuccessOnly: true };
-          const pill = (args) => new DOMParser().parseFromString(buildAttackTargetsFooter(args), "text/html")
-            .querySelector(".carl-target-effect-pill");
-          assert.isTrue(pill({ targetEffects: [te], noAmazing: true }).classList.contains("is-dim"));
-          assert.isFalse(pill({ targetEffects: [{ ...te, amazingSuccessOnly: false }], noAmazing: true }).classList.contains("is-dim"),
-            "an any-hit Debuff isn't");
+          const te = {
+            debuffKey: "burned",
+            stacks: 1,
+            label: "",
+            sourceLabel: "Blade",
+            amazingSuccessOnly: true,
+          };
+          const pill = (args) =>
+            new DOMParser()
+              .parseFromString(buildAttackTargetsFooter(args), "text/html")
+              .querySelector(".carl-target-effect-pill");
+          assert.isTrue(
+            pill({ targetEffects: [te], noAmazing: true }).classList.contains("is-dim"),
+          );
+          assert.isFalse(
+            pill({
+              targetEffects: [{ ...te, amazingSuccessOnly: false }],
+              noAmazing: true,
+            }).classList.contains("is-dim"),
+            "an any-hit Debuff isn't",
+          );
         });
 
         it("an Amazing-Success-only Debuff lands only on targets the Attack Amazingly Succeeded against", async function () {
@@ -205,20 +362,50 @@ export default function register(quench) {
           let message;
           try {
             const rowFor = (id, actor, amazing) => ({
-              id, uuid: actor.uuid, name: actor.name, isCharacter: true, zone: "full", difficulty: 13,
-              hit: true, amazing, freeEvade: false, freeUsed: false, evade: null, applied: false, replaced: false,
+              id,
+              uuid: actor.uuid,
+              name: actor.name,
+              isCharacter: true,
+              zone: "full",
+              difficulty: 13,
+              hit: true,
+              amazing,
+              freeEvade: false,
+              freeUsed: false,
+              evade: null,
+              applied: false,
+              replaced: false,
             });
             message = await ChatMessage.create({
               content: '<div class="carl-chat-card"></div>',
-              flags: { "carl-rpg": {
-                isArea: false, floor: 1, damageIsMagic: true, damageByType: { fire: 1 },
-                targetEffects: [
-                  { id: "as", debuffKey: "burned", stacks: 1, label: "", sourceLabel: "Blade", amazingSuccessOnly: true },
-                  { id: "any", debuffKey: "staggered", stacks: 1, label: "", sourceLabel: "Blade", amazingSuccessOnly: false },
-                ],
-                targetUuids: [amazed.uuid, plain.uuid],
-                targetRows: { t0: rowFor("t0", amazed, true), t1: rowFor("t1", plain, false) },
-              } },
+              flags: {
+                "carl-rpg": {
+                  isArea: false,
+                  floor: 1,
+                  damageIsMagic: true,
+                  damageByType: { fire: 1 },
+                  targetEffects: [
+                    {
+                      id: "as",
+                      debuffKey: "burned",
+                      stacks: 1,
+                      label: "",
+                      sourceLabel: "Blade",
+                      amazingSuccessOnly: true,
+                    },
+                    {
+                      id: "any",
+                      debuffKey: "staggered",
+                      stacks: 1,
+                      label: "",
+                      sourceLabel: "Blade",
+                      amazingSuccessOnly: false,
+                    },
+                  ],
+                  targetUuids: [amazed.uuid, plain.uuid],
+                  targetRows: { t0: rowFor("t0", amazed, true), t1: rowFor("t1", plain, false) },
+                },
+              },
             });
             const rows = () => message.getFlag("carl-rpg", "targetRows");
             await applyRow(message, rows().t0);
@@ -258,11 +445,18 @@ export default function register(quench) {
         });
 
         it("the header's chips say what it is", async function () {
-          const item = await worldItem("chips", { system: { weaponSkill: "Longsword", equipped: true, quantity: 2 } });
+          const item = await worldItem("chips", {
+            system: { weaponSkill: "Longsword", equipped: true, quantity: 2 },
+          });
           try {
             const sheet = await openSheet(item);
-            const chips = [...sheet.element.querySelectorAll(".sheet-header .carl-row-chip")].map((c) => c.textContent.trim());
-            assert.include(chips, game.i18n.format("CARLRPG.ItemSheet.WeaponChip", { skill: "Longsword" }));
+            const chips = [...sheet.element.querySelectorAll(".sheet-header .carl-row-chip")].map(
+              (c) => c.textContent.trim(),
+            );
+            assert.include(
+              chips,
+              game.i18n.format("CARLRPG.ItemSheet.WeaponChip", { skill: "Longsword" }),
+            );
             assert.include(chips, game.i18n.localize("CARLRPG.Item.Equipped"));
             assert.include(chips, "×2");
             await sheet.close();
@@ -272,15 +466,24 @@ export default function register(quench) {
         });
 
         it("a gear Debuff's With any Hand-to-Hand Attack box is drawn ticked, and its row says so", async function () {
-          const item = await worldItem("knuckles", { system: { targetEffects: [entry({ debuffKey: "woozy", handToHandOnly: true })] } });
+          const item = await worldItem("knuckles", {
+            system: { targetEffects: [entry({ debuffKey: "woozy", handToHandOnly: true })] },
+          });
           try {
             const sheet = await openSheet(item);
-            await rerendered(sheet, (el) => el.querySelector(".carl-gear-debuffs .carl-target-effect-row"), "the section never drew");
+            await rerendered(
+              sheet,
+              (el) => el.querySelector(".carl-gear-debuffs .carl-target-effect-row"),
+              "the section never drew",
+            );
             const row = sheet.element.querySelector(".carl-gear-debuffs .carl-target-effect-row");
             const box = row.querySelector('input[name="system.targetEffects.0.handToHandOnly"]');
             assert.exists(box);
             assert.isTrue(box.checked);
-            assert.include(row.querySelector("summary").textContent, game.i18n.localize("CARLRPG.OnHitDebuff.OnlyHandToHand"));
+            assert.include(
+              row.querySelector("summary").textContent,
+              game.i18n.localize("CARLRPG.OnHitDebuff.OnlyHandToHand"),
+            );
             await sheet.close();
           } finally {
             await item.delete();
@@ -292,14 +495,23 @@ export default function register(quench) {
           try {
             const sheet = await openSheet(item);
             sheet.element.querySelector('.carl-add-bar [data-path="system.targetEffects"]').click();
-            await waitFor(() => item.system.targetEffects.length === 1, { message: "no Debuff added" });
+            await waitFor(() => item.system.targetEffects.length === 1, {
+              message: "no Debuff added",
+            });
             const te = item.system.targetEffects[0];
             assert.deepEqual(te.skills, ["Longsword"]);
             assert.isTrue(te.amazingSuccessOnly);
-            await rerendered(sheet, (el) => el.querySelector(".carl-gear-debuffs .carl-target-effect-row"), "the section never drew");
+            await rerendered(
+              sheet,
+              (el) => el.querySelector(".carl-gear-debuffs .carl-target-effect-row"),
+              "the section never drew",
+            );
             const row = sheet.element.querySelector(".carl-gear-debuffs .carl-target-effect-row");
             assert.isTrue(row.open, "a new row opens");
-            assert.equal(row.querySelector(".carl-row-chip").textContent.trim(), game.i18n.localize("CARLRPG.OnHitDebuff.Trigger.amazing"));
+            assert.equal(
+              row.querySelector(".carl-row-chip").textContent.trim(),
+              game.i18n.localize("CARLRPG.OnHitDebuff.Trigger.amazing"),
+            );
             assert.lengthOf(row.querySelectorAll(".carl-only-with-pill"), 1);
             await sheet.close();
           } finally {
@@ -308,25 +520,47 @@ export default function register(quench) {
         });
 
         it("Only with: a Skill typed in is added; a pill's × removes it; other edits keep them", async function () {
-          const item = await worldItem("only with", { system: { targetEffects: [{ debuffKey: "burned", skills: ["Longsword"] }] } });
+          const item = await worldItem("only with", {
+            system: { targetEffects: [{ debuffKey: "burned", skills: ["Longsword"] }] },
+          });
           try {
             const sheet = await openSheet(item);
             const add = sheet.element.querySelector("input.carl-only-with-add");
             add.value = "Dagger";
             add.dispatchEvent(new Event("change", { bubbles: true }));
-            await waitFor(() => item.system.targetEffects[0].skills.length === 2, { message: "the Skill was never added" });
+            await waitFor(() => item.system.targetEffects[0].skills.length === 2, {
+              message: "the Skill was never added",
+            });
             assert.deepEqual(item.system.targetEffects[0].skills, ["Longsword", "Dagger"]);
 
-            await rerendered(sheet, (el) => el.querySelectorAll(".carl-only-with-pill").length === 2, "the pill never drew");
+            await rerendered(
+              sheet,
+              (el) => el.querySelectorAll(".carl-only-with-pill").length === 2,
+              "the pill never drew",
+            );
             const label = sheet.element.querySelector('input[name="system.targetEffects.0.label"]');
             label.value = "Smoulders";
             label.dispatchEvent(new Event("change", { bubbles: true }));
-            await waitFor(() => item.system.targetEffects[0].label === "Smoulders", { message: "the edit never saved" });
-            assert.deepEqual(item.system.targetEffects[0].skills, ["Longsword", "Dagger"], "kept through the edit");
+            await waitFor(() => item.system.targetEffects[0].label === "Smoulders", {
+              message: "the edit never saved",
+            });
+            assert.deepEqual(
+              item.system.targetEffects[0].skills,
+              ["Longsword", "Dagger"],
+              "kept through the edit",
+            );
 
-            await rerendered(sheet, (el) => el.querySelectorAll(".carl-only-with-pill").length === 2, "the pills are gone");
-            sheet.element.querySelector('.carl-only-with-pill [data-action="deleteArrayItem"]').click();
-            await waitFor(() => item.system.targetEffects[0].skills.length === 1, { message: "the Skill was never removed" });
+            await rerendered(
+              sheet,
+              (el) => el.querySelectorAll(".carl-only-with-pill").length === 2,
+              "the pills are gone",
+            );
+            sheet.element
+              .querySelector('.carl-only-with-pill [data-action="deleteArrayItem"]')
+              .click();
+            await waitFor(() => item.system.targetEffects[0].skills.length === 1, {
+              message: "the Skill was never removed",
+            });
             assert.deepEqual(item.system.targetEffects[0].skills, ["Dagger"]);
             await sheet.close();
           } finally {
@@ -335,7 +569,9 @@ export default function register(quench) {
         });
 
         it("a consumable shows only the parts it uses; Cures are pills", async function () {
-          const item = await worldItem("potion", { system: { consumable: { kind: "potion", heal: { slots: 4 } } } });
+          const item = await worldItem("potion", {
+            system: { consumable: { kind: "potion", heal: { slots: 4 } } },
+          });
           try {
             const sheet = await openSheet(item);
             const section = () => sheet.element.querySelector(".carl-consumable");
@@ -345,26 +581,42 @@ export default function register(quench) {
             assert.notExists(section().querySelector(".carl-consumable-cures"));
 
             section().querySelector('[data-reveal="c-cures"]').click();
-            await rerendered(sheet, () => section()?.querySelector(".carl-cure-picker"), "Cures never showed");
+            await rerendered(
+              sheet,
+              () => section()?.querySelector(".carl-cure-picker"),
+              "Cures never showed",
+            );
             const picker = section().querySelector(".carl-cure-picker");
             picker.value = "poisoned";
             picker.dispatchEvent(new Event("change", { bubbles: true }));
-            await waitFor(() => item.system.consumable.cures.includes("poisoned"), { message: "the Cure was never added" });
-            await rerendered(sheet, () => section()?.querySelector('[data-action="removeCure"][data-key="poisoned"]'), "no pill");
+            await waitFor(() => item.system.consumable.cures.includes("poisoned"), {
+              message: "the Cure was never added",
+            });
+            await rerendered(
+              sheet,
+              () => section()?.querySelector('[data-action="removeCure"][data-key="poisoned"]'),
+              "no pill",
+            );
             section().querySelector('[data-action="removeCure"][data-key="poisoned"]').click();
-            await waitFor(() => !item.system.consumable.cures.length, { message: "the Cure was never removed" });
+            await waitFor(() => !item.system.consumable.cures.length, {
+              message: "the Cure was never removed",
+            });
             await sheet.close();
           } finally {
             await item.delete();
           }
         });
 
-        it("\"+ Consumable use\" shows the section before a Kind is picked", async function () {
+        it('"+ Consumable use" shows the section before a Kind is picked', async function () {
           const item = await worldItem("reveal");
           try {
             const sheet = await openSheet(item);
             sheet.element.querySelector('.carl-add-bar [data-reveal="consumable"]').click();
-            await rerendered(sheet, (el) => el.querySelector(".carl-consumable"), "the section never showed");
+            await rerendered(
+              sheet,
+              (el) => el.querySelector(".carl-consumable"),
+              "the section never showed",
+            );
             await sheet.close();
           } finally {
             await item.delete();

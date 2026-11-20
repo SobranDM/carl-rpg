@@ -34,11 +34,21 @@ import { fightStamp } from "./fights.mjs";
  * @param {number|null} spec.difficulty
  * @returns {{aiReroll?: object}}
  */
-export function aiRerollFlags(actor, { kind, formula, natural, total, difficulty = null, ...rest }) {
-  if (actor?.type !== "character" || !formula || natural === null || natural === undefined) return {};
+export function aiRerollFlags(
+  actor,
+  { kind, formula, natural, total, difficulty = null, ...rest },
+) {
+  if (actor?.type !== "character" || !formula || natural === null || natural === undefined)
+    return {};
   return {
     aiReroll: {
-      kind, actorUuid: actor.uuid, formula, natural, total, difficulty, used: false,
+      kind,
+      actorUuid: actor.uuid,
+      formula,
+      natural,
+      total,
+      difficulty,
+      used: false,
       // The fight and round it was rolled in: an Intervene is open until the
       // round ends (module/chat/check-revision.mjs).
       fight: fightStamp(actor),

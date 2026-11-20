@@ -115,7 +115,10 @@ function addEntry(sys, list, key, options) {
       // Refreshed (its duration, if it has one) - except Dying's countdown:
       // re-applying it must not hand back rounds already lost.
       if (!preset.mechanics?.countdown) {
-        list[existingIndex] = buildConditionEntry(key, { ...options, stacks: list[existingIndex].stacks });
+        list[existingIndex] = buildConditionEntry(key, {
+          ...options,
+          stacks: list[existingIndex].stacks,
+        });
       }
       placed = true;
     }
@@ -124,7 +127,8 @@ function addEntry(sys, list, key, options) {
     const entry = buildConditionEntry(key, options);
     // "Your CON Mod is how many rounds you have before you die" (Dying) -
     // ticked down at the end of each round by module/helpers/round-end.mjs.
-    if (preset?.mechanics?.countdown && entry.remaining === null) entry.remaining = dyingRounds(sys);
+    if (preset?.mechanics?.countdown && entry.remaining === null)
+      entry.remaining = dyingRounds(sys);
     list.push(entry);
   }
   for (const extraKey of preset?.mechanics?.alsoApplies ?? []) {
@@ -155,7 +159,8 @@ export function conditionOps(before, after) {
     else {
       const fields = {};
       for (const key of new Set([...Object.keys(old), ...Object.keys(entry)])) {
-        if (JSON.stringify(old[key]) !== JSON.stringify(entry[key])) fields[key] = entry[key] ?? null;
+        if (JSON.stringify(old[key]) !== JSON.stringify(entry[key]))
+          fields[key] = entry[key] ?? null;
       }
       if (Object.keys(fields).length) ops.push({ op: "patch", id: entry.id, fields });
     }
@@ -188,7 +193,8 @@ function applyOps(sys, list, ops) {
         break;
       case "restore":
         // Given back (an undo): only those not there already.
-        for (const entry of op.entries ?? []) if (!has(entry.id)) list.push(foundry.utils.deepClone(entry));
+        for (const entry of op.entries ?? [])
+          if (!has(entry.id)) list.push(foundry.utils.deepClone(entry));
         break;
       case "patch": {
         // Only the fields given; an entry since removed stays removed.
@@ -223,11 +229,15 @@ function applyOps(sys, list, ops) {
  */
 export function opsAllowed(ops, list, actor, user) {
   if (user.isGM || actor.testUserPermission(user, "OWNER")) return ops;
-  const targeted = [...(user.targets ?? [])].some((t) => t.actor === actor || t.document?.actorId === actor.id);
+  const targeted = [...(user.targets ?? [])].some(
+    (t) => t.actor === actor || t.document?.actorId === actor.id,
+  );
   const inCombat = !!fightOf(actor);
   if (!targeted && !inCombat) return [];
   const oneShot = new Set(list.filter((c) => isOneShotDebuff(c.key)).map((c) => c.id));
-  return ops.filter((op) => op?.op === "remove").map((op) => ({ op: "remove", ids: (op.ids ?? []).filter((id) => oneShot.has(id)) }));
+  return ops
+    .filter((op) => op?.op === "remove")
+    .map((op) => ({ op: "remove", ids: (op.ids ?? []).filter((id) => oneShot.has(id)) }));
 }
 
 /**
@@ -284,7 +294,9 @@ export async function changeConditions(actor, ops, { updates = {}, inQueue = fal
     ui.notifications.warn(game.i18n.localize("CARLRPG.Chat.NoGMOnline"));
     return null;
   }
-  return inQueue ? writeNow(actor, ops, updates) : queueForActor(actor.uuid, () => writeNow(actor, ops, updates));
+  return inQueue
+    ? writeNow(actor, ops, updates)
+    : queueForActor(actor.uuid, () => writeNow(actor, ops, updates));
 }
 
 // The GM's side of a player's changeConditions: `user` is the server-supplied
@@ -312,7 +324,8 @@ export async function removeConditionsById(actor, conditionIds) {
   if (!actor || !conditionIds?.length) return;
   // Used up by an Action of this actor's own: back if it's undone.
   const used = (actor.system.conditions ?? []).filter((c) => conditionIds.includes(c.id));
-  if (used.length) noteUndo(actor, { t: "conditions", uuid: actor.uuid, removed: foundry.utils.deepClone(used) });
+  if (used.length)
+    noteUndo(actor, { t: "conditions", uuid: actor.uuid, removed: foundry.utils.deepClone(used) });
   if (!used.length) return;
   const change = changeConditions(actor, [{ op: "remove", ids: [...conditionIds] }]);
   // Someone else's creature (a Mob's Stunned an Attack used up): the GM

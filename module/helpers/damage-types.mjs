@@ -12,8 +12,19 @@
 
 /** The book's 13 damage types, in Table 10 order. */
 export const DAMAGE_TYPE_KEYS = [
-  "acid", "bludgeoning", "electric", "fire", "force", "holy", "ice",
-  "necrotic", "piercing", "poison", "psychic", "slashing", "sonic",
+  "acid",
+  "bludgeoning",
+  "electric",
+  "fire",
+  "force",
+  "holy",
+  "ice",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "slashing",
+  "sonic",
 ];
 
 /**
@@ -49,7 +60,9 @@ export const DAMAGE_TYPE_ALIASES = {
  * @returns {string}
  */
 export function normalizeDamageType(word) {
-  const key = String(word ?? "").trim().toLowerCase();
+  const key = String(word ?? "")
+    .trim()
+    .toLowerCase();
   if (DAMAGE_TYPE_KEYS.includes(key)) return key;
   return DAMAGE_TYPE_ALIASES[key] ?? "";
 }

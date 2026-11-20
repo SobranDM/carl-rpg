@@ -1,6 +1,12 @@
 import {
-  collectDebuffRows, collectAdvantageAgainstRows, resolveRollerRows, resolveDifficultyRows,
-  disadvantageScopeApplies, consumedConditionIds, endedConditionIds, isOneShotDebuff,
+  collectDebuffRows,
+  collectAdvantageAgainstRows,
+  resolveRollerRows,
+  resolveDifficultyRows,
+  disadvantageScopeApplies,
+  consumedConditionIds,
+  endedConditionIds,
+  isOneShotDebuff,
 } from "../../helpers/debuff-effects.mjs";
 import { resolveD20Formula, evaluateMobConstant } from "../../dice/dice.mjs";
 
@@ -8,7 +14,14 @@ import { resolveD20Formula, evaluateMobConstant } from "../../dice/dice.mjs";
 function sysWith(conditions, { dexMod = 0 } = {}) {
   return {
     stats: { dex: { mod: dexMod } },
-    conditions: conditions.map((c, i) => ({ id: `c${i}`, label: "", stacks: 1, remaining: null, source: "", ...c })),
+    conditions: conditions.map((c, i) => ({
+      id: `c${i}`,
+      label: "",
+      stacks: 1,
+      remaining: null,
+      source: "",
+      ...c,
+    })),
   };
 }
 
@@ -21,7 +34,8 @@ export default function register(quench) {
       describe("disadvantageScopeApplies (Table 11 wording)", function () {
         it("'all'/'sight'/'nextCheck' reach every kind of roll", function () {
           for (const scope of ["all", "sight", "nextCheck"]) {
-            for (const kind of ["attack", "evade", "check"]) assert.isTrue(disadvantageScopeApplies(scope, kind), `${scope}/${kind}`);
+            for (const kind of ["attack", "evade", "check"])
+              assert.isTrue(disadvantageScopeApplies(scope, kind), `${scope}/${kind}`);
           }
         });
         it("'attack'/'nextAttack' only reach Attacks", function () {
@@ -34,7 +48,10 @@ export default function register(quench) {
         it("'nextAction' (Queasy) reaches any roll that is the creature's own Action, and nothing else", function () {
           for (const kind of ["attack", "evade", "check"]) {
             assert.isTrue(disadvantageScopeApplies("nextAction", kind), kind);
-            assert.isFalse(disadvantageScopeApplies("nextAction", kind, { ownAction: false }), kind);
+            assert.isFalse(
+              disadvantageScopeApplies("nextAction", kind, { ownAction: false }),
+              kind,
+            );
           }
         });
         it("a Queasy Mob's Evade/Surprise aren't lowered (they aren't its Action)", function () {
@@ -46,8 +63,17 @@ export default function register(quench) {
 
       describe("collectDebuffRows", function () {
         it("flat penalties: Minor Injury -2, Fatigued -1 per stack", function () {
-          const rows = collectDebuffRows(sysWith([{ key: "minorInjury" }, { key: "fatigued", stacks: 3 }]), "check");
-          assert.deepEqual(rows.map((r) => [r.kind, r.value]), [["penalty", -2], ["penalty", -3]]);
+          const rows = collectDebuffRows(
+            sysWith([{ key: "minorInjury" }, { key: "fatigued", stacks: 3 }]),
+            "check",
+          );
+          assert.deepEqual(
+            rows.map((r) => [r.kind, r.value]),
+            [
+              ["penalty", -2],
+              ["penalty", -3],
+            ],
+          );
         });
         it("Terrified's Disadvantage applies to Attacks only", function () {
           const sys = sysWith([{ key: "terrified" }]);
@@ -61,30 +87,56 @@ export default function register(quench) {
           assert.isFalse(collectDebuffRows(sys, "check")[0].defaultOn);
         });
         it("Stunned/Queasy/Staggered are consumed; Shit-Faced isn't", function () {
-          const sys = sysWith([{ key: "stunned" }, { key: "queasy" }, { key: "staggered" }, { key: "shitFaced" }]);
+          const sys = sysWith([
+            { key: "stunned" },
+            { key: "queasy" },
+            { key: "staggered" },
+            { key: "shitFaced" },
+          ]);
           const rows = collectDebuffRows(sys, "attack");
-          assert.deepEqual(rows.map((r) => [r.key, r.consume]), [["stunned", true], ["queasy", true], ["staggered", true], ["shitFaced", false]]);
+          assert.deepEqual(
+            rows.map((r) => [r.key, r.consume]),
+            [
+              ["stunned", true],
+              ["queasy", true],
+              ["staggered", true],
+              ["shitFaced", false],
+            ],
+          );
         });
         it("Woozy removes the DEX Mod from an Evade, and from an Attack only when it uses DEX", function () {
           const sys = sysWith([{ key: "woozy" }], { dexMod: 3 });
-          assert.deepEqual(collectDebuffRows(sys, "evade").map((r) => [r.kind, r.value]), [["noDex", -3]]);
+          assert.deepEqual(
+            collectDebuffRows(sys, "evade").map((r) => [r.kind, r.value]),
+            [["noDex", -3]],
+          );
           assert.lengthOf(collectDebuffRows(sys, "attack", { usesDex: false }), 0);
           assert.lengthOf(collectDebuffRows(sys, "attack", { usesDex: true }), 1);
           assert.lengthOf(collectDebuffRows(sys, "check"), 0);
         });
         it("ignores custom conditions and debuffs with no mechanics", function () {
-          assert.lengthOf(collectDebuffRows(sysWith([{ key: "custom" }, { key: "enraged" }]), "attack"), 0);
+          assert.lengthOf(
+            collectDebuffRows(sysWith([{ key: "custom" }, { key: "enraged" }]), "attack"),
+            0,
+          );
         });
         it("row ids never contain a '.' (they're form-field name segments)", function () {
-          const rows = collectDebuffRows(sysWith([{ key: "minorInjury", id: "abc" }]), "check", { idPrefix: "target" });
+          const rows = collectDebuffRows(sysWith([{ key: "minorInjury", id: "abc" }]), "check", {
+            idPrefix: "target",
+          });
           assert.notInclude(rows[0].id, ".");
         });
       });
 
       describe("collectAdvantageAgainstRows", function () {
         it("Held and Take Down give attackers Advantage", function () {
-          const rows = collectAdvantageAgainstRows(sysWith([{ key: "held" }, { key: "takeDown" }, { key: "minorInjury" }]));
-          assert.deepEqual(rows.map((r) => r.kind), ["advantage", "advantage"]);
+          const rows = collectAdvantageAgainstRows(
+            sysWith([{ key: "held" }, { key: "takeDown" }, { key: "minorInjury" }]),
+          );
+          assert.deepEqual(
+            rows.map((r) => r.kind),
+            ["advantage", "advantage"],
+          );
         });
       });
 
@@ -129,7 +181,10 @@ export default function register(quench) {
           assert.equal(resolveD20Formula(false, "advantage", { disadvantageCount: 1 }), "1d20");
         });
         it("two reasons for Advantage beat one for Disadvantage (p.60)", function () {
-          assert.equal(resolveD20Formula(false, "normal", { advantageCount: 2, disadvantageCount: 1 }), "2d20kh");
+          assert.equal(
+            resolveD20Formula(false, "normal", { advantageCount: 2, disadvantageCount: 1 }),
+            "2d20kh",
+          );
         });
         it("existing two-argument calls are unchanged", function () {
           assert.equal(resolveD20Formula(true, "advantage"), "1d20");
@@ -138,24 +193,41 @@ export default function register(quench) {
 
       describe("endedConditionIds / isOneShotDebuff", function () {
         it("an Action ends Queasy and Staggered even when they didn't shape the roll", function () {
-          const sys = sysWith([{ key: "queasy", id: "q" }, { key: "staggered", id: "s" }, { key: "poisoned", id: "p" }]);
+          const sys = sysWith([
+            { key: "queasy", id: "q" },
+            { key: "staggered", id: "s" },
+            { key: "poisoned", id: "p" },
+          ]);
           assert.sameMembers(endedConditionIds(sys, []), ["q", "s"]);
         });
         it("a roll that isn't an Action (a free Evade) only ends consumed rows", function () {
-          const sys = sysWith([{ key: "queasy", id: "q" }, { key: "stunned", id: "st" }]);
-          assert.deepEqual(endedConditionIds(sys, [{ conditionId: "st", consume: true }], { isAction: false }), ["st"]);
+          const sys = sysWith([
+            { key: "queasy", id: "q" },
+            { key: "stunned", id: "st" },
+          ]);
+          assert.deepEqual(
+            endedConditionIds(sys, [{ conditionId: "st", consume: true }], { isAction: false }),
+            ["st"],
+          );
         });
         it("only Stunned/Queasy/Staggered count as one-shot", function () {
-          for (const key of ["stunned", "queasy", "staggered"]) assert.isTrue(isOneShotDebuff(key), key);
-          for (const key of ["poisoned", "majorInjury", "dying", "custom"]) assert.isFalse(isOneShotDebuff(key), key);
+          for (const key of ["stunned", "queasy", "staggered"])
+            assert.isTrue(isOneShotDebuff(key), key);
+          for (const key of ["poisoned", "majorInjury", "dying", "custom"])
+            assert.isFalse(isOneShotDebuff(key), key);
         });
       });
 
       describe("consumedConditionIds", function () {
         it("returns each consumed row's condition once", function () {
-          assert.deepEqual(consumedConditionIds([
-            { conditionId: "x", consume: true }, { conditionId: "x", consume: true }, { conditionId: "y", consume: false },
-          ]), ["x"]);
+          assert.deepEqual(
+            consumedConditionIds([
+              { conditionId: "x", consume: true },
+              { conditionId: "x", consume: true },
+              { conditionId: "y", consume: false },
+            ]),
+            ["x"],
+          );
         });
       });
 

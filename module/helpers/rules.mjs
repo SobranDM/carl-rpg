@@ -1,4 +1,4 @@
-import { CARLRPG } from './config.mjs';
+import { CARLRPG } from "./config.mjs";
 
 /**
  * Look up a Stat's modifier via the Table 2 stepped lookup (NOT a linear
@@ -27,8 +27,8 @@ export function getStatMod(statValue) {
  */
 export function getRankDamageDie(rank) {
   const value = Number(rank) || 0;
-  if (value < 1) return '';
-  let best = '';
+  if (value < 1) return "";
+  let best = "";
   for (const [min, , formula] of CARLRPG.rankDamageDiceTable) {
     if (min <= value) best = formula;
     else break;
@@ -44,18 +44,18 @@ export function getRankDamageDie(rank) {
  * @returns {string} One of the CARLRPG.degreesOfSuccess keys.
  */
 export function getDegreeOfSuccess(naturalRoll, total, difficulty) {
-  if (naturalRoll === 20) return 'criticalHit';
-  if (naturalRoll === 1) return 'criticalFail';
+  if (naturalRoll === 20) return "criticalHit";
+  if (naturalRoll === 1) return "criticalFail";
   if (difficulty === null || difficulty === undefined) {
     // No Difficulty supplied - can only report the natural-roll-based degrees.
-    return total >= 10 ? 'standardSuccess' : 'standardFail';
+    return total >= 10 ? "standardSuccess" : "standardFail";
   }
   const margin = total - difficulty;
-  if (margin >= 10) return 'amazingSuccess';
-  if (margin >= 0) return 'standardSuccess';
-  if (margin >= -2) return 'nearMissFail';
-  if (margin >= -9) return 'standardFail';
-  return 'majorFail';
+  if (margin >= 10) return "amazingSuccess";
+  if (margin >= 0) return "standardSuccess";
+  if (margin >= -2) return "nearMissFail";
+  if (margin >= -9) return "standardFail";
+  return "majorFail";
 }
 
 /**
@@ -78,17 +78,17 @@ export function degreeLabel(degree) {
  */
 export function degreeBadge(degree) {
   const label = degreeLabel(degree);
-  const type = ['criticalHit', 'amazingSuccess', 'standardSuccess'].includes(degree)
-    ? 'hit'
-    : ['criticalFail', 'majorFail'].includes(degree)
-      ? 'miss'
-      : 'warn';
+  const type = ["criticalHit", "amazingSuccess", "standardSuccess"].includes(degree)
+    ? "hit"
+    : ["criticalFail", "majorFail"].includes(degree)
+      ? "miss"
+      : "warn";
   return { label, type };
 }
 
 /** Whether a Degree of Success counts as a hit (vs. a miss/near-miss). */
 export function isHitDegree(degree) {
-  return ['criticalHit', 'amazingSuccess', 'standardSuccess'].includes(degree);
+  return ["criticalHit", "amazingSuccess", "standardSuccess"].includes(degree);
 }
 
 /**
@@ -158,20 +158,45 @@ export function opposedDifficulty(mod, floor) {
  * @param {{label: string, value: number}|null} [options.given]
  * @returns {{key: string, label: string, value: number|null, selected: boolean}[]}
  */
-export function buildDifficultyPresets({ floor, selected = "custom", opposed = null, given = null }) {
+export function buildDifficultyPresets({
+  floor,
+  selected = "custom",
+  opposed = null,
+  given = null,
+}) {
   const f = Number(floor) || 0;
   const i18n = game.i18n;
   const presets = [];
   if (given && given.value !== null && given.value !== undefined) {
     presets.push({ key: "given", label: `${given.label}: ${given.value}`, value: given.value });
   }
-  presets.push({ key: "unopposed", label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: unopposedDifficulty(f) }), value: unopposedDifficulty(f) });
-  presets.push({ key: "stat", label: i18n.format("CARLRPG.Dialog.Preset.Stat", { value: statDifficulty(f) }), value: statDifficulty(f) });
+  presets.push({
+    key: "unopposed",
+    label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: unopposedDifficulty(f) }),
+    value: unopposedDifficulty(f),
+  });
+  presets.push({
+    key: "stat",
+    label: i18n.format("CARLRPG.Dialog.Preset.Stat", { value: statDifficulty(f) }),
+    value: statDifficulty(f),
+  });
   if (opposed) {
     const value = opposedDifficulty(opposed.mod, f);
-    presets.push({ key: "opposed", label: i18n.format("CARLRPG.Dialog.Preset.Opposed", { name: opposed.name, stat: opposed.stat, value }), value });
+    presets.push({
+      key: "opposed",
+      label: i18n.format("CARLRPG.Dialog.Preset.Opposed", {
+        name: opposed.name,
+        stat: opposed.stat,
+        value,
+      }),
+      value,
+    });
   }
-  presets.push({ key: "custom", label: i18n.localize("CARLRPG.Dialog.Preset.Custom"), value: null });
+  presets.push({
+    key: "custom",
+    label: i18n.localize("CARLRPG.Dialog.Preset.Custom"),
+    value: null,
+  });
   const pick = presets.some((p) => p.key === selected) ? selected : "custom";
   return presets.map((p) => ({ ...p, selected: p.key === pick }));
 }

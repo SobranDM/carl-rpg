@@ -6,12 +6,27 @@
  */
 
 /** Where gear can be worn (CONFIG.CARLRPG.wearSlots' keys, in that order). */
-export const WEAR_SLOT_KEYS = Object.freeze(["head", "torso", "arms", "held", "gloves", "legs", "feet", "accessory"]);
+export const WEAR_SLOT_KEYS = Object.freeze([
+  "head",
+  "torso",
+  "arms",
+  "held",
+  "gloves",
+  "legs",
+  "feet",
+  "accessory",
+]);
 
 /** The book's "Gear Slot:" words -> where-worn keys. */
 const SLOT_WORDS = {
-  head: ["head", "neck"], torso: ["torso"], arms: ["arms", "arm"], legs: ["legs", "leg"], feet: ["feet", "foot"],
-  gloves: ["gloves", "glove"], held: ["hand", "hands", "holding"], accessory: ["accessory", "accessories"],
+  head: ["head", "neck"],
+  torso: ["torso"],
+  arms: ["arms", "arm"],
+  legs: ["legs", "leg"],
+  feet: ["feet", "foot"],
+  gloves: ["gloves", "glove"],
+  held: ["hand", "hands", "holding"],
+  accessory: ["accessory", "accessories"],
 };
 
 /**
@@ -26,7 +41,9 @@ export function parseGearSlotLine(text) {
   const twoHanded = /two[- ]hand|requires two hands|both hands/.test(s);
   if (/\bany\b/.test(s)) return { slots: [...WEAR_SLOT_KEYS], twoHanded };
   const words = s.match(/[a-z]+/g) ?? [];
-  const slots = Object.entries(SLOT_WORDS).filter(([, names]) => names.some((n) => words.includes(n))).map(([key]) => key);
+  const slots = Object.entries(SLOT_WORDS)
+    .filter(([, names]) => names.some((n) => words.includes(n)))
+    .map(([key]) => key);
   return slots.length ? { slots, twoHanded } : null;
 }
 
@@ -38,12 +55,57 @@ export function parseGearSlotLine(text) {
 export const SLOT_NAME_TERMS = Object.freeze({
   gloves: ["glove", "gauntlet", "mitt", "mitten"],
   feet: ["boot", "shoe", "slipper", "sandal", "sock", "sneaker", "clog"],
-  head: ["helm", "helmet", "hat", "cap", "hood", "crown", "mask", "circlet", "headband", "bandana", "necklace", "choker", "amulet", "goggle"],
-  torso: ["shirt", "armor", "armour", "breastplate", "vest", "jerkin", "robe", "blouse", "tunic", "coat", "jacket", "cuirass", "mail", "hauberk"],
+  head: [
+    "helm",
+    "helmet",
+    "hat",
+    "cap",
+    "hood",
+    "crown",
+    "mask",
+    "circlet",
+    "headband",
+    "bandana",
+    "necklace",
+    "choker",
+    "amulet",
+    "goggle",
+  ],
+  torso: [
+    "shirt",
+    "armor",
+    "armour",
+    "breastplate",
+    "vest",
+    "jerkin",
+    "robe",
+    "blouse",
+    "tunic",
+    "coat",
+    "jacket",
+    "cuirass",
+    "mail",
+    "hauberk",
+  ],
   arms: ["bracer", "vambrace", "armband", "elbowpad"],
   legs: ["pants", "trousers", "greave", "kilt", "skirt", "legging", "jeans", "shorts", "boxer"],
   held: ["shield", "buckler"],
-  accessory: ["ring", "brooch", "belt", "cape", "cloak", "tattoo", "patch", "piercing", "earring", "bracelet", "pendant", "charm", "badge", "amulet"],
+  accessory: [
+    "ring",
+    "brooch",
+    "belt",
+    "cape",
+    "cloak",
+    "tattoo",
+    "patch",
+    "piercing",
+    "earring",
+    "bracelet",
+    "pendant",
+    "charm",
+    "badge",
+    "amulet",
+  ],
 });
 
 /** Accessory kinds by name. */
@@ -59,16 +121,20 @@ const termMatches = (word, term) => word === term || word === `${term}s` || word
  * @returns {{slots: string[], accessoryKind: string}|null}
  */
 export function slotsFromName(name) {
-  const head = String(name ?? "").toLowerCase().split(/\bof\b|,|\(/)[0];
+  const head = String(name ?? "")
+    .toLowerCase()
+    .split(/\bof\b|,|\(/)[0];
   const words = head.match(/[a-z]+/g) ?? [];
   for (let i = words.length - 1; i >= 0; i--) {
     const slots = Object.entries(SLOT_NAME_TERMS)
       .filter(([, terms]) => terms.some((t) => termMatches(words[i], t)))
       .map(([key]) => key);
     if (!slots.length) continue;
-    const accessoryKind = Object.entries(KIND_TERMS).find(([, terms]) => terms.some((t) => termMatches(words[i], t)))?.[0] ?? "";
+    const accessoryKind =
+      Object.entries(KIND_TERMS).find(([, terms]) =>
+        terms.some((t) => termMatches(words[i], t)),
+      )?.[0] ?? "";
     return { slots, accessoryKind };
   }
   return null;
 }
-

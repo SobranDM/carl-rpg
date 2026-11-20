@@ -9,11 +9,22 @@ import { actionRecord, undoAction } from "../../helpers/actions.mjs";
 import { setPhase } from "../../helpers/combat-phases.mjs";
 import { rollDrivingCheck } from "../../helpers/vehicle-driving.mjs";
 import {
-  cardFight, intervene, interveneOpen, interveneRow, interventionsOf, interveners, rerollSources,
+  cardFight,
+  intervene,
+  interveneOpen,
+  interveneRow,
+  interventionsOf,
+  interveners,
+  rerollSources,
 } from "../../chat/check-revision.mjs";
 import { canReroll, rerollMessage, rerollRow } from "../../chat/ai-favor-reroll.mjs";
 import { applyRow, evadeRow } from "../../chat/attack-targets-card.mjs";
-import { rowInjury, rowInterveneOpen, rowInterveners, rowRerollSources } from "../../chat/row-evade.mjs";
+import {
+  rowInjury,
+  rowInterveneOpen,
+  rowInterveners,
+  rowRerollSources,
+} from "../../chat/row-evade.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -34,7 +45,10 @@ import {
 /** An unstarted combat with these actors as combatants. */
 async function combatOf(...actors) {
   const combat = await Combat.create({});
-  await combat.createEmbeddedDocuments("Combatant", actors.map((a) => ({ actorId: a.id })));
+  await combat.createEmbeddedDocuments(
+    "Combatant",
+    actors.map((a) => ({ actorId: a.id })),
+  );
   return combat;
 }
 
@@ -42,7 +56,9 @@ async function combatOf(...actors) {
 async function deleteNotices(combat) {
   if (!combat?.id) return;
   await settle(150);
-  const ids = game.messages.filter((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id).map((m) => m.id);
+  const ids = game.messages
+    .filter((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id)
+    .map((m) => m.id);
   if (ids.length) await ChatMessage.deleteDocuments(ids);
 }
 
@@ -72,7 +88,14 @@ export default function register(quench) {
           helper = await createTestCharacter("intervene-helper");
           other = await createTestCharacter("intervene-other");
           punch = await createTestItem(pc, "skill", "Punch", {
-            name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+            name: "Punch",
+            system: {
+              category: "attack",
+              isHandToHand: true,
+              rank: 3,
+              governingStat: "",
+              baseDamage: { dice: "1d6" },
+            },
           });
           combat = await combatOf(mob, pc, helper, other);
           await combat.startCombat();
@@ -88,13 +111,20 @@ export default function register(quench) {
         const spentBy = (actor) => actionRecord(combat, of(actor).id).spent;
         /** Punch the Mob at a Floor where 10 + 3 falls 1-6 short of its Evade. */
         const attack = async () => {
-          const message = await withSetting("currentFloor", 3, () => withPinnedDice(PIN_D20_MID, () =>
-            withFakeTargets([{ actor: mob }], () => CarlDice.rollAttack(pc, punch, { skipDialog: true }))));
+          const message = await withSetting("currentFloor", 3, () =>
+            withPinnedDice(PIN_D20_MID, () =>
+              withFakeTargets([{ actor: mob }], () =>
+                CarlDice.rollAttack(pc, punch, { skipDialog: true }),
+              ),
+            ),
+          );
           made.push(message);
           return message;
         };
         const row = (message) => game.messages.get(message.id).getFlag("carl-rpg", "targetRows").t0;
-        const shortBy = (message) => row(message).difficulty - game.messages.get(message.id).getFlag("carl-rpg", "aiReroll").total;
+        const shortBy = (message) =>
+          row(message).difficulty -
+          game.messages.get(message.id).getFlag("carl-rpg", "aiReroll").total;
 
         it("turns a Near Miss into a hit on the same card, damage untouched, for the helper's Action", async function () {
           const message = await attack();
@@ -102,7 +132,13 @@ export default function register(quench) {
           assert.isTrue(need >= 1 && need <= 6, `the Punch falls short by ${need}`);
           assert.isFalse(row(message).hit);
           assert.isTrue(interveneOpen(message));
-          assert.deepEqual(interveners(message).map((a) => a.id).sort(), [helper.id, other.id].sort(), "not the roller");
+          assert.deepEqual(
+            interveners(message)
+              .map((a) => a.id)
+              .sort(),
+            [helper.id, other.id].sort(),
+            "not the roller",
+          );
           const damage = foundry.utils.deepClone(message.getFlag("carl-rpg", "damageByType"));
 
           assert.isTrue(await intervene(message, { intervener: helper, roll: await d6(need) }));
@@ -110,7 +146,10 @@ export default function register(quench) {
           assert.isTrue(row(revised).hit, "a hit now");
           assert.lengthOf(interventionsOf(revised), 1);
           assert.deepEqual(revised.getFlag("carl-rpg", "damageByType"), damage, "the same damage");
-          assert.equal(revised.getFlag("carl-rpg", "attackTotal"), revised.getFlag("carl-rpg", "aiReroll").total + need);
+          assert.equal(
+            revised.getFlag("carl-rpg", "attackTotal"),
+            revised.getFlag("carl-rpg", "aiReroll").total + need,
+          );
           assert.lengthOf(spentBy(helper), 1, "the helper's Action");
           assert.include(spentBy(helper)[0].label, pc.name);
         });
@@ -118,14 +157,19 @@ export default function register(quench) {
         it("an AI Favor reroll stays on the same card, keeps the d6s, and can be Intervened on again", async function () {
           const message = await attack();
           await intervene(message, { intervener: helper, roll: await d6(1) });
-          assert.isTrue(await withPinnedDice(PIN_D20_MID, () => rerollMessage(game.messages.get(message.id))));
+          assert.isTrue(
+            await withPinnedDice(PIN_D20_MID, () => rerollMessage(game.messages.get(message.id))),
+          );
           await settle();
           const revised = game.messages.get(message.id);
           assert.isTrue(revised.getFlag("carl-rpg", "aiReroll").used);
           assert.notOk(revised.getFlag("carl-rpg", "aiRerolled"), "not marked replaced");
           assert.lengthOf(interventionsOf(revised), 1, "the d6 carried over");
           assert.equal(pc.system.details.aiFavor, 1);
-          assert.isTrue(await intervene(revised, { intervener: other, roll: await d6(2) }), "another after the reroll");
+          assert.isTrue(
+            await intervene(revised, { intervener: other, roll: await d6(2) }),
+            "another after the reroll",
+          );
           assert.lengthOf(interventionsOf(game.messages.get(message.id)), 2);
         });
 
@@ -144,7 +188,10 @@ export default function register(quench) {
           await intervene(message, { intervener: helper, roll: await d6(need) });
           assert.isTrue(row(message).hit);
           await undoAction(combat, of(pc).id, spentBy(pc).at(-1).id);
-          assert.exists(game.messages.get(message.id), "the Attack's own undo is refused while a d6 is on it");
+          assert.exists(
+            game.messages.get(message.id),
+            "the Attack's own undo is refused while a d6 is on it",
+          );
           await undoAction(combat, of(helper).id, spentBy(helper)[0].id);
           assert.lengthOf(interventionsOf(game.messages.get(message.id)), 0);
           assert.isFalse(row(message).hit, "a miss again");
@@ -152,19 +199,38 @@ export default function register(quench) {
         });
 
         it("an Attack at no one: no damage on a miss, rolled when an Intervene makes it a hit, gone when that's undone", async function () {
-          const preset = { advantage: "normal", difficulty: 14, modifier: 0, checked: new Set(), manaCostChoice: 0, checkedDebuffs: null };
+          const preset = {
+            advantage: "normal",
+            difficulty: 14,
+            modifier: 0,
+            checked: new Set(),
+            manaCostChoice: 0,
+            checkedDebuffs: null,
+          };
           const message = await withPinnedDice(PIN_D20_MID, () =>
-            withFakeTargets([], () => CarlDice.rollAttack(pc, punch, { presetOptions: preset })));
+            withFakeTargets([], () => CarlDice.rollAttack(pc, punch, { presetOptions: preset })),
+          );
           made.push(message);
-          assert.notExists(message.getFlag("carl-rpg", "damageByType"), "10 + 3 vs. 14: a miss, no damage");
+          assert.notExists(
+            message.getFlag("carl-rpg", "damageByType"),
+            "10 + 3 vs. 14: a miss, no damage",
+          );
           await intervene(message, { intervener: helper, roll: await d6(1) });
-          assert.exists(game.messages.get(message.id).getFlag("carl-rpg", "damageByType"), "a hit: its damage rolled");
+          assert.exists(
+            game.messages.get(message.id).getFlag("carl-rpg", "damageByType"),
+            "a hit: its damage rolled",
+          );
           await undoAction(combat, of(helper).id, spentBy(helper)[0].id);
-          assert.notExists(game.messages.get(message.id).getFlag("carl-rpg", "damageByType"), "a miss again: no damage");
+          assert.notExists(
+            game.messages.get(message.id).getFlag("carl-rpg", "damageByType"),
+            "a miss again: no damage",
+          );
         });
 
         it("not on a Stat Check, nor once the round has moved on", async function () {
-          const stat = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollStatCheck(pc, "str", { skipDialog: true }));
+          const stat = await withPinnedDice(PIN_D20_MID, () =>
+            CarlDice.rollStatCheck(pc, "str", { skipDialog: true }),
+          );
           made.push(stat);
           assert.isFalse(interveneOpen(stat), "no Intervene on a Stat Check (p.82)");
           const message = await attack();
@@ -211,22 +277,46 @@ export default function register(quench) {
         const rowOf = (attack) => flag(attack, "targetRows").t0;
         const checkOf = (attack, which = "evade") => rowOf(attack).checks?.[which] ?? null;
         /** Cards posted since the Attack (an Evade posts none now). */
-        const postedAfter = (attack) => newMessages((m) => m.id !== attack.id && !m.getFlag("carl-rpg", "phaseNotice")
-          && m.timestamp >= attack.timestamp);
+        const postedAfter = (attack) =>
+          newMessages(
+            (m) =>
+              m.id !== attack.id &&
+              !m.getFlag("carl-rpg", "phaseNotice") &&
+              m.timestamp >= attack.timestamp,
+          );
 
         /** pc's Evade total with the pinned d20 (seated or not). */
-        const evadeTotal = async () => (await withPinnedDice(PIN_D20_MID, () =>
-          CarlDice.rollEvadeCheck(pc, { difficulty: 0, skipDialog: true, post: false, isAction: false }))).total;
+        const evadeTotal = async () =>
+          (
+            await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollEvadeCheck(pc, {
+                difficulty: 0,
+                skipDialog: true,
+                post: false,
+                isAction: false,
+              }),
+            )
+          ).total;
 
         /** The Mob's Attack on pc, its to-hit `beyond` pc's Evade total. */
         const mobAttack = async (beyond) => {
           const total = await evadeTotal();
           const old = mob.items.filter((i) => i.type === "mobAttack").map((i) => i.id);
           if (old.length) await mob.deleteEmbeddedDocuments("Item", old);
-          await mob.createEmbeddedDocuments("Item", [{ name: "Claw", type: "mobAttack", system: { toHit: String(total + beyond), damage: "1d4" } }]);
-          await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+          await mob.createEmbeddedDocuments("Item", [
+            {
+              name: "Claw",
+              type: "mobAttack",
+              system: { toHit: String(total + beyond), damage: "1d4" },
+            },
+          ]);
+          await withFakeTargets([{ actor: pc }], () =>
+            CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+          );
           await settle();
-          const attack = newMessages((m) => m.getFlag("carl-rpg", "targetRows") && m.speaker?.actor === mob.id).at(-1);
+          const attack = newMessages(
+            (m) => m.getFlag("carl-rpg", "targetRows") && m.speaker?.actor === mob.id,
+          ).at(-1);
           assert.exists(attack, "the Mob's Attack card");
           return attack;
         };
@@ -238,7 +328,10 @@ export default function register(quench) {
           return game.messages.get(attack.id);
         };
         const help = async (attack, which, value) =>
-          interveneRow(game.messages.get(attack.id), "t0", which, { intervener: helper, roll: await d6(value) });
+          interveneRow(game.messages.get(attack.id), "t0", which, {
+            intervener: helper,
+            roll: await d6(value),
+          });
 
         it("a row's Near Miss Evade made a Success on the row, for the helper's Action - no card posted", async function () {
           const attack = await mobAttack(1);
@@ -247,8 +340,13 @@ export default function register(quench) {
           assert.isFalse(rowOf(attack).evade.success);
           assert.lengthOf(postedAfter(attack), 0, "the Evade posts no card");
           assert.isTrue(rowInterveneOpen(game.messages.get(attack.id), "t0", "evade"));
-          assert.deepEqual(rowInterveners(game.messages.get(attack.id), "t0", "evade").map((a) => a.id).sort(), [helper.id, other.id].sort(),
-            "not the evader");
+          assert.deepEqual(
+            rowInterveners(game.messages.get(attack.id), "t0", "evade")
+              .map((a) => a.id)
+              .sort(),
+            [helper.id, other.id].sort(),
+            "not the evader",
+          );
 
           assert.isTrue(await help(attack, "evade", 1));
           assert.isTrue(rowOf(attack).evade.success, "Evaded now");
@@ -262,11 +360,18 @@ export default function register(quench) {
         it("an occupant's Near Miss: the hit on the vehicle goes, and comes back on undo", async function () {
           const ride = await createTestVehicle("stage2-ride", { system: { move: 0 } });
           vehicles.push(ride);
-          await ride.update({ "system.occupants": [{ uuid: pc.uuid, role: "passenger", name: pc.name }], "system.parked": true });
+          await ride.update({
+            "system.occupants": [{ uuid: pc.uuid, role: "passenger", name: pc.name }],
+            "system.parked": true,
+          });
           const attack = await mobAttack(1);
           await evade(attack);
           assert.equal(checkOf(attack).degree, "nearMissFail");
-          assert.equal(rowOf(attack).redirectUuid, ride.uuid, "a Near Miss on an occupant hits the vehicle (p.72)");
+          assert.equal(
+            rowOf(attack).redirectUuid,
+            ride.uuid,
+            "a Near Miss on an occupant hits the vehicle (p.72)",
+          );
 
           await help(attack, "evade", 2);
           assert.isNull(rowOf(attack).redirectUuid, "Evaded: nothing hits the vehicle");
@@ -303,17 +408,26 @@ export default function register(quench) {
           assert.lengthOf(spentBy(pc), 0, "free");
 
           await help(attack, "free", 1);
-          assert.isTrue(rowOf(attack).evade.success, "helped to a Success: Evaded, no paid Evade needed");
+          assert.isTrue(
+            rowOf(attack).evade.success,
+            "helped to a Success: Evaded, no paid Evade needed",
+          );
 
           await undoAction(combat, of(helper).id, spentBy(helper)[0].id);
           assert.isNull(rowOf(attack).evade, "failed again");
           assert.isTrue(rowOf(attack).freeUsed);
-          assert.isTrue(rowInterveneOpen(game.messages.get(attack.id), "t0", "free"), "still open until a paid Evade");
+          assert.isTrue(
+            rowInterveneOpen(game.messages.get(attack.id), "t0", "free"),
+            "still open until a paid Evade",
+          );
 
           await evade(attack);
           assert.exists(checkOf(attack, "evade"), "the paid Evade");
           assert.lengthOf(spentBy(pc), 1, "the paid Evade's Action");
-          assert.isFalse(rowInterveneOpen(game.messages.get(attack.id), "t0", "free"), "the free Evade is replaced");
+          assert.isFalse(
+            rowInterveneOpen(game.messages.get(attack.id), "t0", "free"),
+            "the free Evade is replaced",
+          );
           assert.lengthOf(rowRerollSources(game.messages.get(attack.id), "t0", "free"), 0);
           assert.isTrue(rowInterveneOpen(game.messages.get(attack.id), "t0", "evade"));
         });
@@ -322,16 +436,27 @@ export default function register(quench) {
           const attack = await mobAttack(1);
           await evade(attack);
           assert.lengthOf(rowRerollSources(game.messages.get(attack.id), "t0", "evade"), 1);
-          assert.isTrue(await withPinnedDice(PIN_D20_MID, () => rerollRow(game.messages.get(attack.id), "t0", "evade")));
+          assert.isTrue(
+            await withPinnedDice(PIN_D20_MID, () =>
+              rerollRow(game.messages.get(attack.id), "t0", "evade"),
+            ),
+          );
           await settle();
           assert.exists(checkOf(attack).aiRerolled, "the old result kept for the record");
           assert.equal(pc.system.details.aiFavor, 1);
-          assert.lengthOf(rowRerollSources(game.messages.get(attack.id), "t0", "evade"), 0, "once per Check");
+          assert.lengthOf(
+            rowRerollSources(game.messages.get(attack.id), "t0", "evade"),
+            0,
+            "once per Check",
+          );
           assert.lengthOf(postedAfter(attack), 0, "no card");
 
           assert.isTrue(rowInterveneOpen(game.messages.get(attack.id), "t0", "evade"));
           await applyRow(game.messages.get(attack.id), rowOf(attack));
-          assert.isFalse(rowInterveneOpen(game.messages.get(attack.id), "t0", "evade"), "the row is applied");
+          assert.isFalse(
+            rowInterveneOpen(game.messages.get(attack.id), "t0", "evade"),
+            "the row is applied",
+          );
         });
 
         it("undoing the row's Evade puts the row back - not while someone's d6 is on it", async function () {
@@ -351,14 +476,27 @@ export default function register(quench) {
         /** pc at the wheel of a new vehicle, with Driving at Rank 10. */
         const drive = async (data = {}) => {
           if (!pc.items.find((i) => i.name === "Driving")) {
-            await pc.createEmbeddedDocuments("Item", [{ name: "Driving", type: "skill", system: { rank: 10, governingStat: "dex", category: "utility" } }]);
+            await pc.createEmbeddedDocuments("Item", [
+              {
+                name: "Driving",
+                type: "skill",
+                system: { rank: 10, governingStat: "dex", category: "utility" },
+              },
+            ]);
           }
-          const v = await createTestVehicle("stage2-car", foundry.utils.mergeObject({ system: { move: 80 } }, data));
+          const v = await createTestVehicle(
+            "stage2-car",
+            foundry.utils.mergeObject({ system: { move: 80 } }, data),
+          );
           vehicles.push(v);
-          await v.update({ "system.occupants": [{ uuid: pc.uuid, role: "driver", name: pc.name }], "system.parked": false });
+          await v.update({
+            "system.occupants": [{ uuid: pc.uuid, role: "driver", name: pc.name }],
+            "system.parked": false,
+          });
           return v;
         };
-        const drivingCards = (v) => newMessages((m) => m.getFlag("carl-rpg", "driving")?.vehicleUuid === v.uuid);
+        const drivingCards = (v) =>
+          newMessages((m) => m.getFlag("carl-rpg", "driving")?.vehicleUuid === v.uuid);
         const rollDriving = async (v) => {
           await withPinnedDice(PIN_D20_MID, () => rollDrivingCheck(v, { skipDialog: true }));
           await settle();
@@ -397,7 +535,11 @@ export default function register(quench) {
           await withSetting("currentFloor", floor, async () => {
             const v = await drive();
             const card = await rollDriving(v);
-            assert.equal(flag(card, "driving").degree, "nearMissFail", `${probeTotal} vs. 10 + 2 x ${floor}`);
+            assert.equal(
+              flag(card, "driving").degree,
+              "nearMissFail",
+              `${probeTotal} vs. 10 + 2 x ${floor}`,
+            );
             assert.equal(v.system.round.degree, "nearMissFail");
             assert.isTrue(interveneOpen(card));
 
@@ -417,22 +559,42 @@ export default function register(quench) {
           await withSetting("currentFloor", 1, async () => {
             const v = await drive({ system: { upgrades: { fuzzyDice: { installed: true } } } });
             const card = await rollDriving(v);
-            assert.deepEqual(rerollSources(card).map((s) => s.key), ["favor", "fuzzyDice"]);
+            assert.deepEqual(
+              rerollSources(card).map((s) => s.key),
+              ["favor", "fuzzyDice"],
+            );
 
-            const went = await withPinnedDice(PIN_D20_MID, () => withDialog(() => rerollMessage(card), (dialog) => {
-              dialog.element.querySelector('input[value="fuzzyDice"]').checked = true;
-              pressDialog(dialog, "ok");
-            }, "carl-reroll-pick"));
+            const went = await withPinnedDice(PIN_D20_MID, () =>
+              withDialog(
+                () => rerollMessage(card),
+                (dialog) => {
+                  dialog.element.querySelector('input[value="fuzzyDice"]').checked = true;
+                  pressDialog(dialog, "ok");
+                },
+                "carl-reroll-pick",
+              ),
+            );
             assert.isTrue(went);
             await settle();
-            assert.equal(v.system.upgrades.fuzzyDice.usedFloor, 1, "the Fuzzy Dice are used for this Floor");
+            assert.equal(
+              v.system.upgrades.fuzzyDice.usedFloor,
+              1,
+              "the Fuzzy Dice are used for this Floor",
+            );
             assert.equal(pc.system.details.aiFavor, 2, "no AI Favor spent");
             assert.deepEqual(flag(card, "driving").rerolledBy, ["fuzzyDice"]);
             assert.lengthOf(drivingCards(v), 1, "no new card");
 
             const left = rerollSources(game.messages.get(card.id));
-            assert.deepEqual(left.map((s) => s.key), ["favor"], "AI Favor still on offer");
-            assert.isTrue(await withPinnedDice(PIN_D20_MID, () => rerollMessage(game.messages.get(card.id))), "one source: no picker");
+            assert.deepEqual(
+              left.map((s) => s.key),
+              ["favor"],
+              "AI Favor still on offer",
+            );
+            assert.isTrue(
+              await withPinnedDice(PIN_D20_MID, () => rerollMessage(game.messages.get(card.id))),
+              "one source: no picker",
+            );
             await settle();
             assert.equal(pc.system.details.aiFavor, 1);
             assert.deepEqual(flag(card, "driving").rerolledBy, ["fuzzyDice", "favor"]);

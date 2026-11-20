@@ -47,7 +47,9 @@ export function occupantKey(actor) {
  */
 export function vehicleOccupants(vehicle) {
   const occupants = (vehicle?.system?.occupants ?? []).map((o, index) => ({
-    ...o, index, actor: resolveOccupant(o.uuid),
+    ...o,
+    index,
+    actor: resolveOccupant(o.uuid),
   }));
   return occupants.sort((a, b) => (a.role === "driver" ? -1 : 0) - (b.role === "driver" ? -1 : 0));
 }
@@ -112,7 +114,14 @@ export function vehicleSeatOf(actor) {
 }
 
 /** A vehicle's round stamp with no round set: full Move, no result. */
-export const BLANK_ROUND = Object.freeze({ combatId: "", checkId: "", round: null, degree: "", critChoice: "", ramFactor: 1 });
+export const BLANK_ROUND = Object.freeze({
+  combatId: "",
+  checkId: "",
+  round: null,
+  degree: "",
+  critChoice: "",
+  ramFactor: 1,
+});
 
 /**
  * A new round stamp (system.round) for the vehicle's current fight, or for
@@ -158,7 +167,14 @@ export function vehicleFight(vehicle) {
  */
 export function driverPerks(driver, vehicle) {
   const owned = driver ? ownedSkill(driver, vehicle?.system?.driveSkill ?? "") : null;
-  const perks = { item: owned?.item ?? null, rank: owned?.rank ?? 0, move: 0, attackOk: false, evadeAdvantage: false, stuntAdvantage: false };
+  const perks = {
+    item: owned?.item ?? null,
+    rank: owned?.rank ?? 0,
+    move: 0,
+    attackOk: false,
+    evadeAdvantage: false,
+    stuntAdvantage: false,
+  };
   for (const tier of unlockedTiers(owned?.item ?? null)) {
     perks.move += Number(tier.vehicleMove) || 0;
     perks.attackOk ||= !!tier.vehicleAttackOk;
@@ -237,7 +253,8 @@ export function vehicleStatus(vehicle) {
   const perks = driverPerks(driver, vehicle);
   const driveBonus = perks.move;
   const nitrousEndsAt = sys.upgrades.nitrous.endsAt;
-  const nitrousActive = nitrousEndsAt !== null && nitrousEndsAt !== undefined && nitrousEndsAt > game.time.worldTime;
+  const nitrousActive =
+    nitrousEndsAt !== null && nitrousEndsAt !== undefined && nitrousEndsAt > game.time.worldTime;
   const maxMove = Math.max(0, sys.move + driveBonus) * (nitrousActive ? 2 : 1);
 
   const fight = vehicleFight(vehicle);
@@ -245,7 +262,9 @@ export function vehicleStatus(vehicle) {
   const roundActive = fight
     ? stamp.combatId === fight.id && stamp.round === fight.round
     : stamp.combatId === "";
-  const roundMove = roundActive ? Math.floor(tableSixMove(maxMove, stamp.degree, stamp.critChoice) * stamp.ramFactor) : maxMove;
+  const roundMove = roundActive
+    ? Math.floor(tableSixMove(maxMove, stamp.degree, stamp.critChoice) * stamp.ramFactor)
+    : maxMove;
   const currentMove = sys.parked ? 0 : roundMove;
 
   return {

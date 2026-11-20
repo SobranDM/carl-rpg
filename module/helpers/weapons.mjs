@@ -26,7 +26,8 @@ export { isWeaponFor };
  * @returns {boolean}
  */
 export function needsWeapon(actor, skill) {
-  if (!isCrawler(actor) || skill?.type !== "skill" || skill.system?.category !== "attack") return false;
+  if (!isCrawler(actor) || skill?.type !== "skill" || skill.system?.category !== "attack")
+    return false;
   return !isHandToHand(skill) && !skill.system?.noWeapon;
 }
 
@@ -45,15 +46,22 @@ export function needsWeapon(actor, skill) {
 export function attackReadiness(actor, skill, { mainHand } = {}) {
   if (!needsWeapon(actor, skill)) return { ready: true, weapon: null, swap: null };
   const slots = actor.system.gearSlots ?? {};
-  const inMain = mainHand !== undefined ? mainHand : (slots.mainHand ? actor.items.get(slots.mainHand) : null);
+  const inMain =
+    mainHand !== undefined ? mainHand : slots.mainHand ? actor.items.get(slots.mainHand) : null;
   // A two-handed item about to go in the Main Hand takes the Off Hand too.
-  const inOff = mainHand && isTwoHanded(mainHand) ? null : (slots.offHand ? actor.items.get(slots.offHand) : null);
+  const inOff =
+    mainHand && isTwoHanded(mainHand)
+      ? null
+      : slots.offHand
+        ? actor.items.get(slots.offHand)
+        : null;
   const held = [inMain, inOff].find((item) => isWeaponFor(item, skill));
   if (held) return { ready: true, weapon: held, swap: null };
   const hotlist = actor.system.hotlist ?? [];
   for (let index = 0; index < hotlist.length; index++) {
     const item = hotlist[index] ? actor.items.get(hotlist[index]) : null;
-    if (item && item !== mainHand && isWeaponFor(item, skill)) return { ready: true, weapon: item, swap: { index, item } };
+    if (item && item !== mainHand && isWeaponFor(item, skill))
+      return { ready: true, weapon: item, swap: { index, item } };
   }
   return { ready: false, weapon: null, swap: null };
 }

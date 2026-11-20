@@ -1,17 +1,40 @@
 import { CarlRPGActorSheet } from "../../sheets/actor-sheet.mjs";
-import { isVehicle, rollsLikeCrawler, diesAtZeroHb, takesConditions } from "../../helpers/actor-kinds.mjs";
 import {
-  vehicleStatus, vehicleSeatOf, tableSixMove, stepUpDegree, drivingOutcome,
+  isVehicle,
+  rollsLikeCrawler,
+  diesAtZeroHb,
+  takesConditions,
+} from "../../helpers/actor-kinds.mjs";
+import {
+  vehicleStatus,
+  vehicleSeatOf,
+  tableSixMove,
+  stepUpDegree,
+  drivingOutcome,
 } from "../../helpers/vehicle-state.mjs";
-import { boardVehicle, exitVehicle, setDriver, applyVehiclePreset, activateNitrous } from "../../helpers/vehicles.mjs";
+import {
+  boardVehicle,
+  exitVehicle,
+  setDriver,
+  applyVehiclePreset,
+  activateNitrous,
+} from "../../helpers/vehicles.mjs";
 import { collectVehicleRows } from "../../helpers/vehicle-rows.mjs";
-import { rollDrivingCheck, commitDrivingRound, drivingCardCurrent } from "../../helpers/vehicle-driving.mjs";
+import {
+  rollDrivingCheck,
+  commitDrivingRound,
+  drivingCardCurrent,
+} from "../../helpers/vehicle-driving.mjs";
 import { ramFormula, rollRam } from "../../helpers/vehicle-ram.mjs";
 import { applyRow } from "../../chat/attack-targets-card.mjs";
 import { activeRows, childRowId } from "../../helpers/attack-targets.mjs";
 import { buildWeaponFire } from "../../helpers/vehicle-weapons.mjs";
 import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
-import { attackDifficultyParts, crawlerAttackRow, mobAttackRow } from "../../helpers/attack-targets.mjs";
+import {
+  attackDifficultyParts,
+  crawlerAttackRow,
+  mobAttackRow,
+} from "../../helpers/attack-targets.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
 import { applyDamageToActor } from "../../chat/damage-card.mjs";
 import { shouldBeDefeated } from "../../helpers/defeat.mjs";
@@ -37,7 +60,7 @@ import {
  * has them (p.187, p.190) - what CONFIG gave them before 0.7.0.
  */
 const BOOK_TIERS = {
-  "Driving": [
+  Driving: [
     { rankThreshold: 5, description: "", vehicleAttackOk: true },
     { rankThreshold: 10, description: "", vehicleMove: 5, vehicleEvadeAdvantage: true },
     { rankThreshold: 15, description: "", vehicleMove: 5, vehicleStuntAdvantage: true },
@@ -50,16 +73,27 @@ const BOOK_TIERS = {
 };
 
 /** A crawler owning a Skill by exact name at a Rank (the book's tiers for Driving and Chopper Pilot). */
-async function crawlerWithSkill(label, name, rank, stat = "dex", upgrades = BOOK_TIERS[name] ?? []) {
+async function crawlerWithSkill(
+  label,
+  name,
+  rank,
+  stat = "dex",
+  upgrades = BOOK_TIERS[name] ?? [],
+) {
   const actor = await createTestCharacter(label);
-  await actor.createEmbeddedDocuments("Item", [{ name, type: "skill", system: { rank, governingStat: stat, category: "utility", upgrades } }]);
+  await actor.createEmbeddedDocuments("Item", [
+    { name, type: "skill", system: { rank, governingStat: stat, category: "utility", upgrades } },
+  ]);
   return actor;
 }
 
 /** A vehicle with this crawler at the wheel. */
 async function drivenVehicle(driver, data = {}) {
   const vehicle = await createTestVehicle("driven", data);
-  await vehicle.update({ "system.occupants": [{ uuid: driver.uuid, role: "driver", name: driver.name }], "system.parked": false });
+  await vehicle.update({
+    "system.occupants": [{ uuid: driver.uuid, role: "driver", name: driver.name }],
+    "system.parked": false,
+  });
   return vehicle;
 }
 
@@ -115,7 +149,10 @@ export default function register(quench) {
           try {
             await applyVehiclePreset(v, "motorcycle");
             const s = v.system;
-            assert.deepEqual([s.move, s.size, s.dr, s.occupancy, s.cargo, s.driveSkill], [120, 4, 1, 2, 0, "Chopper Pilot"]);
+            assert.deepEqual(
+              [s.move, s.size, s.dr, s.occupancy, s.cargo, s.driveSkill],
+              [120, 4, 1, 2, 0, "Chopper Pilot"],
+            );
           } finally {
             await deleteTestActor(v);
           }
@@ -131,7 +168,9 @@ export default function register(quench) {
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
             await dropOnSheet(sheet, sheet.element, a.toDragData());
-            await waitFor(() => v.system.occupants.length === 1, { message: "the drop never boarded" });
+            await waitFor(() => v.system.occupants.length === 1, {
+              message: "the drop never boarded",
+            });
             assert.equal(v.system.occupants[0].uuid, a.uuid);
             assert.equal(vehicleSeatOf(a)?.vehicle, v);
 
@@ -142,10 +181,18 @@ export default function register(quench) {
 
             await setDriver(v, a.uuid);
             assert.equal(v.system.occupants.find((o) => o.uuid === a.uuid).role, "driver");
-            assert.equal(v.system.occupants.find((o) => o.uuid === b.uuid).role, "passenger", "the old driver takes a seat");
+            assert.equal(
+              v.system.occupants.find((o) => o.uuid === b.uuid).role,
+              "passenger",
+              "the old driver takes a seat",
+            );
             // Seats are looked up from an index, kept until a vehicle changes.
             assert.equal(vehicleSeatOf(a)?.role, "driver", "the index follows a change of seat");
-            assert.strictEqual(vehicleSeatOf(a), vehicleSeatOf(a), "and isn't rebuilt between changes");
+            assert.strictEqual(
+              vehicleSeatOf(a),
+              vehicleSeatOf(a),
+              "and isn't rebuilt between changes",
+            );
 
             await exitVehicle(v, b);
             assert.equal(v.system.occupants.length, 1);
@@ -174,17 +221,28 @@ export default function register(quench) {
 
         it("the sheet: Vehicle, Cargo, Details and Description tabs; Cargo takes gear only", async function () {
           const v = await createTestVehicle("sheet");
-          const skill = await Item.create({ name: `Quench skill ${foundry.utils.randomID()}`, type: "skill" });
+          const skill = await Item.create({
+            name: `Quench skill ${foundry.utils.randomID()}`,
+            type: "skill",
+          });
           const sheet = v.sheet;
           try {
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
             assert.instanceOf(sheet, CarlRPGActorSheet);
-            const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
+            const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map(
+              (el) => el.dataset.tab,
+            );
             assert.sameMembers(tabs, ["abilities", "items", "pet", "description"]);
-            assert.include(sheet.element.querySelector('nav [data-tab="abilities"]').textContent, game.i18n.localize("CARLRPG.Tab.Vehicle"));
+            assert.include(
+              sheet.element.querySelector('nav [data-tab="abilities"]').textContent,
+              game.i18n.localize("CARLRPG.Tab.Vehicle"),
+            );
             assert.exists(sheet.element.querySelector(".carl-vehicle-header .carl-vehicle-move"));
-            assert.exists(sheet.element.querySelector('section[data-tab="pet"] [name="system.move"]'), "base Move is set up on Details");
+            assert.exists(
+              sheet.element.querySelector('section[data-tab="pet"] [name="system.move"]'),
+              "base Move is set up on Details",
+            );
             const { result } = await dropOnSheet(sheet, sheet.element, skill.toDragData());
             assert.isNull(result);
             assert.equal(v.items.size, 0);
@@ -227,7 +285,9 @@ export default function register(quench) {
 
         it("Chopper Pilot's Move Ranks are 5 and 15", async function () {
           const rider = await crawlerWithSkill("biker", "Chopper Pilot", 5);
-          const v = await drivenVehicle(rider, { system: { move: 120, driveSkill: "Chopper Pilot" } });
+          const v = await drivenVehicle(rider, {
+            system: { move: 120, driveSkill: "Chopper Pilot" },
+          });
           try {
             assert.equal(vehicleStatus(v).driveBonus, 5);
           } finally {
@@ -238,21 +298,48 @@ export default function register(quench) {
 
         it("Driving and Chopper Pilot as before: Attacks at 5 / 10, Evade Advantage at Driving 10, stunts at 15", async function () {
           const has = (rows, id) => rows.some((r) => r.id === id);
-          for (const [name, attackRank, evadeRank] of [["Driving", 5, 10], ["Chopper Pilot", 10, null]]) {
+          for (const [name, attackRank, evadeRank] of [
+            ["Driving", 5, 10],
+            ["Chopper Pilot", 10, null],
+          ]) {
             const driver = await crawlerWithSkill(`book ${name}`, name, 0);
             const v = await drivenVehicle(driver, { system: { move: 80, driveSkill: name } });
             try {
               const skill = driver.items.find((i) => i.name === name);
-              const sword = await createTestItem(driver, "skill", "sword", { system: { category: "attack" } });
+              const sword = await createTestItem(driver, "skill", "sword", {
+                system: { category: "attack" },
+              });
               for (const rank of [0, 4, 5, 9, 10, 14, 15]) {
                 await skill.update({ "system.rank": rank });
                 const at = `${name} Rank ${rank}`;
                 const moveRanks = name === "Driving" ? [10, 15] : [5, 15];
-                assert.equal(vehicleStatus(v).driveBonus, moveRanks.filter((r) => rank >= r).length * 5, `${at}: Move`);
-                assert.equal(has(collectVehicleRows(driver, "attack", { skillItem: sword }), "vehicle-driving"), rank < attackRank, `${at}: Attack Disadvantage`);
-                assert.equal(has(collectVehicleRows(driver, "evade"), "vehicle-driving-evade"), evadeRank !== null && rank >= evadeRank, `${at}: Evade Advantage`);
-                assert.equal(has(collectVehicleRows(driver, "check", { skillItem: skill }), "vehicle-stunt"), rank >= 15, `${at}: stunt`);
-                assert.isTrue(has(collectVehicleRows(driver, "evade"), "vehicle-driving"), `${at}: the driver's own Evade keeps its Disadvantage`);
+                assert.equal(
+                  vehicleStatus(v).driveBonus,
+                  moveRanks.filter((r) => rank >= r).length * 5,
+                  `${at}: Move`,
+                );
+                assert.equal(
+                  has(
+                    collectVehicleRows(driver, "attack", { skillItem: sword }),
+                    "vehicle-driving",
+                  ),
+                  rank < attackRank,
+                  `${at}: Attack Disadvantage`,
+                );
+                assert.equal(
+                  has(collectVehicleRows(driver, "evade"), "vehicle-driving-evade"),
+                  evadeRank !== null && rank >= evadeRank,
+                  `${at}: Evade Advantage`,
+                );
+                assert.equal(
+                  has(collectVehicleRows(driver, "check", { skillItem: skill }), "vehicle-stunt"),
+                  rank >= 15,
+                  `${at}: stunt`,
+                );
+                assert.isTrue(
+                  has(collectVehicleRows(driver, "evade"), "vehicle-driving"),
+                  `${at}: the driver's own Evade keeps its Disadvantage`,
+                );
               }
             } finally {
               await deleteTestActor(v);
@@ -265,42 +352,86 @@ export default function register(quench) {
           await withSetting("currentFloor", 1, async () => {
             const pilot = await crawlerWithSkill("mech", "Mech Pilot", 4, "dex", [
               { rankThreshold: 5, description: "", vehicleMove: 10, vehicleStuntAdvantage: true },
-              { rankThreshold: 10, description: "", vehicleAttackOk: true, vehicleEvadeAdvantage: true },
+              {
+                rankThreshold: 10,
+                description: "",
+                vehicleAttackOk: true,
+                vehicleEvadeAdvantage: true,
+              },
               { rankThreshold: 15, description: "", vehicleMove: 20 },
             ]);
-            const v = await drivenVehicle(pilot, { system: { move: 50, driveSkill: "Mech Pilot" } });
+            const v = await drivenVehicle(pilot, {
+              system: { move: 50, driveSkill: "Mech Pilot" },
+            });
             const cards = [];
             const hookId = Hooks.on("createChatMessage", (m) => {
               if (m.flags?.["carl-rpg"]?.driving?.vehicleUuid === v.uuid) cards.push(m);
             });
             try {
               const mech = pilot.items.find((i) => i.name === "Mech Pilot");
-              const sword = await createTestItem(pilot, "skill", "sword", { system: { category: "attack" } });
+              const sword = await createTestItem(pilot, "skill", "sword", {
+                system: { category: "attack" },
+              });
               const has = (rows, id) => rows.some((r) => r.id === id);
               const perks = () => ({
                 move: vehicleStatus(v).driveBonus,
-                attackDisadvantage: has(collectVehicleRows(pilot, "attack", { skillItem: sword }), "vehicle-driving"),
+                attackDisadvantage: has(
+                  collectVehicleRows(pilot, "attack", { skillItem: sword }),
+                  "vehicle-driving",
+                ),
                 evadeAdvantage: has(collectVehicleRows(pilot, "evade"), "vehicle-driving-evade"),
-                stunt: has(collectVehicleRows(pilot, "check", { skillItem: mech }), "vehicle-stunt"),
+                stunt: has(
+                  collectVehicleRows(pilot, "check", { skillItem: mech }),
+                  "vehicle-stunt",
+                ),
               });
-              assert.deepEqual(perks(), { move: 0, attackDisadvantage: true, evadeAdvantage: false, stunt: false }, "Rank 4");
-              assert.isFalse(has(collectVehicleRows(pilot, "check", { skillItem: mech }), "vehicle-driving"), "driving it is no Disadvantage");
+              assert.deepEqual(
+                perks(),
+                { move: 0, attackDisadvantage: true, evadeAdvantage: false, stunt: false },
+                "Rank 4",
+              );
+              assert.isFalse(
+                has(collectVehicleRows(pilot, "check", { skillItem: mech }), "vehicle-driving"),
+                "driving it is no Disadvantage",
+              );
               await mech.update({ "system.rank": 5 });
-              assert.deepEqual(perks(), { move: 10, attackDisadvantage: true, evadeAdvantage: false, stunt: true }, "Rank 5");
+              assert.deepEqual(
+                perks(),
+                { move: 10, attackDisadvantage: true, evadeAdvantage: false, stunt: true },
+                "Rank 5",
+              );
               await mech.update({ "system.rank": 10 });
-              assert.deepEqual(perks(), { move: 10, attackDisadvantage: false, evadeAdvantage: true, stunt: true }, "Rank 10");
+              assert.deepEqual(
+                perks(),
+                { move: 10, attackDisadvantage: false, evadeAdvantage: true, stunt: true },
+                "Rank 10",
+              );
               await mech.update({ "system.rank": 15 });
-              assert.deepEqual(perks(), { move: 30, attackDisadvantage: false, evadeAdvantage: true, stunt: true }, "Rank 15");
+              assert.deepEqual(
+                perks(),
+                { move: 30, attackDisadvantage: false, evadeAdvantage: true, stunt: true },
+                "Rank 15",
+              );
               assert.equal(vehicleStatus(v).maxMove, 80);
 
               // The Driving Check rolls it: d20 10 + Rank 15 + DEX 2 = 27 vs 12.
-              const degree = await withPinnedDice(PIN_D20_MID, () => rollDrivingCheck(v, { skipDialog: true }));
+              const degree = await withPinnedDice(PIN_D20_MID, () =>
+                rollDrivingCheck(v, { skipDialog: true }),
+              );
               assert.equal(degree, "amazingSuccess", "rolled with Mech Pilot");
-              assert.exists(collectVehicleRows(pilot, "check", { skillItem: mech }).find((r) => r.id === "vehicle-amazing"));
+              assert.exists(
+                collectVehicleRows(pilot, "check", { skillItem: mech }).find(
+                  (r) => r.id === "vehicle-amazing",
+                ),
+              );
 
               // Another vehicle's Skill gives none of it.
               await v.update({ "system.driveSkill": "Driving" });
-              assert.deepEqual(perks(), { move: 0, attackDisadvantage: true, evadeAdvantage: false, stunt: false }, "not this vehicle's Skill");
+              assert.deepEqual(
+                perks(),
+                { move: 0, attackDisadvantage: true, evadeAdvantage: false, stunt: false },
+                "not this vehicle's Skill",
+              );
             } finally {
               Hooks.off("createChatMessage", hookId);
               for (const m of cards) await m.delete();
@@ -314,12 +445,26 @@ export default function register(quench) {
           const driver = await crawlerWithSkill("joust", "Driving", 0);
           const v = await drivenVehicle(driver, { system: { move: 50 } });
           try {
-            const pole = await createTestItem(driver, "skill", "Jousting Pole", { system: { category: "attack", mounted: true } });
-            const lance = await createTestItem(driver, "skill", "Lance", { name: "Lance", system: { category: "attack" } });
+            const pole = await createTestItem(driver, "skill", "Jousting Pole", {
+              system: { category: "attack", mounted: true },
+            });
+            const lance = await createTestItem(driver, "skill", "Lance", {
+              name: "Lance",
+              system: { category: "attack" },
+            });
             const has = (rows, id) => rows.some((r) => r.id === id);
-            assert.isFalse(has(collectVehicleRows(driver, "attack", { skillItem: pole }), "vehicle-driving"), "mounted");
-            assert.isTrue(has(collectVehicleRows(driver, "attack", { skillItem: lance }), "vehicle-driving"), "named Lance, box unticked");
-            assert.isTrue(has(collectVehicleRows(driver, "check", { skillItem: pole }), "vehicle-driving"), "only its Attacks");
+            assert.isFalse(
+              has(collectVehicleRows(driver, "attack", { skillItem: pole }), "vehicle-driving"),
+              "mounted",
+            );
+            assert.isTrue(
+              has(collectVehicleRows(driver, "attack", { skillItem: lance }), "vehicle-driving"),
+              "named Lance, box unticked",
+            );
+            assert.isTrue(
+              has(collectVehicleRows(driver, "check", { skillItem: pole }), "vehicle-driving"),
+              "only its Attacks",
+            );
           } finally {
             await deleteTestActor(v);
             await deleteTestActor(driver);
@@ -329,14 +474,22 @@ export default function register(quench) {
         it("an old driving-Skill key reads as the Skill's name; a blank one can't be driven", async function () {
           const model = CONFIG.Actor.dataModels.vehicle;
           assert.equal(model.migrateData({ driveSkill: "driving" }).driveSkill, "Driving");
-          assert.equal(model.migrateData({ driveSkill: "chopperPilot" }).driveSkill, "Chopper Pilot");
+          assert.equal(
+            model.migrateData({ driveSkill: "chopperPilot" }).driveSkill,
+            "Chopper Pilot",
+          );
           assert.equal(model.migrateData({ driveSkill: "Mech Pilot" }).driveSkill, "Mech Pilot");
-          const old = await createTestVehicle("old key", { system: { driveSkill: "chopperPilot" } });
+          const old = await createTestVehicle("old key", {
+            system: { driveSkill: "chopperPilot" },
+          });
           const driver = await crawlerWithSkill("blank", "Driving", 5);
           const v = await drivenVehicle(driver, { system: { driveSkill: "" } });
           try {
             assert.equal(old.system.driveSkill, "Chopper Pilot");
-            assert.isNull(await rollDrivingCheck(v, { skipDialog: true }), "no Skill named: no Check");
+            assert.isNull(
+              await rollDrivingCheck(v, { skipDialog: true }),
+              "no Skill named: no Check",
+            );
           } finally {
             await deleteTestActor(old);
             await deleteTestActor(v);
@@ -366,7 +519,9 @@ export default function register(quench) {
             const v = await drivenVehicle(driver, { system: { move: 80 } });
             try {
               // d20 10 + Rank 10 + DEX +2 = 22 vs 12: Amazing Success.
-              const degree = await withPinnedDice(PIN_D20_MID, () => rollDrivingCheck(v, { skipDialog: true }));
+              const degree = await withPinnedDice(PIN_D20_MID, () =>
+                rollDrivingCheck(v, { skipDialog: true }),
+              );
               assert.equal(degree, "amazingSuccess");
               assert.equal(v.system.round.degree, "amazingSuccess");
               assert.isTrue(v.system.nextCheckAdvantage);
@@ -406,9 +561,18 @@ export default function register(quench) {
               assert.isTrue(drivingCardCurrent(driving(cards[1])));
 
               await commitDrivingRound(v, "standardFail");
-              assert.isFalse(drivingCardCurrent(driving(cards[1])), "a result set by hand replaces it too");
-              assert.isFalse(drivingCardCurrent({ mode: "table6", vehicleUuid: v.uuid }), "an old card with no Check id");
-              assert.isTrue(drivingCardCurrent({ mode: "stop", vehicleUuid: v.uuid }), "a stopping card never sets the round");
+              assert.isFalse(
+                drivingCardCurrent(driving(cards[1])),
+                "a result set by hand replaces it too",
+              );
+              assert.isFalse(
+                drivingCardCurrent({ mode: "table6", vehicleUuid: v.uuid }),
+                "an old card with no Check id",
+              );
+              assert.isTrue(
+                drivingCardCurrent({ mode: "stop", vehicleUuid: v.uuid }),
+                "a stopping card never sets the round",
+              );
             } finally {
               Hooks.off("createChatMessage", hookId);
               for (const m of cards) await m.delete();
@@ -429,10 +593,13 @@ export default function register(quench) {
             const updateMessage = ui.chat.updateMessage;
             const redrawn = [];
             try {
-              for (let i = 0; i < 2; i++) await withPinnedDice(PIN_D20_MID, () => rollDrivingCheck(v, { skipDialog: true }));
+              for (let i = 0; i < 2; i++)
+                await withPinnedDice(PIN_D20_MID, () => rollDrivingCheck(v, { skipDialog: true }));
               await waitFor(() => cards.length === 2);
               const drawn = (m) => document.querySelectorAll(`[data-message-id="${m.id}"]`);
-              await waitFor(() => drawn(cards[0]).length && drawn(cards[1]).length, { message: "the cards were never drawn" });
+              await waitFor(() => drawn(cards[0]).length && drawn(cards[1]).length, {
+                message: "the cards were never drawn",
+              });
               // The first card as if scrolled out of the log.
               for (const li of drawn(cards[0])) li.remove();
 
@@ -458,22 +625,56 @@ export default function register(quench) {
           const passenger = await createTestCharacter("rows passenger");
           const v = await drivenVehicle(driver, { system: { move: 50 } });
           try {
-            await v.update({ "system.occupants": [...v.system.toObject().occupants, { uuid: passenger.uuid, role: "passenger", name: passenger.name }] });
+            await v.update({
+              "system.occupants": [
+                ...v.system.toObject().occupants,
+                { uuid: passenger.uuid, role: "passenger", name: passenger.name },
+              ],
+            });
             const driving = driver.items.find((i) => i.name === "Driving");
-            const sword = await createTestItem(driver, "skill", "sword", { system: { category: "attack" } });
+            const sword = await createTestItem(driver, "skill", "sword", {
+              system: { category: "attack" },
+            });
             const has = (rows, id) => rows.some((r) => r.id === id);
-            assert.isTrue(has(collectVehicleRows(driver, "check"), "vehicle-driving"), "a Stat Check");
-            assert.isFalse(has(collectVehicleRows(driver, "check", { skillItem: driving }), "vehicle-driving"), "driving itself");
-            assert.isTrue(has(collectVehicleRows(driver, "attack", { skillItem: sword }), "vehicle-driving"));
-            assert.isFalse(has(collectVehicleRows(driver, "attack", { skillItem: sword, builtIn: true }), "vehicle-driving"));
+            assert.isTrue(
+              has(collectVehicleRows(driver, "check"), "vehicle-driving"),
+              "a Stat Check",
+            );
+            assert.isFalse(
+              has(collectVehicleRows(driver, "check", { skillItem: driving }), "vehicle-driving"),
+              "driving itself",
+            );
+            assert.isTrue(
+              has(collectVehicleRows(driver, "attack", { skillItem: sword }), "vehicle-driving"),
+            );
+            assert.isFalse(
+              has(
+                collectVehicleRows(driver, "attack", { skillItem: sword, builtIn: true }),
+                "vehicle-driving",
+              ),
+            );
             await driving.update({ "system.rank": 5 });
-            assert.isFalse(has(collectVehicleRows(driver, "attack", { skillItem: sword }), "vehicle-driving"), "Driving Rank 5");
-            assert.isTrue(has(collectVehicleRows(driver, "check"), "vehicle-driving"), "still on other Checks");
-            assert.isFalse(has(collectVehicleRows(passenger, "check"), "vehicle-driving"), "passengers act freely");
-            const evade = collectVehicleRows(passenger, "evade").find((r) => r.id === "vehicle-evade-buff");
+            assert.isFalse(
+              has(collectVehicleRows(driver, "attack", { skillItem: sword }), "vehicle-driving"),
+              "Driving Rank 5",
+            );
+            assert.isTrue(
+              has(collectVehicleRows(driver, "check"), "vehicle-driving"),
+              "still on other Checks",
+            );
+            assert.isFalse(
+              has(collectVehicleRows(passenger, "check"), "vehicle-driving"),
+              "passengers act freely",
+            );
+            const evade = collectVehicleRows(passenger, "evade").find(
+              (r) => r.id === "vehicle-evade-buff",
+            );
             assert.equal(evade?.value, 5, "Move 50 ÷ 10");
             await v.update({ "system.parked": true });
-            assert.isFalse(has(collectVehicleRows(driver, "check"), "vehicle-driving"), "a parked car isn't driven");
+            assert.isFalse(
+              has(collectVehicleRows(driver, "check"), "vehicle-driving"),
+              "a parked car isn't driven",
+            );
           } finally {
             await deleteTestActor(v);
             await deleteTestActor(driver);
@@ -503,15 +704,28 @@ export default function register(quench) {
           const rider = await createTestCharacter("occupant");
           const v = await createTestVehicle("shield");
           try {
-            await v.update({ "system.occupants": [{ uuid: rider.uuid, role: "passenger", name: rider.name }] });
+            await v.update({
+              "system.occupants": [{ uuid: rider.uuid, role: "passenger", name: rider.name }],
+            });
             const row = crawlerAttackRow({
-              id: "t0", target: { uuid: rider.uuid, actor: rider }, difficulty: 15, attackTotal: 14, naturalRoll: 10,
+              id: "t0",
+              target: { uuid: rider.uuid, actor: rider },
+              difficulty: 15,
+              attackTotal: 14,
+              naturalRoll: 10,
             });
             assert.isTrue(row.hit);
             assert.equal(row.redirectUuid, v.uuid);
-            assert.isTrue(row.isCharacter, "still a crawler (a reroll rebuilds from this) - redirectUuid hides Roll Evade");
+            assert.isTrue(
+              row.isCharacter,
+              "still a crawler (a reroll rebuilds from this) - redirectUuid hides Roll Evade",
+            );
             const miss = crawlerAttackRow({
-              id: "t0", target: { uuid: rider.uuid, actor: rider }, difficulty: 15, attackTotal: 10, naturalRoll: 10,
+              id: "t0",
+              target: { uuid: rider.uuid, actor: rider },
+              difficulty: 15,
+              attackTotal: 10,
+              naturalRoll: 10,
             });
             assert.isFalse(miss.hit);
             assert.isNull(miss.redirectUuid);
@@ -545,17 +759,24 @@ export default function register(quench) {
             const target = await createTestMob("ram target", { system: { size: "Medium (4)" } });
             const v = await drivenVehicle(driver, { system: { size: 4, move: 50, dr: 2 } });
             try {
-              await v.update({ "system.occupants": [
-                ...v.system.toObject().occupants,
-                { uuid: passenger.uuid, role: "passenger", name: passenger.name },
-              ] });
+              await v.update({
+                "system.occupants": [
+                  ...v.system.toObject().occupants,
+                  { uuid: passenger.uuid, role: "passenger", name: passenger.name },
+                ],
+              });
               // d20 10 + Driving 10 + DEX 2 = 22 vs the Mob's Evade 10 + 1 + F 1.
-              const message = await withFakeTargets([{ actor: target }],
-                () => withPinnedDice(PIN_D20_MID, () => rollRam(v, { skipDialog: true })));
+              const message = await withFakeTargets([{ actor: target }], () =>
+                withPinnedDice(PIN_D20_MID, () => rollRam(v, { skipDialog: true })),
+              );
               assert.exists(message, "the ram was rolled");
               const flags = () => game.messages.get(message.id).flags["carl-rpg"];
               const ram = flags().ram;
-              assert.equal(message.rolls[1].formula, "9d6", "Size 4 + (50 + 5 from Driving Rank 10) ÷ 10");
+              assert.equal(
+                message.rolls[1].formula,
+                "9d6",
+                "Size 4 + (50 + 5 from Driving Rank 10) ÷ 10",
+              );
               const rows = Object.values(flags().targetRows);
               const hit = rows.find((r) => r.role === "target");
               const recoil = rows.find((r) => r.role === "recoil");
@@ -571,10 +792,15 @@ export default function register(quench) {
               await applyRow(game.messages.get(message.id), recoil);
               assert.equal(v.system.round.ramFactor, 0.5, "the rammer halves its Move");
               const share = Math.max(0, Math.floor(Math.floor(ram.raw / 2) / 2) - 2);
-              const occupantRows = Object.values(flags().targetRows).filter((r) => r.role === "occupant");
+              const occupantRows = Object.values(flags().targetRows).filter(
+                (r) => r.role === "occupant",
+              );
               if (share > 0) {
                 assert.equal(occupantRows.length, 2, "one row per occupant");
-                assert.sameMembers(occupantRows.map((r) => r.id), [childRowId(recoil.id, 0), childRowId(recoil.id, 1)]);
+                assert.sameMembers(
+                  occupantRows.map((r) => r.id),
+                  [childRowId(recoil.id, 0), childRowId(recoil.id, 1)],
+                );
                 assert.isTrue(occupantRows.every((r) => r.damageOverride.bludgeoning === share));
               } else {
                 assert.equal(occupantRows.length, 0);
@@ -594,8 +820,13 @@ export default function register(quench) {
           const fromTarget = [0, 1, 2].map((i) => childRowId("t0", i));
           const fromRecoil = [0, 1, 2].map((i) => childRowId("t1", i));
           assert.lengthOf(new Set([...fromTarget, ...fromRecoil]), 6);
-          const rows = Object.fromEntries(["t1", "t0", ...fromRecoil, ...fromTarget].map((id) => [id, { id }]));
-          assert.deepEqual(activeRows(rows).map((r) => r.id), ["t0", "t1", ...fromTarget, ...fromRecoil]);
+          const rows = Object.fromEntries(
+            ["t1", "t0", ...fromRecoil, ...fromTarget].map((id) => [id, { id }]),
+          );
+          assert.deepEqual(
+            activeRows(rows).map((r) => r.id),
+            ["t0", "t1", ...fromTarget, ...fromRecoil],
+          );
         });
 
         it("at 0 HB it explodes once: one row per occupant, no Evade, and everyone is out", async function () {
@@ -603,15 +834,24 @@ export default function register(quench) {
           const b = await createTestMob("blast b");
           const v = await createTestVehicle("boom", { system: { size: 3 } });
           try {
-            await v.update({ "system.occupants": [
-              { uuid: a.uuid, role: "driver", name: a.name },
-              { uuid: b.uuid, role: "passenger", name: b.name },
-            ] });
+            await v.update({
+              "system.occupants": [
+                { uuid: a.uuid, role: "driver", name: a.name },
+                { uuid: b.uuid, role: "passenger", name: b.name },
+              ],
+            });
             const before = game.messages.size;
             await v.update({ "system.hb.value": 0 });
-            await waitFor(() => game.messages.contents.slice(before).some((m) => m.getFlag("carl-rpg", "explosion")),
-              { message: "no explosion card" });
-            const card = game.messages.contents.slice(before).find((m) => m.getFlag("carl-rpg", "explosion"));
+            await waitFor(
+              () =>
+                game.messages.contents
+                  .slice(before)
+                  .some((m) => m.getFlag("carl-rpg", "explosion")),
+              { message: "no explosion card" },
+            );
+            const card = game.messages.contents
+              .slice(before)
+              .find((m) => m.getFlag("carl-rpg", "explosion"));
             const rows = Object.values(card.getFlag("carl-rpg", "targetRows"));
             assert.equal(rows.length, 2);
             assert.isTrue(rows.every((r) => r.hit && !r.isCharacter));
@@ -620,7 +860,9 @@ export default function register(quench) {
             assert.isTrue(shouldBeDefeated(v));
             await v.update({ "system.hb.value": 0, "system.model": "wreck" });
             await settle(150);
-            const blasts = game.messages.contents.slice(before).filter((m) => m.getFlag("carl-rpg", "explosion"));
+            const blasts = game.messages.contents
+              .slice(before)
+              .filter((m) => m.getFlag("carl-rpg", "explosion"));
             assert.equal(blasts.length, 1, "only once");
           } finally {
             for (const x of [v, a, b]) await deleteTestActor(x);
@@ -635,13 +877,27 @@ export default function register(quench) {
           const gunner = await crawlerWithSkill("gunner", "Aiming", 4, "dex");
           const v = await drivenVehicle(gunner);
           try {
-            await v.update({ "system.attacks": [{ name: "Turret", damage: "4d12", damageType: "piercing", range: "100ft", skill: "Aiming", stat: "dex" }] });
+            await v.update({
+              "system.attacks": [
+                {
+                  name: "Turret",
+                  damage: "4d12",
+                  damageType: "piercing",
+                  range: "100ft",
+                  skill: "Aiming",
+                  stat: "dex",
+                },
+              ],
+            });
             const fire = buildWeaponFire(v, 0, gunner);
             assert.equal(fire.item.system.rank, 4);
             assert.equal(fire.item.system.governingStat, "dex");
             assert.equal(fire.item.system.baseDamage.dice, "4d12");
             assert.deepEqual(fire.castAs.builtIn, { vehicleUuid: v.uuid, index: 0 });
-            const rows = collectVehicleRows(gunner, "attack", { skillItem: fire.item, builtIn: true });
+            const rows = collectVehicleRows(gunner, "attack", {
+              skillItem: fire.item,
+              builtIn: true,
+            });
             assert.notExists(rows.find((r) => r.id === "vehicle-driving"));
           } finally {
             await deleteTestActor(v);
@@ -649,16 +905,34 @@ export default function register(quench) {
           }
         });
 
-        it("a gunner's worn \"+2 Handgun\" gear raises the Rank a built-in gun fires at", async function () {
+        it('a gunner\'s worn "+2 Handgun" gear raises the Rank a built-in gun fires at', async function () {
           const gunner = await crawlerWithSkill("bonus gunner", "Handgun", 3, "dex");
           const v = await drivenVehicle(gunner);
           try {
-            await v.update({ "system.attacks": [{ name: "Gun", damage: "2d6", damageType: "piercing", range: "50ft", skill: "Handgun", stat: "dex" }] });
+            await v.update({
+              "system.attacks": [
+                {
+                  name: "Gun",
+                  damage: "2d6",
+                  damageType: "piercing",
+                  range: "50ft",
+                  skill: "Handgun",
+                  stat: "dex",
+                },
+              ],
+            });
             const sight = await createTestItem(gunner, "item", "Gun Sight", {
               name: "Gun Sight",
-              system: { slots: ["head"], changes: [{ targetType: "skillRank", target: "Handgun", mode: "add", value: "2" }] },
+              system: {
+                slots: ["head"],
+                changes: [{ targetType: "skillRank", target: "Handgun", mode: "add", value: "2" }],
+              },
             });
-            assert.equal(buildWeaponFire(v, 0, gunner).item.system.rank, 3, "carried, it gives nothing");
+            assert.equal(
+              buildWeaponFire(v, 0, gunner).item.system.rank,
+              3,
+              "carried, it gives nothing",
+            );
             await assignItemToSlot(gunner, { slotType: "gear", slotKey: "head" }, sight);
             const fire = buildWeaponFire(v, 0, gunner);
             assert.equal(fire.item.system.rank, 5, "worn: Rank 3 + 2");
@@ -681,10 +955,14 @@ export default function register(quench) {
             return entry ? pack.getDocument(entry._id) : null;
           };
           const perks = (u) => ({
-            rank: u.rankThreshold, move: u.vehicleMove, attackOk: u.vehicleAttackOk,
-            evade: u.vehicleEvadeAdvantage, stunt: u.vehicleStuntAdvantage,
+            rank: u.rankThreshold,
+            move: u.vehicleMove,
+            attackOk: u.vehicleAttackOk,
+            evade: u.vehicleEvadeAdvantage,
+            stunt: u.vehicleStuntAdvantage,
           });
-          const tiers = async (name) => (await doc(name))?.system.upgrades.map(perks).sort((a, b) => a.rank - b.rank);
+          const tiers = async (name) =>
+            (await doc(name))?.system.upgrades.map(perks).sort((a, b) => a.rank - b.rank);
           assert.deepEqual(await tiers("Driving"), [
             { rank: 5, move: 0, attackOk: true, evade: false, stunt: false },
             { rank: 10, move: 5, attackOk: false, evade: true, stunt: false },

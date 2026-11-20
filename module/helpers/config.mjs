@@ -119,8 +119,22 @@ CARLRPG.sizes = {
  * work too.
  */
 CARLRPG.weaponSkills = [
-  "Axe", "Bow", "Club", "Crossbow", "Dagger", "Handgun", "Javelin", "Lance", "Longsword",
-  "Polearm", "Quarterstaff", "Rapier", "Shotgun", "Shuriken", "Slingshot", "Warhammer",
+  "Axe",
+  "Bow",
+  "Club",
+  "Crossbow",
+  "Dagger",
+  "Handgun",
+  "Javelin",
+  "Lance",
+  "Longsword",
+  "Polearm",
+  "Quarterstaff",
+  "Rapier",
+  "Shotgun",
+  "Shuriken",
+  "Slingshot",
+  "Warhammer",
 ];
 
 /**
@@ -412,10 +426,26 @@ CARLRPG.petAltMoveFeet = { swim: 30, burrow: 30, flight: 50, jump: 50 };
 CARLRPG.petStartingSkills = ["Slice Attack"];
 CARLRPG.petRoleSkills = { aggressive: ["Back Claw", "Bite"] };
 CARLRPG.petCommandStates = {
-  free: { label: "CARLRPG.Pet.Command.States.free", status: "carlPetFree", img: "icons/svg/upgrade.svg" },
-  restricted: { label: "CARLRPG.Pet.Command.States.restricted", status: "carlPetRestricted", img: "icons/svg/target.svg" },
-  stayingOut: { label: "CARLRPG.Pet.Command.States.stayingOut", status: "carlPetStayingOut", img: "icons/svg/downgrade.svg" },
-  hiding: { label: "CARLRPG.Pet.Command.States.hiding", status: "carlPetHiding", img: "icons/svg/invisible.svg" },
+  free: {
+    label: "CARLRPG.Pet.Command.States.free",
+    status: "carlPetFree",
+    img: "icons/svg/upgrade.svg",
+  },
+  restricted: {
+    label: "CARLRPG.Pet.Command.States.restricted",
+    status: "carlPetRestricted",
+    img: "icons/svg/target.svg",
+  },
+  stayingOut: {
+    label: "CARLRPG.Pet.Command.States.stayingOut",
+    status: "carlPetStayingOut",
+    img: "icons/svg/downgrade.svg",
+  },
+  hiding: {
+    label: "CARLRPG.Pet.Command.States.hiding",
+    status: "carlPetHiding",
+    img: "icons/svg/invisible.svg",
+  },
 };
 CARLRPG.petLevelStepCap = 15;
 
@@ -433,30 +463,151 @@ CARLRPG.petLevelStepCap = 15;
  *  Mounted-only weapons (a Lance) are marked on the Skill (system.mounted).
  */
 CARLRPG.vehiclePresets = {
-  skateboard: { label: "CARLRPG.Vehicle.Presets.skateboard", move: 30, size: 2, dr: 0, occupancy: 1, cargo: 0, driveSkill: "Driving" },
-  bicycle: { label: "CARLRPG.Vehicle.Presets.bicycle", move: 40, size: 3, dr: 0, occupancy: 2, cargo: 0, driveSkill: "Chopper Pilot" },
-  tank: { label: "CARLRPG.Vehicle.Presets.tank", move: 50, size: 6, dr: 10, occupancy: 4, cargo: 0, driveSkill: "Driving" },
-  eighteenWheeler: { label: "CARLRPG.Vehicle.Presets.eighteenWheeler", move: 60, size: 7, dr: 4, occupancy: 4, cargo: 50, driveSkill: "Driving" },
-  largeTruck: { label: "CARLRPG.Vehicle.Presets.largeTruck", move: 70, size: 6, dr: 4, occupancy: 3, cargo: 5, driveSkill: "Driving" },
-  sedan: { label: "CARLRPG.Vehicle.Presets.sedan", move: 80, size: 5, dr: 3, occupancy: 6, cargo: 0, driveSkill: "Driving" },
-  sportscar: { label: "CARLRPG.Vehicle.Presets.sportscar", move: 100, size: 5, dr: 2, occupancy: 2, cargo: 0, driveSkill: "Driving" },
-  motorcycle: { label: "CARLRPG.Vehicle.Presets.motorcycle", move: 120, size: 4, dr: 1, occupancy: 2, cargo: 0, driveSkill: "Chopper Pilot" },
+  skateboard: {
+    label: "CARLRPG.Vehicle.Presets.skateboard",
+    move: 30,
+    size: 2,
+    dr: 0,
+    occupancy: 1,
+    cargo: 0,
+    driveSkill: "Driving",
+  },
+  bicycle: {
+    label: "CARLRPG.Vehicle.Presets.bicycle",
+    move: 40,
+    size: 3,
+    dr: 0,
+    occupancy: 2,
+    cargo: 0,
+    driveSkill: "Chopper Pilot",
+  },
+  tank: {
+    label: "CARLRPG.Vehicle.Presets.tank",
+    move: 50,
+    size: 6,
+    dr: 10,
+    occupancy: 4,
+    cargo: 0,
+    driveSkill: "Driving",
+  },
+  eighteenWheeler: {
+    label: "CARLRPG.Vehicle.Presets.eighteenWheeler",
+    move: 60,
+    size: 7,
+    dr: 4,
+    occupancy: 4,
+    cargo: 50,
+    driveSkill: "Driving",
+  },
+  largeTruck: {
+    label: "CARLRPG.Vehicle.Presets.largeTruck",
+    move: 70,
+    size: 6,
+    dr: 4,
+    occupancy: 3,
+    cargo: 5,
+    driveSkill: "Driving",
+  },
+  sedan: {
+    label: "CARLRPG.Vehicle.Presets.sedan",
+    move: 80,
+    size: 5,
+    dr: 3,
+    occupancy: 6,
+    cargo: 0,
+    driveSkill: "Driving",
+  },
+  sportscar: {
+    label: "CARLRPG.Vehicle.Presets.sportscar",
+    move: 100,
+    size: 5,
+    dr: 2,
+    occupancy: 2,
+    cargo: 0,
+    driveSkill: "Driving",
+  },
+  motorcycle: {
+    label: "CARLRPG.Vehicle.Presets.motorcycle",
+    move: 120,
+    size: 4,
+    dr: 1,
+    occupancy: 2,
+    cargo: 0,
+    driveSkill: "Chopper Pilot",
+  },
 };
 CARLRPG.vehicleRoles = {
   driver: "CARLRPG.Vehicle.Roles.driver",
   passenger: "CARLRPG.Vehicle.Roles.passenger",
 };
 CARLRPG.drivingOutcomes = {
-  criticalHit: { factor: 1, delta: 0, damageSlots: 0, advantageNext: false, critChoice: true, stall: false },
-  amazingSuccess: { factor: 1, delta: 0, damageSlots: 0, advantageNext: true, critChoice: false, stall: false },
-  standardSuccess: { factor: 1, delta: 0, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
-  nearMissFail: { factor: 1, delta: -5, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
-  standardFail: { factor: 0.5, delta: 0, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
-  majorFail: { factor: 0.5, delta: 0, damageSlots: 1, advantageNext: false, critChoice: false, stall: false },
-  criticalFail: { factor: 0, delta: 0, damageSlots: 3, advantageNext: false, critChoice: false, stall: true },
+  criticalHit: {
+    factor: 1,
+    delta: 0,
+    damageSlots: 0,
+    advantageNext: false,
+    critChoice: true,
+    stall: false,
+  },
+  amazingSuccess: {
+    factor: 1,
+    delta: 0,
+    damageSlots: 0,
+    advantageNext: true,
+    critChoice: false,
+    stall: false,
+  },
+  standardSuccess: {
+    factor: 1,
+    delta: 0,
+    damageSlots: 0,
+    advantageNext: false,
+    critChoice: false,
+    stall: false,
+  },
+  nearMissFail: {
+    factor: 1,
+    delta: -5,
+    damageSlots: 0,
+    advantageNext: false,
+    critChoice: false,
+    stall: false,
+  },
+  standardFail: {
+    factor: 0.5,
+    delta: 0,
+    damageSlots: 0,
+    advantageNext: false,
+    critChoice: false,
+    stall: false,
+  },
+  majorFail: {
+    factor: 0.5,
+    delta: 0,
+    damageSlots: 1,
+    advantageNext: false,
+    critChoice: false,
+    stall: false,
+  },
+  criticalFail: {
+    factor: 0,
+    delta: 0,
+    damageSlots: 3,
+    advantageNext: false,
+    critChoice: false,
+    stall: true,
+  },
 };
 /** Degrees in order, worst to best - Shock Absorbers step a Fail up one. */
-CARLRPG.degreeOrder = ["criticalFail", "majorFail", "standardFail", "nearMissFail", "standardSuccess", "amazingSuccess", "criticalHit"];
+CARLRPG.degreeOrder = [
+  "criticalFail",
+  "majorFail",
+  "standardFail",
+  "nearMissFail",
+  "standardSuccess",
+  "amazingSuccess",
+  "criticalHit",
+];
 /** Nitrous Oxide: "Double Move for 3 rounds" (p.73). */
 CARLRPG.nitrousRounds = 3;
 
@@ -695,7 +846,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.Fatigued.MobEffect",
     durationType: "until-condition",
     stackable: true,
-    mechanics: { penalty: 1, endsOnRest: 'long', halveMove: true },
+    mechanics: { penalty: 1, endsOnRest: "long", halveMove: true },
   },
   held: {
     label: "CARLRPG.Debuff.Held.Label",
@@ -710,7 +861,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.LongTermMajorInjury.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { penalty: 5, endsOnRest: 'fullDay' },
+    mechanics: { penalty: 5, endsOnRest: "fullDay" },
   },
   longTermMinorInjury: {
     label: "CARLRPG.Debuff.LongTermMinorInjury.Label",
@@ -718,7 +869,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.LongTermMinorInjury.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { penalty: 2, endsOnRest: 'long' },
+    mechanics: { penalty: 2, endsOnRest: "long" },
   },
   majorInjury: {
     label: "CARLRPG.Debuff.MajorInjury.Label",
@@ -726,7 +877,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.MajorInjury.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { penalty: 5, endsOnRest: 'long' },
+    mechanics: { penalty: 5, endsOnRest: "long" },
   },
   minorInjury: {
     label: "CARLRPG.Debuff.MinorInjury.Label",
@@ -734,7 +885,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.MinorInjury.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { penalty: 2, endsOnRest: 'short' },
+    mechanics: { penalty: 2, endsOnRest: "short" },
   },
   muted: {
     label: "CARLRPG.Debuff.Muted.Label",

@@ -51,7 +51,8 @@ export function advantageOf(formula) {
  * @returns {object}
  */
 export function makeCheck(kind, result) {
-  const roll = typeof result.roll?.toJSON === "function" ? result.roll.toJSON() : (result.roll ?? null);
+  const roll =
+    typeof result.roll?.toJSON === "function" ? result.roll.toJSON() : (result.roll ?? null);
   return gradeCheck({
     kind,
     formula: result.formula ?? "1d20",
@@ -73,9 +74,17 @@ export function makeCheck(kind, result) {
  * @param {{natural: number|null, total: number, roll: object|null, breakdown: string}} reroll
  */
 export function applyAiReroll(check, { natural, total, roll, breakdown }) {
-  check.aiRerolled = { natural: check.natural, base: check.base, breakdown: check.breakdown, roll: check.roll };
+  check.aiRerolled = {
+    natural: check.natural,
+    base: check.base,
+    breakdown: check.breakdown,
+    roll: check.roll,
+  };
   Object.assign(check, {
-    natural: natural ?? null, base: Number(total) || 0, roll: roll ?? null, breakdown: String(breakdown ?? ""),
+    natural: natural ?? null,
+    base: Number(total) || 0,
+    roll: roll ?? null,
+    breakdown: String(breakdown ?? ""),
   });
 }
 
@@ -146,7 +155,14 @@ export function hitMissed(hit) {
  * @returns {boolean}
  */
 export function hitEvadable(hit) {
-  return !!hit.row?.hit && !!hit.row?.isCharacter && !hit.caughtBy && !hit.evade && !hit.free?.success && !hit.block;
+  return (
+    !!hit.row?.hit &&
+    !!hit.row?.isCharacter &&
+    !hit.caughtBy &&
+    !hit.evade &&
+    !hit.free?.success &&
+    !hit.block
+  );
 }
 
 /**
@@ -173,7 +189,11 @@ export function hitBlockable(state, hit, { magicOk = false } = {}) {
   if (!hit.row?.hit || !hit.row?.isCharacter || hit.caughtBy || hit.block) return false;
   if (hit.evade?.success || hit.free?.success) return false;
   if (nearMissOnVehicle(attack, hit, !!hit.row?.vehicleUuid)) return false;
-  const facts = { isArea: !!attack.isArea, hasDamage: !!String(attack.damage ?? "").trim(), magical: attackIsMagical(attack) };
+  const facts = {
+    isArea: !!attack.isArea,
+    hasDamage: !!String(attack.damage ?? "").trim(),
+    magical: attackIsMagical(attack),
+  };
   return blockableAttack(facts, magicOk ? 5 : 0);
 }
 
@@ -199,7 +219,9 @@ export function nearMissOnVehicle(attack, hit, seated) {
  * @returns {object[]}
  */
 export function blockableHitsFor(state, uuid, options = {}) {
-  return hitList(state).filter((hit) => hit.targetUuid === uuid && hitBlockable(state, hit, options));
+  return hitList(state).filter(
+    (hit) => hit.targetUuid === uuid && hitBlockable(state, hit, options),
+  );
 }
 
 /**
@@ -223,7 +245,9 @@ export function evadableHitsFor(state, uuid) {
  * @returns {object[]}
  */
 export function pullableHits(state, mobUuid, taunterUuid) {
-  return redirectableHits(state, taunterUuid).filter((hit) => state.attacks[hit.attackId].mobUuid === mobUuid);
+  return redirectableHits(state, taunterUuid).filter(
+    (hit) => state.attacks[hit.attackId].mobUuid === mobUuid,
+  );
 }
 
 /**
@@ -238,8 +262,15 @@ export function pullableHits(state, mobUuid, taunterUuid) {
 function redirectableHits(state, takerUuid) {
   return hitList(state).filter((hit) => {
     const attack = state.attacks?.[hit.attackId];
-    return !!attack && !attack.isArea && hit.targetUuid !== takerUuid && !!hit.row?.isCharacter
-      && !hit.caughtBy && !hitMissed(hit) && !hit.evade?.success;
+    return (
+      !!attack &&
+      !attack.isArea &&
+      hit.targetUuid !== takerUuid &&
+      !!hit.row?.isCharacter &&
+      !hit.caughtBy &&
+      !hitMissed(hit) &&
+      !hit.evade?.success
+    );
   });
 }
 
@@ -254,8 +285,12 @@ function redirectableHits(state, takerUuid) {
  */
 export function pullableAreaAttacks(state, mobUuid, taunterUuid) {
   return Object.entries(state?.attacks ?? {})
-    .filter(([id, attack]) => attack.isArea && attack.mobUuid === mobUuid
-      && hitList(state).some((hit) => hit.attackId === id && hit.targetUuid !== taunterUuid))
+    .filter(
+      ([id, attack]) =>
+        attack.isArea &&
+        attack.mobUuid === mobUuid &&
+        hitList(state).some((hit) => hit.attackId === id && hit.targetUuid !== taunterUuid),
+    )
     .map(([id]) => id);
 }
 
@@ -270,8 +305,11 @@ export function tauntableMobs(state, taunterUuid) {
   const seen = new Map();
   for (const attack of Object.values(state?.attacks ?? {})) {
     if (seen.has(attack.mobUuid)) continue;
-    if (pullableHits(state, attack.mobUuid, taunterUuid).length
-      || pullableAreaAttacks(state, attack.mobUuid, taunterUuid).length) seen.set(attack.mobUuid, attack.mobName);
+    if (
+      pullableHits(state, attack.mobUuid, taunterUuid).length ||
+      pullableAreaAttacks(state, attack.mobUuid, taunterUuid).length
+    )
+      seen.set(attack.mobUuid, attack.mobName);
   }
   return [...seen].map(([mobUuid, mobName]) => ({ mobUuid, mobName }));
 }
@@ -311,11 +349,24 @@ export function intervenableAllies(state, intervenerUuid) {
 export function checkList(state) {
   const out = [];
   for (const taunt of tauntList(state)) {
-    out.push({ ref: { type: "taunt", tauntId: taunt.id }, check: taunt.check, ownerUuid: taunt.byUuid, ownerName: taunt.byName, taunt });
+    out.push({
+      ref: { type: "taunt", tauntId: taunt.id },
+      check: taunt.check,
+      ownerUuid: taunt.byUuid,
+      ownerName: taunt.byName,
+      taunt,
+    });
   }
   for (const hit of hitList(state)) {
     for (const which of HIT_CHECKS) {
-      if (hit[which]) out.push({ ref: { type: "hit", hitId: hit.id, which }, check: hit[which], ownerUuid: hit.targetUuid, ownerName: hit.targetName, hit });
+      if (hit[which])
+        out.push({
+          ref: { type: "hit", hitId: hit.id, which },
+          check: hit[which],
+          ownerUuid: hit.targetUuid,
+          ownerName: hit.targetName,
+          hit,
+        });
     }
   }
   return out;
@@ -329,7 +380,8 @@ export function checkList(state) {
  */
 export function checkAt(state, ref) {
   if (ref?.type === "taunt") return state.taunts?.[ref.tauntId]?.check ?? null;
-  if (ref?.type === "hit" && HIT_CHECKS.includes(ref.which)) return state.hits?.[ref.hitId]?.[ref.which] ?? null;
+  if (ref?.type === "hit" && HIT_CHECKS.includes(ref.which))
+    return state.hits?.[ref.hitId]?.[ref.which] ?? null;
   return null;
 }
 
@@ -377,9 +429,17 @@ export function intervenableChecks(state, intervenerUuid) {
  * @returns {object[]}
  */
 export function rerollableChecks(state, ownerUuid) {
-  return checkList(state).filter((c) => c.ownerUuid === ownerUuid
-    && rerollOpen({ natural: c.check.natural, used: !!c.check.aiRerolled }) && checkOpen(state, c.ref)
-    && !(c.ref.type === "taunt" && c.check.success && (state.taunts?.[c.ref.tauntId]?.pulled?.length ?? 0) > 0));
+  return checkList(state).filter(
+    (c) =>
+      c.ownerUuid === ownerUuid &&
+      rerollOpen({ natural: c.check.natural, used: !!c.check.aiRerolled }) &&
+      checkOpen(state, c.ref) &&
+      !(
+        c.ref.type === "taunt" &&
+        c.check.success &&
+        (state.taunts?.[c.ref.tauntId]?.pulled?.length ?? 0) > 0
+      ),
+  );
 }
 
 /**
@@ -422,7 +482,8 @@ export function sectionsOf(state) {
     return sections.get(uuid);
   };
   for (const hit of hitList(state)) {
-    if (hit.originalUuid && hit.originalUuid !== hit.targetUuid) section(hit.originalUuid, hit.originalName).moved.push(hit);
+    if (hit.originalUuid && hit.originalUuid !== hit.targetUuid)
+      section(hit.originalUuid, hit.originalName).moved.push(hit);
     section(hit.targetUuid, hit.targetName).hits.push(hit);
   }
   for (const taunt of tauntList(state)) section(taunt.byUuid, taunt.byName).taunts.push(taunt);
@@ -448,11 +509,13 @@ export function sectionsOf(state) {
 export function hitStatus(state, hit) {
   if (!hit.row?.hit) return { status: "missed", check: null, which: null };
   if (hit.caughtBy) return { status: "caught", check: null, which: null };
-  if (hit.block) return { status: hit.block.success ? "blocked" : "hit", check: hit.block, which: "block" };
+  if (hit.block)
+    return { status: hit.block.success ? "blocked" : "hit", check: hit.block, which: "block" };
   const deciding = decidingEvade(hit);
   const which = deciding ? (deciding === hit.evade ? "evade" : "free") : null;
   if (deciding?.success) {
-    if (!hit.isArea) return { status: which === "free" ? "missed" : "evaded", check: deciding, which };
+    if (!hit.isArea)
+      return { status: which === "free" ? "missed" : "evaded", check: deciding, which };
     return { status: hit.row.zone === "splash" ? "quarter" : "half", check: deciding, which };
   }
   if (hit.evade) return { status: "hit", check: hit.evade, which: "evade" };
@@ -465,7 +528,10 @@ export function hitStatus(state, hit) {
 /** How far the card has got: the hits no longer incoming, of all of them. */
 export function cardProgress(state) {
   const hits = hitList(state);
-  return { settled: hits.filter((hit) => hitStatus(state, hit).status !== "incoming").length, total: hits.length };
+  return {
+    settled: hits.filter((hit) => hitStatus(state, hit).status !== "incoming").length,
+    total: hits.length,
+  };
 }
 
 /**
@@ -504,8 +570,10 @@ export function idleEvaders(state) {
  * @returns {object[]}  Their `crawlers` entries.
  */
 function idleDefenders(state, made, check) {
-  return Object.values(state?.crawlers ?? {}).filter((crawler) => crawler[made]
-    && !hitList(state).some((hit) => hit.targetUuid === crawler.uuid && hit[check]));
+  return Object.values(state?.crawlers ?? {}).filter(
+    (crawler) =>
+      crawler[made] && !hitList(state).some((hit) => hit.targetUuid === crawler.uuid && hit[check]),
+  );
 }
 
 /**
@@ -526,28 +594,60 @@ export function idleBlockers(state) {
  */
 export function buildReactionState(combat, declarations) {
   const state = {
-    combatId: combat.id, round: combat.round, locked: false,
-    attacks: {}, hits: {}, crawlers: {}, taunts: {}, nextOrder: 0,
+    combatId: combat.id,
+    round: combat.round,
+    locked: false,
+    attacks: {},
+    hits: {},
+    crawlers: {},
+    taunts: {},
+    nextOrder: 0,
     // Actions the card's ops spent (helpers/actions.mjs), refunded if it's discarded.
     spentActions: [],
   };
   for (const d of declarations) {
     state.attacks[d.id] = {
-      id: d.id, mobUuid: d.mobUuid, mobName: d.mobName, mobImg: d.mobImg, attackName: d.attackName,
-      damage: d.damage, damageType: d.damageType, damageIsMagic: d.damageIsMagic, armorPiercing: !!d.armorPiercing, isArea: d.isArea,
-      floor: d.floor, mobBase: d.mobBase, mobOwnRows: d.mobOwnRows ?? [], effect: d.effect, range: d.range,
+      id: d.id,
+      mobUuid: d.mobUuid,
+      mobName: d.mobName,
+      mobImg: d.mobImg,
+      attackName: d.attackName,
+      damage: d.damage,
+      damageType: d.damageType,
+      damageIsMagic: d.damageIsMagic,
+      armorPiercing: !!d.armorPiercing,
+      isArea: d.isArea,
+      floor: d.floor,
+      mobBase: d.mobBase,
+      mobOwnRows: d.mobOwnRows ?? [],
+      effect: d.effect,
+      range: d.range,
       // Its Debuffs, each with its trigger - landed at Resolution
       // (reaction-resolve.mjs; docs/mob-sheet.md).
       targetEffects: d.targetEffects ?? [],
     };
-    for (const row of Object.values(d.targetRows ?? {}).sort((a, b) => Number(a.id.slice(1)) - Number(b.id.slice(1)))) {
+    for (const row of Object.values(d.targetRows ?? {}).sort(
+      (a, b) => Number(a.id.slice(1)) - Number(b.id.slice(1)),
+    )) {
       const id = `${d.id}-${row.id}`;
       state.hits[id] = {
-        id, attackId: d.id, rowId: row.id, order: state.nextOrder++, row, isArea: !!d.isArea,
-        targetUuid: row.uuid, targetName: row.name, originalUuid: row.uuid, originalName: row.name,
-        caughtBy: null, tauntedBy: null, free: null, evade: null,
+        id,
+        attackId: d.id,
+        rowId: row.id,
+        order: state.nextOrder++,
+        row,
+        isArea: !!d.isArea,
+        targetUuid: row.uuid,
+        targetName: row.name,
+        originalUuid: row.uuid,
+        originalName: row.name,
+        caughtBy: null,
+        tauntedBy: null,
+        free: null,
+        evade: null,
       };
-      if (row.isCharacter) state.crawlers[crawlerKey(row.uuid)] ??= { uuid: row.uuid, name: row.name, evaded: false };
+      if (row.isCharacter)
+        state.crawlers[crawlerKey(row.uuid)] ??= { uuid: row.uuid, name: row.name, evaded: false };
     }
   }
   return state;

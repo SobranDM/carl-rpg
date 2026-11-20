@@ -77,8 +77,13 @@
   // data-pulse-target buttons in module/apps/gm-toolbox.mjs's #tick() -
   // purely a notification, never a trigger.
   @keyframes carl-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--carl-gold) 70%, transparent); }
-    50% { box-shadow: 0 0 10px 4px color-mix(in srgb, var(--carl-gold) 90%, transparent); }
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 color-mix(in srgb, var(--carl-gold) 70%, transparent);
+    }
+    50% {
+      box-shadow: 0 0 10px 4px color-mix(in srgb, var(--carl-gold) 90%, transparent);
+    }
   }
 
   .pulse {

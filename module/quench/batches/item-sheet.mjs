@@ -41,7 +41,10 @@ export default function register(quench) {
               const sheet = await openSheet(item);
               assert.instanceOf(sheet, foundry.applications.sheets.ItemSheetV2, type);
               assert.instanceOf(sheet, CarlRPGItemSheet, type);
-              assert.exists(sheet.element.querySelector('input[name="name"]'), `${type}: the form rendered`);
+              assert.exists(
+                sheet.element.querySelector('input[name="name"]'),
+                `${type}: the form rendered`,
+              );
               if (SINGLE_PAGE_TYPES.includes(type)) {
                 const page = sheet.element.querySelector(".carl-single-page");
                 assert.exists(page, `${type}: one page`);
@@ -111,7 +114,11 @@ export default function register(quench) {
             const effect = source.effects.contents[0];
             assert.exists(effect, "test setup: the source Item carries an effect");
             const sheet = await openSheet(target);
-            const { dispatches, result } = await dropOnSheet(sheet, sheet.element, effect.toDragData());
+            const { dispatches, result } = await dropOnSheet(
+              sheet,
+              sheet.element,
+              effect.toDragData(),
+            );
             assert.equal(dispatches, 1, "handled once");
             assert.isNull(result);
             assert.equal(target.effects.size, 0);
@@ -128,10 +135,18 @@ export default function register(quench) {
           try {
             const before = target.toObject();
             const sheet = await openSheet(target);
-            const { dispatches, result } = await dropOnSheet(sheet, sheet.element, dropped.toDragData());
+            const { dispatches, result } = await dropOnSheet(
+              sheet,
+              sheet.element,
+              dropped.toDragData(),
+            );
             assert.equal(dispatches, 1);
             assert.isNull(result);
-            assert.deepEqual(target.toObject().system, before.system, "the target Item is unchanged");
+            assert.deepEqual(
+              target.toObject().system,
+              before.system,
+              "the target Item is unchanged",
+            );
             await sheet.close();
           } finally {
             await target.delete();
@@ -156,7 +171,9 @@ export default function register(quench) {
             assert.equal(seen[0].uuid, dropped.uuid);
 
             block = true;
-            const blocked = await dropOnSheet(sheet, sheet.element, dropped.toDragData(), { expectDispatch: false });
+            const blocked = await dropOnSheet(sheet, sheet.element, dropped.toDragData(), {
+              expectDispatch: false,
+            });
             assert.equal(blocked.dispatches, 0, "a false return stops it");
             await sheet.close();
           } finally {
@@ -174,19 +191,28 @@ export default function register(quench) {
           try {
             const name = `Quench Tab Skill ${foundry.utils.randomID()}`;
             const skill = await createTestItem(actor, "skill", name, { name, system: { rank: 4 } });
-            const icon = (sheet, id) => sheet.element.querySelector(`nav.tabs [data-tab="${id}"] i`);
+            const icon = (sheet, id) =>
+              sheet.element.querySelector(`nav.tabs [data-tab="${id}"] i`);
             let sheet = await openSheet(skill);
             assert.isTrue(icon(sheet, "rank5").classList.contains("fa-lock"), "Rank 4: locked");
             await sheet.close();
 
             await createTestItem(actor, "feature", "rank charm", {
-              system: { changes: [{ targetType: "skillRank", target: name, mode: "add", value: "1" }] },
+              system: {
+                changes: [{ targetType: "skillRank", target: name, mode: "add", value: "1" }],
+              },
             });
             assert.equal(skill.system.rank, 4, "test setup: its own Rank is unchanged");
             assert.equal(effectiveRank(skill), 5, "test setup: the feature makes its live Rank 5");
             sheet = await openSheet(skill);
-            assert.isTrue(icon(sheet, "rank5").classList.contains("fa-lock-open"), "live Rank 5: open");
-            assert.isTrue(icon(sheet, "rank10").classList.contains("fa-lock"), "Rank 10 still locked");
+            assert.isTrue(
+              icon(sheet, "rank5").classList.contains("fa-lock-open"),
+              "live Rank 5: open",
+            );
+            assert.isTrue(
+              icon(sheet, "rank10").classList.contains("fa-lock"),
+              "Rank 10 still locked",
+            );
             await sheet.close();
           } finally {
             await deleteTestActor(actor);
@@ -196,9 +222,15 @@ export default function register(quench) {
       describe("string lists: Favored Classes, Class Types, Parent Skills", function () {
         useQuenchTimeout(this);
 
-        const LISTS = [["spell", "favoredClasses"], ["class", "classTypes"], ["damageEffect", "parentSkills"]];
-        const addLink = (sheet, path) => sheet.element.querySelector(`[data-action="addArrayItem"][data-path="${path}"]`);
-        const row = (sheet, path, index) => sheet.element.querySelector(`input[name="${path}.${index}"]`);
+        const LISTS = [
+          ["spell", "favoredClasses"],
+          ["class", "classTypes"],
+          ["damageEffect", "parentSkills"],
+        ];
+        const addLink = (sheet, path) =>
+          sheet.element.querySelector(`[data-action="addArrayItem"][data-path="${path}"]`);
+        const row = (sheet, path, index) =>
+          sheet.element.querySelector(`input[name="${path}.${index}"]`);
         const type = (input, value) => {
           input.value = value;
           input.dispatchEvent(new Event("change", { bubbles: true }));
@@ -213,12 +245,24 @@ export default function register(quench) {
               addLink(sheet, path).click();
               await waitFor(() => row(sheet, path, 0), { message: `${itemType}: Add made no row` });
               type(row(sheet, path, 0), "Mage");
-              await waitFor(() => item._source.system[key][0] === "Mage", { message: `${itemType}: the entry never saved` });
+              await waitFor(() => item._source.system[key][0] === "Mage", {
+                message: `${itemType}: the entry never saved`,
+              });
 
               addLink(sheet, path).click();
-              await waitFor(() => row(sheet, path, 1), { message: `${itemType}: a second Add made no row` });
-              assert.deepEqual(item._source.system[key], ["Mage", ""], `${itemType}: the empty row is stored`);
-              assert.deepEqual(item.system[key], ["Mage"], `${itemType}: an empty row isn't read as an entry`);
+              await waitFor(() => row(sheet, path, 1), {
+                message: `${itemType}: a second Add made no row`,
+              });
+              assert.deepEqual(
+                item._source.system[key],
+                ["Mage", ""],
+                `${itemType}: the empty row is stored`,
+              );
+              assert.deepEqual(
+                item.system[key],
+                ["Mage"],
+                `${itemType}: an empty row isn't read as an entry`,
+              );
               await sheet.close();
             } finally {
               await item.delete();
@@ -233,10 +277,14 @@ export default function register(quench) {
             try {
               const sheet = await openSheet(item);
               type(row(sheet, path, 0), "");
-              await waitFor(() => item._source.system[key][0] === "", { message: `${itemType}: the cleared entry never saved` });
+              await waitFor(() => item._source.system[key][0] === "", {
+                message: `${itemType}: the cleared entry never saved`,
+              });
               const renamed = `${item.name} renamed`;
               type(sheet.element.querySelector('input[name="name"]'), renamed);
-              await waitFor(() => item.name === renamed, { message: `${itemType}: a later edit never saved` });
+              await waitFor(() => item.name === renamed, {
+                message: `${itemType}: a later edit never saved`,
+              });
               assert.deepEqual(item.system[key], [], `${itemType}: the cleared entry isn't read`);
               await sheet.close();
             } finally {

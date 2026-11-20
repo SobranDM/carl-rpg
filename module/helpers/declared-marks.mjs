@@ -96,7 +96,13 @@ export function registerDeclaredMarks() {
     if (!canvas.ready) return;
     drawMark(token, declaredCounts().get(token.id) ?? 0);
   });
-  for (const hook of ["canvasReady", "updateCombat", "deleteCombat", "createCombatant", "deleteCombatant"]) {
+  for (const hook of [
+    "canvasReady",
+    "updateCombat",
+    "deleteCombat",
+    "createCombatant",
+    "deleteCombatant",
+  ]) {
     Hooks.on(hook, all);
   }
   // A world loaded mid-Declaration: draw what's already declared.

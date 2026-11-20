@@ -1,5 +1,5 @@
-@use '../utils/typography' as *;
-@use '../utils/variables' as *;
+@use "../utils/typography" as *;
+@use "../utils/variables" as *;
 
 @mixin styles {
   .item-form {
@@ -8,8 +8,8 @@
 
   .sheet-header {
     flex: 0 0 auto; // never shrink - a flex sibling with much taller natural
-                     // content must not compress this fixed-height header's
-                     // 100px .profile-img below its real size
+    // content must not compress this fixed-height header's
+    // 100px .profile-img below its real size
     overflow: hidden;
     display: flex;
     flex-direction: row;
@@ -174,11 +174,26 @@
   // instead of respecting its own width. `flex: 0 0 auto` makes every one
   // of these classes hold its declared width in ANY flex context; it's a
   // no-op everywhere else (grid cells, non-flex containers).
-  .carl-w-tiny { width: $width-tiny; text-align: center; flex: 0 0 auto; }
-  .carl-w-short { width: $width-short; flex: 0 0 auto; }
-  .carl-w-medium { width: $width-medium; flex: 0 0 auto; }
-  .carl-w-wide { width: $width-wide; flex: 0 0 auto; }
-  .carl-w-full { width: 100%; }
+  .carl-w-tiny {
+    width: $width-tiny;
+    text-align: center;
+    flex: 0 0 auto;
+  }
+  .carl-w-short {
+    width: $width-short;
+    flex: 0 0 auto;
+  }
+  .carl-w-medium {
+    width: $width-medium;
+    flex: 0 0 auto;
+  }
+  .carl-w-wide {
+    width: $width-wide;
+    flex: 0 0 auto;
+  }
+  .carl-w-full {
+    width: 100%;
+  }
 
   // Responsive field row: each field keeps its own natural width (driven by
   // its .carl-w-* child, see above) and wraps onto additional rows once a

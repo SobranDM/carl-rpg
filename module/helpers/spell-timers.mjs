@@ -36,7 +36,11 @@ export const SPELL_TIMER_PATH = "flags.carl-rpg.spellTimer";
  * @param {{now?: number, fight?: Combat|null}} [context]
  * @returns {{endsAt: number|null, combatId: string|null, text: string}|null}
  */
-export function spellTimerFor(actor, spell, { now = game.time.worldTime, fight = fightOf(actor) } = {}) {
+export function spellTimerFor(
+  actor,
+  spell,
+  { now = game.time.worldTime, fight = fightOf(actor) } = {},
+) {
   const text = spell?.system?.duration ?? "";
   const parsed = parseTimerText(text);
   if (!parsed || parsed.manual) return null;
@@ -76,7 +80,9 @@ export function spellsEndingBy(actor, worldTime) {
  * @returns {Item[]}
  */
 export function spellsEndingWithCombat(actor, combatId) {
-  return (actor?.items ?? []).filter((i) => i.type === "spell" && i.system.active && spellTimerOf(i)?.combatId === combatId);
+  return (actor?.items ?? []).filter(
+    (i) => i.type === "spell" && i.system.active && spellTimerOf(i)?.combatId === combatId,
+  );
 }
 
 /** Whether any of the actor's switched-on Spells has a timer (the sweep skips the rest). */
@@ -95,9 +101,14 @@ function switchOff(actor, pick) {
   return queueForActor(actor.uuid, async () => {
     const spells = pick(actor);
     if (!spells.length) return [];
-    await actor.updateEmbeddedDocuments("Item", spells.map((s) => ({
-      _id: s.id, "system.active": false, [SPELL_TIMER_PATH]: null,
-    })));
+    await actor.updateEmbeddedDocuments(
+      "Item",
+      spells.map((s) => ({
+        _id: s.id,
+        "system.active": false,
+        [SPELL_TIMER_PATH]: null,
+      })),
+    );
     return spells.map((s) => s.name);
   });
 }
@@ -129,5 +140,7 @@ export function endCombatSpellTimers(actor, combatId) {
  * @returns {string[]}  Trusted HTML.
  */
 export function spellEndedLines(actor, names) {
-  return names.map((spell) => game.i18n.format("CARLRPG.Toggle.Ended", { name: esc(actor.name), spell: esc(spell) }));
+  return names.map((spell) =>
+    game.i18n.format("CARLRPG.Toggle.Ended", { name: esc(actor.name), spell: esc(spell) }),
+  );
 }

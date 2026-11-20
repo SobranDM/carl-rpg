@@ -56,7 +56,9 @@ export function durationSeconds(duration, unit) {
 export function sweepableActors() {
   const actors = new Map();
   for (const actor of game.actors) actors.set(actor.uuid, actor);
-  const scenes = new Set([canvas?.scene, ...game.combats.filter((c) => c.started).map((c) => c.scene)].filter(Boolean));
+  const scenes = new Set(
+    [canvas?.scene, ...game.combats.filter((c) => c.started).map((c) => c.scene)].filter(Boolean),
+  );
   for (const actor of unlinkedTokenActors(scenes)) actors.set(actor.uuid, actor);
   return [...actors.values()];
 }
@@ -116,13 +118,18 @@ export function registerExpirySweep() {
     if (!game.users.activeGM?.isSelf) return;
     const lines = [];
     for (const actor of sweepableActors()) {
-      if (actor.system?.conditions?.some?.((c) => c.expiresAt !== null && c.expiresAt !== undefined)) {
+      if (
+        actor.system?.conditions?.some?.((c) => c.expiresAt !== null && c.expiresAt !== undefined)
+      ) {
         try {
           const ended = await expireConditions(actor, worldTime);
           if (ended.length) {
-            lines.push(game.i18n.format("CARLRPG.Consumable.Expired", {
-              name: esc(actor.name), effects: ended.map(esc).join(", "),
-            }));
+            lines.push(
+              game.i18n.format("CARLRPG.Consumable.Expired", {
+                name: esc(actor.name),
+                effects: ended.map(esc).join(", "),
+              }),
+            );
           }
         } catch (err) {
           console.error(`CarlRPG | Expiring timed effects failed for ${actor.name}`, err);

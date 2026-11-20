@@ -9,7 +9,6 @@ import { defineSkillChoiceGrantsField } from "./shared/skill-choice-grant.mjs";
  * always active while the Class item is owned.
  */
 export default class CarlRPGClass extends CarlRPGItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const schema = super.defineSchema();
@@ -21,7 +20,7 @@ export default class CarlRPGClass extends CarlRPGItemBase {
     // list (prepareBaseData).
     schema.classTypes = new fields.ArrayField(
       new fields.StringField({ required: true, blank: true }),
-      { required: false, initial: [] }
+      { required: false, initial: [] },
     );
 
     schema.prerequisites = new fields.StringField({ required: false, blank: true, initial: "" });

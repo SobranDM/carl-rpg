@@ -45,7 +45,6 @@ export async function resolveRowTarget(row) {
   return doc.actor ? { actor: doc.actor, token: doc } : null;
 }
 
-
 /** A row of an Attack card, by id. */
 export function rowAt(message, rowId) {
   return message?.flags?.[SCOPE]?.targetRows?.[rowId] ?? null;
@@ -98,8 +97,10 @@ export function rowInjury(row) {
 function rowSummary(row, checks, { isArea, target }) {
   const deciding = checks.evade ?? (checks.free?.success ? checks.free : null);
   // Not an Area Attack: the vehicle is caught in it on its own row.
-  const seat = deciding && !deciding.success && deciding.degree === "nearMissFail" && !isArea && target
-    ? vehicleSeatOf(target.actor) : null;
+  const seat =
+    deciding && !deciding.success && deciding.degree === "nearMissFail" && !isArea && target
+      ? vehicleSeatOf(target.actor)
+      : null;
   const summary = {
     evade: deciding ? { degree: deciding.degree, success: deciding.success } : null,
     freeUsed: !!checks.free || !!row.freeUsed,
@@ -109,7 +110,9 @@ function rowSummary(row, checks, { isArea, target }) {
   // A Shield Block's outcome (attack-targets-card.mjs) - only on a row that
   // has had one, so an Evade's write leaves other rows as they were.
   if (checks.block || "block" in row) {
-    summary.block = checks.block ? { degree: checks.block.degree, success: checks.block.success } : null;
+    summary.block = checks.block
+      ? { degree: checks.block.degree, success: checks.block.success }
+      : null;
   }
   return summary;
 }
@@ -150,8 +153,15 @@ export async function recordRowEvade(attack, row, target, result, { free }) {
   };
   const checks = { ...(row.checks ?? {}), [which]: check };
   const summary = rowSummary(row, checks, { isArea: !!attack.flags[SCOPE].isArea, target });
-  await moveAdvantage(attack, target, decidingRowCheck(row)?.degree ?? null, summary.evade?.degree ?? null);
-  await updateCardMessage(attack, { flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { [which]: check }, ...summary } } } } });
+  await moveAdvantage(
+    attack,
+    target,
+    decidingRowCheck(row)?.degree ?? null,
+    summary.evade?.degree ?? null,
+  );
+  await updateCardMessage(attack, {
+    flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { [which]: check }, ...summary } } } },
+  });
   return check;
 }
 
@@ -178,7 +188,9 @@ export async function recordRowBlock(attack, row, target, result, { shield, rank
   };
   const checks = { ...(row.checks ?? {}), block: check };
   const summary = rowSummary(row, checks, { isArea: !!attack.flags[SCOPE].isArea, target });
-  await updateCardMessage(attack, { flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { block: check }, ...summary } } } } });
+  await updateCardMessage(attack, {
+    flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { block: check }, ...summary } } } },
+  });
   return check;
 }
 
@@ -280,7 +292,15 @@ export async function reviseRow(attack, rowId, which, { interventions = [], rero
     write: async () => {
       await moveAdvantage(attack, target, before, summary.evade?.degree ?? null);
       const { ForcedReplacement } = foundry.data.operators;
-      await attack.update({ flags: { [SCOPE]: { targetRows: { [rowId]: { checks: { [which]: ForcedReplacement.create(check) }, ...summary } } } } });
+      await attack.update({
+        flags: {
+          [SCOPE]: {
+            targetRows: {
+              [rowId]: { checks: { [which]: ForcedReplacement.create(check) }, ...summary },
+            },
+          },
+        },
+      });
     },
   };
 }
@@ -301,11 +321,21 @@ export async function clearRowEvade(attack, rowId, checkId, which = "evade") {
   if (!row || !["evade", "block"].includes(which) || row.checks?.[which]?.id !== checkId) return;
   const target = await resolveRowTarget(row);
   const checks = { ...row.checks, [which]: null };
-  const summary = rowSummary(which === "evade" ? { ...row, freeUsed: false } : row, checks, { isArea: !!attack.flags[SCOPE].isArea, target });
+  const summary = rowSummary(which === "evade" ? { ...row, freeUsed: false } : row, checks, {
+    isArea: !!attack.flags[SCOPE].isArea,
+    target,
+  });
   const { ForcedDeletion } = foundry.data.operators;
-  await attack.update({
-    flags: { [SCOPE]: { targetRows: { [rowId]: { checks: { [which]: new ForcedDeletion() }, ...summary } } } },
-  }, { carlUndo: true });
+  await attack.update(
+    {
+      flags: {
+        [SCOPE]: {
+          targetRows: { [rowId]: { checks: { [which]: new ForcedDeletion() }, ...summary } },
+        },
+      },
+    },
+    { carlUndo: true },
+  );
 }
 
 /**
@@ -324,8 +354,14 @@ export async function addRowInjury(attack, rowId) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Evade.NoActor"));
     return false;
   }
-  await updateCardMessage(attack, { flags: { [SCOPE]: { targetRows: { [rowId]: { injuryAdded: true } } } } });
-  await addConditionToActor(target.actor, key, { source: game.i18n.localize("CARLRPG.Roll.Evade") });
-  ui.notifications.info(game.i18n.format("CARLRPG.Evade.DebuffAddedNotice", { name: target.actor.name }));
+  await updateCardMessage(attack, {
+    flags: { [SCOPE]: { targetRows: { [rowId]: { injuryAdded: true } } } },
+  });
+  await addConditionToActor(target.actor, key, {
+    source: game.i18n.localize("CARLRPG.Roll.Evade"),
+  });
+  ui.notifications.info(
+    game.i18n.format("CARLRPG.Evade.DebuffAddedNotice", { name: target.actor.name }),
+  );
   return true;
 }

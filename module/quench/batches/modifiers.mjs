@@ -88,10 +88,14 @@ export default function register(quench) {
             name: "Iron Punch",
             system: {
               rank: 10,
-              upgrades: [{
-                rankThreshold: 5,
-                targetEffects: [{ id: "a", debuffKey: "poisoned", critOnly: false, amazingSuccessOnly: false }],
-              }],
+              upgrades: [
+                {
+                  rankThreshold: 5,
+                  targetEffects: [
+                    { id: "a", debuffKey: "poisoned", critOnly: false, amazingSuccessOnly: false },
+                  ],
+                },
+              ],
             },
           };
           assert.lengthOf(collectItemTargetEffects(item), 1);
@@ -105,24 +109,38 @@ export default function register(quench) {
             name: "Enchanted Blade",
             system: {
               rank: 10,
-              upgrades: [{
-                rankThreshold: 5,
-                targetEffects: [
-                  { id: "crit", debuffKey: "stunned", critOnly: true, amazingSuccessOnly: false },
-                  { id: "as", debuffKey: "staggered", critOnly: false, amazingSuccessOnly: true },
-                ],
-              }],
+              upgrades: [
+                {
+                  rankThreshold: 5,
+                  targetEffects: [
+                    { id: "crit", debuffKey: "stunned", critOnly: true, amazingSuccessOnly: false },
+                    { id: "as", debuffKey: "staggered", critOnly: false, amazingSuccessOnly: true },
+                  ],
+                },
+              ],
             },
           };
-          assert.lengthOf(collectItemTargetEffects(item, { isCrit: false, isAmazingSuccess: false }), 0);
-          assert.lengthOf(collectItemTargetEffects(item, { isCrit: true, isAmazingSuccess: false }), 1);
-          assert.lengthOf(collectItemTargetEffects(item, { isCrit: false, isAmazingSuccess: true }), 1);
+          assert.lengthOf(
+            collectItemTargetEffects(item, { isCrit: false, isAmazingSuccess: false }),
+            0,
+          );
+          assert.lengthOf(
+            collectItemTargetEffects(item, { isCrit: true, isAmazingSuccess: false }),
+            1,
+          );
+          assert.lengthOf(
+            collectItemTargetEffects(item, { isCrit: false, isAmazingSuccess: true }),
+            1,
+          );
         });
 
         it("filters out entries with a blank debuffKey", function () {
           const item = {
             name: "Blank Effect",
-            system: { rank: 5, upgrades: [{ rankThreshold: 5, targetEffects: [{ id: "x", debuffKey: "" }] }] },
+            system: {
+              rank: 5,
+              upgrades: [{ rankThreshold: 5, targetEffects: [{ id: "x", debuffKey: "" }] }],
+            },
           };
           assert.lengthOf(collectItemTargetEffects(item), 0);
         });
@@ -131,25 +149,41 @@ export default function register(quench) {
       describe("computeActiveShieldSlots", function () {
         it("returns 0 with no toggled-active shield spell", function () {
           assert.equal(computeActiveShieldSlots([]), 0);
-          const off = [{ type: "spell", system: { isToggled: true, active: false, shieldSlots: 4 } }];
+          const off = [
+            { type: "spell", system: { isToggled: true, active: false, shieldSlots: 4 } },
+          ];
           assert.equal(computeActiveShieldSlots(off), 0);
         });
 
         it("uses the highest-rankThreshold unlocked tier that overrides shieldSlots", function () {
-          const items = [{
-            type: "spell",
-            system: {
-              isToggled: true, active: true, shieldSlots: 4, rank: 10,
-              upgrades: [{ rankThreshold: 5, shieldSlots: 6 }, { rankThreshold: 15, shieldSlots: 8 }],
+          const items = [
+            {
+              type: "spell",
+              system: {
+                isToggled: true,
+                active: true,
+                shieldSlots: 4,
+                rank: 10,
+                upgrades: [
+                  { rankThreshold: 5, shieldSlots: 6 },
+                  { rankThreshold: 15, shieldSlots: 8 },
+                ],
+              },
             },
-          }];
+          ];
           assert.equal(computeActiveShieldSlots(items), 6);
         });
 
         it("only ever considers the first active shield spell found", function () {
           const items = [
-            { type: "spell", system: { isToggled: true, active: true, shieldSlots: 4, rank: 1, upgrades: [] } },
-            { type: "spell", system: { isToggled: true, active: true, shieldSlots: 99, rank: 1, upgrades: [] } },
+            {
+              type: "spell",
+              system: { isToggled: true, active: true, shieldSlots: 4, rank: 1, upgrades: [] },
+            },
+            {
+              type: "spell",
+              system: { isToggled: true, active: true, shieldSlots: 99, rank: 1, upgrades: [] },
+            },
           ];
           assert.equal(computeActiveShieldSlots(items), 4);
         });
@@ -158,37 +192,83 @@ export default function register(quench) {
       describe("applyOneChange (per-targetType branches)", function () {
         it("stat: accumulates into bonuses['stats.<key>'] and applies capMax", function () {
           const ctx = emptyCtx();
-          applyOneChange(change({ targetType: "stat", target: "str", value: "3", capMax: "10" }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({ targetType: "stat", target: "str", value: "3", capMax: "10" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           assert.equal(ctx.bonuses["stats.str"], 3);
           assert.equal(ctx.caps["stats.str"], 10);
         });
 
         it("resource: accumulates into bonuses[target] directly (e.g. hb.max)", function () {
           const ctx = emptyCtx();
-          applyOneChange(change({ targetType: "resource", target: "hb.max", value: "5" }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({ targetType: "resource", target: "hb.max", value: "5" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           assert.equal(ctx.bonuses["hb.max"], 5);
         });
 
         it("resistance: SET semantics, not accumulate", function () {
           const ctx = emptyCtx();
-          applyOneChange(change({ targetType: "resistance", target: "fire", value: "immune" }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({ targetType: "resistance", target: "fire", value: "immune" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           assert.equal(ctx.resistances.fire, "immune");
         });
 
         it("advancementBonus: accumulates by slugified skill name", function () {
           const ctx = emptyCtx();
-          applyOneChange(change({ targetType: "advancementBonus", target: "Alchemy", value: "1" }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({ targetType: "advancementBonus", target: "Alchemy", value: "1" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           assert.equal(ctx.advancementBonuses["alchemy"], 1);
         });
 
         it("skillRank: bumps the skills bag, unless it's a baked Race/Class grant", function () {
-          const ctx = emptyCtx({ skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 2 } } });
-          applyOneChange(change({ targetType: "skillRank", target: "Alchemy", value: "2" }), "src", "id1", 0, ctx, "skill");
+          const ctx = emptyCtx({
+            skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 2 } },
+          });
+          applyOneChange(
+            change({ targetType: "skillRank", target: "Alchemy", value: "2" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+            "skill",
+          );
           assert.equal(ctx.skills.alchemy.rank, 4);
 
-          const bakedCtx = emptyCtx({ skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 2 } } });
-          applyOneChange(change({ targetType: "skillRank", target: "Alchemy", value: "2" }), "src", "id1", 0, bakedCtx, "race");
-          assert.equal(bakedCtx.skills.alchemy.rank, 2, "a baked Race/Class grant must not double-apply live");
+          const bakedCtx = emptyCtx({
+            skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 2 } },
+          });
+          applyOneChange(
+            change({ targetType: "skillRank", target: "Alchemy", value: "2" }),
+            "src",
+            "id1",
+            0,
+            bakedCtx,
+            "race",
+          );
+          assert.equal(
+            bakedCtx.skills.alchemy.rank,
+            2,
+            "a baked Race/Class grant must not double-apply live",
+          );
         });
 
         it("stat: multiply scales the real base Stat value (rollData.stats), not the zeroed bonus accumulator", function () {
@@ -197,7 +277,13 @@ export default function register(quench) {
           // against the running bonuses-bag accumulator (which starts at 0
           // every pass), not the actor's real base value.
           const ctx = emptyCtx({ rollData: { stats: { str: { value: 10 } }, lvl: 1, floor: 1 } });
-          applyOneChange(change({ targetType: "stat", target: "str", mode: "multiply", value: "2" }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({ targetType: "stat", target: "str", mode: "multiply", value: "2" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           // base 10, factor 2 -> bonus contribution = 10*(2-1) = 10, so
           // effective (base + bonus) = 20 = base*factor, as intended.
           assert.equal(ctx.bonuses["stats.str"], 10);
@@ -205,8 +291,20 @@ export default function register(quench) {
 
         it("stat: two independent multiply ChangeEntries on the same Stat combine additively against the same base (design choice), not by compounding", function () {
           const ctx = emptyCtx({ rollData: { stats: { str: { value: 10 } }, lvl: 1, floor: 1 } });
-          applyOneChange(change({ targetType: "stat", target: "str", mode: "multiply", value: "2" }), "item1", "id1", 0, ctx);
-          applyOneChange(change({ targetType: "stat", target: "str", mode: "multiply", value: "2" }), "item2", "id2", 0, ctx);
+          applyOneChange(
+            change({ targetType: "stat", target: "str", mode: "multiply", value: "2" }),
+            "item1",
+            "id1",
+            0,
+            ctx,
+          );
+          applyOneChange(
+            change({ targetType: "stat", target: "str", mode: "multiply", value: "2" }),
+            "item2",
+            "id2",
+            0,
+            ctx,
+          );
           // Each x2 item independently contributes base*(2-1)=10 against the
           // SAME original base (10), not against each other's result - so
           // total bonus is 20 (effective 30 = 3x base), NOT 30 bonus/40
@@ -216,20 +314,54 @@ export default function register(quench) {
 
         it("stat: multiply falls back to a no-op contribution when rollData has no real base for the target (unchanged pre-fix behavior)", function () {
           const ctx = emptyCtx({ rollData: { stats: {}, lvl: 1, floor: 1 } });
-          applyOneChange(change({ targetType: "stat", target: "dex", mode: "multiply", value: "2" }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({ targetType: "stat", target: "dex", mode: "multiply", value: "2" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           assert.equal(ctx.bonuses["stats.dex"], 0);
         });
 
         it("resource: multiply on 'dr' is kept as a multiplier of the whole DR, not added to the adds", function () {
           const ctx = emptyCtx({ actorSystem: { dr: 5 } });
-          applyOneChange(change({ targetType: "resource", target: "dr", mode: "multiply", value: "3" }), "src", "id1", 0, ctx);
-          applyOneChange(change({ targetType: "resource", target: "dr", mode: "add", value: "1" }), "race", "id2", 0, ctx);
+          applyOneChange(
+            change({ targetType: "resource", target: "dr", mode: "multiply", value: "3" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
+          applyOneChange(
+            change({ targetType: "resource", target: "dr", mode: "add", value: "1" }),
+            "race",
+            "id2",
+            0,
+            ctx,
+          );
           assert.equal(ctx.bonuses.dr, 1, "only the add is a bonus");
           assert.equal(ctx.multipliers.dr, 2, "x3 is kept as +2 on a multiplier of 1");
-          applyOneChange(change({ targetType: "resource", target: "dr", mode: "multiply", value: "2" }), "src2", "id3", 0, ctx);
-          assert.equal(ctx.multipliers.dr, 3, "two multipliers add their (factor - 1), never compound");
-          assert.deepEqual(ctx.bonusSources.dr.map((s) => [s.label, s.value, s.mode]),
-            [["src", 3, "multiply"], ["race", 1, "add"], ["src2", 2, "multiply"]]);
+          applyOneChange(
+            change({ targetType: "resource", target: "dr", mode: "multiply", value: "2" }),
+            "src2",
+            "id3",
+            0,
+            ctx,
+          );
+          assert.equal(
+            ctx.multipliers.dr,
+            3,
+            "two multipliers add their (factor - 1), never compound",
+          );
+          assert.deepEqual(
+            ctx.bonusSources.dr.map((s) => [s.label, s.value, s.mode]),
+            [
+              ["src", 3, "multiply"],
+              ["race", 1, "add"],
+              ["src2", 2, "multiply"],
+            ],
+          );
         });
 
         it("resource: multiply on 'hb.max'/'mana.max' still falls back to the old no-real-base behavior (documented limitation, not fixed by this change)", function () {
@@ -240,39 +372,110 @@ export default function register(quench) {
           // deliberately left as the pre-existing (documented) no-op rather
           // than scaling a possibly-stale/wrong number.
           const ctx = emptyCtx({ actorSystem: { dr: 5 } });
-          applyOneChange(change({ targetType: "resource", target: "hb.max", mode: "multiply", value: "2" }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({ targetType: "resource", target: "hb.max", mode: "multiply", value: "2" }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           assert.equal(ctx.bonuses["hb.max"], 0);
 
           const manaCtx = emptyCtx({ actorSystem: { dr: 5 } });
-          applyOneChange(change({ targetType: "resource", target: "mana.max", mode: "multiply", value: "2" }), "src", "id1", 0, manaCtx);
+          applyOneChange(
+            change({ targetType: "resource", target: "mana.max", mode: "multiply", value: "2" }),
+            "src",
+            "id1",
+            0,
+            manaCtx,
+          );
           assert.equal(manaCtx.bonuses["mana.max"], 0);
         });
 
         it("skillRank: Override/Upgrade/Downgrade still work exactly as before (regression - these remain correct for skillRank)", function () {
-          const overrideCtx = emptyCtx({ skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 2 } } });
-          applyOneChange(change({ targetType: "skillRank", target: "Alchemy", mode: "override", value: "7" }), "src", "id1", 0, overrideCtx);
+          const overrideCtx = emptyCtx({
+            skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 2 } },
+          });
+          applyOneChange(
+            change({ targetType: "skillRank", target: "Alchemy", mode: "override", value: "7" }),
+            "src",
+            "id1",
+            0,
+            overrideCtx,
+          );
           assert.equal(overrideCtx.skills.alchemy.rank, 7);
 
-          const upgradeCtx = emptyCtx({ skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 2 } } });
-          applyOneChange(change({ targetType: "skillRank", target: "Alchemy", mode: "upgrade", value: "5" }), "src", "id1", 0, upgradeCtx);
-          assert.equal(upgradeCtx.skills.alchemy.rank, 5, "upgrade should raise rank 2 up to at least 5");
-          applyOneChange(change({ targetType: "skillRank", target: "Alchemy", mode: "upgrade", value: "3" }), "src", "id2", 0, upgradeCtx);
-          assert.equal(upgradeCtx.skills.alchemy.rank, 5, "a lower upgrade value should not lower an already-higher rank");
+          const upgradeCtx = emptyCtx({
+            skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 2 } },
+          });
+          applyOneChange(
+            change({ targetType: "skillRank", target: "Alchemy", mode: "upgrade", value: "5" }),
+            "src",
+            "id1",
+            0,
+            upgradeCtx,
+          );
+          assert.equal(
+            upgradeCtx.skills.alchemy.rank,
+            5,
+            "upgrade should raise rank 2 up to at least 5",
+          );
+          applyOneChange(
+            change({ targetType: "skillRank", target: "Alchemy", mode: "upgrade", value: "3" }),
+            "src",
+            "id2",
+            0,
+            upgradeCtx,
+          );
+          assert.equal(
+            upgradeCtx.skills.alchemy.rank,
+            5,
+            "a lower upgrade value should not lower an already-higher rank",
+          );
 
-          const downgradeCtx = emptyCtx({ skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 8 } } });
-          applyOneChange(change({ targetType: "skillRank", target: "Alchemy", mode: "downgrade", value: "5" }), "src", "id1", 0, downgradeCtx);
-          assert.equal(downgradeCtx.skills.alchemy.rank, 5, "downgrade should cap rank 8 down to at most 5");
+          const downgradeCtx = emptyCtx({
+            skills: { alchemy: { key: "alchemy", name: "Alchemy", rank: 8 } },
+          });
+          applyOneChange(
+            change({ targetType: "skillRank", target: "Alchemy", mode: "downgrade", value: "5" }),
+            "src",
+            "id1",
+            0,
+            downgradeCtx,
+          );
+          assert.equal(
+            downgradeCtx.skills.alchemy.rank,
+            5,
+            "downgrade should cap rank 8 down to at most 5",
+          );
         });
 
         it("skips a change entirely when levelGate exceeds the actor's current level", function () {
           const ctx = emptyCtx({ rollData: { stats: {}, lvl: 10, floor: 1 } });
-          applyOneChange(change({ targetType: "stat", target: "dex", value: "2", levelGate: 50 }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({ targetType: "stat", target: "dex", value: "2", levelGate: 50 }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           assert.notProperty(ctx.bonuses, "stats.dex");
         });
 
         it("routes a change with conditions into conditionalModifiers instead of applying it", function () {
           const ctx = emptyCtx();
-          applyOneChange(change({ targetType: "stat", target: "str", value: "2", conditions: [{ id: "c1", label: "Flanking" }] }), "src", "id1", 0, ctx);
+          applyOneChange(
+            change({
+              targetType: "stat",
+              target: "str",
+              value: "2",
+              conditions: [{ id: "c1", label: "Flanking" }],
+            }),
+            "src",
+            "id1",
+            0,
+            ctx,
+          );
           assert.notProperty(ctx.bonuses, "stats.str");
           assert.lengthOf(ctx.conditionalModifiers, 1);
         });
@@ -302,7 +505,11 @@ export default function register(quench) {
         it("accumulateBonus 'multiply' with a numeric baseValue contributes base*(factor-1), not current*factor", function () {
           const bonuses = {};
           accumulateBonus(bonuses, "x", change({ mode: "multiply", value: "4" }), {}, 10);
-          assert.equal(bonuses.x, 30, "base 10, factor 4 -> bonus 10*(4-1) = 30 (effective 10+30=40=10*4)");
+          assert.equal(
+            bonuses.x,
+            30,
+            "base 10, factor 4 -> bonus 10*(4-1) = 30 (effective 10+30=40=10*4)",
+          );
         });
 
         it("accumulateBonus 'multiply' with no baseValue falls back to the old current*factor arithmetic (always 0 for a first contributor)", function () {
@@ -325,7 +532,11 @@ export default function register(quench) {
           for (const targetType of ["stat", "resource", "rollMode", "custom"]) {
             const allowed = CONFIG.CARLRPG.changeModesByTarget[targetType];
             assert.isArray(allowed, `expected a Mode allow-list for targetType "${targetType}"`);
-            assert.sameMembers(allowed, ["add", "subtract", "multiply"], `targetType "${targetType}"`);
+            assert.sameMembers(
+              allowed,
+              ["add", "subtract", "multiply"],
+              `targetType "${targetType}"`,
+            );
           }
         });
 
@@ -334,10 +545,14 @@ export default function register(quench) {
         });
 
         it("keeps all six modes for skillRank (its 'current' is the real live rank, not a zeroed accumulator)", function () {
-          assert.sameMembers(
-            CONFIG.CARLRPG.changeModesByTarget.skillRank,
-            ["add", "subtract", "multiply", "override", "upgrade", "downgrade"],
-          );
+          assert.sameMembers(CONFIG.CARLRPG.changeModesByTarget.skillRank, [
+            "add",
+            "subtract",
+            "multiply",
+            "override",
+            "upgrade",
+            "downgrade",
+          ]);
         });
 
         it("has no entry for skillDamage or resistance, so their dropdown stays the full unfiltered list", function () {
@@ -357,8 +572,14 @@ export default function register(quench) {
         });
 
         it("keeps the full six-option list for a Class or Race item's own 'stat' change (bakes into the real base - see race-class-grants.mjs)", function () {
-          assert.sameMembers(Object.keys(helper(allModes, byTarget, "stat", "class")), Object.keys(allModes));
-          assert.sameMembers(Object.keys(helper(allModes, byTarget, "stat", "race")), Object.keys(allModes));
+          assert.sameMembers(
+            Object.keys(helper(allModes, byTarget, "stat", "class")),
+            Object.keys(allModes),
+          );
+          assert.sameMembers(
+            Object.keys(helper(allModes, byTarget, "stat", "race")),
+            Object.keys(allModes),
+          );
         });
 
         it("does NOT extend that Class/Race exception to 'resource' changes (only 'stat'/'skillRank' are ever baked)", function () {

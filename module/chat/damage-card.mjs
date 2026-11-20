@@ -28,7 +28,11 @@
  * either can be clicked (or not) without affecting the other.
  */
 import { computeDamageApplication } from "../helpers/damage-pipeline.mjs";
-import { changeConditions, dyingRounds, removeConditionsWithMechanic } from "../helpers/conditions.mjs";
+import {
+  changeConditions,
+  dyingRounds,
+  removeConditionsWithMechanic,
+} from "../helpers/conditions.mjs";
 import { appendCardSection } from "./chat-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
@@ -92,14 +96,22 @@ function formatDamageDigestLine(actor, result) {
   const parts = result.perType.map((p) => {
     const label = damageTypeLabel(p.type);
     if (p.state === "none" && p.afterDr === p.raw) return `${label} ${p.final}`;
-    const stateLabel = p.state === "none" ? "" : ` (${game.i18n.localize(CARLRPG.resistanceStates[p.state] ?? p.state)})`;
+    const stateLabel =
+      p.state === "none"
+        ? ""
+        : ` (${game.i18n.localize(CARLRPG.resistanceStates[p.state] ?? p.state)})`;
     return `${label} ${p.raw} -> ${p.final}${stateLabel}`;
   });
   // Shield absorption (docs/known-gaps.md 1.4) happens ahead of DR/per-type
   // resistance, so it's surfaced as its own leading segment rather than
   // folded into one of the per-type entries above.
   if (result.shieldAbsorbed > 0) {
-    parts.unshift(game.i18n.format("CARLRPG.Damage.DigestShield", { absorbed: result.shieldAbsorbed, slots: result.shieldSlotsLost }));
+    parts.unshift(
+      game.i18n.format("CARLRPG.Damage.DigestShield", {
+        absorbed: result.shieldAbsorbed,
+        slots: result.shieldSlotsLost,
+      }),
+    );
   }
   return game.i18n.format("CARLRPG.Damage.DigestLine", {
     name: actor.name,
@@ -128,8 +140,14 @@ function formatDamageDigestLine(actor, result) {
  *   (damage-pipeline.mjs).
  * @returns {Promise<string[]>} GM digest lines.
  */
-export async function applyDamageToActor(actor, damageByType, isMagic, { noShield = false, armorPiercing = false } = {}) {
-  return (await applyDamageWithResult(actor, damageByType, isMagic, { noShield, armorPiercing })).lines;
+export async function applyDamageToActor(
+  actor,
+  damageByType,
+  isMagic,
+  { noShield = false, armorPiercing = false } = {},
+) {
+  return (await applyDamageWithResult(actor, damageByType, isMagic, { noShield, armorPiercing }))
+    .lines;
 }
 
 /**
@@ -143,18 +161,33 @@ export async function applyDamageToActor(actor, damageByType, isMagic, { noShiel
  * @param {{noShield?: boolean, extraDr?: number, armorPiercing?: boolean}} [options]
  * @returns {Promise<{lines: string[], result: object, dying: boolean}>}
  */
-export async function applyDamageWithResult(actor, damageByType, isMagic, { noShield = false, extraDr = 0, armorPiercing = false } = {}) {
+export async function applyDamageWithResult(
+  actor,
+  damageByType,
+  isMagic,
+  { noShield = false, extraDr = 0, armorPiercing = false } = {},
+) {
   const lines = [];
-  const result = computeDamageApplication(damageByType, actor, isMagic || noShield, { extraDr, armorPiercing });
+  const result = computeDamageApplication(damageByType, actor, isMagic || noShield, {
+    extraDr,
+    armorPiercing,
+  });
 
-  const dying = (actor.system.conditions ?? []).find((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown);
+  const dying = (actor.system.conditions ?? []).find(
+    (c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown,
+  );
   if (dying) {
     const left = dying.remaining ?? dyingRounds(actor.system);
     if (result.totalFinalDamage > 0 && left > 0) {
-      await changeConditions(actor, [{ op: "patch", id: dying.id, fields: { remaining: left - 1 } }]);
-      lines.push(game.i18n.format("CARLRPG.Damage.DyingCountdown", {
-        name: foundry.utils.escapeHTML(actor.name), rounds: left - 1,
-      }));
+      await changeConditions(actor, [
+        { op: "patch", id: dying.id, fields: { remaining: left - 1 } },
+      ]);
+      lines.push(
+        game.i18n.format("CARLRPG.Damage.DyingCountdown", {
+          name: foundry.utils.escapeHTML(actor.name),
+          rounds: left - 1,
+        }),
+      );
     }
     return { lines, result, dying: true };
   }
@@ -177,7 +210,12 @@ export async function applyDamageWithResult(actor, damageByType, isMagic, { noSh
   if (result.slotsLost > 0) {
     const ended = await removeConditionsWithMechanic(actor, "endsOnHbLoss");
     if (ended.length) {
-      lines.push(game.i18n.format("CARLRPG.Damage.DebuffEnded", { name: actor.name, debuffs: ended.join(", ") }));
+      lines.push(
+        game.i18n.format("CARLRPG.Damage.DebuffEnded", {
+          name: actor.name,
+          debuffs: ended.join(", "),
+        }),
+      );
     }
   }
   return { lines, result, dying: false };
@@ -218,7 +256,9 @@ export async function onApplyDamage(event, message) {
 
   const digestLines = [];
   for (const actor of actors.values()) {
-    digestLines.push(...await applyDamageToActor(actor, damageByType, isMagic, { armorPiercing }));
+    digestLines.push(
+      ...(await applyDamageToActor(actor, damageByType, isMagic, { armorPiercing })),
+    );
   }
 
   // GM-only visibility of this digest is enforced generically by
@@ -243,14 +283,17 @@ export async function onApplyDamage(event, message) {
  * disabled state for whenever a linked Evade roll (module/chat/
  * evade-link-card.mjs) has determined the real outcome instead.
  */
-export const damageActionEntries = [{
-  action: "applyDamage",
-  buttonSelector: ".carl-apply-damage",
-  wrapperSelector: ".carl-damage-card",
-  canAct: canApplyDamage,
-  doneFlag: "damageApplied",
-  doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Damage.Applied")}`,
-  supersededFlag: "damageSuperseded",
-  supersededLabel: () => `<i class="fas fa-ban"></i> ${game.i18n.localize("CARLRPG.Damage.Superseded")}`,
-  onClick: onApplyDamage,
-}];
+export const damageActionEntries = [
+  {
+    action: "applyDamage",
+    buttonSelector: ".carl-apply-damage",
+    wrapperSelector: ".carl-damage-card",
+    canAct: canApplyDamage,
+    doneFlag: "damageApplied",
+    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Damage.Applied")}`,
+    supersededFlag: "damageSuperseded",
+    supersededLabel: () =>
+      `<i class="fas fa-ban"></i> ${game.i18n.localize("CARLRPG.Damage.Superseded")}`,
+    onClick: onApplyDamage,
+  },
+];

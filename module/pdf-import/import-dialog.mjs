@@ -79,10 +79,13 @@ export async function chooseContent(title, found, maps) {
     // map Scenes again).
     onRender: (event, dialog) => {
       const root = dialog?.element ?? event?.target?.element;
-      root?.querySelectorAll("[data-map-select]").forEach((button) => button.addEventListener("click", () => {
-        const on = button.dataset.mapSelect === "all";
-        for (const box of root.querySelectorAll('.carl-pdf-import-map input[type="checkbox"]')) box.checked = on;
-      }));
+      root?.querySelectorAll("[data-map-select]").forEach((button) =>
+        button.addEventListener("click", () => {
+          const on = button.dataset.mapSelect === "all";
+          for (const box of root.querySelectorAll('.carl-pdf-import-map input[type="checkbox"]'))
+            box.checked = on;
+        }),
+      );
     },
     buttons: [
       {
@@ -112,8 +115,12 @@ function summarize(results) {
       // Written as a compendium's copy (a gear bonus's matched Skill isn't one).
       const { spells = 0, consumables = 0, gear = 0 } = r.matched ?? {};
       const copies = spells + consumables + gear;
-      if (copies) parts.push(game.i18n.format("CARLRPG.PdfImport.SummaryCopied", { copied: copies }));
-      if (r.skipped?.length) parts.push(game.i18n.format("CARLRPG.PdfImport.SummarySkipped", { skipped: r.skipped.length }));
+      if (copies)
+        parts.push(game.i18n.format("CARLRPG.PdfImport.SummaryCopied", { copied: copies }));
+      if (r.skipped?.length)
+        parts.push(
+          game.i18n.format("CARLRPG.PdfImport.SummarySkipped", { skipped: r.skipped.length }),
+        );
       return parts.join(" ");
     })
     .join(", ");

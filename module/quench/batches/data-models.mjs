@@ -135,7 +135,11 @@ export default function register(quench) {
               const model = CONFIG[documentName]?.dataModels?.[type];
               for (const path of htmlFields) {
                 const field = model?.schema.getField(path);
-                assert.instanceOf(field, StringField, `${documentName}.${type} htmlFields "${path}" must be a text field`);
+                assert.instanceOf(
+                  field,
+                  StringField,
+                  `${documentName}.${type} htmlFields "${path}" must be a text field`,
+                );
                 checked++;
               }
             }
@@ -470,17 +474,30 @@ export default function register(quench) {
         });
 
         it("amount can't be stored as null (a cleared Amount isn't a +0 grant)", async function () {
-          const amountField = CONFIG.Item.dataModels.race.schema.getField("skillChoiceGrants").element.fields.amount;
+          const amountField =
+            CONFIG.Item.dataModels.race.schema.getField("skillChoiceGrants").element.fields.amount;
           assert.isFalse(amountField.nullable);
           const actor = await createTestCharacter();
           try {
             const race = await createTestItem(actor, "race", "race", {
               system: { skillChoiceGrants: [{ category: "crafting", amount: null }] },
             });
-            assert.equal(race.system.skillChoiceGrants[0].amount, 1, "created with null: the initial 1");
-            await race.update({ "system.skillChoiceGrants": [{ category: "crafting", amount: 3 }] });
-            await race.update({ "system.skillChoiceGrants": [{ category: "crafting", amount: null }] });
-            assert.equal(race._source.system.skillChoiceGrants[0].amount, 1, "updated to null: the initial 1");
+            assert.equal(
+              race.system.skillChoiceGrants[0].amount,
+              1,
+              "created with null: the initial 1",
+            );
+            await race.update({
+              "system.skillChoiceGrants": [{ category: "crafting", amount: 3 }],
+            });
+            await race.update({
+              "system.skillChoiceGrants": [{ category: "crafting", amount: null }],
+            });
+            assert.equal(
+              race._source.system.skillChoiceGrants[0].amount,
+              1,
+              "updated to null: the initial 1",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -494,18 +511,21 @@ export default function register(quench) {
         // array's entries without an index.
         const htmlPaths = (field, path = []) => {
           if (field instanceof HTMLField) return [path.join(".")];
-          if (field instanceof SchemaField) return Object.entries(field.fields).flatMap(([key, f]) => htmlPaths(f, [...path, key]));
+          if (field instanceof SchemaField)
+            return Object.entries(field.fields).flatMap(([key, f]) => htmlPaths(f, [...path, key]));
           if (field instanceof ArrayField) return htmlPaths(field.element, path);
           return [];
         };
-        const manifest = async () => (await fetch(foundry.utils.getRoute(`systems/${game.system.id}/system.json`))).json();
+        const manifest = async () =>
+          (await fetch(foundry.utils.getRoute(`systems/${game.system.id}/system.json`))).json();
 
         it("each type declares its description or biography, and every other HTMLField it has", async function () {
           const { documentTypes } = await manifest();
           for (const documentName of ["Actor", "Item"]) {
             for (const [type, model] of Object.entries(CONFIG[documentName].dataModels)) {
               const declared = documentTypes[documentName]?.[type]?.htmlFields ?? [];
-              const main = documentName === "Actor" && type !== "lootBox" ? "biography" : "description";
+              const main =
+                documentName === "Actor" && type !== "lootBox" ? "biography" : "description";
               assert.include(declared, main, `${documentName}.${type}: ${main}`);
               for (const path of htmlPaths(model.schema)) {
                 assert.include(declared, path, `${documentName}.${type}: ${path} is an HTMLField`);
@@ -517,9 +537,18 @@ export default function register(quench) {
         // Needs a world relaunch after system.json changes: the server reads
         // htmlFields when it opens the world's databases.
         it("a script in an Item's description or an Actor's biography isn't stored", async function () {
-          const evil = '<p>kept</p><script>window.carlQuenchXss = 1</script><img src="x" onerror="window.carlQuenchXss = 1">';
-          const item = await Item.create({ name: `Quench xss ${foundry.utils.randomID()}`, type: "feature", system: { description: evil } });
-          const pet = await Actor.create({ name: `Quench xss ${foundry.utils.randomID()}`, type: "pet", system: { biography: evil } });
+          const evil =
+            '<p>kept</p><script>window.carlQuenchXss = 1</script><img src="x" onerror="window.carlQuenchXss = 1">';
+          const item = await Item.create({
+            name: `Quench xss ${foundry.utils.randomID()}`,
+            type: "feature",
+            system: { description: evil },
+          });
+          const pet = await Actor.create({
+            name: `Quench xss ${foundry.utils.randomID()}`,
+            type: "pet",
+            system: { biography: evil },
+          });
           try {
             for (const stored of [item._source.system.description, pet._source.system.biography]) {
               assert.include(stored, "<p>kept</p>");
@@ -666,13 +695,27 @@ export default function register(quench) {
               clubs: ["Desperado Club"],
               deity: [],
               sponsors: ["Valtay", "Borant"],
-              personalSpace: { tier: "2", size: "Medium", amenities: "Hot tub", notes: ["", "Mini fridge"] },
-              story: { pastTrauma: "Lost a cat\nTwice", looseEnds: "", regrets: "Everything", notes: "" },
+              personalSpace: {
+                tier: "2",
+                size: "Medium",
+                amenities: "Hot tub",
+                notes: ["", "Mini fridge"],
+              },
+              story: {
+                pastTrauma: "Lost a cat\nTwice",
+                looseEnds: "",
+                regrets: "Everything",
+                notes: "",
+              },
             },
           });
           try {
             const s = actor.system;
-            assert.equal(s.importantKills, "<p>A goblin</p><p>The &lt;Hoarder&gt;</p>", "one paragraph per non-empty slot, escaped");
+            assert.equal(
+              s.importantKills,
+              "<p>A goblin</p><p>The &lt;Hoarder&gt;</p>",
+              "one paragraph per non-empty slot, escaped",
+            );
             assert.equal(s.clubs, "<p>Desperado Club</p>");
             assert.equal(s.deity.notes, "", "an empty old Deity list becomes empty notes");
             assert.equal(s.sponsors, "<p>Valtay</p><p>Borant</p>");
@@ -684,7 +727,11 @@ export default function register(quench) {
             assert.include(s.story, game.i18n.localize("CARLRPG.Actor.PastTrauma"));
             assert.include(s.story, "<p>Lost a cat</p><p>Twice</p>");
             assert.include(s.story, "<p>Everything</p>");
-            assert.notInclude(s.story, game.i18n.localize("CARLRPG.Actor.LooseEnds"), "empty parts are left out");
+            assert.notInclude(
+              s.story,
+              game.i18n.localize("CARLRPG.Actor.LooseEnds"),
+              "empty parts are left out",
+            );
 
             // An old "amenities" key left in the database isn't folded in again.
             const reloaded = actor.system.constructor.migrateData({
@@ -709,9 +756,13 @@ export default function register(quench) {
             assert.equal(actor.system.deity.notes, "<p>Apito - a single tear</p>");
             assert.equal(actor.system.deity.tier, "");
             // The shim only touches the old string shape.
-            const migrated = actor.system.constructor.migrateData({ deity: { name: "Apito", notes: "<p>x</p>" } });
+            const migrated = actor.system.constructor.migrateData({
+              deity: { name: "Apito", notes: "<p>x</p>" },
+            });
             assert.deepEqual(migrated.deity, { name: "Apito", notes: "<p>x</p>" });
-            assert.deepEqual(actor.system.constructor.migrateData({ deity: "<p>y</p>" }).deity, { notes: "<p>y</p>" });
+            assert.deepEqual(actor.system.constructor.migrateData({ deity: "<p>y</p>" }).deity, {
+              notes: "<p>y</p>",
+            });
           } finally {
             await deleteTestActor(actor);
           }

@@ -6,14 +6,30 @@ import { useConsumable } from "../helpers/consumables.mjs";
 import { isMinion, isPet } from "../helpers/actor-kinds.mjs";
 import { describePetCommand, petFight } from "../helpers/pet-command.mjs";
 import { refuseOutsideHotlist } from "../helpers/hotlist.mjs";
-import { freeSlotFor, hotlistWithout, isItemWorn, placeInFreeSlot, takeOutOfSlots } from "../helpers/equip-slots.mjs";
+import {
+  freeSlotFor,
+  hotlistWithout,
+  isItemWorn,
+  placeInFreeSlot,
+  takeOutOfSlots,
+} from "../helpers/equip-slots.mjs";
 import { refuseWhileSwapping } from "../helpers/swap-lock.mjs";
 import { canAct, combatantInFight, gearRecord, spendAction } from "../helpers/actions.mjs";
-import { HANDS, accessoryKindOf, canWear, fitsSlot, isConsumable, isTwoHanded, slotsOf } from "../helpers/gear.mjs";
+import {
+  HANDS,
+  accessoryKindOf,
+  canWear,
+  fitsSlot,
+  isConsumable,
+  isTwoHanded,
+  slotsOf,
+} from "../helpers/gear.mjs";
 
 /** "Head, Accessory": where a piece of gear is worn, for a warning. */
 function slotsOfProbe(item) {
-  return slotsOf(item).map((s) => game.i18n.localize(CONFIG.CARLRPG.wearSlots[s] ?? s)).join(", ");
+  return slotsOf(item)
+    .map((s) => game.i18n.localize(CONFIG.CARLRPG.wearSlots[s] ?? s))
+    .join(", ");
 }
 
 /**
@@ -54,8 +70,13 @@ export class CarlRPGItem extends Item {
     if (this.type === "spell" && this.parent && (this.system.rank ?? 0) < 1) {
       this.updateSource({ "system.rank": 1 });
     }
-    if (this.type === "item" && this.parent?.type === "character" && this.system.equipped
-      && !options.carlKeepEquipped && !options.carlUndo) {
+    if (
+      this.type === "item" &&
+      this.parent?.type === "character" &&
+      this.system.equipped &&
+      !options.carlKeepEquipped &&
+      !options.carlUndo
+    ) {
       this.updateSource({ "system.equipped": false });
     }
     const raceOrClass = this.type === "race" || this.type === "class";
@@ -93,7 +114,10 @@ export class CarlRPGItem extends Item {
     // A migration's write (helpers/migration.mjs) never bakes: it doesn't
     // add grants, and a copy that was never baked mustn't start now.
     if (game.user.id !== userId || options.carlMigration) return;
-    if ((this.type === "class" || this.type === "race") && foundry.utils.hasProperty(changed, "system.changes")) {
+    if (
+      (this.type === "class" || this.type === "race") &&
+      foundry.utils.hasProperty(changed, "system.changes")
+    ) {
       await bakeItemGrants(this);
     }
   }
@@ -112,20 +136,41 @@ export class CarlRPGItem extends Item {
   async _preUpdate(changed, options, user) {
     if ((await super._preUpdate(changed, options, user)) === false) return false;
     // Where it's worn changed while it's worn: off whatever it no longer fits.
-    const slotFields = ["system.slots", "system.twoHanded", "system.accessoryKind"].some((p) => foundry.utils.hasProperty(changed, p));
-    if (this.type === "item" && slotFields && !options.carlMigration && this.actor?.type === "character" && isItemWorn(this.actor, this.id)) {
+    const slotFields = ["system.slots", "system.twoHanded", "system.accessoryKind"].some((p) =>
+      foundry.utils.hasProperty(changed, p),
+    );
+    if (
+      this.type === "item" &&
+      slotFields &&
+      !options.carlMigration &&
+      this.actor?.type === "character" &&
+      isItemWorn(this.actor, this.id)
+    ) {
       await this.#refitWorn(changed, options);
     }
     const equipped = foundry.utils.getProperty(changed, "system.equipped");
-    if (this.type !== "item" || !this.actor || equipped === undefined || equipped === this.system.equipped) return;
+    if (
+      this.type !== "item" ||
+      !this.actor ||
+      equipped === undefined ||
+      equipped === this.system.equipped
+    )
+      return;
     // The Equipped box (or a macro) - not the doll, a swap, an undo or a
     // migration, which place the item themselves (docs/gear-slots.md).
-    const byBox = !options.carlMigration && !options.carlInAction && !options.carlSwap && !options.carlUndo;
+    const byBox =
+      !options.carlMigration && !options.carlInAction && !options.carlSwap && !options.carlUndo;
     // Its slots may be set in this same update.
-    const probe = byBox && equipped
-      ? { id: this.id, name: this.name, type: this.type, actor: this.actor,
-        system: foundry.utils.mergeObject(this.toObject(), changed, { inplace: false }).system }
-      : null;
+    const probe =
+      byBox && equipped
+        ? {
+            id: this.id,
+            name: this.name,
+            type: this.type,
+            actor: this.actor,
+            system: foundry.utils.mergeObject(this.toObject(), changed, { inplace: false }).system,
+          }
+        : null;
     // Gear with no slot can't be worn until one is set; a consumable never is.
     if (probe && !canWear(probe)) {
       const key = isConsumable(probe) ? "CARLRPG.Gear.ConsumableNotWorn" : "CARLRPG.Gear.NoSlot";
@@ -139,7 +184,9 @@ export class CarlRPGItem extends Item {
     const boxSlot = placing ? freeSlotFor(this.actor, probe) : null;
     if (placing && !boxSlot) {
       const where = slotsOfProbe(probe);
-      ui.notifications?.warn(game.i18n.format("CARLRPG.Gear.NoFreeSlot", { item: this.name, slots: where }));
+      ui.notifications?.warn(
+        game.i18n.format("CARLRPG.Gear.NoFreeSlot", { item: this.name, slots: where }),
+      );
       if (this.sheet?.rendered) this.sheet.render();
       return false;
     }
@@ -153,20 +200,27 @@ export class CarlRPGItem extends Item {
     // a swap pay for it as their own Action (carlInAction / carlSwap); this
     // is the Item sheet's Equipped box, or a macro - one Action for the whole
     // batch (Foundry hands every item in one update the same options).
-    const paid = options.carlSwap || options.carlInAction || options.carlUndo || options.carlRetrieveCharged;
+    const paid =
+      options.carlSwap || options.carlInAction || options.carlUndo || options.carlRetrieveCharged;
     if (!paid && combatantInFight(this.actor)) {
       if (!canAct(this.actor, "other")) {
         if (this.sheet?.rendered) this.sheet.render();
         return false;
       }
       options.carlRetrieveCharged = true;
-      await spendAction(this.actor, "other", game.i18n.format("CARLRPG.Actions.Label.Retrieve", { item: this.name }), {
-        undo: [gearRecord(this.actor)],
-      });
+      await spendAction(
+        this.actor,
+        "other",
+        game.i18n.format("CARLRPG.Actions.Label.Retrieve", { item: this.name }),
+        {
+          undo: [gearRecord(this.actor)],
+        },
+      );
     }
     if (boxSlot) await placeInFreeSlot(this.actor, boxSlot, probe);
     // Unticked on a Character: out of its slot too.
-    if (!equipped && byBox && this.actor.type === "character") await takeOutOfSlots(this.actor, this);
+    if (!equipped && byBox && this.actor.type === "character")
+      await takeOutOfSlots(this.actor, this);
     if (equipped) {
       const hotlist = hotlistWithout(this.actor, this.id);
       if (hotlist) await this.actor.update({ "system.hotlist": hotlist });
@@ -184,11 +238,17 @@ export class CarlRPGItem extends Item {
    */
   async #refitWorn(changed, options) {
     const actor = this.actor;
-    const probe = { id: this.id, name: this.name, type: this.type, actor,
-      system: foundry.utils.mergeObject(this.toObject(), changed, { inplace: false }).system };
+    const probe = {
+      id: this.id,
+      name: this.name,
+      type: this.type,
+      actor,
+      system: foundry.utils.mergeObject(this.toObject(), changed, { inplace: false }).system,
+    };
     const gearSlots = { ...actor.system.gearSlots };
     for (const [key, id] of Object.entries(gearSlots)) {
-      if (id === this.id && !fitsSlot(probe, { slotType: "gear", slotKey: key })) gearSlots[key] = "";
+      if (id === this.id && !fitsSlot(probe, { slotType: "gear", slotKey: key }))
+        gearSlots[key] = "";
     }
     if (isTwoHanded(probe) && HANDS.some((hand) => gearSlots[hand] === this.id)) {
       const other = HANDS.find((hand) => gearSlots[hand] !== this.id);
@@ -199,11 +259,15 @@ export class CarlRPGItem extends Item {
     let accessories = actor.system.accessories ?? [];
     if (accessories.includes(this.id)) {
       const kind = accessoryKindOf(probe);
-      const clash = kind && accessories.some((id) => id !== this.id && accessoryKindOf(actor.items.get(id)) === kind);
-      if (!fitsSlot(probe, { slotType: "accessory", slotKey: "0" }) || clash) accessories = accessories.filter((id) => id !== this.id);
+      const clash =
+        kind &&
+        accessories.some((id) => id !== this.id && accessoryKindOf(actor.items.get(id)) === kind);
+      if (!fitsSlot(probe, { slotType: "accessory", slotKey: "0" }) || clash)
+        accessories = accessories.filter((id) => id !== this.id);
     }
-    const moved = JSON.stringify(gearSlots) !== JSON.stringify(actor.system.gearSlots)
-      || accessories.length !== (actor.system.accessories ?? []).length;
+    const moved =
+      JSON.stringify(gearSlots) !== JSON.stringify(actor.system.gearSlots) ||
+      accessories.length !== (actor.system.accessories ?? []).length;
     if (!moved) return;
     await actor.update({ "system.gearSlots": gearSlots, "system.accessories": accessories });
     if (!isItemWorn(actor, this.id)) {
@@ -237,7 +301,8 @@ export class CarlRPGItem extends Item {
 
     // "If a Spell ain't in your Hotlist, you can't cast it until you Retrieve
     // it" (p.86) - in a fight. A Spell already switched on can be switched off.
-    if (this.type === "spell" && !this.system.active && refuseOutsideHotlist(this.actor, this)) return null;
+    if (this.type === "spell" && !this.system.active && refuseOutsideHotlist(this.actor, this))
+      return null;
 
     if (this.type === "skill" || this.type === "spell") warnPetCommand(this);
 
@@ -253,7 +318,8 @@ export class CarlRPGItem extends Item {
       // which the target-effects pipeline (module/chat/target-effects-card.mjs)
       // depends on.
       const isSkillAttack = this.type === "skill" && this.system.category === "attack";
-      const isSpellAttack = this.type === "spell" && this.system.castingKeywords?.includes("attack");
+      const isSpellAttack =
+        this.type === "spell" && this.system.castingKeywords?.includes("attack");
       if (isSkillAttack || isSpellAttack) {
         return CarlDice.rollAttack(this.actor, this);
       }
@@ -316,11 +382,20 @@ function warnPetCommand(item) {
   const fight = petFight(pet);
   if (!fight) return;
   const command = describePetCommand(pet);
-  const isAttack = (item.type === "skill" && item.system.category === "attack")
-    || (item.type === "spell" && item.system.castingKeywords?.includes("attack"));
-  if (!command.active || pet.system.command.combatId !== fight.id || ["stayingOut", "hiding"].includes(command.state)) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Pet.Command.WarnNotFighting", { name: pet.name }));
+  const isAttack =
+    (item.type === "skill" && item.system.category === "attack") ||
+    (item.type === "spell" && item.system.castingKeywords?.includes("attack"));
+  if (
+    !command.active ||
+    pet.system.command.combatId !== fight.id ||
+    ["stayingOut", "hiding"].includes(command.state)
+  ) {
+    ui.notifications.warn(
+      game.i18n.format("CARLRPG.Pet.Command.WarnNotFighting", { name: pet.name }),
+    );
   } else if (command.state === "restricted" && !isAttack) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Pet.Command.WarnRestricted", { name: pet.name }));
+    ui.notifications.warn(
+      game.i18n.format("CARLRPG.Pet.Command.WarnRestricted", { name: pet.name }),
+    );
   }
 }

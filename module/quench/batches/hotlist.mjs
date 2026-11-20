@@ -1,6 +1,12 @@
 import {
-  hotlistCandidates, hotlistRows, isInHotlist, outsideHotlist, placeInHotlist, promptHotlistPick,
-  toggleHotlist, useHotlistSlot,
+  hotlistCandidates,
+  hotlistRows,
+  isInHotlist,
+  outsideHotlist,
+  placeInHotlist,
+  promptHotlistPick,
+  toggleHotlist,
+  useHotlistSlot,
 } from "../../helpers/hotlist.mjs";
 import CarlDice from "../../dice/dice.mjs";
 import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
@@ -29,7 +35,9 @@ async function startedCombat(actor) {
 
 /** A rendered sheet's Equipment Doll slot ("gear"/"head", "accessory"/"0"). */
 function dollSlot(sheet, type, key) {
-  return sheet.element.querySelector(`.carl-equip-panel [data-slot-type="${type}"][data-slot-key="${key}"]`);
+  return sheet.element.querySelector(
+    `.carl-equip-panel [data-slot-type="${type}"][data-slot-key="${key}"]`,
+  );
 }
 
 /** Drop an owned item onto a doll slot, as dragging its inventory row would. */
@@ -55,8 +63,9 @@ async function postedBy(fn) {
 }
 
 const isRetrieveCard = (html) => html.includes(" Retrieves ");
-const isReadyCard = (html) => html.includes(game.i18n.localize("CARLRPG.Hotlist.ReadyRule"))
-  || html.includes(game.i18n.localize("CARLRPG.Hotlist.ReadyFreeRule"));
+const isReadyCard = (html) =>
+  html.includes(game.i18n.localize("CARLRPG.Hotlist.ReadyRule")) ||
+  html.includes(game.i18n.localize("CARLRPG.Hotlist.ReadyFreeRule"));
 
 export default function register(quench) {
   quench.registerBatch(
@@ -71,8 +80,12 @@ export default function register(quench) {
           const actor = await createTestCharacter("offers");
           try {
             const spell = await createTestItem(actor, "spell", "spark", { system: { rank: 2 } });
-            const potion = await createTestItem(actor, "item", "potion", { system: { quantity: 1, consumable: { kind: "potion" } } });
-            await createTestItem(actor, "item", "empty flask", { system: { quantity: 0, consumable: { kind: "potion" } } });
+            const potion = await createTestItem(actor, "item", "potion", {
+              system: { quantity: 1, consumable: { kind: "potion" } },
+            });
+            await createTestItem(actor, "item", "empty flask", {
+              system: { quantity: 0, consumable: { kind: "potion" } },
+            });
             const club = await createTestItem(actor, "item", "club");
             const helm = await createTestItem(actor, "item", "helm");
             const rope = await createTestItem(actor, "item", "rope");
@@ -83,7 +96,10 @@ export default function register(quench) {
             const offered = hotlistCandidates(actor);
             const ids = offered.flatMap((g) => g.entries.map((e) => e.id));
             assert.sameMembers(ids, [spell.id, potion.id, club.id]);
-            assert.deepEqual(offered.map((g) => g.key), ["spells", "consumables", "gear"]);
+            assert.deepEqual(
+              offered.map((g) => g.key),
+              ["spells", "consumables", "gear"],
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -93,7 +109,8 @@ export default function register(quench) {
           const actor = await createTestCharacter("pins");
           try {
             const items = [];
-            for (let i = 0; i < 11; i++) items.push(await createTestItem(actor, "item", `pin ${i}`));
+            for (let i = 0; i < 11; i++)
+              items.push(await createTestItem(actor, "item", `pin ${i}`));
             assert.isTrue(await toggleHotlist(actor, items[0]));
             assert.equal(actor.system.hotlist[0], items[0].id);
             assert.isTrue(isInHotlist(actor, items[0]));
@@ -118,13 +135,19 @@ export default function register(quench) {
             assert.isFalse(await placeInHotlist(actor, 0, helm), "worn");
             assert.isFalse(isInHotlist(actor, helm));
             // A worn consumable too.
-            const charm = await createTestItem(actor, "item", "charm", { system: { equipped: true, consumable: { kind: "other" } } });
+            const charm = await createTestItem(actor, "item", "charm", {
+              system: { equipped: true, consumable: { kind: "other" } },
+            });
             assert.isFalse(await placeInHotlist(actor, 1, charm), "a worn consumable");
 
             await placeInHotlist(actor, 2, club);
             await placeInHotlist(actor, 5, club);
             assert.equal(actor.system.hotlist[5], club.id);
-            assert.equal(actor.system.hotlist.filter((id) => id === club.id).length, 1, "in one slot only");
+            assert.equal(
+              actor.system.hotlist.filter((id) => id === club.id).length,
+              1,
+              "in one slot only",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -172,21 +195,29 @@ export default function register(quench) {
           const actor = await createTestCharacter("picker");
           const sheet = actor.sheet;
           try {
-            await createTestItem(actor, "item", "aaa potion", { system: { quantity: 2, consumable: { kind: "potion" } } });
+            await createTestItem(actor, "item", "aaa potion", {
+              system: { quantity: 2, consumable: { kind: "potion" } },
+            });
             const rope = await createTestItem(actor, "item", "zzz rope");
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            const empty = sheet.element.querySelector('[data-slot-key="4"] [data-action="pickHotlist"]');
+            const empty = sheet.element.querySelector(
+              '[data-slot-key="4"] [data-action="pickHotlist"]',
+            );
             assert.include(empty.textContent, game.i18n.localize("CARLRPG.Hotlist.Empty"));
             empty.click();
             const dialog = await openDialog("carl-hotlist-pick-dialog");
             try {
-              const potionRadio = dialog.element.querySelector('input[name="pick"]:not([value="' + rope.id + '"])');
+              const potionRadio = dialog.element.querySelector(
+                'input[name="pick"]:not([value="' + rope.id + '"])',
+              );
               potionRadio.checked = true;
               const filter = dialog.element.querySelector("[data-carl-pick-filter]");
               filter.value = "rope";
               filter.dispatchEvent(new Event("input"));
-              const shown = [...dialog.element.querySelectorAll(".carl-hotlist-pick-entry")].filter((e) => e.offsetParent !== null);
+              const shown = [...dialog.element.querySelectorAll(".carl-hotlist-pick-entry")].filter(
+                (e) => e.offsetParent !== null,
+              );
               assert.lengthOf(shown, 1, "only the rope matches");
               assert.isFalse(potionRadio.checked, "a hidden entry isn't left picked");
               assert.equal(shown[0].querySelector("input").value, rope.id);
@@ -196,7 +227,9 @@ export default function register(quench) {
               await dialog.close();
               throw err;
             }
-            await waitFor(() => actor.system.hotlist[4] === rope.id, { message: "the slot never filled" });
+            await waitFor(() => actor.system.hotlist[4] === rope.id, {
+              message: "the slot never filled",
+            });
             assert.lengthOf(actor.system.hotlist.filter(Boolean), 1, "only the rope went in");
           } finally {
             await sheet.close();
@@ -208,13 +241,21 @@ export default function register(quench) {
           const actor = await createTestCharacter("add");
           try {
             const club = await createTestItem(actor, "item", "club");
-            const nothing = await withDialog(() => promptHotlistPick(actor, 0), (d) => pressDialog(d, "add"), "carl-hotlist-pick-dialog");
+            const nothing = await withDialog(
+              () => promptHotlistPick(actor, 0),
+              (d) => pressDialog(d, "add"),
+              "carl-hotlist-pick-dialog",
+            );
             assert.isFalse(nothing, "a lone, unchecked entry isn't picked");
             assert.isFalse(isInHotlist(actor, club));
-            await withDialog(() => promptHotlistPick(actor, 0), (d) => {
-              d.element.querySelector(`input[name="pick"][value="${club.id}"]`).checked = true;
-              pressDialog(d, "add");
-            }, "carl-hotlist-pick-dialog");
+            await withDialog(
+              () => promptHotlistPick(actor, 0),
+              (d) => {
+                d.element.querySelector(`input[name="pick"][value="${club.id}"]`).checked = true;
+                pressDialog(d, "add");
+              },
+              "carl-hotlist-pick-dialog",
+            );
             assert.equal(actor.system.hotlist[0], club.id);
           } finally {
             await deleteTestActor(actor);
@@ -226,11 +267,15 @@ export default function register(quench) {
           try {
             const club = await createTestItem(actor, "item", "club");
             const pipe = await createTestItem(actor, "item", "pipe");
-            const placed = await withDialog(() => promptHotlistPick(actor, 2), async (d) => {
-              await placeInHotlist(actor, 2, pipe);
-              d.element.querySelector(`input[name="pick"][value="${club.id}"]`).checked = true;
-              pressDialog(d, "add");
-            }, "carl-hotlist-pick-dialog");
+            const placed = await withDialog(
+              () => promptHotlistPick(actor, 2),
+              async (d) => {
+                await placeInHotlist(actor, 2, pipe);
+                d.element.querySelector(`input[name="pick"][value="${club.id}"]`).checked = true;
+                pressDialog(d, "add");
+              },
+              "carl-hotlist-pick-dialog",
+            );
             assert.isFalse(placed);
             assert.equal(actor.system.hotlist[2], pipe.id, "the pipe stays");
           } finally {
@@ -245,10 +290,15 @@ export default function register(quench) {
         it("each row knows what a click does: Cast a Spell, Use a consumable, Ready gear", async function () {
           const actor = await createTestCharacter("rows");
           try {
-            const spell = await createTestItem(actor, "spell", "missile", { system: { manaCost: 4, rank: 3 } });
-            const potion = await createTestItem(actor, "item", "potion", { system: { quantity: 2, consumable: { kind: "potion" } } });
+            const spell = await createTestItem(actor, "spell", "missile", {
+              system: { manaCost: 4, rank: 3 },
+            });
+            const potion = await createTestItem(actor, "item", "potion", {
+              system: { quantity: 2, consumable: { kind: "potion" } },
+            });
             const club = await createTestItem(actor, "item", "club");
-            for (const [i, item] of [spell, potion, club].entries()) await placeInHotlist(actor, i, item);
+            for (const [i, item] of [spell, potion, club].entries())
+              await placeInHotlist(actor, i, item);
             const [s, p, c] = hotlistRows(actor);
             assert.include(s, { kind: "spell", action: "Cast", manaCost: 4, rank: 3 });
             assert.include(p, { kind: "consumable", action: "Use", quantity: 2 });
@@ -301,9 +351,19 @@ export default function register(quench) {
               system: { quantity: 2, consumable: { kind: "potion", heal: { slots: 2 } } },
             });
             await placeInHotlist(actor, 0, potion);
-            await withDialog(() => useHotlistSlot(actor, 0), (d) => pressDialog(d, "cancel"), "carl-consumable-confirm");
+            await withDialog(
+              () => useHotlistSlot(actor, 0),
+              (d) => pressDialog(d, "cancel"),
+              "carl-consumable-confirm",
+            );
             assert.equal(actor.items.get(potion.id).system.quantity, 2, "kept");
-            await postedBy(() => withDialog(() => useHotlistSlot(actor, 0), (d) => pressDialog(d, "use"), "carl-consumable-confirm"));
+            await postedBy(() =>
+              withDialog(
+                () => useHotlistSlot(actor, 0),
+                (d) => pressDialog(d, "use"),
+                "carl-consumable-confirm",
+              ),
+            );
             assert.equal(actor.items.get(potion.id).system.quantity, 1, "used once");
           } finally {
             await deleteTestActor(actor);
@@ -315,19 +375,37 @@ export default function register(quench) {
           let combat;
           try {
             const spell = await createTestItem(actor, "spell", "spark", { system: { rank: 1 } });
-            const scroll = await createTestItem(actor, "item", "scroll", { system: { consumable: { kind: "scroll" } } });
-            const potion = await createTestItem(actor, "item", "potion", { system: { consumable: { kind: "potion" } } });
+            const scroll = await createTestItem(actor, "item", "scroll", {
+              system: { consumable: { kind: "scroll" } },
+            });
+            const potion = await createTestItem(actor, "item", "potion", {
+              system: { consumable: { kind: "potion" } },
+            });
             assert.isFalse(outsideHotlist(actor, spell), "outside a fight, anything goes");
             combat = await startedCombat(actor);
             assert.isTrue(isInCombat(actor));
-            for (const item of [spell, scroll, potion]) assert.isTrue(outsideHotlist(actor, item), item.name);
+            for (const item of [spell, scroll, potion])
+              assert.isTrue(outsideHotlist(actor, item), item.name);
             assert.isNull(await spell.roll(), "refused, without rolling");
-            const de = await createTestItem(actor, "damageEffect", "zap", { system: { rank: 1, parentSkills: [spell.name] } });
-            assert.isNull(await CarlDice.rollDamageEffect(actor, de), "nor through its Damage Effect");
+            const de = await createTestItem(actor, "damageEffect", "zap", {
+              system: { rank: 1, parentSkills: [spell.name] },
+            });
+            assert.isNull(
+              await CarlDice.rollDamageEffect(actor, de),
+              "nor through its Damage Effect",
+            );
             // With a Skill parent too, the Spell isn't offered: the Skill's Attack opens straight away.
-            const punch = await createTestItem(actor, "skill", "punch", { system: { category: "attack", rank: 1, isHandToHand: true } });
-            const both = await createTestItem(actor, "damageEffect", "jolt", { system: { rank: 1, parentSkills: [spell.name, punch.name] } });
-            await withDialog(() => CarlDice.rollDamageEffect(actor, both), (d) => pressDialog(d, "cancel"), "carl-roll-dialog");
+            const punch = await createTestItem(actor, "skill", "punch", {
+              system: { category: "attack", rank: 1, isHandToHand: true },
+            });
+            const both = await createTestItem(actor, "damageEffect", "jolt", {
+              system: { rank: 1, parentSkills: [spell.name, punch.name] },
+            });
+            await withDialog(
+              () => CarlDice.rollDamageEffect(actor, both),
+              (d) => pressDialog(d, "cancel"),
+              "carl-roll-dialog",
+            );
             await postedBy(() => placeInHotlist(actor, 0, spell));
             assert.isFalse(outsideHotlist(actor, spell), "in the Hotlist: castable");
           } finally {
@@ -345,8 +423,13 @@ export default function register(quench) {
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, club);
             await placeInHotlist(actor, 0, pipe);
             combat = await startedCombat(actor);
-            const { contents } = await postedBy(() => withDialog(() => useHotlistSlot(actor, 0),
-              (d) => pressDialog(d, "swap"), "carl-hotlist-swap-dialog"));
+            const { contents } = await postedBy(() =>
+              withDialog(
+                () => useHotlistSlot(actor, 0),
+                (d) => pressDialog(d, "swap"),
+                "carl-hotlist-swap-dialog",
+              ),
+            );
             assert.equal(actor.system.gearSlots.mainHand, pipe.id);
             assert.equal(actor.system.hotlist[0], club.id);
             assert.isTrue(contents.some(isReadyCard), "a Ready card");
@@ -361,9 +444,15 @@ export default function register(quench) {
           const actor = await createTestCharacter("swing");
           let combat;
           try {
-            const skill = await createTestItem(actor, "skill", "clubbing", { system: { category: "attack", rank: 2 } });
-            const club = await createTestItem(actor, "item", "club", { system: { weaponSkill: skill.name } });
-            const pipe = await createTestItem(actor, "item", "pipe", { system: { weaponSkill: skill.name } });
+            const skill = await createTestItem(actor, "skill", "clubbing", {
+              system: { category: "attack", rank: 2 },
+            });
+            const club = await createTestItem(actor, "item", "club", {
+              system: { weaponSkill: skill.name },
+            });
+            const pipe = await createTestItem(actor, "item", "pipe", {
+              system: { weaponSkill: skill.name },
+            });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, club);
             await placeInHotlist(actor, 0, pipe);
             combat = await startedCombat(actor);
@@ -374,7 +463,11 @@ export default function register(quench) {
               pressDialog(swap, `attack-${skill.id}`);
               const roll = await openDialog("carl-roll-dialog");
               try {
-                assert.equal(actor.system.gearSlots.mainHand, pipe.id, "swapped before the Attack rolls");
+                assert.equal(
+                  actor.system.gearSlots.mainHand,
+                  pipe.id,
+                  "swapped before the Attack rolls",
+                );
                 assert.isNull(await useHotlistSlot(actor, 0), "one swap at a time");
                 // The club took the pipe's slot: the star would take it out.
                 assert.isFalse(await toggleHotlist(actor, club), "nor the star");
@@ -404,9 +497,15 @@ export default function register(quench) {
           const actor = await createTestCharacter("both undo");
           let combat;
           try {
-            const skill = await createTestItem(actor, "skill", "staffing", { system: { category: "attack", rank: 2 } });
-            const staff = await createTestItem(actor, "item", "staff", { system: { weaponSkill: skill.name } });
-            const pipe = await createTestItem(actor, "item", "pipe", { system: { weaponSkill: skill.name } });
+            const skill = await createTestItem(actor, "skill", "staffing", {
+              system: { category: "attack", rank: 2 },
+            });
+            const staff = await createTestItem(actor, "item", "staff", {
+              system: { weaponSkill: skill.name },
+            });
+            const pipe = await createTestItem(actor, "item", "pipe", {
+              system: { weaponSkill: skill.name },
+            });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, staff);
             await actor.update({ "system.gearSlots.offHand": staff.id });
             await placeInHotlist(actor, 0, pipe);
@@ -433,19 +532,29 @@ export default function register(quench) {
           let combat;
           try {
             const unarmed = await createTestItem(actor, "skill", "Unarmed Combat", {
-              name: "Unarmed Combat", system: { category: "attack", rank: 1, isHandToHand: true, noDamageEffects: true },
+              name: "Unarmed Combat",
+              system: { category: "attack", rank: 1, isHandToHand: true, noDamageEffects: true },
             });
             const pugilism = await createTestItem(actor, "skill", "Pugilism", {
-              name: "Pugilism", system: { category: "attack", rank: 3, isHandToHand: true },
+              name: "Pugilism",
+              system: { category: "attack", rank: 3, isHandToHand: true },
             });
             const pipe = await createTestItem(actor, "item", "pipe");
             await placeInHotlist(actor, 0, pipe);
             combat = await startedCombat(actor);
-            await withDialog(() => useHotlistSlot(actor, 0), (d) => {
-              assert.exists(d.element.querySelector(`button[data-action="attack-${pugilism.id}"]`));
-              assert.notExists(d.element.querySelector(`button[data-action="attack-${unarmed.id}"]`));
-              pressDialog(d, "cancel");
-            }, "carl-hotlist-swap-dialog");
+            await withDialog(
+              () => useHotlistSlot(actor, 0),
+              (d) => {
+                assert.exists(
+                  d.element.querySelector(`button[data-action="attack-${pugilism.id}"]`),
+                );
+                assert.notExists(
+                  d.element.querySelector(`button[data-action="attack-${unarmed.id}"]`),
+                );
+                pressDialog(d, "cancel");
+              },
+              "carl-hotlist-swap-dialog",
+            );
           } finally {
             await deleteTestCombat(combat);
             await deleteTestActor(actor);
@@ -456,9 +565,15 @@ export default function register(quench) {
           const actor = await createTestCharacter("stuck");
           let combat;
           try {
-            const skill = await createTestItem(actor, "skill", "clubbing", { system: { category: "attack", rank: 2 } });
-            const club = await createTestItem(actor, "item", "club", { system: { weaponSkill: skill.name } });
-            const pipe = await createTestItem(actor, "item", "pipe", { system: { weaponSkill: skill.name } });
+            const skill = await createTestItem(actor, "skill", "clubbing", {
+              system: { category: "attack", rank: 2 },
+            });
+            const club = await createTestItem(actor, "item", "club", {
+              system: { weaponSkill: skill.name },
+            });
+            const pipe = await createTestItem(actor, "item", "pipe", {
+              system: { weaponSkill: skill.name },
+            });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, club);
             await placeInHotlist(actor, 0, pipe);
             combat = await startedCombat(actor);
@@ -498,9 +613,15 @@ export default function register(quench) {
             sheet.changeTab("items", "primary");
             await settle(100);
             const panel = sheet.element.querySelector(".carl-equip-panel");
-            const slot = sheet.element.querySelector('.carl-equip-panel [data-slot-key="mainHand"]');
+            const slot = sheet.element.querySelector(
+              '.carl-equip-panel [data-slot-key="mainHand"]',
+            );
             assert.isAtMost(panel.getBoundingClientRect().width, 241, "the doll keeps its 240px");
-            assert.isAtMost(slot.getBoundingClientRect().height, 90, "and its slots stay small squares");
+            assert.isAtMost(
+              slot.getBoundingClientRect().height,
+              90,
+              "and its slots stay small squares",
+            );
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
@@ -515,15 +636,25 @@ export default function register(quench) {
             const helm = await createTestItem(actor, "item", "zzz helm");
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            assert.notExists(sheet.element.querySelector("select.carl-slot-select"), "the Slot column is gone");
+            assert.notExists(
+              sheet.element.querySelector("select.carl-slot-select"),
+              "the Slot column is gone",
+            );
 
             await dropOnDoll(sheet, "gear", "head", helm);
             await waitFor(() => actor.system.gearSlots.head === helm.id, { message: "never worn" });
             assert.isTrue(actor.items.get(helm.id).system.equipped);
             assert.equal(actor.items.size, 2, "worn, not copied");
-            await waitFor(() => !sheet.element.querySelector(`section[data-tab="items"] li.item[data-item-id="${helm.id}"]`),
-              { message: "worn gear shouldn't be listed: it's on the doll" });
-            await waitFor(() => dollSlot(sheet, "gear", "head")?.classList.contains("filled"), { message: "the doll never showed it" });
+            await waitFor(
+              () =>
+                !sheet.element.querySelector(
+                  `section[data-tab="items"] li.item[data-item-id="${helm.id}"]`,
+                ),
+              { message: "worn gear shouldn't be listed: it's on the doll" },
+            );
+            await waitFor(() => dollSlot(sheet, "gear", "head")?.classList.contains("filled"), {
+              message: "the doll never showed it",
+            });
 
             await dropOnDoll(sheet, "gear", "torso", helm);
             await waitFor(() => actor.system.gearSlots.torso === helm.id);
@@ -533,9 +664,14 @@ export default function register(quench) {
             await waitFor(() => actor.system.accessories.includes(helm.id));
             assert.equal(actor.system.gearSlots.torso, "");
 
-            await waitFor(() => dollSlot(sheet, "accessory", "0")?.querySelector(".carl-slot-clear"), { message: "no (x)" });
+            await waitFor(
+              () => dollSlot(sheet, "accessory", "0")?.querySelector(".carl-slot-clear"),
+              { message: "no (x)" },
+            );
             dollSlot(sheet, "accessory", "0").querySelector(".carl-slot-clear").click();
-            await waitFor(() => !actor.items.get(helm.id).system.equipped, { message: "never taken off" });
+            await waitFor(() => !actor.items.get(helm.id).system.equipped, {
+              message: "never taken off",
+            });
             assert.notInclude(actor.system.accessories, helm.id);
           } finally {
             await sheet.close();
@@ -551,14 +687,23 @@ export default function register(quench) {
             await placeInHotlist(actor, 0, cloak);
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            const row = () => sheet.element.querySelector(`section[data-tab="items"] li.item[data-item-id="${cloak.id}"]`);
+            const row = () =>
+              sheet.element.querySelector(
+                `section[data-tab="items"] li.item[data-item-id="${cloak.id}"]`,
+              );
             assert.notExists(row(), "in the Hotlist, so not in the Inventory list");
 
             // Back out of the Hotlist: listed again, then worn with the box.
-            sheet.element.querySelector('[data-slot-type="hotlist"][data-slot-key="0"] .carl-slot-clear').click();
-            await waitFor(() => !isInHotlist(actor, cloak) && row(), { message: "never listed again" });
+            sheet.element
+              .querySelector('[data-slot-type="hotlist"][data-slot-key="0"] .carl-slot-clear')
+              .click();
+            await waitFor(() => !isInHotlist(actor, cloak) && row(), {
+              message: "never listed again",
+            });
             row().querySelector(".carl-equip-toggle").click();
-            await waitFor(() => actor.items.get(cloak.id).system.equipped, { message: "never worn" });
+            await waitFor(() => actor.items.get(cloak.id).system.equipped, {
+              message: "never worn",
+            });
             await waitFor(() => !row(), { message: "worn, so not in the Inventory list" });
           } finally {
             await sheet.close();

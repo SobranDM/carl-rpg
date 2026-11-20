@@ -29,7 +29,12 @@
 import CarlDice, { isBlockedByDebuff } from "../dice/dice.mjs";
 import { CARLRPG } from "./config.mjs";
 import { findConditionWithMechanic, conditionLabel } from "./debuff-effects.mjs";
-import { cleanSkillLikeCopy, findOwnedSkillLike, findSkillLikeItem, learnSkillLike } from "./race-class-grants.mjs";
+import {
+  cleanSkillLikeCopy,
+  findOwnedSkillLike,
+  findSkillLikeItem,
+  learnSkillLike,
+} from "./race-class-grants.mjs";
 import { skillRankCap, unlockedTiers } from "./modifiers.mjs";
 import { buildConditionEntry, changeConditions, conditionOps } from "./conditions.mjs";
 import { durationSeconds } from "./expiry.mjs";
@@ -94,7 +99,10 @@ export async function resolveConsumableSpell(item) {
 async function postScrollEffect(actor, spell, rank) {
   const upgrades = unlockedTiers(spell, rank)
     .filter((u) => u.description)
-    .map((u) => `<p><strong>${game.i18n.format("CARLRPG.Consumable.UpgradeRank", { rank: u.rankThreshold })}</strong> ${u.description}</p>`)
+    .map(
+      (u) =>
+        `<p><strong>${game.i18n.format("CARLRPG.Consumable.UpgradeRank", { rank: u.rankThreshold })}</strong> ${u.description}</p>`,
+    )
     .join("");
   return createCardMessage({
     title: spell.name,
@@ -115,7 +123,12 @@ export async function consumeOne(item) {
   const quantity = Number(item.system.quantity ?? 1);
   // Given back if the Action is undone - the last one re-made with its id,
   // so the Hotlist still finds it (helpers/action-undo.mjs).
-  noteUndo(item.parent, { t: "item", actorUuid: item.parent?.uuid, id: item.id, data: quantity > 1 ? null : item.toObject() });
+  noteUndo(item.parent, {
+    t: "item",
+    actorUuid: item.parent?.uuid,
+    id: item.id,
+    data: quantity > 1 ? null : item.toObject(),
+  });
   if (quantity > 1) await item.update({ "system.quantity": quantity - 1 });
   else await item.delete();
 }
@@ -142,8 +155,19 @@ async function chooseRecipient(item, actor, target) {
     content: `<div class="carl-dialog-body">${parts.join("")}</div>`,
     classes: ["carl-consumable-recipient"],
     buttons: [
-      { action: "self", icon: "fa-solid fa-flask", label: game.i18n.localize("CARLRPG.Consumable.UseYourself"), default: true, callback: () => "self" },
-      { action: "give", icon: "fa-solid fa-hand-holding-medical", label: game.i18n.format("CARLRPG.Consumable.GiveTo", { name: target.name }), callback: () => "give" },
+      {
+        action: "self",
+        icon: "fa-solid fa-flask",
+        label: game.i18n.localize("CARLRPG.Consumable.UseYourself"),
+        default: true,
+        callback: () => "self",
+      },
+      {
+        action: "give",
+        icon: "fa-solid fa-hand-holding-medical",
+        label: game.i18n.format("CARLRPG.Consumable.GiveTo", { name: target.name }),
+        callback: () => "give",
+      },
       cancelButton(),
     ],
   });
@@ -157,7 +181,9 @@ async function chooseSkill(recipient, item) {
   const owned = recipient.items
     .filter((i) => i.type === "skill" || i.type === "spell")
     .sort((a, b) => a.name.localeCompare(b.name));
-  const options = owned.map((i) => `<option value="${esc(i.name)}">${esc(i.name)}</option>`).join("");
+  const options = owned
+    .map((i) => `<option value="${esc(i.name)}">${esc(i.name)}</option>`)
+    .join("");
   const result = await showCarlDialog({
     title: item.name,
     content: `<div class="carl-dialog-body">
@@ -250,11 +276,23 @@ async function drinkOrUse(actor, item, { skipDialog }) {
   const heal = effects.heal ?? {};
   const buff = effects.buff ?? {};
   const heals = heal.full || heal.slots || heal.mend || buff.perRound?.hb;
-  const doesMore = effects.mana?.full || effects.mana?.amount || effects.cures?.length
-    || effects.permanent?.kind || buff.label || buff.changes?.length || buff.perRound?.mana;
-  const taint = heals && !doesMore ? findConditionWithMechanic(recipient.system, "noHealing") : null;
+  const doesMore =
+    effects.mana?.full ||
+    effects.mana?.amount ||
+    effects.cures?.length ||
+    effects.permanent?.kind ||
+    buff.label ||
+    buff.changes?.length ||
+    buff.perRound?.mana;
+  const taint =
+    heals && !doesMore ? findConditionWithMechanic(recipient.system, "noHealing") : null;
   if (taint) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Heal.BlockedByDebuff", { name: recipient.name, debuff: conditionLabel(taint) }));
+    ui.notifications.warn(
+      game.i18n.format("CARLRPG.Heal.BlockedByDebuff", {
+        name: recipient.name,
+        debuff: conditionLabel(taint),
+      }),
+    );
     return null;
   }
   // A restore "each round" with no length would never stop.
@@ -266,11 +304,17 @@ async function drinkOrUse(actor, item, { skipDialog }) {
   const permanent = effects.permanent ?? {};
   if (permanent.kind) {
     if (recipient.type !== "character") {
-      ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.CrawlersOnly", { item: item.name }));
+      ui.notifications.warn(
+        game.i18n.format("CARLRPG.Consumable.CrawlersOnly", { item: item.name }),
+      );
       return null;
     }
     if ((recipient.system.permanentPotions?.[permanent.kind] ?? 0) >= PERMANENT_POTION_LIMIT) {
-      ui.notifications.warn(game.i18n.format(`CARLRPG.Consumable.LimitReached.${permanent.kind}`, { name: recipient.name }));
+      ui.notifications.warn(
+        game.i18n.format(`CARLRPG.Consumable.LimitReached.${permanent.kind}`, {
+          name: recipient.name,
+        }),
+      );
       return null;
     }
     if (permanent.kind === "stat" && !CARLRPG.statAbbreviations[permanent.target]) {
@@ -286,7 +330,12 @@ async function drinkOrUse(actor, item, { skipDialog }) {
     // A Skill already at its ceiling would gain nothing, and the potion
     // would still count toward the two-ever limit - keep it instead.
     if (permanent.kind === "skill" && skillAtCap(recipient, permanent.target)) {
-      ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.SkillAtCap", { name: recipient.name, skill: permanent.target }));
+      ui.notifications.warn(
+        game.i18n.format("CARLRPG.Consumable.SkillAtCap", {
+          name: recipient.name,
+          skill: permanent.target,
+        }),
+      );
       return null;
     }
   }
@@ -299,7 +348,11 @@ async function drinkOrUse(actor, item, { skipDialog }) {
   const applyNow = recipient.isOwner;
   let lines = null;
   if (applyNow) {
-    lines = await applyConsumableEffects(recipient, effects, { itemName: item.name, isPotion, drankAt });
+    lines = await applyConsumableEffects(recipient, effects, {
+      itemName: item.name,
+      isPotion,
+      drankAt,
+    });
     // Its effects couldn't be written: kept, not used.
     if (!lines) return null;
   }
@@ -342,11 +395,15 @@ function useNotes(actor, item, drinkers) {
   const lines = [];
   if (isInCombat(actor)) {
     const key = item.system.consumable?.kind === "scroll" ? "CastAction" : "UseAction";
-    lines.push(`<p class="carl-dialog-hint">${esc(game.i18n.localize(`CARLRPG.Consumable.Confirm.${key}`))}</p>`);
+    lines.push(
+      `<p class="carl-dialog-hint">${esc(game.i18n.localize(`CARLRPG.Consumable.Confirm.${key}`))}</p>`,
+    );
   }
   if (item.system.consumable?.kind === "potion") {
     for (const who of new Set(drinkers.filter((a) => a && wouldCauseSickness(a)))) {
-      lines.push(`<p class="carl-dialog-warning">${esc(game.i18n.format("CARLRPG.Consumable.Confirm.Sickness", { name: who.name }))}</p>`);
+      lines.push(
+        `<p class="carl-dialog-warning">${esc(game.i18n.format("CARLRPG.Consumable.Confirm.Sickness", { name: who.name }))}</p>`,
+      );
     }
   }
   return lines;
@@ -372,7 +429,13 @@ async function confirmUse(actor, item, { recipient = actor, isPotion = false } =
     content: `<div class="carl-dialog-body">${parts.join("")}</div>`,
     classes: ["carl-consumable-confirm"],
     buttons: [
-      { action: "use", icon: "fa-solid fa-flask", label: "CARLRPG.Consumable.Confirm.Use", default: true, callback: () => true },
+      {
+        action: "use",
+        icon: "fa-solid fa-flask",
+        label: "CARLRPG.Consumable.Confirm.Use",
+        default: true,
+        callback: () => true,
+      },
       cancelButton(),
     ],
   });
@@ -396,8 +459,14 @@ async function confirmUse(actor, item, { recipient = actor, isPotion = false } =
  * @returns {Promise<string[]|null>} Result lines (HTML-safe); null if they
  *   couldn't be written (changeConditions).
  */
-export function applyConsumableEffects(recipient, effects, { itemName = "", isPotion = false, drankAt } = {}) {
-  return queueForActor(recipient.uuid, () => runConsumableEffects(recipient, effects, { itemName, isPotion, drankAt }));
+export function applyConsumableEffects(
+  recipient,
+  effects,
+  { itemName = "", isPotion = false, drankAt } = {},
+) {
+  return queueForActor(recipient.uuid, () =>
+    runConsumableEffects(recipient, effects, { itemName, isPotion, drankAt }),
+  );
 }
 
 async function runConsumableEffects(recipient, effects, { itemName, isPotion, drankAt }) {
@@ -409,7 +478,8 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
   const updates = {};
   const original = sys.toObject().conditions ?? [];
   let conditions = foundry.utils.deepClone(original);
-  const fmt = (key, data = {}) => game.i18n.format(`CARLRPG.Consumable.Result.${key}`, { name, ...data });
+  const fmt = (key, data = {}) =>
+    game.i18n.format(`CARLRPG.Consumable.Result.${key}`, { name, ...data });
 
   // Restores: each adds to whatever this use has already restored, up to
   // max (never lowering). A heal The Taint blocks is reported once.
@@ -449,7 +519,9 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
   // Mending is healing: The Taint stops it.
   if (heal.mend && !healBlocked()) {
     const order = heal.mend === "any" ? ["majorInjury", "minorInjury"] : ["minorInjury"];
-    const index = order.map((key) => conditions.findIndex((c) => c.key === key)).find((i) => i >= 0);
+    const index = order
+      .map((key) => conditions.findIndex((c) => c.key === key))
+      .find((i) => i >= 0);
     if (index !== undefined) {
       const [mended] = conditions.splice(index, 1);
       lines.push(fmt("Mended", { debuff: esc(conditionLabel(mended)) }));
@@ -483,10 +555,12 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
       const value = (sys.stats[permanent.target].value ?? 0) + Number(permanent.value);
       updates[`system.stats.${permanent.target}.value`] = Math.max(1, value);
       updates["system.permanentPotions.stat"] = used + 1;
-      lines.push(fmt("Stat", {
-        stat: game.i18n.localize(CARLRPG.statAbbreviations[permanent.target] ?? permanent.target),
-        value: Number(permanent.value),
-      }));
+      lines.push(
+        fmt("Stat", {
+          stat: game.i18n.localize(CARLRPG.statAbbreviations[permanent.target] ?? permanent.target),
+          value: Number(permanent.value),
+        }),
+      );
     } else if (permanent.kind === "skill" && permanent.target) {
       const raised = await raiseSkill(recipient, permanent.target, Number(permanent.value));
       lines.push(raised.line);
@@ -511,7 +585,10 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
     // The fight it was used in, if that fight is still on - a card applied
     // after the combat ended times it as out of combat.
     const inFight = !!(moment && game.combats.get(moment.combatId)?.started);
-    const rounds = Math.max(1, Math.round(durationSeconds(buff.duration, buff.unit) / (CONFIG.time.roundTime || 10)));
+    const rounds = Math.max(
+      1,
+      Math.round(durationSeconds(buff.duration, buff.unit) / (CONFIG.time.roundTime || 10)),
+    );
     let perRound = { hb: buff.perRound?.hb ?? null, mana: buff.perRound?.mana ?? null };
 
     let restoredAtOnce = false;
@@ -545,15 +622,29 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
         timing = { durationType: "rounds", remaining: rounds, expiresAt: null };
       } else {
         const seconds = durationSeconds(buff.duration, buff.unit);
-        timing = { durationType: null, remaining: null, expiresAt: seconds ? game.time.worldTime + seconds : null };
+        timing = {
+          durationType: null,
+          remaining: null,
+          expiresAt: seconds ? game.time.worldTime + seconds : null,
+        };
       }
       const carried = { changes: foundry.utils.deepClone(buff.changes ?? []), perRound };
-      const existing = conditions.find((c) => c.key === "custom" && c.label === label && c.source === itemName);
+      const existing = conditions.find(
+        (c) => c.key === "custom" && c.label === label && c.source === itemName,
+      );
       if (existing) {
         Object.assign(existing, timing, carried);
         lines.push(fmt("BuffRefreshed", { buff: esc(label) }));
       } else {
-        conditions.push({ id: foundry.utils.randomID(), key: "custom", label, stacks: 1, source: itemName, ...timing, ...carried });
+        conditions.push({
+          id: foundry.utils.randomID(),
+          key: "custom",
+          label,
+          stacks: 1,
+          source: itemName,
+          ...timing,
+          ...carried,
+        });
         lines.push(fmt("Buff", { buff: esc(label) }));
       }
     }
@@ -564,8 +655,14 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
   if (isPotion) {
     if (moment) {
       if (wouldCauseSickness(recipient, moment)) {
-        const sick = buildConditionEntry("poisoned", { source: game.i18n.localize("CARLRPG.Consumable.PotionSickness") });
-        Object.assign(sick, { id: foundry.utils.randomID(), durationType: "rounds", remaining: SICKNESS_ROUND_ENDS });
+        const sick = buildConditionEntry("poisoned", {
+          source: game.i18n.localize("CARLRPG.Consumable.PotionSickness"),
+        });
+        Object.assign(sick, {
+          id: foundry.utils.randomID(),
+          durationType: "rounds",
+          remaining: SICKNESS_ROUND_ENDS,
+        });
         conditions.push(sick);
         lines.push(fmt("Sickness"));
       }
@@ -574,7 +671,13 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
   }
 
   // Not made (the GM's client didn't answer): nothing was written.
-  if (!(await changeConditions(recipient, conditionOps(original, conditions), { updates, inQueue: true }))) return null;
+  if (
+    !(await changeConditions(recipient, conditionOps(original, conditions), {
+      updates,
+      inQueue: true,
+    }))
+  )
+    return null;
   return lines;
 }
 
@@ -598,14 +701,35 @@ async function raiseSkill(actor, skillName, value) {
     const current = owned.system.rank ?? 0;
     const next = Math.min(cap, current + value);
     if (next <= current) {
-      return { line: game.i18n.format("CARLRPG.Consumable.Result.SkillAtCap", { name, skill: esc(owned.name), rank: current }), changed: false };
+      return {
+        line: game.i18n.format("CARLRPG.Consumable.Result.SkillAtCap", {
+          name,
+          skill: esc(owned.name),
+          rank: current,
+        }),
+        changed: false,
+      };
     }
     await owned.update({ "system.rank": next });
-    return { line: game.i18n.format("CARLRPG.Consumable.Result.Skill", { name, skill: esc(owned.name), rank: next }), changed: true };
+    return {
+      line: game.i18n.format("CARLRPG.Consumable.Result.Skill", {
+        name,
+        skill: esc(owned.name),
+        rank: next,
+      }),
+      changed: true,
+    };
   }
   const rank = Math.min(cap, value);
   const created = await learnSkillLike(actor, skillName, rank);
-  return { line: game.i18n.format("CARLRPG.Consumable.Result.Skill", { name, skill: esc(created?.name ?? skillName), rank }), changed: true };
+  return {
+    line: game.i18n.format("CARLRPG.Consumable.Result.Skill", {
+      name,
+      skill: esc(created?.name ?? skillName),
+      rank,
+    }),
+    changed: true,
+  };
 }
 
 /**
@@ -621,7 +745,13 @@ export async function learnSpell(actor, source, rank) {
   const data = { name: esc(actor.name), spell: esc(source.name), rank };
   if (owned) {
     if ((owned.system.rank ?? 0) >= rank) {
-      return { line: game.i18n.format("CARLRPG.Consumable.Result.SpellKnown", { ...data, rank: owned.system.rank }), changed: false };
+      return {
+        line: game.i18n.format("CARLRPG.Consumable.Result.SpellKnown", {
+          ...data,
+          rank: owned.system.rank,
+        }),
+        changed: false,
+      };
     }
     await owned.update({ "system.rank": rank });
     return { line: game.i18n.format("CARLRPG.Consumable.Result.SpellRaised", data), changed: true };
@@ -633,14 +763,22 @@ export async function learnSpell(actor, source, rank) {
 async function readSpellbook(actor, item, { skipDialog }) {
   const { source, name, rank: bookRank } = await resolveConsumableSpell(item);
   if (!source) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.NoSpell", { item: item.name, spell: name || "?" }));
+    ui.notifications.warn(
+      game.i18n.format("CARLRPG.Consumable.NoSpell", { item: item.name, spell: name || "?" }),
+    );
     return null;
   }
   // Already known at least as well as the book could teach (a random Rank
   // is at most 5) - keep the book for someone it would help.
   const known = findOwnedSkillLike(actor, source.name, ["spell"]);
   if (known && (known.system.rank ?? 0) >= (bookRank ?? 5)) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.SpellbookKnown", { name: actor.name, spell: source.name, rank: known.system.rank }));
+    ui.notifications.warn(
+      game.i18n.format("CARLRPG.Consumable.SpellbookKnown", {
+        name: actor.name,
+        spell: source.name,
+        rank: known.system.rank,
+      }),
+    );
     return null;
   }
   if (!skipDialog && !(await confirmUse(actor, item))) return null;
@@ -655,16 +793,29 @@ async function readSpellbook(actor, item, { skipDialog }) {
   const card = { name: item.name, img: item.img };
   await consumeOne(item);
   return postConsumableCard({
-    actor, recipient: actor, item: card, effects: null, lines: [line],
+    actor,
+    recipient: actor,
+    item: card,
+    effects: null,
+    lines: [line],
     rolls: roll ? [roll] : [],
-    rollMeta: roll ? [{ label: game.i18n.localize("CARLRPG.Consumable.RandomRank"), breakdown: "1d6 - 1 (min 1)" }] : [],
+    rollMeta: roll
+      ? [
+          {
+            label: game.i18n.localize("CARLRPG.Consumable.RandomRank"),
+            breakdown: "1d6 - 1 (min 1)",
+          },
+        ]
+      : [],
   });
 }
 
 async function useScroll(actor, item, { skipDialog, within }) {
   const { source, name, rank } = await resolveConsumableSpell(item);
   if (!source) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Consumable.NoSpell", { item: item.name, spell: name || "?" }));
+    ui.notifications.warn(
+      game.i18n.format("CARLRPG.Consumable.NoSpell", { item: item.name, spell: name || "?" }),
+    );
     return null;
   }
   if (!rank) {
@@ -673,17 +824,21 @@ async function useScroll(actor, item, { skipDialog, within }) {
   }
   const { item: spell, castAs } = buildScrollCast(actor, source.toObject(), rank);
   const keywords = spell.system.castingKeywords ?? [];
-  const noRollDialog = !keywords.includes("attack")
-    && (keywords.includes("heal") || spell.system.isPassive || spell.system.isToggled);
+  const noRollDialog =
+    !keywords.includes("attack") &&
+    (keywords.includes("heal") || spell.system.isPassive || spell.system.isToggled);
   if (noRollDialog && !skipDialog && !(await confirmUse(actor, item))) return null;
   let message;
   // The scroll's use is the Action (useConsumable) - its cast is part of it.
-  if (keywords.includes("attack")) message = await CarlDice.rollAttack(actor, spell, { castAs, skipDialog, within });
-  else if (keywords.includes("heal")) message = await CarlDice.rollHeal(actor, spell, { castAs, within, skipDialog });
+  if (keywords.includes("attack"))
+    message = await CarlDice.rollAttack(actor, spell, { castAs, skipDialog, within });
+  else if (keywords.includes("heal"))
+    message = await CarlDice.rollHeal(actor, spell, { castAs, within, skipDialog });
   // A Spell with no Check to roll (Hole, Wall of Fire) or one you switch on
   // and off (Shield) just takes effect: the card states it at the scroll's
   // Rank, with that Rank's Upgrades, for the table to run.
-  else if (spell.system.isPassive || spell.system.isToggled) message = await postScrollEffect(actor, spell, rank);
+  else if (spell.system.isPassive || spell.system.isToggled)
+    message = await postScrollEffect(actor, spell, rank);
   else message = await CarlDice.rollSkillCheck(actor, spell, { castAs, skipDialog, within });
   // A cancelled dialog (or a blocked cast) leaves the scroll unused.
   if (!message) return null;

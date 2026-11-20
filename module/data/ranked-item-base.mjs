@@ -8,7 +8,6 @@ import { currentFloor } from "../helpers/floor.mjs";
  * Ranks 5, 10, and 15" pattern (Skill Upgrades, p. 173-174).
  */
 export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const requiredInteger = { required: true, nullable: false, integer: true };
@@ -36,7 +35,9 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     schema.isPassive = new fields.BooleanField({ required: true, initial: false });
 
     schema.advancementGate = new fields.StringField({
-      required: true, blank: false, initial: "normal",
+      required: true,
+      blank: false,
+      initial: "normal",
       choices: () => Object.keys(CONFIG.CARLRPG.advancementGates),
     });
 
@@ -59,7 +60,9 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     // "pets" - pets and minions only (Heal Critter), "anyone". Blank: by
     // Range - "Self only" is "self", anything else "anyone".
     schema.heals = new fields.StringField({
-      required: true, blank: true, initial: "",
+      required: true,
+      blank: true,
+      initial: "",
       choices: () => Object.keys(CONFIG.CARLRPG.healsChoices),
     });
     // The heal restores the target's whole Health Bar at any Rank, with no
@@ -120,6 +123,6 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
    * @returns {object[]}
    */
   get unlockedUpgrades() {
-    return this.upgrades.filter(u => this.rank >= u.rankThreshold);
+    return this.upgrades.filter((u) => this.rank >= u.rankThreshold);
   }
 }

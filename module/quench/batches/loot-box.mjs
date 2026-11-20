@@ -99,7 +99,11 @@ export default function register(quench) {
           const actor = await createTestCharacter("looter");
           try {
             const item = await createTestItem(box, "item", "worn loot", {
-              system: { equipped: true, slots: ["head"], changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }] },
+              system: {
+                equipped: true,
+                slots: ["head"],
+                changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }],
+              },
             });
             assert.isTrue(item.system.equipped, "test setup: equipped in the box");
             await takeLootItem(item, actor);

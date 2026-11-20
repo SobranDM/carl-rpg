@@ -16,7 +16,11 @@
  */
 import CarlDice, { evaluateMobConstant } from "../dice/dice.mjs";
 import { currentPhase, phasedCombatFor } from "../helpers/combat-phases.mjs";
-import { declarationsByMob, describeDeclaration, removeDeclaration } from "../helpers/declarations.mjs";
+import {
+  declarationsByMob,
+  describeDeclaration,
+  removeDeclaration,
+} from "../helpers/declarations.mjs";
 import { mobAttacksOf } from "../helpers/mob-attacks.mjs";
 import { isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { actionBubbles } from "../helpers/actions.mjs";
@@ -80,8 +84,10 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
         damage: [item.system.damage, item.system.damageType].filter(Boolean).join(" "),
         isArea: !!item.system.isArea,
       })),
-      declared: declarationsByMob(combat, { tokenUuid: token.document?.uuid, actorUuid: actor.uuid })
-        .map((d) => ({ id: d.id, label: describeDeclaration(d) })),
+      declared: declarationsByMob(combat, {
+        tokenUuid: token.document?.uuid,
+        actorUuid: actor.uuid,
+      }).map((d) => ({ id: d.id, label: describeDeclaration(d) })),
     }));
     context.targets = [...game.user.targets].map((t) => t.name).join(", ");
     return context;
@@ -106,13 +112,17 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {HTMLElement} target
    */
   static async #onDeclare(event, target) {
-    const entry = CarlDeclareHud.declaringMobs().find((m) => m.token.id === target.closest("[data-token-id]")?.dataset.tokenId);
+    const entry = CarlDeclareHud.declaringMobs().find(
+      (m) => m.token.id === target.closest("[data-token-id]")?.dataset.tokenId,
+    );
     if (!entry) return;
     if (!game.user.targets.size) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.NoTargets"));
       return;
     }
-    await CarlDice.rollMobAttack(entry.actor, target.dataset.attackId, { skipDialog: event.shiftKey });
+    await CarlDice.rollMobAttack(entry.actor, target.dataset.attackId, {
+      skipDialog: event.shiftKey,
+    });
   }
 
   /**
@@ -122,7 +132,9 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {HTMLElement} target
    */
   static async #onRemove(event, target) {
-    const entry = CarlDeclareHud.declaringMobs().find((m) => m.token.id === target.closest("[data-token-id]")?.dataset.tokenId);
+    const entry = CarlDeclareHud.declaringMobs().find(
+      (m) => m.token.id === target.closest("[data-token-id]")?.dataset.tokenId,
+    );
     if (entry) await removeDeclaration(entry.combat, target.dataset.id);
   }
 }
@@ -139,7 +151,10 @@ function actionsLeft(combat, actor) {
   const bubbles = actionBubbles(combat, combatant);
   const left = bubbles.filter((b) => !b.spent && b.pool !== "move").length;
   const moveLeft = bubbles.some((b) => !b.spent && b.pool === "move");
-  return game.i18n.format(moveLeft ? "CARLRPG.Declare.ActionsLeftMove" : "CARLRPG.Declare.ActionsLeft", { left });
+  return game.i18n.format(
+    moveLeft ? "CARLRPG.Declare.ActionsLeftMove" : "CARLRPG.Declare.ActionsLeft",
+    { left },
+  );
 }
 
 /**
@@ -148,10 +163,18 @@ function actionsLeft(combat, actor) {
  */
 export function registerDeclareHud() {
   if (!game.user.isGM) return;
-  const hud = game.carlrpg.declareHud = new CarlDeclareHud();
+  const hud = (game.carlrpg.declareHud = new CarlDeclareHud());
   const refresh = () => hud.refresh();
-  for (const hook of ["controlToken", "targetToken", "canvasReady", "updateCombat", "deleteCombat",
-    "createCombatant", "deleteCombatant", "updateActor"]) {
+  for (const hook of [
+    "controlToken",
+    "targetToken",
+    "canvasReady",
+    "updateCombat",
+    "deleteCombat",
+    "createCombatant",
+    "deleteCombatant",
+    "updateActor",
+  ]) {
     Hooks.on(hook, refresh);
   }
   refresh();

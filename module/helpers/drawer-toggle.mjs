@@ -19,7 +19,8 @@ export async function onToggleDrawer(event, target, document) {
   // Spells header's Mana input, see collapsible-section.hbs) - don't toggle
   // when the actual click landed on a form control, only on the header
   // itself/its label/caret.
-  if (event.target.closest('input, select, textarea, button, a:not([data-action="toggleDrawer"])')) return;
+  if (event.target.closest('input, select, textarea, button, a:not([data-action="toggleDrawer"])'))
+    return;
   event.preventDefault();
   if (!document) return;
   const path = target.dataset.path;

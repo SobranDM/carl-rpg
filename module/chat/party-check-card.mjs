@@ -24,7 +24,16 @@
  */
 import CarlDice from "../dice/dice.mjs";
 import { createCardMessage } from "./chat-card.mjs";
-import { headerProgress, iconButton, rememberOpenRows, statusChip, statusRow, statusSection, trackPerCard, versusNum } from "./status-rows.mjs";
+import {
+  headerProgress,
+  iconButton,
+  rememberOpenRows,
+  statusChip,
+  statusRow,
+  statusSection,
+  trackPerCard,
+  versusNum,
+} from "./status-rows.mjs";
 import { queueForCard } from "../helpers/actor-queue.mjs";
 import { findSkillLikeItem, skillOrUntrainedCopy } from "../helpers/race-class-grants.mjs";
 import { degreeLabel, getDegreeOfSuccess, isHitDegree } from "../helpers/rules.mjs";
@@ -44,7 +53,6 @@ const FLAG = "partyCheck";
 /*  State                                       */
 /* -------------------------------------------- */
 
-
 /**
  * A new card's state.
  * @param {{skill: string, stat?: string, difficulty: number, actors: Actor[]}} args
@@ -56,7 +64,9 @@ export function buildPartyCheckState({ skill, stat = "", difficulty, actors }) {
     stat,
     difficulty,
     closed: false,
-    rows: Object.fromEntries(actors.map((a, i) => [`c${i}`, { uuid: a.uuid, name: a.name, check: null }])),
+    rows: Object.fromEntries(
+      actors.map((a, i) => [`c${i}`, { uuid: a.uuid, name: a.name, check: null }]),
+    ),
   };
 }
 
@@ -81,7 +91,8 @@ export function partyTally(state) {
   const successes = rolled.filter((r) => r.check.success).length;
   const settled = !!state?.closed || (rows.length > 0 && rolled.length === rows.length);
   let outcome = null;
-  if (settled) outcome = !rolled.length ? "none" : (successes * 2 >= rolled.length ? "succeeds" : "fails");
+  if (settled)
+    outcome = !rolled.length ? "none" : successes * 2 >= rolled.length ? "succeeds" : "fails";
   return { total: rows.length, rolled: rolled.length, successes, settled, outcome };
 }
 
@@ -126,7 +137,10 @@ export async function postPartyCheck({ skill, difficulty, actors }) {
   if (!name || !actors?.length) return null;
   const source = await findSkillLikeItem(name);
   const state = buildPartyCheckState({
-    skill: source?.name ?? name, stat: source?.system?.governingStat ?? "", difficulty: Number(difficulty) || 0, actors,
+    skill: source?.name ?? name,
+    stat: source?.system?.governingStat ?? "",
+    difficulty: Number(difficulty) || 0,
+    actors,
   });
   return createCardMessage({
     title: game.i18n.format("CARLRPG.PartyCheck.Title", { skill: state.skill }),
@@ -155,18 +169,28 @@ export async function rollPartyRow(message, rowId) {
   if (!row || row.check || state.closed || !canRollRow(row)) return false;
   const actor = actorFromUuid(row.uuid);
   if (!actor) return false;
-  const { skill, trained } = await skillOrUntrainedCopy(actor, state.skill, { system: { governingStat: state.stat ?? "" } });
+  const { skill, trained } = await skillOrUntrainedCopy(actor, state.skill, {
+    system: { governingStat: state.stat ?? "" },
+  });
   const result = await CarlDice.rollOpposedSkillCheck(actor, skill, {
     // Called for by the GM, not an Action of its own.
-    difficulty: state.difficulty, opponent: null, post: false, markUse: trained, isAction: false,
+    difficulty: state.difficulty,
+    opponent: null,
+    post: false,
+    markUse: trained,
+    isAction: false,
   });
   if (!result) return false;
-  if (result.roll && game.dice3d) void game.dice3d.showForRoll(result.roll, game.user, true).catch(() => {});
+  if (result.roll && game.dice3d)
+    void game.dice3d.showForRoll(result.roll, game.user, true).catch(() => {});
   await sendOp(message, "roll", {
     rowId,
     check: {
-      total: result.total, naturalRoll: result.naturalRoll ?? null, formula: result.formula ?? null,
-      breakdown: String(result.breakdown ?? ""), roll: result.roll?.toJSON?.() ?? null,
+      total: result.total,
+      naturalRoll: result.naturalRoll ?? null,
+      formula: result.formula ?? null,
+      breakdown: String(result.breakdown ?? ""),
+      roll: result.roll?.toJSON?.() ?? null,
       // The Stat it was rolled with, shown on the row when it isn't the
       // Skill's own (Off-Stat, p.58), so the table can see it.
       stat: String(result.statKey ?? ""),
@@ -234,8 +258,14 @@ export function applyPartyOp(cardId, op, data, user) {
     const naturalRoll = Number.isFinite(Number(sent.naturalRoll)) ? Number(sent.naturalRoll) : null;
     const graded = gradePartyRoll({ total, naturalRoll }, state.difficulty);
     const check = {
-      total, naturalRoll, formula: sent.formula ?? null, breakdown: String(sent.breakdown ?? ""),
-      roll: sent.roll ?? null, trained: !!sent.trained, degree: graded.degree, success: graded.success,
+      total,
+      naturalRoll,
+      formula: sent.formula ?? null,
+      breakdown: String(sent.breakdown ?? ""),
+      roll: sent.roll ?? null,
+      trained: !!sent.trained,
+      degree: graded.degree,
+      success: graded.success,
       stat: String(sent.stat ?? ""),
     };
     await message.update({ [`flags.${SCOPE}.${FLAG}.rows.${rowId}.check`]: check });
@@ -274,7 +304,9 @@ async function onPartyCheckButton(event, message, button) {
 }
 
 /** Registry entries for module/chat/chat-listener.mjs. */
-export const partyCheckActionEntries = [{ action: "partyCheck", custom: true, onClick: onPartyCheckButton }];
+export const partyCheckActionEntries = [
+  { action: "partyCheck", custom: true, onClick: onPartyCheckButton },
+];
 
 /* -------------------------------------------- */
 /*  Drawing the card                            */
@@ -296,7 +328,10 @@ export function offStatLabel(stat, governing = "") {
   if (!stat || stat === (governing ?? "")) return "";
   const abbr = (key) => game.i18n.localize(CARLRPG.statAbbreviations?.[key] ?? key);
   return governing
-    ? game.i18n.format("CARLRPG.PartyCheck.OffStat", { stat: abbr(stat), governing: abbr(governing) })
+    ? game.i18n.format("CARLRPG.PartyCheck.OffStat", {
+        stat: abbr(stat),
+        governing: abbr(governing),
+      })
     : game.i18n.format("CARLRPG.PartyCheck.OffStatNoGoverning", { stat: abbr(stat) });
 }
 
@@ -313,9 +348,14 @@ function crawlerRow(state, row, cardId) {
     const off = offStatLabel(check.stat, state.stat);
     if (off) sub.push(off);
   }
-  const acts = !check && !state.closed && canRollRow(row)
-    ? iconButton("fa-dice-d20", i18n.format("CARLRPG.PartyCheck.Roll", { name: row.name }), { action: "partyCheck", op: "roll", "row-id": row.id })
-    : "";
+  const acts =
+    !check && !state.closed && canRollRow(row)
+      ? iconButton("fa-dice-d20", i18n.format("CARLRPG.PartyCheck.Roll", { name: row.name }), {
+          action: "partyCheck",
+          op: "roll",
+          "row-id": row.id,
+        })
+      : "";
   return statusRow({
     chip,
     what: `<strong>${esc(row.name)}</strong>`,
@@ -343,34 +383,52 @@ export function decoratePartyCheckCard(message, html) {
   const tally = partyTally(state);
 
   if (tally.settled) {
-    headerProgress(html, i18n.localize(`CARLRPG.PartyCheck.Outcome.${tally.outcome}`), { locked: true });
+    headerProgress(html, i18n.localize(`CARLRPG.PartyCheck.Outcome.${tally.outcome}`), {
+      locked: true,
+    });
   } else {
-    headerProgress(html, i18n.format("CARLRPG.PartyCheck.Progress", { rolled: tally.rolled, total: tally.total }));
+    headerProgress(
+      html,
+      i18n.format("CARLRPG.PartyCheck.Progress", { rolled: tally.rolled, total: tally.total }),
+    );
   }
 
   const section = statusSection({
     name: state.skill,
-    summary: i18n.format("CARLRPG.PartyCheck.Tally", { successes: tally.successes, rolled: tally.rolled }),
+    summary: i18n.format("CARLRPG.PartyCheck.Tally", {
+      successes: tally.successes,
+      rolled: tally.rolled,
+    }),
     rows: partyRows(state).map((row) => crawlerRow(state, row, message.id)),
   });
 
   let outcome = "";
   if (tally.settled) {
-    const tone = tally.outcome === "succeeds" ? "good" : tally.outcome === "fails" ? "bad" : "neutral";
-    const detail = tally.outcome === "none"
-      ? i18n.localize("CARLRPG.PartyCheck.NoRolls")
-      : i18n.format(state.closed && tally.rolled < tally.total ? "CARLRPG.PartyCheck.ResultClosed" : "CARLRPG.PartyCheck.Result", {
-        successes: tally.successes, rolled: tally.rolled, total: tally.total,
-      });
+    const tone =
+      tally.outcome === "succeeds" ? "good" : tally.outcome === "fails" ? "bad" : "neutral";
+    const detail =
+      tally.outcome === "none"
+        ? i18n.localize("CARLRPG.PartyCheck.NoRolls")
+        : i18n.format(
+            state.closed && tally.rolled < tally.total
+              ? "CARLRPG.PartyCheck.ResultClosed"
+              : "CARLRPG.PartyCheck.Result",
+            {
+              successes: tally.successes,
+              rolled: tally.rolled,
+              total: tally.total,
+            },
+          );
     outcome = `<div class="carl-party-outcome" data-tone="${tone}">
       <strong>${esc(i18n.localize(`CARLRPG.PartyCheck.Outcome.${tally.outcome}`))}</strong>
       <span>${esc(detail)}</span></div>`;
   }
 
-  const foot = !tally.settled && game.user.isGM
-    ? `<div class="carl-status-foot"><span class="carl-status-gm"><button type="button" class="carl-status-button" data-action="partyCheck" data-op="close">
+  const foot =
+    !tally.settled && game.user.isGM
+      ? `<div class="carl-status-foot"><span class="carl-status-gm"><button type="button" class="carl-status-button" data-action="partyCheck" data-op="close">
         <i class="fas fa-lock"></i> ${esc(i18n.localize("CARLRPG.PartyCheck.Close"))}</button></span></div>`
-    : "";
+      : "";
   container.innerHTML = `<p class="carl-party-rule">${esc(i18n.localize("CARLRPG.PartyCheck.Rule"))}</p>${section}${outcome}${foot}`;
   rememberOpenRows(container, message.id, openRows);
 }

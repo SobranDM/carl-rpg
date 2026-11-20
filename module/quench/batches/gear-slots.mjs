@@ -5,12 +5,24 @@
  * and the 0.7.0 migration.
  */
 import {
-  fitsSlot, guessGearSlots, isShield, isTwoHanded, parseGearSlotLine, slotsFromName, slotsOf,
+  fitsSlot,
+  guessGearSlots,
+  isShield,
+  isTwoHanded,
+  parseGearSlotLine,
+  slotsFromName,
+  slotsOf,
 } from "../../helpers/gear.mjs";
 import { assignItemToSlot, clearSlot } from "../../helpers/equip-slots.mjs";
 import { placeInHotlist, swapForAttack } from "../../helpers/hotlist.mjs";
 import { attackReadiness } from "../../helpers/weapons.mjs";
-import { announceRemovedGear, gearSlotUpdate, inferActorGear, unequipMisfits, whisperUnplacedGear } from "../../helpers/migration.mjs";
+import {
+  announceRemovedGear,
+  gearSlotUpdate,
+  inferActorGear,
+  unequipMisfits,
+  whisperUnplacedGear,
+} from "../../helpers/migration.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -23,7 +35,12 @@ import {
   waitFor,
 } from "../helpers.mjs";
 
-const change = (target, value) => ({ targetType: "resource", target, mode: "add", value: String(value) });
+const change = (target, value) => ({
+  targetType: "resource",
+  target,
+  mode: "add",
+  value: String(value),
+});
 /** Gear with these slots (the test fixture's default is every slot). */
 const gearOn = (actor, label, slots, system = {}) =>
   createTestItem(actor, "item", label, { name: label, system: { slots, ...system } });
@@ -38,19 +55,41 @@ export default function register(quench) {
         it("its slots; a weapon is always Held; a consumable never worn", function () {
           const item = (system) => ({ type: "item", system: { slots: [], ...system } });
           assert.deepEqual(slotsOf(item({ slots: ["head"] })), ["head"]);
-          assert.sameMembers(slotsOf(item({ slots: ["accessory"], weaponSkill: "Dagger" })), ["accessory", "held"]);
+          assert.sameMembers(slotsOf(item({ slots: ["accessory"], weaponSkill: "Dagger" })), [
+            "accessory",
+            "held",
+          ]);
           assert.deepEqual(slotsOf(item({ slots: ["head"], consumable: { kind: "potion" } })), []);
           assert.deepEqual(slotsOf({ type: "skill", system: {} }), []);
-          assert.isTrue(fitsSlot(item({ slots: ["held"] }), { slotType: "gear", slotKey: "offHand" }), "either hand");
-          assert.isFalse(fitsSlot(item({ slots: ["head"] }), { slotType: "gear", slotKey: "feet" }));
-          assert.isTrue(fitsSlot(item({ slots: ["head"] }), { slotType: "gear", slotKey: "mainHand" }), "anything can be held");
-          assert.isTrue(fitsSlot(item({ slots: [] }), { slotType: "gear", slotKey: "offHand" }), "even with no slot");
-          assert.isTrue(fitsSlot(item({ slots: ["accessory", "head"] }), { slotType: "accessory", slotKey: "3" }));
+          assert.isTrue(
+            fitsSlot(item({ slots: ["held"] }), { slotType: "gear", slotKey: "offHand" }),
+            "either hand",
+          );
+          assert.isFalse(
+            fitsSlot(item({ slots: ["head"] }), { slotType: "gear", slotKey: "feet" }),
+          );
+          assert.isTrue(
+            fitsSlot(item({ slots: ["head"] }), { slotType: "gear", slotKey: "mainHand" }),
+            "anything can be held",
+          );
+          assert.isTrue(
+            fitsSlot(item({ slots: [] }), { slotType: "gear", slotKey: "offHand" }),
+            "even with no slot",
+          );
+          assert.isTrue(
+            fitsSlot(item({ slots: ["accessory", "head"] }), {
+              slotType: "accessory",
+              slotKey: "3",
+            }),
+          );
           assert.isTrue(isTwoHanded(item({ slots: ["held"], twoHanded: true })));
-          assert.isFalse(isTwoHanded(item({ slots: ["torso"], twoHanded: true })), "only Held gear");
+          assert.isFalse(
+            isTwoHanded(item({ slots: ["torso"], twoHanded: true })),
+            "only Held gear",
+          );
         });
 
-        it("reads the book's \"Gear Slot:\" line", function () {
+        it('reads the book\'s "Gear Slot:" line', function () {
           assert.deepEqual(parseGearSlotLine("Head").slots, ["head"]);
           assert.sameMembers(parseGearSlotLine("Accessory or Head").slots, ["accessory", "head"]);
           assert.deepEqual(parseGearSlotLine("Hands/Holding").slots, ["held"]);
@@ -72,15 +111,33 @@ export default function register(quench) {
           assert.isNull(slotsFromName("Mysterious Thing"));
         });
 
-        it("guesses in order: the \"Gear Slot:\" line, the name, a Weapon Skill, where it's worn", function () {
-          const item = (name, system = {}) => ({ type: "item", name, system: { slots: [], description: "", ...system } });
-          assert.equal(guessGearSlots(item("Fancy Hat", { description: "<p><strong>Gear Slot:</strong> Accessory</p>" })).from, "line");
+        it('guesses in order: the "Gear Slot:" line, the name, a Weapon Skill, where it\'s worn', function () {
+          const item = (name, system = {}) => ({
+            type: "item",
+            name,
+            system: { slots: [], description: "", ...system },
+          });
+          assert.equal(
+            guessGearSlots(
+              item("Fancy Hat", { description: "<p><strong>Gear Slot:</strong> Accessory</p>" }),
+            ).from,
+            "line",
+          );
           assert.deepEqual(guessGearSlots(item("Fancy Hat")).slots, ["head"]);
-          assert.deepEqual(guessGearSlots(item("Old Thing", { weaponSkill: "Club" })).slots, ["held"]);
+          assert.deepEqual(guessGearSlots(item("Old Thing", { weaponSkill: "Club" })).slots, [
+            "held",
+          ]);
           assert.deepEqual(guessGearSlots(item("Old Thing"), { wornIn: "arms" }).slots, ["arms"]);
           assert.isNull(guessGearSlots(item("Old Thing")));
-          assert.isTrue(guessGearSlots(item("Big Axe", { weaponSkill: "Axe", description: "<p>Limitation: Two-Handed</p>" })).twoHanded);
-          assert.isNull(guessGearSlots(item("Potion of Hats", { consumable: { kind: "potion" } })), "consumables aren't worn");
+          assert.isTrue(
+            guessGearSlots(
+              item("Big Axe", { weaponSkill: "Axe", description: "<p>Limitation: Two-Handed</p>" }),
+            ).twoHanded,
+          );
+          assert.isNull(
+            guessGearSlots(item("Potion of Hats", { consumable: { kind: "potion" } })),
+            "consumables aren't worn",
+          );
         });
       });
 
@@ -101,7 +158,10 @@ export default function register(quench) {
             await assignItemToSlot(actor, { slotType: "accessory", slotKey: "0" }, thing);
             assert.notInclude(actor.system.accessories, thing.id);
             await thing.update({ "system.equipped": true });
-            assert.isFalse(actor.items.get(thing.id).system.equipped, "the Equipped box refuses it too");
+            assert.isFalse(
+              actor.items.get(thing.id).system.equipped,
+              "the Equipped box refuses it too",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -173,7 +233,10 @@ export default function register(quench) {
             await torch.update({ "system.equipped": true });
             assert.equal(actor.system.gearSlots.mainHand, torch.id);
             await sword.update({ "system.equipped": true });
-            assert.isFalse(actor.items.get(sword.id).system.equipped, "two-handed needs both hands free");
+            assert.isFalse(
+              actor.items.get(sword.id).system.equipped,
+              "two-handed needs both hands free",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -205,7 +268,11 @@ export default function register(quench) {
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "offHand" }, shield);
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, sword);
             await sword.update({ "system.twoHanded": true });
-            assert.equal(actor.system.gearSlots.mainHand, "", "two-handed with the other hand full: off");
+            assert.equal(
+              actor.system.gearSlots.mainHand,
+              "",
+              "two-handed with the other hand full: off",
+            );
             assert.equal(actor.system.gearSlots.offHand, shield.id);
             assert.isFalse(actor.items.get(sword.id).system.equipped);
           } finally {
@@ -216,7 +283,9 @@ export default function register(quench) {
         it("a consumable is never equipped", async function () {
           const actor = await createTestCharacter("potion");
           try {
-            const potion = await createTestItem(actor, "item", "Potion", { system: { consumable: { kind: "potion" } } });
+            const potion = await createTestItem(actor, "item", "Potion", {
+              system: { consumable: { kind: "potion" } },
+            });
             await potion.update({ "system.equipped": true });
             assert.isFalse(actor.items.get(potion.id).system.equipped);
           } finally {
@@ -227,13 +296,21 @@ export default function register(quench) {
         it("a potion dropped on the Main Hand is refused and stays in the Hotlist", async function () {
           const actor = await createTestCharacter("potion hand");
           try {
-            const potion = await createTestItem(actor, "item", "Potion", { system: { consumable: { kind: "potion" } } });
-            assert.isFalse(fitsSlot(potion, { slotType: "gear", slotKey: "mainHand" }), "not even in a hand");
+            const potion = await createTestItem(actor, "item", "Potion", {
+              system: { consumable: { kind: "potion" } },
+            });
+            assert.isFalse(
+              fitsSlot(potion, { slotType: "gear", slotKey: "mainHand" }),
+              "not even in a hand",
+            );
             await placeInHotlist(actor, 0, potion);
             assert.equal(actor.system.hotlist[0], potion.id, "test setup: in the Hotlist");
             const sheet = actor.sheet;
             await sheet.render({ force: true });
-            const hand = () => sheet.element?.querySelector('.carl-equip-panel [data-slot-type="gear"][data-slot-key="mainHand"]');
+            const hand = () =>
+              sheet.element?.querySelector(
+                '.carl-equip-panel [data-slot-type="gear"][data-slot-key="mainHand"]',
+              );
             await waitFor(hand, { message: "no Main Hand slot" });
             await dropOnSheet(sheet, hand(), potion.toDragData());
             assert.equal(actor.system.gearSlots.mainHand, "", "not in the hand");
@@ -249,9 +326,14 @@ export default function register(quench) {
           const giver = await createTestCharacter("helm giver");
           const taker = await createTestCharacter("helm taker");
           try {
-            const theirs = await gearOn(giver, "Great Helm", ["head"], { changes: [change("dr", 3)] });
+            const theirs = await gearOn(giver, "Great Helm", ["head"], {
+              changes: [change("dr", 3)],
+            });
             await assignItemToSlot(giver, { slotType: "gear", slotKey: "head" }, theirs);
-            assert.isTrue(giver.items.get(theirs.id).system.equipped, "test setup: worn by the giver");
+            assert.isTrue(
+              giver.items.get(theirs.id).system.equipped,
+              "test setup: worn by the giver",
+            );
             const mine = await gearOn(taker, "Iron Helm", ["head"], { changes: [change("dr", 1)] });
             await assignItemToSlot(taker, { slotType: "gear", slotKey: "head" }, mine);
             assert.equal(taker.system.drEffective, 1, "test setup");
@@ -262,7 +344,11 @@ export default function register(quench) {
             const copy = taker.items.find((i) => i.name === "Great Helm");
             assert.exists(copy, "the copy arrived");
             assert.isFalse(copy.system.equipped, "in no slot: not equipped");
-            assert.equal(taker.system.gearSlots.head, mine.id, "the doll still shows the taker's own");
+            assert.equal(
+              taker.system.gearSlots.head,
+              mine.id,
+              "the doll still shows the taker's own",
+            );
             assert.equal(taker.system.drEffective, 1, "only the helmet on the head counts");
             await sheet.close();
           } finally {
@@ -274,12 +360,21 @@ export default function register(quench) {
         it("a two-handed weapon about to be drawn empties the Off Hand for the Attack choice", async function () {
           const actor = await createTestCharacter("readiness");
           try {
-            const knives = await createTestItem(actor, "skill", "Knives", { name: "Knives", system: { category: "attack", rank: 1 } });
+            const knives = await createTestItem(actor, "skill", "Knives", {
+              name: "Knives",
+              system: { category: "attack", rank: 1 },
+            });
             const dagger = await gearOn(actor, "Dagger", ["held"], { weaponSkill: "Knives" });
-            const sword = await gearOn(actor, "Greatsword", ["held"], { twoHanded: true, weaponSkill: "Longsword" });
+            const sword = await gearOn(actor, "Greatsword", ["held"], {
+              twoHanded: true,
+              weaponSkill: "Longsword",
+            });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "offHand" }, dagger);
             assert.isTrue(attackReadiness(actor, knives).ready, "the dagger's in hand");
-            assert.isFalse(attackReadiness(actor, knives, { mainHand: sword }).ready, "not once the greatsword takes both hands");
+            assert.isFalse(
+              attackReadiness(actor, knives, { mainHand: sword }).ready,
+              "not once the greatsword takes both hands",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -300,7 +395,10 @@ export default function register(quench) {
           const actor = await createTestCharacter("swap back");
           try {
             const shield = await gearOn(actor, "Buckler", ["held"]);
-            const sword = await gearOn(actor, "Greatsword", ["held"], { twoHanded: true, weaponSkill: "Longsword" });
+            const sword = await gearOn(actor, "Greatsword", ["held"], {
+              twoHanded: true,
+              weaponSkill: "Longsword",
+            });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "offHand" }, shield);
             await placeInHotlist(actor, 0, sword);
             const result = await swapForAttack(actor, { index: 0, item: sword }, async () => null);
@@ -353,16 +451,35 @@ export default function register(quench) {
             const boots = await gearOn(actor, "Boots", ["feet"]);
             const sheet = actor.sheet;
             await sheet.render({ force: true });
-            await waitFor(() => sheet.element?.querySelector(`.carl-equip-panel`) && sheet.element.querySelector(`[data-item-id="${boots.id}"]`),
-              { message: "no doll or row" });
-            const row = sheet.element.querySelector(`section[data-tab="items"] [data-item-id="${boots.id}"]`)
-              ?? sheet.element.querySelector(`[data-item-id="${boots.id}"]`);
+            await waitFor(
+              () =>
+                sheet.element?.querySelector(`.carl-equip-panel`) &&
+                sheet.element.querySelector(`[data-item-id="${boots.id}"]`),
+              { message: "no doll or row" },
+            );
+            const row =
+              sheet.element.querySelector(
+                `section[data-tab="items"] [data-item-id="${boots.id}"]`,
+              ) ?? sheet.element.querySelector(`[data-item-id="${boots.id}"]`);
             row.dispatchEvent(makeDragEvent("dragstart"));
             const panel = sheet.element.querySelector(".carl-equip-panel");
             assert.isTrue(panel.classList.contains("is-dragging"));
-            assert.isTrue(panel.querySelector('[data-slot-type="gear"][data-slot-key="feet"]').classList.contains("is-fit"));
-            assert.isFalse(panel.querySelector('[data-slot-type="gear"][data-slot-key="head"]').classList.contains("is-fit"));
-            assert.isTrue(panel.querySelector('[data-slot-type="gear"][data-slot-key="mainHand"]').classList.contains("is-fit"), "a hand holds anything");
+            assert.isTrue(
+              panel
+                .querySelector('[data-slot-type="gear"][data-slot-key="feet"]')
+                .classList.contains("is-fit"),
+            );
+            assert.isFalse(
+              panel
+                .querySelector('[data-slot-type="gear"][data-slot-key="head"]')
+                .classList.contains("is-fit"),
+            );
+            assert.isTrue(
+              panel
+                .querySelector('[data-slot-type="gear"][data-slot-key="mainHand"]')
+                .classList.contains("is-fit"),
+              "a hand holds anything",
+            );
             document.dispatchEvent(new DragEvent("dragend", { bubbles: true }));
             assert.isFalse(panel.classList.contains("is-dragging"), "cleared when the drag ends");
             await sheet.close();
@@ -376,19 +493,33 @@ export default function register(quench) {
         useQuenchTimeout(this);
 
         it("pills set the slots; Held shows Two-handed; a weapon is always Held", async function () {
-          const item = await Item.create({ name: `Quench worn ${foundry.utils.randomID()}`, type: "item" });
+          const item = await Item.create({
+            name: `Quench worn ${foundry.utils.randomID()}`,
+            type: "item",
+          });
           try {
             const sheet = item.sheet;
             await sheet.render({ force: true });
-            await waitFor(() => sheet.rendered && sheet.element.querySelector(".carl-worn-on"), { message: "no Worn on" });
-            assert.exists(sheet.element.querySelector(".carl-worn-on .carl-hint"), "says it can't be worn yet");
+            await waitFor(() => sheet.rendered && sheet.element.querySelector(".carl-worn-on"), {
+              message: "no Worn on",
+            });
+            assert.exists(
+              sheet.element.querySelector(".carl-worn-on .carl-hint"),
+              "says it can't be worn yet",
+            );
             sheet.element.querySelector('[data-action="toggleWornSlot"][data-slot="held"]').click();
             await waitFor(() => item.system.slots.includes("held"), { message: "Held never set" });
-            await waitFor(() => sheet.element.querySelector('input[name="system.twoHanded"]'), { message: "no Two-handed" });
+            await waitFor(() => sheet.element.querySelector('input[name="system.twoHanded"]'), {
+              message: "no Two-handed",
+            });
 
             await item.update({ "system.weaponSkill": "Club", "system.slots": [] });
-            await waitFor(() => sheet.element.querySelector('[data-slot="held"]')?.disabled, { message: "Held isn't locked on" });
-            assert.isTrue(sheet.element.querySelector('[data-slot="held"]').classList.contains("is-on"));
+            await waitFor(() => sheet.element.querySelector('[data-slot="held"]')?.disabled, {
+              message: "Held isn't locked on",
+            });
+            assert.isTrue(
+              sheet.element.querySelector('[data-slot="held"]').classList.contains("is-on"),
+            );
             await sheet.close();
           } finally {
             await item.delete();
@@ -406,7 +537,10 @@ export default function register(quench) {
             const trinket = await gearOn(actor, "Odd Trinket", [], { equipped: true });
             const mystery = await gearOn(actor, "Mystery Box", [], { equipped: true });
             const torch = await gearOn(actor, "Lit Torch", [], { equipped: true });
-            const club = await gearOn(actor, "Old Club", [], { equipped: true, weaponSkill: "Club" });
+            const club = await gearOn(actor, "Old Club", [], {
+              equipped: true,
+              weaponSkill: "Club",
+            });
             // Worn as before 0.7.0: anything anywhere.
             await actor.update({
               "system.gearSlots.head": gauntlets.id,
@@ -417,9 +551,17 @@ export default function register(quench) {
 
             const first = await inferActorGear(actor);
             assert.deepEqual(actor.items.get(gauntlets.id).system.slots, ["gloves"], "by name");
-            assert.deepEqual(actor.items.get(trinket.id).system.slots, ["accessory"], "where it's worn");
+            assert.deepEqual(
+              actor.items.get(trinket.id).system.slots,
+              ["accessory"],
+              "where it's worn",
+            );
             assert.deepEqual(actor.items.get(club.id).system.slots, ["held"], "a weapon");
-            assert.include(first.unplaced.map((i) => i.name), mystery.name, "nothing tells");
+            assert.include(
+              first.unplaced.map((i) => i.name),
+              mystery.name,
+              "nothing tells",
+            );
 
             const off = await unequipMisfits(actor);
             assert.sameMembers(off, [gauntlets.name, mystery.name]);
@@ -443,8 +585,15 @@ export default function register(quench) {
           ]);
           try {
             const text = message.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-            for (const name of ["Carl", "Iron Gauntlets", "Ghoul", "Rusty Helm", "Boots",
-              game.i18n.localize("TYPES.Actor.character"), game.i18n.localize("TYPES.Actor.mob")]) {
+            for (const name of [
+              "Carl",
+              "Iron Gauntlets",
+              "Ghoul",
+              "Rusty Helm",
+              "Boots",
+              game.i18n.localize("TYPES.Actor.character"),
+              game.i18n.localize("TYPES.Actor.mob"),
+            ]) {
               assert.include(text, name);
             }
             assert.isTrue(message.whisper.length > 0, "whispered to the GM");
@@ -454,15 +603,30 @@ export default function register(quench) {
         });
 
         it("the GM's list names each item with no slot and who has it", async function () {
-          const message = await whisperUnplacedGear(new Map([
-            ["Carl", [{ name: "Snack Bar", takenOff: false }, { name: "Mystery Box", takenOff: true }]],
-            ["Items directory", [{ name: "Odd Rock", takenOff: false }]],
-          ]));
+          const message = await whisperUnplacedGear(
+            new Map([
+              [
+                "Carl",
+                [
+                  { name: "Snack Bar", takenOff: false },
+                  { name: "Mystery Box", takenOff: true },
+                ],
+              ],
+              ["Items directory", [{ name: "Odd Rock", takenOff: false }]],
+            ]),
+          );
           try {
             const text = message.content.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
-            for (const name of ["Carl", "Snack Bar", "Mystery Box", "Items directory", "Odd Rock"]) assert.include(text, name);
-            assert.include(text, `Mystery Box (${game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.TakenOff")})`);
-            assert.notInclude(text, `Snack Bar (${game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.TakenOff")})`);
+            for (const name of ["Carl", "Snack Bar", "Mystery Box", "Items directory", "Odd Rock"])
+              assert.include(text, name);
+            assert.include(
+              text,
+              `Mystery Box (${game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.TakenOff")})`,
+            );
+            assert.notInclude(
+              text,
+              `Snack Bar (${game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.TakenOff")})`,
+            );
             assert.isTrue(message.whisper.length > 0, "the GM's");
           } finally {
             await message.delete();
@@ -485,13 +649,18 @@ export default function register(quench) {
           }
         });
 
-        it("a \"Gear Slot:\" line wins over the name", async function () {
+        it('a "Gear Slot:" line wins over the name', async function () {
           const actor = await createTestCharacter("migrate line");
           try {
-            const hat = await gearOn(actor, "Fancy Hat", [], { description: "<p><strong>Gear Slot:</strong> Accessory or Head</p>" });
+            const hat = await gearOn(actor, "Fancy Hat", [], {
+              description: "<p><strong>Gear Slot:</strong> Accessory or Head</p>",
+            });
             const update = gearSlotUpdate(hat);
             assert.sameMembers(update["system.slots"], ["accessory", "head"]);
-            assert.isNull(gearSlotUpdate(await gearOn(actor, "Set", ["torso"])), "gear with slots is left alone");
+            assert.isNull(
+              gearSlotUpdate(await gearOn(actor, "Set", ["torso"])),
+              "gear with slots is left alone",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -509,8 +678,24 @@ export default function register(quench) {
           const skills = new Map((await docs(SKILLS)).map((s) => [s.name, s]));
           assert.isAbove(gear.length, 0, "the pack is built");
           const weapons = gear.filter((g) => g.system.weaponSkill);
-          for (const name of ["Club", "Warhammer", "Axe", "Dagger", "Longsword", "Rapier", "Bow", "Crossbow", "Handgun",
-            "Javelin", "Shotgun", "Shuriken", "Slingshot", "Lance", "Polearm", "Quarterstaff"]) {
+          for (const name of [
+            "Club",
+            "Warhammer",
+            "Axe",
+            "Dagger",
+            "Longsword",
+            "Rapier",
+            "Bow",
+            "Crossbow",
+            "Handgun",
+            "Javelin",
+            "Shotgun",
+            "Shuriken",
+            "Slingshot",
+            "Lance",
+            "Polearm",
+            "Quarterstaff",
+          ]) {
             const w = weapons.find((g) => g.name === name);
             assert.exists(w, name);
             const skill = skills.get(w.system.weaponSkill);
@@ -539,7 +724,15 @@ export default function register(quench) {
           assert.equal(lid.system.changes.find((c) => c.target === "dr")?.value, "1");
           assert.deepEqual(slotsOf(by("Heavy Winter Coat")), ["torso"]);
           assert.deepEqual(slotsOf(by("Hockey Pads")), ["legs"]);
-          for (const name of ["Torch", "Lantern", "Rope", "Lighter", "Crawler Biscuits", "Plain Clothes"]) assert.exists(by(name), name);
+          for (const name of [
+            "Torch",
+            "Lantern",
+            "Rope",
+            "Lighter",
+            "Crawler Biscuits",
+            "Plain Clothes",
+          ])
+            assert.exists(by(name), name);
         });
       });
     },

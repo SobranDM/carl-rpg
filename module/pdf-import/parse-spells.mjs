@@ -193,7 +193,12 @@ function toItem(rawName, page, s) {
           // "the target gains the Woozy Debuff", "on a Critical Hit, ...
           // gain the Paralyzed Debuff" (debuff-text.mjs). A Spell with a
           // compendium copy takes the copy's instead (importer.mjs).
-          return { rankThreshold: u.rank, description, changes: [], targetEffects: itemTargetEffects(description, "spell") };
+          return {
+            rankThreshold: u.rank,
+            description,
+            changes: [],
+            targetEffects: itemTargetEffects(description, "spell"),
+          };
         }),
         manaCost: Number.isFinite(manaCost) ? manaCost : 0,
         range: f.Range ?? "",

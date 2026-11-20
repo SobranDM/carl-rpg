@@ -69,7 +69,9 @@ function sameCreature(a, b) {
 export function resolveHealRecipients(caster, item, targets = []) {
   const mode = healsMode(item);
   const self = { actor: caster, uuid: caster.uuid, name: caster.name };
-  const refuse = (key, data = {}) => ({ refusal: game.i18n.format(`CARLRPG.Heals.Refuse.${key}`, { spell: item.name, ...data }) });
+  const refuse = (key, data = {}) => ({
+    refusal: game.i18n.format(`CARLRPG.Heals.Refuse.${key}`, { spell: item.name, ...data }),
+  });
   if (mode === "self") return { recipients: [self] };
 
   const list = targets.filter((t) => t?.actor);
@@ -100,7 +102,11 @@ export function resolveHealRecipients(caster, item, targets = []) {
 export function userHealTargets() {
   return [...(game.user.targets ?? [])]
     .filter((t) => t?.actor)
-    .map((t) => ({ actor: t.actor, uuid: t.document?.uuid ?? t.actor.uuid, name: t.document?.name ?? t.name ?? t.actor.name }));
+    .map((t) => ({
+      actor: t.actor,
+      uuid: t.document?.uuid ?? t.actor.uuid,
+      name: t.document?.name ?? t.name ?? t.actor.name,
+    }));
 }
 
 /**
@@ -119,8 +125,19 @@ export async function chooseHealRecipient(item, caster, target) {
     content: `<div class="carl-dialog-body"><p>${esc(game.i18n.format("CARLRPG.Heals.ChooseRecipient", { spell: item.name, name: target.name }))}</p></div>`,
     classes: ["carl-heal-recipient"],
     buttons: [
-      { action: "self", icon: "fa-solid fa-heart", label: game.i18n.localize("CARLRPG.Heals.HealYourself"), default: true, callback: () => "self" },
-      { action: "target", icon: "fa-solid fa-hand-holding-medical", label: game.i18n.format("CARLRPG.Heals.HealTarget", { name: target.name }), callback: () => "target" },
+      {
+        action: "self",
+        icon: "fa-solid fa-heart",
+        label: game.i18n.localize("CARLRPG.Heals.HealYourself"),
+        default: true,
+        callback: () => "self",
+      },
+      {
+        action: "target",
+        icon: "fa-solid fa-hand-holding-medical",
+        label: game.i18n.format("CARLRPG.Heals.HealTarget", { name: target.name }),
+        callback: () => "target",
+      },
       cancelButton(),
     ],
   });

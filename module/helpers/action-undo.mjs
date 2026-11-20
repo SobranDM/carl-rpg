@@ -27,7 +27,13 @@ import { declaredAttacks, removeDeclaration } from "./declarations.mjs";
 import { isCardLocked } from "../chat/taunt-card.mjs";
 import { writeState } from "../chat/reaction-card.mjs";
 import { applyRevision, interventionsOf, interveneOpen } from "../chat/check-revision.mjs";
-import { clearRowEvade, recoilSettledBy, rowAt, rowCheck, rowInterveneOpen } from "../chat/row-evade.mjs";
+import {
+  clearRowEvade,
+  recoilSettledBy,
+  rowAt,
+  rowCheck,
+  rowInterveneOpen,
+} from "../chat/row-evade.mjs";
 import { tellUser } from "./chat-socket.mjs";
 import { queueForCard } from "./actor-queue.mjs";
 import { changeConditions } from "./conditions.mjs";
@@ -36,8 +42,15 @@ const SCOPE = "carl-rpg";
 
 /** A card's "already done" flags - its buttons have been used (chat-listener.mjs doneFlag). */
 const DONE_FLAGS = [
-  "damageApplied", "targetEffectsApplied", "healApplied", "healMended", "consumableApplied",
-  "tauntedBy", "debuffAdded", "markChoiceDone", "grindSurplusApplied",
+  "damageApplied",
+  "targetEffectsApplied",
+  "healApplied",
+  "healMended",
+  "consumableApplied",
+  "tauntedBy",
+  "debuffAdded",
+  "markChoiceDone",
+  "grindSurplusApplied",
 ];
 
 /** Undos under way on this client, by entry id: a double-click undoes once. */
@@ -64,7 +77,9 @@ export function undoBlocker(entry, spent = []) {
     switch (record.t) {
       case "gear": {
         // A snapshot: putting it back would undo a later Retrieve too.
-        const movedSince = later.some((e) => (e.undo ?? []).some((r) => r.t === "gear" && r.uuid === record.uuid));
+        const movedSince = later.some((e) =>
+          (e.undo ?? []).some((r) => r.t === "gear" && r.uuid === record.uuid),
+        );
         if (movedSince) return t("GearChanged");
         break;
       }
@@ -147,7 +162,8 @@ function rowEvadeBlocker(record) {
 function cardActedOn(message) {
   if (DONE_FLAGS.some((flag) => !!message.getFlag(SCOPE, flag))) return true;
   // A heal applied to some of its recipients (module/chat/heal-card.mjs).
-  if (Object.values(message.getFlag(SCOPE, "healRecipients") ?? {}).some((r) => r?.applied)) return true;
+  if (Object.values(message.getFlag(SCOPE, "healRecipients") ?? {}).some((r) => r?.applied))
+    return true;
   return !!message.getFlag(SCOPE, "targetRows") && isCardLocked(message);
 }
 
@@ -232,13 +248,17 @@ async function runRecord(record) {
       const actor = fromUuidSync(record.uuid);
       if (!actor) return;
       const mana = actor.system.mana ?? {};
-      const value = Math.min(mana.max ?? Infinity, (mana.value ?? 0) + (Number(record.amount) || 0));
+      const value = Math.min(
+        mana.max ?? Infinity,
+        (mana.value ?? 0) + (Number(record.amount) || 0),
+      );
       await actor.update({ "system.mana.value": value });
       return;
     }
     case "conditions": {
       const actor = fromUuidSync(record.uuid);
-      if (actor && record.removed?.length) await changeConditions(actor, [{ op: "restore", entries: record.removed }]);
+      if (actor && record.removed?.length)
+        await changeConditions(actor, [{ op: "restore", entries: record.removed }]);
       return;
     }
     case "set": {
@@ -259,9 +279,19 @@ async function runRecord(record) {
       if (!actor) return;
       const { gearSlots, accessories, hotlist } = record.slots;
       // Only slots still holding something it owns (or empty) are put back.
-      await actor.update({ "system.gearSlots": gearSlots, "system.accessories": accessories, "system.hotlist": hotlist }, { carlUndo: true });
+      await actor.update(
+        {
+          "system.gearSlots": gearSlots,
+          "system.accessories": accessories,
+          "system.hotlist": hotlist,
+        },
+        { carlUndo: true },
+      );
       const updates = Object.entries(record.equipped ?? {})
-        .filter(([id, equipped]) => actor.items.get(id) && !!actor.items.get(id).system.equipped !== equipped)
+        .filter(
+          ([id, equipped]) =>
+            actor.items.get(id) && !!actor.items.get(id).system.equipped !== equipped,
+        )
         .map(([id, equipped]) => ({ _id: id, "system.equipped": equipped }));
       if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { carlUndo: true });
       return;
@@ -270,15 +300,28 @@ async function runRecord(record) {
       const actor = fromUuidSync(record.actorUuid);
       if (!actor) return;
       const item = actor.items.get(record.id);
-      if (item) await item.update({ "system.quantity": Number(item.system.quantity ?? 0) + 1 }, { carlUndo: true });
-      else if (record.data) await actor.createEmbeddedDocuments("Item", [record.data], { keepId: true, carlUndo: true });
+      if (item)
+        await item.update(
+          { "system.quantity": Number(item.system.quantity ?? 0) + 1 },
+          { carlUndo: true },
+        );
+      else if (record.data)
+        await actor.createEmbeddedDocuments("Item", [record.data], {
+          keepId: true,
+          carlUndo: true,
+        });
       return;
     }
     case "intervene": {
       // The d6 off the card (or its row), and it re-graded without it.
-      await applyRevision(record.messageId, "unintervene", record.rowId
-        ? { id: record.id, rowId: record.rowId, which: record.which }
-        : { id: record.id }, game.user);
+      await applyRevision(
+        record.messageId,
+        "unintervene",
+        record.rowId
+          ? { id: record.id, rowId: record.rowId, which: record.which }
+          : { id: record.id },
+        game.user,
+      );
       // Refused (its card couldn't be re-graded): the d6 is still on it.
       return interventionStillOn(record) ? "Failed" : null;
     }

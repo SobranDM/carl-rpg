@@ -12,7 +12,6 @@
  * never has to run twice with a chance of disagreeing).
  */
 
-
 const SOCKET = "system.carl-rpg";
 const ASK = "askGM";
 const ANSWER = "gmAnswer";

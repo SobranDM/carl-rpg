@@ -26,7 +26,12 @@
 import CarlDice, { extractNaturalD20 } from "../dice/dice.mjs";
 import { rerollFormula } from "./ai-favor.mjs";
 import { isInHand, isShield } from "./gear.mjs";
-import { buildItemSkillEntry, effectiveRank, shieldDrState, slugifySkillName } from "./modifiers.mjs";
+import {
+  buildItemSkillEntry,
+  effectiveRank,
+  shieldDrState,
+  slugifySkillName,
+} from "./modifiers.mjs";
 import { passiveContext } from "./actions.mjs";
 
 /** The Skill's name, as the compendium has it. */
@@ -110,7 +115,10 @@ export function attackIsMagical(attack) {
  * @param {number} rank
  * @returns {boolean}
  */
-export function blockableAttack({ isArea = false, hasDamage = true, magical = false } = {}, rank = 0) {
+export function blockableAttack(
+  { isArea = false, hasDamage = true, magical = false } = {},
+  rank = 0,
+) {
   if (isArea || !hasDamage) return false;
   return !magical || rank >= 5;
 }
@@ -138,10 +146,19 @@ export function keptBlockRoll({ formula, natural, total } = {}) {
  * @returns {Promise<{roll: Roll, total: number, naturalRoll: number|null, formula: string, difficulty: number|null, breakdown: string}>}
  */
 export async function rollBlockAgain(kept, difficulty) {
-  const roll = await new Roll(rerollFormula({ formula: kept.formula, natural: 0, total: kept.rest })).evaluate();
+  const roll = await new Roll(
+    rerollFormula({ formula: kept.formula, natural: 0, total: kept.rest }),
+  ).evaluate();
   return {
-    roll, total: roll.total, naturalRoll: extractNaturalD20(roll), formula: kept.formula, difficulty,
-    breakdown: game.i18n.format("CARLRPG.ShieldBlock.Again", { formula: roll.formula, total: roll.total }),
+    roll,
+    total: roll.total,
+    naturalRoll: extractNaturalD20(roll),
+    formula: kept.formula,
+    difficulty,
+    breakdown: game.i18n.format("CARLRPG.ShieldBlock.Again", {
+      formula: roll.formula,
+      total: roll.total,
+    }),
   };
 }
 
@@ -176,9 +193,19 @@ export function shieldLossFor(degree) {
  */
 export function blockNotes(check) {
   const i18n = game.i18n;
-  const notes = [i18n.localize(check?.success ? "CARLRPG.ShieldBlock.Sub.success" : "CARLRPG.ShieldBlock.Sub.failed")];
+  const notes = [
+    i18n.localize(
+      check?.success ? "CARLRPG.ShieldBlock.Sub.success" : "CARLRPG.ShieldBlock.Sub.failed",
+    ),
+  ];
   const loss = shieldLossFor(check?.degree);
-  if (loss) notes.push(i18n.format("CARLRPG.ShieldBlock.Sub.loss", { shield: check.shieldName ?? "?", amount: loss }));
+  if (loss)
+    notes.push(
+      i18n.format("CARLRPG.ShieldBlock.Sub.loss", {
+        shield: check.shieldName ?? "?",
+        amount: loss,
+      }),
+    );
   if (check?.bashed) notes.push(i18n.localize("CARLRPG.ShieldBlock.Sub.bashed"));
   return notes;
 }
@@ -195,7 +222,9 @@ export function blockNotes(check) {
 export async function damageShield(actor, shieldId, amount) {
   const item = actor?.items?.get(shieldId);
   if (!item || !isShield(item) || !(amount > 0)) return null;
-  await item.update({ "system.shieldDamage": Math.max(0, Number(item.system.shieldDamage) || 0) + amount });
+  await item.update({
+    "system.shieldDamage": Math.max(0, Number(item.system.shieldDamage) || 0) + amount,
+  });
   const state = shieldDrState(item);
   return { name: item.name, amount, dr: state.dr, broken: state.broken };
 }
@@ -270,7 +299,14 @@ export function buildShieldBash(actor, rank) {
 export async function rollShieldBash(actor, { targetUuid, rank, skipDialog = false }) {
   const doc = targetUuid ? fromUuidSync(targetUuid) : null;
   const targetActor = doc instanceof Actor ? doc : (doc?.actor ?? null);
-  const targets = targetActor ? [{ actor: targetActor, document: doc, name: doc.name ?? targetActor.name }] : [];
+  const targets = targetActor
+    ? [{ actor: targetActor, document: doc, name: doc.name ?? targetActor.name }]
+    : [];
   const { item, castAs } = buildShieldBash(actor, rank);
-  return CarlDice.rollAttack(actor, item, { castAs, targets, skipDialog, within: passiveContext() });
+  return CarlDice.rollAttack(actor, item, {
+    castAs,
+    targets,
+    skipDialog,
+    within: passiveContext(),
+  });
 }

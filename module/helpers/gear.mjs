@@ -24,8 +24,14 @@ export { SLOT_NAME_TERMS, WEAR_SLOT_KEYS, parseGearSlotLine, slotsFromName } fro
 
 /** A doll slot (CONFIG.CARLRPG.gearSlots key) -> where-worn key. */
 export const WEAR_SLOT_OF_GEAR_SLOT = Object.freeze({
-  mainHand: "held", offHand: "held", head: "head", torso: "torso", arms: "arms",
-  gloves: "gloves", legs: "legs", feet: "feet",
+  mainHand: "held",
+  offHand: "held",
+  head: "head",
+  torso: "torso",
+  arms: "arms",
+  gloves: "gloves",
+  legs: "legs",
+  feet: "feet",
 });
 
 /** The hands: a two-handed item fills both. */
@@ -188,10 +194,24 @@ export function guessGearSlots(item, { wornIn = null } = {}) {
   const fromLine = line ? parseGearSlotLine(line) : null;
   const fromName = slotsFromName(item.name);
   const kind = fromName?.accessoryKind ?? "";
-  if (fromLine) return { slots: fromLine.slots, twoHanded: fromLine.twoHanded || twoHandedText, accessoryKind: kind, from: "line" };
-  if (fromName) return { slots: fromName.slots, twoHanded: twoHandedText, accessoryKind: kind, from: "name" };
-  if (isWeapon(item)) return { slots: ["held"], twoHanded: twoHandedText, accessoryKind: "", from: "weapon" };
-  if (wornIn) return { slots: [wornIn], twoHanded: twoHandedText && wornIn === "held", accessoryKind: "", from: "worn" };
+  if (fromLine)
+    return {
+      slots: fromLine.slots,
+      twoHanded: fromLine.twoHanded || twoHandedText,
+      accessoryKind: kind,
+      from: "line",
+    };
+  if (fromName)
+    return { slots: fromName.slots, twoHanded: twoHandedText, accessoryKind: kind, from: "name" };
+  if (isWeapon(item))
+    return { slots: ["held"], twoHanded: twoHandedText, accessoryKind: "", from: "weapon" };
+  if (wornIn)
+    return {
+      slots: [wornIn],
+      twoHanded: twoHandedText && wornIn === "held",
+      accessoryKind: "",
+      from: "worn",
+    };
   return null;
 }
 

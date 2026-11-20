@@ -29,14 +29,33 @@
 import { slugifySkillName } from "./modifiers.mjs";
 import { createNoticeMessage } from "../chat/chat-card.mjs";
 import { tierRank } from "./worship.mjs";
-import { COMPANIONS_MIGRATION_ID, migrateCompanionActors, sweepLegacyCompanions } from "./companion-migration.mjs";
-import { LEGACY_FLAG, MOB_ATTACK_TYPE, attacksToCheck, convertLegacyAttacks } from "./mob-attacks.mjs";
+import {
+  COMPANIONS_MIGRATION_ID,
+  migrateCompanionActors,
+  sweepLegacyCompanions,
+} from "./companion-migration.mjs";
+import {
+  LEGACY_FLAG,
+  MOB_ATTACK_TYPE,
+  attacksToCheck,
+  convertLegacyAttacks,
+} from "./mob-attacks.mjs";
 import { importState, restamp } from "../pdf-import/fingerprint.mjs";
 import { parseSize } from "./size.mjs";
 import { LEGACY_DRIVE_SKILLS } from "../data/vehicle.mjs";
 import {
-  HANDS, WEAR_SLOT_OF_GEAR_SLOT, accessoryKindOf, canWear, fitsSlot, guessGearSlots, heldOrWearable, isConsumable, isShield,
-  isTwoHanded, isWeapon, slotsFromName,
+  HANDS,
+  WEAR_SLOT_OF_GEAR_SLOT,
+  accessoryKindOf,
+  canWear,
+  fitsSlot,
+  guessGearSlots,
+  heldOrWearable,
+  isConsumable,
+  isShield,
+  isTwoHanded,
+  isWeapon,
+  slotsFromName,
 } from "./gear.mjs";
 import { freeSlotFor, isItemWorn, placeInFreeSlot } from "./equip-slots.mjs";
 import { PACKS, withUnlockedPack } from "./packs.mjs";
@@ -160,9 +179,10 @@ export async function migrateWorld() {
  * @param {string[]} done  The ids recorded before.
  */
 async function runMigrations(run, done) {
-
   const version = run.at(-1).version;
-  const banner = ui.notifications.info(game.i18n.format("CARLRPG.Migration.Begin", { version }), { permanent: true });
+  const banner = ui.notifications.info(game.i18n.format("CARLRPG.Migration.Begin", { version }), {
+    permanent: true,
+  });
   let errors = 0;
   let changed = 0;
   const finished = [];
@@ -200,9 +220,14 @@ async function runMigrations(run, done) {
     }
   }
   if (errors) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Migration.Failed", { version, count: changed, errors }), { permanent: true });
+    ui.notifications.warn(
+      game.i18n.format("CARLRPG.Migration.Failed", { version, count: changed, errors }),
+      { permanent: true },
+    );
   } else {
-    ui.notifications.info(game.i18n.format("CARLRPG.Migration.Done", { version, count: changed }), { permanent: true });
+    ui.notifications.info(game.i18n.format("CARLRPG.Migration.Done", { version, count: changed }), {
+      permanent: true,
+    });
   }
 }
 
@@ -230,11 +255,13 @@ export function migrationFailure(step, where, err) {
  * @returns {Promise<ChatMessage>}
  */
 export function whisperMigrationFailures(failures) {
-  const lines = failures.map((f) => game.i18n.format("CARLRPG.Migration.Failures.Line", {
-    where: esc(f.where || game.i18n.localize("CARLRPG.Migration.Failures.WholeStep")),
-    step: esc(f.step),
-    message: esc(f.message),
-  }));
+  const lines = failures.map((f) =>
+    game.i18n.format("CARLRPG.Migration.Failures.Line", {
+      where: esc(f.where || game.i18n.localize("CARLRPG.Migration.Failures.WholeStep")),
+      step: esc(f.step),
+      message: esc(f.message),
+    }),
+  );
   return whisperGmList("Failures", lines);
 }
 
@@ -298,7 +325,8 @@ function migrationTally(fail) {
  *   The console messages for a failure.
  */
 async function eachWorldActor(tally, perActor, { actorMessage, packMessage }) {
-  for (const actor of game.actors) await tally.attempt(actor.name, () => perActor(actor), actorMessage(actor));
+  for (const actor of game.actors)
+    await tally.attempt(actor.name, () => perActor(actor), actorMessage(actor));
   for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
     try {
       await withUnlockedPack(pack, async () => {
@@ -326,7 +354,15 @@ function migrateWorldPack(pack, { onActor, itemUpdate, options }, failed) {
   return withUnlockedPack(pack, async () => {
     const documents = await pack.getDocuments();
     const onFail = failed && ((doc, err) => failed(`${doc.name} (${pack.title})`, err));
-    if (pack.documentName === "Actor") return eachDocument(documents, onActor, onFail ?? ((doc, err) => { throw err; }));
+    if (pack.documentName === "Actor")
+      return eachDocument(
+        documents,
+        onActor,
+        onFail ??
+          ((doc, err) => {
+            throw err;
+          }),
+      );
     const updates = documents.map(itemUpdate).filter(Boolean);
     return updateItemsEach(documents, updates, { pack: pack.collection, ...options }, onFail);
   });
@@ -335,7 +371,9 @@ function migrateWorldPack(pack, { onActor, itemUpdate, options }, failed) {
 /** An imported rulebook document the GM hadn't edited (fingerprint.mjs), so a migration's write can be re-stamped. */
 function untouchedImport(doc) {
   const flag = doc?.flags?.[SCOPE]?.pdfImport;
-  return !!flag?.hash && Array.isArray(flag.fields) && importState(doc._source, flag) === "untouched";
+  return (
+    !!flag?.hash && Array.isArray(flag.fields) && importState(doc._source, flag) === "untouched"
+  );
 }
 
 /**
@@ -354,9 +392,13 @@ export async function updateItemsEach(documents, updates, options, onFail = null
   if (!updates.length) return 0;
   const cls = Item.implementation;
   const byId = new Map([...documents].map((d) => [d.id, d]));
-  const untouched = new Set(updates.filter((u) => untouchedImport(byId.get(u._id))).map((u) => u._id));
+  const untouched = new Set(
+    updates.filter((u) => untouchedImport(byId.get(u._id))).map((u) => u._id),
+  );
   const fresh = new Map();
-  const keep = (docs) => { for (const d of docs ?? []) fresh.set(d.id, d); };
+  const keep = (docs) => {
+    for (const d of docs ?? []) fresh.set(d.id, d);
+  };
   const thrown = new Set();
   try {
     keep(await cls.updateDocuments(updates, options));
@@ -376,7 +418,10 @@ export async function updateItemsEach(documents, updates, options, onFail = null
   // something, so one not given back wasn't written.
   for (const update of updates) {
     if (fresh.has(update._id) || thrown.has(update._id)) continue;
-    onFail?.(byId.get(update._id) ?? { name: update._id }, new Error(game.i18n.localize("CARLRPG.Migration.Failures.NotWritten")));
+    onFail?.(
+      byId.get(update._id) ?? { name: update._id },
+      new Error(game.i18n.localize("CARLRPG.Migration.Failures.NotWritten")),
+    );
   }
   const written = updates.filter((u) => fresh.has(u._id)).length;
   const key = `flags.${SCOPE}.pdfImport`;
@@ -401,12 +446,19 @@ export async function updateItemsEach(documents, updates, options, onFail = null
 /* -------------------------------------------------- */
 
 // The hand-to-hand Combat Skills (p.179), which 0.7.0's pack ticks.
-const HAND_TO_HAND = new Set(["Foot Soldier", "Noggin Nocker", "Pugilism", "Unarmed Combat", "Wrasslin'"]
-  .map((name) => slugifySkillName(name)));
+const HAND_TO_HAND = new Set(
+  ["Foot Soldier", "Noggin Nocker", "Pugilism", "Unarmed Combat", "Wrasslin'"].map((name) =>
+    slugifySkillName(name),
+  ),
+);
 
 /** A copy of one of the five whose Hand-to-Hand box isn't ticked yet. */
 export function needsHandToHand(item) {
-  return item?.type === "skill" && !item.system?.isHandToHand && HAND_TO_HAND.has(slugifySkillName(item.name));
+  return (
+    item?.type === "skill" &&
+    !item.system?.isHandToHand &&
+    HAND_TO_HAND.has(slugifySkillName(item.name))
+  );
 }
 
 /**
@@ -415,7 +467,9 @@ export function needsHandToHand(item) {
  * @returns {Promise<number>}  How many were ticked.
  */
 export async function tickHandToHandOn(actor) {
-  const updates = actor.items.filter(needsHandToHand).map((item) => ({ _id: item.id, "system.isHandToHand": true }));
+  const updates = actor.items
+    .filter(needsHandToHand)
+    .map((item) => ({ _id: item.id, "system.isHandToHand": true }));
   if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { render: false });
   return updates.length;
 }
@@ -432,11 +486,16 @@ export async function tickHandToHandOn(actor) {
 async function migrateHandToHandSkills({ fail = NO_FAIL } = {}) {
   const { attempt, failed, result } = migrationTally(fail);
 
-  for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => tickHandToHandOn(actor));
+  for (const actor of game.actors)
+    await attempt(`Actor ${actor.name}`, () => tickHandToHandOn(actor));
 
   await attempt("the Items directory", () => {
-    const updates = game.items.filter(needsHandToHand).map((item) => ({ _id: item.id, "system.isHandToHand": true }));
-    return updateItemsEach(game.items, updates, { render: false }, (item, err) => failed(item.name, err));
+    const updates = game.items
+      .filter(needsHandToHand)
+      .map((item) => ({ _id: item.id, "system.isHandToHand": true }));
+    return updateItemsEach(game.items, updates, { render: false }, (item, err) =>
+      failed(item.name, err),
+    );
   });
 
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
@@ -461,8 +520,11 @@ const SKILL_SETTING_BOXES = {
   noDamageEffects: ["Unarmed Combat"],
   commandsPets: ["Animal Handling"],
 };
-const BOX_BY_SLUG = new Map(Object.entries(SKILL_SETTING_BOXES)
-  .flatMap(([box, names]) => names.map((name) => [slugifySkillName(name), box])));
+const BOX_BY_SLUG = new Map(
+  Object.entries(SKILL_SETTING_BOXES).flatMap(([box, names]) =>
+    names.map((name) => [slugifySkillName(name), box]),
+  ),
+);
 
 /**
  * A copy of one of those Skills whose box isn't ticked yet, as the update
@@ -485,7 +547,12 @@ export function skillSettingBoxUpdate(item) {
  * @returns {boolean}
  */
 export function isBookHandToHandList(skills) {
-  const slugs = new Set((skills ?? []).map((s) => String(s ?? "").trim()).filter(Boolean).map((s) => slugifySkillName(s)));
+  const slugs = new Set(
+    (skills ?? [])
+      .map((s) => String(s ?? "").trim())
+      .filter(Boolean)
+      .map((s) => slugifySkillName(s)),
+  );
   return slugs.size === HAND_TO_HAND.size && [...slugs].every((s) => HAND_TO_HAND.has(s));
 }
 
@@ -520,7 +587,8 @@ export function skillSettingUpdate(item) {
  */
 export async function applySkillSettingBoxesOn(actor) {
   const updates = actor.items.map(skillSettingUpdate).filter(Boolean);
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { carlMigration: true, render: false });
+  if (updates.length)
+    await actor.updateEmbeddedDocuments("Item", updates, { carlMigration: true, render: false });
   return updates.length;
 }
 
@@ -538,15 +606,29 @@ export async function applySkillSettingBoxesOn(actor) {
  */
 export async function migrateSkillSettingBoxes({ fail = NO_FAIL } = {}) {
   const { attempt, failed, result } = migrationTally(fail);
-  for (const actor of actorsWithOwnGear()) await attempt(`Actor ${actor.name}`, () => applySkillSettingBoxesOn(actor));
+  for (const actor of actorsWithOwnGear())
+    await attempt(`Actor ${actor.name}`, () => applySkillSettingBoxesOn(actor));
   await attempt("the Items directory", () => {
     const updates = game.items.map(skillSettingUpdate).filter(Boolean);
-    return updateItemsEach(game.items, updates, { carlMigration: true, render: false }, (item, err) => failed(item.name, err));
+    return updateItemsEach(
+      game.items,
+      updates,
+      { carlMigration: true, render: false },
+      (item, err) => failed(item.name, err),
+    );
   });
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
-    await attempt(`compendium ${pack.collection}`, () => migrateWorldPack(pack, {
-      onActor: applySkillSettingBoxesOn, itemUpdate: skillSettingUpdate, options: { carlMigration: true, render: false },
-    }, failed));
+    await attempt(`compendium ${pack.collection}`, () =>
+      migrateWorldPack(
+        pack,
+        {
+          onActor: applySkillSettingBoxesOn,
+          itemUpdate: skillSettingUpdate,
+          options: { carlMigration: true, render: false },
+        },
+        failed,
+      ),
+    );
   }
   return result();
 }
@@ -578,11 +660,12 @@ export function baseMultiplierUpdate(item) {
   if (!BASE_MULTIPLIER_ITEMS.has(slugifySkillName(item.name))) return null;
   const source = item._source?.system ?? item.system;
   let changed = false;
-  const fix = (changes) => (changes ?? []).map((c) => {
-    if (c?.damageDiceKind !== "multiplier") return c;
-    changed = true;
-    return { ...c, damageDiceKind: "base" };
-  });
+  const fix = (changes) =>
+    (changes ?? []).map((c) => {
+      if (c?.damageDiceKind !== "multiplier") return c;
+      changed = true;
+      return { ...c, damageDiceKind: "base" };
+    });
   const changes = fix(source.changes);
   const upgrades = (source.upgrades ?? []).map((u) => ({ ...u, changes: fix(u.changes) }));
   if (!changed) return null;
@@ -605,15 +688,26 @@ async function fixBaseMultipliersOn(actor) {
  */
 async function migrateBaseMultipliers({ fail = NO_FAIL } = {}) {
   const { attempt, failed, result } = migrationTally(fail);
-  for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => fixBaseMultipliersOn(actor));
+  for (const actor of game.actors)
+    await attempt(`Actor ${actor.name}`, () => fixBaseMultipliersOn(actor));
   await attempt("the Items directory", () => {
     const updates = game.items.map(baseMultiplierUpdate).filter(Boolean);
-    return updateItemsEach(game.items, updates, { render: false }, (item, err) => failed(item.name, err));
+    return updateItemsEach(game.items, updates, { render: false }, (item, err) =>
+      failed(item.name, err),
+    );
   });
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
-    await attempt(`compendium ${pack.collection}`, () => migrateWorldPack(pack, {
-      onActor: fixBaseMultipliersOn, itemUpdate: baseMultiplierUpdate, options: { render: false },
-    }, failed));
+    await attempt(`compendium ${pack.collection}`, () =>
+      migrateWorldPack(
+        pack,
+        {
+          onActor: fixBaseMultipliersOn,
+          itemUpdate: baseMultiplierUpdate,
+          options: { render: false },
+        },
+        failed,
+      ),
+    );
   }
   return result();
 }
@@ -648,10 +742,16 @@ async function migrateDeityBlocks({ fail = NO_FAIL } = {}) {
   const tally = migrationTally(fail);
   const failed = (label, err) => tally.failed(label, err, `couldn't save the Deity of ${label}`);
   const attempt = (label, fn) => tally.attempt(label, fn, `couldn't save the Deity of ${label}`);
-  for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => persistDeityBlock(actor));
+  for (const actor of game.actors)
+    await attempt(`Actor ${actor.name}`, () => persistDeityBlock(actor));
   for (const pack of game.packs.filter((p) => p.documentName === "Actor" && shouldMigratePack(p))) {
-    await attempt(`compendium ${pack.collection}`, () => withUnlockedPack(pack, async () =>
-      eachDocument(await pack.getDocuments(), persistDeityBlock, (actor, err) => failed(`${actor.name} (${pack.title})`, err))));
+    await attempt(`compendium ${pack.collection}`, () =>
+      withUnlockedPack(pack, async () =>
+        eachDocument(await pack.getDocuments(), persistDeityBlock, (actor, err) =>
+          failed(`${actor.name} (${pack.title})`, err),
+        ),
+      ),
+    );
   }
   return tally.result();
 }
@@ -667,7 +767,10 @@ export async function persistDeityBlock(actor) {
   if (actor.type !== "character") return 0;
   const { ForcedReplacement } = foundry.data.operators;
   const deity = foundry.utils.deepClone(actor.system.toObject().deity);
-  await actor.update({ system: { deity: ForcedReplacement.create(deity) } }, { render: false, carlMigration: true });
+  await actor.update(
+    { system: { deity: ForcedReplacement.create(deity) } },
+    { render: false, carlMigration: true },
+  );
   return 1;
 }
 
@@ -703,7 +806,10 @@ export async function backfillDeityTier(actor) {
   if (!tier) return "";
   const { ForcedReplacement } = foundry.data.operators;
   const deity = { ...foundry.utils.deepClone(actor.system.toObject().deity), tier };
-  await actor.update({ system: { deity: ForcedReplacement.create(deity) } }, { render: false, carlMigration: true });
+  await actor.update(
+    { system: { deity: ForcedReplacement.create(deity) } },
+    { render: false, carlMigration: true },
+  );
   return tier;
 }
 
@@ -719,18 +825,24 @@ export async function backfillDeityTier(actor) {
 async function migrateDeityTiers({ fail = NO_FAIL } = {}) {
   const tally = migrationTally(fail);
   const lines = [];
-  await eachWorldActor(tally, async (actor, where) => {
-    const tier = await backfillDeityTier(actor);
-    if (!tier) return 0;
-    lines.push(game.i18n.format("CARLRPG.Migration.DeityTier.Line", {
-      name: esc(actor.name) + (where ? ` (${esc(where)})` : ""),
-      tier: esc(game.i18n.localize(CONFIG.CARLRPG.featureTiers[tier])),
-    }));
-    return 1;
-  }, {
-    actorMessage: (actor) => `couldn't set the Deity Tier of ${actor.name}`,
-    packMessage: (pack) => `couldn't set Deity Tiers in compendium ${pack.collection}`,
-  });
+  await eachWorldActor(
+    tally,
+    async (actor, where) => {
+      const tier = await backfillDeityTier(actor);
+      if (!tier) return 0;
+      lines.push(
+        game.i18n.format("CARLRPG.Migration.DeityTier.Line", {
+          name: esc(actor.name) + (where ? ` (${esc(where)})` : ""),
+          tier: esc(game.i18n.localize(CONFIG.CARLRPG.featureTiers[tier])),
+        }),
+      );
+      return 1;
+    },
+    {
+      actorMessage: (actor) => `couldn't set the Deity Tier of ${actor.name}`,
+      packMessage: (pack) => `couldn't set Deity Tiers in compendium ${pack.collection}`,
+    },
+  );
   if (lines.length) await whisperGmList("DeityTier", lines);
   return tally.result();
 }
@@ -745,11 +857,29 @@ async function migrateDeityTiers({ fail = NO_FAIL } = {}) {
  */
 export const REFRESHED_ITEMS = {
   "classes-and-races": [
-    "Tigran", "Tigran (Primal)", "Amazonian", "Amazonian (Primal)", "Doppelgänger", "Doppelgänger (Primal)",
-    "Elf (High)", "Elf (High) (Primal)", "Obsidian Butterfly", "Obsidian Butterfly (Primal)",
-    "Straight-to-DVD Action Hero", "Zulu Warrior",
+    "Tigran",
+    "Tigran (Primal)",
+    "Amazonian",
+    "Amazonian (Primal)",
+    "Doppelgänger",
+    "Doppelgänger (Primal)",
+    "Elf (High)",
+    "Elf (High) (Primal)",
+    "Obsidian Butterfly",
+    "Obsidian Butterfly (Primal)",
+    "Straight-to-DVD Action Hero",
+    "Zulu Warrior",
   ],
-  "skills-and-spells": ["Dodge", "Running", "Catlike Reflexes", "Jumping", "Longsword", "Rapier", "Quarterstaff", "Oakhide"],
+  "skills-and-spells": [
+    "Dodge",
+    "Running",
+    "Catlike Reflexes",
+    "Jumping",
+    "Longsword",
+    "Rapier",
+    "Quarterstaff",
+    "Oakhide",
+  ],
 };
 
 /** The change targets the refresh owns: everything else on a copy is kept. */
@@ -759,8 +889,10 @@ const MANAGED_TARGETS = {
 };
 
 /** Oakhide's description note before and after it became a toggled Spell. */
-const OAKHIDE_OLD_NOTE = "<p><em>Note: DR has no temporary/conditional-bonus mechanism in this system - apply this bonus by hand while the buff is active.</em></p>";
-const OAKHIDE_NEW_NOTE = "<p><em>Casting it switches it on (paying its Mana) and its DR is added automatically; cast it again when the buff ends to switch it off.</em></p>";
+const OAKHIDE_OLD_NOTE =
+  "<p><em>Note: DR has no temporary/conditional-bonus mechanism in this system - apply this bonus by hand while the buff is active.</em></p>";
+const OAKHIDE_NEW_NOTE =
+  "<p><em>Casting it switches it on (paying its Mana) and its DR is added automatically; cast it again when the buff ends to switch it off.</em></p>";
 
 /**
  * Whether the refresh owns this change: a DR, Move or Step resource change,
@@ -774,8 +906,18 @@ export function isManagedChange(change) {
 
 /** The managed changes in a list, order-free, for comparing two lists. */
 function managedSignature(changes) {
-  return (changes ?? []).filter(isManagedChange)
-    .map((c) => [c.targetType, c.target, c.mode, String(c.value), Number(c.levelGate) || 0, (c.conditions ?? []).length].join("|"))
+  return (changes ?? [])
+    .filter(isManagedChange)
+    .map((c) =>
+      [
+        c.targetType,
+        c.target,
+        c.mode,
+        String(c.value),
+        Number(c.levelGate) || 0,
+        (c.conditions ?? []).length,
+      ].join("|"),
+    )
     .sort()
     .join(";");
 }
@@ -791,7 +933,9 @@ function mergeManagedChanges(own, source) {
   if (managedSignature(own) === managedSignature(source)) return null;
   return [
     ...(own ?? []).filter((c) => !isManagedChange(c)),
-    ...(source ?? []).filter(isManagedChange).map((c) => ({ ...foundry.utils.deepClone(c), id: foundry.utils.randomID() })),
+    ...(source ?? [])
+      .filter(isManagedChange)
+      .map((c) => ({ ...foundry.utils.deepClone(c), id: foundry.utils.randomID() })),
   ];
 }
 
@@ -807,7 +951,7 @@ function mergeManagedChanges(own, source) {
  * @returns {object|null}  Update data (system.* paths), or null if current.
  */
 export function refreshedItemUpdate(item, source) {
-  const plain = (sys) => (typeof sys?.toObject === "function" ? sys.toObject() : sys ?? {});
+  const plain = (sys) => (typeof sys?.toObject === "function" ? sys.toObject() : (sys ?? {}));
   const own = plain(item.system);
   const src = plain(source.system);
   const update = {};
@@ -833,7 +977,10 @@ export function refreshedItemUpdate(item, source) {
       if (!(sourceTier.changes ?? []).some(isManagedChange)) continue;
       upgrades.push({
         ...foundry.utils.deepClone(sourceTier),
-        changes: (sourceTier.changes ?? []).map((c) => ({ ...foundry.utils.deepClone(c), id: foundry.utils.randomID() })),
+        changes: (sourceTier.changes ?? []).map((c) => ({
+          ...foundry.utils.deepClone(c),
+          id: foundry.utils.randomID(),
+        })),
       });
       touched = true;
     }
@@ -921,8 +1068,13 @@ function refreshUpdatesFor(items, sources) {
 
 /** Whether a compendium item changes Move or Step, at any Rank. */
 function changesMovement(source) {
-  const all = [...(source.system.changes ?? []), ...(source.system.upgrades ?? []).flatMap((t) => t.changes ?? [])];
-  return all.some((c) => c.targetType === "resource" && (c.target === "move" || c.target === "step"));
+  const all = [
+    ...(source.system.changes ?? []),
+    ...(source.system.upgrades ?? []).flatMap((t) => t.changes ?? []),
+  ];
+  return all.some(
+    (c) => c.targetType === "resource" && (c.target === "move" || c.target === "step"),
+  );
 }
 
 /**
@@ -973,7 +1125,12 @@ async function migrateCompendiumCopies({ fail = NO_FAIL } = {}) {
       const written = await write(updates);
       changed += typeof written === "number" ? written : updates.length;
       const note = movement ? esc(typedMovementNote(actor)) : "";
-      lines.push(game.i18n.format("CARLRPG.Migration.Refresh.Line", { name: esc(label), items: names.map(esc).join(", ") }) + note);
+      lines.push(
+        game.i18n.format("CARLRPG.Migration.Refresh.Line", {
+          name: esc(label),
+          items: names.map(esc).join(", "),
+        }) + note,
+      );
     } catch (err) {
       console.error(`carl-rpg | 0.7.0 migration: couldn't refresh the items of ${label}`, err);
       errors += 1;
@@ -983,25 +1140,45 @@ async function migrateCompendiumCopies({ fail = NO_FAIL } = {}) {
   if (!sources.length) return { changed, errors };
 
   for (const actor of game.actors) {
-    await refresh(actor.name, actor.items, (u) => actor.updateEmbeddedDocuments("Item", u, options), actor);
+    await refresh(
+      actor.name,
+      actor.items,
+      (u) => actor.updateEmbeddedDocuments("Item", u, options),
+      actor,
+    );
   }
-  await refresh(game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"), game.items,
-    (u) => updateItemsEach(game.items, u, options, failedItem("")));
+  await refresh(game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"), game.items, (u) =>
+    updateItemsEach(game.items, u, options, failedItem("")),
+  );
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
     try {
       await withUnlockedPack(pack, async () => {
         const documents = await pack.getDocuments();
         if (pack.documentName === "Actor") {
           for (const actor of documents) {
-            await refresh(`${actor.name} (${pack.title})`, actor.items, (u) => actor.updateEmbeddedDocuments("Item", u, options), actor);
+            await refresh(
+              `${actor.name} (${pack.title})`,
+              actor.items,
+              (u) => actor.updateEmbeddedDocuments("Item", u, options),
+              actor,
+            );
           }
         } else {
-          await refresh(pack.title, documents,
-            (u) => updateItemsEach(documents, u, { ...options, pack: pack.collection }, failedItem(pack.title)));
+          await refresh(pack.title, documents, (u) =>
+            updateItemsEach(
+              documents,
+              u,
+              { ...options, pack: pack.collection },
+              failedItem(pack.title),
+            ),
+          );
         }
       });
     } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't refresh items in compendium ${pack.collection}`, err);
+      console.error(
+        `carl-rpg | 0.7.0 migration: couldn't refresh items in compendium ${pack.collection}`,
+        err,
+      );
       errors += 1;
       fail(pack.collection, err);
     }
@@ -1039,17 +1216,24 @@ export async function zeroCharacterBaseDr(actor) {
 async function migrateCharacterBaseDr({ fail = NO_FAIL } = {}) {
   const tally = migrationTally(fail);
   const lines = [];
-  await eachWorldActor(tally, async (actor, where) => {
-    const dr = await zeroCharacterBaseDr(actor);
-    if (!dr) return 0;
-    lines.push(game.i18n.format("CARLRPG.Migration.BaseDr.Line", {
-      name: esc(actor.name) + (where ? ` (${esc(where)})` : ""), dr,
-    }));
-    return 1;
-  }, {
-    actorMessage: (actor) => `couldn't zero the base DR of ${actor.name}`,
-    packMessage: (pack) => `couldn't zero base DR in compendium ${pack.collection}`,
-  });
+  await eachWorldActor(
+    tally,
+    async (actor, where) => {
+      const dr = await zeroCharacterBaseDr(actor);
+      if (!dr) return 0;
+      lines.push(
+        game.i18n.format("CARLRPG.Migration.BaseDr.Line", {
+          name: esc(actor.name) + (where ? ` (${esc(where)})` : ""),
+          dr,
+        }),
+      );
+      return 1;
+    },
+    {
+      actorMessage: (actor) => `couldn't zero the base DR of ${actor.name}`,
+      packMessage: (pack) => `couldn't zero base DR in compendium ${pack.collection}`,
+    },
+  );
   if (lines.length) await whisperGmList("BaseDr", lines);
   return tally.result();
 }
@@ -1069,9 +1253,11 @@ const SKILL_TYPES = ["skill", "spell", "damageEffect"];
  * @returns {boolean}
  */
 export function madeBeforeChargen(actor) {
-  return actor?.type === "character"
-    && !actor.getFlag(SCOPE, "chargen")?.done
-    && actor.items.some((i) => SKILL_TYPES.includes(i.type));
+  return (
+    actor?.type === "character" &&
+    !actor.getFlag(SCOPE, "chargen")?.done &&
+    actor.items.some((i) => SKILL_TYPES.includes(i.type))
+  );
 }
 
 /**
@@ -1082,7 +1268,10 @@ export function madeBeforeChargen(actor) {
  */
 export async function markChargenDone(actor) {
   if (!madeBeforeChargen(actor)) return false;
-  await actor.update({ [`flags.${SCOPE}.chargen`]: { done: true, migrated: true } }, { render: false, carlMigration: true });
+  await actor.update(
+    { [`flags.${SCOPE}.chargen`]: { done: true, migrated: true } },
+    { render: false, carlMigration: true },
+  );
   return true;
 }
 
@@ -1112,8 +1301,9 @@ async function migrateChargenDone({ fail = NO_FAIL } = {}) {
 function whisperGmList(key, lines) {
   return createNoticeMessage({
     title: game.i18n.localize(`CARLRPG.Migration.${key}.Title`),
-    bodyHtml: `<p>${esc(game.i18n.localize(`CARLRPG.Migration.${key}.Body`))}</p>`
-      + `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
+    bodyHtml:
+      `<p>${esc(game.i18n.localize(`CARLRPG.Migration.${key}.Body`))}</p>` +
+      `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
     whisper: gmUserIds(),
   });
 }
@@ -1145,12 +1335,18 @@ export async function migrateMobAttacks({ fail = NO_FAIL } = {}) {
       changed += 1;
       const check = attacksToCheck(list);
       if (check.length) {
-        lines.push(game.i18n.format("CARLRPG.Migration.MobAttacks.Line", {
-          name: esc(actor.name) + (where ? ` (${esc(where)})` : ""), attacks: esc(check.join(", ")),
-        }));
+        lines.push(
+          game.i18n.format("CARLRPG.Migration.MobAttacks.Line", {
+            name: esc(actor.name) + (where ? ` (${esc(where)})` : ""),
+            attacks: esc(check.join(", ")),
+          }),
+        );
       }
     } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't convert the Attacks of ${actor.name}`, err);
+      console.error(
+        `carl-rpg | 0.7.0 migration: couldn't convert the Attacks of ${actor.name}`,
+        err,
+      );
       errors += 1;
       fail(actor.name, err);
     }
@@ -1165,7 +1361,10 @@ export async function migrateMobAttacks({ fail = NO_FAIL } = {}) {
       try {
         await clearInheritedAttacks(token);
       } catch (err) {
-        console.error(`carl-rpg | 0.7.0 migration: couldn't clear the inherited Attacks of token ${token.name}`, err);
+        console.error(
+          `carl-rpg | 0.7.0 migration: couldn't clear the inherited Attacks of token ${token.name}`,
+          err,
+        );
         errors += 1;
         fail(token.name, err);
         continue;
@@ -1180,7 +1379,10 @@ export async function migrateMobAttacks({ fail = NO_FAIL } = {}) {
         for (const actor of await pack.getDocuments()) await convert(actor, pack.title);
       });
     } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't convert Mob Attacks in compendium ${pack.collection}`, err);
+      console.error(
+        `carl-rpg | 0.7.0 migration: couldn't convert Mob Attacks in compendium ${pack.collection}`,
+        err,
+      );
       errors += 1;
       fail(pack.collection, err);
     }
@@ -1205,7 +1407,8 @@ async function clearInheritedAttacks(token) {
   const inherited = token.actor.items
     .filter((i) => i.type === MOB_ATTACK_TYPE && Number.isInteger(i.getFlag(SCOPE, LEGACY_FLAG)))
     .map((i) => i.id);
-  if (inherited.length) await token.actor.deleteEmbeddedDocuments("Item", inherited, { carlMigration: true });
+  if (inherited.length)
+    await token.actor.deleteEmbeddedDocuments("Item", inherited, { carlMigration: true });
 }
 
 /**
@@ -1257,10 +1460,16 @@ export async function migrateMobSizes({ fail = NO_FAIL } = {}) {
       const raw = token.actorLink ? undefined : token.delta?._source?.system?.size;
       if (typeof raw !== "string" || token.actor?.type !== "mob") continue;
       try {
-        await token.actor.update({ "system.size": parseSize(raw) }, { diff: false, render: false, carlMigration: true });
+        await token.actor.update(
+          { "system.size": parseSize(raw) },
+          { diff: false, render: false, carlMigration: true },
+        );
         changed += 1;
       } catch (err) {
-        console.error(`carl-rpg | 0.7.0 migration: couldn't save the Size of token ${token.name}`, err);
+        console.error(
+          `carl-rpg | 0.7.0 migration: couldn't save the Size of token ${token.name}`,
+          err,
+        );
         errors += 1;
         fail(token.name, err);
       }
@@ -1274,12 +1483,20 @@ export async function migrateMobSizes({ fail = NO_FAIL } = {}) {
         .filter((entry) => entry.type === "mob" && typeof entry.system?.size === "string")
         .map((entry) => ({ _id: entry._id, "system.size": parseSize(entry.system.size) }));
       if (!updates.length) continue;
-      await withUnlockedPack(pack, () => Actor.implementation.updateDocuments(updates, {
-        pack: pack.collection, diff: false, render: false, carlMigration: true,
-      }));
+      await withUnlockedPack(pack, () =>
+        Actor.implementation.updateDocuments(updates, {
+          pack: pack.collection,
+          diff: false,
+          render: false,
+          carlMigration: true,
+        }),
+      );
       changed += updates.length;
     } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't save Mob Sizes in compendium ${pack.collection}`, err);
+      console.error(
+        `carl-rpg | 0.7.0 migration: couldn't save Mob Sizes in compendium ${pack.collection}`,
+        err,
+      );
       errors += 1;
       fail(pack.collection, err);
     }
@@ -1332,7 +1549,12 @@ export async function migrateGearSlots({ fail = NO_FAIL } = {}) {
   const noteUnplaced = (where, item, owned = true) => {
     if (!unplaced.has(where)) unplaced.set(where, []);
     // Only an actor's gear is taken off (unequipMisfits).
-    unplaced.get(where).push({ name: item.name, takenOff: owned && !!item.system?.equipped && !heldOrWearable(item) });
+    unplaced
+      .get(where)
+      .push({
+        name: item.name,
+        takenOff: owned && !!item.system?.equipped && !heldOrWearable(item),
+      });
   };
   const removed = [];
 
@@ -1350,8 +1572,12 @@ export async function migrateGearSlots({ fail = NO_FAIL } = {}) {
       if (update) updates.push(update);
       else if (needsSlot(item)) noteUnplaced(where, item, false);
     }
-    changed += await updateItemsEach(items, updates, { ...options, carlMigration: true, render: false },
-      (item, err) => failed(`${item.name} (${where})`, err));
+    changed += await updateItemsEach(
+      items,
+      updates,
+      { ...options, carlMigration: true, render: false },
+      (item, err) => failed(`${item.name} (${where})`, err),
+    );
   };
   const actorsToCheck = [];
   const sidebar = game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Sidebar");
@@ -1378,20 +1604,28 @@ export async function migrateGearSlots({ fail = NO_FAIL } = {}) {
     try {
       await withUnlockedPack(pack, async () => {
         const documents = await pack.getDocuments();
-        if (pack.documentName === "Item") return inferItems(documents, pack.title, { pack: pack.collection });
-        await eachDocument(documents, async (actor) => {
-          const result = await inferActorGear(actor);
-          changed += result.changed;
-          for (const item of result.unplaced) noteUnplaced(`${pack.title}: ${actor.name}`, item);
-          const off = await unequipMisfits(actor);
-          if (off.length) {
-            removed.push({ type: actor.type, name: `${actor.name} (${pack.title})`, items: off });
-            changed += 1;
-          }
-        }, (actor, err) => failed(`${actor.name} (${pack.title})`, err));
+        if (pack.documentName === "Item")
+          return inferItems(documents, pack.title, { pack: pack.collection });
+        await eachDocument(
+          documents,
+          async (actor) => {
+            const result = await inferActorGear(actor);
+            changed += result.changed;
+            for (const item of result.unplaced) noteUnplaced(`${pack.title}: ${actor.name}`, item);
+            const off = await unequipMisfits(actor);
+            if (off.length) {
+              removed.push({ type: actor.type, name: `${actor.name} (${pack.title})`, items: off });
+              changed += 1;
+            }
+          },
+          (actor, err) => failed(`${actor.name} (${pack.title})`, err),
+        );
       });
     } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't set gear slots in compendium ${pack.collection}`, err);
+      console.error(
+        `carl-rpg | 0.7.0 migration: couldn't set gear slots in compendium ${pack.collection}`,
+        err,
+      );
       errors += 1;
       fail(pack.collection, err);
     }
@@ -1430,12 +1664,14 @@ function needsSlot(item) {
  * @returns {object|null}
  */
 export function gearSlotUpdate(item, wornIn = null) {
-  if (item?.type !== "item" || (item.system?.slots ?? []).length || item.system?.consumable?.kind) return null;
+  if (item?.type !== "item" || (item.system?.slots ?? []).length || item.system?.consumable?.kind)
+    return null;
   const guess = guessGearSlots(item, { wornIn });
   if (!guess) return null;
   const update = { _id: item.id, "system.slots": guess.slots };
   if (guess.twoHanded) update["system.twoHanded"] = true;
-  if (guess.accessoryKind && guess.slots.includes("accessory")) update["system.accessoryKind"] = guess.accessoryKind;
+  if (guess.accessoryKind && guess.slots.includes("accessory"))
+    update["system.accessoryKind"] = guess.accessoryKind;
   return update;
 }
 
@@ -1459,7 +1695,8 @@ export async function inferActorGear(actor) {
     if (update) updates.push(update);
     else if (needsSlot(item)) unplaced.push(item);
   }
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { carlMigration: true, render: false });
+  if (updates.length)
+    await actor.updateEmbeddedDocuments("Item", updates, { carlMigration: true, render: false });
   return { changed: updates.length, unplaced };
 }
 
@@ -1476,7 +1713,9 @@ export async function unequipMisfits(actor) {
   const off = new Set();
   // In a doll slot when this started: a misfit comes off (ruled
   // 2026-11-17), it isn't moved to a slot it fits.
-  const wornBefore = new Set([...Object.values(sys.gearSlots ?? {}), ...(sys.accessories ?? [])].filter(Boolean));
+  const wornBefore = new Set(
+    [...Object.values(sys.gearSlots ?? {}), ...(sys.accessories ?? [])].filter(Boolean),
+  );
   const update = {};
   // A consumable is never worn or held (gear.mjs fitsSlot): it leaves its
   // slot quietly, unequipped below and not listed.
@@ -1520,16 +1759,26 @@ export async function unequipMisfits(actor) {
       if (kind) kinds.add(kind);
       return true;
     });
-    if (off.size || quietlyCleared) Object.assign(update, { "system.gearSlots": gearSlots, "system.accessories": accessories });
-    else if (JSON.stringify(gearSlots) !== JSON.stringify(sys.gearSlots)) update["system.gearSlots"] = gearSlots;
+    if (off.size || quietlyCleared)
+      Object.assign(update, { "system.gearSlots": gearSlots, "system.accessories": accessories });
+    else if (JSON.stringify(gearSlots) !== JSON.stringify(sys.gearSlots))
+      update["system.gearSlots"] = gearSlots;
   }
-  if (Object.keys(update).length) await actor.update(update, { carlMigration: true, render: false });
+  if (Object.keys(update).length)
+    await actor.update(update, { carlMigration: true, render: false });
   // A Character's gear equipped through the old Equipped box (in no doll
   // slot): into a free slot it fits, or off - one item per slot (p.98).
   if (actor.system.gearSlots) {
     for (const item of actor.items) {
-      if (item.type !== "item" || !item.system.equipped || isConsumable(item) || wornBefore.has(item.id)
-        || isItemWorn(actor, item.id) || !canWear(item)) continue;
+      if (
+        item.type !== "item" ||
+        !item.system.equipped ||
+        isConsumable(item) ||
+        wornBefore.has(item.id) ||
+        isItemWorn(actor, item.id) ||
+        !canWear(item)
+      )
+        continue;
       const slot = freeSlotFor(actor, item);
       if (slot) await placeInFreeSlot(actor, slot, item);
       else off.add(item.id);
@@ -1537,21 +1786,38 @@ export async function unequipMisfits(actor) {
   }
   // An equipped consumable (held, worn, or only ticked): never worn -
   // unequipped, not listed.
-  const quiet = actor.items.filter((i) => i.type === "item" && i.system.equipped && isConsumable(i)).map((i) => i.id);
+  const quiet = actor.items
+    .filter((i) => i.type === "item" && i.system.equipped && isConsumable(i))
+    .map((i) => i.id);
   if (quiet.length) {
-    await actor.updateEmbeddedDocuments("Item", quiet.map((id) => ({ _id: id, "system.equipped": false })),
-      { carlMigration: true, carlInAction: true, render: false });
+    await actor.updateEmbeddedDocuments(
+      "Item",
+      quiet.map((id) => ({ _id: id, "system.equipped": false })),
+      { carlMigration: true, carlInAction: true, render: false },
+    );
   }
   // Equipped with no slot, and not held in a hand.
   for (const item of actor.items) {
-    if (item.type === "item" && item.system.equipped && !isConsumable(item) && !heldOrWearable(item)) off.add(item.id);
+    if (
+      item.type === "item" &&
+      item.system.equipped &&
+      !isConsumable(item) &&
+      !heldOrWearable(item)
+    )
+      off.add(item.id);
   }
   // Worn elsewhere still? Then it stays equipped (only its misfit slot went).
-  const unequip = [...off].filter((id) => actor.items.get(id)?.system.equipped
-    && (!isItemWorn(actor, id) || !heldOrWearable(actor.items.get(id))));
+  const unequip = [...off].filter(
+    (id) =>
+      actor.items.get(id)?.system.equipped &&
+      (!isItemWorn(actor, id) || !heldOrWearable(actor.items.get(id))),
+  );
   if (unequip.length) {
-    await actor.updateEmbeddedDocuments("Item", unequip.map((id) => ({ _id: id, "system.equipped": false })),
-      { carlMigration: true, carlInAction: true, render: false });
+    await actor.updateEmbeddedDocuments(
+      "Item",
+      unequip.map((id) => ({ _id: id, "system.equipped": false })),
+      { carlMigration: true, carlInAction: true, render: false },
+    );
   }
   return [...off].map((id) => actor.items.get(id)?.name).filter(Boolean);
 }
@@ -1563,10 +1829,17 @@ export async function unequipMisfits(actor) {
  */
 export function whisperUnplacedGear(unplaced) {
   const i18n = game.i18n;
-  const sections = [...unplaced.entries()].map(([where, items]) => {
-    const lines = items.map((i) => `<li>${esc(i.name)}${i.takenOff ? ` <em>(${esc(i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.TakenOff"))})</em>` : ""}</li>`).join("");
-    return `<h4>${esc(where)}</h4><ul>${lines}</ul>`;
-  }).join("");
+  const sections = [...unplaced.entries()]
+    .map(([where, items]) => {
+      const lines = items
+        .map(
+          (i) =>
+            `<li>${esc(i.name)}${i.takenOff ? ` <em>(${esc(i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.TakenOff"))})</em>` : ""}</li>`,
+        )
+        .join("");
+      return `<h4>${esc(where)}</h4><ul>${lines}</ul>`;
+    })
+    .join("");
   return createNoticeMessage({
     title: i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Title"),
     bodyHtml: `<p>${esc(i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Body"))}</p>${sections}`,
@@ -1586,11 +1859,15 @@ export function announceRemovedGear(removed) {
     if (!groups.has(entry.type)) groups.set(entry.type, []);
     groups.get(entry.type).push(entry);
   }
-  const sections = [...groups.entries()].map(([type, entries]) => {
-    const heading = game.i18n.localize(`TYPES.Actor.${type}`);
-    const lines = entries.map((e) => `<li><strong>${esc(e.name)}:</strong> ${esc(e.items.join(", "))}</li>`).join("");
-    return `<h4>${esc(heading)}</h4><ul>${lines}</ul>`;
-  }).join("");
+  const sections = [...groups.entries()]
+    .map(([type, entries]) => {
+      const heading = game.i18n.localize(`TYPES.Actor.${type}`);
+      const lines = entries
+        .map((e) => `<li><strong>${esc(e.name)}:</strong> ${esc(e.items.join(", "))}</li>`)
+        .join("");
+      return `<h4>${esc(heading)}</h4><ul>${lines}</ul>`;
+    })
+    .join("");
   return createNoticeMessage({
     title: game.i18n.localize("CARLRPG.Migration.GearSlots.Title"),
     bodyHtml: `<p>${esc(game.i18n.localize("CARLRPG.Migration.GearSlots.Body"))}</p>${sections}`,
@@ -1628,7 +1905,8 @@ function nameSlug(name) {
  * @returns {boolean}
  */
 function isWieldedAttackSkill(skill) {
-  if (skill?.type !== "skill" || skill.system?.category !== "attack" || skill.system?.isHandToHand) return false;
+  if (skill?.type !== "skill" || skill.system?.category !== "attack" || skill.system?.isHandToHand)
+    return false;
   if (skill.system?.noWeapon) return false;
   const slug = nameSlug(skill.name);
   return !!slug && BOX_BY_SLUG.get(slug) !== "noWeapon";
@@ -1651,7 +1929,9 @@ export async function loadWeaponSkillSources() {
   const skills = new Map();
   const missing = [PACKS.gear, PACKS.skillsAndSpells].filter((id) => !game.packs.get(id));
   const gearPack = game.packs.get(PACKS.gear);
-  for (const entry of (await gearPack?.getIndex({ fields: ["type", "system.weaponSkill", "system.consumable.kind"] })) ?? []) {
+  for (const entry of (await gearPack?.getIndex({
+    fields: ["type", "system.weaponSkill", "system.consumable.kind"],
+  })) ?? []) {
     const slug = nameSlug(entry.name);
     if (entry.type !== "item" || !slug) continue;
     const weaponSkill = String(entry.system?.weaponSkill ?? "").trim();
@@ -1662,7 +1942,9 @@ export async function loadWeaponSkillSources() {
     gear.set(slug, gear.has(slug) && gear.get(slug) !== weaponSkill ? null : weaponSkill);
   }
   const skillsPack = game.packs.get(PACKS.skillsAndSpells);
-  for (const entry of (await skillsPack?.getIndex({ fields: ["type", "system.category", "system.isHandToHand", "system.noWeapon"] })) ?? []) {
+  for (const entry of (await skillsPack?.getIndex({
+    fields: ["type", "system.category", "system.isHandToHand", "system.noWeapon"],
+  })) ?? []) {
     if (isWieldedAttackSkill(entry)) skills.set(nameSlug(entry.name), entry.name);
   }
   return { gear, notWeapons, skills, missing };
@@ -1685,15 +1967,23 @@ export async function loadWeaponSkillSources() {
  * @returns {{weaponSkill: string, from: "owner"|"gear"|"skills"}|null}
  */
 export function guessWeaponSkill(item, sources, owner = item?.actor ?? null) {
-  if (item?.type !== "item" || String(item.system?.weaponSkill ?? "").trim() || item.system?.consumable?.kind) return null;
+  if (
+    item?.type !== "item" ||
+    String(item.system?.weaponSkill ?? "").trim() ||
+    item.system?.consumable?.kind
+  )
+    return null;
   const slug = nameSlug(item.name);
   if (!slug) return null;
-  const own = owner ? owner.items.filter((i) => i.type === "skill" && nameSlug(i.name) === slug) : [];
+  const own = owner
+    ? owner.items.filter((i) => i.type === "skill" && nameSlug(i.name) === slug)
+    : [];
   const skill = own.find(isWieldedAttackSkill);
   if (skill) return { weaponSkill: skill.name, from: "owner" };
   const weaponSkill = sources.gear.get(slug);
   if (weaponSkill) return { weaponSkill, from: "gear" };
-  if (!own.length && sources.skills.has(slug)) return { weaponSkill: sources.skills.get(slug), from: "skills" };
+  if (!own.length && sources.skills.has(slug))
+    return { weaponSkill: sources.skills.get(slug), from: "skills" };
   return null;
 }
 
@@ -1721,7 +2011,8 @@ function weaponSkillUpdates(items, sources, owner = null) {
  */
 export async function guessActorWeaponSkills(actor, sources) {
   const updates = weaponSkillUpdates(actor.items, sources, actor);
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { carlMigration: true, render: false });
+  if (updates.length)
+    await actor.updateEmbeddedDocuments("Item", updates, { carlMigration: true, render: false });
   return updates.length;
 }
 
@@ -1737,7 +2028,12 @@ export async function guessActorWeaponSkills(actor, sources) {
  */
 export async function guessItemWeaponSkills(items, sources, options = {}, onFail = null) {
   const updates = weaponSkillUpdates(items, sources);
-  return updateItemsEach(items, updates, { ...options, carlMigration: true, render: false }, onFail);
+  return updateItemsEach(
+    items,
+    updates,
+    { ...options, carlMigration: true, render: false },
+    onFail,
+  );
 }
 
 /**
@@ -1761,7 +2057,10 @@ export async function migrateWeaponSkillGuesses({ fail = NO_FAIL } = {}) {
   try {
     sources = await loadWeaponSkillSources();
   } catch (err) {
-    console.error("carl-rpg | 0.7.0 migration: couldn't read the Gear and Skills compendiums for Weapon Skills", err);
+    console.error(
+      "carl-rpg | 0.7.0 migration: couldn't read the Gear and Skills compendiums for Weapon Skills",
+      err,
+    );
     sources = { gear: new Map(), notWeapons: new Set(), skills: new Map(), missing: [] };
     errors += 1;
     fail("", err);
@@ -1770,9 +2069,14 @@ export async function migrateWeaponSkillGuesses({ fail = NO_FAIL } = {}) {
   for (const id of sources.missing ?? []) failed(id, missingPackError(id));
   const sidebar = game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Sidebar");
   try {
-    changed += await guessItemWeaponSkills(game.items.contents, sources, {}, (item, err) => failed(`${item.name} (${sidebar})`, err));
+    changed += await guessItemWeaponSkills(game.items.contents, sources, {}, (item, err) =>
+      failed(`${item.name} (${sidebar})`, err),
+    );
   } catch (err) {
-    console.error("carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills on sidebar items", err);
+    console.error(
+      "carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills on sidebar items",
+      err,
+    );
     errors += 1;
     fail(sidebar, err);
   }
@@ -1780,7 +2084,10 @@ export async function migrateWeaponSkillGuesses({ fail = NO_FAIL } = {}) {
     try {
       changed += await guessActorWeaponSkills(actor, sources);
     } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills for ${actor.name}`, err);
+      console.error(
+        `carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills for ${actor.name}`,
+        err,
+      );
       errors += 1;
       fail(actor.name, err);
     }
@@ -1791,13 +2098,25 @@ export async function migrateWeaponSkillGuesses({ fail = NO_FAIL } = {}) {
         const documents = await pack.getDocuments();
         const onFail = (doc, err) => failed(`${doc.name} (${pack.title})`, err);
         if (pack.documentName === "Item") {
-          changed += await guessItemWeaponSkills(documents, sources, { pack: pack.collection }, onFail);
+          changed += await guessItemWeaponSkills(
+            documents,
+            sources,
+            { pack: pack.collection },
+            onFail,
+          );
           return;
         }
-        changed += await eachDocument(documents, (actor) => guessActorWeaponSkills(actor, sources), onFail);
+        changed += await eachDocument(
+          documents,
+          (actor) => guessActorWeaponSkills(actor, sources),
+          onFail,
+        );
       });
     } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills in compendium ${pack.collection}`, err);
+      console.error(
+        `carl-rpg | 0.7.0 migration: couldn't fill in Weapon Skills in compendium ${pack.collection}`,
+        err,
+      );
       errors += 1;
       fail(pack.collection, err);
     }
@@ -1808,7 +2127,10 @@ export async function migrateWeaponSkillGuesses({ fail = NO_FAIL } = {}) {
 
 /** World actors, and unlinked tokens with gear of their own (as migrateGearSlots walks them). */
 function actorsWithOwnGear() {
-  return [...game.actors, ...unlinkedTokenActors(game.scenes, (token) => !!token.delta?._source?.items?.length)];
+  return [
+    ...game.actors,
+    ...unlinkedTokenActors(game.scenes, (token) => !!token.delta?._source?.items?.length),
+  ];
 }
 
 /* -------------------------------------------------- */
@@ -1851,13 +2173,18 @@ export async function announceWeaponSkill({ fail = NO_FAIL } = {}) {
   try {
     sources = await loadWeaponSkillSources();
   } catch (err) {
-    console.error("carl-rpg | 0.7.0 migration: couldn't read the Gear compendium for the Weapon Skill notice", err);
+    console.error(
+      "carl-rpg | 0.7.0 migration: couldn't read the Gear compendium for the Weapon Skill notice",
+      err,
+    );
     errors += 1;
     fail("", err);
   }
   const remaining = new Map();
   const note = (where, items) => {
-    const names = [...items].filter((item) => looksLikeWeapon(item, sources)).map((item) => item.name);
+    const names = [...items]
+      .filter((item) => looksLikeWeapon(item, sources))
+      .map((item) => item.name);
     if (names.length) remaining.set(where, [...(remaining.get(where) ?? []), ...names]);
   };
   note(game.i18n.localize("CARLRPG.Migration.GearSlotsUnplaced.Sidebar"), game.items);
@@ -1868,7 +2195,10 @@ export async function announceWeaponSkill({ fail = NO_FAIL } = {}) {
       if (pack.documentName === "Item") note(pack.title, documents);
       else for (const actor of documents) note(`${pack.title}: ${actor.name}`, actor.items);
     } catch (err) {
-      console.error(`carl-rpg | 0.7.0 migration: couldn't read compendium ${pack.collection} for the Weapon Skill notice`, err);
+      console.error(
+        `carl-rpg | 0.7.0 migration: couldn't read compendium ${pack.collection} for the Weapon Skill notice`,
+        err,
+      );
       errors += 1;
       fail(pack.collection, err);
     }
@@ -1888,15 +2218,26 @@ export async function announceWeaponSkill({ fail = NO_FAIL } = {}) {
 export async function postWeaponSkillNotice({ filled, remaining }) {
   const i18n = game.i18n;
   const paragraphs = [i18n.localize("CARLRPG.Migration.WeaponSkill.Body")];
-  if (filled) paragraphs.push(i18n.format("CARLRPG.Migration.WeaponSkill.Filled", { count: filled }));
-  paragraphs.push(i18n.localize(remaining.size ? "CARLRPG.Migration.WeaponSkill.Left" : "CARLRPG.Migration.WeaponSkill.NoneLeft"));
+  if (filled)
+    paragraphs.push(i18n.format("CARLRPG.Migration.WeaponSkill.Filled", { count: filled }));
+  paragraphs.push(
+    i18n.localize(
+      remaining.size
+        ? "CARLRPG.Migration.WeaponSkill.Left"
+        : "CARLRPG.Migration.WeaponSkill.NoneLeft",
+    ),
+  );
   const notice = await createNoticeMessage({
     title: i18n.localize("CARLRPG.Migration.WeaponSkill.Title"),
     bodyHtml: paragraphs.map((p) => `<p>${esc(p)}</p>`).join(""),
   });
   if (!remaining.size) return { notice, list: null };
-  const sections = [...remaining.entries()].map(([where, names]) =>
-    `<h4>${esc(where)}</h4><ul>${names.map((name) => `<li>${esc(name)}</li>`).join("")}</ul>`).join("");
+  const sections = [...remaining.entries()]
+    .map(
+      ([where, names]) =>
+        `<h4>${esc(where)}</h4><ul>${names.map((name) => `<li>${esc(name)}</li>`).join("")}</ul>`,
+    )
+    .join("");
   const list = await createNoticeMessage({
     title: i18n.localize("CARLRPG.Migration.WeaponSkillLeft.Title"),
     bodyHtml: `<p>${esc(i18n.localize("CARLRPG.Migration.WeaponSkillLeft.Body"))}</p>${sections}`,
@@ -1915,11 +2256,16 @@ export async function postWeaponSkillNotice({ filled, remaining }) {
  * @returns {Promise<number>}  How many were ticked.
  */
 export function migratePack(pack, failed = null) {
-  return migrateWorldPack(pack, {
-    onActor: tickHandToHandOn,
-    itemUpdate: (item) => (needsHandToHand(item) ? { _id: item.id, "system.isHandToHand": true } : null),
-    options: { render: false },
-  }, failed);
+  return migrateWorldPack(
+    pack,
+    {
+      onActor: tickHandToHandOn,
+      itemUpdate: (item) =>
+        needsHandToHand(item) ? { _id: item.id, "system.isHandToHand": true } : null,
+      options: { render: false },
+    },
+    failed,
+  );
 }
 
 /* -------------------------------------------------- */
@@ -1953,7 +2299,9 @@ const MOUNTED_SKILLS = new Set(["lance"]);
  * @returns {*}
  */
 export function driveSkillName(raw) {
-  return typeof raw === "string" && Object.hasOwn(LEGACY_DRIVE_SKILLS, raw) ? LEGACY_DRIVE_SKILLS[raw] : raw;
+  return typeof raw === "string" && Object.hasOwn(LEGACY_DRIVE_SKILLS, raw)
+    ? LEGACY_DRIVE_SKILLS[raw]
+    : raw;
 }
 
 /**
@@ -1979,7 +2327,13 @@ export function vehicleSkillUpdate(item) {
     for (const [rank, fields] of Object.entries(ranks)) {
       let tier = upgrades.find((u) => u.rankThreshold === Number(rank));
       if (!tier) {
-        tier = { id: foundry.utils.randomID(), rankThreshold: Number(rank), description: "", changes: [], targetEffects: [] };
+        tier = {
+          id: foundry.utils.randomID(),
+          rankThreshold: Number(rank),
+          description: "",
+          changes: [],
+          targetEffects: [],
+        };
         upgrades.push(tier);
         changed = true;
       }
@@ -1997,7 +2351,8 @@ export function vehicleSkillUpdate(item) {
 /** An Actor's own copies (a world or compendium Actor). */
 export async function fixVehicleSkillsOn(actor) {
   const updates = actor.items.map(vehicleSkillUpdate).filter(Boolean);
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { render: false, carlMigration: true });
+  if (updates.length)
+    await actor.updateEmbeddedDocuments("Item", updates, { render: false, carlMigration: true });
   return updates.length;
 }
 
@@ -2009,12 +2364,24 @@ export async function fixVehicleSkillsOn(actor) {
  * @param {(doc: Actor, err: unknown) => void} [onFail]  None: the first failure throws.
  * @returns {Promise<number>}  How many were written.
  */
-export function saveDriveSkills(vehicles, onFail = (doc, err) => { throw err; }) {
+export function saveDriveSkills(
+  vehicles,
+  onFail = (doc, err) => {
+    throw err;
+  },
+) {
   const list = vehicles.filter((a) => a?.type === "vehicle");
-  return eachDocument(list, async (vehicle) => {
-    await vehicle.update({ "system.driveSkill": vehicle.system.driveSkill }, { diff: false, render: false, carlMigration: true });
-    return 1;
-  }, onFail);
+  return eachDocument(
+    list,
+    async (vehicle) => {
+      await vehicle.update(
+        { "system.driveSkill": vehicle.system.driveSkill },
+        { diff: false, render: false, carlMigration: true },
+      );
+      return 1;
+    },
+    onFail,
+  );
 }
 
 /**
@@ -2033,45 +2400,78 @@ export function saveDriveSkills(vehicles, onFail = (doc, err) => { throw err; })
 export async function migrateVehicleSkillSettings({ fail = NO_FAIL } = {}) {
   const { attempt, failed, result } = migrationTally(fail);
 
-  await attempt(game.i18n.localize("TYPES.Actor.vehicle"),
-    () => saveDriveSkills(game.actors.filter((a) => a.type === "vehicle"), (actor, err) => failed(actor.name, err)));
+  await attempt(game.i18n.localize("TYPES.Actor.vehicle"), () =>
+    saveDriveSkills(
+      game.actors.filter((a) => a.type === "vehicle"),
+      (actor, err) => failed(actor.name, err),
+    ),
+  );
   for (const scene of game.scenes) {
     for (const token of scene.tokens) {
       const raw = token.actorLink ? undefined : token.delta?._source?.system?.driveSkill;
       if (driveSkillName(raw) === raw || token.actor?.type !== "vehicle") continue;
       await attempt(token.name, async () => {
-        await token.actor.update({ "system.driveSkill": driveSkillName(raw) }, { diff: false, render: false, carlMigration: true });
+        await token.actor.update(
+          { "system.driveSkill": driveSkillName(raw) },
+          { diff: false, render: false, carlMigration: true },
+        );
         return 1;
       });
     }
   }
 
-  for (const actor of game.actors) await attempt(`Actor ${actor.name}`, () => fixVehicleSkillsOn(actor));
+  for (const actor of game.actors)
+    await attempt(`Actor ${actor.name}`, () => fixVehicleSkillsOn(actor));
   await attempt("the Items directory", () => {
     const updates = game.items.map(vehicleSkillUpdate).filter(Boolean);
-    return updateItemsEach(game.items, updates, { render: false, carlMigration: true }, (item, err) => failed(item.name, err));
+    return updateItemsEach(
+      game.items,
+      updates,
+      { render: false, carlMigration: true },
+      (item, err) => failed(item.name, err),
+    );
   });
 
   for (const pack of game.packs.filter((p) => shouldMigratePack(p))) {
-    await attempt(`compendium ${pack.collection}`, () => withUnlockedPack(pack, async () => {
-      const onFail = (doc, err) => failed(`${doc.name} (${pack.title})`, err);
-      const options = { pack: pack.collection, render: false, carlMigration: true };
-      if (pack.documentName === "Item") {
+    await attempt(`compendium ${pack.collection}`, () =>
+      withUnlockedPack(pack, async () => {
+        const onFail = (doc, err) => failed(`${doc.name} (${pack.title})`, err);
+        const options = { pack: pack.collection, render: false, carlMigration: true };
+        if (pack.documentName === "Item") {
+          const documents = await pack.getDocuments();
+          return updateItemsEach(
+            documents,
+            documents.map(vehicleSkillUpdate).filter(Boolean),
+            options,
+            onFail,
+          );
+        }
+        // Vehicles with an old key, found from the index (which isn't migrated).
+        const index = await pack.getIndex({ fields: ["type", "system.driveSkill"] });
+        const oldKeys = new Set(
+          index
+            .filter(
+              (e) =>
+                e.type === "vehicle" &&
+                driveSkillName(e.system?.driveSkill) !== e.system?.driveSkill,
+            )
+            .map((e) => e._id),
+        );
         const documents = await pack.getDocuments();
-        return updateItemsEach(documents, documents.map(vehicleSkillUpdate).filter(Boolean), options, onFail);
-      }
-      // Vehicles with an old key, found from the index (which isn't migrated).
-      const index = await pack.getIndex({ fields: ["type", "system.driveSkill"] });
-      const oldKeys = new Set(index
-        .filter((e) => e.type === "vehicle" && driveSkillName(e.system?.driveSkill) !== e.system?.driveSkill)
-        .map((e) => e._id));
-      const documents = await pack.getDocuments();
-      const keys = await eachDocument(documents.filter((a) => oldKeys.has(a.id)), async (vehicle) => {
-        await vehicle.update({ "system.driveSkill": vehicle.system.driveSkill }, { diff: false, render: false, carlMigration: true });
-        return 1;
-      }, onFail);
-      return keys + await eachDocument(documents, fixVehicleSkillsOn, onFail);
-    }));
+        const keys = await eachDocument(
+          documents.filter((a) => oldKeys.has(a.id)),
+          async (vehicle) => {
+            await vehicle.update(
+              { "system.driveSkill": vehicle.system.driveSkill },
+              { diff: false, render: false, carlMigration: true },
+            );
+            return 1;
+          },
+          onFail,
+        );
+        return keys + (await eachDocument(documents, fixVehicleSkillsOn, onFail));
+      }),
+    );
   }
   return result();
 }

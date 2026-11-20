@@ -72,7 +72,10 @@ export default function register(quench) {
             assert.equal(middleKey, "fatigued");
             await removeConditionFromActor(actor, 1);
             assert.lengthOf(actor.system.conditions, 2);
-            assert.notInclude(actor.system.conditions.map((c) => c.key), "fatigued");
+            assert.notInclude(
+              actor.system.conditions.map((c) => c.key),
+              "fatigued",
+            );
           } finally {
             await deleteTestActor(actor);
           }

@@ -20,9 +20,7 @@ import { labelChoices } from "../helpers/html.mjs";
  * @mixes {HandlebarsApplication}
  * @mixes {DragDropMixin}
  */
-export class CarlRPGLootBoxSheet extends DragDropMixin(
-  HandlebarsApplicationMixin(ActorSheetV2),
-) {
+export class CarlRPGLootBoxSheet extends DragDropMixin(HandlebarsApplicationMixin(ActorSheetV2)) {
   /** @override */
   static DEFAULT_OPTIONS = {
     classes: ["carl-rpg", "sheet", "actor", "loot-box"],
@@ -71,7 +69,9 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
         img: item.img || Item.DEFAULT_ICON,
         tierLabel: CONFIG.CARLRPG.lootBoxTiers[item.getFlag("carl-rpg", "lootTier")]?.label ?? "",
         // A loot item's GM Secrets are the GM's, even to a player who owns the box.
-        descriptionHTML: await enrichDescription(item.system.description, item, { secrets: game.user.isGM }),
+        descriptionHTML: await enrichDescription(item.system.description, item, {
+          secrets: game.user.isGM,
+        }),
       })),
     );
 

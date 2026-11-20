@@ -3,7 +3,12 @@ import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
 import { linesToHtml, storyToHtml } from "../helpers/rich-text.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
 import {
-  defineStatsField, deriveStats, deriveDefenses, deriveMovement, deriveResourceCaps, creatureRollData,
+  defineStatsField,
+  deriveStats,
+  deriveDefenses,
+  deriveMovement,
+  deriveResourceCaps,
+  creatureRollData,
 } from "./shared/derive-creature.mjs";
 
 export default class CarlRPGCharacter extends CarlRPGActorBase {
@@ -116,7 +121,9 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     schema.deity = new fields.SchemaField({
       name: text(),
       tier: new fields.StringField({
-        required: true, blank: true, initial: "",
+        required: true,
+        blank: true,
+        initial: "",
         choices: ["", ...Object.keys(CONFIG.CARLRPG.featureTiers)],
       }),
       worshipDays: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),

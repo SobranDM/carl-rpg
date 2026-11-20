@@ -64,8 +64,10 @@ const TONES = {
  */
 export function statusChip(status, { tone = null, label = null } = {}) {
   const text = label ?? game.i18n.localize(`CARLRPG.StatusChip.${status}`);
-  return `<span class="carl-status-chip" data-tone="${esc(tone ?? TONES[status] ?? "neutral")}">`
-    + `<i class="fas ${ICONS[status] ?? "fa-circle"}" aria-hidden="true"></i>${esc(text)}</span>`;
+  return (
+    `<span class="carl-status-chip" data-tone="${esc(tone ?? TONES[status] ?? "neutral")}">` +
+    `<i class="fas ${ICONS[status] ?? "fa-circle"}" aria-hidden="true"></i>${esc(text)}</span>`
+  );
 }
 
 /**
@@ -88,18 +90,32 @@ export function statusChip(status, { tone = null, label = null } = {}) {
  * @returns {string}
  */
 export function statusRow({
-  chip, what, sub = [], flag = "", num = "", acts = "", detail = "", key = "", open = false, ghost = false, after = "",
-  id = "", numTip = "",
+  chip,
+  what,
+  sub = [],
+  flag = "",
+  num = "",
+  acts = "",
+  detail = "",
+  key = "",
+  open = false,
+  ghost = false,
+  after = "",
+  id = "",
+  numTip = "",
 }) {
   const notes = sub.filter(Boolean);
-  const subHtml = notes.length ? `<span class="carl-status-sub">${notes.map(esc).join(" · ")}</span>` : "";
-  const line = `${chip}<span class="carl-status-what">${what}${flag}${subHtml}</span>`
-    + `<span class="carl-status-num"${numTip ? ` data-tooltip="${esc(numTip)}"` : ""}>${num}</span><span class="carl-status-acts">${acts}</span>`;
+  const subHtml = notes.length
+    ? `<span class="carl-status-sub">${notes.map(esc).join(" · ")}</span>`
+    : "";
+  const line =
+    `${chip}<span class="carl-status-what">${what}${flag}${subHtml}</span>` +
+    `<span class="carl-status-num"${numTip ? ` data-tooltip="${esc(numTip)}"` : ""}>${num}</span><span class="carl-status-acts">${acts}</span>`;
   const cls = `carl-status-row${ghost ? " is-ghost" : ""}`;
   const rowId = id ? ` data-row-id="${esc(id)}"` : "";
   const body = detail
-    ? `<details class="${cls}"${rowId} data-row-key="${esc(key)}"${open ? " open" : ""}><summary class="carl-status-line">${line}</summary>`
-      + `<div class="carl-status-detail">${detail}</div></details>`
+    ? `<details class="${cls}"${rowId} data-row-key="${esc(key)}"${open ? " open" : ""}><summary class="carl-status-line">${line}</summary>` +
+      `<div class="carl-status-detail">${detail}</div></details>`
     : `<div class="${cls}"${rowId}><div class="carl-status-line">${line}</div></div>`;
   return body + after;
 }
@@ -131,8 +147,11 @@ export function headerProgress(html, text, { locked = false, subtitle = null } =
   const header = html.querySelector(".carl-chat-header");
   if (!header) return;
   header.querySelector(".carl-badge, .carl-status-progress")?.remove();
-  header.insertAdjacentHTML("beforeend", `<span class="carl-status-progress${locked ? " is-locked" : ""}">`
-    + `${locked ? '<i class="fas fa-lock" aria-hidden="true"></i> ' : ""}${esc(text)}</span>`);
+  header.insertAdjacentHTML(
+    "beforeend",
+    `<span class="carl-status-progress${locked ? " is-locked" : ""}">` +
+      `${locked ? '<i class="fas fa-lock" aria-hidden="true"></i> ' : ""}${esc(text)}</span>`,
+  );
   if (subtitle !== null) {
     const el = header.querySelector(".carl-chat-subtitle");
     if (el) el.textContent = subtitle;
@@ -147,9 +166,13 @@ export function headerProgress(html, text, { locked = false, subtitle = null } =
  * @returns {string}
  */
 export function iconButton(icon, title, data) {
-  const attrs = Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ");
-  return `<button type="button" class="carl-status-icon" ${attrs} data-tooltip="${esc(title)}" aria-label="${esc(title)}">`
-    + `<i class="fas ${icon}" aria-hidden="true"></i></button>`;
+  const attrs = Object.entries(data)
+    .map(([k, v]) => `data-${k}="${esc(v)}"`)
+    .join(" ");
+  return (
+    `<button type="button" class="carl-status-icon" ${attrs} data-tooltip="${esc(title)}" aria-label="${esc(title)}">` +
+    `<i class="fas ${icon}" aria-hidden="true"></i></button>`
+  );
 }
 
 /**
@@ -159,8 +182,10 @@ export function iconButton(icon, title, data) {
  * @returns {string}
  */
 export function versusNum(total, difficulty) {
-  const vs = difficulty === null || difficulty === undefined ? ""
-    : ` <span class="carl-status-vs">${esc(game.i18n.format("CARLRPG.Reaction.Vs", { difficulty }))}</span>`;
+  const vs =
+    difficulty === null || difficulty === undefined
+      ? ""
+      : ` <span class="carl-status-vs">${esc(game.i18n.format("CARLRPG.Reaction.Vs", { difficulty }))}</span>`;
   return `<b>${esc(total)}</b>${vs}`;
 }
 
@@ -185,9 +210,19 @@ export function checkDetail(check) {
   const lines = [`${check.breakdown ? `${esc(check.breakdown)} · ` : ""}${esc(degree)}`];
   const dice = rolledD20s(check.roll);
   if (dice) lines.push(esc(i18n.format("CARLRPG.Reaction.Dice", { dice })));
-  for (const i of check.interventions ?? []) lines.push(esc(i18n.format("CARLRPG.Reaction.InterveneLine", { name: i.byName, value: i.value })));
+  for (const i of check.interventions ?? [])
+    lines.push(
+      esc(i18n.format("CARLRPG.Reaction.InterveneLine", { name: i.byName, value: i.value })),
+    );
   if (check.aiRerolled) {
-    lines.push(esc(i18n.format("CARLRPG.Reaction.RerolledFrom", { total: check.aiRerolled.base, natural: check.aiRerolled.natural ?? "-" })));
+    lines.push(
+      esc(
+        i18n.format("CARLRPG.Reaction.RerolledFrom", {
+          total: check.aiRerolled.base,
+          natural: check.aiRerolled.natural ?? "-",
+        }),
+      ),
+    );
   }
   return lines.map((line) => `<div>${line}</div>`).join("");
 }
@@ -212,7 +247,8 @@ export function checkNotes(check) {
   const i18n = game.i18n;
   const notes = [];
   const helped = (check?.interventions ?? []).map((i) => `${i.byName} +${i.value}`);
-  if (helped.length) notes.push(i18n.format("CARLRPG.Reaction.Sub.helped", { names: helped.join(", ") }));
+  if (helped.length)
+    notes.push(i18n.format("CARLRPG.Reaction.Sub.helped", { names: helped.join(", ") }));
   if (check?.aiRerolled) notes.push(i18n.localize("CARLRPG.Reaction.Op.reroll"));
   return notes;
 }
@@ -227,13 +263,17 @@ export function checkNotes(check) {
 export function rememberOpenRows(container, cardId, opened) {
   trackPerCard(opened);
   // "toggle" doesn't bubble - listen in the capture phase.
-  container.addEventListener("toggle", (event) => {
-    const key = event.target?.dataset?.rowKey;
-    if (!key) return;
-    const id = `${cardId}:${key}`;
-    if (event.target.open) opened.add(id);
-    else opened.delete(id);
-  }, true);
+  container.addEventListener(
+    "toggle",
+    (event) => {
+      const key = event.target?.dataset?.rowKey;
+      if (!key) return;
+      const id = `${cardId}:${key}`;
+      if (event.target.open) opened.add(id);
+      else opened.delete(id);
+    },
+    true,
+  );
 }
 
 /* -------------------------------------------- */

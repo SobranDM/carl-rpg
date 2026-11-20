@@ -30,9 +30,23 @@ function titleAttributes(text) {
   const found = [];
   let depth = 0;
   for (let i = 0; i < text.length; i++) {
-    if (text.startsWith("{{", i)) { depth++; i++; continue; }
-    if (depth && text.startsWith("}}", i)) { depth--; i++; continue; }
-    if (!depth && (text.startsWith('title="', i) || text.startsWith("title='", i)) && i > 0 && /[\s}]/.test(text[i - 1])) found.push(i);
+    if (text.startsWith("{{", i)) {
+      depth++;
+      i++;
+      continue;
+    }
+    if (depth && text.startsWith("}}", i)) {
+      depth--;
+      i++;
+      continue;
+    }
+    if (
+      !depth &&
+      (text.startsWith('title="', i) || text.startsWith("title='", i)) &&
+      i > 0 &&
+      /[\s}]/.test(text[i - 1])
+    )
+      found.push(i);
   }
   return found;
 }
@@ -40,20 +54,28 @@ function titleAttributes(text) {
 const problems = [];
 for (const file of files(path.join(ROOT, "templates"), ".hbs")) {
   const text = fs.readFileSync(file, "utf8");
-  for (const at of titleAttributes(text)) problems.push([file, text.slice(0, at).split("\n").length]);
+  for (const at of titleAttributes(text))
+    problems.push([file, text.slice(0, at).split("\n").length]);
 }
 // Markup built in code: a `title="` inside a string or template literal.
 for (const file of files(path.join(ROOT, "module"), ".mjs")) {
   const lines = fs.readFileSync(file, "utf8").split("\n");
   lines.forEach((line, i) => {
-    if (/<[a-z][^>]*\stitle=["'$]/i.test(line) || /\.setAttribute\(\s*["']title["']/.test(line) || /\.title\s*=\s*[^=]/.test(line) && /\b(el|element|button|span|div|a|img|li|node)\.title\b/.test(line)) {
+    if (
+      /<[a-z][^>]*\stitle=["'$]/i.test(line) ||
+      /\.setAttribute\(\s*["']title["']/.test(line) ||
+      (/\.title\s*=\s*[^=]/.test(line) &&
+        /\b(el|element|button|span|div|a|img|li|node)\.title\b/.test(line))
+    ) {
       problems.push([file, i + 1]);
     }
   });
 }
 
 if (problems.length) {
-  console.log("Browser title= tooltips found - use data-tooltip / data-tooltip-text / data-tooltip-html:");
+  console.log(
+    "Browser title= tooltips found - use data-tooltip / data-tooltip-text / data-tooltip-html:",
+  );
   for (const [file, line] of problems) console.log(`  ${path.relative(ROOT, file)}:${line}`);
   process.exit(1);
 }

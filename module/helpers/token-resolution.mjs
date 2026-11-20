@@ -60,7 +60,9 @@ export function resolveActingActor(user = game.user) {
 export function resolveCombatantFor({ actor, token } = {}, combat = fightOf(actor)) {
   if (!combat || !actor) return null;
   if (token) {
-    const byToken = combat.combatants.find((c) => c.tokenId === token.id && c.sceneId === (token.parent?.id ?? null));
+    const byToken = combat.combatants.find(
+      (c) => c.tokenId === token.id && c.sceneId === (token.parent?.id ?? null),
+    );
     if (byToken) return byToken;
   }
   // The actor itself: an unlinked token's own actor is its own, so two

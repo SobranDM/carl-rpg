@@ -32,7 +32,11 @@ export async function landDebuffs(actor, targetEffects, row, damageByType) {
     return { landed: [], lines: [game.i18n.format("CARLRPG.Vehicle.ImmuneToDebuffs", { name })] };
   }
   for (const te of landing) {
-    await addConditionToActor(actor, te.debuffKey, { stacks: te.stacks, source: te.sourceLabel, label: te.label });
+    await addConditionToActor(actor, te.debuffKey, {
+      stacks: te.stacks,
+      source: te.sourceLabel,
+      label: te.label,
+    });
   }
   return { landed: landing, lines: [] };
 }

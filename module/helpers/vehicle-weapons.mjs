@@ -36,7 +36,10 @@ export function buildWeaponFire(vehicle, index, gunner) {
   const rank = owned ? ownedRank(gunner, owned) : 0;
   const data = {
     _id: foundry.utils.randomID(),
-    name: game.i18n.format("CARLRPG.Vehicle.WeaponName", { weapon: weapon.name || "?", vehicle: vehicle.name }),
+    name: game.i18n.format("CARLRPG.Vehicle.WeaponName", {
+      weapon: weapon.name || "?",
+      vehicle: vehicle.name,
+    }),
     type: "skill",
     img: vehicle.img,
     system: {
@@ -45,14 +48,25 @@ export function buildWeaponFire(vehicle, index, gunner) {
       governingStat: weapon.stat || "dex",
       range: weapon.range ?? "",
       marked: false,
-      baseDamage: { dice: String(weapon.damage ?? "").replace(/\bF\b/g, "@floor"), stat: "", damageType: weapon.damageType ?? "" },
+      baseDamage: {
+        dice: String(weapon.damage ?? "").replace(/\bF\b/g, "@floor"),
+        stat: "",
+        damageType: weapon.damageType ?? "",
+      },
     },
   };
   const item = new Item.implementation(data, { parent: gunner });
   const { skillEntry, conditionalModifiers } = buildItemSkillEntry(gunner.system, item);
   return {
     item,
-    castAs: { skillEntry, conditionalModifiers, free: true, spellData: data, rank, builtIn: { vehicleUuid: vehicle.uuid, index } },
+    castAs: {
+      skillEntry,
+      conditionalModifiers,
+      free: true,
+      spellData: data,
+      rank,
+      builtIn: { vehicleUuid: vehicle.uuid, index },
+    },
   };
 }
 
@@ -76,7 +90,11 @@ export function gunnersFor(vehicle) {
  * @param {{gunner?: Actor, skipDialog?: boolean}} [options]
  * @returns {Promise<ChatMessage|null>}
  */
-export async function fireVehicleWeapon(vehicle, index, { gunner = null, skipDialog = false } = {}) {
+export async function fireVehicleWeapon(
+  vehicle,
+  index,
+  { gunner = null, skipDialog = false } = {},
+) {
   const gunners = gunnersFor(vehicle);
   if (!gunners.length) {
     ui.notifications.warn(game.i18n.format("CARLRPG.Vehicle.NoGunner", { vehicle: vehicle.name }));
@@ -85,7 +103,8 @@ export async function fireVehicleWeapon(vehicle, index, { gunner = null, skipDia
   let shooter = gunner && gunners.includes(gunner) ? gunner : null;
   if (!shooter) {
     const selected = (canvas.tokens?.controlled ?? []).map((t) => t.actor);
-    shooter = gunners.find((g) => selected.includes(g)) ?? (gunners.length === 1 ? gunners[0] : null);
+    shooter =
+      gunners.find((g) => selected.includes(g)) ?? (gunners.length === 1 ? gunners[0] : null);
   }
   if (!shooter) shooter = await pickGunner(gunners);
   if (!shooter) return null;
@@ -96,7 +115,9 @@ export async function fireVehicleWeapon(vehicle, index, { gunner = null, skipDia
 
 /** Ask which occupant fires. */
 async function pickGunner(gunners) {
-  const options = gunners.map((g, i) => `<option value="${i}">${foundry.utils.escapeHTML(g.name)}</option>`).join("");
+  const options = gunners
+    .map((g, i) => `<option value="${i}">${foundry.utils.escapeHTML(g.name)}</option>`)
+    .join("");
   const result = await showCarlDialog({
     title: game.i18n.localize("CARLRPG.Vehicle.PickGunner"),
     content: `<div class="carl-dialog-body"><div class="form-group">
@@ -113,5 +134,5 @@ async function pickGunner(gunners) {
       cancelButton(),
     ],
   });
-  return Number.isInteger(result) ? gunners[result] ?? null : null;
+  return Number.isInteger(result) ? (gunners[result] ?? null) : null;
 }

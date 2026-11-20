@@ -16,7 +16,8 @@ import { parseGearSlotLine, slotsFromName } from "../helpers/gear-text.mjs";
 const SLOT_RE = /^Gear Slot:\s*(.*)$/;
 // Section headings on the gear pages that aren't items: the loot box
 // tiers ("GOLD BOXES"), and tables and lists of many items.
-const NOT_GEAR_RE = /^(?:\w+ Boxes|Randomized Magic Items\b.*|Memorial and Soul Crystals|Faction Wars Items)$/i;
+const NOT_GEAR_RE =
+  /^(?:\w+ Boxes|Randomized Magic Items\b.*|Memorial and Soul Crystals|Faction Wars Items)$/i;
 const STAT_WORDS = {
   strength: "str",
   dexterity: "dex",
@@ -109,7 +110,8 @@ function gearSlotData(slot, name) {
   const slots = fromLine?.slots ?? fromName?.slots ?? [];
   const out = { slots };
   if (fromLine?.twoHanded) out.twoHanded = true;
-  if (fromName?.accessoryKind && slots.includes("accessory")) out.accessoryKind = fromName.accessoryKind;
+  if (fromName?.accessoryKind && slots.includes("accessory"))
+    out.accessoryKind = fromName.accessoryKind;
   return out;
 }
 

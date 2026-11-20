@@ -76,9 +76,11 @@ function isBlocked(entry, message) {
   // (e.g. module/chat/attack-targets-card.mjs's per-target rows), and its
   // handler re-checks everything for the button clicked.
   if (entry.custom) return false;
-  return !entry.canAct(message)
-    || isDoneFor(entry, message)
-    || !!(entry.supersededFlag && message.getFlag("carl-rpg", entry.supersededFlag));
+  return (
+    !entry.canAct(message) ||
+    isDoneFor(entry, message) ||
+    !!(entry.supersededFlag && message.getFlag("carl-rpg", entry.supersededFlag))
+  );
 }
 
 /** Whether an entry's button is used up, for this viewer. */
@@ -159,8 +161,8 @@ export function registerChatListener() {
       if (!entry) return;
       event.preventDefault();
       if (isBlocked(entry, message)) return; // re-check at click time: closes
-                                              // a race if two clients click
-                                              // near-simultaneously.
+      // a race if two clients click
+      // near-simultaneously.
       void entry.onClick(event, message, target);
     });
   });

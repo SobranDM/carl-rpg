@@ -18,7 +18,6 @@ import CarlRPGItemBase from "./item-base.mjs";
  * only flags are the attacker's roll; a Mob doesn't roll).
  */
 export default class CarlRPGMobAttack extends CarlRPGItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const schema = super.defineSchema();
@@ -26,7 +25,9 @@ export default class CarlRPGMobAttack extends CarlRPGItemBase {
     schema.toHit = new fields.StringField({ required: true, blank: true, initial: "" });
     schema.damage = new fields.StringField({ required: true, blank: true, initial: "" });
     schema.damageType = new fields.StringField({
-      required: true, blank: true, initial: "",
+      required: true,
+      blank: true,
+      initial: "",
       choices: ["", ...Object.keys(CONFIG.CARLRPG.damageTypes)],
     });
     schema.range = new fields.StringField({ required: true, blank: true, initial: "" });
@@ -35,17 +36,32 @@ export default class CarlRPGMobAttack extends CarlRPGItemBase {
     // "..., Armor-Piercing" in the stat block: ignores DR, except DR from
     // gear marked Anti-Piercing (p.95, p.225).
     schema.armorPiercing = new fields.BooleanField({ required: true, initial: false });
-    schema.targetEffects = new fields.ArrayField(new fields.SchemaField({
-      id: new fields.StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() }),
-      /** Key into CONFIG.CARLRPG.debuffs. */
-      debuffKey: new fields.StringField({ required: true, blank: true, initial: "" }),
-      stacks: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 1, min: 1 }),
-      trigger: new fields.StringField({
-        required: true, blank: false, initial: "hit",
-        choices: () => Object.keys(CONFIG.CARLRPG.mobAttackTriggers),
+    schema.targetEffects = new fields.ArrayField(
+      new fields.SchemaField({
+        id: new fields.StringField({
+          required: true,
+          blank: false,
+          initial: () => foundry.utils.randomID(),
+        }),
+        /** Key into CONFIG.CARLRPG.debuffs. */
+        debuffKey: new fields.StringField({ required: true, blank: true, initial: "" }),
+        stacks: new fields.NumberField({
+          required: true,
+          nullable: false,
+          integer: true,
+          initial: 1,
+          min: 1,
+        }),
+        trigger: new fields.StringField({
+          required: true,
+          blank: false,
+          initial: "hit",
+          choices: () => Object.keys(CONFIG.CARLRPG.mobAttackTriggers),
+        }),
+        label: new fields.StringField({ required: true, blank: true, initial: "" }),
       }),
-      label: new fields.StringField({ required: true, blank: true, initial: "" }),
-    }), { required: true, initial: [] });
+      { required: true, initial: [] },
+    );
 
     return schema;
   }

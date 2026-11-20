@@ -1,4 +1,10 @@
-import { getStatMod, getRankDamageDie, getDegreeOfSuccess, isHitDegree, degreeBadge } from "../../helpers/rules.mjs";
+import {
+  getStatMod,
+  getRankDamageDie,
+  getDegreeOfSuccess,
+  isHitDegree,
+  degreeBadge,
+} from "../../helpers/rules.mjs";
 
 export default function register(quench) {
   quench.registerBatch(

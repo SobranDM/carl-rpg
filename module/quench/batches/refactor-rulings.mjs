@@ -1,16 +1,31 @@
 import CarlDice from "../../dice/dice.mjs";
 import {
-  addConditionToActor, changeConditions, conditionOps, opsAllowed,
+  addConditionToActor,
+  changeConditions,
+  conditionOps,
+  opsAllowed,
 } from "../../helpers/conditions.mjs";
 import { isUntrained } from "../../helpers/rules.mjs";
-import { bareSkillLikeData, cleanSkillLikeCopy, findSkillLikeItem } from "../../helpers/race-class-grants.mjs";
+import {
+  bareSkillLikeData,
+  cleanSkillLikeCopy,
+  findSkillLikeItem,
+} from "../../helpers/race-class-grants.mjs";
 import { copyData, PACKS } from "../../helpers/packs.mjs";
 import { fightOf } from "../../helpers/fights.mjs";
 import { resolveCombatantFor } from "../../helpers/token-resolution.mjs";
 import { itemDescriptions, itemTooltips, namedItemTooltips } from "../../helpers/rich-text.mjs";
 import { useConsumable } from "../../helpers/consumables.mjs";
 import {
-  createTestCharacter, createTestCombat, createTestMob, createTestItem, deleteTestActor, deleteTestCombat, useQuenchTimeout, waitFor, withFakeTargets,
+  createTestCharacter,
+  createTestCombat,
+  createTestMob,
+  createTestItem,
+  deleteTestActor,
+  deleteTestCombat,
+  useQuenchTimeout,
+  waitFor,
+  withFakeTargets,
 } from "../helpers.mjs";
 import { REFRESHED_ITEMS } from "../../helpers/migration.mjs";
 
@@ -46,11 +61,20 @@ export default function register(quench) {
         useQuenchTimeout(this);
 
         it("conditionOps: removals, changed fields and new entries, by id", function () {
-          const before = [{ id: "a", key: "blinded", stacks: 1 }, { id: "b", key: "queasy", stacks: 1 }];
-          const after = [{ id: "a", key: "blinded", stacks: 3 }, { id: "c", key: "stunned", stacks: 1 }];
+          const before = [
+            { id: "a", key: "blinded", stacks: 1 },
+            { id: "b", key: "queasy", stacks: 1 },
+          ];
+          const after = [
+            { id: "a", key: "blinded", stacks: 3 },
+            { id: "c", key: "stunned", stacks: 1 },
+          ];
           const ops = conditionOps(before, after);
           assert.deepEqual(ops.find((o) => o.op === "remove")?.ids, ["b"]);
-          assert.deepEqual(ops.find((o) => o.op === "patch"), { op: "patch", id: "a", fields: { stacks: 3 } });
+          assert.deepEqual(
+            ops.find((o) => o.op === "patch"),
+            { op: "patch", id: "a", fields: { stacks: 3 } },
+          );
           assert.equal(ops.find((o) => o.op === "push")?.entry.id, "c");
           assert.deepEqual(conditionOps(before, before), [], "no change, no ops");
         });
@@ -64,13 +88,23 @@ export default function register(quench) {
             const blinded = before.find((c) => c.key === "blinded");
             const fatigued = before.find((c) => c.key === "fatigued");
             // Worked out now: Blinded at 3 stacks, a label on Fatigued...
-            const after = before.map((c) => (c.id === blinded.id ? { ...c, stacks: 3 } : { ...c, label: "Tired" }));
+            const after = before.map((c) =>
+              c.id === blinded.id ? { ...c, stacks: 3 } : { ...c, label: "Tired" },
+            );
             // ...while, meanwhile, Fatigued is removed and Woozy added.
             await changeConditions(actor, [{ op: "remove", ids: [fatigued.id] }]);
             await addConditionToActor(actor, "woozy");
             await changeConditions(actor, conditionOps(before, after));
-            assert.sameMembers(keys(actor), ["blinded", "woozy"], "the removal and the addition both stand");
-            assert.equal(actor.system.conditions.find((c) => c.key === "blinded").stacks, 3, "its own change made");
+            assert.sameMembers(
+              keys(actor),
+              ["blinded", "woozy"],
+              "the removal and the addition both stand",
+            );
+            assert.equal(
+              actor.system.conditions.find((c) => c.key === "blinded").stacks,
+              3,
+              "its own change made",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -83,7 +117,9 @@ export default function register(quench) {
             const [stunned] = actor.system.toObject().conditions;
             await changeConditions(actor, [{ op: "restore", entries: [stunned] }]);
             assert.lengthOf(actor.system.conditions, 1, "not duplicated");
-            await changeConditions(actor, [{ op: "patch", id: stunned.id, fields: { source: "Test" } }]);
+            await changeConditions(actor, [
+              { op: "patch", id: stunned.id, fields: { source: "Test" } },
+            ]);
             const entry = actor.system.conditions[0];
             assert.equal(entry.source, "Test");
             assert.equal(entry.key, "stunned", "the rest of it kept");
@@ -99,10 +135,13 @@ export default function register(quench) {
             await addConditionToActor(actor, "minorInjury");
             assert.include(keys(actor), "longTermMinorInjury");
             assert.notInclude(keys(actor), "minorInjury");
-            const sepsis = Object.entries(CONFIG.CARLRPG.debuffs).find(([, d]) => d.mechanics?.alsoApplies?.length);
+            const sepsis = Object.entries(CONFIG.CARLRPG.debuffs).find(
+              ([, d]) => d.mechanics?.alsoApplies?.length,
+            );
             if (sepsis) {
               await addConditionToActor(actor, sepsis[0]);
-              for (const extra of sepsis[1].mechanics.alsoApplies) assert.include(keys(actor), extra);
+              for (const extra of sepsis[1].mechanics.alsoApplies)
+                assert.include(keys(actor), extra);
             }
           } finally {
             await deleteTestActor(actor);
@@ -118,8 +157,11 @@ export default function register(quench) {
             await addConditionToActor(mob, "blinded");
             const list = mob.system.toObject().conditions;
             const ids = list.map((c) => c.id);
-            assert.deepEqual(opsAllowed([{ op: "remove", ids }], list, mob, player), [],
-              "not targeted, not in a fight: nothing");
+            assert.deepEqual(
+              opsAllowed([{ op: "remove", ids }], list, mob, player),
+              [],
+              "not targeted, not in a fight: nothing",
+            );
             assert.deepEqual(opsAllowed([{ op: "add", key: "woozy" }], list, mob, player), []);
           } finally {
             await deleteTestActor(mob);
@@ -145,11 +187,21 @@ export default function register(quench) {
             const skill = await createTestItem(actor, "skill", "Driving", { system: { rank: 5 } });
             await addConditionToActor(actor, "queasy");
             const free = await CarlDice.rollOpposedSkillCheck(actor, skill, {
-              difficulty: 10, skipDialog: true, post: false, isAction: false,
+              difficulty: 10,
+              skipDialog: true,
+              post: false,
+              isAction: false,
             });
-            assert.isFalse((free.applied ?? []).some((row) => row.key === "queasy"), "no Disadvantage from it");
+            assert.isFalse(
+              (free.applied ?? []).some((row) => row.key === "queasy"),
+              "no Disadvantage from it",
+            );
             assert.include(keys(actor), "queasy", "not ended");
-            await CarlDice.rollOpposedSkillCheck(actor, skill, { difficulty: 10, skipDialog: true, post: false });
+            await CarlDice.rollOpposedSkillCheck(actor, skill, {
+              difficulty: 10,
+              skipDialog: true,
+              post: false,
+            });
             assert.notInclude(keys(actor), "queasy", "an Action ends it");
           } finally {
             await deleteTestActor(actor);
@@ -174,11 +226,16 @@ export default function register(quench) {
         it("a potion that only heals and mends is refused and kept", async function () {
           const actor = await createTestCharacter("tainted mend", { system: { hb: { value: 2 } } });
           try {
-            const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(([, d]) => d.mechanics?.noHealing)?.[0];
+            const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(
+              ([, d]) => d.mechanics?.noHealing,
+            )?.[0];
             await addConditionToActor(actor, taintKey);
             await addConditionToActor(actor, "minorInjury");
             const potion = await createTestItem(actor, "item", "mend", {
-              system: { quantity: 1, consumable: { kind: "potion", heal: { slots: 3, mend: "minor" } } },
+              system: {
+                quantity: 1,
+                consumable: { kind: "potion", heal: { slots: 3, mend: "minor" } },
+              },
             });
             assert.isNull(await quietly(() => useConsumable(actor, potion, { skipDialog: true })));
             assert.exists(actor.items.get(potion.id), "kept");
@@ -190,15 +247,24 @@ export default function register(quench) {
         });
 
         it("a potion that also restores Mana is used: the Mana restored, the mending blocked", async function () {
-          const actor = await createTestCharacter("tainted mana mend", { system: { mana: { value: 0 } } });
+          const actor = await createTestCharacter("tainted mana mend", {
+            system: { mana: { value: 0 } },
+          });
           try {
-            const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(([, d]) => d.mechanics?.noHealing)?.[0];
+            const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(
+              ([, d]) => d.mechanics?.noHealing,
+            )?.[0];
             await addConditionToActor(actor, taintKey);
             await addConditionToActor(actor, "minorInjury");
             const potion = await createTestItem(actor, "item", "mend mana", {
-              system: { quantity: 1, consumable: { kind: "potion", heal: { mend: "minor" }, mana: { full: true } } },
+              system: {
+                quantity: 1,
+                consumable: { kind: "potion", heal: { mend: "minor" }, mana: { full: true } },
+              },
             });
-            assert.isNotNull(await quietly(() => useConsumable(actor, potion, { skipDialog: true })));
+            assert.isNotNull(
+              await quietly(() => useConsumable(actor, potion, { skipDialog: true })),
+            );
             assert.equal(actor.system.mana.value, actor.system.mana.max, "Mana restored");
             assert.include(keys(actor), "minorInjury", "not mended");
           } finally {
@@ -253,14 +319,19 @@ export default function register(quench) {
       describe("Copies keep their compendium source (#12)", function () {
         it("copyData and cleanSkillLikeCopy", async function () {
           const pack = game.packs.get(PACKS.skillsAndSpells);
-          const entry = (await pack?.getIndex())?.contents?.[0] ?? [...((await pack?.getIndex()) ?? [])][0];
+          const entry =
+            (await pack?.getIndex())?.contents?.[0] ?? [...((await pack?.getIndex()) ?? [])][0];
           if (!entry) this.skip();
           const doc = await pack.getDocument(entry._id);
           const data = copyData(doc);
           assert.equal(data._stats.compendiumSource, doc.uuid);
           for (const key of ["_id", "folder", "sort", "ownership"]) assert.notProperty(data, key);
           assert.equal(cleanSkillLikeCopy(doc, 3)._stats.compendiumSource, doc.uuid);
-          assert.notProperty(cleanSkillLikeCopy({ name: "X", type: "skill", system: {} }, 1), "_stats", "plain data names none");
+          assert.notProperty(
+            cleanSkillLikeCopy({ name: "X", type: "skill", system: {} }, 1),
+            "_stats",
+            "plain data names none",
+          );
         });
       });
 
@@ -270,12 +341,17 @@ export default function register(quench) {
         it("an item's description, and its name for one without (ruled 2026-11-19)", async function () {
           const actor = await createTestCharacter("tooltips");
           try {
-            const described = await createTestItem(actor, "item", "described", { system: { description: "<p>A sturdy rope.</p>" } });
+            const described = await createTestItem(actor, "item", "described", {
+              system: { description: "<p>A sturdy rope.</p>" },
+            });
             const plain = await createTestItem(actor, "item", "plain");
             const tips = itemTooltips(actor.items, await itemDescriptions(actor.items));
             assert.include(tips[described.id], "A sturdy rope.");
             assert.notInclude(tips[described.id], "carl-tooltip-name", "the description alone");
-            assert.equal(tips[plain.id], `<strong class="carl-tooltip-name">${plain.name}</strong>`);
+            assert.equal(
+              tips[plain.id],
+              `<strong class="carl-tooltip-name">${plain.name}</strong>`,
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -286,20 +362,41 @@ export default function register(quench) {
           const sheet = actor.sheet;
           try {
             const quoted = '<p class="x">A "sturdy" rope.</p>';
-            const described = await createTestItem(actor, "item", "described", { system: { description: quoted } });
+            const described = await createTestItem(actor, "item", "described", {
+              system: { description: quoted },
+            });
             const plain = await createTestItem(actor, "item", "plain");
             const skill = await createTestItem(actor, "skill", "Tooltip Skill", {
               system: { description: `<p>See @UUID[${actor.uuid}]{its owner}.</p>` },
             });
             await sheet.render({ force: true });
-            await waitFor(() => sheet.rendered && sheet.element.querySelector(`li[data-item-id="${described.id}"]`));
-            const cell = (item) => sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name`);
-            assert.equal(cell(described).dataset.tooltipHtml, quoted, "the description, quotes and all");
+            await waitFor(
+              () =>
+                sheet.rendered && sheet.element.querySelector(`li[data-item-id="${described.id}"]`),
+            );
+            const cell = (item) =>
+              sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name`);
+            assert.equal(
+              cell(described).dataset.tooltipHtml,
+              quoted,
+              "the description, quotes and all",
+            );
             assert.equal(cell(described).dataset.tooltipClass, "carl-item-tooltip");
-            assert.include(cell(plain).dataset.tooltipHtml ?? "", plain.name, "no description: its name");
+            assert.include(
+              cell(plain).dataset.tooltipHtml ?? "",
+              plain.name,
+              "no description: its name",
+            );
             const skillName = sheet.element.querySelector(`li[data-item-id="${skill.id}"] h4`);
-            assert.include(skillName?.dataset.tooltipHtml ?? "", "content-link", "a Skill's name shows its enriched description");
-            assert.isNull(sheet.element.querySelector("li[data-item-id] [title], li[data-item-id][title]"), "no browser title= tooltips on rows");
+            assert.include(
+              skillName?.dataset.tooltipHtml ?? "",
+              "content-link",
+              "a Skill's name shows its enriched description",
+            );
+            assert.isNull(
+              sheet.element.querySelector("li[data-item-id] [title], li[data-item-id][title]"),
+              "no browser title= tooltips on rows",
+            );
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
@@ -313,20 +410,36 @@ export default function register(quench) {
             game.tooltip.deactivate();
             element.dispatchEvent(new PointerEvent("pointerenter", { bubbles: false }));
             // TooltipManager waits TOOLTIP_ACTIVATION_MS (500) for intent.
-            await new Promise((resolve) => setTimeout(resolve, (game.tooltip.constructor.TOOLTIP_ACTIVATION_MS ?? 500) + 200));
+            await new Promise((resolve) =>
+              setTimeout(resolve, (game.tooltip.constructor.TOOLTIP_ACTIVATION_MS ?? 500) + 200),
+            );
           };
           try {
-            const described = await createTestItem(actor, "item", "rope", { system: { description: "<p>A sturdy rope.</p>" } });
+            const described = await createTestItem(actor, "item", "rope", {
+              system: { description: "<p>A sturdy rope.</p>" },
+            });
             const bare = await createTestItem(actor, "item", "lighter");
             await sheet.render({ force: true });
-            await waitFor(() => sheet.rendered && sheet.element.querySelector(`li[data-item-id="${described.id}"]`));
-            const name = (item) => sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name h4`);
+            await waitFor(
+              () =>
+                sheet.rendered && sheet.element.querySelector(`li[data-item-id="${described.id}"]`),
+            );
+            const name = (item) =>
+              sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name h4`);
             await hover(name(described).closest(".item-name"));
-            assert.equal(game.tooltip.element, name(described).closest(".item-name"), "the name cell's tooltip is up");
+            assert.equal(
+              game.tooltip.element,
+              name(described).closest(".item-name"),
+              "the name cell's tooltip is up",
+            );
             assert.include(game.tooltip.tooltip.innerHTML, "A sturdy rope.");
             await hover(name(bare).closest(".item-name"));
             assert.equal(game.tooltip.element, name(bare).closest(".item-name"));
-            assert.include(game.tooltip.tooltip.innerHTML, "lighter", "an item with no description: its name");
+            assert.include(
+              game.tooltip.tooltip.innerHTML,
+              "lighter",
+              "an item with no description: its name",
+            );
           } finally {
             game.tooltip.deactivate();
             await sheet.close();
@@ -335,10 +448,20 @@ export default function register(quench) {
         });
 
         it("the Equipment Doll and Hotlist name the item above its description", async function () {
-          const items = [{ id: "a", name: "Rope & Hook" }, { id: "b", name: "Lighter" }];
+          const items = [
+            { id: "a", name: "Rope & Hook" },
+            { id: "b", name: "Lighter" },
+          ];
           const named = namedItemTooltips(items, { a: "<p>Sturdy.</p>" });
-          assert.equal(named.a, '<strong class="carl-tooltip-name">Rope &amp; Hook</strong><p>Sturdy.</p>');
-          assert.equal(named.b, '<strong class="carl-tooltip-name">Lighter</strong>', "the name alone without a description");
+          assert.equal(
+            named.a,
+            '<strong class="carl-tooltip-name">Rope &amp; Hook</strong><p>Sturdy.</p>',
+          );
+          assert.equal(
+            named.b,
+            '<strong class="carl-tooltip-name">Lighter</strong>',
+            "the name alone without a description",
+          );
         });
       });
 
@@ -353,6 +476,9 @@ export default function register(quench) {
         });
       });
     },
-    { displayName: "CarlRPG: 0.7.1 rulings (conditions writer, Ranks, Opposed, Mend, lookups, fights, copies, tooltips)" },
+    {
+      displayName:
+        "CarlRPG: 0.7.1 rulings (conditions writer, Ranks, Opposed, Mend, lookups, fights, copies, tooltips)",
+    },
   );
 }

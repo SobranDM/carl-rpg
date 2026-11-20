@@ -2,8 +2,19 @@ import CarlDice from "../../dice/dice.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
 import { processActorRoundEnd, processCombatEnd } from "../../helpers/round-end.mjs";
 import {
-  createTestCharacter, createTestMob, createTestItem, createTestCombat, deleteTestActor, deleteTestCombat,
-  settle, waitFor, withFakeTargets, withPinnedDice, PIN_D20_MID, withSetting, useQuenchTimeout,
+  createTestCharacter,
+  createTestMob,
+  createTestItem,
+  createTestCombat,
+  deleteTestActor,
+  deleteTestCombat,
+  settle,
+  waitFor,
+  withFakeTargets,
+  withPinnedDice,
+  PIN_D20_MID,
+  withSetting,
+  useQuenchTimeout,
 } from "../helpers.mjs";
 
 const keys = (actor) => (actor.system.conditions ?? []).map((c) => c.key);
@@ -35,14 +46,19 @@ export default function register(quench) {
           const mob = await createTestMob("target", { system: { stats: { dex: { value: 3 } } } });
           try {
             const skill = await createTestItem(actor, "skill", "Attack Skill", {
-              name: "Attack Skill", system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "" },
+              name: "Attack Skill",
+              system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "" },
             });
             await addConditionToActor(mob, "shitFaced");
             await settle();
             // base = 10 + dexMod(2) + floor(1) = 13; Shit-Faced -> 8.
             const message = await withSetting("currentFloor", 1, () =>
               withPinnedDice(PIN_D20_MID, () =>
-                withFakeTargets([{ actor: mob }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
+                withFakeTargets([{ actor: mob }], () =>
+                  CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+                ),
+              ),
+            );
             assert.equal(message.getFlag("carl-rpg", "targetDifficulty"), 8);
           } finally {
             await deleteTestActor(actor);
@@ -55,11 +71,14 @@ export default function register(quench) {
           const mob = await createTestMob("target");
           try {
             const skill = await createTestItem(actor, "skill", "Attack Skill", {
-              name: "Attack Skill", system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "" },
+              name: "Attack Skill",
+              system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "" },
             });
             await addConditionToActor(mob, "stunned");
             await settle();
-            await withFakeTargets([{ actor: mob }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }));
+            await withFakeTargets([{ actor: mob }], () =>
+              CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+            );
             assert.notInclude(keys(mob), "stunned");
           } finally {
             await deleteTestActor(actor);
@@ -74,9 +93,13 @@ export default function register(quench) {
         it("Minor Injury takes 2 off a crawler's Evade total", async function () {
           const actor = await createTestCharacter();
           try {
-            const clean = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollEvadeCheck(actor, { difficulty: 10, skipDialog: true, post: false }));
+            const clean = await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollEvadeCheck(actor, { difficulty: 10, skipDialog: true, post: false }),
+            );
             await addConditionToActor(actor, "minorInjury");
-            const hurt = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollEvadeCheck(actor, { difficulty: 10, skipDialog: true, post: false }));
+            const hurt = await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollEvadeCheck(actor, { difficulty: 10, skipDialog: true, post: false }),
+            );
             assert.equal(hurt.total, clean.total - 2);
           } finally {
             await deleteTestActor(actor);
@@ -86,9 +109,13 @@ export default function register(quench) {
         it("Stat Checks apply Debuffs too (Minor Injury -2)", async function () {
           const actor = await createTestCharacter();
           try {
-            const clean = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollStatCheck(actor, "str", { skipDialog: true }));
+            const clean = await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollStatCheck(actor, "str", { skipDialog: true }),
+            );
             await addConditionToActor(actor, "minorInjury");
-            const hurt = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollStatCheck(actor, "str", { skipDialog: true }));
+            const hurt = await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollStatCheck(actor, "str", { skipDialog: true }),
+            );
             assert.equal(hurt.rolls[0].total, clean.rolls[0].total - 2);
           } finally {
             await deleteTestActor(actor);
@@ -110,10 +137,19 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             await addConditionToActor(actor, "queasy");
-            const free = await CarlDice.rollEvadeCheck(actor, { difficulty: 10, skipDialog: true, post: false, isAction: false });
+            const free = await CarlDice.rollEvadeCheck(actor, {
+              difficulty: 10,
+              skipDialog: true,
+              post: false,
+              isAction: false,
+            });
             assert.equal(free.debuffNote, "");
             assert.include(keys(actor), "queasy");
-            const real = await CarlDice.rollEvadeCheck(actor, { difficulty: 10, skipDialog: true, post: false });
+            const real = await CarlDice.rollEvadeCheck(actor, {
+              difficulty: 10,
+              skipDialog: true,
+              post: false,
+            });
             assert.isNotEmpty(real.debuffNote);
             assert.notInclude(keys(actor), "queasy");
           } finally {
@@ -125,7 +161,13 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             await addConditionToActor(actor, "paralyzed");
-            assert.isNull(await CarlDice.rollEvadeCheck(actor, { difficulty: 10, skipDialog: true, post: false }));
+            assert.isNull(
+              await CarlDice.rollEvadeCheck(actor, {
+                difficulty: 10,
+                skipDialog: true,
+                post: false,
+              }),
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -135,7 +177,14 @@ export default function register(quench) {
       describe("Mob Attacks (CarlDice.rollMobAttack)", function () {
         useQuenchTimeout(this);
 
-        const bite = { name: "Bite", toHit: "16+F", damage: "1d4", damageType: "piercing", range: "", effect: "" };
+        const bite = {
+          name: "Bite",
+          toHit: "16+F",
+          damage: "1d4",
+          damageType: "piercing",
+          range: "",
+          effect: "",
+        };
 
         it("a Terrified Mob's Attack is 5 easier to Evade and grants a free Evade", async function () {
           const mob = await createTestMob("attacker", { system: { attacks: [bite] } });
@@ -143,7 +192,10 @@ export default function register(quench) {
           try {
             await addConditionToActor(mob, "terrified");
             const message = await withSetting("currentFloor", 1, () =>
-              withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true })));
+              withFakeTargets([{ actor: pc }], () =>
+                CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+              ),
+            );
             assert.equal(message.getFlag("carl-rpg", "targetDifficulty"), 12);
             assert.isTrue(message.getFlag("carl-rpg", "freeEvade"));
             assert.isNotEmpty(message.getFlag("carl-rpg", "damageByType"));
@@ -158,7 +210,9 @@ export default function register(quench) {
           const mob = await createTestMob("attacker", { system: { attacks: [claw] } });
           const pc = await createTestCharacter("defender");
           try {
-            const message = await withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+            const message = await withFakeTargets([{ actor: pc }], () =>
+              CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+            );
             assert.isFalse(message.getFlag("carl-rpg", "damageIsMagic"));
           } finally {
             await deleteTestActor(mob);
@@ -185,7 +239,10 @@ export default function register(quench) {
             await addConditionToActor(mob, "terrified");
             await addConditionToActor(pcB, "held");
             const message = await withSetting("currentFloor", 1, () =>
-              withFakeTargets([{ actor: pcA }, { actor: pcB }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true })));
+              withFakeTargets([{ actor: pcA }, { actor: pcB }], () =>
+                CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+              ),
+            );
             const rows = message.getFlag("carl-rpg", "targetRows");
             assert.equal(rows.t0.difficulty, 12, "Terrified: 17 - 5");
             assert.isTrue(rows.t0.freeEvade);
@@ -205,7 +262,10 @@ export default function register(quench) {
             await addConditionToActor(mob, "terrified");
             await addConditionToActor(pc, "held");
             const message = await withSetting("currentFloor", 1, () =>
-              withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true })));
+              withFakeTargets([{ actor: pc }], () =>
+                CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+              ),
+            );
             assert.equal(message.getFlag("carl-rpg", "targetDifficulty"), 17);
             assert.notExists(message.getFlag("carl-rpg", "freeEvade"));
           } finally {
@@ -275,7 +335,9 @@ export default function register(quench) {
             const conditions = foundry.utils.deepClone(actor.system.conditions);
             conditions.find((c) => c.key === "dying").remaining = 0;
             await actor.update({ "system.conditions": conditions });
-            const dead = game.i18n.format("CARLRPG.RoundEnd.DyingDead", { name: foundry.utils.escapeHTML(actor.name) });
+            const dead = game.i18n.format("CARLRPG.RoundEnd.DyingDead", {
+              name: foundry.utils.escapeHTML(actor.name),
+            });
             assert.include((await processActorRoundEnd(actor)).lines, dead);
             assert.notInclude((await processActorRoundEnd(actor)).lines, dead);
           } finally {
@@ -293,7 +355,11 @@ export default function register(quench) {
             await addConditionToActor(actor, "poisoned");
             const result = await processActorRoundEnd(actor);
             assert.lengthOf(result.rolls, 0);
-            assert.equal(condition(actor, "dying").remaining, 1, "1 for the Poison, 1 for the round");
+            assert.equal(
+              condition(actor, "dying").remaining,
+              1,
+              "1 for the Poison, 1 for the round",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -307,7 +373,9 @@ export default function register(quench) {
           try {
             await addConditionToActor(mob, "poisoned");
             await addConditionToActor(mob, "terrified");
-            await withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () => processActorRoundEnd(mob)));
+            await withSetting("currentFloor", 1, () =>
+              withPinnedDice(PIN_D20_MID, () => processActorRoundEnd(mob)),
+            );
             assert.isBelow(mob.system.hb.value, 3);
             assert.notInclude(keys(mob), "terrified");
             assert.include(keys(mob), "poisoned");
@@ -323,11 +391,18 @@ export default function register(quench) {
             await addConditionToActor(actor, "blinded");
             ({ combat } = await createTestCombat(actor));
             await combat.startCombat();
-            assert.equal(actor.system.conditions.find((c) => c.key === "blinded").remaining, 2, "starting combat ends no round");
+            assert.equal(
+              actor.system.conditions.find((c) => c.key === "blinded").remaining,
+              2,
+              "starting combat ends no round",
+            );
             await combat.nextRound();
-            await waitFor(() => actor.system.conditions.find((c) => c.key === "blinded")?.remaining === 1, {
-              message: "Blinded never ticked down after nextRound()",
-            });
+            await waitFor(
+              () => actor.system.conditions.find((c) => c.key === "blinded")?.remaining === 1,
+              {
+                message: "Blinded never ticked down after nextRound()",
+              },
+            );
           } finally {
             await deleteTestCombat(combat);
             await deleteTestActor(actor);

@@ -77,7 +77,10 @@ export async function levelBondedPets(owner, delta) {
 export async function grantPetSkills(pet) {
   if (!isPet(pet)) return;
   const sys = pet.system;
-  const names = [...CONFIG.CARLRPG.petStartingSkills, ...(CONFIG.CARLRPG.petRoleSkills[sys.role] ?? [])];
+  const names = [
+    ...CONFIG.CARLRPG.petStartingSkills,
+    ...(CONFIG.CARLRPG.petRoleSkills[sys.role] ?? []),
+  ];
   if (sys.specialAbilities.tauntOrCatcher === "taunt") names.push("Taunt");
   if (sys.specialAbilities.tauntOrCatcher === "catcher") names.push("Catcher");
   // Queued per Pet, so two quick updates can't both learn the same Skill.
@@ -117,6 +120,7 @@ export async function syncPetCommandStatus(pet) {
   const active = state && game.combats.has(combatId) ? state : "";
   for (const [key, def] of Object.entries(CONFIG.CARLRPG.petCommandStates)) {
     const on = key === active;
-    if (pet.statuses?.has(def.status) !== on) await pet.toggleStatusEffect(def.status, { active: on });
+    if (pet.statuses?.has(def.status) !== on)
+      await pet.toggleStatusEffect(def.status, { active: on });
   }
 }
