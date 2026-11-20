@@ -147,6 +147,10 @@
         "CheckMove": "(base Move {move} ft, Step {step} ft were typed in by hand: check they don't already include what these now add)",
         "ItemsDirectory": "Items directory"
       },
+      "OpposedStats": {
+        "Title": "Skills and Spells that are Opposed",
+        "Body": "These Skills and Spells are Opposed in the book (\"Make an Int-Opposed Skill Check\"), so a Check with them now opens Opposed against a targeted creature. Each copy below was given the Stat it's Opposed by (nothing else on it changed):"
+      },
       "GearSlots": {
         "Title": "Gear says where it's worn now",
         "Body": "Each piece of gear now has the slots it's worn in (Worn on, on its sheet), and the Equipment Doll keeps to them: one Belt and one Cape, and a two-handed weapon takes both hands. This gear was worn where it doesn't fit, so it's been taken off - put it back where it goes:"

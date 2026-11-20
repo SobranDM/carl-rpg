@@ -1,54 +1,56 @@
 import {
   announceWeaponSkill,
+  applySkillSettingBoxesOn,
   backfillDeityTier,
   BASE_DR_MIGRATION_ID,
-  COMPENDIUM_REFRESH_ID,
-  DEITY_MIGRATION_ID,
-  DEITY_TIER_MIGRATION_ID,
-  inferDeityTier,
-  MIGRATIONS,
-  migrationPlan,
-  needsHandToHand,
-  persistDeityBlock,
-  refreshedItemUpdate,
-  tickHandToHandOn,
-  WEAPON_SKILL_NOTICE_ID,
-  zeroCharacterBaseDr,
-  CHARGEN_DONE_MIGRATION_ID,
-  madeBeforeChargen,
-  markChargenDone,
-  refreshSourceFor,
-  RENAMED_MIGRATION_IDS,
-  currentMigrationIds,
-  MOB_ATTACKS_MIGRATION_ID,
-  MOB_SIZE_MIGRATION_ID,
-  saveMobSizes,
-  GEAR_SLOTS_MIGRATION_ID,
-  WEAPON_SKILL_GUESS_ID,
-  loadWeaponSkillSources,
-  guessWeaponSkill,
-  guessActorWeaponSkills,
-  guessItemWeaponSkills,
-  looksLikeWeapon,
-  postWeaponSkillNotice,
-  gearSlotUpdate,
-  inferActorGear,
   BASE_MULTIPLIER_MIGRATION_ID,
   baseMultiplierUpdate,
+  CHARGEN_DONE_MIGRATION_ID,
+  COMPENDIUM_REFRESH_ID,
+  currentMigrationIds,
+  DEITY_MIGRATION_ID,
+  DEITY_TIER_MIGRATION_ID,
+  driveSkillName,
+  fixVehicleSkillsOn,
+  GEAR_SLOTS_MIGRATION_ID,
+  gearSlotUpdate,
+  guessActorWeaponSkills,
+  guessItemWeaponSkills,
+  guessWeaponSkill,
+  handToHandOnlyUpdate,
+  inferActorGear,
+  inferDeityTier,
+  isBookHandToHandList,
+  loadWeaponSkillSources,
+  looksLikeWeapon,
+  madeBeforeChargen,
+  markChargenDone,
   migratePack,
   migrationFailure,
-  whisperMigrationFailures,
-  unequipMisfits,
+  migrationPlan,
+  MIGRATIONS,
+  MOB_ATTACKS_MIGRATION_ID,
+  MOB_SIZE_MIGRATION_ID,
+  needsHandToHand,
+  OPPOSED_STATS_MIGRATION_ID,
+  opposedStatUpdate,
+  persistDeityBlock,
+  postWeaponSkillNotice,
+  refreshedItemUpdate,
+  refreshSourceFor,
+  RENAMED_MIGRATION_IDS,
+  saveDriveSkills,
+  saveMobSizes,
   SKILL_SETTING_BOXES_ID,
   skillSettingBoxUpdate,
-  handToHandOnlyUpdate,
-  isBookHandToHandList,
-  applySkillSettingBoxesOn,
+  tickHandToHandOn,
+  unequipMisfits,
   VEHICLE_SKILL_MIGRATION_ID,
-  driveSkillName,
   vehicleSkillUpdate,
-  fixVehicleSkillsOn,
-  saveDriveSkills,
+  WEAPON_SKILL_GUESS_ID,
+  WEAPON_SKILL_NOTICE_ID,
+  whisperMigrationFailures,
+  zeroCharacterBaseDr,
 } from "../../helpers/migration.mjs";
 import { FINGERPRINT_VERSION, importStamp, importState } from "../../pdf-import/fingerprint.mjs";
 import {
@@ -113,10 +115,10 @@ export default function register(quench) {
           assert.includeMembers(p.record, ["some-later-fix", HAND]);
         });
 
-        it("are all 0.7.0 migrations, and a world that ran them under their old 0.6.0 ids reruns none", function () {
+        it("are 0.7.0 and 0.8.0 migrations, and a world that ran them under their old 0.6.0 ids reruns none", function () {
           for (const m of MIGRATIONS) {
-            assert.equal(m.version, "0.7.0", m.id);
-            assert.match(m.id, /^0\.7\.0-/, m.id);
+            assert.include(["0.7.0", "0.8.0"], m.version, m.id);
+            assert.isTrue(m.id.startsWith(`${m.version}-`), m.id);
           }
           const oldIds = Object.keys(RENAMED_MIGRATION_IDS);
           const renamed = Object.values(RENAMED_MIGRATION_IDS);
@@ -135,6 +137,7 @@ export default function register(quench) {
             GEAR_SLOTS_MIGRATION_ID,
             SKILL_SETTING_BOXES_ID,
             VEHICLE_SKILL_MIGRATION_ID,
+            OPPOSED_STATS_MIGRATION_ID,
           ]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
           assert.sameMembers(
@@ -888,6 +891,59 @@ export default function register(quench) {
           assert.notInclude(update["system.description"], "apply this bonus by hand");
           assert.include(update["system.description"], "<p>Bark.</p>");
           assert.equal(update["system.changes"][0].target, "dr");
+        });
+      });
+
+      describe("0.8.0: the Stat a Skill or Spell is Opposed by", function () {
+        // Made-up compendium originals: what refreshSourceFor matches by.
+        const src = (id, name, type, opposedStat) => ({ id, name, type, system: { opposedStat } });
+        const sources = [
+          src("stealthSourceId1", "Stealth", "skill", "int"),
+          src("turnUndeadSrcId1", "Turn Undead", "spell", "cha"),
+        ];
+        const copy = (name, type, system = {}, origin = "") => ({
+          id: foundry.utils.randomID(),
+          name,
+          type,
+          system: { rank: 7, opposedStat: "", ...system },
+          _stats: { compendiumSource: origin },
+        });
+
+        it("a copy gets its original's Stat - that field only", function () {
+          const update = opposedStatUpdate(
+            copy(
+              "Stealth",
+              "skill",
+              {},
+              "Compendium.carl-rpg.skills-and-spells.Item.stealthSourceId1",
+            ),
+            sources,
+          );
+          assert.deepEqual(Object.keys(update).sort(), ["_id", "system.opposedStat"]);
+          assert.equal(update["system.opposedStat"], "int");
+          assert.equal(
+            opposedStatUpdate(copy("Turn Undead", "spell"), sources)["system.opposedStat"],
+            "cha",
+            "matched by name",
+          );
+        });
+
+        it("a Stat already set (the GM's) is kept; anything else is left alone", function () {
+          assert.isNull(
+            opposedStatUpdate(copy("Stealth", "skill", { opposedStat: "dex" }), sources),
+          );
+          assert.isNull(opposedStatUpdate(copy("Climbing", "skill"), sources), "not Opposed");
+          assert.isNull(
+            opposedStatUpdate(copy("Stealth", "item"), sources),
+            "not a Skill or Spell",
+          );
+          assert.isNull(
+            opposedStatUpdate(
+              copy("Stealth", "skill", {}, "Compendium.world.homebrew.Item.abc"),
+              sources,
+            ),
+            "a homebrew Stealth isn't the system's",
+          );
         });
       });
 

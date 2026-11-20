@@ -102,6 +102,9 @@ export const BASE_MULTIPLIER_MIGRATION_ID = "0.7.0-base-multipliers";
 /** 0.7.0: a vehicle's driving Skill by name, its perks on the Skill's tiers, Lance's Mounted box (migrateVehicleSkillSettings). */
 export const VEHICLE_SKILL_MIGRATION_ID = "0.7.0-vehicle-skill-settings";
 
+/** 0.8.0: the Stat a Skill or Spell is Opposed by, on existing copies (migrateOpposedStats). */
+export const OPPOSED_STATS_MIGRATION_ID = "0.8.0-opposed-stats";
+
 /** 0.7.0: Skills' Needs no weapon / No Damage Effects / Commands pets boxes, gear's Hand-to-Hand Debuffs (migrateSkillSettingBoxes). */
 export const SKILL_SETTING_BOXES_ID = "0.7.0-skill-setting-boxes";
 
@@ -2488,6 +2491,115 @@ export async function migrateVehicleSkillSettings({ fail = NO_FAIL } = {}) {
  * migrate (runMigrations whispers the GM one list of them).
  * @type {{id: string, version: string, run: (context: {fail: (where: string, error: unknown) => void}) => Promise<{changed: number, errors: number, incomplete?: boolean}>}[]}
  */
+/* -------------------------------------------------- */
+/*  0.8.0: the Stat a Skill or Spell is Opposed by    */
+/* -------------------------------------------------- */
+
+/**
+ * The update an owned copy of a system Skill or Spell needs for 0.8.0's
+ * Opposed Checks (p.59): the Stat its compendium original is Opposed by -
+ * only that field, and only where the copy has none (a Stat the GM set is
+ * kept). Its Rank, marks and everything else are left alone.
+ * @param {Item|object} item
+ * @param {Item[]} sources  The system's Skills and Spells with an opposed Stat.
+ * @returns {object|null}  {_id, "system.opposedStat"}, or null.
+ */
+export function opposedStatUpdate(item, sources) {
+  if (!["skill", "spell"].includes(item?.type)) return null;
+  if (item.system?.opposedStat) return null;
+  const stat = refreshSourceFor(item, sources)?.system?.opposedStat;
+  return stat ? { _id: item.id, "system.opposedStat": stat } : null;
+}
+
+/**
+ * 0.8.0 gave the system Skills and Spells the book calls Opposed ("Make an
+ * Int-Opposed Skill Check") the Stat they're Opposed by, so a Check with one
+ * opens Opposed at a target. Every actor holds its own copy, made before:
+ * this sets the Stat on each copy that has none - on world Actors, in the
+ * Items directory and in world compendiums - and whispers the GM a list.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+async function migrateOpposedStats({ fail = NO_FAIL } = {}) {
+  const packId = `${SCOPE}.skills-and-spells`;
+  const pack = game.packs.get(packId);
+  if (!pack) {
+    console.error(`carl-rpg | 0.8.0 migration: the system compendium ${packId} is missing`);
+    fail(packId, missingPackError(packId));
+    return { changed: 0, errors: 1 };
+  }
+  const sources = (await pack.getDocuments()).filter((d) => d.system?.opposedStat);
+  let changed = 0;
+  let errors = 0;
+  const lines = [];
+  const options = { render: false, carlMigration: true };
+  const failedItem = (where) => (item, err) => {
+    console.error(`carl-rpg | 0.8.0 migration: couldn't update ${item.name}`, err);
+    errors += 1;
+    fail(where ? `${item.name} (${where})` : item.name, err);
+  };
+  const patch = async (label, items, write) => {
+    try {
+      const updates = [...items].map((i) => opposedStatUpdate(i, sources)).filter(Boolean);
+      if (!updates.length) return;
+      const written = await write(updates);
+      changed += typeof written === "number" ? written : updates.length;
+      const names = updates.map(
+        (u) => items.get?.(u._id)?.name ?? [...items].find((i) => i.id === u._id)?.name,
+      );
+      lines.push(
+        game.i18n.format("CARLRPG.Migration.Refresh.Line", {
+          name: esc(label),
+          items: names.filter(Boolean).map(esc).join(", "),
+        }),
+      );
+    } catch (err) {
+      console.error(`carl-rpg | 0.8.0 migration: couldn't update the items of ${label}`, err);
+      errors += 1;
+      fail(label, err);
+    }
+  };
+  if (!sources.length) return { changed, errors };
+
+  for (const actor of game.actors) {
+    await patch(actor.name, actor.items, (u) => actor.updateEmbeddedDocuments("Item", u, options));
+  }
+  await patch(game.i18n.localize("CARLRPG.Migration.Refresh.ItemsDirectory"), game.items, (u) =>
+    updateItemsEach(game.items, u, options, failedItem("")),
+  );
+  for (const worldPack of game.packs.filter((p) => shouldMigratePack(p))) {
+    try {
+      await withUnlockedPack(worldPack, async () => {
+        const documents = await worldPack.getDocuments();
+        if (worldPack.documentName === "Actor") {
+          for (const actor of documents) {
+            await patch(`${actor.name} (${worldPack.title})`, actor.items, (u) =>
+              actor.updateEmbeddedDocuments("Item", u, options),
+            );
+          }
+        } else {
+          await patch(worldPack.title, documents, (u) =>
+            updateItemsEach(
+              documents,
+              u,
+              { ...options, pack: worldPack.collection },
+              failedItem(worldPack.title),
+            ),
+          );
+        }
+      });
+    } catch (err) {
+      console.error(
+        `carl-rpg | 0.8.0 migration: couldn't update items in compendium ${worldPack.collection}`,
+        err,
+      );
+      errors += 1;
+      fail(worldPack.collection, err);
+    }
+  }
+  if (lines.length) await whisperGmList("OpposedStats", lines);
+  return { changed, errors };
+}
+
 export const MIGRATIONS = [
   { id: "0.7.0-hand-to-hand-box", version: "0.7.0", run: migrateHandToHandSkills },
   { id: COMPANIONS_MIGRATION_ID, version: "0.7.0", run: migrateCompanionActors },
@@ -2509,6 +2621,7 @@ export const MIGRATIONS = [
   { id: WEAPON_SKILL_NOTICE_ID, version: "0.7.0", run: announceWeaponSkill },
   { id: VEHICLE_SKILL_MIGRATION_ID, version: "0.7.0", run: migrateVehicleSkillSettings },
   { id: SKILL_SETTING_BOXES_ID, version: "0.7.0", run: migrateSkillSettingBoxes },
+  { id: OPPOSED_STATS_MIGRATION_ID, version: "0.8.0", run: migrateOpposedStats },
 ];
 
 /**
