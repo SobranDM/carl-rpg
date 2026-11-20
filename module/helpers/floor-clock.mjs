@@ -13,6 +13,10 @@ import { collapseDays, currentFloor } from "./floor.mjs";
  * or take away time ("have time either fly or stagnate", p.63). Shown to
  * everyone by apps/floor-clock-hud.mjs.
  *
+ * Each floor keeps its own timer (ruled 2026-11-19): `{floors: {3: {endsAt,
+ * warned}}}`, and the bar shows the current Floor's. Going back to a floor
+ * - a Floor -/+ misclick put right - picks its timer up where it is.
+ *
  * Its last day is marked from 30 hours left; at 24 hours everyone gets a
  * notice once (the System's warning before a collapse): the GM's client sets `warned`,
  * and each client announces the change.
@@ -26,14 +30,14 @@ const NONE = { endsAt: null, warned: false };
 
 /**
  * Register the timer's settings (init).
- * @param {(clock: object) => void} onChange  Every client, when it changes.
+ * @param {(value: object) => void} onChange  Every client, when it changes.
  */
 export function registerFloorClockSettings(onChange) {
   game.settings.register(SCOPE, SETTING, {
     scope: "world",
     config: false,
     type: Object,
-    default: NONE,
+    default: { floors: {} },
     onChange,
   });
   // Where this player put the bar (dragged); empty: above the hotbar.
@@ -45,9 +49,44 @@ export function registerFloorClockSettings(onChange) {
   });
 }
 
-/** The timer now: {endsAt, warned}. */
-export function floorClock() {
-  return { ...NONE, ...(game.settings.get(SCOPE, SETTING) ?? {}) };
+/**
+ * Every floor's timer, by floor: {3: {endsAt, warned}}. (A world from before
+ * floors had their own kept one timer: it's the current floor's.)
+ * @returns {Record<string, {endsAt: number|null, warned: boolean}>}
+ */
+export function floorClocks() {
+  const value = game.settings.get(SCOPE, SETTING) ?? {};
+  if (value.floors) return { ...value.floors };
+  if (value.endsAt !== null && value.endsAt !== undefined) {
+    return { [currentFloor()]: { endsAt: value.endsAt, warned: !!value.warned } };
+  }
+  return {};
+}
+
+/**
+ * A floor's timer: {endsAt, warned}; endsAt null with none.
+ * @param {number} [floor]  The current Floor by default.
+ */
+export function floorClock(floor = currentFloor()) {
+  return { ...NONE, ...(floorClocks()[floor] ?? {}) };
+}
+
+/**
+ * Has this floor had a timer started?
+ * @param {number} floor
+ * @returns {boolean}
+ */
+export function hasFloorClock(floor) {
+  const clock = floorClocks()[floor];
+  return clock?.endsAt !== null && clock?.endsAt !== undefined;
+}
+
+/** Write one floor's timer (null: none), keeping every other floor's. */
+function writeClock(clock, floor = currentFloor()) {
+  const floors = floorClocks();
+  if (clock) floors[floor] = { endsAt: clock.endsAt, warned: !!clock.warned };
+  else delete floors[floor];
+  return game.settings.set(SCOPE, SETTING, { floors });
 }
 
 /**
@@ -115,7 +154,7 @@ export async function setTimeLeft(hours) {
 export async function setCollapseTimer(hours) {
   if (!game.user.isGM) return;
   const endsAt = game.time.worldTime + Math.max(0, Number(hours) || 0) * 3600;
-  await game.settings.set(SCOPE, SETTING, { endsAt, warned: false });
+  await writeClock({ endsAt, warned: false });
   await checkCollapseWarning();
 }
 
@@ -130,16 +169,16 @@ export async function adjustCollapseTimer(hours) {
   const endsAt = Number(clock.endsAt) + (Number(hours) || 0) * 3600;
   // Moved back past 24 hours: it can warn again.
   const warned = clock.warned && hoursLeft({ endsAt }) <= 24;
-  await game.settings.set(SCOPE, SETTING, { endsAt, warned });
+  await writeClock({ endsAt, warned });
   await checkCollapseWarning();
 }
 
 /**
- * No timer (GM): the bar shows only the Floor.
+ * No timer on this floor (GM): the bar shows only the Floor.
  * @returns {Promise<void>}
  */
 export async function clearCollapseTimer() {
-  if (game.user.isGM) await game.settings.set(SCOPE, SETTING, NONE);
+  if (game.user.isGM) await writeClock(null);
 }
 
 /**
@@ -154,7 +193,7 @@ export async function checkCollapseWarning() {
   // Also when the clock jumps straight past zero (a long rest): everyone
   // still hears it - the notice then says the floor has collapsed.
   if (hours === null || clock.warned || hours > 24) return false;
-  await game.settings.set(SCOPE, SETTING, { ...clock, warned: true });
+  await writeClock({ ...clock, warned: true });
   return true;
 }
 

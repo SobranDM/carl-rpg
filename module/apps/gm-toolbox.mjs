@@ -52,6 +52,7 @@ import {
   clearCollapseTimer,
   DAY_HOURS,
   defaultCollapseHours,
+  hasFloorClock,
   hoursLeft,
   setCollapseTimer,
   setTimeLeft,
@@ -658,13 +659,19 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     this.render();
   }
 
+  /**
+   * Floor +: a floor whose timer was started (a misclick put right) picks
+   * it up where it is; a new one asks for its timer (ruled 2026-11-19).
+   */
   static async #onFloorIncrement(event, target) {
     if (!game.user.isGM) return;
-    const floor = currentFloor();
-    await game.settings.set("carl-rpg", "currentFloor", floor + 1);
+    const next = currentFloor() + 1;
+    await game.settings.set("carl-rpg", "currentFloor", next);
     this.render();
+    if (!hasFloorClock(next)) await CarlToolbox.#onCollapseTimer.call(this);
   }
 
+  /** Floor -: back to that floor, and its own timer if it had one. */
   static async #onFloorDecrement(event, target) {
     if (!game.user.isGM) return;
     const floor = currentFloor();

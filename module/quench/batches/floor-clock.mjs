@@ -5,13 +5,15 @@ import {
   clockStage,
   defaultCollapseHours,
   floorClock,
+  floorClocks,
   formatTimeLeft,
+  hasFloorClock,
   hoursLeft,
   setCollapseTimer,
   setTimeLeft,
 } from "../../helpers/floor-clock.mjs";
 import { collapseDays, currentFloor } from "../../helpers/floor.mjs";
-import { useQuenchTimeout, waitFor } from "../helpers.mjs";
+import { useQuenchTimeout, waitFor, withSetting } from "../helpers.mjs";
 
 /**
  * The floor-collapse timer (0.8.0, ruled 2026-11-19; Time, pp.62-63): the
@@ -56,8 +58,10 @@ export default function register(quench) {
         useQuenchTimeout(this);
         let saved;
         let warn;
-        before(function () {
+        before(async function () {
           saved = game.settings.get("carl-rpg", "floorClock");
+          // From no timers on any floor (the world's own come back after).
+          await game.settings.set("carl-rpg", "floorClock", { floors: {} });
           // The 24-hour notice is permanent: not one per test run.
           warn = ui.notifications.warn;
           ui.notifications.warn = () => null;
@@ -100,12 +104,33 @@ export default function register(quench) {
           await setCollapseTimer(26);
           assert.isFalse(floorClock().warned);
           await game.settings.set("carl-rpg", "floorClock", {
-            endsAt: game.time.worldTime - 4 * 3600,
-            warned: false,
+            floors: { [currentFloor()]: { endsAt: game.time.worldTime - 4 * 3600, warned: false } },
           });
           assert.isTrue(await checkCollapseWarning());
           assert.isTrue(floorClock().warned);
           assert.equal(clockStage(hoursLeft()), "collapsed");
+        });
+
+        it("each floor keeps its own timer: a Floor -/+ misclick put right loses nothing (ruled 2026-11-19)", async function () {
+          const floor = currentFloor();
+          await setCollapseTimer(100);
+          const endsAt = floorClock().endsAt;
+          await withSetting("currentFloor", floor + 1, async () => {
+            assert.isFalse(hasFloorClock(floor + 1), "a new floor has none");
+            assert.isNull(hoursLeft(), "the bar shows the new floor's: none");
+            await setCollapseTimer(50);
+            assert.closeTo(hoursLeft(), 50, 0.01);
+          });
+          assert.equal(floorClock().endsAt, endsAt, "back on the floor: its own timer");
+          assert.closeTo(floorClock(floor + 1).endsAt - game.time.worldTime, 50 * 3600, 60);
+          assert.hasAllKeys(floorClocks(), [String(floor), String(floor + 1)]);
+        });
+
+        it("a world from before floors had their own timer: it's the current floor's", async function () {
+          const endsAt = game.time.worldTime + 3600;
+          await game.settings.set("carl-rpg", "floorClock", { endsAt, warned: false });
+          assert.equal(floorClock().endsAt, endsAt);
+          assert.isTrue(hasFloorClock(currentFloor()));
         });
 
         it("everyone's bar: the Floor, and the time left once a timer runs", async function () {

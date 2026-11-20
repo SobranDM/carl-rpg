@@ -71,7 +71,7 @@ Hooks.once("init", function () {
   registerAchievementSettings();
   registerSoundSettings();
   // The floor-collapse timer: its change redraws every client's bar.
-  registerFloorClockSettings((clock) => FloorClockHud.onClockChange(clock));
+  registerFloorClockSettings(() => FloorClockHud.onClockChange());
   // The box-opening session's state: its change redraws every client's window.
   registerOpeningSessionSetting((state) => OpeningSessionApp.sync(state));
 

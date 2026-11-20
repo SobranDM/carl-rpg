@@ -3,6 +3,7 @@ import {
   checkCollapseWarning,
   clockStage,
   floorClock,
+  floorClocks,
   formatTimeLeft,
   hoursLeft,
 } from "../helpers/floor-clock.mjs";
@@ -23,8 +24,12 @@ export default class FloorClockHud {
   /** The bar's element. @type {HTMLElement|null} */
   static #el = null;
 
-  /** Whether the 24-hour notice has been announced, as this client last saw. */
-  static #warned = false;
+  /**
+   * Each floor's 24-hour notice, as this client last saw it - so going back
+   * to a floor that was already warned doesn't warn again.
+   * @type {Record<string, boolean>}
+   */
+  static #warned = {};
 
   /** Put the bar on the screen and keep it current. Call from `ready`. */
   static init() {
@@ -35,7 +40,7 @@ export default class FloorClockHud {
     el.dataset.tooltipText = game.i18n.localize("CARLRPG.FloorClock.Hint");
     document.body.append(el);
     FloorClockHud.#el = el;
-    FloorClockHud.#warned = floorClock().warned;
+    FloorClockHud.#warned = FloorClockHud.#warnedByFloor();
     FloorClockHud.#wireDrag(el);
     FloorClockHud.refresh();
     FloorClockHud.place();
@@ -54,12 +59,12 @@ export default class FloorClockHud {
   }
 
   /**
-   * The timer changed (its setting's onChange, every client): redraw, and
-   * announce the 24-hour notice the first time it's set.
-   * @param {object} clock
+   * A timer changed (its setting's onChange, every client): redraw, and
+   * announce the current floor's 24-hour notice the first time it's set.
    */
-  static onClockChange(clock) {
-    if (clock?.warned && !FloorClockHud.#warned) {
+  static onClockChange() {
+    const clock = floorClock();
+    if (clock.warned && !FloorClockHud.#warned[currentFloor()]) {
       const collapsed = clockStage(hoursLeft(clock)) === "collapsed";
       ui.notifications.warn(
         game.i18n.localize(
@@ -68,8 +73,15 @@ export default class FloorClockHud {
         { permanent: true },
       );
     }
-    FloorClockHud.#warned = !!clock?.warned;
+    FloorClockHud.#warned = FloorClockHud.#warnedByFloor();
     FloorClockHud.refresh();
+  }
+
+  /** Which floors' 24-hour notices have gone out. */
+  static #warnedByFloor() {
+    return Object.fromEntries(
+      Object.entries(floorClocks()).map(([floor, clock]) => [floor, !!clock.warned]),
+    );
   }
 
   /** Redraw the bar's text and colour. */
