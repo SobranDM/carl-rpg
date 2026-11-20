@@ -3,33 +3,122 @@
 // (templates/item/achievement-sheet.hbs) and a Character's list
 // (templates/actor/parts/details.hbs).
 @mixin styles {
-  .carl-achievement {
+  // The splash: no window chrome - a red paint-splash banner
+  // (assets/paint-banner.webp) slammed onto the screen, white text with a
+  // heavy black outline (~5:1 on the red before the outline).
+  &.carl-achievement-splash {
+    background: none;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+
+    .window-content {
+      padding: 0;
+      background: none;
+      overflow: visible;
+    }
+  }
+
+  .carl-achievement-banner {
+    position: relative;
+    padding: 48px 72px 52px;
+    background: url("../assets/paint-banner.webp") center / 100% 100% no-repeat;
+    color: #fff;
+    filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.6));
+    transform: rotate(-2deg);
+    animation: carl-achievement-slam 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+
+  .carl-achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .carl-achievement-text {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 12px 16px;
-    text-align: center;
+    gap: 4px;
+    min-width: 0;
+    text-shadow:
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      2px 2px 0 #000,
+      0 3px 6px rgba(0, 0, 0, 0.8);
   }
 
   .carl-achievement-icon {
+    flex: 0 0 96px;
     width: 96px;
     height: 96px;
     object-fit: contain;
     border: none;
+    filter: drop-shadow(0 0 2px #fff) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+    transform: rotate(-6deg);
+  }
+
+  .carl-achievement-tag {
+    font-size: 0.85em;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #ffe14d;
   }
 
   .carl-achievement-name {
     margin: 0;
     border: none;
-    color: var(--carl-gold);
+    font-size: 2em;
+    font-weight: 900;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .carl-achievement-crawler {
+    font-weight: bold;
+    opacity: 0.9;
+  }
+
+  .carl-achievement-description p {
+    margin: 0 0 0.3em;
   }
 
   .carl-achievement-description p:last-child {
     margin-bottom: 0;
   }
 
-  .carl-achievement-reward-label,
+  .carl-achievement-reward {
+    font-weight: bold;
+  }
+
+  .carl-achievement-reward-label {
+    color: #ffe14d;
+    text-transform: uppercase;
+  }
+
+  .carl-achievement-close {
+    position: absolute;
+    top: 18px;
+    right: 34px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #111;
+    color: #fff;
+    line-height: 1;
+    cursor: pointer;
+    transform: rotate(2deg);
+
+    &:hover {
+      background: #000;
+      box-shadow: 0 0 8px #fff;
+    }
+  }
+
   .carl-achievement-note span {
     font-weight: bold;
   }
@@ -227,5 +316,16 @@
 
   .carl-achievement-row-name {
     font-weight: bold;
+  }
+}
+
+@keyframes carl-achievement-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.4) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-2deg);
   }
 }

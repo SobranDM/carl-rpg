@@ -21,8 +21,10 @@ export default class AchievementSplash extends HandlebarsApplicationMixin(Applic
   /** @override */
   static DEFAULT_OPTIONS = {
     classes: ["carl-rpg", "carl-achievement-splash"],
-    window: { title: "CARLRPG.Achievement.New", icon: "fas fa-trophy", minimizable: false },
-    position: { width: 420, height: "auto", top: 80 },
+    // No window chrome: the paint-splash banner is the splash, with its own
+    // X (the built-in "close" action).
+    window: { frame: false, title: "CARLRPG.Achievement.New" },
+    position: { width: 680, height: "auto", top: 90 },
   };
 
   /** @override */

@@ -21,7 +21,7 @@ const SCOPE = "carl-rpg";
 const SETTING = "openingSession";
 const ASK = "openingSession";
 /** How long a box shakes and glows before it opens (a test may shorten it). */
-export const sessionTiming = { openingMs: 2500 };
+export const sessionTiming = { openingMs: 1250 };
 
 const queues = new Map();
 const IDLE = { active: false, turn: 0 };

@@ -1925,6 +1925,7 @@
     "Achievement": {
       "New": "New Achievement!",
       "NewName": "New Achievement",
+      "Close": "Close",
       "Library": "Achievements",
       "Plural": "Achievements",
       "Reward": "Reward",
