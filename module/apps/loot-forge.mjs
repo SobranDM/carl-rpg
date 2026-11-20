@@ -243,12 +243,6 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     const draft = this.draft;
     if (data.tierKey) draft.tierKey = data.tierKey;
     if (data.gold !== undefined) draft.gold = Math.max(0, Math.floor(Number(data.gold) || 0));
-    if (data.recipientId !== undefined && data.recipientId !== (this.recipient?.id ?? "")) {
-      this.recipient = game.actors.get(data.recipientId) ?? null;
-      for (const entry of draft.entries) {
-        if (entry.kind === "magic") await refitForRecipient(entry, this.recipient);
-      }
-    }
     for (const [i, changes] of Object.entries(data.entries ?? {})) {
       const entry = draft.entries[Number(i)];
       if (!entry) continue;
@@ -269,6 +263,14 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
           if (ench.kind === "inherentSpell") ench.spellUuid = "";
         }
         if (e.text !== undefined) ench.text = String(e.text);
+      }
+    }
+    // Last: the form still shows the old recipient's choices, which the
+    // edits above have just copied back in.
+    if (data.recipientId !== undefined && data.recipientId !== (this.recipient?.id ?? "")) {
+      this.recipient = game.actors.get(data.recipientId) ?? null;
+      for (const entry of draft.entries) {
+        if (entry.kind === "magic") await refitForRecipient(entry, this.recipient);
       }
     }
     if (event?.target instanceof HTMLSelectElement) this.render();
