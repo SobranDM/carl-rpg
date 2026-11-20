@@ -51,7 +51,28 @@
     gap: 2px;
   }
 
-  // The grid.
+  // The grid: room to make achievements before there are any.
+  &.carl-achievement-grid {
+    min-width: 640px;
+  }
+
+  .carl-achievement-boxes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .carl-achievement-box-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .carl-achievement-box-name {
+    flex: 1 1 auto;
+    font-weight: bold;
+  }
+
   .carl-grid {
     display: flex;
     flex-direction: column;

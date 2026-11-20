@@ -1,9 +1,12 @@
 import {
+  achievementBoxOf,
   achievementsOf,
   awardAchievement,
   awardedCopy,
   definitionOf,
+  preparedBoxFor,
   revokeAchievement,
+  setPreparedBoxFor,
 } from "../../helpers/achievements.mjs";
 import { rewardBox } from "../../helpers/reward-text.mjs";
 import { openBox } from "../../helpers/boxes.mjs";
@@ -40,7 +43,6 @@ async function makeDefinition(system = {}, name = "Quench Button Masher") {
       reward: "You've received a Bronze Crafter's Box!",
       grade: "bronze",
       lootBox: true,
-      contents: "One big red button",
       ...system,
     },
   });
@@ -178,6 +180,42 @@ export default function register(quench) {
           } finally {
             await app?.close();
             await deleteTestActor(actor);
+            await deleteLibraryAchievement(def);
+          }
+        });
+
+        it("a box prepared for one crawler before the award: theirs holds it, another's is rolled", async function () {
+          const def = await makeDefinition();
+          const a = await createTestCharacter("prepared for");
+          const b = await createTestCharacter("not prepared for");
+          try {
+            const draft = {
+              tierKey: "bronze",
+              gold: 7,
+              entries: [
+                {
+                  kind: "text",
+                  name: "Quench Prepared",
+                  img: "icons/svg/item-bag.svg",
+                  quantity: 1,
+                },
+              ],
+            };
+            await setPreparedBoxFor(a, def, draft);
+            assert.exists(preparedBoxFor(a, def));
+            assert.isNull(preparedBoxFor(b, def), "per crawler");
+
+            const boxA = achievementBoxOf(await awardAchievement(def, a));
+            assert.equal(boxA.system.contents.mode, "prepared");
+            assert.equal(boxA.system.contents.gold, 7);
+            assert.equal(boxA.system.contents.entries[0].name, "Quench Prepared");
+            assert.isNull(preparedBoxFor(a, def), "used up by the award");
+
+            const boxB = achievementBoxOf(await awardAchievement(def, b));
+            assert.equal(boxB.system.contents.mode, "random");
+          } finally {
+            await deleteTestActor(a);
+            await deleteTestActor(b);
             await deleteLibraryAchievement(def);
           }
         });

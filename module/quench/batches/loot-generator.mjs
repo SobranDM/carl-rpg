@@ -1,7 +1,6 @@
 import {
   autofillMagicDraft,
   buildMagicItemData,
-  createLootInWorld,
   generateLoot,
   generateMagicDraft,
   grantLoot,
@@ -293,33 +292,6 @@ export default function register(quench) {
           }
         });
 
-        it("createLootInWorld: the items in the world's Loot folder", async function () {
-          const name = game.i18n.localize("CARLRPG.Loot.Folder");
-          const hadFolder = !!game.folders.find(
-            (f) => f.type === "Item" && f.name === name && !f.folder,
-          );
-          const items = await createLootInWorld({
-            tierKey: "bronze",
-            gold: 5,
-            entries: [
-              {
-                kind: "text",
-                name: "Quench World Loot",
-                img: "icons/svg/item-bag.svg",
-                quantity: 1,
-              },
-            ],
-          });
-          try {
-            assert.lengthOf(items, 1);
-            assert.equal(items[0].folder?.name, name);
-          } finally {
-            const folder = items[0]?.folder;
-            for (const item of items) await item.delete();
-            if (!hadFolder && folder) await folder.delete();
-          }
-        });
-
         it("one effect rerolled: the others are kept", async function () {
           const draft = await generateMagicDraft("legendary", { floor: 3 });
           assert.exists(draft, "the magic item tables are there");
@@ -397,7 +369,11 @@ export default function register(quench) {
               Number(forge.element.querySelector('input[name="gold"]').value),
               draft.gold,
             );
-            assert.isNotNull(forge.element.querySelector('[data-action="give"]'));
+            assert.isNotNull(forge.element.querySelector('[data-action="save"]'));
+            assert.isNull(
+              forge.element.querySelector('[name="recipientId"]'),
+              "the caller picks who it's for",
+            );
           } finally {
             await forge.close();
           }
@@ -452,36 +428,6 @@ export default function register(quench) {
             await waitFor(() => forge.draft.gold === 250);
           } finally {
             await forge.close();
-          }
-        });
-
-        it("a new recipient: a percentage Stat from their Stat, and a Skill they have", async function () {
-          const actor = await createTestCharacter("forge recipient", {
-            system: { stats: { dex: { value: 60 } } },
-          });
-          const forge = await LootForge.open({
-            draft: magicDraft([
-              { kind: "stat", target: "dex", value: 9, percent: 10 },
-              { kind: "skill", target: "Nobody Has This", value: 5 },
-            ]),
-          });
-          try {
-            // createTestItem names it "Quench Lockpicking <id>".
-            const owned = await createTestItem(actor, "skill", "Lockpicking", {
-              system: { rank: 1, category: "utility" },
-            });
-            const before = forge.element.querySelector('[name="recipientId"]');
-            edit(forge, "recipientId", actor.id);
-            await waitFor(() => forge.recipient?.id === actor.id);
-            const [stat, skill] = forge.draft.entries[0].enchantments;
-            await waitFor(() => skill.target === owned.name);
-            // Let the redraw finish before closing.
-            await waitFor(() => forge.element.querySelector('[name="recipientId"]') !== before);
-            assert.equal(stat.value, 6, "10% of 60, worked out again");
-            assert.equal(skill.value, 5, "the X is kept");
-          } finally {
-            await forge.close();
-            await deleteTestActor(actor);
           }
         });
       });

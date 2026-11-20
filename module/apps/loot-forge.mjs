@@ -5,23 +5,18 @@
  * damage type...), with rerolls for the lot, one item or one effect, items
  * dropped in from the sidebar or a compendium, and items taken out.
  *
- * Modes:
- *  - "loot" (GM Toolbox Roll Loot): Give to a character, Create in World,
- *    Post to Chat.
- *  - "save" (a Box's prepared contents; Reforge of one magic item): Save,
- *    which hands the draft to `onSave`. `single` shows one magic item only.
+ * Used to prepare a Box's contents (its sheet; an achievement's box for one
+ * crawler, the Achievements window) and to Reforge one magic item (`single`).
+ * Save hands the draft to `onSave`. The recipient - the crawler it's for -
+ * is fixed by the caller: auto-fill and percentage Stats use them.
  *
  * Works on a LootDraft (helpers/loot.mjs generateLoot): {tierKey, gold, entries}.
  */
 import {
-  autofillMagicDraft,
-  createLootInWorld,
   enchantmentLine,
   generateLoot,
   generateMagicDraft,
-  grantLoot,
   magicItemUpdate,
-  postLootCard,
   rerollEnchantment,
 } from "../helpers/loot.mjs";
 import { labelChoices } from "../helpers/html.mjs";
@@ -37,37 +32,32 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   /**
    * @param {object} config
    * @param {{tierKey: string, gold?: number, entries: object[]}} config.draft  Copied, not changed.
-   * @param {"loot"|"save"} [config.mode]
-   * @param {Actor|null} [config.recipient]  Whose loot it is: auto-fill and Give use them.
-   * @param {((draft: object) => Promise<void>)|null} [config.onSave]  "save" mode's Save.
+   * @param {Actor|null} [config.recipient]  Whose loot it is: auto-fill uses them.
+   * @param {((draft: object) => Promise<void>)|null} [config.onSave]  Save.
    * @param {boolean} [config.single]  One magic item: no tier, gold or other entries.
    * @param {string|null} [config.title]
    */
   constructor({
     draft,
-    mode = "loot",
     recipient = null,
     onSave = null,
     single = false,
     title = null,
-    lockRecipient = false,
     ...options
   } = {}) {
     super(options);
     this.draft = foundry.utils.deepClone(draft);
     this.draft.gold ??= 0;
-    this.mode = mode;
     this.recipient = recipient;
     this.onSave = onSave;
     this.single = single;
     this.customTitle = title;
-    this.lockRecipient = lockRecipient;
-    /** True while loot is being handed out: a second click does nothing. */
+    /** True while Save runs: a second click does nothing. */
     this.busy = false;
   }
 
   /**
-   * Run a hand-out action once: further clicks while it runs are ignored.
+   * Run Save once: further clicks while it runs are ignored.
    * @param {() => Promise<void>} fn
    */
   async #once(fn) {
@@ -105,7 +95,6 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     const owner = item.parent?.type === "character" ? item.parent : null;
     return LootForge.open({
       draft: { tierKey: draft.tierKey, gold: 0, entries: [draft] },
-      mode: "save",
       single: true,
       recipient: owner,
       title: game.i18n.format("CARLRPG.Loot.Forge.ReforgeTitle", { name: item.name }),
@@ -128,9 +117,6 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       removeEntry: LootForge.#onRemoveEntry,
       rerollEntry: LootForge.#onRerollEntry,
       rerollEffect: LootForge.#onRerollEffect,
-      give: LootForge.#onGive,
-      createWorld: LootForge.#onCreateWorld,
-      postChat: LootForge.#onPostChat,
       save: LootForge.#onSave,
     },
   };
@@ -152,7 +138,6 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   async _prepareContext(options) {
     const loc = (key) => game.i18n.localize(key);
     const cfg = CONFIG.CARLRPG;
-    const characters = game.actors.filter((a) => a.type === "character");
     const skillNames = (this.recipient?.items ?? [])
       .filter((i) => ["skill", "spell"].includes(i.type))
       .map((i) => i.name)
@@ -191,21 +176,12 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       tierChoices: labelChoices(cfg.lootBoxTiers),
       tierKey: this.draft.tierKey,
       gold: this.draft.gold,
-      showRecipient: !this.single && !this.lockRecipient,
-      recipientId: this.recipient?.id ?? "",
-      recipientChoices: {
-        "": loc("CARLRPG.Loot.Forge.NoRecipient"),
-        ...Object.fromEntries(characters.map((a) => [a.id, a.name])),
-      },
       entries,
       skillNames,
       statChoices: cfg.stats,
       damageChoices: cfg.damageTypes,
       slotChoices: { "": "CARLRPG.Loot.Forge.NoSlot", ...cfg.wearSlots },
       accessoryChoices: cfg.accessoryKinds,
-      lootMode: this.mode === "loot",
-      saveMode: this.mode === "save",
-      canGive: this.mode === "loot" && !!this.recipient,
     };
   }
 
@@ -267,14 +243,6 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
         if (e.text !== undefined) ench.text = String(e.text);
       }
     }
-    // Last: the form still shows the old recipient's choices, which the
-    // edits above have just copied back in.
-    if (data.recipientId !== undefined && data.recipientId !== (this.recipient?.id ?? "")) {
-      this.recipient = game.actors.get(data.recipientId) ?? null;
-      for (const entry of draft.entries) {
-        if (entry.kind === "magic") await refitForRecipient(entry, this.recipient);
-      }
-    }
     if (event?.target instanceof HTMLSelectElement) this.#redraw();
   }
 
@@ -332,64 +300,12 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     this.#redraw();
   }
 
-  static async #onGive() {
-    return this.#once(async () => {
-      if (!this.recipient) {
-        ui.notifications.warn(game.i18n.localize("CARLRPG.Loot.Forge.PickRecipient"));
-        return;
-      }
-      await grantLoot(this.draft, this.recipient);
-      await postLootCard(this.draft, { actor: this.recipient });
-      ui.notifications.info(
-        game.i18n.format("CARLRPG.Loot.Forge.Given", { name: this.recipient.name }),
-      );
-      this.close();
-    });
-  }
-
-  static async #onCreateWorld() {
-    return this.#once(async () => {
-      const items = await createLootInWorld(this.draft);
-      ui.notifications.info(
-        game.i18n.format("CARLRPG.Loot.Forge.Created", { count: items.length }),
-      );
-      if (this.draft.gold) {
-        ui.notifications.warn(
-          game.i18n.format("CARLRPG.Loot.Forge.GoldNotItem", { gold: this.draft.gold }),
-        );
-      }
-      this.close();
-    });
-  }
-
-  static async #onPostChat() {
-    await postLootCard(this.draft);
-  }
-
   static async #onSave() {
     return this.#once(async () => {
       await this.onSave?.(foundry.utils.deepClone(this.draft));
       this.close();
     });
   }
-}
-
-/**
- * A magic draft made over for a new recipient: a percentage Stat is worked
- * out from their Stat again (p.220), and a +X Skill they don't have goes to
- * one they do; then the rest is filled in as for a fresh roll.
- * @param {object} entry  A magic draft (changed in place).
- * @param {Actor|null} recipient
- */
-async function refitForRecipient(entry, recipient) {
-  const owned = new Set(
-    (recipient?.items ?? []).filter((i) => i.type === "skill").map((i) => i.name),
-  );
-  for (const e of entry.enchantments) {
-    if (e.kind === "stat" && e.percent) e.value = null;
-    if (e.kind === "skill" && recipient && !owned.has(e.target)) e.target = "";
-  }
-  await autofillMagicDraft(entry, { recipient });
 }
 
 /** A non-magic entry's name as shown. */

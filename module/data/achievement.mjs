@@ -8,8 +8,6 @@
  *    Crafter's Box!"), a title or perk, or nothing.
  *  - `grade`: CONFIG.CARLRPG.lootBoxTiers - its icon, and its box's tier.
  *  - `lootBox`: awarding it gives a loot box, titled from the Reward line.
- *  - `contents`: the GM's note (the book's "Contents" line). Not shown to
- *    players.
  * On an awarded copy:
  *  - `awardedFloor`: the Floor it was awarded on.
  *  - `seen`: its owner has closed its splash (apps/achievement-splash.mjs).
@@ -28,7 +26,6 @@ export default class CarlRPGAchievement extends foundry.abstract.TypeDataModel {
         choices: () => Object.keys(CONFIG.CARLRPG.lootBoxTiers),
       }),
       lootBox: new fields.BooleanField({ required: true, initial: false }),
-      contents: new fields.StringField({ required: true, blank: true, initial: "" }),
       awardedFloor: new fields.NumberField({
         required: true,
         nullable: true,

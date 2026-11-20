@@ -9,11 +9,6 @@
     <label>{{localize "CARLRPG.Loot.Forge.Gold"}}
       <input type="number" name="gold" value="{{gold}}" min="0" step="1" />
     </label>
-    {{#if showRecipient}}
-    <label>{{localize "CARLRPG.Loot.Forge.Recipient"}}
-      <select name="recipientId">{{selectOptions recipientChoices selected=recipientId}}</select>
-    </label>
-    {{/if}}
     <button type="button" data-action="rerollAll" data-tooltip-text="{{localize 'CARLRPG.Loot.Forge.RerollAll'}}">
       <i class="fas fa-dice"></i>
     </button>
@@ -93,13 +88,6 @@
     {{#unless single}}
     <button type="button" data-action="addMagic"><i class="fas fa-wand-sparkles"></i> {{localize "CARLRPG.Loot.Forge.AddMagic"}}</button>
     {{/unless}}
-    {{#if lootMode}}
-    <button type="button" data-action="postChat"><i class="fas fa-comment"></i> {{localize "CARLRPG.Loot.Forge.PostChat"}}</button>
-    <button type="button" data-action="createWorld"><i class="fas fa-folder-plus"></i> {{localize "CARLRPG.Loot.Forge.CreateWorld"}}</button>
-    <button type="button" data-action="give" {{#unless canGive}}disabled{{/unless}}><i class="fas fa-gift"></i> {{localize "CARLRPG.Loot.Forge.Give"}}</button>
-    {{/if}}
-    {{#if saveMode}}
     <button type="button" data-action="save"><i class="fas fa-save"></i> {{localize "CARLRPG.Loot.Forge.Save"}}</button>
-    {{/if}}
   </footer>
 </div>

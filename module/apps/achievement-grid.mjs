@@ -1,5 +1,13 @@
 import { pickerGroups } from "./actor-picker.mjs";
-import { awardAchievement, awardedCopy, revokeAchievement } from "../helpers/achievements.mjs";
+import {
+  achievementBox,
+  achievementBoxOf,
+  awardAchievement,
+  awardedCopy,
+  preparedBoxFor,
+  revokeAchievement,
+  setPreparedBoxFor,
+} from "../helpers/achievements.mjs";
 import {
   achievementLibrary,
   createLibraryAchievement,
@@ -8,7 +16,9 @@ import {
   libraryAchievements,
   updateLibraryAchievement,
 } from "../helpers/achievement-library.mjs";
-import { boxTierRank } from "../helpers/boxes.mjs";
+import { boxDraftForForge, boxTierRank, clearBoxContents, prepareBox } from "../helpers/boxes.mjs";
+import { generateLoot } from "../helpers/loot.mjs";
+import LootForge from "./loot-forge.mjs";
 import { enrichDescription, itemDescriptions, itemTooltips } from "../helpers/rich-text.mjs";
 import { labelChoices } from "../helpers/html.mjs";
 
@@ -26,7 +36,9 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * award it), lit once awarded, with a check once its loot box is opened.
  * Click (or right-click) an awarded one to take it back, after a
  * confirmation. New Achievement, or an achievement's name, opens its editor
- * below the grid.
+ * below the grid. For an achievement with a loot box, the editor lists the
+ * crawlers: the GM can prepare what each one's box holds (ruled 2026-11-19:
+ * per crawler) - before it's awarded, or after, until it's opened.
  */
 export default class AchievementGrid extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @override */
@@ -42,6 +54,8 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
       editAchievement: AchievementGrid.#onEdit,
       closeEditor: AchievementGrid.#onCloseEditor,
       deleteAchievement: AchievementGrid.#onDelete,
+      prepareFor: AchievementGrid.#onPrepareFor,
+      clearFor: AchievementGrid.#onClearFor,
     },
   };
 
@@ -132,6 +146,13 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
             descriptionHTML: await enrichDescription(editing.system.description, editing, {
               secrets: true,
             }),
+            boxes: editing.system.lootBox
+              ? columns.map((actor) => ({
+                  actorId: actor.id,
+                  name: actor.name,
+                  ...boxState(actor, editing),
+                }))
+              : null,
           }
         : null,
     };
@@ -157,6 +178,13 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     for (const hook of ["createActor", "deleteActor", "userConnected"]) {
       this.#hooks.push([hook, Hooks.on(hook, redraw)]);
     }
+    // A crawler's box prepared ahead of its award (a flag on the crawler).
+    this.#hooks.push([
+      "updateActor",
+      Hooks.on("updateActor", (actor, changed) => {
+        if (foundry.utils.hasProperty(changed, "flags.carl-rpg")) redraw();
+      }),
+    ]);
   }
 
   /** @override */
@@ -262,6 +290,46 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     this.render();
   }
 
+  /**
+   * Prepare one crawler's loot box for the achievement in the editor, in
+   * the Loot Forge: its box if it has been awarded (until it's opened),
+   * else what it will hold when it is - a roll for them to start from.
+   */
+  static async #onPrepareFor(event, target) {
+    const def = await this.#editingDoc();
+    const actor = game.actors.get(target.closest("[data-actor-id]")?.dataset.actorId);
+    if (!def || !actor) return;
+    const copy = awardedCopy(actor, def.uuid);
+    const box = copy ? achievementBoxOf(copy) : null;
+    if (copy && !box) return;
+    const tierKey = achievementBox(def)?.tierKey ?? def.system.grade;
+    const draft = box
+      ? await boxDraftForForge(box)
+      : (foundry.utils.deepClone(preparedBoxFor(actor, def)) ??
+        (await generateLoot(tierKey, { recipient: actor })));
+    if (!draft) return;
+    await LootForge.open({
+      draft,
+      recipient: actor,
+      title: game.i18n.format("CARLRPG.Achievement.Grid.PrepareTitle", {
+        name: actor.name,
+        achievement: def.name,
+      }),
+      onSave: (saved) => (box ? prepareBox(box, saved) : setPreparedBoxFor(actor, def, saved)),
+    });
+  }
+
+  /** Back to a roll when the box is opened, for one crawler. */
+  static async #onClearFor(event, target) {
+    const def = await this.#editingDoc();
+    const actor = game.actors.get(target.closest("[data-actor-id]")?.dataset.actorId);
+    if (!def || !actor) return;
+    const copy = awardedCopy(actor, def.uuid);
+    const box = copy ? achievementBoxOf(copy) : null;
+    if (box) await clearBoxContents(box);
+    else if (!copy) await setPreparedBoxFor(actor, def, null);
+  }
+
   /** Take an award back, after asking. */
   async #onRevoke(cell) {
     const { actor, definition } = await this.#cellTargets(cell);
@@ -276,4 +344,27 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     });
     if (ok) await revokeAchievement(copy);
   }
+}
+
+/**
+ * Where a crawler's loot box for an achievement stands, for the editor:
+ * opened; awarded and waiting (prepared, or to be rolled); or not awarded
+ * yet (prepared ahead, or to be rolled).
+ * @returns {{label: string, canPrepare: boolean, prepared: boolean}}
+ */
+function boxState(actor, definition) {
+  const copy = awardedCopy(actor, definition.uuid);
+  const key = (k) => `CARLRPG.Achievement.Grid.Box.${k}`;
+  if (copy) {
+    const box = achievementBoxOf(copy);
+    if (!box) return { label: key("Opened"), canPrepare: false, prepared: false };
+    const prepared = box.system.contents.mode === "prepared";
+    return {
+      label: key(prepared ? "AwardedPrepared" : "AwardedRandom"),
+      canPrepare: true,
+      prepared,
+    };
+  }
+  const prepared = !!preparedBoxFor(actor, definition);
+  return { label: key(prepared ? "Prepared" : "Random"), canPrepare: true, prepared };
 }

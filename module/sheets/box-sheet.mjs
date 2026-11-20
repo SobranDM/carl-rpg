@@ -80,9 +80,7 @@ export class CarlRPGBoxSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     if (!draft) return;
     await LootForge.open({
       draft,
-      mode: "save",
       recipient: box.parent?.type === "character" ? box.parent : null,
-      lockRecipient: true,
       title: game.i18n.format("CARLRPG.Box.PrepareTitle", { name: box.name }),
       onSave: (saved) => prepareBox(box, saved),
     });

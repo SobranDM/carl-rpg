@@ -4518,12 +4518,20 @@
   flex: 1 1 0;
   white-space: nowrap;
 }
+.carl-rpg .carl-box-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.carl-rpg .carl-box-toggle {
+  width: 100%;
+}
 .carl-rpg .carl-box-strip {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin-bottom: 8px;
 }
 .carl-rpg .carl-box-chip img {
   width: 40px;
@@ -4570,6 +4578,23 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+.carl-rpg.carl-achievement-grid {
+  min-width: 640px;
+}
+.carl-rpg .carl-achievement-boxes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.carl-rpg .carl-achievement-box-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.carl-rpg .carl-achievement-box-name {
+  flex: 1 1 auto;
+  font-weight: bold;
 }
 .carl-rpg .carl-grid {
   display: flex;

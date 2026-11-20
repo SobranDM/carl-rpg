@@ -7,20 +7,27 @@
       aren't listed here (actor-sheet.mjs _prepareItems). Gold sits above
       the doll, so it doesn't push the list down. --}}
 <section class="tab scrollable {{tab.cssClass}}" data-group="primary" data-tab="items">
-  {{#if boxes.length}}
-  {{!-- Unopened loot boxes (data/box.mjs): the art, the title as its
-        tooltip; click for its sheet. --}}
-  <div class="carl-box-strip">
-    <span class="resource-label">{{localize "CARLRPG.Box.Strip"}}</span>
-    {{#each boxes as |box|}}
-    <a class="carl-box-chip" data-item-id="{{box._id}}" data-action="editItem" data-tooltip-text="{{box.name}}">
-      <img src="{{box.img}}" alt="" />
-    </a>
-    {{/each}}
-  </div>
-  {{/if}}
   <div class="carl-inventory-layout">
   <ol class="items-list">
+    {{#if boxes.length}}
+    {{!-- Unopened loot boxes (data/box.mjs), behind a button at the top of
+          the list's own column so they don't push the list down: the art,
+          the title as its tooltip; click one for its sheet. --}}
+    <li class="carl-box-row">
+      <button type="button" class="carl-box-toggle" data-action="toggleBoxes">
+        <i class="fas fa-box"></i> {{localize (ifThen showBoxes "CARLRPG.Box.Hide" "CARLRPG.Box.Show") count=boxes.length}}
+      </button>
+      {{#if showBoxes}}
+      <div class="carl-box-strip">
+        {{#each boxes as |box|}}
+        <a class="carl-box-chip" data-item-id="{{box._id}}" data-action="editItem" data-tooltip-text="{{box.name}}">
+          <img src="{{box.img}}" alt="" />
+        </a>
+        {{/each}}
+      </div>
+      {{/if}}
+    </li>
+    {{/if}}
     <li class="item flexrow items-header">
       <div class="item-name carl-sort-header" data-action="sortList" data-list="gear" data-sort-key="name">{{localize "Name"}} <i class="fas {{@root.listSort.gear.name}}"></i></div>
       <div class="item-prop carl-sort-header" data-action="sortList" data-list="gear" data-sort-key="quantity">{{localize "CARLRPG.Item.Quantity"}} <i class="fas {{@root.listSort.gear.quantity}}"></i></div>

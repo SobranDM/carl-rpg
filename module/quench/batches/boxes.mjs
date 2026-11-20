@@ -241,15 +241,22 @@ export default function register(quench) {
       describe("Sheets", function () {
         useQuenchTimeout(this);
 
-        it("the Inventory's Unopened Boxes strip: each box's art, its title as the tooltip", async function () {
+        it("the Inventory's Show Loot Boxes: each box's art, its title as the tooltip", async function () {
           const actor = await createTestCharacter("box strip");
           const sheet = actor.sheet;
           try {
             const box = await giveBox(actor, { tierKey: "gold", name: "Gold Pet Box" });
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            const chip = sheet.element.querySelector(`.carl-box-chip[data-item-id="${box.id}"]`);
-            assert.exists(chip);
+            const chipOf = () =>
+              sheet.element.querySelector(`.carl-box-chip[data-item-id="${box.id}"]`);
+            assert.isNull(chipOf(), "behind the button until it's clicked");
+            const toggle = sheet.element.querySelector('[data-action="toggleBoxes"]');
+            assert.exists(toggle);
+            assert.exists(toggle.closest("ol.items-list"), "in the list's own column");
+            toggle.click();
+            await waitFor(() => chipOf());
+            const chip = chipOf();
             assert.equal(chip.dataset.tooltipText, "Gold Pet Box");
             assert.isNull(chip.getAttribute("title"));
           } finally {

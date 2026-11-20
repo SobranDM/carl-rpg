@@ -138,6 +138,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       addArrayItem: CarlRPGActorSheet.#onAddArrayItem,
       deleteArrayItem: CarlRPGActorSheet.#onDeleteArrayItem,
       toggleDrawer: CarlRPGActorSheet.#onToggleDrawer,
+      toggleBoxes: CarlRPGActorSheet.#onToggleBoxes,
       setHbValue: CarlRPGActorSheet.#onSetHbValue,
       setShieldValue: CarlRPGActorSheet.#onSetShieldValue,
       spendStatPoints: CarlRPGActorSheet.#onSpendStatPoints,
@@ -342,6 +343,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @type {Object<string, {key: string, dir: 1|-1}>}
    */
   #listSort = {};
+
+  /** The Inventory's unopened loot boxes are shown (Show Loot Boxes). */
+  #showBoxes = false;
 
   /**
    * Rows of an array of objects (the Conditions tab) submit only the fields
@@ -980,6 +984,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Awarded achievements (data/achievement.mjs), newest first.
     const order = achievementsOf(this.actor).map((i) => i.id);
     context.achievements = achievements.sort((a, b) => order.indexOf(a._id) - order.indexOf(b._id));
+    context.showBoxes = this.#showBoxes;
     // Unopened loot boxes (data/box.mjs), Bronze to Celestial.
     context.boxes = boxes.sort(
       (a, b) => boxTierRank(a.system.tier) - boxTierRank(b.system.tier) || byName(a, b),
@@ -1471,6 +1476,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * `system.damageEffectsExpanded`, resolved from the closest `[data-item-id]`.
    * @private
    */
+  /** Show Loot Boxes / Hide Loot Boxes (the Inventory). */
+  static #onToggleBoxes() {
+    this.#showBoxes = !this.#showBoxes;
+    this.render();
+  }
+
   static #onToggleDrawer(event, target) {
     const scope = target.dataset.scope;
     const doc = scope === "item" ? itemFor(this.actor, target) : this.actor;

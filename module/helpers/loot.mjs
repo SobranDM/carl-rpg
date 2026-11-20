@@ -544,22 +544,6 @@ export async function grantLoot(draft, actor, { itemData = null } = {}) {
 }
 
 /**
- * A LootDraft's items made in the world's Items directory, in a "Loot"
- * folder (made if missing). Gold isn't an item, so it isn't made.
- * @param {{entries: object[]}} draft
- * @returns {Promise<Item[]>}
- */
-export async function createLootInWorld(draft) {
-  const data = await lootItemData(draft);
-  if (!data.length) return [];
-  const name = game.i18n.localize("CARLRPG.Loot.Folder");
-  const folder =
-    game.folders.find((f) => f.type === "Item" && f.name === name && !f.folder) ??
-    (await Folder.implementation.create({ name, type: "Item" }));
-  return Item.implementation.createDocuments(data.map((d) => ({ ...d, folder: folder.id })));
-}
-
-/**
  * A LootDraft as HTML: its gold, then each entry (a magic item with its
  * enchantments).
  * @param {{gold?: number, entries: object[]}} draft

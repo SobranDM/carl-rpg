@@ -7,8 +7,7 @@ import { labelChoices } from "../helpers/html.mjs";
 /**
  * An Achievement's sheet (data/achievement.mjs). The GM edits it: name,
  * grade (its icon and box tier), the Reward line, whether it gives a loot
- * box, the description, and a GM note (the book's "Contents"). A player
- * reads it - without the GM note.
+ * box, and the description. A player reads it.
  * @extends {ItemSheetV2}
  * @mixes {HandlebarsApplication}
  */

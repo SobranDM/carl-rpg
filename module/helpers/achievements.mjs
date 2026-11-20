@@ -1,6 +1,6 @@
 import { copyData } from "./packs.mjs";
 import { currentFloor } from "./floor.mjs";
-import { boxName, giveBox } from "./boxes.mjs";
+import { boxName, giveBox, prepareBox } from "./boxes.mjs";
 import { rewardBox } from "./reward-text.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { enrichDescription } from "./rich-text.mjs";
@@ -20,6 +20,11 @@ import { queueForActor } from "./actor-queue.mjs";
 const SCOPE = "carl-rpg";
 /** The flag on an awarded copy: its definition's uuid. */
 export const SOURCE_FLAG = "achievementSource";
+/**
+ * The flag on a crawler holding the loot box contents the GM prepared for
+ * an achievement they haven't been awarded yet, by the achievement's id.
+ */
+const PREPARED_FLAG = "preparedBoxes";
 
 /** Register the achievement settings (init). */
 export function registerAchievementSettings() {
@@ -108,11 +113,17 @@ async function award(definition, actor) {
   const [copy] = await actor.createEmbeddedDocuments("Item", [data]);
   if (!copy) return null;
   if (box) {
-    await giveBox(actor, {
+    const given = await giveBox(actor, {
       tierKey: box.tierKey,
       name: box.name,
       source: { kind: "achievement", uuid: copy.uuid },
     });
+    // What the GM prepared for this crawler's box, ahead of the award.
+    const prepared = preparedBoxFor(actor, definition);
+    if (given && prepared) {
+      await prepareBox(given, prepared);
+      await actor.unsetFlag(SCOPE, `${PREPARED_FLAG}.${definition.id}`);
+    }
   }
   if (game.settings.get(SCOPE, "postAchievementsToChat")) await postAchievementCard(copy, actor);
   return copy;
@@ -132,6 +143,46 @@ export async function definitionFor(item) {
 }
 
 /**
+ * The loot box contents the GM prepared for a crawler's achievement before
+ * awarding it (ruled 2026-11-19: per crawler).
+ * @param {Actor} actor
+ * @param {Item} definition
+ * @returns {{tierKey: string, gold: number, entries: object[]}|null}
+ */
+export function preparedBoxFor(actor, definition) {
+  return actor?.getFlag(SCOPE, PREPARED_FLAG)?.[definition?.id] ?? null;
+}
+
+/**
+ * Prepare (or, with null, clear) what a crawler's box for an achievement
+ * will hold when it's awarded (GM).
+ * @param {Actor} actor
+ * @param {Item} definition
+ * @param {{tierKey: string, gold?: number, entries: object[]}|null} draft
+ * @returns {Promise<Actor>}
+ */
+export function setPreparedBoxFor(actor, definition, draft) {
+  const key = `${PREPARED_FLAG}.${definition.id}`;
+  if (!draft) return actor.unsetFlag(SCOPE, key);
+  return actor.setFlag(SCOPE, key, {
+    tierKey: draft.tierKey,
+    gold: Math.max(0, Math.floor(Number(draft.gold) || 0)),
+    entries: draft.entries,
+  });
+}
+
+/**
+ * The unopened loot box an awarded achievement gave.
+ * @param {Item} copy
+ * @returns {Item|null}
+ */
+export function achievementBoxOf(copy) {
+  return (
+    copy?.parent?.items.find((i) => i.type === "box" && i.system.source.uuid === copy.uuid) ?? null
+  );
+}
+
+/**
  * Take an awarded achievement back (GM): the copy, and its loot box if it
  * hasn't been opened.
  * @param {Item} copy
@@ -140,12 +191,8 @@ export async function definitionFor(item) {
 export async function revokeAchievement(copy) {
   const actor = copy?.parent;
   if (!game.user.isGM || copy?.type !== "achievement" || !actor) return;
-  const boxes = actor.items.filter((i) => i.type === "box" && i.system.source.uuid === copy.uuid);
-  if (boxes.length)
-    await actor.deleteEmbeddedDocuments(
-      "Item",
-      boxes.map((b) => b.id),
-    );
+  const box = achievementBoxOf(copy);
+  if (box) await box.delete();
   await copy.delete();
 }
 

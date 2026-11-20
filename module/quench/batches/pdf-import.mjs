@@ -538,7 +538,8 @@ export default function register(quench) {
             assert.equal(sys.reward, "You've received a Bronze Button Box!");
             assert.equal(sys.grade, "bronze");
             assert.isTrue(sys.lootBox, "the Reward gives a loot box");
-            assert.equal(sys.contents, "One big red button");
+            assert.notProperty(sys, "contents", "the Contents line isn't kept");
+            assert.notInclude(sys.reward, "big red button");
             assert.notInclude(JSON.stringify(sys), "body prose");
           });
         }

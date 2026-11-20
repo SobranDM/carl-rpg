@@ -29,8 +29,6 @@ import {
   endOfFloorPopularityDelta,
 } from "../helpers/floor.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
-import { generateLoot } from "../helpers/loot.mjs";
-import LootForge from "./loot-forge.mjs";
 import AchievementGrid from "./achievement-grid.mjs";
 import OpeningSessionApp from "./opening-session.mjs";
 import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
@@ -131,7 +129,6 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       floorDecrement: CarlToolbox.#onFloorDecrement,
       rest: CarlToolbox.#onRest,
       grind: CarlToolbox.#onGrind,
-      rollLoot: CarlToolbox.#onRollLoot,
       partyCheck: CarlToolbox.#onPartyCheck,
       newScene: CarlToolbox.#onNewScene,
     },
@@ -965,33 +962,5 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       for (const item of actor.items) if (item.type === "skill") names.add(item.name);
     }
     return [...names].sort((a, b) => a.localeCompare(b));
-  }
-
-  /**
-   * Roll Loot: a loot box's contents at a tier (helpers/loot.mjs
-   * generateLoot - gold, consumables, mundane items, a magic item from
-   * Silver up), auto-filled for the recipient if one is picked, opened in
-   * the Loot Forge to adjust, then given to a character, made in the world
-   * or posted to chat.
-   */
-  static async #onRollLoot(event, target) {
-    if (!game.user.isGM) return;
-
-    const tiers = optionsHtml(labelChoices(CONFIG.CARLRPG.lootBoxTiers));
-    const crawlers = optionsHtml({
-      "": "CARLRPG.Loot.Forge.NoRecipient",
-      ...Object.fromEntries(
-        game.actors.filter((a) => a.type === "character").map((a) => [a.id, a.name]),
-      ),
-    });
-    const result = await showCarlDialog({
-      title: game.i18n.localize("CARLRPG.Toolbox.RollLootTitle"),
-      content: `<div class="carl-dialog-body"><div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.LootTierLabel")}</label><select name="tier">${tiers}</select></div><div class="form-group"><label>${game.i18n.localize("CARLRPG.Loot.Forge.Recipient")}</label><select name="recipient">${crawlers}</select></div></div>`,
-      buttons: [rollButton(), cancelButton()],
-    });
-    if (!result) return;
-    const recipient = game.actors.get(result.recipient) ?? null;
-    const draft = await generateLoot(result.tier, { recipient });
-    if (draft) await LootForge.open({ draft, mode: "loot", recipient });
   }
 }

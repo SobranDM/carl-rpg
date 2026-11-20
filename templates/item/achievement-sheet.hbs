@@ -1,5 +1,5 @@
 {{!-- An Achievement (module/sheets/achievement-sheet.mjs). The GM edits
-      it; a player reads it, without the GM note. On an awarded copy: the
+      it; a player reads it. On an awarded copy: the
       Floor it was awarded on, and whether its loot box is opened. --}}
 <div class="carl-achievement-item">
   <header class="carl-box-head">
@@ -30,10 +30,6 @@
   <prose-mirror name="system.description" toggled value="{{system.description}}" data-document-uuid="{{item.uuid}}">
     {{{descriptionHTML}}}
   </prose-mirror>
-  <label class="carl-achievement-note">
-    <span>{{localize "CARLRPG.Achievement.Contents"}}</span>
-    <textarea name="system.contents" rows="2">{{system.contents}}</textarea>
-  </label>
   {{else}}
   <div class="carl-achievement-description">{{{descriptionHTML}}}</div>
   {{#if system.reward}}

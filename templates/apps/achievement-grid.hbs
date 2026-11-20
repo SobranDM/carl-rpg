@@ -70,10 +70,26 @@
     <prose-mirror toggled value="{{editor.system.description}}" data-document-uuid="{{editor.uuid}}">
       {{{editor.descriptionHTML}}}
     </prose-mirror>
-    <label class="carl-achievement-note">
-      <span>{{localize "CARLRPG.Achievement.Contents"}}</span>
-      <textarea name="system.contents" rows="2">{{editor.system.contents}}</textarea>
-    </label>
+    {{#if editor.boxes}}
+    {{!-- Each crawler's loot box for it: prepared, or rolled when opened. --}}
+    <fieldset class="carl-achievement-boxes">
+      <legend>{{localize "CARLRPG.Achievement.Grid.Box.Legend"}}</legend>
+      {{#each editor.boxes as |b|}}
+      <div class="carl-achievement-box-row" data-actor-id="{{b.actorId}}">
+        <span class="carl-achievement-box-name">{{b.name}}</span>
+        <span class="carl-hint">{{localize b.label}}</span>
+        {{#if b.canPrepare}}
+        <a class="item-control" data-action="prepareFor" data-tooltip-text="{{localize 'CARLRPG.Achievement.Grid.Box.Prepare'}}"><i class="fas fa-hammer"></i></a>
+        {{#if b.prepared}}
+        <a class="item-control" data-action="clearFor" data-tooltip-text="{{localize 'CARLRPG.Box.Randomize'}}"><i class="fas fa-dice"></i></a>
+        {{/if}}
+        {{/if}}
+      </div>
+      {{else}}
+      <p class="carl-hint">{{localize "CARLRPG.Achievement.Grid.NoCrawlers"}}</p>
+      {{/each}}
+    </fieldset>
+    {{/if}}
     <footer class="carl-box-buttons">
       <button type="button" data-action="closeEditor"><i class="fas fa-check"></i> {{localize "CARLRPG.Achievement.Grid.Done"}}</button>
       <button type="button" data-action="deleteAchievement"><i class="fas fa-trash"></i> {{localize "CARLRPG.Achievement.Grid.Delete"}}</button>

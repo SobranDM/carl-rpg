@@ -65,12 +65,22 @@
     }
   }
 
+  .carl-box-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .carl-box-toggle {
+    width: 100%;
+  }
+
   .carl-box-strip {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 6px;
-    margin-bottom: 8px;
   }
 
   .carl-box-chip img {
