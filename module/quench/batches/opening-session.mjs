@@ -163,11 +163,13 @@ export default function register(quench) {
         });
 
         it("a box that throws while opening: shown as failed, and the session goes on", async function () {
-          const a = await createTestCharacter("throwing box");
+          const a = await crawlerWithBoxes("throwing box", [["bronze", "Quench Never"]]);
+          // Making its items fails (as a server error would) - this crawler only.
+          a.createEmbeddedDocuments = async () => {
+            throw new Error("Quench: making items failed");
+          };
           try {
-            const box = await giveBox(a, { tierKey: "bronze" });
-            // An item with no name fails validation when it's made.
-            await prepareBox(box, { tierKey: "bronze", gold: 0, entries: [text("")] });
+            const box = a.items.find((i) => i.type === "box");
             await startSession([a.id]);
             await pressSession("open");
             assert.equal(sessionState().step, "revealed", "not stuck shaking");
@@ -176,6 +178,7 @@ export default function register(quench) {
             await pressSession("next");
             assert.equal(sessionState().step, "done");
           } finally {
+            delete a.createEmbeddedDocuments;
             await deleteTestActor(a);
           }
         });
