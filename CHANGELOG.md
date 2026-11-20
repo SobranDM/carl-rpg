@@ -6,7 +6,7 @@ Achievements and loot boxes, plus behind-the-scenes tidying to make future work 
 
 ### Deprecation Warning
 
-- **The Map Loot Box Is Deprecated** and will be removed in a later release. Its Generate Loot now rolls a whole box per crawler but no gold (gold goes to the crawler who opens a box), and Reroll works on magic items only. It's labelled "Loot Box (Map)" when creating an Actor.
+- **The Map Loot Box Actor Is Deprecated** and will be removed in a later release. Its Generate Loot now rolls a whole box per crawler but no gold (gold goes to the crawler who opens a box), and Reroll works on magic items only. It's labelled "Loot Box (Map)" when creating an Actor.
 
 ### Achievements and Loot Boxes
 
@@ -23,6 +23,13 @@ Achievements and loot boxes, plus behind-the-scenes tidying to make future work 
 - **Sounds:** earning an achievement and gaining a Level play a sound for the crawler's player, and opening a loot box plays one for everyone. Each can be muted in your own settings.
 - **Potions Can Mend All Injuries**, as the Heal Severe Injury Potion does (p.218).
 - **The Rulebook Import** puts achievements in the Achievements compendium, a folder per book, with their grade and loot box read from the Reward, instead of a journal. An earlier import's journal is left as it is.
+
+### Floors
+
+- **The Floor Collapse Timer** (pp.62-63): everyone sees the Floor and the time left before it collapses, in 30-hour days, on a bar just above the hotbar that each player can drag elsewhere.
+  - It follows Foundry's in-world clock, so rests, grinding and combat move it. Automatically compatible with Calendar modules as a result.
+  - End Floor starts the next floor's timer at the book's length, the GM Toolbox's Collapse Timer changes or stops it, and each floor keeps its own, so a misclick can be corrected without losing the old timer.
+  - The bar turns amber in the last 30 hours and red in the last 24, when everyone gets a warning.
 
 ### Sheets
 
