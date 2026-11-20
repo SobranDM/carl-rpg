@@ -4,6 +4,8 @@
 @mixin styles {
   &.carl-floor-clock {
     position: fixed;
+    // Anchored by its centre (floor-clock-hud.mjs): it grows both ways.
+    translate: -50% 0;
     z-index: 60;
     display: flex;
     align-items: center;

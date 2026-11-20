@@ -96,22 +96,26 @@ export default class FloorClockHud {
     const el = FloorClockHud.#el;
     if (!el) return;
     const saved = game.settings.get("carl-rpg", "floorClockPosition") ?? {};
-    if (Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
-      FloorClockHud.#moveTo(saved.left, saved.top);
+    if (Number.isFinite(saved.centre) && Number.isFinite(saved.top)) {
+      FloorClockHud.#moveTo(saved.centre, saved.top);
       return;
     }
     const bar = el.getBoundingClientRect();
     const hotbar = document.getElementById("hotbar")?.getBoundingClientRect();
     const top = hotbar?.height ? hotbar.top - bar.height - 6 : window.innerHeight - bar.height - 90;
     const centre = hotbar?.width ? hotbar.left + hotbar.width / 2 : window.innerWidth / 2;
-    FloorClockHud.#moveTo(centre - bar.width / 2, top);
+    FloorClockHud.#moveTo(centre, top);
   }
 
-  /** Put the bar here, kept on screen. */
-  static #moveTo(left, top) {
+  /**
+   * Put the bar's centre here (it's anchored by its centre, so when the
+   * countdown appears or changes length it grows both ways), kept on screen.
+   */
+  static #moveTo(centre, top) {
     const el = FloorClockHud.#el;
     const bar = el.getBoundingClientRect();
-    const x = Math.min(Math.max(0, left), window.innerWidth - bar.width);
+    const half = bar.width / 2;
+    const x = Math.min(Math.max(half, centre), window.innerWidth - half);
     const y = Math.min(Math.max(0, top), window.innerHeight - bar.height);
     el.style.left = `${Math.round(x)}px`;
     el.style.top = `${Math.round(y)}px`;
@@ -120,10 +124,14 @@ export default class FloorClockHud {
   /** Drag to move (this user's own place for it); double-click to put it back. */
   static #wireDrag(el) {
     let start = null;
+    const centreOf = () => {
+      const rect = el.getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top };
+    };
     el.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
-      const rect = el.getBoundingClientRect();
-      start = { dx: event.clientX - rect.left, dy: event.clientY - rect.top };
+      const at = centreOf();
+      start = { dx: event.clientX - at.x, dy: event.clientY - at.y };
       el.setPointerCapture(event.pointerId);
       el.classList.add("dragging");
     });
@@ -135,10 +143,10 @@ export default class FloorClockHud {
       start = null;
       el.releasePointerCapture(event.pointerId);
       el.classList.remove("dragging");
-      const rect = el.getBoundingClientRect();
+      const at = centreOf();
       await game.settings.set("carl-rpg", "floorClockPosition", {
-        left: Math.round(rect.left),
-        top: Math.round(rect.top),
+        centre: Math.round(at.x),
+        top: Math.round(at.y),
       });
     });
     el.addEventListener("dblclick", async () => {

@@ -4933,6 +4933,7 @@
 }
 .carl-rpg.carl-floor-clock {
   position: fixed;
+  translate: -50% 0;
   z-index: 60;
   display: flex;
   align-items: center;
