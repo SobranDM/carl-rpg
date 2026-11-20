@@ -438,13 +438,16 @@ export default function register(quench) {
           try {
             edit(forge, "entries.0.enchantments.0.value", "7");
             await waitFor(() => forge.draft.entries[0].enchantments[0].value === 7);
+            // A select redraws the window: wait for the new one before the
+            // next edit, or it lands on a field that's being replaced.
+            const select = '[name="entries.0.enchantments.0.target"]';
+            const before = forge.element.querySelector(select);
             edit(forge, "entries.0.enchantments.0.target", "con");
             await waitFor(() => forge.draft.entries[0].enchantments[0].target === "con");
-            await waitFor(
-              () =>
-                forge.element.querySelector('[name="entries.0.enchantments.0.target"]')?.value ===
-                "con",
-            );
+            await waitFor(() => {
+              const now = forge.element.querySelector(select);
+              return now && now !== before && now.value === "con";
+            });
             edit(forge, "gold", "250");
             await waitFor(() => forge.draft.gold === 250);
           } finally {
@@ -466,10 +469,13 @@ export default function register(quench) {
             await createTestItem(actor, "skill", "Lockpicking", {
               system: { rank: 1, category: "utility" },
             });
+            const before = forge.element.querySelector('[name="recipientId"]');
             edit(forge, "recipientId", actor.id);
             await waitFor(() => forge.recipient?.id === actor.id);
             const [stat, skill] = forge.draft.entries[0].enchantments;
             await waitFor(() => skill.target === "Lockpicking");
+            // Let the redraw finish before closing.
+            await waitFor(() => forge.element.querySelector('[name="recipientId"]') !== before);
             assert.equal(stat.value, 6, "10% of 60, worked out again");
             assert.equal(skill.value, 5, "the X is kept");
           } finally {

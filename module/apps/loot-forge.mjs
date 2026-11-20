@@ -231,7 +231,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       img: doc.img,
       quantity: 1,
     });
-    this.render();
+    this.#redraw();
   }
 
   /**
@@ -273,7 +273,16 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
         if (entry.kind === "magic") await refitForRecipient(entry, this.recipient);
       }
     }
-    if (event?.target instanceof HTMLSelectElement) this.render();
+    if (event?.target instanceof HTMLSelectElement) this.#redraw();
+  }
+
+  /**
+   * Draw the window again with the draft's changes - unless it has been
+   * closed meanwhile (a reroll or a refit still running when the GM closed
+   * it), which would open it again.
+   */
+  #redraw() {
+    if (this.rendered) this.render();
   }
 
   /** The index of the entry an action's element belongs to. */
@@ -284,7 +293,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   static async #onRerollAll() {
     const fresh = await generateLoot(this.draft.tierKey, { recipient: this.recipient });
     if (fresh) this.draft = fresh;
-    this.render();
+    this.#redraw();
   }
 
   static async #onAddMagic() {
@@ -294,12 +303,12 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       return;
     }
     this.draft.entries.push(magic);
-    this.render();
+    this.#redraw();
   }
 
   static #onRemoveEntry(event, target) {
     this.draft.entries.splice(LootForge.#entryIndex(target), 1);
-    this.render();
+    this.#redraw();
   }
 
   static async #onRerollEntry(event, target) {
@@ -310,7 +319,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       recipient: this.recipient,
     });
     if (magic) this.draft.entries.splice(index, 1, magic);
-    this.render();
+    this.#redraw();
   }
 
   static async #onRerollEffect(event, target) {
@@ -318,7 +327,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     const effect = Number(target.closest("[data-effect]")?.dataset.effect);
     if (entry?.kind !== "magic" || !Number.isInteger(effect)) return;
     await rerollEnchantment(entry, effect, { recipient: this.recipient });
-    this.render();
+    this.#redraw();
   }
 
   static async #onGive() {

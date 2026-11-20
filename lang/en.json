@@ -1850,7 +1850,6 @@
       "View": "View item",
       "Empty": "This box is empty.",
       "EmptyGM": "Empty. Pick a tier and click Generate Loot, or drop items here.",
-      "Gold": "Gold",
       "Taken": "{actor} took {item} from {box}.",
       "TakeFailed": "{item} couldn't be given out, so it stayed in the box.",
       "NoCharacter": "You have no assigned Character. Drag the item onto your sheet instead.",

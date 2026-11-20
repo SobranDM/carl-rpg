@@ -18,15 +18,9 @@
           <span class="resource-label">{{localize "CARLRPG.LootBox.Crawlers"}}</span>
           <input type="number" class="carl-w-tiny" name="system.crawlers" value="{{system.crawlers}}" min="1" max="20" />
         </label>
-        <label class="resource flex-group-center">
-          <span class="resource-label">{{localize "CARLRPG.LootBox.Gold"}}</span>
-          <input type="number" class="carl-w-tiny" name="system.gold" value="{{system.gold}}" min="0" />
-        </label>
         <button type="button" class="carl-loot-generate" data-action="generateLoot">
           <i class="fas fa-dice-d20"></i> {{localize "CARLRPG.LootBox.Generate"}}
         </button>
-        {{else if system.gold}}
-        <span class="carl-loot-gold">{{localize "CARLRPG.Loot.Gold" gold=system.gold}}</span>
         {{/if}}
       </div>
     </div>

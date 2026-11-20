@@ -35,7 +35,7 @@ export default function register(quench) {
           }
         });
 
-        it("rolls a whole box per crawler: its items in the box, its gold on the box (pp.216-219)", async function () {
+        it("rolls a whole box per crawler: its items in the box, no gold (gold goes to whoever opens a box; ruled 2026-11-19)", async function () {
           useQuenchTimeout(this, 60000);
           const box = await createTestLootBox({ tier: "gold", crawlers: 2 });
           try {
@@ -48,23 +48,19 @@ export default function register(quench) {
             const magic = box.items.filter((i) => i.getFlag("carl-rpg", "magicDraft"));
             assert.lengthOf(magic, 2, "one magic item per crawler");
             for (const item of magic) assert.include(item.system.description, "<ul>");
-            assert.isTrue(
-              box.system.gold >= 2000 && box.system.gold <= 12000,
-              String(box.system.gold),
-            );
+            assert.notProperty(box.system, "gold");
           } finally {
             await deleteTestActor(box);
           }
         });
 
-        it("Bronze: gold and mundane things, no magic item", async function () {
+        it("Bronze: mundane things, no magic item", async function () {
           useQuenchTimeout(this, 60000);
           const box = await createTestLootBox({ tier: "bronze" });
           try {
             await generateLootBoxItems(box);
             assert.isAbove(box.items.size, 0);
             assert.isFalse(box.items.some((i) => i.getFlag("carl-rpg", "magicDraft")));
-            assert.isTrue(box.system.gold >= 1 && box.system.gold <= 10, String(box.system.gold));
           } finally {
             await deleteTestActor(box);
           }
@@ -137,7 +133,6 @@ export default function register(quench) {
             await waitFor(() => sheet.rendered);
             assert.isNotNull(sheet.element.querySelector('[data-action="generateLoot"]'));
             assert.isNotNull(sheet.element.querySelector('select[name="system.tier"]'));
-            assert.isNotNull(sheet.element.querySelector('input[name="system.gold"]'));
           } finally {
             await sheet.close();
             await deleteTestActor(box);

@@ -117,24 +117,24 @@ async function moveLootItem(item, actor) {
 
 /**
  * Roll one box of the box's tier per crawler (helpers/loot.mjs
- * generateLoot: gold, consumables, mundane items, a magic item from Silver
- * up) and put it all in: the items as Items, the gold on the box.
+ * generateLoot: consumables, mundane items, a magic item from Silver up)
+ * and put its items in. The gold is left out: gold goes to the crawler who
+ * opens a box (ruled 2026-11-19), and nobody opens a map Loot Box - Roll
+ * Loot's Give hands gold out. (The Loot Box actor is kept for 0.8.0 and
+ * phased out after.)
  * @param {Actor} box A Loot Box.
  * @returns {Promise<Item[]>}
  */
 export async function generateLootBoxItems(box) {
   const itemData = [];
-  let gold = 0;
   for (let i = 0; i < box.system.crawlers; i++) {
     const loot = await generateLoot(box.system.tier);
     if (!loot) break;
-    gold += loot.gold;
     for (const data of await lootItemData(loot)) {
       foundry.utils.setProperty(data, "flags.carl-rpg.lootTier", box.system.tier);
       itemData.push(data);
     }
   }
-  if (gold) await box.update({ "system.gold": box.system.gold + gold });
   if (!itemData.length) return [];
   return box.createEmbeddedDocuments("Item", itemData);
 }

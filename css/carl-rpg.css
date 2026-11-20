@@ -4445,10 +4445,6 @@
   flex: 1 1 0;
   white-space: nowrap;
 }
-.carl-rpg .carl-loot-gold {
-  color: var(--carl-gold);
-  white-space: nowrap;
-}
 
 /* An item's description as its Foundry tooltip (the itemTooltip helper).
    The tooltip lives on <body>, outside any sheet. */
