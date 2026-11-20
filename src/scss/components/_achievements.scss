@@ -156,11 +156,11 @@
     }
   }
 
-  // A trophy's cell: an opaque light neutral, whatever the theme. The
-  // trophies run from near-black to their metal (Celestial is dark all
-  // through, Legendary and Platinum pale at one end): only a light ground
-  // shows Celestial, and a 1px dark outline gives every trophy's edge
-  // ~19:1 against it (WCAG 1.4.11 asks 3:1 of graphics).
+  // A trophy's cell: an opaque dark neutral, whatever the theme (ruled
+  // 2026-11-19, Celestial left out of it). The trophies run from near-black
+  // to their metal: on #1a1a1a the metal halves pass WCAG 1.4.11's 3:1
+  // (Legendary and Platinum all through), and a 1px light outline gives
+  // every trophy's edge ~17:1, so its near-black half keeps its shape.
   .carl-grid-cell {
     position: relative;
     width: 44px;
@@ -168,7 +168,7 @@
     padding: 0;
     text-align: center;
     vertical-align: middle;
-    background: #f4f4f4;
+    background: #1a1a1a;
     cursor: pointer;
 
     img {
@@ -178,12 +178,12 @@
       margin: 0 auto;
       object-fit: contain;
       border: none;
-      filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
+      filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.85));
     }
   }
 
   .carl-grid-none img {
-    filter: grayscale(1) drop-shadow(0 0 1px rgba(0, 0, 0, 0.9));
+    filter: grayscale(1) drop-shadow(0 0 1px rgba(255, 255, 255, 0.85));
     opacity: 0.3;
   }
 
@@ -191,12 +191,12 @@
     opacity: 0.7;
   }
 
-  // Dark green: ~6:1 on the cell's light ground (gold would be 1.3:1).
+  // Gold: ~12:1 on the cell's dark ground.
   .carl-grid-check {
     position: absolute;
     right: 2px;
     bottom: 2px;
-    color: #1e6b1e;
+    color: #ffd700;
   }
 
   // A Character's list.
