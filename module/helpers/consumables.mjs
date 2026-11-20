@@ -243,14 +243,14 @@ async function drinkOrUse(actor, item, { skipDialog }) {
     asked = true;
   }
 
-  // A healing-only potion - including HB restored each round - can't help
-  // someone who can't be healed (The Taint): keep it for later instead.
-  // Mending an Injury isn't healing (ruled 2026-11-19, as the Heal Spell's
-  // Mend Debuff): The Taint doesn't stop it, so a potion that mends is used.
+  // A healing-only potion - including HB restored each round, and mending an
+  // Injury (healing too: "heal through ... potions ... and by resting or
+  // mending", p.94; ruled 2026-11-19) - can't help someone who can't be
+  // healed (The Taint): keep it for later instead.
   const heal = effects.heal ?? {};
   const buff = effects.buff ?? {};
-  const heals = heal.full || heal.slots || buff.perRound?.hb;
-  const doesMore = heal.mend || effects.mana?.full || effects.mana?.amount || effects.cures?.length
+  const heals = heal.full || heal.slots || heal.mend || buff.perRound?.hb;
+  const doesMore = effects.mana?.full || effects.mana?.amount || effects.cures?.length
     || effects.permanent?.kind || buff.label || buff.changes?.length || buff.perRound?.mana;
   const taint = heals && !doesMore ? findConditionWithMechanic(recipient.system, "noHealing") : null;
   if (taint) {
@@ -446,7 +446,8 @@ async function runConsumableEffects(recipient, effects, { itemName, isPotion, dr
   }
 
   // Mend one Minor Injury - or, for "any", the worse of a Major or Minor.
-  if (heal.mend) {
+  // Mending is healing: The Taint stops it.
+  if (heal.mend && !healBlocked()) {
     const order = heal.mend === "any" ? ["majorInjury", "minorInjury"] : ["minorInjury"];
     const index = order.map((key) => conditions.findIndex((c) => c.key === key)).find((i) => i >= 0);
     if (index !== undefined) {

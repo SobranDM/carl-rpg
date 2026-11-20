@@ -272,12 +272,22 @@ async function healActor(actor, { full, rest, amount }) {
 export async function onMendDebuff(event, message) {
   event.preventDefault();
   const actors = [];
+  let refused = false;
   for (const row of healRows(message).filter((r) => ownsUuid(r.uuid))) {
     const actor = await resolveHealActor(row.uuid);
-    if (actor && !actors.includes(actor)) actors.push(actor);
+    if (!actor || actors.includes(actor)) continue;
+    // Mending is healing (ruled 2026-11-19): not for a creature The Taint
+    // stops being healed, nor a vehicle.
+    const refusal = healRefusal(actor);
+    if (refusal) {
+      ui.notifications.warn(refusal);
+      refused = true;
+      continue;
+    }
+    actors.push(actor);
   }
   if (!actors.length) {
-    ui.notifications.warn(game.i18n.localize("CARLRPG.Heal.NoActor"));
+    if (!refused) ui.notifications.warn(game.i18n.localize("CARLRPG.Heal.NoActor"));
     return;
   }
 

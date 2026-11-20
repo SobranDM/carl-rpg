@@ -168,10 +168,10 @@ export default function register(quench) {
         });
       });
 
-      describe("Mending under The Taint (ruled 2026-11-19)", function () {
+      describe("Mending is healing: The Taint stops it (ruled 2026-11-19)", function () {
         useQuenchTimeout(this);
 
-        it("a potion that mends is used: the Injury is mended, the healing blocked", async function () {
+        it("a potion that only heals and mends is refused and kept", async function () {
           const actor = await createTestCharacter("tainted mend", { system: { hb: { value: 2 } } });
           try {
             const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(([, d]) => d.mechanics?.noHealing)?.[0];
@@ -180,9 +180,27 @@ export default function register(quench) {
             const potion = await createTestItem(actor, "item", "mend", {
               system: { quantity: 1, consumable: { kind: "potion", heal: { slots: 3, mend: "minor" } } },
             });
-            assert.isNotNull(await quietly(() => useConsumable(actor, potion, { skipDialog: true })));
-            assert.notInclude(keys(actor), "minorInjury", "mended");
+            assert.isNull(await quietly(() => useConsumable(actor, potion, { skipDialog: true })));
+            assert.exists(actor.items.get(potion.id), "kept");
+            assert.include(keys(actor), "minorInjury", "not mended");
             assert.equal(actor.system.hb.value, 2, "not healed");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a potion that also restores Mana is used: the Mana restored, the mending blocked", async function () {
+          const actor = await createTestCharacter("tainted mana mend", { system: { mana: { value: 0 } } });
+          try {
+            const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(([, d]) => d.mechanics?.noHealing)?.[0];
+            await addConditionToActor(actor, taintKey);
+            await addConditionToActor(actor, "minorInjury");
+            const potion = await createTestItem(actor, "item", "mend mana", {
+              system: { quantity: 1, consumable: { kind: "potion", heal: { mend: "minor" }, mana: { full: true } } },
+            });
+            assert.isNotNull(await quietly(() => useConsumable(actor, potion, { skipDialog: true })));
+            assert.equal(actor.system.mana.value, actor.system.mana.max, "Mana restored");
+            assert.include(keys(actor), "minorInjury", "not mended");
           } finally {
             await deleteTestActor(actor);
           }
