@@ -162,6 +162,24 @@ export default function register(quench) {
           }
         });
 
+        it("a box that throws while opening: shown as failed, and the session goes on", async function () {
+          const a = await createTestCharacter("throwing box");
+          try {
+            const box = await giveBox(a, { tierKey: "bronze" });
+            // An item with no name fails validation when it's made.
+            await prepareBox(box, { tierKey: "bronze", gold: 0, entries: [text("")] });
+            await startSession([a.id]);
+            await pressSession("open");
+            assert.equal(sessionState().step, "revealed", "not stuck shaking");
+            assert.isTrue(sessionState().result.failed);
+            assert.exists(a.items.get(box.id), "it stays unopened");
+            await pressSession("next");
+            assert.equal(sessionState().step, "done");
+          } finally {
+            await deleteTestActor(a);
+          }
+        });
+
         it("every client's window opens with the session and closes when it ends", async function () {
           const a = await crawlerWithBoxes("window", [["bronze", "Quench Window"]]);
           try {

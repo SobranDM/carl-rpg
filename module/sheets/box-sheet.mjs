@@ -98,8 +98,12 @@ export class CarlRPGBoxSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   static async #onOpenBox(event, target) {
     if (!game.user.isGM) return;
     target.disabled = true;
-    const result = await openBox(this.item);
-    if (result) this.close();
-    else target.disabled = false;
+    let result = null;
+    try {
+      result = await openBox(this.item);
+    } finally {
+      if (result) this.close();
+      else target.disabled = false;
+    }
   }
 }

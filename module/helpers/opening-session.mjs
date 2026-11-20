@@ -147,11 +147,19 @@ async function openNext(state, index) {
   await reveal(opening);
 }
 
-/** Open the session's current box and show what came out. */
+/**
+ * Open the session's current box and show what came out. Whatever goes
+ * wrong, the session moves on: a box that won't open shows as failed.
+ */
 async function reveal(state) {
   const actor = game.actors.get(state.order[state.crawler]);
   const live = actor?.items.get(state.boxes[state.box]?.id);
-  const result = live ? await openBox(live) : null;
+  let result = null;
+  try {
+    result = live ? await openBox(live) : null;
+  } catch (err) {
+    console.error("CarlRPG | opening a loot box failed", err);
+  }
   await write({
     ...state,
     step: "revealed",
