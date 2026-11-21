@@ -1155,9 +1155,9 @@ function makeAggregationContext(actorSystem) {
  * unconditional "skillRank" change - worn gear's "+1 Dagger", a Buff's,
  * another item's - as the main pass would apply them, with tiers (and a
  * Rank 0 item's base Bonuses, none below Rank 1) gated at `ranks`: the
- * items' own Ranks, or a first pass's live ones. aggregateActorBonuses runs
- * it twice, so a Rank 0 Skill boosted to 1 gives its "+N" to another Skill;
- * a chain any longer than that doesn't carry through.
+ * items' own Ranks, or a last pass's live ones. settledLiveRanks repeats it
+ * until they stop changing, so a Rank 0 Skill boosted to 1 gives its "+N"
+ * to another Skill, however long the chain.
  * @param {Item[]} items
  * @param {object} actorSystem
  * @param {Map<string, number>|null} [ranks]  By item id; default: their own.
@@ -1207,6 +1207,31 @@ function previewLiveRanks(items, actorSystem, ranks = null) {
 }
 
 /**
+ * The live Ranks every item is gated at, settled: previewLiveRanks repeated,
+ * each pass gating at the last's Ranks, until they stop changing - so the
+ * Rank a Skill shows and the Rank its Bonuses and tiers are gated at always
+ * agree, however its Rank was reached. A pass only ever adds "+N"s (a gate
+ * opens, never closes), so it settles; the cap is a backstop. With no
+ * "+Rank" bonuses about (the usual case) the first pass already matches.
+ * @param {Item[]} items
+ * @param {object} actorSystem
+ * @returns {Map<string, number>}  By item id.
+ */
+function settledLiveRanks(items, actorSystem) {
+  const ownRank = (item) => item.system.rank ?? 0;
+  let gating = null;
+  for (let pass = 0; pass <= items.length + 1; pass++) {
+    const live = previewLiveRanks(items, actorSystem, gating);
+    const settled = items.every(
+      (item) => !live.has(item.id) || live.get(item.id) === (gating?.get(item.id) ?? ownRank(item)),
+    );
+    gating = live;
+    if (settled) break;
+  }
+  return gating;
+}
+
+/**
  * Aggregate every embedded item's structured changes into:
  *  - actorSystem.skills            dynamic bag keyed by slugified skill name
  *  - actorSystem.bonuses           dotted-key bag for stat/resource/rollMode/custom targets
@@ -1248,7 +1273,7 @@ export function aggregateActorBonuses(actorSystem) {
   // 312) - module/helpers/worship.mjs. Only a Character has a deity.
   const deity = actorSystem.deity;
   // Upgrade tiers unlock at each Skill's live Rank (effectiveRank).
-  const liveRanks = previewLiveRanks(items, actorSystem, previewLiveRanks(items, actorSystem));
+  const liveRanks = settledLiveRanks(items, actorSystem);
   // Within one slot type, only the best piece of worn gear adds its DR (p.225).
   const superseded = supersededArmorIds(items, ctx.rollData, actorSystem);
   for (const item of items) {
