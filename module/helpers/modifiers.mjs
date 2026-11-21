@@ -1153,14 +1153,17 @@ function makeAggregationContext(actorSystem) {
  * Each owned Skill/Spell/Damage Effect's live Rank (effectiveRank), for
  * aggregateActorBonuses to unlock Upgrade tiers at: its own Rank plus every
  * unconditional "skillRank" change - worn gear's "+1 Dagger", a Buff's,
- * another item's - as the main pass would apply them, with tiers here
- * gated at each item's own Rank. A "+N" that a tier only grants once
- * another bonus has unlocked it doesn't chain into this.
+ * another item's - as the main pass would apply them, with tiers (and a
+ * Rank 0 item's base Bonuses, none below Rank 1) gated at `ranks`: the
+ * items' own Ranks, or a first pass's live ones. aggregateActorBonuses runs
+ * it twice, so a Rank 0 Skill boosted to 1 gives its "+N" to another Skill;
+ * a chain any longer than that doesn't carry through.
  * @param {Item[]} items
  * @param {object} actorSystem
+ * @param {Map<string, number>|null} [ranks]  By item id; default: their own.
  * @returns {Map<string, number>}  By item id.
  */
-function previewLiveRanks(items, actorSystem) {
+function previewLiveRanks(items, actorSystem, ranks = null) {
   const ctx = makeAggregationContext(actorSystem);
   for (const item of items) {
     if (RANKED_TYPES.has(item.type)) seedSkillFromItem(ctx.skills, item);
@@ -1176,7 +1179,7 @@ function previewLiveRanks(items, actorSystem) {
       sourceItemId,
       sourceItemRank,
       sourceItemType,
-    } of collectItemChanges(item)) {
+    } of collectItemChanges(item, ranks?.get(item.id) ?? item.system.rank ?? 0)) {
       if (skipSelf?.(change)) continue;
       if (rankChange(change))
         applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
@@ -1195,12 +1198,12 @@ function previewLiveRanks(items, actorSystem) {
         );
     }
   }
-  const ranks = new Map();
+  const live = new Map();
   for (const item of items) {
     const entry = RANKED_TYPES.has(item.type) ? ctx.skills[slugifySkillName(item.name)] : null;
-    if (entry?.itemId === item.id && Number.isFinite(entry.rank)) ranks.set(item.id, entry.rank);
+    if (entry?.itemId === item.id && Number.isFinite(entry.rank)) live.set(item.id, entry.rank);
   }
-  return ranks;
+  return live;
 }
 
 /**
@@ -1245,7 +1248,7 @@ export function aggregateActorBonuses(actorSystem) {
   // 312) - module/helpers/worship.mjs. Only a Character has a deity.
   const deity = actorSystem.deity;
   // Upgrade tiers unlock at each Skill's live Rank (effectiveRank).
-  const liveRanks = previewLiveRanks(items, actorSystem);
+  const liveRanks = previewLiveRanks(items, actorSystem, previewLiveRanks(items, actorSystem));
   // Within one slot type, only the best piece of worn gear adds its DR (p.225).
   const superseded = supersededArmorIds(items, ctx.rollData, actorSystem);
   for (const item of items) {
