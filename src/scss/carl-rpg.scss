@@ -116,6 +116,11 @@
     margin: 0 0 0.4em;
   }
 
+  // A Hotlist row's hint, a blank line above the item's name.
+  .carl-tooltip-hint {
+    margin-bottom: 1em;
+  }
+
   // The item's name above its description (Equipment Doll, Hotlist).
   .carl-tooltip-name {
     display: block;

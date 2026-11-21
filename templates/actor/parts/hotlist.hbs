@@ -19,13 +19,14 @@
       </button>
       {{else}}
       {{#if slot.action}}
-      <button type="button" class="carl-hotlist-use" data-action="useHotlist"
-        data-tooltip="{{localize (concat 'CARLRPG.Hotlist.Hint.' slot.action)}}">
+      {{!-- Its tooltip: what clicking does, then the item's name and description. --}}
+      <button type="button" class="carl-hotlist-use" data-action="useHotlist"{{itemTooltip slot.tooltip}}>
       {{else}}
       <div class="carl-hotlist-use carl-hotlist-idle">
       {{/if}}
         {{#if slot.img}}<img src="{{slot.img}}" alt="" width="22" height="22" />{{/if}}
-        <span class="carl-hotlist-name"{{itemTooltip (lookup @root.namedItemTooltips slot.itemId)}}>{{slot.name}}</span>
+        {{!-- A usable row's tooltip is the button's (hint, name, description) over all of it. --}}
+        <span class="carl-hotlist-name"{{#unless slot.action}}{{itemTooltip (lookup @root.namedItemTooltips slot.itemId)}}{{/unless}}>{{slot.name}}</span>
         <span class="carl-hotlist-detail">
           {{#if (eq slot.kind "spell")}}R{{slot.rank}} · {{slot.manaCost}} MP{{#if slot.active}} <i class="fas fa-bolt" data-tooltip-text="{{localize 'CARLRPG.Toggle.Active'}}"></i>{{/if}}{{/if}}
           {{#if (eq slot.kind "skill")}}R{{slot.rank}}{{/if}}

@@ -6,7 +6,7 @@ import {
   tauntAttack,
   tauntRedirectNow,
 } from "../../chat/taunt-card.mjs";
-import { canApplyDamage, onApplyDamage } from "../../chat/damage-card.mjs";
+import { applyDamageToActor, canApplyDamage, onApplyDamage } from "../../chat/damage-card.mjs";
 import { canApplyTargetEffects, onApplyTargetEffects } from "../../chat/target-effects-card.mjs";
 import { canApplyHeal, healNow, onApplyHeal } from "../../chat/heal-card.mjs";
 import {
@@ -280,6 +280,32 @@ export default function register(quench) {
           }
         });
 
+        it("the digest line: the target, then damage less each reduction, named, and slots lost", async function () {
+          const mob = await createTestMob("digest-math", {
+            system: { dr: 1, resistances: { fire: "resist" } },
+          });
+          const bare = await createTestMob("digest-bare", { system: { dr: 0 } });
+          try {
+            const [line] = await applyDamageToActor(mob, { bludgeoning: 4, fire: 4 }, true);
+            const div = document.createElement("div");
+            div.innerHTML = line;
+            assert.equal(div.querySelector(".carl-digest-name")?.textContent, mob.name);
+            const sum = div.querySelector(".carl-digest-sum")?.textContent ?? "";
+            assert.match(sum, /^8 - 1 \(DR\) - \d+ \(Fire Resisted\) = \d+ damage$/);
+            const chip = div.querySelector(
+              ".carl-digest-math > .carl-digest-cost .carl-status-chip",
+            );
+            assert.match(chip?.textContent ?? "", /^\d+ Slots?$/, "slots lost, as a chip, first");
+            // Nothing taken off: just the damage.
+            const [plain] = await applyDamageToActor(bare, { "": 1 }, true);
+            div.innerHTML = plain;
+            assert.equal(div.querySelector(".carl-digest-sum").textContent, "1 damage");
+          } finally {
+            await deleteTestActor(mob);
+            await deleteTestActor(bare);
+          }
+        });
+
         it("two rows applied at once both keep their GM digest (kept per row, not in the content)", async function () {
           const a = await createTestCharacter("digest-a");
           const b = await createTestCharacter("digest-b");
@@ -516,6 +542,29 @@ export default function register(quench) {
         // A d20 pinned to 10 + Rank 10 against 10 + the Mob's Mod + Floor 1: a Success.
         const rolledToSucceed = (fn) =>
           withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, fn));
+
+        it("only a Mob's Attack can be Taunted: a crawler's has no button and is refused", async function () {
+          assert.include(card.content, "carl-taunt-attack", "the Mob's Attack has one");
+          assert.isTrue(canActTaunt(card));
+          const punch = await createTestItem(wren, "skill", "Punch", {
+            // No weapon needed (weapons.mjs needsWeapon), so it's rolled as it is.
+            system: { category: "attack", rank: 2, noWeapon: true, baseDamage: { dice: "1d4" } },
+          });
+          const own = await withFakeTargets([{ actor: mob }], () =>
+            CarlDice.rollAttack(wren, punch, { skipDialog: true }),
+          );
+          try {
+            assert.exists(own, "the crawler's Attack was rolled");
+            assert.exists(own.getFlag("carl-rpg", "targetRows"), "a targeted Attack");
+            assert.notInclude(own.content, "carl-taunt-attack", "no Taunt button");
+            // A card posted before the fix still has the button: hidden, refused.
+            assert.isFalse(canActTaunt(own));
+            assert.isNull(await tauntAttack(own, { taunter: asChase(), skipDialog: true }));
+            assert.notOk(own.getFlag("carl-rpg", "tauntedBy"));
+          } finally {
+            await own?.delete();
+          }
+        });
 
         it("succeeds: the Attack moves onto the taunter", async function () {
           assert.exists(rows()?.t0, "the Attack card has Wren's row");

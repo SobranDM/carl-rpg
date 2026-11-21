@@ -191,6 +191,34 @@ export default function register(quench) {
           }
         });
 
+        it("a usable slot's tooltip: what clicking does, then the name and description (ruled 2026-11-21)", async function () {
+          const actor = await createTestCharacter("hotlist tooltip");
+          const sheet = actor.sheet;
+          try {
+            const spell = await createTestItem(actor, "spell", "Quench Spark", {
+              system: { description: "<p>Quench: a small spark.</p>" },
+            });
+            await placeInHotlist(actor, 0, spell);
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            const row = sheet.element.querySelector('.carl-hotlist-row[data-slot-key="0"]');
+            const tip = row.querySelector('[data-action="useHotlist"]')?.dataset.tooltipHtml ?? "";
+            const hint = game.i18n.localize("CARLRPG.Hotlist.Hint.Cast");
+            assert.isTrue(
+              tip.startsWith(`<p class="carl-tooltip-hint">${hint}</p>`),
+              "what clicking does, first",
+            );
+            assert.include(tip, spell.name, "the name");
+            assert.isTrue(tip.endsWith("<p>Quench: a small spark.</p>"), "then the description");
+            assert.notExists(
+              row.querySelector(".carl-hotlist-name").dataset.tooltipHtml,
+              "over the name too, the row's tooltip shows",
+            );
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
         it("clicking an empty slot opens the picker; the filter narrows it, and one click on an entry fills that slot", async function () {
           const actor = await createTestCharacter("picker");
           const sheet = actor.sheet;

@@ -462,6 +462,30 @@ export default function register(quench) {
             await waitFor(() => declaredAttacks(combat).length === 0, {
               message: "the remove button didn't withdraw",
             });
+
+            // A plain click: declared at once, no dialog (ruled 2026-11-21).
+            await withFakeTargets([{ actor: pc }], async () => {
+              button().click();
+              await waitFor(() => declaredAttacks(combat).length === 1, {
+                message: "a plain click didn't declare without a dialog",
+              });
+            });
+            await removeDeclaration(combat, declaredAttacks(combat)[0].id);
+            await waitFor(() => declaredAttacks(combat).length === 0);
+            // Modify Roll: the Mob Attack dialog first.
+            // Looked up at the click: the HUD re-renders as declarations change.
+            const modify = () => hud.element.querySelector('[data-action="declareModified"]');
+            assert.equal(modify()?.dataset.attackId, mobAttacksOf(mob)[0].id, "beside its Attack");
+            await withFakeTargets([{ actor: pc }], () =>
+              withDialog(
+                async () => modify().click(),
+                (dialog) => pressDialog(dialog, "roll"),
+                "carl-roll-dialog",
+              ),
+            );
+            await waitFor(() => declaredAttacks(combat).length === 1, {
+              message: "Modify Roll didn't declare once the dialog was rolled",
+            });
           } finally {
             CarlDeclareHud.declaringMobs = original;
             await hud.close({ animate: false });

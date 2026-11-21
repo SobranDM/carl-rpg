@@ -565,6 +565,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const descriptions = await itemDescriptions(actor.items);
     context.itemTooltips = itemTooltips(actor.items, descriptions);
     context.namedItemTooltips = namedItemTooltips(actor.items, descriptions);
+    // A usable Hotlist row's tooltip: what clicking it does, then the item's
+    // name and description (ruled 2026-11-21).
+    for (const row of context.hotlist?.rows ?? []) {
+      if (!row.action) continue;
+      const hint = game.i18n.localize(`CARLRPG.Hotlist.Hint.${row.action}`);
+      const named = context.namedItemTooltips[row.itemId] ?? "";
+      row.tooltip = `<p class="carl-tooltip-hint">${foundry.utils.escapeHTML(hint)}</p>${named}`;
+    }
     context.drawerHTML = await this.#prepareDrawerDescriptions(context);
     if (context.isMob) {
       context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);

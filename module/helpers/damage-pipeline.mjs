@@ -199,6 +199,7 @@ export function reduceViaShield(rawTotal, shield) {
  *   slotValue: number,
  *   shieldSlotsLost: number,
  *   shieldAbsorbed: number,
+ *   drApplied: number,
  * }}
  */
 export function computeDamageApplication(
@@ -253,6 +254,8 @@ export function computeDamageApplication(
     slotValue,
     shieldSlotsLost: shieldResult.slotsLost,
     shieldAbsorbed: shieldResult.absorbed,
+    // What DR actually took off (no more than was left of the hit).
+    drApplied: shieldResult.remaining - totalAfterDr,
   };
 }
 

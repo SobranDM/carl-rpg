@@ -27,13 +27,7 @@ import { resolveActingActor } from "../helpers/token-resolution.mjs";
 import { createRollMessage } from "./chat-card.mjs";
 import { askGM, registerAskHandler } from "../helpers/chat-socket.mjs";
 import { noteUndo, takeAction } from "../helpers/actions.mjs";
-import {
-  activeRows,
-  crawlerAttackDifficulty,
-  crawlerAttackRow,
-  mobAttackRow,
-  nextRowId,
-} from "../helpers/attack-targets.mjs";
+import { activeRows, mobAttackRow, nextRowId } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { ownedSkill } from "../helpers/modifiers.mjs";
 import { queueForCard } from "../helpers/actor-queue.mjs";
@@ -67,33 +61,31 @@ export function isCardLocked(message) {
 }
 
 /**
- * The taunter's new target row: a Mob Attack re-resolves its to-hit for the
- * taunter (their Held/Take Down); a crawler's Attack checks its rolled total
- * against the taunter's own Evade.
+ * Whether an Attack card's Attack is a Mob's - the only kind Taunt draws
+ * (the Check is made against a Mob, p.81). A crawler's or Pet's isn't: its
+ * card has no Taunt button (dice.mjs), and an older card hides it.
+ * @param {ChatMessage} message
+ * @returns {boolean}
+ */
+export function isTauntableAttack(message) {
+  return !rollsLikeCrawler(message.getFlag("carl-rpg", "attackerType"));
+}
+
+/**
+ * The taunter's new target row: the Mob's Attack re-resolves its to-hit for
+ * the taunter (their Held/Take Down).
  * @param {ChatMessage} message
  * @param {{actor: Actor, token: TokenDocument|null}} taunter
  * @returns {object}
  */
 function taunterRow(message, taunter) {
   const flags = message.flags["carl-rpg"];
-  const id = nextRowId(flags.targetRows);
-  const target = { uuid: taunter.token?.uuid ?? taunter.actor.uuid, actor: taunter.actor };
-  if (!rollsLikeCrawler(flags.attackerType)) {
-    return mobAttackRow({
-      id,
-      target,
-      base: flags.mobBase ?? flags.targetDifficulty,
-      ownRows: flags.mobOwnRows ?? [],
-    }).row;
-  }
-  const floor = flags.floor ?? currentFloor();
-  return crawlerAttackRow({
-    id,
-    target,
-    difficulty: crawlerAttackDifficulty(taunter.actor, floor).difficulty,
-    attackTotal: flags.attackTotal,
-    naturalRoll: flags.naturalRoll ?? null,
-  });
+  return mobAttackRow({
+    id: nextRowId(flags.targetRows),
+    target: { uuid: taunter.token?.uuid ?? taunter.actor.uuid, actor: taunter.actor },
+    base: flags.mobBase ?? flags.targetDifficulty,
+    ownRows: flags.mobOwnRows ?? [],
+  }).row;
 }
 
 /**
@@ -118,10 +110,13 @@ async function resolveAttackerActor(message) {
  * would be backwards here. Simplest correct behavior per the design prompt:
  * visible to the GM or anyone who owns an Actor at all; the real "not
  * already the target"/"already resolved" checks happen in onClick with a
- * clear toast rather than being expressed as a visibility predicate.
+ * clear toast rather than being expressed as a visibility predicate. A
+ * crawler's or Pet's Attack card never shows it (isTauntableAttack).
+ * @param {ChatMessage} [message]
  * @returns {boolean}
  */
-export function canActTaunt() {
+export function canActTaunt(message) {
+  if (message && !isTauntableAttack(message)) return false;
   if (game.user.isGM) return true;
   return !!game.user.character || game.actors.some((a) => a.isOwner);
 }
@@ -163,6 +158,10 @@ export async function tauntAttack(message, { taunter = null, skipDialog = false 
   }
   if (message.getFlag("carl-rpg", "isArea")) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.NotArea"));
+    return null;
+  }
+  if (!isTauntableAttack(message)) {
+    ui.notifications.warn(game.i18n.localize("CARLRPG.Taunt.NotMob"));
     return null;
   }
 
@@ -329,6 +328,7 @@ registerAskHandler(TAUNT, tauntRedirectNow);
  */
 function redirectRefused(message, taunterUuid, seen) {
   if (isCardLocked(message) || message.getFlag("carl-rpg", "isArea")) return true;
+  if (!isTauntableAttack(message)) return true;
   if ((message.getFlag("carl-rpg", "targetUuids") ?? []).includes(taunterUuid)) return true;
   const now = activeRows(message.getFlag("carl-rpg", "targetRows")).map((row) => row.id);
   return !Array.isArray(seen) || now.length !== seen.length || now.some((id, i) => id !== seen[i]);

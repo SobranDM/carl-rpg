@@ -897,9 +897,15 @@ export default function register(quench) {
             const lines = await applyRow(message, message.getFlag("carl-rpg", "targetRows").t0);
             await settle();
             const total = Math.max(0, 10 - dr);
+            // The digest's math (damage-card.mjs): "10 - 2 (DR) = 8 damage".
+            const sums = lines.map((l) => {
+              const div = document.createElement("div");
+              div.innerHTML = l;
+              return div.querySelector(".carl-digest-sum")?.textContent ?? "";
+            });
             assert.isTrue(
-              lines.some((l) => l.includes(`= ${total} total`)),
-              `20 halved to 10, then DR: ${lines.join(" | ")}`,
+              sums.some((s) => s.startsWith("10") && s.endsWith(`${total} damage`)),
+              `20 halved to 10, then DR: ${sums.join(" | ")}`,
             );
             assert.include(keys(pc), "burned", "still a hit");
           } finally {

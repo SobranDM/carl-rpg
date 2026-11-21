@@ -1949,8 +1949,10 @@ export default class CarlDice {
       );
     }
     // Taunt (Interrupt, p.81) - a third party may redirect a single-target
-    // Attack onto themselves (module/chat/taunt-card.mjs). Not an Area Attack.
-    if (targetUuids.length && !isArea) footerParts.push(await buildTauntLinkFooter());
+    // Attack onto themselves (module/chat/taunt-card.mjs). Not an Area
+    // Attack, and only a Mob's: Taunt draws a Mob, not a crawler or Pet.
+    if (targetUuids.length && !isArea && !rollsLikeCrawler(actor))
+      footerParts.push(await buildTauntLinkFooter());
     const footer = footerParts.length ? footerParts.join("") : undefined;
     const body =
       (cooldownEarly ? earlyUseNote() : "") +
@@ -2263,7 +2265,8 @@ export default class CarlDice {
         }),
       );
     }
-    if (targetRowList.length && !isArea) footerParts.push(await buildTauntLinkFooter());
+    if (targetRowList.length && !isArea && !rollsLikeCrawler(flags.attackerType))
+      footerParts.push(await buildTauntLinkFooter());
 
     return {
       rolls,
