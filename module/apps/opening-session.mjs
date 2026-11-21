@@ -45,7 +45,19 @@ export default class OpeningSessionApp extends HandlebarsApplicationMixin(Applic
   static sync(state = sessionState()) {
     const app = foundry.applications.instances.get("carl-opening-session");
     if (!state?.active) {
-      app?.close();
+      if (app) {
+        const closing = app.close().finally(() => {
+          if (OpeningSessionApp.#closing === closing) OpeningSessionApp.#closing = null;
+        });
+        OpeningSessionApp.#closing = closing;
+      }
+      return;
+    }
+    // A session started while the last one's window is still closing: a
+    // redraw asked for now would run after the close, on a closed window,
+    // and do nothing - wait for it, then open it afresh.
+    if (OpeningSessionApp.#closing) {
+      OpeningSessionApp.#closing.then(() => OpeningSessionApp.sync(sessionState()));
       return;
     }
     if (app) app.render({ force: !app.rendered });
@@ -63,6 +75,9 @@ export default class OpeningSessionApp extends HandlebarsApplicationMixin(Applic
 
   /** The reveal this client last played the loot box sound for. */
   static #heardTurn = null;
+
+  /** The window's close in progress (a session just ended), or null. */
+  static #closing = null;
 
   /** Where this client last put the window. @override */
   _initializeApplicationOptions(options) {

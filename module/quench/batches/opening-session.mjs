@@ -207,6 +207,26 @@ export default function register(quench) {
           }
         });
 
+        it("a session started while the last one's window is still closing still opens it", async function () {
+          const a = await crawlerWithBoxes("reopen", [
+            ["bronze", "Quench Reopen 1"],
+            ["bronze", "Quench Reopen 2"],
+          ]);
+          const windowOpen = () =>
+            foundry.applications.instances.get("carl-opening-session")?.rendered;
+          try {
+            await startSession([a.id]);
+            await waitFor(windowOpen);
+            // End and start again at once: the close is still under way.
+            await pressSession("end");
+            await startSession([a.id]);
+            await waitFor(windowOpen);
+            assert.isTrue(sessionState().active);
+          } finally {
+            await deleteTestActor(a);
+          }
+        });
+
         it("nobody with a box: no session", async function () {
           const a = await createTestCharacter("boxless");
           try {
