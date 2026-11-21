@@ -110,12 +110,27 @@ export default function register(quench) {
           );
         });
 
+        it("accents don't split a category; it's shown as most of them spell it, whatever their order", function () {
+          const cats = [
+            def("a", "gold", "cafe crawl"),
+            def("b", "bronze", "Café Crawl"),
+            def("c", "silver", "Café Crawl"),
+          ];
+          for (const order of [cats, [...cats].reverse()]) {
+            const sections = achievementSections(order);
+            assert.lengthOf(sections, 1);
+            assert.equal(sections[0].category, "Café Crawl");
+            assert.deepEqual(achievementCategories(order), ["Café Crawl"]);
+          }
+        });
+
         it("the editor suggests every category in use, once each", function () {
           assert.deepEqual(
             achievementCategories([
               def("a", "gold", "Boss Kills"),
               def("b", "gold", "boss kills"),
-              def("c", "gold"),
+              def("c", "gold", "Boss Kills"),
+              def("d", "gold"),
             ]),
             ["Boss Kills"],
           );

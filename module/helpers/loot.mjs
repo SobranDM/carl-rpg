@@ -45,7 +45,8 @@ export async function lootTable(name) {
 
 /**
  * A box-contents Roll Table by name ("Bronze Box: Mundane"): the world's own
- * first, then the world's compendiums (in the order Foundry lists them),
+ * first, then the world's compendiums (the first one the world lists - the
+ * order they were made, not the sidebar's),
  * then the system's (ruled 2026-11-20). What a box holds besides its magic
  * item is our own call, not the book's, so a GM who imports one of these
  * tables into the world or a compendium of their own and changes it gets

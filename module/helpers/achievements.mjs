@@ -225,30 +225,60 @@ function tidyCategory(category) {
     .trim();
 }
 
+/** Names compared as the window sorts them: capitals and accents aside. */
+const byName = (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" });
+
+/**
+ * What makes two categories the same, matching byName: "Café Crawl",
+ * "cafe crawl" and "Cafe  Crawl " are one.
+ * @param {string} category  Tidied.
+ * @returns {string}
+ */
+function categoryKey(category) {
+  return category.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase();
+}
+
+/**
+ * The categories in use, grouped, each with the spelling shown for it: the
+ * most used one, ties going to the first in sort order - the same whatever
+ * order the achievements come in.
+ * @param {Item[]} definitions
+ * @returns {Map<string, {category: string, items: Item[]}>}  By categoryKey.
+ */
+function categoryGroups(definitions) {
+  const groups = new Map();
+  for (const def of definitions) {
+    const category = tidyCategory(def.system?.category);
+    if (!category) continue;
+    const key = categoryKey(category);
+    if (!groups.has(key)) groups.set(key, { spellings: new Map(), items: [] });
+    const group = groups.get(key);
+    group.spellings.set(category, (group.spellings.get(category) ?? 0) + 1);
+    group.items.push(def);
+  }
+  return new Map(
+    [...groups].map(([key, { spellings, items }]) => {
+      const [category] = [...spellings].sort(
+        ([a, countA], [b, countB]) => countB - countA || a.localeCompare(b),
+      )[0];
+      return [key, { category, items }];
+    }),
+  );
+}
+
 /**
  * How the Achievements window lists achievements (ruled 2026-11-20): an
  * achievement with a category is grouped with the rest of its category -
- * the same name whatever its capitals or spacing - sorted Bronze to
- * Celestial, then by name; the groups and the achievements with no category
- * are in alphabetical order together, a group by its category's name.
- * Achievements with no category next to each other share a section.
+ * the same name whatever its capitals, accents or spacing - sorted Bronze
+ * to Celestial, then by name; the groups and the achievements with no
+ * category are in alphabetical order together, a group by its category's
+ * name. Achievements with no category next to each other share a section.
  * @param {Item[]} definitions
  * @returns {{category: string|null, items: Item[]}[]}  category: null for ungrouped.
  */
 export function achievementSections(definitions) {
-  const groups = new Map();
-  const loose = [];
-  for (const def of definitions) {
-    const category = tidyCategory(def.system?.category);
-    if (!category) {
-      loose.push(def);
-      continue;
-    }
-    const key = category.toLocaleLowerCase();
-    if (!groups.has(key)) groups.set(key, { category, items: [] });
-    groups.get(key).items.push(def);
-  }
-  const byName = (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" });
+  const groups = categoryGroups(definitions);
+  const loose = definitions.filter((def) => !tidyCategory(def.system?.category));
   for (const group of groups.values()) {
     group.items.sort(
       (a, b) => boxTierRank(a.system.grade) - boxTierRank(b.system.grade) || byName(a.name, b.name),
@@ -277,12 +307,6 @@ export function achievementSections(definitions) {
  * @returns {string[]}
  */
 export function achievementCategories(definitions) {
-  const seen = new Map();
-  for (const def of definitions) {
-    const category = tidyCategory(def.system?.category);
-    if (category && !seen.has(category.toLocaleLowerCase())) {
-      seen.set(category.toLocaleLowerCase(), category);
-    }
-  }
-  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  // The same spelling the window's headings show.
+  return [...categoryGroups(definitions).values()].map((g) => g.category).sort(byName);
 }

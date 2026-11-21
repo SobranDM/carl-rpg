@@ -33,7 +33,9 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * to open (helpers/achievement-library.mjs).
  *
  * Crawlers across the top - those whose player is online, and the rest if
- * "Show offline" is ticked - and achievements down the side, by grade. Each
+ * "Show offline" is ticked - and achievements down the side: alphabetical,
+ * a category's achievements grouped under its name, Bronze to Celestial
+ * (helpers/achievements.mjs achievementSections). Each
  * cell is the achievement's icon: dimmed until the crawler has it (click to
  * award it), lit once awarded, with a check once its loot box is opened.
  * Click an awarded one to take it back, after a confirmation. Right-click
