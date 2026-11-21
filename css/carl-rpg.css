@@ -4804,6 +4804,20 @@
   text-transform: uppercase;
   color: var(--carl-gold);
 }
+.carl-rpg .carl-grid-group-head th a {
+  display: block;
+  color: inherit;
+  cursor: pointer;
+}
+.carl-rpg .carl-grid-group-head th i {
+  width: 1em;
+  font-size: 0.85em;
+}
+.carl-rpg .carl-grid-group-count {
+  font-weight: normal;
+  letter-spacing: 0;
+  opacity: 0.8;
+}
 .carl-rpg .carl-grid-editing .carl-grid-achievement {
   color: var(--carl-gold);
 }

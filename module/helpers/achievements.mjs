@@ -37,6 +37,35 @@ export function registerAchievementSettings() {
     type: Boolean,
     default: false,
   });
+  // The categories this user has folded in the Achievements window, by
+  // key (ruled 2026-11-21): kept across reloads, on this client.
+  game.settings.register(SCOPE, COLLAPSED_SETTING, {
+    scope: "client",
+    config: false,
+    type: Array,
+    default: [],
+  });
+}
+
+const COLLAPSED_SETTING = "achievementGridCollapsed";
+
+/** The category keys this user has folded in the Achievements window. */
+export function collapsedCategories() {
+  return new Set(game.settings.get(SCOPE, COLLAPSED_SETTING) ?? []);
+}
+
+/**
+ * Fold or unfold a category in the Achievements window.
+ * @param {string} key  achievementSections' key.
+ * @returns {Promise<boolean>}  Whether it's folded now.
+ */
+export async function toggleCategory(key) {
+  const keys = collapsedCategories();
+  const folded = !keys.has(key);
+  if (folded) keys.add(key);
+  else keys.delete(key);
+  await game.settings.set(SCOPE, COLLAPSED_SETTING, [...keys]);
+  return folded;
 }
 
 /**
@@ -261,7 +290,7 @@ function categoryGroups(definitions) {
       const [category] = [...spellings].sort(
         ([a, countA], [b, countB]) => countB - countA || a.localeCompare(b),
       )[0];
-      return [key, { category, items }];
+      return [key, { key, category, items }];
     }),
   );
 }
@@ -274,7 +303,9 @@ function categoryGroups(definitions) {
  * category are in alphabetical order together, a group by its category's
  * name. Achievements with no category next to each other share a section.
  * @param {Item[]} definitions
- * @returns {{category: string|null, items: Item[]}[]}  category: null for ungrouped.
+ * @returns {{key: string|null, category: string|null, items: Item[]}[]}
+ *   category: null for ungrouped; key: the category whatever its spelling
+ *   (what the window remembers a folded one by).
  */
 export function achievementSections(definitions) {
   const groups = categoryGroups(definitions);
@@ -296,7 +327,7 @@ export function achievementSections(definitions) {
     }
     const last = sections.at(-1);
     if (last && last.category === null) last.items.push(entry.def);
-    else sections.push({ category: null, items: [entry.def] });
+    else sections.push({ key: null, category: null, items: [entry.def] });
   }
   return sections;
 }

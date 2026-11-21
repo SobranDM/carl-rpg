@@ -277,6 +277,24 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--carl-gold);
+
+    // The name folds the category (ruled 2026-11-21).
+    a {
+      display: block;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    i {
+      width: 1em;
+      font-size: 0.85em;
+    }
+  }
+
+  .carl-grid-group-count {
+    font-weight: normal;
+    letter-spacing: 0;
+    opacity: 0.8;
   }
 
   .carl-grid-editing .carl-grid-achievement {

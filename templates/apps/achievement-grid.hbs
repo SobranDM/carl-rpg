@@ -27,12 +27,19 @@
         </tr>
       </thead>
       {{!-- A category is its own section: its name, then its achievements
-            Bronze to Celestial, with a line above and below. --}}
+            Bronze to Celestial, with a line above and below. Clicking its
+            name folds it to that line, with how many it holds. --}}
       {{#each sections as |section|}}
-      <tbody{{#if section.category}} class="carl-grid-group"{{/if}}>
+      <tbody{{#if section.category}} class="carl-grid-group{{#if section.collapsed}} carl-grid-collapsed{{/if}}"{{/if}}>
         {{#if section.category}}
-        <tr class="carl-grid-group-head"><th colspan="{{@root.span}}">{{section.category}}</th></tr>
+        <tr class="carl-grid-group-head"><th colspan="{{@root.span}}">
+          <a data-action="toggleCategory" data-key="{{section.key}}" aria-expanded="{{#if section.collapsed}}false{{else}}true{{/if}}">
+            <i class="fas fa-chevron-{{#if section.collapsed}}right{{else}}down{{/if}}"></i> {{section.category}}
+            {{#if section.collapsed}}<span class="carl-grid-group-count">({{section.count}})</span>{{/if}}
+          </a>
+        </th></tr>
         {{/if}}
+        {{#unless section.collapsed}}
         {{#each section.rows as |row|}}
         <tr data-uuid="{{row.uuid}}"{{#if row.editing}} class="carl-grid-editing"{{/if}}>
           <th class="carl-grid-achievement"{{itemTooltip row.tooltip}}>
@@ -47,6 +54,7 @@
           {{/each}}
         </tr>
         {{/each}}
+        {{/unless}}
       </tbody>
       {{/each}}
     </table>

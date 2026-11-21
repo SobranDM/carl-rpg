@@ -4,6 +4,8 @@ import {
   achievementBoxOf,
   achievementCategories,
   achievementSections,
+  collapsedCategories,
+  toggleCategory,
   awardAchievement,
   awardedCopy,
   preparedBoxFor,
@@ -57,6 +59,7 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     actions: {
       award: AchievementGrid.#onAward,
       toggleOffline: AchievementGrid.#onToggleOffline,
+      toggleCategory: AchievementGrid.#onToggleCategory,
       newAchievement: AchievementGrid.#onNew,
       editAchievement: AchievementGrid.#onEdit,
       closeEditor: AchievementGrid.#onCloseEditor,
@@ -129,6 +132,7 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     }
     const editing = defs.find((d) => d.uuid === this.editing) ?? null;
     if (!editing) this.editing = null;
+    const collapsed = collapsedCategories();
     const rowOf = (def) => ({
       uuid: def.uuid,
       name: def.name,
@@ -159,8 +163,12 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
       showOffline,
       columns: columns.map((a) => ({ id: a.id, name: a.name, img: a.img })),
       // Grouped by category, alphabetical (helpers/achievements.mjs).
+      // A category folded by its heading shows only that (ruled 2026-11-21).
       sections: achievementSections(defs).map((section) => ({
+        key: section.key,
         category: section.category,
+        collapsed: !!section.key && collapsed.has(section.key),
+        count: section.items.length,
         rows: section.items.map(rowOf),
       })),
       // A category heading spans the achievement column and every crawler's.
@@ -278,6 +286,12 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     if (!actor || !definition) return;
     if (awardedCopy(actor, definition.uuid)) return this.#onRevoke(target);
     await awardAchievement(definition, actor);
+  }
+
+  /** A category's heading: fold or unfold it. */
+  static async #onToggleCategory(event, target) {
+    await toggleCategory(target.dataset.key);
+    this.render();
   }
 
   static #onToggleOffline() {

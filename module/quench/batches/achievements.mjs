@@ -96,6 +96,18 @@ export default function register(quench) {
           );
         });
 
+        it("a category's key is the same whatever its spelling; the rest have none", function () {
+          const sections = achievementSections([
+            def("Giant Slayer", "gold", "Boss Kills"),
+            def("Mouse Hunter", "bronze", " boss  kills "),
+            def("Zoo Keeper", "bronze"),
+          ]);
+          assert.deepEqual(
+            sections.map((s) => s.key),
+            ["boss kills", null],
+          );
+        });
+
         it("achievements without a category next to each other share a section", function () {
           const sections = achievementSections([
             def("A", "gold"),
@@ -559,6 +571,46 @@ export default function register(quench) {
           } finally {
             await grid.close();
             if (def) await deleteLibraryAchievement(await fromUuid(def.uuid));
+          }
+        });
+
+        it("clicking a category's name folds it to that line, with its count, and back (ruled 2026-11-21)", async function () {
+          const category = `Quench Fold ${foundry.utils.randomID()}`;
+          const defs = [
+            await makeDefinition({ category, lootBox: false }, "Quench Fold One"),
+            await makeDefinition({ category, lootBox: false }, "Quench Fold Two"),
+          ];
+          const grid = AchievementGrid.open();
+          try {
+            await withSetting("achievementGridCollapsed", [], async () => {
+              await waitFor(() => grid.rendered);
+              await grid.render();
+              const rowOf = (d) => grid.element.querySelector(`tr[data-uuid="${d.uuid}"]`);
+              const head = () =>
+                [...grid.element.querySelectorAll('[data-action="toggleCategory"]')].find((a) =>
+                  a.textContent.includes(category),
+                );
+              await waitFor(() => !!head() && !!rowOf(defs[0]));
+              head().click();
+              await waitFor(() => !rowOf(defs[0]) && !rowOf(defs[1]), {
+                message: "its achievements never folded away",
+              });
+              assert.include(head().textContent, "(2)", "how many it holds");
+              assert.equal(head().getAttribute("aria-expanded"), "false");
+              assert.lengthOf(
+                game.settings.get("carl-rpg", "achievementGridCollapsed"),
+                1,
+                "remembered",
+              );
+              head().click();
+              await waitFor(() => !!rowOf(defs[0]) && !!rowOf(defs[1]), {
+                message: "they never came back",
+              });
+              assert.notInclude(head().textContent, "(2)");
+            });
+          } finally {
+            await grid.close();
+            for (const d of defs) await deleteLibraryAchievement(await fromUuid(d.uuid));
           }
         });
 
