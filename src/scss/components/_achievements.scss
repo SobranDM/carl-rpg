@@ -157,6 +157,11 @@
   &.carl-achievement-grid {
     min-width: 640px;
     min-height: 650px;
+
+    // The columns scroll, not the window.
+    .window-content {
+      overflow: hidden;
+    }
   }
 
   .carl-achievement-boxes {
@@ -176,11 +181,25 @@
     font-weight: bold;
   }
 
+  // Two columns: the list, and the editor beside it when one is open. The
+  // window has a set height, so each scrolls on its own (ruled 2026-11-21).
   .carl-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .carl-grid-list {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 8px;
   }
 
   .carl-grid-controls {
@@ -202,8 +221,10 @@
     }
   }
 
+  // The list's own scrollbar.
   .carl-grid-scroll {
-    max-height: 70vh;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: auto;
   }
 
@@ -262,13 +283,17 @@
     color: var(--carl-gold);
   }
 
-  // The editor, below the grid.
+  // The editor, a column beside the list (ruled 2026-11-21): it scrolls on
+  // its own when it's taller than the window, so Done is always in reach.
   .carl-achievement-editor {
+    flex: 0 0 380px;
+    min-height: 0;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--carl-border-soft);
+    padding-left: 8px;
+    border-left: 1px solid var(--carl-border-soft);
 
     // Room to write in, as on other item sheets (80px was too cramped,
     // 0.8.1); the box fills it, open or not.

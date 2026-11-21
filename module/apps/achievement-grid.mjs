@@ -40,7 +40,8 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * award it), lit once awarded, with a check once its loot box is opened.
  * Click an awarded one to take it back, after a confirmation. Right-click
  * any to prepare that crawler's loot box for it. New Achievement, or an achievement's name, opens its editor
- * below the grid. For an achievement with a loot box, the editor lists the
+ * in a column beside the grid; the window has a set height, and each
+ * column scrolls on its own (ruled 2026-11-21). For an achievement with a loot box, the editor lists the
  * crawlers: the GM can prepare what each one's box holds (ruled 2026-11-19:
  * per crawler) - before it's awarded, or after, until it's opened.
  */
@@ -50,7 +51,9 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     id: "carl-achievement-grid",
     classes: ["carl-rpg", "carl-achievement-grid"],
     window: { title: "CARLRPG.Achievement.Grid.Title", icon: "fas fa-trophy", resizable: true },
-    position: { width: 720, height: "auto" },
+    // A set height, so the list and the editor beside it each scroll on
+    // their own (ruled 2026-11-21); wide enough for both.
+    position: { width: 1000, height: 700 },
     actions: {
       award: AchievementGrid.#onAward,
       toggleOffline: AchievementGrid.#onToggleOffline,
@@ -65,7 +68,11 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
 
   /** @override */
   static PARTS = {
-    body: { template: "systems/carl-rpg/templates/apps/achievement-grid.hbs" },
+    // Awarding redraws the window: each column keeps where it was scrolled.
+    body: {
+      template: "systems/carl-rpg/templates/apps/achievement-grid.hbs",
+      scrollable: [".carl-grid-scroll", ".carl-achievement-editor"],
+    },
   };
 
   /**

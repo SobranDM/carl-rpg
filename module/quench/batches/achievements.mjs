@@ -561,6 +561,46 @@ export default function register(quench) {
             if (def) await deleteLibraryAchievement(await fromUuid(def.uuid));
           }
         });
+
+        it("the editor is a column beside the list, Done in view; the list scrolls on its own (ruled 2026-11-21)", async function () {
+          const grid = AchievementGrid.open();
+          let def = null;
+          try {
+            await waitFor(() => grid.rendered);
+            grid.element.querySelector('[data-action="newAchievement"]').click();
+            await waitFor(
+              () => grid.editing && grid.element.querySelector(".carl-achievement-editor"),
+            );
+            def = await fromUuid(grid.editing);
+            const list = grid.element.querySelector(".carl-grid-list");
+            const editor = grid.element.querySelector(".carl-achievement-editor");
+            const listBox = list.getBoundingClientRect();
+            const editorBox = editor.getBoundingClientRect();
+            assert.isAtLeast(editorBox.left, listBox.right - 1, "to the list's right");
+            assert.isBelow(Math.abs(editorBox.top - listBox.top), 2, "side by side");
+            const done = editor.querySelector('[data-action="closeEditor"]');
+            editor.scrollTop = editor.scrollHeight;
+            const windowBox = grid.element.getBoundingClientRect();
+            assert.isAtMost(
+              done.getBoundingClientRect().bottom,
+              windowBox.bottom + 1,
+              "Done can be reached in the window",
+            );
+            const scroll = grid.element.querySelector(".carl-grid-scroll");
+            if (scroll) {
+              assert.equal(getComputedStyle(scroll).overflowY, "auto", "the list's own scrollbar");
+              assert.isAtMost(
+                scroll.getBoundingClientRect().bottom,
+                windowBox.bottom + 1,
+                "inside the window, however long the list",
+              );
+            }
+            assert.notEqual(grid.position.height, "auto", "a set height");
+          } finally {
+            await grid.close();
+            if (def) await deleteLibraryAchievement(await fromUuid(def.uuid));
+          }
+        });
       });
 
       describe("The Character's Details tab", function () {

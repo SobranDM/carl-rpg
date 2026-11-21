@@ -3,8 +3,9 @@
       under its name, Bronze to Celestial. A dimmed icon: click to award; a
       lit one: awarded (a check once its box is opened) - click to take it
       back. Right-click either: that crawler's loot box. An achievement's name opens its editor
-      below. --}}
+      in a column beside the list; each column scrolls on its own. --}}
 <div class="carl-grid">
+  <div class="carl-grid-list">
   <div class="carl-grid-controls">
     <label class="checkbox">
       <input type="checkbox" data-action="toggleOffline" {{#if showOffline}}checked{{/if}} />
@@ -53,6 +54,7 @@
   {{else}}
   <p class="carl-hint">{{localize "CARLRPG.Achievement.Grid.NoAchievements"}}</p>
   {{/if}}
+  </div>
 
   {{#if editor}}
   {{!-- The editor: every field saves as it changes. --}}

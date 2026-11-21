@@ -4707,6 +4707,9 @@
   min-width: 640px;
   min-height: 650px;
 }
+.carl-rpg.carl-achievement-grid .window-content {
+  overflow: hidden;
+}
 .carl-rpg .carl-achievement-boxes {
   display: flex;
   flex-direction: column;
@@ -4722,10 +4725,21 @@
   font-weight: bold;
 }
 .carl-rpg .carl-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-grid-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px;
 }
 .carl-rpg .carl-grid-controls {
   display: flex;
@@ -4744,7 +4758,8 @@
   gap: 4px;
 }
 .carl-rpg .carl-grid-scroll {
-  max-height: 70vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
 }
 .carl-rpg .carl-grid-table {
@@ -4793,11 +4808,14 @@
   color: var(--carl-gold);
 }
 .carl-rpg .carl-achievement-editor {
+  flex: 0 0 380px;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--carl-border-soft);
+  padding-left: 8px;
+  border-left: 1px solid var(--carl-border-soft);
 }
 .carl-rpg .carl-achievement-editor prose-mirror {
   min-height: 200px;
