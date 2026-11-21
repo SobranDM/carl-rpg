@@ -157,6 +157,24 @@ export default function register(quench) {
           }
         });
 
+        it("a Passive Spell's base DR counts from Rank 1, not at Rank 0 (ruled 2026-11-20)", async function () {
+          const actor = await createTestCharacter("rank 0 bonus");
+          try {
+            const spell = await createTestItem(actor, "spell", "Bark", {
+              system: {
+                castingKeywords: ["passive"],
+                rank: 0,
+                changes: [change("resource", "dr", 2)],
+              },
+            });
+            assert.equal(actor.system.drEffective, 0, "untrained: nothing");
+            await spell.update({ "system.rank": 1 });
+            assert.equal(actor.system.drEffective, 2, "Rank 1: its +2 DR");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
         it("Iron Skin doubles the whole DR: Race and gear DR", async function () {
           const actor = await createTestCharacter("dr x2");
           try {

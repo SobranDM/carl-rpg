@@ -34,7 +34,10 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             await createTestItem(actor, "skill", "skill", {
-              system: { changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }] },
+              system: {
+                rank: 1, // none at Rank 0 (ruled 2026-11-20)
+                changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }],
+              },
             });
             await settle();
             assert.equal(

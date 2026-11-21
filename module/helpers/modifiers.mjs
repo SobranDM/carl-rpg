@@ -259,8 +259,9 @@ function resolveValue(formula, rollData) {
 
 /**
  * Collect every currently-active ChangeEntry from one embedded item: its
- * universal `changes` (item-base, always active while owned) plus, for
- * Rank-gated items, every `upgrades[].changes` whose rankThreshold is met.
+ * universal `changes` (item-base, always active while owned - for a Skill,
+ * Spell or Damage Effect, from Rank 1) plus, for Rank-gated items, every
+ * `upgrades[].changes` whose rankThreshold is met.
  * @param {Item} item
  * @param {number} [rank]  The Rank tiers unlock at, and `@rank`/a Rank
  *   damage die read: the item's live Rank (aggregateActorBonuses passes
@@ -276,6 +277,10 @@ function collectItemChanges(item, rank = item.system.rank ?? 0) {
   // "Only gear in your Gear Slots grants its benefits" (p.98) - an owned
   // but unequipped gear item contributes nothing.
   if (item.type === "item" && !givesBonuses(item)) return [];
+  // A Skill, Spell or Damage Effect gives nothing until it's learned: no
+  // Bonuses at Rank 0 or below (ruled 2026-11-20). Its Upgrades start at
+  // Rank 5, so this only stops the base ones.
+  if (RANKED_TYPES.has(item.type) && !(Number(rank) >= 1)) return [];
   const sourceItemRank = rank;
   const out = [];
   // A Damage Effect is never an always-on modifier - "choose one available

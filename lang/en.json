@@ -1180,6 +1180,7 @@
         "Bonuses": "Bonuses"
       },
       "AnyRank": "at any Rank",
+      "FromRank1": "from Rank 1",
       "DamageEffectBonuses": "Only a Bonus to this Damage Effect's own damage counts, and only on the Attack it's chosen for.",
       "Unlocked": "Unlocked",
       "Locked": "Locked",
