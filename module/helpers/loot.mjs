@@ -24,7 +24,9 @@ const ITEM_TYPE_TABLE_NAME = "Item Type";
  *  - {kind: "text", name, img, quantity}: a table row naming no item;
  *  - {kind: "magic", ...}: a magic item draft (generateMagicDraft).
  * Turned into Item data by lootItemData. Tables are read by name, the
- * world's own copy first, so a GM's edits win.
+ * world's own copy first, so a GM's edits win. The box tables (what a box
+ * holds besides its magic item - our own call, not the book's) are also
+ * looked for in the world's compendiums before the system's (boxTable).
  */
 
 /**
@@ -39,6 +41,30 @@ export async function lootTable(name) {
   const pack = game.packs.get(PACKS.rollTables);
   const entry = (await pack?.getIndex())?.find((e) => e.name === name);
   return entry ? pack.getDocument(entry._id) : null;
+}
+
+/**
+ * A box-contents Roll Table by name ("Bronze Box: Mundane"): the world's own
+ * first, then the world's compendiums (in the order Foundry lists them),
+ * then the system's (ruled 2026-11-20). What a box holds besides its magic
+ * item is our own call, not the book's, so a GM who imports one of these
+ * tables into the world or a compendium of their own and changes it gets
+ * theirs. The magic item's tables (Tables 38-42, the book's own) are read
+ * by lootTable.
+ * @param {string} name
+ * @returns {Promise<RollTable|null>}
+ */
+export async function boxTable(name) {
+  const world = game.tables?.getName?.(name);
+  if (world) return world;
+  const worldPacks = game.packs.filter(
+    (p) => p.documentName === "RollTable" && p.metadata.packageType === "world",
+  );
+  for (const pack of worldPacks) {
+    const entry = (await pack.getIndex())?.find((e) => e.name === name);
+    if (entry) return pack.getDocument(entry._id);
+  }
+  return lootTable(name);
 }
 
 /** A tier key as the tables name it ("bronze" -> "Bronze"). */
@@ -82,7 +108,7 @@ export async function generateLoot(tierKey, { recipient = null, floor = currentF
   const ctx = { tierKey, recipient, floor };
   const entries = [];
   const draw = async (suffix, count) => {
-    const table = count > 0 ? await lootTable(`${tierName(tierKey)} Box: ${suffix}`) : null;
+    const table = count > 0 ? await boxTable(`${tierName(tierKey)} Box: ${suffix}`) : null;
     for (let i = 0; i < (table ? count : 0); i++) {
       const { results } = await table.roll({ recursive: false });
       for (const result of results) {

@@ -1,5 +1,6 @@
 import {
   autofillMagicDraft,
+  boxTable,
   buildMagicItemData,
   enchantmentLine,
   generateLoot,
@@ -222,6 +223,66 @@ export default function register(quench) {
           } finally {
             await table.delete();
           }
+        });
+      });
+
+      describe("Box tables: the world's, then the world's compendiums', then the system's (ruled 2026-11-20)", function () {
+        useQuenchTimeout(this, 60000);
+
+        it("a world compendium's copy beats the system's; the world's own beats both", async function () {
+          const name = "Bronze Box: Mundane";
+          if (game.tables.getName(name)) this.skip(); // the GM's own table would win either way
+          const pack = await foundry.documents.collections.CompendiumCollection.createCompendium({
+            type: "RollTable",
+            label: "Quench Box Tables",
+            name: `quench-box-tables-${foundry.utils.randomID().toLowerCase()}`,
+          });
+          let world = null;
+          try {
+            await RollTable.implementation.create(
+              {
+                name,
+                formula: "1d1",
+                results: [{ type: "text", name: "Quench Pack Thing ×2", range: [1, 1], weight: 1 }],
+              },
+              { pack: pack.collection },
+            );
+            assert.equal((await boxTable(name))?.pack, pack.collection, "the world compendium's");
+            const loot = await generateLoot("bronze");
+            const thing = loot.entries.find((e) => e.name === "Quench Pack Thing");
+            assert.exists(thing, "drawn from it");
+            assert.equal(thing.quantity, 2);
+
+            [world] = await RollTable.createDocuments([
+              {
+                name,
+                formula: "1d1",
+                results: [{ type: "text", name: "Quench World Thing", range: [1, 1], weight: 1 }],
+              },
+            ]);
+            assert.equal((await boxTable(name))?.id, world.id, "the world's own first");
+          } finally {
+            await world?.delete();
+            await pack.deleteCompendium();
+          }
+        });
+
+        it("with neither, the system's", async function () {
+          const name = "Silver Box: Consumables";
+          if (game.tables.getName(name)) this.skip();
+          const table = await boxTable(name);
+          assert.exists(table);
+          assert.isTrue(
+            table.pack === "carl-rpg.roll-tables" ||
+              game.packs.get(table.pack)?.metadata.packageType === "world",
+          );
+        });
+
+        it("the magic item's tables (the book's) aren't looked for in world compendiums", async function () {
+          // lootTable: the world's, then the system's - unchanged.
+          const table = await lootTable("Item Type");
+          assert.exists(table);
+          if (table.pack) assert.equal(table.pack, "carl-rpg.roll-tables");
         });
       });
 
