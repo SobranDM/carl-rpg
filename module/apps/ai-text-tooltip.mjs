@@ -35,16 +35,22 @@ export function registerAiTextTooltipSetting() {
 
 /** The token hover hooks: once, at `ready`. */
 export function registerAiTextTooltipHooks() {
+  // By document: a token redrawn while hovered (a new image) is a new
+  // Token object for the same token.
+  const ours = (doc) => !!doc && [shownFor, pendingFor].some((t) => t?.document === doc);
   Hooks.on("hoverToken", (token, hovered) => {
     if (hovered) scheduleAiText(token);
-    else if (shownFor === token || pendingFor === token) hideAiText();
+    else if (ours(token.document)) hideAiText();
   });
-  for (const hook of ["canvasPan", "canvasTearDown", "deleteToken"]) Hooks.on(hook, hideAiText);
+  for (const hook of ["canvasPan", "canvasTearDown"]) Hooks.on(hook, hideAiText);
+  // Only its own token's deletion, not any token's.
+  Hooks.on("deleteToken", (doc) => {
+    if (ours(doc)) hideAiText();
+  });
   // A token that moves while hovered (arrow keys, another user) leaves it.
   Hooks.on("updateToken", (doc, changes) => {
     const moved = "x" in changes || "y" in changes || "width" in changes || "height" in changes;
-    const ours = [shownFor, pendingFor].some((t) => t?.document === doc);
-    if (moved && ours) hideAiText();
+    if (moved && ours(doc)) hideAiText();
   });
   // A press on the board (a drag starting, a click) clears it.
   document.addEventListener("pointerdown", () => hideAiText(), { capture: true, passive: true });

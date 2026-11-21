@@ -13,7 +13,7 @@
       <input type="checkbox" data-action="toggleOffline" {{#if showOffline}}checked{{/if}} />
       {{localize "CARLRPG.Achievement.Grid.ShowOffline"}}
     </label>
-    <input type="search" class="carl-grid-search" value="{{search}}" aria-label="{{localize 'CARLRPG.Achievement.Grid.Search'}}"
+    <input type="search" class="carl-grid-search" name="carlAchievementSearch" value="{{search}}" aria-label="{{localize 'CARLRPG.Achievement.Grid.Search'}}"
       placeholder="{{localize 'CARLRPG.Achievement.Grid.Search'}}" />
     <button type="button" data-action="newAchievement"><i class="fas fa-plus"></i> {{localize "CARLRPG.Achievement.Grid.New"}}</button>
   </div>

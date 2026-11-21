@@ -629,6 +629,24 @@ export default function register(quench) {
           }
         });
 
+        it("a redraw while typing in the search box leaves the cursor in it, at the end", async function () {
+          const grid = AchievementGrid.open();
+          try {
+            await waitFor(() => grid.rendered);
+            const box = () => grid.element.querySelector(".carl-grid-search");
+            box().focus();
+            box().value = "quench";
+            box().dispatchEvent(new Event("input", { bubbles: true }));
+            await grid.render();
+            await waitFor(() => grid.rendered);
+            assert.equal(document.activeElement, box(), "still in it");
+            assert.equal(box().value, "quench");
+            assert.equal(box().selectionStart, "quench".length, "at the end");
+          } finally {
+            await grid.close();
+          }
+        });
+
         it("the search box shows the achievements whose name or category holds it, as it's typed (ruled 2026-11-21)", async function () {
           const tag = foundry.utils.randomID();
           const defs = [

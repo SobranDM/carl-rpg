@@ -448,6 +448,48 @@ export default function register(quench) {
           assert.include(drip.data.system.aiText, "the drip's", "its own, by name");
         });
 
+        it("at a column's top: a blurb running on isn't a new header; a name after a stat block is", function () {
+          // The left column's last lines, then the right column's first.
+          const twoColumns = (left, right) => {
+            const one = page(left);
+            const two = page(right);
+            for (const line of two.lines) line.col = 1;
+            two.lines[0].gap = null;
+            return { ...one, lines: [...one.lines, ...two.lines] };
+          };
+          const [blurb, ...more] = findAiTexts([
+            twoColumns(
+              [
+                ["Test Gloop. Level 4.", AI_BOLD, 10, 31],
+                ["Quench text: gloops are slow, and", AI_REG, 10, 17.5],
+              ],
+              [
+                ["not worth it below Level 5.", AI_REG, 10],
+                ["Quench text: the end.", AI_REG, 10, 13],
+              ],
+            ),
+          ]);
+          assert.lengthOf(more, 0, "one blurb");
+          assert.include(blurb.html, "not worth it below Level 5. Quench text: the end.");
+
+          const [, next] = findAiTexts([
+            twoColumns(
+              [
+                ["Test Drip. Level 2.", AI_BOLD, 10, 31],
+                ["Quench text: the drip's.", AI_REG, 10, 17.5],
+                ["Slap: 12+F to hit, 1d6+2 Bludgeoning, 5ft range", AI_REG, 10, 18],
+                ["On an Evade Major Fail, the crawler is", AI_REG, 10, 13],
+              ],
+              [
+                ["Test Bootlicker. Level 42.", AI_BOLD, 10],
+                ["Quench text: the bootlicker's.", AI_REG, 10, 17.5],
+              ],
+            ),
+          ]);
+          assert.equal(next?.header, "Test Bootlicker. Level 42.", "a name at the top starts one");
+          assert.include(next.html, "the bootlicker's");
+        });
+
         it("a header may end in a kind after a comma: 'Level 15, City Elves'", function () {
           const [blurb] = findAiTexts([
             page([

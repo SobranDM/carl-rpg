@@ -241,6 +241,11 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
       this.#search = search.value;
       this.#applySearch();
     });
+    // A redraw while it's being typed in (a player logging in) gives it its
+    // focus back (it has a name); the cursor goes back to its end.
+    if (search && document.activeElement === search) {
+      search.setSelectionRange(search.value.length, search.value.length);
+    }
     this.#applySearch();
     // Right-click a trophy: that crawler's loot box for it, as in the
     // editor (ruled 2026-11-19). Taking an award back is a left-click.
@@ -253,6 +258,10 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     }
     // The editor: each field saves as it changes.
     const editor = this.element.querySelector(".carl-achievement-editor");
+    // Another achievement opened: its editor starts at the top, not where
+    // the last one was scrolled to.
+    if (editor && editor.dataset.uuid !== this.#shownEditor) editor.scrollTop = 0;
+    this.#shownEditor = editor?.dataset.uuid ?? null;
     if (!editor) return;
     for (const field of editor.querySelectorAll("input[name], select[name], textarea[name]")) {
       field.addEventListener("change", () => {
@@ -301,6 +310,9 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     if (awardedCopy(actor, definition.uuid)) return this.#onRevoke(target);
     await awardAchievement(definition, actor);
   }
+
+  /** The achievement the editor last showed (its scroll is kept only for it). */
+  #shownEditor = null;
 
   /** What's in the search box (ruled 2026-11-21). */
   #search = "";

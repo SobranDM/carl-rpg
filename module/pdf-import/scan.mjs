@@ -74,12 +74,16 @@ export async function readPages(pdfDoc, { onProgress } = {}) {
  */
 async function nameFaces(page, items, names) {
   const ids = [...new Set(items.map((i) => i.font).filter(Boolean))].filter((id) => !names.has(id));
-  if (ids.length) {
+  let drawn = ids.length > 0;
+  if (drawn) {
     try {
       await page.getOperatorList();
     } catch {
-      return;
+      // This page's new fonts go unnamed; those already known still apply.
+      drawn = false;
     }
+  }
+  if (drawn) {
     const fonts = await Promise.all(ids.map((id) => loadedFont(page, id)));
     ids.forEach((id, k) => {
       // "BDIFOQ+TextbookNew-Bold": the six letters name the subset, not the face.

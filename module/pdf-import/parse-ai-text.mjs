@@ -86,8 +86,9 @@ export function findAiTexts(pages, sectionAt) {
     AI_FACE_RE.test(lines[k].face ?? "") &&
     lines[k].size <= MAX_SIZE &&
     !STAT_LINE_RE.test(lines[k].text);
-  const afterOther = (k) =>
-    !isAi(k - 1) || lines[k - 1].col !== lines[k].col || lines[k - 1].page !== lines[k].page;
+  // After a line that isn't the AI's - here, or at the foot of the column or
+  // page before. A column's top that follows the AI's text carries it on.
+  const afterOther = (k) => !isAi(k - 1);
   // A paragraph starts at a wider gap (about 1.7 lines), the top of a
   // column, or after a line that isn't the AI's.
   const startsBlock = (k) =>
@@ -96,8 +97,13 @@ export function findAiTexts(pages, sectionAt) {
   // in both books), or after a line that isn't the AI's (the core book sets
   // an "AI" mark right above): so a Level the text mentions after a
   // paragraph break never starts another blurb.
+  // A column's top after the AI's typeface (a blurb, or a stat block's
+  // last lines) only when it reads as a name - "Pazuzu Bootlicker. Level
+  // 42." - not a blurb's text running on ("Not worth it below Level 5.").
   const startsHeader = (k) =>
-    lines[k].gap === null || lines[k].gap >= lines[k].size * 1.9 || afterOther(k);
+    (lines[k].gap !== null && lines[k].gap >= lines[k].size * 1.9) ||
+    afterOther(k) ||
+    (lines[k].gap === null && readsAsName(lines[k].text));
   const ctx = { lines, isAi, startsBlock, startsHeader };
 
   const blurbs = [];
@@ -191,6 +197,18 @@ export function looksLikeHeader(text) {
   if (LEVEL_FIRST_RE.test(line)) return true;
   const m = line.match(LEVEL_RE);
   return !!m && AFTER_LEVEL_RE.test(line.slice(m.index + m[0].length));
+}
+
+/**
+ * Whether a line, up to any "Level", reads as a name: no lower-case word of
+ * four letters or more ("Crawler #9,483,176. 'Gus.'" does; "Not worth it
+ * below" doesn't).
+ */
+function readsAsName(text) {
+  return !String(text)
+    .replace(/\bLevel\b.*$/, "")
+    .split(/\s+/)
+    .some((w) => /^[a-z]/.test(w) && w.replace(/[^a-z]/g, "").length >= 4);
 }
 
 /** A line that only adds the tier to a header: "Level 10 Neighborhood Boss!". */
