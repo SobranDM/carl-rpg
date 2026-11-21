@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.8.1
+
+- **Achievement Descriptions** have room to write in, in the Achievements window and on the Achievement sheet.
+
 ## 0.8.0
 
 Achievements and loot boxes, a floor collapse timer and Opposed Checks, plus behind-the-scenes tidying to make future work easier.
