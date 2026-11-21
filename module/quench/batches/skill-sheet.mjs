@@ -611,10 +611,31 @@ export default function register(quench) {
             await waitFor(() => item.system.changes[0]?.value === "3", {
               message: "the edit never saved",
             });
-            await rerendered(sheet, () => !!bonuses(), "the sheet never redrew");
-            // Its own Add link: a Bonus can be added with none there.
+            await rerendered(
+              sheet,
+              () => row()?.querySelector(".carl-edit-row-value")?.textContent.trim() === "+3",
+              "the summary never updated",
+            );
+            assert.notExists(
+              sheet.element.querySelector(".carl-damage-effect-bonus-hint"),
+              "the Damage Effect hint is for Damage Effects",
+            );
+            // Its own Add link, for another Bonus.
             assert.exists(
               bonuses().querySelector('[data-action="addArrayItem"][data-path="system.changes"]'),
+            );
+            await sheet.close();
+          } finally {
+            await item.delete();
+          }
+        });
+
+        it("a Damage Effect's Main tab says only a Bonus to its own damage counts", async function () {
+          const item = await worldItem("damageEffect", "bonus hint");
+          try {
+            const sheet = await openSheet(item);
+            assert.exists(
+              sheet.element.querySelector(".carl-base-bonuses .carl-damage-effect-bonus-hint"),
             );
             await sheet.close();
           } finally {

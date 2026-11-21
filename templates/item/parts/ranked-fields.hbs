@@ -1,7 +1,7 @@
 {{!-- The shared lower half of a Skill, Spell or Damage Effect's Main tab
       (docs/skill-item-sheets.md), after its Description and "What it is":
       Rank and advancement, Rolling it, Bonuses (at any Rank - Oakhide's
-      +2 DR), Damage or Healing, On-hit Debuffs (at any Rank), and the
+      +2 DR; a Damage Effect's count only toward its own damage), Damage or Healing, On-hit Debuffs (at any Rank), and the
       Upgrades overview. isAttackFlavored
       (item-sheet.mjs's _prepareContext) picks Damage or Healing and shows
       the Debuffs - true for an Attack-category Skill, an "attack"-keyword
@@ -59,11 +59,12 @@
   </div>
 </div>
 
-{{!-- system.changes: the Bonuses it gives from Rank 1, on top of any
+{{!-- system.changes: the Bonuses it gives at any Rank, on top of any
       Upgrade's. Every keyword has them (a Passive Spell's are its point). --}}
 <div class="carl-item-group carl-base-bonuses">
   <span class="carl-item-group-title">{{localize "CARLRPG.ItemSheet.Group.Bonuses"}}
     <span class="carl-item-group-summary">{{localize "CARLRPG.ItemSheet.AnyRank"}}</span></span>
+  {{#if isDamageEffect}}<p class="carl-hint carl-damage-effect-bonus-hint">{{localize "CARLRPG.ItemSheet.DamageEffectBonuses"}}</p>{{/if}}
   {{> "systems/carl-rpg/templates/item/parts/changes-editor.hbs"
     changes=system.changes path="system.changes" config=config item=item actorSkillNames=actorSkillNames}}
 </div>
