@@ -196,13 +196,13 @@ export default function register(quench) {
               },
             });
             await bark.update({ "system.rank": 0 }); // a Spell arrives at Rank 1
-            const dex = actor.system.stats.dex.value;
+            const dex = actor.system.stats.dex.effective;
             assert.equal(actor.system.drEffective, 0, "Rank 0: nothing");
             await gear(actor, "Bark Charm", [change("skillRank", "Bark", 1)]);
             assert.equal(actor.system.drEffective, 2, "raised to Rank 1: its +2 DR");
             assert.equal(actor.system.skills.climbing.rank, 5, "its +1 Climbing");
             assert.equal(
-              actor.system.stats.dex.value,
+              actor.system.stats.dex.effective,
               dex + 1,
               "which unlocks Climbing's Rank 5 tier",
             );
