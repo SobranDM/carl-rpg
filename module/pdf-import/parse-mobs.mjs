@@ -128,7 +128,9 @@ export function parseMobs(pages) {
     }
     const name = joinText(lines.slice(nameAt, at).map((l) => l.text));
     const section = sectionAt(lines[at].page, lines[at].at);
-    const mob = toMob(name, lines[at], lines.slice(at + 1, end), flavor);
+    // The next Mob's AI Text, before its name, isn't this one's notes.
+    const body = lines.slice(at + 1, end).filter((l) => !inBlurb.has(`${l.page}:${l.at}`));
+    const mob = toMob(name, lines[at], body, flavor);
     if (!mob) return null;
     const blurb = blurbFor(
       {

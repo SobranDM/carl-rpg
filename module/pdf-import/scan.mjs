@@ -18,8 +18,11 @@ import { parseSpells } from "./parse-spells.mjs";
 // margins) is mostly picture: a possible map.
 const MAP_TEXT_LIMIT = 150;
 // A page that may hold a Mob's AI Text ("Rat Brute, Level 4"): its
-// typefaces are read too (parse-ai-text.mjs tells the AI's voice by them).
+// typefaces are read too (parse-ai-text.mjs tells the AI's voice by them),
+// and the next page's, where a blurb may run on.
 const MAY_HAVE_AI_TEXT_RE = /\bLevel\s+\d/;
+// How long to wait for one font to load before going without its name.
+const FONT_WAIT_MS = 3000;
 
 /**
  * Read every page's text.
@@ -29,6 +32,7 @@ const MAY_HAVE_AI_TEXT_RE = /\bLevel\s+\d/;
  */
 export async function readPages(pdfDoc, { onProgress } = {}) {
   const pages = [];
+  let lastMayHave = false;
   for (let n = 1; n <= pdfDoc.numPages; n++) {
     const page = await pdfDoc.getPage(n);
     const [x0, y0, x1, y1] = page.view;
@@ -39,7 +43,9 @@ export async function readPages(pdfDoc, { onProgress } = {}) {
       x: i.x - x0,
       y: i.y - y0,
     }));
-    if (MAY_HAVE_AI_TEXT_RE.test(items.map((i) => i.str).join(" "))) await nameFaces(page, items);
+    const mayHave = MAY_HAVE_AI_TEXT_RE.test(items.map((i) => i.str).join(" "));
+    if (mayHave || lastMayHave) await nameFaces(page, items);
+    lastMayHave = mayHave;
     const size = { width: x1 - x0, height: y1 - y0, page: n };
     pages.push({ ...size, items, lines: layoutLines(items, size) });
     page.cleanup();
@@ -50,9 +56,10 @@ export async function readPages(pdfDoc, { onProgress } = {}) {
 
 /**
  * Give each text item its typeface's name ("TextbookNew-Bold"), as `face`.
- * pdf.js only knows a font's name once the page's drawing is loaded, so this
- * costs a little: it's done only where AI Text may be. An item whose font
- * isn't known keeps no face.
+ * pdf.js only knows a font's name once the page's drawing is loaded and the
+ * font itself has loaded (which can finish after the drawing), so this costs
+ * a little: it's done only where AI Text may be. An item whose font isn't
+ * known in time keeps no face.
  * @param {object} page  A pdf.js page.
  * @param {object[]} items  From toTextItems; `font` is pdf.js's font id.
  */
@@ -62,22 +69,38 @@ async function nameFaces(page, items) {
   } catch {
     return;
   }
+  const ids = [...new Set(items.map((i) => i.font).filter(Boolean))];
+  const fonts = await Promise.all(ids.map((id) => loadedFont(page, id)));
   const names = new Map();
-  for (const item of items) {
-    if (!item.font || names.has(item.font)) continue;
-    let name = "";
-    try {
-      if (page.commonObjs.has(item.font)) name = page.commonObjs.get(item.font)?.name ?? "";
-    } catch {
-      name = "";
-    }
+  ids.forEach((id, k) => {
     // "BDIFOQ+TextbookNew-Bold": the six letters name the subset, not the face.
-    names.set(item.font, String(name).replace(/^[A-Z]{6}\+/, ""));
-  }
+    names.set(id, String(fonts[k]?.name ?? "").replace(/^[A-Z]{6}\+/, ""));
+  });
   for (const item of items) {
     const face = names.get(item.font);
     if (face) item.face = face;
   }
+}
+
+/**
+ * A page's font, once loaded - or null if it isn't within FONT_WAIT_MS.
+ * @param {object} page
+ * @param {string} id  pdf.js's font id.
+ * @returns {Promise<object|null>}
+ */
+function loadedFont(page, id) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => resolve(null), FONT_WAIT_MS);
+    try {
+      page.commonObjs.get(id, (font) => {
+        clearTimeout(timer);
+        resolve(font ?? null);
+      });
+    } catch {
+      clearTimeout(timer);
+      resolve(null);
+    }
+  });
 }
 
 /**

@@ -84,15 +84,19 @@ export function findAiTexts(pages, sectionAt) {
     AI_FACE_RE.test(lines[k].face ?? "") &&
     lines[k].size <= MAX_SIZE &&
     !STAT_LINE_RE.test(lines[k].text);
-  // A block starts at a wider gap, the top of a column, or after a line
-  // that isn't the AI's (the core book sets an "AI" mark right above).
+  const afterOther = (k) =>
+    !isAi(k - 1) || lines[k - 1].col !== lines[k].col || lines[k - 1].page !== lines[k].page;
+  // A paragraph starts at a wider gap (about 1.7 lines), the top of a
+  // column, or after a line that isn't the AI's.
   const startsBlock = (k) =>
-    lines[k].gap === null ||
-    lines[k].gap >= lines[k].size * 1.4 ||
-    !isAi(k - 1) ||
-    lines[k - 1].col !== lines[k].col ||
-    lines[k - 1].page !== lines[k].page;
-  const ctx = { lines, isAi, startsBlock };
+    lines[k].gap === null || lines[k].gap >= lines[k].size * 1.4 || afterOther(k);
+  // A header starts a bigger break than a paragraph does (2 lines and more
+  // in both books), or after a line that isn't the AI's (the core book sets
+  // an "AI" mark right above): so a Level the text mentions after a
+  // paragraph break never starts another blurb.
+  const startsHeader = (k) =>
+    lines[k].gap === null || lines[k].gap >= lines[k].size * 1.9 || afterOther(k);
+  const ctx = { lines, isAi, startsBlock, startsHeader };
 
   const blurbs = [];
   for (let i = 0; i < lines.length; i++) {
@@ -100,19 +104,21 @@ export function findAiTexts(pages, sectionAt) {
     const head = readHeader(ctx, i);
     if (!head) continue;
     let j = i + 1;
-    // "Krakaren Clone, Level 10" / "Level 10 Neighborhood Boss!"
-    while (isAi(j) && /^Level\s+\d+\b[^.!]*[.!]?\s*$/.test(lines[j].text.trim())) {
+    // "Krakaren Clone, Level 10" / "Level 10 Neighborhood Boss!" - a tier
+    // at most, not "Level 3 crawlers should run".
+    while (isAi(j) && headerContinues(lines[j].text)) {
       head.header += ` ${lines[j].text.trim()}`;
       j++;
     }
     const body = head.rest ? [{ text: head.rest, gap: null, size: lines[i].size }] : [];
-    while (isAi(j) && !readHeader(ctx, j)) body.push(lines[j++]);
+    // On until the next header, or the next header's name lines.
+    while (isAi(j) && !readHeader(ctx, j) && !namesNextHeader(ctx, j)) body.push(lines[j++]);
     if (!body.length) continue;
     const used = [...head.from, ...range(i, j)];
     blurbs.push({
       whole: nameKey(head.name),
       primary: nameKey(primaryName(head.name)),
-      parts: String(head.name).split(TITLE_SPLIT_RE).map(nameKey).filter(Boolean),
+      parts: nameParts(head.name).map(nameKey).filter(Boolean),
       level: head.level,
       header: head.header,
       html: toHtml(head.header, body),
@@ -131,7 +137,7 @@ export function findAiTexts(pages, sectionAt) {
  *   from: number[]}|null}  rest: the text's first words on a "Level 6.
  *   Basically..." line; from: the name's own lines above.
  */
-function readHeader({ lines, isAi, startsBlock }, i) {
+function readHeader({ lines, isAi, startsBlock, startsHeader }, i) {
   const text = lines[i].text.trim();
   let prefix;
   let level;
@@ -147,16 +153,18 @@ function readHeader({ lines, isAi, startsBlock }, i) {
     prefix = text.slice(0, m.index).trim();
     level = Number(m[1]);
   }
-  // The name's lines above: back to where their block starts. A name all
-  // on this line needs this line to start the block.
+  // The name's lines above, back to where the header starts. A name all on
+  // this line needs this line to start it. Meeting a paragraph break
+  // first, it's text that mentions a Level, not a header.
   const from = [];
-  if (first || !startsBlock(i)) {
+  if (first || !startsHeader(i)) {
     for (let k = i - 1; k >= 0 && from.length < MAX_NAME_LINES; k--) {
       if (!isAi(k) || lines[k].page !== lines[i].page || LEVEL_RE.test(lines[k].text)) return null;
       from.unshift(k);
-      if (startsBlock(k)) break;
+      if (startsHeader(k)) break;
+      if (startsBlock(k)) return null;
     }
-    if (!from.length || !startsBlock(from[0])) return null;
+    if (!from.length || !startsHeader(from[0])) return null;
   }
   const name = joinText([...from.map((k) => lines[k].text.trim()), prefix].filter(Boolean))
     .replace(/[.,]$/, "")
@@ -167,9 +175,37 @@ function readHeader({ lines, isAi, startsBlock }, i) {
   return { name, header, level, rest, from };
 }
 
+/** A line that only adds the tier to a header: "Level 10 Neighborhood Boss!". */
+function headerContinues(text) {
+  const m = text.trim().match(/^Level\s+\d+\b(.*)$/);
+  return !!m && AFTER_LEVEL_RE.test(m[1]);
+}
+
+/**
+ * Whether line j is the first of the next header's name lines - "The Bar
+ * Render. Former Lawyer, Current" above "Level 8 Neighborhood Boss!" - so a
+ * blurb before it stops there.
+ */
+function namesNextHeader(ctx, j) {
+  if (!ctx.startsHeader(j)) return false;
+  for (let k = j + 1; k <= j + MAX_NAME_LINES && ctx.isAi(k); k++) {
+    const head = readHeader(ctx, k);
+    if (head) return head.from[0] === j;
+  }
+  return false;
+}
+
+// "Dr. Bones" is one name, not "Dr", titled "Bones".
+const HONORIFIC_RE = /\b(Mr|Mrs|Ms|Dr|St|Jr|Sr|Mt|Lt|Sgt|Capt|Prof|Gen|Col|Rev)\.\s+/g;
+
+/** A name's parts: "Stoker. Non-Sparkly Vampire" is "Stoker", "Non-Sparkly Vampire". */
+function nameParts(name) {
+  return String(name).replace(HONORIFIC_RE, "$1 ").split(TITLE_SPLIT_RE);
+}
+
 /** A name's part before its title: "Mick Moran" of "Mick Moran, Hulking Chef". */
 function primaryName(name) {
-  return String(name).split(TITLE_SPLIT_RE)[0];
+  return nameParts(name)[0];
 }
 
 /**
@@ -209,7 +245,8 @@ export function lineOrder(pages) {
 
 /**
  * The blurb that names a Mob (see the file's comment), trying in turn: its
- * whole name or the part before its title; any part of the blurb's name
+ * whole name exactly; its whole name or the part before its title, either
+ * way; any part of the blurb's name
  * ("Stoker. Non-Sparkly Vampire."); a blurb's name that begins the Mob's,
  * at its Level; a name a letter or two off - a misprint - at its Level.
  * @param {{name: string, level?: number, order: number, section?: object}} mob
@@ -223,7 +260,8 @@ export function blurbFor(mob, blurbs) {
   const sameLevel = (b) => b.level === mob.level;
   const shim = BLURB_KEYS.get(whole);
   const tries = [
-    (b) => !!shim && b.whole === shim && sameLevel(b),
+    (b) => !!shim && (b.whole === shim || (b.parts ?? []).includes(shim)) && sameLevel(b),
+    (b) => b.whole === whole,
     (b) => mobKeys.has(b.whole) || mobKeys.has(b.primary),
     (b) => (b.parts ?? []).some((p) => mobKeys.has(p)),
     (b) => sameLevel(b) && b.primary.length > 3 && whole.startsWith(`${b.primary} `),

@@ -40,6 +40,12 @@ export function registerAiTextTooltipHooks() {
     else if (shownFor === token || pendingFor === token) hideAiText();
   });
   for (const hook of ["canvasPan", "canvasTearDown", "deleteToken"]) Hooks.on(hook, hideAiText);
+  // A token that moves while hovered (arrow keys, another user) leaves it.
+  Hooks.on("updateToken", (doc, changes) => {
+    const moved = "x" in changes || "y" in changes || "width" in changes || "height" in changes;
+    const ours = [shownFor, pendingFor].some((t) => t?.document === doc);
+    if (moved && ours) hideAiText();
+  });
   // A press on the board (a drag starting, a click) clears it.
   document.addEventListener("pointerdown", () => hideAiText(), { capture: true, passive: true });
 }
@@ -55,7 +61,12 @@ export function aiTextOf(token) {
   const actor = token?.actor;
   if (actor?.type !== "mob") return "";
   const html = String(actor.system.aiText ?? "");
-  return html.replace(/<[^>]*>|&nbsp;|\s/g, "") ? html : "";
+  return hasText(html) ? html : "";
+}
+
+/** Whether HTML holds any text: "<p> </p>" doesn't. */
+function hasText(html) {
+  return !!String(html).replace(/<[^>]*>|&nbsp;|\s/g, "");
 }
 
 /**
@@ -119,6 +130,11 @@ export async function showAiText(token) {
   pendingFor = token;
   const enriched = await enrichDescription(html, token.actor);
   if (pendingFor !== token) return false; // moved on while enriching
+  // All of it a GM secret this user can't see: nothing to show.
+  if (!hasText(enriched)) {
+    pendingFor = null;
+    return false;
+  }
   const anchor = placeAnchor(token);
   game.tooltip.activate(anchor, {
     html: aiTextContent(enriched),

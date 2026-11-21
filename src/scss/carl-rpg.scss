@@ -71,9 +71,11 @@
   visibility: hidden;
 }
 
+// As tall as the text needs - it can't be scrolled (the pointer stays on
+// the token) - up to the screen's height.
 #tooltip.carl-ai-tooltip {
   max-width: 360px;
-  max-height: 50vh;
+  max-height: calc(100vh - 20px);
   overflow: hidden;
   text-align: left;
 

@@ -25,7 +25,7 @@
  */
 
 import { buildMatcher, MATCH_TYPES, matchKind, SYSTEM_PACKS, TIERS } from "./compendium-match.mjs";
-import { importStamp, importState } from "./fingerprint.mjs";
+import { importStamp, importState, textSinceImport } from "./fingerprint.mjs";
 import { canvasToBlob, mapImageCanvas, mapSceneData, uploadMap } from "./maps.mjs";
 import { getPdfJs } from "./pdf-loader.mjs";
 import { bookIdOf } from "./books.mjs";
@@ -279,7 +279,11 @@ async function upsert(
     if (old) {
       // Only what the import made and the GM left alone; a GM's own
       // document of the same name isn't touched either.
-      if (importState(old._source, old.flags?.[SCOPE]?.[FLAG]) !== "untouched") {
+      const stamp = old.flags?.[SCOPE]?.[FLAG];
+      if (
+        importState(old._source, stamp) !== "untouched" ||
+        textSinceImport(doc.data, old._source, stamp).length
+      ) {
         skipped.push(old.name);
         continue;
       }

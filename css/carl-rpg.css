@@ -5025,7 +5025,7 @@
 
 #tooltip.carl-ai-tooltip {
   max-width: 360px;
-  max-height: 50vh;
+  max-height: calc(100vh - 20px);
   overflow: hidden;
   text-align: left;
 }

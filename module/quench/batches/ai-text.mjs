@@ -6,6 +6,7 @@ import {
   showAiText,
 } from "../../apps/ai-text-tooltip.mjs";
 import { blurbFor, findAiTexts, nameKey } from "../../pdf-import/parse-ai-text.mjs";
+import { textSinceImport } from "../../pdf-import/fingerprint.mjs";
 import { parseMobs } from "../../pdf-import/parse-mobs.mjs";
 import {
   AI_TEXT_NOTICE_ID,
@@ -314,6 +315,122 @@ export default function register(quench) {
           assert.isUndefined(pick("Troglodyte Pygmy", 2), "not at another Level");
           assert.equal(pick("Grease Gremilin", 38), "grease gremlin");
           assert.isUndefined(pick("Grease Gremilin", 18), "a misprint only at its Level");
+        });
+
+        it("a Level the text mentions after a paragraph break doesn't start a blurb", function () {
+          const [blurb, ...more] = findAiTexts([
+            page([
+              ["Test Gloop. Level 4.", AI_BOLD, 10, 31],
+              ["Quench text: the first paragraph.", AI_REG, 10, 17.5],
+              ["Don't let the size fool you. This thing hits like it's", AI_REG, 10, 17.5],
+              ["Level 15.", AI_REG, 10, 13],
+              ["Quench text: still the same blurb.", AI_REG, 10, 13],
+            ]),
+          ]);
+          assert.lengthOf(more, 0, "one blurb");
+          assert.include(blurb.html, "still the same blurb");
+          assert.include(blurb.html, "hits like it's Level 15.");
+        });
+
+        it("a header takes a tier line under it, not the text's first words", function () {
+          const [blurb] = findAiTexts([
+            page([
+              ["Test Gloop, Level 4", AI_REG, 10.5, 22],
+              ["Level 3 crawlers should run", AI_REG, 10.5, 17.5],
+              ["while they still can.", AI_REG, 10.5, 13],
+            ]),
+          ]);
+          assert.equal(blurb.header, "Test Gloop, Level 4");
+          assert.include(blurb.html, "<p>Level 3 crawlers should run while they still can.</p>");
+        });
+
+        it("two blurbs back to back: the second's name lines aren't the first's text", function () {
+          const [a, b] = findAiTexts([
+            page([
+              ["Test Gloop. Level 4.", AI_BOLD, 10, 31],
+              ["Quench text: the gloop's.", AI_REG, 10, 17.5],
+              ["The Test Queen. Former Gloop, Current", AI_REG, 10, 22],
+              ["Ruler of Every Drip", AI_REG, 10, 13],
+              ["Level 9 Neighborhood Boss!", AI_REG, 10, 17.5],
+              ["Quench text: the queen's.", AI_REG, 10, 17.5],
+            ]),
+          ]);
+          assert.notInclude(a.html, "Ruler of Every Drip");
+          assert.include(b.header, "The Test Queen. Former Gloop, Current Ruler of Every Drip");
+          assert.lengthOf(
+            [...a.lines].filter((k) => b.lines.has(k)),
+            0,
+            "no line in both",
+          );
+        });
+
+        it("the next Mob's AI Text isn't this one's notes", function () {
+          const [first, second] = parseMobs([
+            page([
+              ["TEST GLOOPS", "NeueKabel-ExtraBold", 16, 30],
+              ...statBlock("Test Gloop", "Mob; Small (2), Ooze", 4),
+              ["Notes: Wobbly—It wobbles.", AI_REG, 10, 13],
+              ["Test Drip. Level 2.", AI_BOLD, 10, 31],
+              ["Quench text: the drip's.", AI_REG, 10, 17.5],
+              ...statBlock("Test Drip", "Mob; Tiny (1), Ooze", 2),
+            ]),
+          ]);
+          assert.equal(first.name, "Test Gloop");
+          assert.notInclude(first.data.system.biography, "the drip's");
+          assert.notInclude(JSON.stringify(first.data.system.attacks), "the drip's");
+          assert.include(second.data.system.aiText, "the drip's");
+        });
+
+        it("'Dr. Bones' is one name, and its own blurb wins over a 'Dr.' one", function () {
+          const blurbs = [
+            keyed({
+              whole: nameKey("Dr. Octo"),
+              primary: nameKey("Dr. Octo"),
+              level: 5,
+              order: 99,
+            }),
+            keyed({
+              whole: nameKey("Dr. Bones"),
+              primary: nameKey("Dr. Bones"),
+              level: 5,
+              order: 10,
+            }),
+          ];
+          assert.equal(
+            blurbFor({ name: "Dr. Bones", level: 5, order: 100 }, blurbs).whole,
+            nameKey("Dr. Bones"),
+          );
+        });
+
+        it("a re-import leaves alone a Mob whose AI Text the GM typed since", function () {
+          const flag = { v: 2, fields: ["name", "system.biography"], hash: "x" };
+          const data = { name: "Test Gloop", system: { biography: "<p>b</p>", aiText: "" } };
+          const typed = {
+            name: "Test Gloop",
+            system: { biography: "<p>b</p>", aiText: "<p>Mine.</p>" },
+          };
+          assert.deepEqual(textSinceImport(data, typed, flag), ["system.aiText"]);
+          const blank = { ...typed, system: { ...typed.system, aiText: "<p> </p>" } };
+          assert.deepEqual(textSinceImport(data, blank, flag), [], "an empty editor isn't typing");
+          const same = {
+            name: "Test Gloop",
+            system: { biography: "<p>b</p>", aiText: "<p>Mine.</p>" },
+          };
+          assert.deepEqual(
+            textSinceImport(
+              { ...data, system: { ...data.system, aiText: "<p>Mine.</p>" } },
+              same,
+              flag,
+            ),
+            [],
+            "the same text as the book's",
+          );
+          assert.deepEqual(
+            textSinceImport(data, typed, { ...flag, fields: [...flag.fields, "system.aiText"] }),
+            [],
+            "a field the last import wrote: the fingerprint's to judge",
+          );
+          assert.deepEqual(textSinceImport(data, typed, {}), [], "imported before fingerprints");
         });
 
         it("the four the core book names differently on the stat block and the AI Text", function () {
