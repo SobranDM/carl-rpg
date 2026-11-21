@@ -211,6 +211,32 @@ export default function register(quench) {
           }
         });
 
+        it("a multiplied Rank drops its fraction, and its tiers unlock at the Rank shown (ruled 2026-11-21)", async function () {
+          const actor = await createTestCharacter("rank fraction");
+          try {
+            await createTestItem(actor, "skill", "Climbing", {
+              name: "Climbing",
+              system: {
+                rank: 4,
+                upgrades: [{ rankThreshold: 5, changes: [change("resource", "dr", 3)] }],
+              },
+            });
+            await createTestItem(actor, "skill", "Swimming", {
+              name: "Swimming",
+              system: { rank: 5 },
+            });
+            await gear(actor, "Odd Charm", [
+              change("skillRank", "Climbing", 1.2, "multiply"),
+              change("skillRank", "Swimming", 1.25, "multiply"),
+            ]);
+            assert.equal(actor.system.skills.swimming.rank, 6, "5 x1.25 is 6, not 6.25");
+            assert.equal(actor.system.skills.climbing.rank, 4, "4 x1.2 is 4, not 4.8");
+            assert.equal(actor.system.drEffective, 0, "so Climbing's Rank 5 tier stays locked");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
         it("a chain of Rank 0 Skills each raising the next: the last shows Rank 1 and gives its Bonuses", async function () {
           const actor = await createTestCharacter("rank chain");
           try {
