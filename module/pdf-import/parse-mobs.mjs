@@ -21,7 +21,7 @@ import { mobAttackTargetEffects, splitArmorPiercing } from "./debuff-text.mjs";
 import { bodySize, escapeHtml, isHeading, joinText } from "./page-text.mjs";
 import { findDamageType } from "../helpers/damage-types.mjs";
 import { findSections } from "./sections.mjs";
-import { blurbFor, findAiTexts, lineOrder } from "./parse-ai-text.mjs";
+import { blurbAbove, blurbFor, findAiTexts, lineOrder } from "./parse-ai-text.mjs";
 import { parseSizeText } from "../helpers/size-text.mjs";
 
 // kind, size name, size number, a size range's upper number, type.
@@ -129,6 +129,7 @@ export function parseMobs(pages) {
       body: lines.slice(at + 1, end),
       section: sectionAt(lines[at].page, lines[at].at),
       order: order.get(`${lines[at].page}:${lines[at].at}`) ?? 0,
+      nameOrder: order.get(`${lines[nameAt].page}:${lines[nameAt].at}`) ?? 0,
     };
   });
 
@@ -137,11 +138,22 @@ export function parseMobs(pages) {
   // notes - a blurb no Mob takes (a Guide's) stays where it was.
   const taken = blocks.map((block) => {
     const mob = toMob(block.name, block.classLine, block.body, block.flavor);
-    if (!mob) return null;
+    // A Vehicle (no Mob): false, so it takes nothing by position either.
+    if (!mob) return false;
     return blurbFor(
       { name: mob.name, level: mob.data.system.level, section: block.section, order: block.order },
       blurbs,
     );
+  });
+  // Then, for a Mob no blurb names, the one just above it that no Mob took.
+  const claimed = new Set(taken.filter(Boolean));
+  blocks.forEach((block, n) => {
+    if (taken[n] !== null) return;
+    const above = blurbAbove(block.nameOrder, blurbs, claimed);
+    if (above) {
+      taken[n] = above;
+      claimed.add(above);
+    }
   });
   const inBlurb = new Set(taken.filter(Boolean).flatMap((b) => [...b.lines]));
   const ours = (l) => !inBlurb.has(`${l.page}:${l.at}`);

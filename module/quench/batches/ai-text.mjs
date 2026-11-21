@@ -321,6 +321,12 @@ export default function register(quench) {
           assert.equal(pick("Troglodyte Basher", 6), "troglodyte");
           assert.isUndefined(pick("Troglodyte Pygmy", 2), "not at another Level");
           assert.equal(pick("Grease Gremilin", 38), "grease gremlin");
+          const militia = [keyed({ whole: "merry militia", primary: "merry militia", level: 15 })];
+          assert.equal(
+            blurbFor({ name: "Merry Militiaman", level: 15, order: 20 }, militia)?.whole,
+            "merry militia",
+            "a name running on into a longer word",
+          );
           assert.isUndefined(pick("Grease Gremilin", 18), "a misprint only at its Level");
         });
 
@@ -420,12 +426,48 @@ export default function register(quench) {
           assert.deepEqual(textSinceImport(data, stored, flag), []);
         });
 
-        it("a blurb no Mob takes stays in the Notes, as before", function () {
+        it("failing every name, the blurb just above its stat block that no Mob took (ruled 2026-11-21)", function () {
+          const [girl, drip] = parseMobs([
+            page([
+              ["TEST CRAWLERS", "NeueKabel-ExtraBold", 16, 30],
+              ["Crawler #1,234. “Quench Annie.” Level 21.", AI_BOLD, 10, 31],
+              ["Quench text: Annie's.", AI_REG, 10, 17.5],
+              ...statBlock("Test Cat Girl", "NPC; Medium (4), Humanoid", 19),
+              ["Notes: Purr—It purrs.", AI_REG, 10, 13],
+              ["Test Drip. Level 2.", AI_BOLD, 10, 31],
+              ["Quench text: the drip's.", AI_REG, 10, 17.5],
+              ...statBlock("Test Drip", "Mob; Tiny (1), Ooze", 2),
+            ]),
+          ]);
+          assert.include(
+            girl.data.system.aiText,
+            "Quench Annie",
+            "named for who, the stat block for what",
+          );
+          assert.notInclude(girl.data.system.biography, "Annie's");
+          assert.include(drip.data.system.aiText, "the drip's", "its own, by name");
+        });
+
+        it("a header may end in a kind after a comma: 'Level 15, City Elves'", function () {
+          const [blurb] = findAiTexts([
+            page([
+              ["Test Militia. Level 15, Test Elves", AI_BOLD, 10, 31],
+              ["Quench text: the militia's.", AI_REG, 10, 17.5],
+            ]),
+          ]);
+          assert.equal(blurb?.level, 15);
+          assert.include(blurb.html, "the militia's");
+        });
+
+        it("a blurb no Mob takes, not just above one, stays in the Notes, as before", function () {
           const [gloop] = parseMobs([
             page([
               ["TEST GLOOPS", "NeueKabel-ExtraBold", 16, 30],
               ["Crawler #1,234. Quench Guide. Level 30.", AI_BOLD, 10, 31],
               ["Quench text: a guide's, not a gloop's.", AI_REG, 10, 17.5],
+              ["The book's own words come between,", PROSE, 10.5, 22],
+              ["over a few lines of prose,", PROSE, 10.5, 13],
+              ["before the gloop's stat block.", PROSE, 10.5, 13],
               ...statBlock("Test Gloop", "Mob; Small (2), Ooze", 4),
             ]),
           ]);

@@ -22,8 +22,9 @@
  * before the title ("Mick Moran" of "Mick Moran, Hulking Crocodilian
  * Chef") - from its own Floor and Neighborhood or Quest first, then the
  * nearest. Failing that, a blurb whose name begins the Mob's, at the
- * Mob's Level ("Troglodyte, Level 6" for the Level 6 Troglodyte Basher).
- * A blurb naming no Mob (a Guide's, a crawler's) is left out.
+ * Mob's Level ("Troglodyte, Level 6" for the Level 6 Troglodyte Basher);
+ * failing every name, the blurb printed just above it that no Mob took
+ * (blurbAbove). A blurb no Mob takes stays in the Notes.
  *
  * scan.mjs names each line's typeface (`face`) on the pages that may hold
  * AI Text; a line without one is never read as AI Text.
@@ -37,8 +38,9 @@ const AI_FACE_RE = /^TextbookNew-(?!ExtraBold)/;
 const MAX_SIZE = 11.2;
 const LEVEL_RE = /\bLevel\s+(\d+)\b/;
 // After "Level 10": at most a tier or "NPC", and closing punctuation.
+// Or a kind after a comma: "Merry Militia. Level 15, City Elves".
 const AFTER_LEVEL_RE =
-  /^\s*(?:(?:NPC|Pet|Elite|Mob|Crawler|(?:Neighborhood|Borough|Burrough|City|Province|Country|Floor|Quest) Boss)\b)?\s*[.!]?\s*$/i;
+  /^\s*(?:(?:NPC|Pet|Elite|Mob|Crawler|(?:Neighborhood|Borough|Burrough|City|Province|Country|Floor|Quest) Boss)\b)?\s*(?:,\s*[A-Z][\w'’-]*(?:\s+[A-Z][\w'’-]*){0,3})?\s*[.!]?\s*$/;
 // A line starting "Level 6." - its name is on the lines above; it may
 // carry the text's first words ("Level 6. Basically harmless...").
 const LEVEL_FIRST_RE = /^Level\s+(\d+)\b([^.!]{0,40}[.!])?\s*(.*)$/;
@@ -123,6 +125,8 @@ export function findAiTexts(pages, sectionAt) {
       header: head.header,
       html: toHtml(head.header, body),
       order: i,
+      // Its last line's place in the book (lineOrder), for blurbAbove.
+      end: j - 1,
       section: sectionAt?.(lines[i].page, lines[i].at) ?? null,
       lines: new Set(used.map((k) => `${lines[k].page}:${lines[k].at}`)),
     });
@@ -278,7 +282,12 @@ export function blurbFor(mob, blurbs) {
     (b) => b.whole === whole,
     (b) => mobKeys.has(b.whole) || mobKeys.has(b.primary),
     (b) => (b.parts ?? []).some((p) => mobKeys.has(p)),
-    (b) => sameLevel(b) && b.primary.length > 3 && whole.startsWith(`${b.primary} `),
+    // "Troglodyte" of "Troglodyte Basher"; "Merry Militia" of "Merry
+    // Militiaman" (6 letters at least, running on into a word).
+    (b) =>
+      sameLevel(b) &&
+      ((b.primary.length > 3 && whole.startsWith(`${b.primary} `)) ||
+        (b.primary.length >= 6 && whole.startsWith(b.primary))),
     (b) => sameLevel(b) && whole.length >= 8 && editDistance(whole, b.whole) <= 2,
   ];
   for (const fits of tries) {
@@ -290,6 +299,23 @@ export function blurbFor(mob, blurbs) {
     return pool.reduce((best, b) => (distance(b) < distance(best) ? b : best));
   }
   return null;
+}
+
+/**
+ * Failing every name (ruled 2026-11-21): the blurb printed just above a
+ * Mob's name - ending within two lines of it, a mark between at most, or
+ * at the foot of the column or page before - that no Mob took by name. An
+ * NPC's stat block is often named for what it is ("Cat Girl") and its AI
+ * Text for who ("Crawler #11,121,982. 'Annie H.' Level 24.").
+ * @param {number} nameOrder  The Mob's name line's place in the book (lineOrder).
+ * @param {object[]} blurbs  From findAiTexts.
+ * @param {Set<object>} claimed  The blurbs Mobs took by name.
+ * @returns {object|null}
+ */
+export function blurbAbove(nameOrder, blurbs, claimed) {
+  return (
+    blurbs.find((b) => !claimed.has(b) && nameOrder - b.end > 0 && nameOrder - b.end <= 2) ?? null
+  );
 }
 
 /** Letters to change, add or drop to turn a into b (3 for "more than 2"). */
