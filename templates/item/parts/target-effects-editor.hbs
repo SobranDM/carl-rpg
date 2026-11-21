@@ -14,12 +14,14 @@
       Attack" box (handToHandOnly); and `addTemplate` (JSON) for a new
       entry's defaults.
       Same context-depth rules as changes-editor.hbs: `path`/`config` from
-      inside {{#each targetEffects}} need one `../`. --}}
+      inside {{#each targetEffects}} need one `../`. A row's data-sync keeps
+      it open through a redraw outside an item sheet (the Loot Forge, which
+      has its own addArrayItem/deleteArrayItem). --}}
 <div class="carl-target-effects-editor">
   {{#if targetEffects.length}}
   <div class="carl-edit-rows">
     {{#each targetEffects as |te teIndex|}}
-    <details class="carl-edit-row carl-target-effect-row is-debuff" data-row-key="{{te.id}}">
+    <details class="carl-edit-row carl-target-effect-row is-debuff" data-row-key="{{te.id}}" data-sync="{{te.id}}">
       <summary class="carl-edit-row-line">
         {{debuffLine te}}
         <span class="carl-edit-row-acts">

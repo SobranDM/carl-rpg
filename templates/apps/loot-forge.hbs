@@ -40,6 +40,20 @@
         {{/unless}}
       </div>
       <div class="carl-hint">{{entry.typeLabel}}</div>
+      {{!-- Its image, and the GM's own words: the enchantments are listed
+            after them on the item (helpers/loot.mjs buildMagicItemData). --}}
+      <div class="carl-forge-row carl-forge-image">
+        <img src="{{entry.imgShown}}" alt="" width="36" height="36" />
+        <file-picker name="entries.{{entry.index}}.img" type="image" value="{{entry.img}}"
+          aria-label="{{localize 'CARLRPG.Loot.Forge.Image'}}"></file-picker>
+      </div>
+      <div class="carl-forge-description">
+        <span class="carl-forge-kind">{{localize "CARLRPG.Loot.Forge.Description"}}</span>
+        <prose-mirror name="entries.{{entry.index}}.description" toggled value="{{entry.description}}">
+          {{{entry.description}}}
+        </prose-mirror>
+        <p class="carl-hint">{{localize "CARLRPG.Loot.Forge.DescriptionHint"}}</p>
+      </div>
       {{#if entry.canBeWeapon}}
       {{!-- A weapon: the Attack Skill it's wielded with (as the item sheet). --}}
       <div class="carl-forge-row" data-tooltip-text="{{localize 'CARLRPG.Weapon.SkillHint'}}">
@@ -47,6 +61,26 @@
         <input type="text" name="entries.{{entry.index}}.weaponSkill" value="{{entry.weaponSkill}}"
           list="carl-forge-weapons-{{@root.appId}}" placeholder="{{localize 'CARLRPG.Weapon.NotAWeapon'}}" />
       </div>
+      {{#if entry.isWeapon}}
+      {{!-- Only a weapon's (ruled 2026-11-21): how it's held, Armor-Piercing,
+            and what it inflicts on a hit. --}}
+      <div class="carl-forge-row carl-forge-weapon">
+        <label class="carl-check-field" data-tooltip-text="{{localize 'CARLRPG.Gear.TwoHandedHint'}}">
+          <input type="checkbox" name="entries.{{entry.index}}.twoHanded" {{checked entry.twoHanded}} />
+          {{localize "CARLRPG.Gear.TwoHanded"}}
+        </label>
+        <label class="carl-check-field" data-tooltip-text="{{localize 'CARLRPG.ArmorPiercing.WeaponHint'}}">
+          <input type="checkbox" name="entries.{{entry.index}}.armorPiercing" {{checked entry.armorPiercing}} />
+          {{localize "CARLRPG.ArmorPiercing.Label"}}
+        </label>
+      </div>
+      <div class="carl-forge-debuffs">
+        <span class="carl-forge-kind">{{localize "CARLRPG.ItemSheet.Group.Debuffs"}}</span>
+        {{> "systems/carl-rpg/templates/item/parts/target-effects-editor.hbs"
+          targetEffects=entry.targetEffects path=entry.targetEffectsPath config=@root.config
+          addTemplate=entry.debuffTemplate}}
+      </div>
+      {{/if}}
       {{/if}}
       <ol class="carl-forge-effects">
         {{#each entry.enchantments as |e|}}

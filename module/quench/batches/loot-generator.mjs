@@ -9,6 +9,8 @@ import {
   lootItemData,
   lootTable,
   magicItemUpdate,
+  magicSummaryHtml,
+  ownDescription,
   rerollEnchantment,
   statBonus,
   uniqueMultiplier,
@@ -553,6 +555,190 @@ export default function register(quench) {
             await waitFor(() => forge.draft.gold === 250);
           } finally {
             await forge.close();
+          }
+        });
+      });
+
+      describe("A magic item's description, image and weapon parts (ruled 2026-11-21)", function () {
+        useQuenchTimeout(this, 30000);
+
+        const weaponDraft = (more = {}) => ({
+          kind: "magic",
+          tierKey: "silver",
+          itemType: "mundane",
+          typeLabel: "Enchanted Mundane Item or Weapon",
+          name: "Quench Cleaver",
+          slots: ["held"],
+          accessoryKind: "",
+          weaponSkill: "Axe",
+          enchantments: [{ kind: "dr", value: 1 }],
+          ...more,
+        });
+        const DEBUFF = "blinded";
+        const debuff = {
+          id: "quenchdebuff0001",
+          debuffKey: DEBUFF,
+          stacks: 2,
+          critOnly: false,
+          amazingSuccessOnly: false,
+          label: "",
+        };
+
+        it("the GM's words, then the enchantments; its image; a weapon's parts", function () {
+          const data = buildMagicItemData(
+            weaponDraft({
+              description: "<p>Quench: it hums.</p>",
+              img: "icons/svg/sword.svg",
+              twoHanded: true,
+              armorPiercing: true,
+              targetEffects: [debuff],
+            }),
+          );
+          const desc = data.system.description;
+          assert.isTrue(desc.startsWith("<p>Quench: it hums.</p>"), "the GM's words first");
+          assert.include(desc, 'class="carl-magic-enchantments"', "then the enchantments");
+          assert.equal(data.img, "icons/svg/sword.svg");
+          assert.isTrue(data.system.twoHanded);
+          assert.isTrue(data.system.armorPiercing);
+          assert.equal(data.system.targetEffects[0].debuffKey, DEBUFF);
+        });
+
+        it("not a weapon: no Two-Handed, Armor-Piercing or Debuffs, whatever the draft held", function () {
+          const data = buildMagicItemData(
+            weaponDraft({
+              weaponSkill: "",
+              slots: ["head"],
+              twoHanded: true,
+              armorPiercing: true,
+              targetEffects: [debuff],
+            }),
+          );
+          assert.isFalse(data.system.twoHanded);
+          assert.isFalse(data.system.armorPiercing);
+          assert.lengthOf(data.system.targetEffects, 0);
+          assert.equal(data.img, "icons/svg/item-bag.svg", "no image: the bag");
+        });
+
+        it("the GM's own words are told from the enchantments again, even edited around", function () {
+          const draft = weaponDraft();
+          const summary = magicSummaryHtml(draft);
+          assert.equal(ownDescription(`<p>Mine.</p>${summary}`, draft), "<p>Mine.</p>");
+          assert.equal(
+            ownDescription(`<p>Mine.</p>${summary}<p>Added on the sheet.</p>`, draft),
+            "<p>Mine.</p><p>Added on the sheet.</p>",
+          );
+          assert.equal(ownDescription(summary, draft), "", "none of its own");
+          // Made before 0.8.3: the same summary without its classes - and
+          // as the text editor rewrites it once edited (each line its own
+          // paragraph).
+          const legacy = summary.replace(/ class="[^"]*"/g, "");
+          assert.equal(ownDescription(`<p>Old.</p>${legacy}`, draft), "<p>Old.</p>");
+          const rewritten = legacy.replace(/<li>(.*?)<\/li>/g, "<li><p>$1</p></li>");
+          assert.equal(ownDescription(`<p>Old.</p>${rewritten}`, draft), "<p>Old.</p>");
+        });
+
+        it("Reforge leaves alone what a non-weapon's sheet set; a cleared image is the bag", function () {
+          const ring = weaponDraft({ weaponSkill: "", slots: ["accessory"] });
+          const update = magicItemUpdate(ring);
+          assert.notProperty(update, "system.targetEffects", "its sheet's Debuffs stay");
+          assert.notProperty(update, "system.twoHanded");
+          assert.notProperty(update, "img", "no image in the draft: kept");
+          assert.equal(magicItemUpdate({ ...ring, img: "" }).img, "icons/svg/item-bag.svg");
+          const weapon = magicItemUpdate(weaponDraft({ targetEffects: [debuff] }));
+          assert.equal(
+            weapon["system.targetEffects"][0].debuffKey,
+            DEBUFF,
+            "a weapon's are written",
+          );
+          const stored = buildMagicItemData(ring).flags["carl-rpg"].magicDraft;
+          assert.deepEqual(stored.targetEffects, [], "every key stored, for a later merge");
+          assert.equal(stored.description, "");
+        });
+
+        it("rerolling the item keeps the GM's words and image", async function () {
+          const forge = await LootForge.open({
+            draft: {
+              tierKey: "silver",
+              gold: 0,
+              entries: [weaponDraft({ description: "<p>Mine.</p>", img: "icons/svg/sword.svg" })],
+            },
+          });
+          try {
+            const before = forge.draft.entries[0];
+            forge.element.querySelector('[data-action="rerollEntry"]').click();
+            await waitFor(() => forge.draft.entries[0] !== before);
+            assert.equal(forge.draft.entries[0].description, "<p>Mine.</p>");
+            assert.equal(forge.draft.entries[0].img, "icons/svg/sword.svg");
+          } finally {
+            await forge.close();
+          }
+        });
+
+        it("a weapon's parts show only once it has a Weapon Skill; a Debuff is added and removed", async function () {
+          const forge = await LootForge.open({
+            draft: {
+              tierKey: "silver",
+              gold: 0,
+              entries: [weaponDraft({ weaponSkill: "", slots: [] })],
+            },
+          });
+          try {
+            const q = (sel) => forge.element.querySelector(sel);
+            assert.isNull(q('[name="entries.0.twoHanded"]'), "not a weapon: hidden");
+            const skill = q('[name="entries.0.weaponSkill"]');
+            skill.value = "Axe";
+            skill.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => !!q('[name="entries.0.twoHanded"]'));
+            q('.carl-forge-debuffs [data-action="addArrayItem"]').click();
+            await waitFor(() => forge.draft.entries[0].targetEffects?.length === 1);
+            const added = forge.draft.entries[0].targetEffects[0];
+            assert.deepEqual(added.skills, ["Axe"], "only with this weapon, as the sheet's");
+            assert.isTrue(added.amazingSuccessOnly);
+            await waitFor(() => q(`details[data-row-key="${added.id}"]`)?.open === true);
+            await waitFor(() => !!q('[name="entries.0.targetEffects.0.debuffKey"]'));
+            const pick = q('[name="entries.0.targetEffects.0.debuffKey"]');
+            pick.value = DEBUFF;
+            pick.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => forge.draft.entries[0].targetEffects[0].debuffKey === DEBUFF);
+            await waitFor(() => !!q('.carl-forge-debuffs [data-action="deleteArrayItem"]'));
+            q('.carl-forge-debuffs [data-action="deleteArrayItem"]').click();
+            await waitFor(() => forge.draft.entries[0].targetEffects.length === 0);
+          } finally {
+            await forge.close();
+          }
+        });
+
+        it("Reforge starts from the item as it is now, and saves its new parts", async function () {
+          const actor = await createTestCharacter("reforge parts");
+          let forge = null;
+          try {
+            const data = buildMagicItemData(weaponDraft({ description: "<p>Mine.</p>" }));
+            const [item] = await actor.createEmbeddedDocuments("Item", [data]);
+            // Edited on its sheet since: a new image and a word added.
+            await item.update({
+              img: "icons/svg/sun.svg",
+              "system.description": `${item.system.description}<p>Added.</p>`,
+            });
+            forge = await LootForge.reforge(item);
+            const entry = forge.draft.entries[0];
+            assert.equal(entry.img, "icons/svg/sun.svg");
+            assert.equal(entry.description, "<p>Mine.</p><p>Added.</p>");
+            entry.twoHanded = true;
+            entry.targetEffects = [debuff];
+            forge.element.querySelector('[data-action="save"]').click();
+            await waitFor(() => actor.items.get(item.id)?.system.twoHanded === true);
+            const after = actor.items.get(item.id);
+            assert.equal(after.img, "icons/svg/sun.svg");
+            assert.equal(after.system.targetEffects[0].debuffKey, DEBUFF);
+            assert.isTrue(after.system.description.startsWith("<p>Mine.</p><p>Added.</p>"));
+            assert.lengthOf(
+              after.system.description.match(/carl-magic-enchantments/g) ?? [],
+              1,
+              "the enchantments listed once",
+            );
+          } finally {
+            await forge?.close();
+            await deleteTestActor(actor);
           }
         });
       });

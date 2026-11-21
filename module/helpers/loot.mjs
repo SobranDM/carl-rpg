@@ -407,12 +407,64 @@ export function enchantmentLine(e) {
   }
 }
 
+/** The default image of a magic item with none chosen. */
+export const MAGIC_ITEM_IMG = "icons/svg/item-bag.svg";
+
+/**
+ * A magic item's generated summary: its type, then every enchantment. Each
+ * part carries a class, which the text editor keeps, so the GM's own words
+ * can be told from it again (ownDescription).
+ * @param {object} draft  A magic draft.
+ * @returns {string}  HTML.
+ */
+export function magicSummaryHtml(draft) {
+  const lines = draft.enchantments.map((e) => `<li>${esc(enchantmentLine(e))}</li>`).join("");
+  return `<p class="carl-magic-type">${esc(draft.typeLabel)}</p><ul class="carl-magic-enchantments">${lines}</ul>`;
+}
+
+/**
+ * The GM's own words in a magic item's description: all but its generated
+ * summary (magicSummaryHtml) - whatever has been written around it on the
+ * item's sheet since. An item made before 0.8.3 has the summary without its
+ * classes: a paragraph reading its type, then a list of its enchantments,
+ * is found by what they say - however the text editor has rewritten them.
+ * @param {string} html  The item's description.
+ * @param {object} draft  Its magic draft.
+ * @returns {string}  HTML ("" for none).
+ */
+export function ownDescription(html, draft) {
+  const text = String(html ?? "");
+  const root = document.createElement("div");
+  root.innerHTML = text;
+  const marked = root.querySelectorAll(".carl-magic-type, .carl-magic-enchantments");
+  if (marked.length) {
+    marked.forEach((el) => el.remove());
+    return root.innerHTML.trim();
+  }
+  const words = (el) => el.textContent.replace(/\s+/g, " ").trim();
+  const lines = draft.enchantments.map((e) => enchantmentLine(e).replace(/\s+/g, " ").trim());
+  for (const p of root.querySelectorAll("p")) {
+    const list = p.nextElementSibling;
+    if (words(p) !== String(draft.typeLabel ?? "").trim() || list?.tagName !== "UL") continue;
+    const items = [...list.children].map(words);
+    if (items.length === lines.length && items.every((line, i) => line === lines[i])) {
+      p.remove();
+      list.remove();
+      break;
+    }
+  }
+  return root.innerHTML.trim();
+}
+
 /**
  * A magic draft as gear Item data: its Bonuses (a Stat, a Skill's Rank, a
  * Passive Skill at its Rank, a Resistance, DR - module/data/shared/
- * change-entry.mjs) and every enchantment listed in the description. The
- * draft rides along (flags.carl-rpg.magicDraft) so the Item Forge can edit
- * it again.
+ * change-entry.mjs); its description - the GM's own words (draft
+ * `description`), then every enchantment listed (magicSummaryHtml); its
+ * image; and, a weapon, whether it's Two-Handed or Armor-Piercing and its
+ * on-hit Debuffs (ruled 2026-11-21: only a weapon keeps these). The draft
+ * rides along (flags.carl-rpg.magicDraft) so the Item Forge can edit it
+ * again.
  * @param {object} draft
  * @returns {object}  Item creation data.
  */
@@ -452,20 +504,36 @@ export function buildMagicItemData(draft) {
       );
     }
   }
-  const lines = draft.enchantments.map((e) => `<li>${esc(enchantmentLine(e))}</li>`).join("");
+  const weapon = !!draft.weaponSkill;
   return {
     name: draft.name,
     type: "item",
-    img: "icons/svg/item-bag.svg",
+    img: draft.img || MAGIC_ITEM_IMG,
     system: {
-      description: `<p>${esc(draft.typeLabel)}</p><ul>${lines}</ul>`,
+      description: `${draft.description ?? ""}${magicSummaryHtml(draft)}`,
       // A weapon is wielded with its Skill, and Held (gear.mjs slotsOf).
       weaponSkill: draft.weaponSkill ?? "",
-      slots: draft.weaponSkill ? ["held"] : [...(draft.slots ?? [])],
+      slots: weapon ? ["held"] : [...(draft.slots ?? [])],
       accessoryKind: draft.accessoryKind ?? "",
+      twoHanded: weapon && !!draft.twoHanded,
+      armorPiercing: weapon && !!draft.armorPiercing,
+      targetEffects: weapon ? foundry.utils.deepClone(draft.targetEffects ?? []) : [],
       changes,
     },
-    flags: { "carl-rpg": { lootTier: draft.tierKey, magicDraft: foundry.utils.deepClone(draft) } },
+    flags: {
+      "carl-rpg": {
+        lootTier: draft.tierKey,
+        // Every key, so a merge into a stored draft leaves nothing of the old.
+        magicDraft: {
+          description: "",
+          img: "",
+          twoHanded: false,
+          armorPiercing: false,
+          targetEffects: [],
+          ...foundry.utils.deepClone(draft),
+        },
+      },
+    },
   };
 }
 
@@ -657,7 +725,9 @@ export function postLootCard(draft, { actor = null, title = null } = {}) {
 /**
  * The update that makes an existing item a magic draft (the Loot Forge's
  * Reforge, a Loot Box's reroll): its name, Bonuses, description and where
- * it's worn; its image and anything else are kept.
+ * it's worn; a weapon's Two-Handed, Armor-Piercing and on-hit Debuffs (an
+ * item that isn't one keeps whatever its sheet set); and its image when the
+ * draft has one (cleared: the bag). Anything else is kept.
  * @param {object} draft  A magic draft.
  * @returns {object}  An Item update.
  */
@@ -669,10 +739,18 @@ export function magicItemUpdate(draft) {
     "system.slots": data.system.slots,
     "system.weaponSkill": data.system.weaponSkill,
     "system.accessoryKind": data.system.accessoryKind,
+    ...(draft.weaponSkill
+      ? {
+          "system.twoHanded": data.system.twoHanded,
+          "system.armorPiercing": data.system.armorPiercing,
+          "system.targetEffects": data.system.targetEffects,
+        }
+      : {}),
     "system.changes": data.system.changes,
+    ...("img" in draft ? { img: draft.img || MAGIC_ITEM_IMG } : {}),
     "flags.carl-rpg.lootTier": draft.tierKey,
-    // Every draft has the same keys, and its enchantments array is replaced
-    // whole, so a merge leaves nothing of the old one.
+    // Every key is written (buildMagicItemData), and its arrays replaced
+    // whole, so a merge leaves nothing of the old draft.
     "flags.carl-rpg.magicDraft": data.flags["carl-rpg"].magicDraft,
   };
 }

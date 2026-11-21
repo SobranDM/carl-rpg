@@ -10,13 +10,19 @@
  * Save hands the draft to `onSave`. The recipient - the crawler it's for -
  * is fixed by the caller: auto-fill and percentage Stats use them.
  *
+ * A magic item also takes the GM's own description and an image, and - a
+ * weapon - Two-Handed, Armor-Piercing and on-hit Debuffs (ruled
+ * 2026-11-21). Rerolling it keeps the description and image.
+ *
  * Works on a LootDraft (helpers/loot.mjs generateLoot): {tierKey, gold, entries}.
  */
 import {
   enchantmentLine,
   generateLoot,
   generateMagicDraft,
+  MAGIC_ITEM_IMG,
   magicItemUpdate,
+  ownDescription,
   rerollEnchantment,
 } from "../helpers/loot.mjs";
 import { labelChoices } from "../helpers/html.mjs";
@@ -83,15 +89,31 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
 
   /**
    * Reforge a rolled magic item (GM): its draft in a one-item Forge, and
-   * Save rewrites the item (name, Bonuses, description, where it's worn;
-   * its image and anything else are kept). The owner, if a Character, is
-   * the recipient for auto-fill and percentage Stats.
+   * Save rewrites the item (name, Bonuses, description, where it's worn,
+   * image, weapon parts; anything else is kept). The Forge starts from the
+   * item as it is now - a name, description, image or Debuff changed on its
+   * sheet since is kept; only its enchantments come from the draft. The
+   * owner, if a Character, is the recipient for auto-fill and percentage
+   * Stats.
    * @param {Item} item  An Item with a magic draft (flags.carl-rpg.magicDraft).
    * @returns {Promise<LootForge|null>}
    */
   static async reforge(item) {
-    const draft = item?.getFlag("carl-rpg", "magicDraft");
-    if (!game.user.isGM || !draft) return null;
+    const stored = item?.getFlag("carl-rpg", "magicDraft");
+    if (!game.user.isGM || !stored) return null;
+    const sys = item.system;
+    const draft = {
+      ...foundry.utils.deepClone(stored),
+      name: item.name,
+      img: item.img,
+      description: ownDescription(sys.description, stored),
+      weaponSkill: sys.weaponSkill ?? "",
+      slots: [...(sys.slots ?? [])],
+      accessoryKind: sys.accessoryKind ?? "",
+      twoHanded: !!sys.twoHanded,
+      armorPiercing: !!sys.armorPiercing,
+      targetEffects: foundry.utils.deepClone(item._source.system.targetEffects ?? []),
+    };
     const owner = item.parent?.type === "character" ? item.parent : null;
     return LootForge.open({
       draft: { tierKey: draft.tierKey, gold: 0, entries: [draft] },
@@ -117,6 +139,8 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       removeEntry: LootForge.#onRemoveEntry,
       rerollEntry: LootForge.#onRerollEntry,
       rerollEffect: LootForge.#onRerollEffect,
+      addArrayItem: LootForge.#onAddArrayItem,
+      deleteArrayItem: LootForge.#onDeleteArrayItem,
       save: LootForge.#onSave,
     },
   };
@@ -162,6 +186,21 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
         // "Enchanted Mundane Item or Weapon" (Table 38) can be a weapon.
         canBeWeapon: isMagic && entry.itemType === "mundane",
         isWeapon: isMagic && !!entry.weaponSkill,
+        imgShown: entry.img || MAGIC_ITEM_IMG,
+        description: entry.description ?? "",
+        targetEffects: entry.targetEffects ?? [],
+        targetEffectsPath: `entries.${index}.targetEffects`,
+        // A new Debuff lands with this weapon only, on an Amazing Success,
+        // as the item sheet makes a weapon's (item-sheet.mjs debuffTemplate).
+        debuffTemplate: JSON.stringify({
+          debuffKey: "",
+          stacks: 1,
+          critOnly: false,
+          amazingSuccessOnly: true,
+          label: "",
+          skills: entry.weaponSkill ? [entry.weaponSkill] : [],
+          handToHandOnly: false,
+        }),
         isAccessory: entry.slots?.[0] === "accessory",
         label: isMagic ? entry.name : entryLabel(entry),
         qtyEditable: entry.kind === "item" || entry.kind === "text",
@@ -203,6 +242,8 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       damageChoices: cfg.damageTypes,
       slotChoices: { "": "CARLRPG.Loot.Forge.NoSlot", ...cfg.wearSlots },
       accessoryChoices: cfg.accessoryKinds,
+      // The Debuff editor's choices (target-effects-editor.hbs).
+      config: cfg,
     };
   }
 
@@ -251,10 +292,31 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       if (changes.slot !== undefined) entry.slots = changes.slot ? [changes.slot] : [];
       // A weapon is wielded with its Skill, so it's Held (gear.mjs slotsOf).
       if (changes.weaponSkill !== undefined) {
+        const was = entry.weaponSkill ?? "";
         entry.weaponSkill = String(changes.weaponSkill).trim();
         if (entry.weaponSkill) entry.slots = ["held"];
+        // Its Debuffs that were "only with" it follow the new name.
+        for (const te of entry.targetEffects ?? []) {
+          if (was && entry.weaponSkill && te.skills?.includes(was))
+            te.skills = te.skills.map((s) => (s === was ? entry.weaponSkill : s));
+        }
       }
       if (changes.accessoryKind !== undefined) entry.accessoryKind = changes.accessoryKind;
+      if (changes.description !== undefined) entry.description = String(changes.description ?? "");
+      if (changes.img !== undefined) entry.img = String(changes.img ?? "").trim();
+      if (changes.twoHanded !== undefined) entry.twoHanded = !!changes.twoHanded;
+      if (changes.armorPiercing !== undefined) entry.armorPiercing = !!changes.armorPiercing;
+      for (const [k, te] of Object.entries(changes.targetEffects ?? {})) {
+        const debuff = entry.targetEffects?.[Number(k)];
+        if (!debuff) continue;
+        if (te.debuffKey !== undefined) debuff.debuffKey = String(te.debuffKey);
+        if (te.stacks !== undefined)
+          debuff.stacks = Math.max(1, Math.floor(Number(te.stacks) || 1));
+        if (te.critOnly !== undefined) debuff.critOnly = !!te.critOnly;
+        if (te.amazingSuccessOnly !== undefined)
+          debuff.amazingSuccessOnly = !!te.amazingSuccessOnly;
+        if (te.label !== undefined) debuff.label = String(te.label);
+      }
       if (entry.slots?.[0] !== "accessory") entry.accessoryKind = "";
       for (const [j, e] of Object.entries(changes.enchantments ?? {})) {
         const ench = entry.enchantments?.[Number(j)];
@@ -269,8 +331,12 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
         if (e.text !== undefined) ench.text = String(e.text);
       }
     }
-    const weaponChanged = event?.target?.name?.endsWith(".weaponSkill");
-    if (event?.target instanceof HTMLSelectElement || weaponChanged) this.#redraw();
+    // A new Weapon Skill shows or hides the weapon's parts; a new image, its
+    // preview; a box ticked, its Debuff's summary line.
+    const name = event?.target?.name ?? "";
+    const redraws = [".weaponSkill", ".img", ".critOnly", ".amazingSuccessOnly", ".stacks"];
+    if (event?.target instanceof HTMLSelectElement || redraws.some((s) => name.endsWith(s)))
+      this.#redraw();
   }
 
   /**
@@ -279,7 +345,34 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
    * it), which would open it again.
    */
   #redraw() {
-    if (this.rendered) this.render();
+    if (!this.rendered) return;
+    this.#takeEditors();
+    this.render();
+  }
+
+  /**
+   * An open Description editor's text, into the draft. A toggled editor
+   * only hands its text to the form when it's saved, and a redraw or Save
+   * would otherwise lose what's been typed in it since.
+   */
+  #takeEditors() {
+    for (const editor of this.element?.querySelectorAll("prose-mirror[name]") ?? []) {
+      const m = editor.getAttribute("name").match(/^entries\.(\d+)\.description$/);
+      const entry = m ? this.draft.entries[Number(m[1])] : null;
+      if (entry && editor.open) entry.description = String(editor.value ?? "");
+    }
+  }
+
+  /** A Debuff row just added: opened on the next draw, ready to fill in. */
+  #openRow = null;
+
+  /** @override */
+  _onRender(context, options) {
+    super._onRender(context, options);
+    if (!this.#openRow) return;
+    const row = this.element.querySelector(`details[data-row-key="${this.#openRow}"]`);
+    if (row) row.open = true;
+    this.#openRow = null;
   }
 
   /** The index of the entry an action's element belongs to. */
@@ -315,7 +408,12 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     const magic = await generateMagicDraft(entry.tierKey ?? this.draft.tierKey, {
       recipient: this.recipient,
     });
-    if (magic) this.draft.entries.splice(index, 1, magic);
+    // A new item, but the GM's own words and image stay (ruled 2026-11-21).
+    if (magic) {
+      if (entry.description) magic.description = entry.description;
+      if (entry.img) magic.img = entry.img;
+      this.draft.entries.splice(index, 1, magic);
+    }
     this.#redraw();
   }
 
@@ -327,8 +425,41 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     this.#redraw();
   }
 
+  /**
+   * The Debuff editor's Add (target-effects-editor.hbs): a new row, from its
+   * template, in the draft list its path names.
+   */
+  static #onAddArrayItem(event, target) {
+    const path = target.dataset.path;
+    if (!path?.startsWith("entries.")) return;
+    let template = {};
+    try {
+      template = JSON.parse(target.dataset.template || "{}");
+    } catch {
+      template = {};
+    }
+    const list = foundry.utils.getProperty(this.draft, path) ?? [];
+    const id = foundry.utils.randomID();
+    list.push({ ...template, id });
+    this.#openRow = id;
+    foundry.utils.setProperty(this.draft, path, list);
+    this.#redraw();
+  }
+
+  /** The Debuff editor's Remove: that row, from the draft list. */
+  static #onDeleteArrayItem(event, target) {
+    event.preventDefault();
+    event.stopPropagation();
+    const list = foundry.utils.getProperty(this.draft, target.dataset.path ?? "");
+    const index = Number(target.dataset.index);
+    if (!Array.isArray(list) || !Number.isInteger(index)) return;
+    list.splice(index, 1);
+    this.#redraw();
+  }
+
   static async #onSave() {
     return this.#once(async () => {
+      this.#takeEditors();
       await this.onSave?.(foundry.utils.deepClone(this.draft));
       this.close();
     });

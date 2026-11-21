@@ -4497,6 +4497,42 @@
   margin: 0;
   text-align: center;
 }
+.carl-rpg .carl-forge-image {
+  margin-top: 4px;
+}
+.carl-rpg .carl-forge-image img {
+  flex: 0 0 36px;
+  border: none;
+  object-fit: contain;
+}
+.carl-rpg .carl-forge-image file-picker {
+  flex: 1 1 auto;
+}
+.carl-rpg .carl-forge-description,
+.carl-rpg .carl-forge-debuffs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+.carl-rpg .carl-forge-description .carl-hint,
+.carl-rpg .carl-forge-debuffs .carl-hint {
+  margin: 0;
+}
+.carl-rpg .carl-forge-description prose-mirror {
+  flex: 0 0 auto;
+  min-height: 4em;
+}
+.carl-rpg .carl-forge-description prose-mirror.active {
+  min-height: 160px;
+}
+.carl-rpg .carl-forge-description prose-mirror .editor-content {
+  flex: 1;
+}
+.carl-rpg .carl-forge-weapon {
+  gap: 16px;
+  margin-top: 4px;
+}
 .carl-rpg .carl-forge-footer {
   display: flex;
   gap: 6px;
