@@ -10,35 +10,72 @@ the rulebook's publisher, Renegade Game Studios. Use at your own risk.
 
 ## Features
 
-- Full Skill/Spell/Damage Effect/Class/Race compendium content, organized
-  into Folders by category
-- A homebrew ChangeEntry modifier engine driving Stat/Skill/damage/resource
-  bonuses from owned items
-- A multi-type damage pipeline (DR -> Resistance/Vulnerability/Immunity ->
-  whole-slot Health Bar consumption), including a Shield-style secondary HP
-  pool and toggled ongoing spell effects
-- Roll flows for Skill Checks, Attacks (with a Damage Effect picker and
-  Mana-cost-variant support), Heals, and Evade Checks, each with an
-  apply-on-click chat card
-- Rollable Mob Attacks (printed to-hit as the Evade Difficulty, with a free
-  Evade against a Disadvantaged Attack)
-- Automated Debuffs: penalties and Advantage/Disadvantage on crawler rolls,
-  Mob Difficulties adjusted per the Debuffs-on-Mobs rules, and end-of-round
-  damage, countdowns and expiry
-- A GM Toolbox for party-wide rests and floor tracking
-- RollTables for loot and encounter content
-- A rulebook PDF importer for the GM's own copies of the books (see below)
+### Characters
+
+- A Character sheet with Combat, Inventory, Skills, Benefits, Conditions and
+  Details tabs, an Equipment Doll and a Hotlist
+- A Create Crawler wizard for First Floor characters, animal crawlers included
+- Pets and vehicles as their own actors
+- Bonuses from Races, Classes, gear, Skills and Spells applied for you,
+  including DR, Move, Evade and armor by slot
+- Potions, scrolls and spellbooks you can use, with Potion Sickness tracked
+
+### Rolls and combat
+
+- Skill, Stat, Attack, Heal and Evade rolls. The roll dialog fills in the
+  book's Difficulty, and the chat cards apply damage and healing on a click
+- Opposed Checks against a targeted creature, any creature on the scene, or
+  a number such as a Spell Rank
+- Phased combat (Declaration, Reaction, Resolution, Crawler Actions) with
+  Action tracking, Intervene, Shield Block and Taunt
+- Damage through DR, Resistance, Vulnerability and Immunity into whole
+  Health Bar slots, with Shields as a second pool
+- Debuffs that apply their penalties, change Mob Difficulties, and wear off
+  on their own
+- Mob sheets whose Attacks carry their to-hit, damage and Debuffs
+
+### Loot and achievements
+
+- Achievements, made and awarded from the GM Toolbox. The crawler's player
+  gets a splash for each one, and the GM can group them into categories
+- Loot boxes in the Inventory, from achievements, Boss kills or the GM. The
+  party opens them together, one crawler at a time, with everyone watching
+- Box contents rolled from Roll Tables for each tier, or prepared ahead of
+  time by the GM for each crawler. Magic items are rolled on the book's
+  tables and come with working bonuses. GMs can swap in their own copies of
+  the box tables
+
+### GM Toolbox
+
+- Rests, Mending, Grinding, End Floor and Boss Killed, and Party Skill Checks
+- A floor collapse timer on everyone's screen, in 30-hour days. It follows
+  Foundry's in-world clock, so rests, grinding and combat move it
+- A real-world session timer for the two-hour tick
+
+### Compendiums
+
+- Skills, Spells, Damage Effects, Classes and Races
+- Gear, consumables, and Roll Tables for loot
 
 ## Importing your rulebooks
 
-This system does not ship any rulebook text or art.
-If you own the PDFs, can import in settings/carl-rpg
+This system does not ship any rulebook text or art. If you own the PDFs, a GM
+can import them from the system's settings, under **Import Rulebook PDF**:
 
+- **Gear and Spells.** Where this system's compendiums already have the item,
+  that copy is used.
+- **Mobs,** with their Attacks and Debuffs, filed by Floor and then by
+  Neighborhood or Quest.
+- **Achievements,** into the Achievements compendium, in a folder per book.
 - **Maps** as gridless Scenes. Map images are saved to
   `carl-rpg/<book>/maps/` in your Foundry Data folder.
 
-Everything goes into folders named after the book. Importing the same book
-again updates those documents instead of making copies.
+Each book gets its own GM-only compendiums. Importing a book again updates
+what you haven't edited and leaves your changes alone. The low-quality (LQ)
+edition of the PDF isn't supported.
+
+Characters made on CrawlerForge can be brought in with the **Import
+CrawlerForge** button in the Actors sidebar.
 
 ## Installation
 
@@ -55,10 +92,17 @@ npm install
 npm run build          # compile Sass -> css/carl-rpg.css
 npm run build:packs    # compile packs-source/*.json -> the LevelDB packs Foundry reads
 npm run unpack:packs   # the reverse - pull in-world compendium edits back into packs-source/
+npm run format         # format the code (oxfmt); format:check only reports
+npm run check:packs    # every compendium link in packs-source/ points at a real document
+npm run check:tooltips # tooltips use Foundry's tooltip attributes, not HTML titles
 ```
 
-`build:packs`/`unpack:packs` need exclusive access to the compiled `packs/`
-LevelDB directories, so Foundry must be fully closed while either runs.
+`build:packs` and `unpack:packs` need exclusive access to the compiled
+`packs/` LevelDB directories. Close the world (return to setup) before
+running either; the Foundry server can stay up.
+
+The tests run inside Foundry with the [Quench](https://github.com/Ethaks/FVTT-Quench)
+module: each area of the system has its own batch under `module/quench/`.
 
 To see what the PDF importer pulls out of a book without Foundry:
 
@@ -70,4 +114,4 @@ See `CHANGELOG.md` for release history.
 
 ## License
 
-MIT with the Commons Clause (no selling) for changes from 2026-11-11 on; earlier code stays plain MIT. See `LICENSE.txt`.
+MIT with the Commons Clause. See `LICENSE.txt`.
