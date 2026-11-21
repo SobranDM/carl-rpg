@@ -21,6 +21,7 @@ import { mobAttackTargetEffects, splitArmorPiercing } from "./debuff-text.mjs";
 import { bodySize, escapeHtml, isHeading, joinText } from "./page-text.mjs";
 import { findDamageType } from "../helpers/damage-types.mjs";
 import { findSections } from "./sections.mjs";
+import { blurbFor, findAiTexts, lineOrder } from "./parse-ai-text.mjs";
 import { parseSizeText } from "../helpers/size-text.mjs";
 
 // kind, size name, size number, a size range's upper number, type.
@@ -65,6 +66,11 @@ const STAT_KEYS = { str: "str", int: "int", con: "con", dex: "dex", cha: "cha" }
  */
 export function parseMobs(pages) {
   const sectionAt = findSections(pages);
+  // The AI Text blurbs (parse-ai-text.mjs), and where each line falls in
+  // the book, to find the one nearest each stat block.
+  const blurbs = findAiTexts(pages, sectionAt);
+  const inBlurb = new Set(blurbs.flatMap((b) => [...b.lines]));
+  const order = lineOrder(pages);
   // A block can run onto the next page, which has no class line of its own.
   const lines = [];
   let prevHadBlock = false;
@@ -107,7 +113,10 @@ export function parseMobs(pages) {
     const floor = n > 0 ? anchors[n - 1] + 1 : 0;
     let start = nameAt;
     while (start - 1 >= floor && !lines[start - 1].heading) start--;
-    const flavor = lines[start - 1]?.heading ? lines.slice(start, nameAt) : [];
+    // A blurb there is the AI Text, not flavor.
+    const flavor = (lines[start - 1]?.heading ? lines.slice(start, nameAt) : []).filter(
+      (l) => !inBlurb.has(`${l.page}:${l.at}`),
+    );
 
     // Body: up to the next block's name, or a heading.
     let end = n + 1 < anchors.length ? nameStarts[n + 1] : lines.length;
@@ -118,9 +127,21 @@ export function parseMobs(pages) {
       }
     }
     const name = joinText(lines.slice(nameAt, at).map((l) => l.text));
+    const section = sectionAt(lines[at].page, lines[at].at);
     const mob = toMob(name, lines[at], lines.slice(at + 1, end), flavor);
+    if (!mob) return null;
+    const blurb = blurbFor(
+      {
+        name: mob.name,
+        level: mob.data.system.level,
+        section,
+        order: order.get(`${lines[at].page}:${lines[at].at}`) ?? 0,
+      },
+      blurbs,
+    );
+    mob.data.system.aiText = blurb?.html ?? "";
     // Where in the dungeon it's found (sections.mjs): files it on import.
-    return mob && { ...mob, section: sectionAt(lines[at].page, lines[at].at) };
+    return { ...mob, section };
   });
   // A Vehicle block is null (toMob).
   return mobs.filter(Boolean);

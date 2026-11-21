@@ -104,6 +104,9 @@ export const VEHICLE_SKILL_MIGRATION_ID = "0.7.0-vehicle-skill-settings";
 
 /** 0.8.0: the Stat a Skill or Spell is Opposed by, on existing copies (migrateOpposedStats). */
 export const OPPOSED_STATS_MIGRATION_ID = "0.8.0-opposed-stats";
+// Not a change to any data: a card telling the GM Mobs now have AI Text,
+// and to re-import the books for it (ruled 2026-11-21).
+export const AI_TEXT_NOTICE_ID = "0.8.2-ai-text-notice";
 
 /** 0.7.0: Skills' Needs no weapon / No Damage Effects / Commands pets boxes, gear's Hand-to-Hand Debuffs (migrateSkillSettingBoxes). */
 export const SKILL_SETTING_BOXES_ID = "0.7.0-skill-setting-boxes";
@@ -2284,6 +2287,21 @@ export async function postWeaponSkillNotice({ filled, remaining }) {
   return { notice, list };
 }
 
+/**
+ * 0.8.2: Mobs have AI Text (data/mob.mjs aiText), read by the rulebook
+ * import. A Mob already imported gets it only when its book is imported
+ * again - the text is in the GM's PDF, not ours - so a card in chat says
+ * so (ruled 2026-11-21). Nothing in the world changes.
+ * @returns {Promise<{changed: number, errors: number}>}
+ */
+export async function announceAiText() {
+  await createNoticeMessage({
+    title: game.i18n.localize("CARLRPG.Migration.AiText.Title"),
+    body: game.i18n.localize("CARLRPG.Migration.AiText.Body"),
+  });
+  return { changed: 0, errors: 0 };
+}
+
 /** One compendium: unlocked for the run, locked again after. */
 /**
  * The Hand-to-Hand box in one compendium, unlocked for the run and locked
@@ -2624,6 +2642,7 @@ export const MIGRATIONS = [
   { id: VEHICLE_SKILL_MIGRATION_ID, version: "0.7.0", run: migrateVehicleSkillSettings },
   { id: SKILL_SETTING_BOXES_ID, version: "0.7.0", run: migrateSkillSettingBoxes },
   { id: OPPOSED_STATS_MIGRATION_ID, version: "0.8.0", run: migrateOpposedStats },
+  { id: AI_TEXT_NOTICE_ID, version: "0.8.2", run: announceAiText },
 ];
 
 /**

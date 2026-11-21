@@ -17,6 +17,9 @@ import { parseSpells } from "./parse-spells.mjs";
 // A page with less real text than this (letters and digits, outside the
 // margins) is mostly picture: a possible map.
 const MAP_TEXT_LIMIT = 150;
+// A page that may hold a Mob's AI Text ("Rat Brute, Level 4"): its
+// typefaces are read too (parse-ai-text.mjs tells the AI's voice by them).
+const MAY_HAVE_AI_TEXT_RE = /\bLevel\s+\d/;
 
 /**
  * Read every page's text.
@@ -36,12 +39,45 @@ export async function readPages(pdfDoc, { onProgress } = {}) {
       x: i.x - x0,
       y: i.y - y0,
     }));
+    if (MAY_HAVE_AI_TEXT_RE.test(items.map((i) => i.str).join(" "))) await nameFaces(page, items);
     const size = { width: x1 - x0, height: y1 - y0, page: n };
     pages.push({ ...size, items, lines: layoutLines(items, size) });
     page.cleanup();
     onProgress?.(n, pdfDoc.numPages);
   }
   return pages;
+}
+
+/**
+ * Give each text item its typeface's name ("TextbookNew-Bold"), as `face`.
+ * pdf.js only knows a font's name once the page's drawing is loaded, so this
+ * costs a little: it's done only where AI Text may be. An item whose font
+ * isn't known keeps no face.
+ * @param {object} page  A pdf.js page.
+ * @param {object[]} items  From toTextItems; `font` is pdf.js's font id.
+ */
+async function nameFaces(page, items) {
+  try {
+    await page.getOperatorList();
+  } catch {
+    return;
+  }
+  const names = new Map();
+  for (const item of items) {
+    if (!item.font || names.has(item.font)) continue;
+    let name = "";
+    try {
+      if (page.commonObjs.has(item.font)) name = page.commonObjs.get(item.font)?.name ?? "";
+    } catch {
+      name = "";
+    }
+    // "BDIFOQ+TextbookNew-Bold": the six letters name the subset, not the face.
+    names.set(item.font, String(name).replace(/^[A-Z]{6}\+/, ""));
+  }
+  for (const item of items) {
+    const face = names.get(item.font);
+    if (face) item.face = face;
+  }
 }
 
 /**

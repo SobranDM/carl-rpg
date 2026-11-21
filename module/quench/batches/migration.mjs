@@ -1,4 +1,5 @@
 import {
+  AI_TEXT_NOTICE_ID,
   announceWeaponSkill,
   applySkillSettingBoxesOn,
   backfillDeityTier,
@@ -115,9 +116,9 @@ export default function register(quench) {
           assert.includeMembers(p.record, ["some-later-fix", HAND]);
         });
 
-        it("are 0.7.0 and 0.8.0 migrations, and a world that ran them under their old 0.6.0 ids reruns none", function () {
+        it("are 0.7.0, 0.8.0 and 0.8.2 migrations, and a world that ran them under their old 0.6.0 ids reruns none", function () {
           for (const m of MIGRATIONS) {
-            assert.include(["0.7.0", "0.8.0"], m.version, m.id);
+            assert.include(["0.7.0", "0.8.0", "0.8.2"], m.version, m.id);
             assert.isTrue(m.id.startsWith(`${m.version}-`), m.id);
           }
           const oldIds = Object.keys(RENAMED_MIGRATION_IDS);
@@ -138,6 +139,7 @@ export default function register(quench) {
             SKILL_SETTING_BOXES_ID,
             VEHICLE_SKILL_MIGRATION_ID,
             OPPOSED_STATS_MIGRATION_ID,
+            AI_TEXT_NOTICE_ID,
           ]);
           const p = migrationPlan({ done: oldIds, hasContent: true });
           assert.sameMembers(

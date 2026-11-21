@@ -184,6 +184,10 @@
         "Body": "Characters now have a church Tier in their Deity block, and a Boon tagged with a Tier only applies at or below it. These Characters had no Tier yet, so each was given the highest Tier among its Boons, to keep them working. Check them on the Benefits tab:",
         "Line": "{name}: {tier}"
       },
+      "AiText": {
+        "Title": "Mobs get AI Text",
+        "Body": "Mobs have now been updated to import the message from the AI that Crawlers see when looking at a mob. It is recommended that you re-import mobs from the core rulebook or Gamemaster's Toolkit so that the mobs in your world get the appropriate text. Custom AI Text can be entered on the Notes tab."
+      },
       "WeaponSkill": {
         "Title": "New: Weapon Skill",
         "Body": "Gear items now have a Weapon Skill field: the Attack Skill the item is wielded with (e.g. Longsword). An Attack with a Weapon Skill now needs a weapon in hand or in the Hotlist whose Weapon Skill names it. Hand-to-hand Skills, Improvised Weapons and natural attacks need no weapon.",
