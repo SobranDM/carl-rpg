@@ -2,7 +2,7 @@
 
 ## 0.8.0
 
-Achievements and loot boxes, plus behind-the-scenes tidying to make future work easier.
+Achievements and loot boxes, a floor collapse timer and Opposed Checks, plus behind-the-scenes tidying to make future work easier.
 
 ### Deprecation Warning
 
@@ -12,13 +12,14 @@ Achievements and loot boxes, plus behind-the-scenes tidying to make future work 
 
 - **Achievements:** a new Achievement item with a description, a Reward, a grade (Bronze to Celestial, which sets its icon) and an option to give a loot box. The GM makes, edits and awards them all in the GM Toolbox's Achievements window; they're kept in an Achievements compendium the system looks after.
   - The crawler's player sees a New Achievement! splash, which stays until they close it, even if they were offline when it was awarded.
+  - An optional Category groups achievements together in the window, Bronze to Celestial.
   - A world setting posts awarded achievements to chat (off by default).
   - A Character's Details tab lists their achievements.
 - **Loot Boxes Live in the Inventory** (p.21), behind a Show Loot Boxes button: from an achievement (titled from its Reward), a Boss kill (p.22), or given from the GM Toolbox. Players see a box's art and title, never what's inside, and can't change or delete it. The GM can prepare each crawler's box ahead of time, even before an achievement is awarded, or leave it to be rolled when it's opened.
 - **Opening Loot Boxes Together:** the GM Toolbox's Open Loot Boxes starts a session everyone watches, one crawler at a time. Each box shakes, glows and shows what came out, which goes straight onto the sheet. Only that crawler's player or the GM can move on, and the GM can skip a player.
 - **Fuller Loot** (pp.215-220): boxes hold gold, consumables and mundane items as well as magic items, from new Roll Tables for each tier. Magic items get real bonuses, in their tier's range and to a Skill the crawler has.
   - 13 new items from the book's sample boxes: potions, dynamite, a canoe, a bicycle, coupons and more.
-  - A world copy of a box table replaces the system's, so GMs can change what boxes hold.
+  - A copy of a box table in the world or a world compendium replaces the system's, so GMs can change what boxes hold.
 - **The Loot Forge:** where the GM prepares a box's contents: gold, quantities, and each magic item's name, slot, bonuses and (for a mundane item) the Weapon Skill that makes it a weapon, with rerolls. Something Unique shows how powerful it is: one step for each roll it stopped (p.220). Reforge reopens a rolled magic item later.
 - **Sounds:** earning an achievement and gaining a Level play a sound for the crawler's player, and opening a loot box plays one for everyone. Each can be muted in your own settings.
 - **Potions Can Mend All Injuries**, as the Heal Severe Injury Potion does (p.218).
@@ -42,6 +43,7 @@ Achievements and loot boxes, plus behind-the-scenes tidying to make future work 
 ### Combat and Rolls
 
 - **Debuff Changes Are Never Lost:** When a player and the GM change the same creature's Debuffs at once (a potion as a round ends), both stick. A player's change now waits for the GM's client to apply it; with no GM logged in, it's made as before.
+- **Opposed Checks** (p.59): any Skill or Stat Check, and the Party Skill Check, can be Opposed. Pick who (a targeted or on-scene creature, or a number such as a Spell Rank) and their Stat, and the Difficulty becomes 10 + their Mod + the Floor. Skills and Spells the book calls Opposed (Stealth, Intimidate, Detect Lies, Turn Undead and more) start Opposed against a targeted creature; with several targeted, the hardest counts. Crawlers' existing copies of those Skills and Spells are updated when the world loads, keeping their Ranks.
 - **Opposed Checks That Aren't Actions** (Party Skill Checks, Driving Checks, ramming) no longer suffer or use up Queasy and Staggered.
 - **A Negative Rank Counts as Untrained** and roll with Disadvantage.
 - **A Natural 20 Evade's Advantage** follows the fight the crawler is in, resolving issues when multiple fights are running.
