@@ -316,6 +316,30 @@ export default function register(quench) {
           assert.isUndefined(pick("Grease Gremilin", 18), "a misprint only at its Level");
         });
 
+        it("the four the core book names differently on the stat block and the AI Text", function () {
+          const blurbs = [
+            ["Grampus. Justice Demon", 50],
+            ["Concierge Wereshark (Shark Form)", 18],
+            ["Clurichaun Aspirant Super Star", 55],
+            ["Elder Silkpaw. Pterolykos", 50],
+          ].map(([name, level], order) =>
+            keyed({ whole: nameKey(name), primary: nameKey(name), level, order: order * 100 }),
+          );
+          const pick = (name, level) =>
+            blurbFor({ name, level, order: 1000 }, blurbs)?.whole ?? null;
+          assert.equal(pick("Demon", 50), nameKey("Grampus. Justice Demon"));
+          assert.equal(
+            pick("Concierge Wereshark", 18),
+            nameKey("Concierge Wereshark (Shark Form)"),
+          );
+          assert.equal(
+            pick("Clurichaun Aspirant Super Duper Star", 55),
+            nameKey("Clurichaun Aspirant Super Star"),
+          );
+          assert.equal(pick("Pterolykos Elder", 50), nameKey("Elder Silkpaw. Pterolykos"));
+          assert.isNull(pick("Demon", 12), "only at the printed Level");
+        });
+
         it("the same name twice: its own Neighborhood's first, then the nearest", function () {
           const here = { floor: 1, kind: "neighborhood", name: "Here" };
           const there = { floor: 1, kind: "neighborhood", name: "There" };

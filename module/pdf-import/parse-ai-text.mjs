@@ -51,6 +51,21 @@ const STAT_LINE_RE = /\d\s*(?:\+\s*[\dF]+\s*)*to hit\b|^Level Surprise|^Str\b|^N
 const TITLE_SPLIT_RE = /\s*[.—–]\s+|\s*[—–]\s*|\s*,\s+|\s+--\s+|--/;
 
 /**
+ * Mobs the core rulebook names one way on the stat block and another on
+ * its AI Text (ruled 2026-11-21): the stat block's name, then the blurb's,
+ * each as printed. Tried before any other match.
+ */
+const BLURB_NAMES = {
+  Demon: "Grampus. Justice Demon",
+  "Concierge Wereshark": "Concierge Wereshark (Shark Form)",
+  "Clurichaun Aspirant Super Duper Star": "Clurichaun Aspirant Super Star",
+  "Pterolykos Elder": "Elder Silkpaw. Pterolykos",
+};
+const BLURB_KEYS = new Map(
+  Object.entries(BLURB_NAMES).map(([mob, blurb]) => [nameKey(mob), nameKey(blurb)]),
+);
+
+/**
  * Every AI Text blurb in the book.
  * @param {object[]} pages  From scan.mjs readPages.
  * @param {(page: number, at: number) => object} [sectionAt]  sections.mjs
@@ -206,7 +221,9 @@ export function blurbFor(mob, blurbs) {
   const whole = nameKey(mob.name);
   const mobKeys = new Set([whole, nameKey(primaryName(mob.name))]);
   const sameLevel = (b) => b.level === mob.level;
+  const shim = BLURB_KEYS.get(whole);
   const tries = [
+    (b) => !!shim && b.whole === shim && sameLevel(b),
     (b) => mobKeys.has(b.whole) || mobKeys.has(b.primary),
     (b) => (b.parts ?? []).some((p) => mobKeys.has(p)),
     (b) => sameLevel(b) && b.primary.length > 3 && whole.startsWith(`${b.primary} `),
