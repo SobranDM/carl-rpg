@@ -186,8 +186,17 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
+  }
 
-    button {
+  // An Attack, and its Modify Roll button beside it.
+  .carl-declare-attack-row {
+    display: flex;
+    align-items: stretch;
+    gap: 3px;
+
+    .carl-declare-attack {
+      flex: 1 1 auto;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
@@ -195,6 +204,14 @@
       padding: 3px 6px;
       line-height: 1.2;
       text-align: left;
+    }
+
+    .carl-declare-modify {
+      flex: 0 0 28px;
+      width: 28px;
+      height: auto;
+      padding: 0;
+      justify-content: center;
     }
   }
 

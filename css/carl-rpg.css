@@ -594,11 +594,16 @@
   opacity: 0.6;
 }
 .carl-chat-card .carl-gm-digest {
+  display: flow-root;
   border-style: dashed;
   font-size: 11px;
 }
 .carl-chat-card .carl-gm-digest .carl-gm-digest-title {
   display: inline-block;
+  box-sizing: border-box;
+  height: 18px;
+  line-height: 14px;
+  margin: 0 0 4px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -606,11 +611,41 @@
   color: var(--carl-header-text);
   padding: 2px 6px;
   border-radius: 3px;
-  margin-bottom: 4px;
 }
 .carl-chat-card .carl-gm-digest ul {
   margin: 0;
   padding-left: 1.25em;
+}
+.carl-chat-card .carl-gm-digest:has(.carl-digest-name) .carl-gm-digest-title {
+  float: left;
+  margin-right: 6px;
+}
+.carl-chat-card .carl-gm-digest:has(.carl-digest-name) ul {
+  padding-left: 0;
+}
+.carl-chat-card .carl-gm-digest:has(.carl-digest-name) li {
+  clear: left;
+  margin-left: 1.25em;
+}
+.carl-chat-card .carl-gm-digest:has(.carl-digest-name) li:has(> .carl-digest-name) {
+  clear: none;
+  margin-left: 0;
+  list-style: none;
+}
+.carl-chat-card .carl-gm-digest:has(.carl-digest-name) li + li {
+  margin-top: 2px;
+}
+.carl-chat-card .carl-gm-digest:has(.carl-digest-name) .carl-digest-name {
+  display: block;
+  line-height: 22px;
+  font-weight: 700;
+}
+.carl-chat-card .carl-gm-digest:has(.carl-digest-name) .carl-digest-math {
+  display: block;
+  line-height: 20px;
+}
+.carl-chat-card .carl-gm-digest:has(.carl-digest-name) .carl-digest-term {
+  color: var(--carl-text-muted);
 }
 .carl-chat-card .carl-debuff-note,
 .carl-chat-card .carl-free-evade-note,
@@ -1043,7 +1078,14 @@
   flex-direction: column;
   gap: 3px;
 }
-#carl-declare-hud .carl-declare-attacks button {
+#carl-declare-hud .carl-declare-attack-row {
+  display: flex;
+  align-items: stretch;
+  gap: 3px;
+}
+#carl-declare-hud .carl-declare-attack-row .carl-declare-attack {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1051,6 +1093,13 @@
   padding: 3px 6px;
   line-height: 1.2;
   text-align: left;
+}
+#carl-declare-hud .carl-declare-attack-row .carl-declare-modify {
+  flex: 0 0 28px;
+  width: 28px;
+  height: auto;
+  padding: 0;
+  justify-content: center;
 }
 #carl-declare-hud .carl-declare-attack-name {
   font-weight: 700;
@@ -5140,6 +5189,9 @@
 }
 #tooltip.carl-item-tooltip p {
   margin: 0 0 0.4em;
+}
+#tooltip.carl-item-tooltip .carl-tooltip-hint {
+  margin-bottom: 1em;
 }
 #tooltip.carl-item-tooltip .carl-tooltip-name {
   display: block;

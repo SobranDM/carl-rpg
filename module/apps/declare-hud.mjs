@@ -6,9 +6,13 @@
  * its printed Attacks as buttons and what it has already declared this
  * round (each removable), and it shows who is currently targeted.
  *
- * Flow: select the Mob, target its victims (T), click an Attack. That opens
- * the usual Mob Attack dialog (Shift-click skips it) and CarlDice.
- * rollMobAttack records the declaration (module/helpers/declarations.mjs).
+ * Flow: select the Mob, target its victims (T), click an Attack: it's
+ * declared as it is, with no modifiers - except an Area Attack, which always
+ * opens the dialog (who's in the zone, who's splashed). The button beside
+ * it (Modify Roll) opens the usual Mob Attack dialog first (ruled
+ * 2026-11-21).
+ * CarlDice.rollMobAttack records the declaration (module/helpers/
+ * declarations.mjs).
  *
  * One instance, kept at game.carlrpg.declareHud and re-rendered (debounced)
  * on token control/targeting and combat changes; it closes itself whenever
@@ -37,6 +41,7 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
     window: { frame: false, positioned: false },
     actions: {
       declare: CarlDeclareHud.#onDeclare,
+      declareModified: CarlDeclareHud.#onDeclareModified,
       removeDeclaration: CarlDeclareHud.#onRemove,
     },
   };
@@ -106,23 +111,24 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * Declare one of a Mob's Attacks against the current targets.
+   * Declare one of a Mob's Attacks against the current targets, with no
+   * modifiers - no dialog, unless it's an Area Attack (declareFrom).
    * @this {CarlDeclareHud}
    * @param {PointerEvent} event
    * @param {HTMLElement} target
    */
-  static async #onDeclare(event, target) {
-    const entry = CarlDeclareHud.declaringMobs().find(
-      (m) => m.token.id === target.closest("[data-token-id]")?.dataset.tokenId,
-    );
-    if (!entry) return;
-    if (!game.user.targets.size) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.NoTargets"));
-      return;
-    }
-    await CarlDice.rollMobAttack(entry.actor, target.dataset.attackId, {
-      skipDialog: event.shiftKey,
-    });
+  static #onDeclare(event, target) {
+    return declareFrom(target, { skipDialog: true });
+  }
+
+  /**
+   * Declare one, through the Mob Attack dialog (Modify Roll).
+   * @this {CarlDeclareHud}
+   * @param {PointerEvent} event
+   * @param {HTMLElement} target
+   */
+  static #onDeclareModified(event, target) {
+    return declareFrom(target, { skipDialog: false });
   }
 
   /**
@@ -136,6 +142,37 @@ export class CarlDeclareHud extends HandlebarsApplicationMixin(ApplicationV2) {
       (m) => m.token.id === target.closest("[data-token-id]")?.dataset.tokenId,
     );
     if (entry) await removeDeclaration(entry.combat, target.dataset.id);
+  }
+}
+
+/** Whether a declaration from the HUD is under way (declareFrom). */
+let declaring = false;
+
+/**
+ * Declare the Attack a HUD button is for, from the Mob of its section,
+ * against the current targets.
+ * @param {HTMLElement} button  Carries data-attack-id.
+ * @param {{skipDialog: boolean}} options
+ */
+async function declareFrom(button, { skipDialog }) {
+  // One at a time: a double-click mustn't declare twice.
+  if (declaring) return;
+  const entry = CarlDeclareHud.declaringMobs().find(
+    (m) => m.token.id === button.closest("[data-token-id]")?.dataset.tokenId,
+  );
+  if (!entry) return;
+  if (!game.user.targets.size) {
+    ui.notifications.warn(game.i18n.localize("CARLRPG.Declare.NoTargets"));
+    return;
+  }
+  const attackId = button.dataset.attackId;
+  // An Area Attack always asks: the dialog is where its splash is picked.
+  const isArea = !!mobAttacksOf(entry.actor).find((item) => item.id === attackId)?.system.isArea;
+  declaring = true;
+  try {
+    await CarlDice.rollMobAttack(entry.actor, attackId, { skipDialog: skipDialog && !isArea });
+  } finally {
+    declaring = false;
   }
 }
 

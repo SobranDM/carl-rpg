@@ -1295,8 +1295,21 @@
       "AppliedNotice": "Applied damage to {count} target(s).",
       "NoTargets": "No targets were selected when this roll was made.",
       "DigestTitle": "Damage Applied",
-      "DigestLine": "<strong>{name}</strong>: {parts} = {total} total, {slots} slot(s) lost",
-      "DigestShield": "Shield absorbed {absorbed} ({slots} slot(s))",
+      "Digest": {
+        "Total": "{total} damage",
+        "Shield": "Shield",
+        "Dr": "DR",
+        "TypeState": "{type} {state}",
+        "State": {
+          "resist": "Resisted",
+          "vulnerable": "Vulnerable",
+          "immune": "Immune"
+        },
+        "Slot": "{slots} Slot",
+        "Slots": "{slots} Slots",
+        "ShieldSlot": "{slots} Shield Slot",
+        "ShieldSlots": "{slots} Shield Slots"
+      },
       "Superseded": "Superseded by Evade"
     },
     "Heal": {
@@ -1638,6 +1651,7 @@
       "NoAttacker": "Could not find the attacking Mob for this card.",
       "NoTauntSkill": "You don't have the Taunt Skill.",
       "NotArea": "An Area Attack hits everyone in the area - it can't be Taunted onto one crawler.",
+      "NotMob": "Only a Mob's Attack can be Taunted.",
       "TooLate": "{name}'s Taunt succeeded, but the Attack was settled or changed meanwhile (a target Evaded, blocked or took the damage, or another Taunt took it), so it isn't redirected. The Taunt still stands."
     },
     "Roll": {
@@ -2227,7 +2241,8 @@
     "Declare": {
       "Title": "Declare Attacks",
       "TargetFirst": "Target the crawlers this Mob attacks (T), then pick an Attack.",
-      "AttackHint": "Declare this Attack against your targets. Shift-click skips the dialog.",
+      "AttackHint": "Declare this Attack against your targets, with no modifiers (an Area Attack asks who's splashed).",
+      "ModifyRoll": "Modify Roll",
       "ToHit": "to hit {value}",
       "NoAttacks": "This Mob has no Attacks on its sheet.",
       "NoTargets": "Target the crawlers this Mob attacks first.",

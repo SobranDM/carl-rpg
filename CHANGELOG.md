@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 0.8.4
+
+- **Taunt Only Mob Attacks:** A crawler's or Pet's Attack card no longer offers Taunt This Attack.
+- **Clearer Damage Applied:** The GM's digest now names the target, then shows slots lost as a chip, followed by the math, e.g. "4 - 1 (DR) = 3 damage".
+- **Quicker Mob Attacks:** In the Declare Attacks panel, clicking an Attack declares it at once with no modifiers. The button beside it (Modify Roll) opens the dialog as before. Area Attacks always open the dialog, to pick who's splashed.
+- **Hotlist Tooltips:** Hovering a Hotlist item shows what clicking it does, then the item's name and description.
+- **Achievement GM Secrets Stay Secret:** Secret blocks in an achievement's description no longer show to players in the New Achievement! splash, the sheet's tooltip or the chat card.
+
 ## 0.8.3
 
 - **The Loot Forge:** A magic item now takes a description and an image. A weapon also takes Two-Handed, Armor-Piercing and on-hit Debuffs. Rerolling an item keeps its description and image, and Reforge picks up changes made on the item's sheet.

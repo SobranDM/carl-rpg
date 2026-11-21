@@ -14,6 +14,7 @@ import { rewardBox } from "../../helpers/reward-text.mjs";
 import { openBox } from "../../helpers/boxes.mjs";
 import { currentFloor } from "../../helpers/floor.mjs";
 import AchievementSplash from "../../apps/achievement-splash.mjs";
+import { enrichDescription, showsSecrets } from "../../helpers/rich-text.mjs";
 import AchievementGrid from "../../apps/achievement-grid.mjs";
 import {
   createTestCharacter,
@@ -354,6 +355,48 @@ export default function register(quench) {
             const card = game.messages.contents.at(-1);
             assert.isEmpty(card.whisper, "public");
             assert.include(card.content, def.name);
+          } finally {
+            await deleteTestActor(actor);
+            await deleteLibraryAchievement(def);
+          }
+        });
+
+        it("its GM Secrets: never on the chat card, and only the GM sees them elsewhere", async function () {
+          const def = await makeDefinition({
+            lootBox: false,
+            description:
+              '<p>You pressed every button.</p><section class="secret" id="secret-quench01"><p>Quench GM note.</p></section>',
+          });
+          const actor = await createTestCharacter("secrets");
+          try {
+            const copy = await withSetting("postAchievementsToChat", true, () =>
+              awardAchievement(def, actor),
+            );
+            const card = game.messages.contents.findLast((m) => m.content.includes(copy.name));
+            assert.include(card.content, "You pressed every button.");
+            assert.notInclude(card.content, "Quench GM note.", "not on the public card");
+            assert.include(
+              await enrichDescription(copy.system.description, copy),
+              "Quench GM note.",
+            );
+            // As the crawler's player sees it: they own the copy, but aren't
+            // the GM. Not GM only for this one synchronous check - nothing
+            // else on this client can run meanwhile.
+            const isGM = Object.getOwnPropertyDescriptor(game.user, "isGM");
+            Object.defineProperty(game.user, "isGM", { value: false, configurable: true });
+            let shown;
+            try {
+              shown = showsSecrets(copy);
+            } finally {
+              if (isGM) Object.defineProperty(game.user, "isGM", isGM);
+              else delete game.user.isGM;
+            }
+            assert.isTrue(game.user.isGM, "the GM again");
+            assert.isFalse(shown, "the player owns the copy, but doesn't see its secrets");
+            assert.notInclude(
+              await enrichDescription(copy.system.description, copy, { secrets: shown }),
+              "Quench GM note.",
+            );
           } finally {
             await deleteTestActor(actor);
             await deleteLibraryAchievement(def);

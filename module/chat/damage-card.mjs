@@ -33,9 +33,8 @@ import {
   dyingRounds,
   removeConditionsWithMechanic,
 } from "../helpers/conditions.mjs";
-import { appendCardSection } from "./chat-card.mjs";
+import { appendCardSection, esc } from "./chat-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
-import { CARLRPG } from "../helpers/config.mjs";
 import { ownsUuid } from "../helpers/token-resolution.mjs";
 import { damageTypeLabel } from "../helpers/damage-types.mjs";
 
@@ -82,43 +81,75 @@ export function canApplyDamage(message) {
 }
 
 /**
- * Format one target's pipeline result as a readable digest line, e.g.
- * "Bludgeoning 8; Fire 4 -> 2 (Resisted) = 10 total, 2 slot(s) lost." Every
- * other roll/apply flow in this system shows its math in the chat log, not
- * just a toast - this is the GM-facing counterpart to that, since a
+ * Format one target's pipeline result as its digest line: the target's
+ * name, then the hit's math, each term named, and what it cost as chips -
+ * e.g. "Pack Rat (2)" over "[1 Slot] 4 - 1 (DR) = 3 damage". The
+ * terms follow the pipeline's order: Shield (non-magic only), DR, then each
+ * damage type's Resistance, Vulnerability or Immunity. GM-facing, since a
  * target's resistances/DR are often GM-only information (see the
  * .carl-gm-only fold-in in the caller).
  * @param {Actor} actor
- * @param {{perType: Array<{type: string, raw: number, afterDr: number, state: string, final: number}>, totalFinalDamage: number, slotsLost: number}} result
+ * @param {{perType: Array<{type: string, raw: number, afterDr: number, state: string, final: number}>, totalFinalDamage: number, slotsLost: number, shieldAbsorbed: number, shieldSlotsLost: number, drApplied: number}} result
  * @returns {string}
  */
 function formatDamageDigestLine(actor, result) {
-  const parts = result.perType.map((p) => {
-    const label = damageTypeLabel(p.type);
-    if (p.state === "none" && p.afterDr === p.raw) return `${label} ${p.final}`;
-    const stateLabel =
-      p.state === "none"
-        ? ""
-        : ` (${game.i18n.localize(CARLRPG.resistanceStates[p.state] ?? p.state)})`;
-    return `${label} ${p.raw} -> ${p.final}${stateLabel}`;
-  });
-  // Shield absorption (docs/known-gaps.md 1.4) happens ahead of DR/per-type
-  // resistance, so it's surfaced as its own leading segment rather than
-  // folded into one of the per-type entries above.
-  if (result.shieldAbsorbed > 0) {
-    parts.unshift(
-      game.i18n.format("CARLRPG.Damage.DigestShield", {
-        absorbed: result.shieldAbsorbed,
-        slots: result.shieldSlotsLost,
-      }),
-    );
+  const i18n = game.i18n;
+  const term = (amount, label) => `${amount} <span class="carl-digest-term">(${esc(label)})</span>`;
+  const raw = result.perType.reduce((sum, p) => sum + p.raw, 0);
+  const shield = result.shieldAbsorbed ?? 0;
+  const dr = result.drApplied ?? 0;
+
+  let math = String(raw);
+  let changed = false;
+  if (shield > 0) {
+    math += ` - ${term(shield, i18n.localize("CARLRPG.Damage.Digest.Shield"))}`;
+    changed = true;
   }
-  return game.i18n.format("CARLRPG.Damage.DigestLine", {
-    name: actor.name,
-    parts: parts.join("; "),
-    total: result.totalFinalDamage,
-    slots: result.slotsLost,
-  });
+  // A negative DR (a Debuff's) adds to the hit.
+  if (dr) {
+    math += ` ${dr > 0 ? "-" : "+"} ${term(Math.abs(dr), i18n.localize("CARLRPG.Damage.Digest.Dr"))}`;
+    changed = true;
+  }
+  for (const p of result.perType) {
+    const delta = p.final - p.afterDr;
+    if (p.state === "none" || !delta) continue;
+    const label = i18n.format("CARLRPG.Damage.Digest.TypeState", {
+      type: damageTypeLabel(p.type),
+      state: i18n.localize(`CARLRPG.Damage.Digest.State.${p.state}`),
+    });
+    math += ` ${delta < 0 ? "-" : "+"} ${term(Math.abs(delta), label)}`;
+    changed = true;
+  }
+  // A fraction rounded down (a halved hit) changes it too.
+  const total = i18n.format("CARLRPG.Damage.Digest.Total", { total: result.totalFinalDamage });
+  math = changed || result.totalFinalDamage !== raw ? `${math} = ${total}` : total;
+
+  // What it cost, ahead of the math: HB slots, and any Shield slots.
+  const chip = (tone, text) =>
+    `<span class="carl-status-chip" data-tone="${tone}">${esc(text)}</span>`;
+  const slots = result.slotsLost;
+  const chips = [
+    chip(
+      slots ? "bad" : "muted",
+      i18n.format(`CARLRPG.Damage.Digest.${slots === 1 ? "Slot" : "Slots"}`, { slots }),
+    ),
+  ];
+  const shieldSlots = result.shieldSlotsLost ?? 0;
+  if (shieldSlots)
+    chips.push(
+      chip(
+        "neutral",
+        i18n.format(`CARLRPG.Damage.Digest.${shieldSlots === 1 ? "ShieldSlot" : "ShieldSlots"}`, {
+          slots: shieldSlots,
+        }),
+      ),
+    );
+
+  return (
+    `<span class="carl-digest-name">${esc(actor.name)}</span>` +
+    `<span class="carl-digest-math"><span class="carl-digest-cost">${chips.join(" ")}</span> ` +
+    `<span class="carl-digest-sum">${math}</span></span>`
+  );
 }
 
 /**
@@ -212,8 +243,8 @@ export async function applyDamageWithResult(
     if (ended.length) {
       lines.push(
         game.i18n.format("CARLRPG.Damage.DebuffEnded", {
-          name: actor.name,
-          debuffs: ended.join(", "),
+          name: esc(actor.name),
+          debuffs: ended.map((d) => esc(d)).join(", "),
         }),
       );
     }

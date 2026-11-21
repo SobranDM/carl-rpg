@@ -225,10 +225,13 @@ export async function revokeAchievement(copy) {
   await copy.delete();
 }
 
-/** The public chat card for an awarded achievement (the world setting). */
+/**
+ * The public chat card for an awarded achievement (the world setting).
+ * Built on the GM's client, but everyone reads it: never its GM Secrets.
+ */
 async function postAchievementCard(copy, actor) {
   const sys = copy.system;
-  const description = await enrichDescription(sys.description, copy);
+  const description = await enrichDescription(sys.description, copy, { secrets: false });
   const reward = sys.reward
     ? `<p><strong>${esc(game.i18n.localize("CARLRPG.Achievement.Reward"))}:</strong> ${esc(sys.reward)}</p>`
     : "";

@@ -69,21 +69,33 @@ export function storyToHtml(parts) {
 }
 
 /**
+ * Whether a document's GM Secret blocks show to this user by default: to its
+ * owner - but an achievement's only to the GM. Its words are the GM's, and
+ * its awarded copy is owned by the crawler's player.
+ * @param {foundry.abstract.Document} doc
+ * @returns {boolean}
+ */
+export function showsSecrets(doc) {
+  if (doc?.type === "achievement") return game.user.isGM;
+  return !!doc?.isOwner;
+}
+
+/**
  * A document's rich text as its own sheet shows it: links and inline rolls
  * drawn relative to it, with its roll data (an item's includes its actor's -
- * documents/item.mjs getRollData), GM Secret blocks only for its owner.
- * An item's description is enriched against the item wherever it shows
- * (ruled 2026-11-19).
+ * documents/item.mjs getRollData), GM Secret blocks only for those who may
+ * see them (showsSecrets). An item's description is enriched against the
+ * item wherever it shows (ruled 2026-11-19).
  * @param {string} html
  * @param {foundry.abstract.Document} doc
  * @param {{rollData?: object, secrets?: boolean}} [options]  rollData: already
- *   worked out; secrets: whether GM Secret blocks show (default: to its owner).
+ *   worked out; secrets: whether GM Secret blocks show (default: showsSecrets).
  * @returns {Promise<string>}
  */
 export function enrichDescription(html, doc, { rollData, secrets } = {}) {
   return foundry.applications.ux.TextEditor.implementation.enrichHTML(html ?? "", {
     relativeTo: doc,
-    secrets: secrets ?? !!doc?.isOwner,
+    secrets: secrets ?? showsSecrets(doc),
     rollData: rollData ?? doc?.getRollData?.() ?? {},
   });
 }

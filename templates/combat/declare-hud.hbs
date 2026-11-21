@@ -18,15 +18,24 @@
         </div>
         <div class="carl-declare-attacks">
             {{#each attacks}}
-            <button type="button" data-action="declare" data-attack-id="{{id}}"
-                    data-tooltip="{{localize "CARLRPG.Declare.AttackHint"}}">
-                <span class="carl-declare-attack-name">{{name}}</span>
-                <span class="carl-declare-attack-stats">
-                    {{#if toHit includeZero=true}}{{localize "CARLRPG.Declare.ToHit" value=toHit}}{{/if}}
-                    {{#if damage}} · {{damage}}{{/if}}
-                    {{#if isArea}} · <i class="fa-solid fa-burst" inert></i>{{/if}}
-                </span>
-            </button>
+            {{!-- Declared as it is; or through the Mob Attack dialog, to modify
+                  it (ruled 2026-11-21). --}}
+            <div class="carl-declare-attack-row">
+                <button type="button" class="carl-declare-attack" data-action="declare" data-attack-id="{{id}}"
+                        data-tooltip="{{localize "CARLRPG.Declare.AttackHint"}}">
+                    <span class="carl-declare-attack-name">{{name}}</span>
+                    <span class="carl-declare-attack-stats">
+                        {{#if toHit includeZero=true}}{{localize "CARLRPG.Declare.ToHit" value=toHit}}{{/if}}
+                        {{#if damage}} · {{damage}}{{/if}}
+                        {{#if isArea}} · <i class="fa-solid fa-burst" inert></i>{{/if}}
+                    </span>
+                </button>
+                <button type="button" class="carl-declare-modify" data-action="declareModified" data-attack-id="{{id}}"
+                        data-tooltip-text="{{localize "CARLRPG.Declare.ModifyRoll"}}"
+                        aria-label="{{localize "CARLRPG.Declare.ModifyRoll"}}">
+                    <i class="fa-solid fa-sliders" inert></i>
+                </button>
+            </div>
             {{else}}
             <p class="carl-declare-empty">{{localize "CARLRPG.Declare.NoAttacks"}}</p>
             {{/each}}
