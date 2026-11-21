@@ -92,6 +92,53 @@
     text-align: center;
   }
 
+  // A magic item's image, description and - a weapon's - Debuffs (ruled
+  // 2026-11-21).
+  .carl-forge-image {
+    margin-top: 4px;
+
+    img {
+      flex: 0 0 36px;
+      border: none;
+      object-fit: contain;
+    }
+
+    file-picker {
+      flex: 1 1 auto;
+    }
+  }
+
+  .carl-forge-description,
+  .carl-forge-debuffs {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+
+    .carl-hint {
+      margin: 0;
+    }
+  }
+
+  // Compact to read; room to type in once opened (as an item sheet's).
+  .carl-forge-description prose-mirror {
+    flex: 0 0 auto;
+    min-height: 4em;
+
+    &.active {
+      min-height: 160px;
+    }
+
+    .editor-content {
+      flex: 1;
+    }
+  }
+
+  .carl-forge-weapon {
+    gap: 16px;
+    margin-top: 4px;
+  }
+
   .carl-forge-footer {
     display: flex;
     gap: 6px;

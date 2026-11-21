@@ -1924,6 +1924,9 @@
         "AddMagic": "Add Magic Item",
         "Save": "Save",
         "UniqueTimes": "Something Unique ×{times}",
+        "Image": "Image",
+        "Description": "Description",
+        "DescriptionHint": "Your own words, shown above the item's enchantments. Rerolling the item keeps them.",
         "WeaponHeld": "A weapon is held in a hand.",
         "NoMagicAtTier": "This tier has no magic items. Pick Silver or higher.",
         "Kind": {

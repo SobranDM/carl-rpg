@@ -47,7 +47,13 @@ export default function register(quench) {
             }
             const magic = box.items.filter((i) => i.getFlag("carl-rpg", "magicDraft"));
             assert.lengthOf(magic, 2, "one magic item per crawler");
-            for (const item of magic) assert.include(item.system.description, "<ul>");
+            for (const item of magic) {
+              assert.include(
+                item.system.description,
+                "carl-magic-enchantments",
+                "its enchantments listed",
+              );
+            }
             assert.notProperty(box.system, "gold");
           } finally {
             await deleteTestActor(box);
@@ -78,6 +84,33 @@ export default function register(quench) {
             assert.equal(box.items.get(item.id).getFlag("carl-rpg", "lootTier"), "gold");
             assert.equal(box.items.get(item.id).getFlag("carl-rpg", "magicDraft").tierKey, "gold");
             if (plain) assert.isNull(await rerollLootItem(plain));
+          } finally {
+            await deleteTestActor(box);
+          }
+        });
+
+        it("reroll keeps the GM's words, image and a weapon's Debuffs (ruled 2026-11-21)", async function () {
+          useQuenchTimeout(this, 60000);
+          const box = await createTestLootBox({ tier: "silver" });
+          try {
+            await generateLootBoxItems(box);
+            const item = box.items.find((i) => i.getFlag("carl-rpg", "magicDraft"));
+            const debuff = { debuffKey: "blinded", stacks: 1, label: "" };
+            await item.update({
+              img: "icons/svg/sun.svg",
+              "system.description": `<p>Mine.</p>${item.system.description}`,
+              "system.targetEffects": [debuff],
+            });
+            await rerollLootItem(item);
+            const after = box.items.get(item.id);
+            assert.isTrue(after.system.description.startsWith("<p>Mine.</p>"));
+            assert.lengthOf(
+              after.system.description.match(/<ul/g) ?? [],
+              1,
+              "one enchantment list",
+            );
+            assert.equal(after.img, "icons/svg/sun.svg");
+            assert.equal(after.system.targetEffects[0]?.debuffKey, "blinded");
           } finally {
             await deleteTestActor(box);
           }

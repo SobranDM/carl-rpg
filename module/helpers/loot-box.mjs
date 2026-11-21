@@ -1,4 +1,10 @@
-import { generateLoot, generateMagicDraft, lootItemData, magicItemUpdate } from "./loot.mjs";
+import {
+  generateLoot,
+  generateMagicDraft,
+  lootItemData,
+  magicItemUpdate,
+  ownDescription,
+} from "./loot.mjs";
 
 /**
  * Loot Box Actor (module/data/loot-box.mjs) behavior: the GM rolls loot into
@@ -141,9 +147,11 @@ export async function generateLootBoxItems(box) {
 
 /**
  * Roll a magic loot Item again at the box's current tier (Tables 38-41).
- * Keeps the Item (same id, image and anything else the GM set) and rewrites
- * its name, Bonuses, description and where it's worn. Only a rolled magic
- * item (one with a magic draft) can be rerolled.
+ * Keeps the Item (same id, image, the GM's own words in its description, a
+ * weapon's Two-Handed, Armor-Piercing and Debuffs, and anything else the GM
+ * set) and rewrites its name, Bonuses, the description's enchantment list
+ * and where it's worn. Only a rolled magic item (one with a magic draft)
+ * can be rerolled.
  * @param {Item} item An Item in a Loot Box.
  * @returns {Promise<Item|null>}
  */
@@ -151,5 +159,10 @@ export async function rerollLootItem(item) {
   if (!isLootBoxItem(item) || !item.getFlag("carl-rpg", "magicDraft")) return null;
   const draft = await generateMagicDraft(item.parent.system.tier);
   if (!draft) return null;
+  const sys = item.system;
+  draft.description = ownDescription(sys.description, item.getFlag("carl-rpg", "magicDraft"));
+  draft.twoHanded = !!sys.twoHanded;
+  draft.armorPiercing = !!sys.armorPiercing;
+  draft.targetEffects = foundry.utils.deepClone(item._source.system.targetEffects ?? []);
   return item.update(magicItemUpdate(draft));
 }

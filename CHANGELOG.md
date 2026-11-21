@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.8.3
+
+- **The Loot Forge:** A magic item now takes a description and an image. A weapon also takes Two-Handed, Armor-Piercing and on-hit Debuffs. Rerolling an item keeps its description and image, and Reforge picks up changes made on the item's sheet.
+
 ## 0.8.2
 
 - **Mobs Have AI Text:** What the System AI tells crawlers who look at a Mob. It's on the Mob's Notes tab, and appears beside its token when anyone hovers over it (the GM can turn that off in the system settings). The rulebook import now reads it from the core rulebook and the Gamemaster's Toolkit. Require re-import.
