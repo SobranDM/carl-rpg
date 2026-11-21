@@ -629,7 +629,7 @@ export default function register(quench) {
           }
         });
 
-        it("a redraw while typing in the search box leaves the cursor in it, at the end", async function () {
+        it("a redraw while typing in the search box leaves the cursor in it, where it was", async function () {
           const grid = AchievementGrid.open();
           try {
             await waitFor(() => grid.rendered);
@@ -637,11 +637,13 @@ export default function register(quench) {
             box().focus();
             box().value = "quench";
             box().dispatchEvent(new Event("input", { bubbles: true }));
+            box().setSelectionRange(3, 3);
+            assert.equal(document.activeElement, box(), "test setup: typing in it");
             await grid.render();
             await waitFor(() => grid.rendered);
             assert.equal(document.activeElement, box(), "still in it");
             assert.equal(box().value, "quench");
-            assert.equal(box().selectionStart, "quench".length, "at the end");
+            assert.equal(box().selectionStart, 3, "the cursor where it was");
           } finally {
             await grid.close();
           }

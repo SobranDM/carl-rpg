@@ -232,6 +232,28 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
   }
 
   /** @override */
+  _preSyncPartState(partId, newElement, priorElement, state) {
+    super._preSyncPartState(partId, newElement, priorElement, state);
+    // A redraw while the search box is being typed in (a player logging
+    // in): it keeps the cursor, where it was. Core's own focus keeping
+    // looks for ":focus", which matches nothing while the browser window
+    // isn't the one in front; the document's active element is still it.
+    const active = document.activeElement;
+    if (active?.matches?.(".carl-grid-search") && priorElement.contains(active)) {
+      state.carlSearchCursor = [active.selectionStart, active.selectionEnd];
+    }
+  }
+
+  /** @override */
+  _syncPartState(partId, newElement, priorElement, state) {
+    super._syncPartState(partId, newElement, priorElement, state);
+    if (!state.carlSearchCursor) return;
+    const search = newElement.querySelector(".carl-grid-search");
+    search?.focus();
+    search?.setSelectionRange(...state.carlSearchCursor);
+  }
+
+  /** @override */
   _onRender(context, options) {
     super._onRender(context, options);
     // The search box filters as it's typed in, without a redraw (which
@@ -241,11 +263,6 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
       this.#search = search.value;
       this.#applySearch();
     });
-    // A redraw while it's being typed in (a player logging in) gives it its
-    // focus back (it has a name); the cursor goes back to its end.
-    if (search && document.activeElement === search) {
-      search.setSelectionRange(search.value.length, search.value.length);
-    }
     this.#applySearch();
     // Right-click a trophy: that crawler's loot box for it, as in the
     // editor (ruled 2026-11-19). Taking an award back is a left-click.
