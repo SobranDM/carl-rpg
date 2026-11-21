@@ -34,15 +34,11 @@ Achievements and loot boxes, a floor collapse timer and Opposed Checks, plus beh
 
 ### Sheets
 
-- **Item Tooltips:** Hover over an item's icon or name to see its description, or its name if it has none. On the Equipment Doll and the Hotlist, the name sits above the description.
-- **Every Tooltip Is Now Foundry's Tooltip Helper** instead of HTML titles.
 - **Descriptions of Races, Classes, Features and Mob Attacks** on the character sheet now show links and inline rolls as their own sheets do.
-- **Clearing the Crawler's Number on a Loot Box** no longer resets it.
 - **The GM Toolbox** is reorganized into Downtime, Rewards and Party sections, and its button is now a tool in Token Controls instead of a category of its own.
 
 ### Combat and Rolls
 
-- **Debuff Changes Are Never Lost:** When a player and the GM change the same creature's Debuffs at once (a potion as a round ends), both stick. A player's change now waits for the GM's client to apply it; with no GM logged in, it's made as before.
 - **Opposed Checks** (p.59): any Skill or Stat Check, and the Party Skill Check, can be Opposed. Pick who (a targeted or on-scene creature, or a number such as a Spell Rank) and their Stat, and the Difficulty becomes 10 + their Mod + the Floor. Skills and Spells the book calls Opposed (Stealth, Intimidate, Detect Lies, Turn Undead and more) start Opposed against a targeted creature; with several targeted, the hardest counts. Crawlers' existing copies of those Skills and Spells are updated when the world loads, keeping their Ranks.
 - **Opposed Checks That Aren't Actions** (Party Skill Checks, Driving Checks, ramming) no longer suffer or use up Queasy and Staggered.
 - **A Negative Rank Counts as Untrained** and roll with Disadvantage.
@@ -52,7 +48,6 @@ Achievements and loot boxes, a floor collapse timer and Opposed Checks, plus beh
 
 - **The Taint Stops Mending Too:** Mending an injury counts as healing, so a potion that heals or mends is kept, and a Heal Spell's Mend Debuff is refused, while The Taint lasts.
 - **Items Copied from a Compendium** remember where they came from, so later updates can refresh them.
-- **The GM Toolbox's Grind Dialog** shows names with symbols in them correctly.
 
 ## 0.7.0
 
