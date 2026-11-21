@@ -3,12 +3,13 @@ import { CARLRPG } from "./config.mjs";
 /**
  * Look up a Stat's modifier via the Table 2 stepped lookup (NOT a linear
  * formula - e.g. a Stat of 10-19 is always +4, regardless of exactly where
- * in that range it falls).
+ * in that range it falls). A fraction is dropped first: Table 2's ranges
+ * are whole numbers, and 2.5 would fall between two of them.
  * @param {number} statValue
  * @returns {number}
  */
 export function getStatMod(statValue) {
-  const value = Number(statValue) || 0;
+  const value = Math.floor(Number(statValue) || 0);
   for (const [min, max, mod] of CARLRPG.statModTable) {
     if (value >= min && value <= max) return mod;
   }

@@ -426,6 +426,42 @@ export default function register(quench) {
       describe("the gear sheet", function () {
         useQuenchTimeout(this);
 
+        it("a Description being typed in has room, on gear, consumables and Spells (ruled 2026-11-21)", async function () {
+          const potion = await worldItem("roomy potion", {
+            system: { consumable: { kind: "potion", heal: { slots: 4 } } },
+          });
+          const spell = await Item.create({
+            name: `Quench roomy spell ${foundry.utils.randomID()}`,
+            type: "spell",
+          });
+          try {
+            for (const item of [potion, spell]) {
+              const sheet = await openSheet(item);
+              const editor = sheet.element.querySelector(
+                '.carl-item-page > prose-mirror[name="system.description"]',
+              );
+              assert.exists(editor, `${item.type}: its Description`);
+              // Foundry marks an editor open for typing "active".
+              editor.classList.add("active");
+              assert.isAtLeast(
+                parseFloat(getComputedStyle(editor).minHeight),
+                200,
+                `${item.type}: room while typing`,
+              );
+              editor.classList.remove("active");
+              assert.isBelow(
+                parseFloat(getComputedStyle(editor).minHeight),
+                200,
+                `${item.type}: compact while reading`,
+              );
+              await sheet.close();
+            }
+          } finally {
+            await potion.delete();
+            await spell.delete();
+          }
+        });
+
         it("one page: the Description first, then what it is; nothing optional until added", async function () {
           const item = await worldItem("plain");
           try {

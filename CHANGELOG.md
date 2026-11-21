@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.8.2
+
+- **Mobs Have AI Text:** What the System AI tells crawlers who look at a Mob. It's on the Mob's Notes tab, and appears beside its token when anyone hovers over it (the GM can turn that off in the system settings). The rulebook import now reads it from the core rulebook and the Gamemaster's Toolkit. Require re-import.
+- **Room to Type a Description:** On gear, consumable, Skill, Spell, Damage Effect and Loot Box sheets, the editor should now properly accommodate... editing.
+- **The Achievements Window:** Editor now in a column beside the list. Independent scrollbars. Category names are now collapsible. Can now search the list by name or category.
+- **Stats and Skill Ranks Are Whole Numbers:** Once multiplied by gear, a Skill or a Boon drops any fraction once every bonus is in (a Strength of 2 ×1.25 is 2, not 2.5). Fix applies to Characters, Mobs and Pets.
+
 ## 0.8.1
 
 - **Achievement Descriptions** have room to write in, in the Achievements window and on the Achievement sheet.

@@ -21,6 +21,7 @@ import { mobAttackTargetEffects, splitArmorPiercing } from "./debuff-text.mjs";
 import { bodySize, escapeHtml, isHeading, joinText } from "./page-text.mjs";
 import { findDamageType } from "../helpers/damage-types.mjs";
 import { findSections } from "./sections.mjs";
+import { blurbAbove, blurbFor, findAiTexts, lineOrder } from "./parse-ai-text.mjs";
 import { parseSizeText } from "../helpers/size-text.mjs";
 
 // kind, size name, size number, a size range's upper number, type.
@@ -65,6 +66,10 @@ const STAT_KEYS = { str: "str", int: "int", con: "con", dex: "dex", cha: "cha" }
  */
 export function parseMobs(pages) {
   const sectionAt = findSections(pages);
+  // The AI Text blurbs (parse-ai-text.mjs), and where each line falls in
+  // the book, to find the one nearest each stat block.
+  const blurbs = findAiTexts(pages, sectionAt);
+  const order = lineOrder(pages);
   // A block can run onto the next page, which has no class line of its own.
   const lines = [];
   let prevHadBlock = false;
@@ -100,7 +105,8 @@ export function parseMobs(pages) {
     return nameAt;
   });
 
-  const mobs = anchors.map((at, n) => {
+  // Each block's lines, as printed.
+  const blocks = anchors.map((at, n) => {
     const nameAt = nameStarts[n];
     // Flavor: prose between the nearest heading above and the name.
     // Reaching the previous block first means there is none.
@@ -108,7 +114,6 @@ export function parseMobs(pages) {
     let start = nameAt;
     while (start - 1 >= floor && !lines[start - 1].heading) start--;
     const flavor = lines[start - 1]?.heading ? lines.slice(start, nameAt) : [];
-
     // Body: up to the next block's name, or a heading.
     let end = n + 1 < anchors.length ? nameStarts[n + 1] : lines.length;
     for (let i = at + 1; i < end; i++) {
@@ -117,10 +122,53 @@ export function parseMobs(pages) {
         break;
       }
     }
-    const name = joinText(lines.slice(nameAt, at).map((l) => l.text));
-    const mob = toMob(name, lines[at], lines.slice(at + 1, end), flavor);
+    return {
+      name: joinText(lines.slice(nameAt, at).map((l) => l.text)),
+      classLine: lines[at],
+      flavor,
+      body: lines.slice(at + 1, end),
+      section: sectionAt(lines[at].page, lines[at].at),
+      order: order.get(`${lines[at].page}:${lines[at].at}`) ?? 0,
+      nameOrder: order.get(`${lines[nameAt].page}:${lines[nameAt].at}`) ?? 0,
+    };
+  });
+
+  // Each Mob's AI Text (parse-ai-text.mjs blurbFor, by its name and Level).
+  // The lines of a blurb some Mob takes are its AI Text, not flavor or
+  // notes - a blurb no Mob takes (a Guide's) stays where it was.
+  const taken = blocks.map((block) => {
+    const mob = toMob(block.name, block.classLine, block.body, block.flavor);
+    // A Vehicle (no Mob): false, so it takes nothing by position either.
+    if (!mob) return false;
+    return blurbFor(
+      { name: mob.name, level: mob.data.system.level, section: block.section, order: block.order },
+      blurbs,
+    );
+  });
+  // Then, for a Mob no blurb names, the one just above it that no Mob took.
+  const claimed = new Set(taken.filter(Boolean));
+  blocks.forEach((block, n) => {
+    if (taken[n] !== null) return;
+    const above = blurbAbove(block.nameOrder, blurbs, claimed);
+    if (above) {
+      taken[n] = above;
+      claimed.add(above);
+    }
+  });
+  const inBlurb = new Set(taken.filter(Boolean).flatMap((b) => [...b.lines]));
+  const ours = (l) => !inBlurb.has(`${l.page}:${l.at}`);
+
+  const mobs = blocks.map((block, n) => {
+    const mob = toMob(
+      block.name,
+      block.classLine,
+      block.body.filter(ours),
+      block.flavor.filter(ours),
+    );
+    if (!mob) return null;
+    mob.data.system.aiText = taken[n]?.html ?? "";
     // Where in the dungeon it's found (sections.mjs): files it on import.
-    return mob && { ...mob, section: sectionAt(lines[at].page, lines[at].at) };
+    return { ...mob, section: block.section };
   });
   // A Vehicle block is null (toMob).
   return mobs.filter(Boolean);

@@ -3,13 +3,18 @@
       under its name, Bronze to Celestial. A dimmed icon: click to award; a
       lit one: awarded (a check once its box is opened) - click to take it
       back. Right-click either: that crawler's loot box. An achievement's name opens its editor
-      below. --}}
+      in a column beside the list; each column scrolls on its own. The
+      search box filters the list as it's typed in (achievement-grid.mjs
+      #applySearch), by name or category. --}}
 <div class="carl-grid">
+  <div class="carl-grid-list">
   <div class="carl-grid-controls">
     <label class="checkbox">
       <input type="checkbox" data-action="toggleOffline" {{#if showOffline}}checked{{/if}} />
       {{localize "CARLRPG.Achievement.Grid.ShowOffline"}}
     </label>
+    <input type="search" class="carl-grid-search" name="carlAchievementSearch" value="{{search}}" aria-label="{{localize 'CARLRPG.Achievement.Grid.Search'}}"
+      placeholder="{{localize 'CARLRPG.Achievement.Grid.Search'}}" />
     <button type="button" data-action="newAchievement"><i class="fas fa-plus"></i> {{localize "CARLRPG.Achievement.Grid.New"}}</button>
   </div>
 
@@ -26,14 +31,21 @@
         </tr>
       </thead>
       {{!-- A category is its own section: its name, then its achievements
-            Bronze to Celestial, with a line above and below. --}}
+            Bronze to Celestial, with a line above and below. Clicking its
+            name folds it to that line, with how many it holds (its rows are
+            hidden, not left out: a search shows them). --}}
       {{#each sections as |section|}}
-      <tbody{{#if section.category}} class="carl-grid-group"{{/if}}>
+      <tbody{{#if section.category}} class="carl-grid-group{{#if section.collapsed}} carl-grid-collapsed{{/if}}"{{/if}}>
         {{#if section.category}}
-        <tr class="carl-grid-group-head"><th colspan="{{@root.span}}">{{section.category}}</th></tr>
+        <tr class="carl-grid-group-head"><th colspan="{{@root.span}}">
+          <a data-action="toggleCategory" data-key="{{section.key}}" aria-expanded="{{#if section.collapsed}}false{{else}}true{{/if}}">
+            <i class="fas fa-chevron-{{#if section.collapsed}}right{{else}}down{{/if}}"></i> {{section.category}}
+            <span class="carl-grid-group-count">({{section.count}})</span>
+          </a>
+        </th></tr>
         {{/if}}
         {{#each section.rows as |row|}}
-        <tr data-uuid="{{row.uuid}}"{{#if row.editing}} class="carl-grid-editing"{{/if}}>
+        <tr class="carl-grid-row{{#if row.editing}} carl-grid-editing{{/if}}" data-uuid="{{row.uuid}}" data-search="{{row.search}}">
           <th class="carl-grid-achievement"{{itemTooltip row.tooltip}}>
             <a data-action="editAchievement">{{row.name}}</a>
           </th>
@@ -49,10 +61,12 @@
       </tbody>
       {{/each}}
     </table>
+    <p class="carl-hint carl-grid-no-match" hidden>{{localize "CARLRPG.Achievement.Grid.NoMatches"}}</p>
   </div>
   {{else}}
   <p class="carl-hint">{{localize "CARLRPG.Achievement.Grid.NoAchievements"}}</p>
   {{/if}}
+  </div>
 
   {{#if editor}}
   {{!-- The editor: every field saves as it changes. --}}

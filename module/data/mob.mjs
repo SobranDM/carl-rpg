@@ -133,6 +133,12 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // other player characters.
     schema.conditions = defineConditionsField();
 
+    // What the System AI tells crawlers who look at it - the book's short
+    // blurb by the stat block, "<Name>. Level <n>." then a few lines
+    // (ruled 2026-11-21). Shown on the Notes tab and when its token is
+    // hovered (apps/ai-text-tooltip.mjs).
+    schema.aiText = new fields.HTMLField({ required: true, blank: true });
+
     return schema;
   }
 

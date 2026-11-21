@@ -94,6 +94,37 @@ export default function register(quench) {
           }
         });
 
+        it("a Mob's Notes tab has its Notes, then its AI Text (ruled 2026-11-21)", async function () {
+          const actor = await createTestMob("ai text", {
+            system: {
+              biography: "<p>Quench notes</p>",
+              aiText: "<p><strong>Quench Mob. Level 3.</strong> Quench says hi.</p>",
+            },
+          });
+          const sheet = actor.sheet;
+          try {
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            sheet.changeTab("description", "primary");
+            const tab = sheet.element.querySelector('section.tab[data-tab="description"]');
+            const editors = [...tab.querySelectorAll("prose-mirror")].map((e) =>
+              e.getAttribute("name"),
+            );
+            assert.deepEqual(editors, ["system.biography", "system.aiText"]);
+            assert.include(
+              tab.querySelector('prose-mirror[name="system.aiText"]').textContent,
+              "Quench says hi.",
+            );
+            assert.include(
+              tab.querySelector(".carl-ai-text-label").textContent,
+              game.i18n.localize("CARLRPG.AiText.Label"),
+            );
+          } finally {
+            await sheet.close();
+            await deleteTestActor(actor);
+          }
+        });
+
         it("editing the actor does not jump the Inventory tab back to the top", async function () {
           const actor = await createTestCharacter();
           const sheet = actor.sheet;

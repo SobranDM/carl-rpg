@@ -166,6 +166,7 @@ export function layoutLines(items, { width, height, page = 0 }) {
     for (const row of toRows(colItems)) {
       const text = joinRow(row.items);
       if (!text) continue;
+      const face = mainFace(row.items);
       lines.push({
         text,
         x: Math.min(...row.items.map((i) => i.x)),
@@ -174,11 +175,28 @@ export function layoutLines(items, { width, height, page = 0 }) {
         col,
         page,
         gap: prevY === null ? null : prevY - row.y,
+        ...(face ? { face } : {}),
       });
       prevY = row.y;
     }
   });
   return lines;
+}
+
+/**
+ * The typeface most of a row's text is set in (scan.mjs names them on the
+ * pages that need it), or "" if unknown.
+ * @param {object[]} items
+ * @returns {string}
+ */
+function mainFace(items) {
+  const chars = new Map();
+  for (const item of items) {
+    if (item.face) chars.set(item.face, (chars.get(item.face) ?? 0) + item.str.length);
+  }
+  let best = "";
+  for (const [face, n] of chars) if (!best || n > chars.get(best)) best = face;
+  return best;
 }
 
 /** Median line size: the body text size of a page or run of pages. */

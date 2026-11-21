@@ -10,4 +10,12 @@
   <prose-mirror name="system.biography" toggled value="{{actor.system.biography}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
     {{{biographyHTML}}}
   </prose-mirror>
+  {{#if isMob}}
+  {{!-- What the System AI tells crawlers (system.aiText): also shown when
+        its token is hovered (module/apps/ai-text-tooltip.mjs). --}}
+  <label class="resource-label carl-ai-text-label">{{localize "CARLRPG.AiText.Label"}}</label>
+  <prose-mirror name="system.aiText" toggled value="{{actor.system.aiText}}" data-document-uuid="{{actor.uuid}}" {{#unless editable}}disabled{{/unless}}>
+    {{{aiTextHTML}}}
+  </prose-mirror>
+  {{/if}}
 </section>

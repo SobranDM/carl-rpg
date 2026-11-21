@@ -4,6 +4,9 @@ import {
   achievementBoxOf,
   achievementCategories,
   achievementSections,
+  collapsedCategories,
+  searchText,
+  toggleCategory,
   awardAchievement,
   awardedCopy,
   preparedBoxFor,
@@ -40,7 +43,8 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * award it), lit once awarded, with a check once its loot box is opened.
  * Click an awarded one to take it back, after a confirmation. Right-click
  * any to prepare that crawler's loot box for it. New Achievement, or an achievement's name, opens its editor
- * below the grid. For an achievement with a loot box, the editor lists the
+ * in a column beside the grid; the window has a set height, and each
+ * column scrolls on its own (ruled 2026-11-21). For an achievement with a loot box, the editor lists the
  * crawlers: the GM can prepare what each one's box holds (ruled 2026-11-19:
  * per crawler) - before it's awarded, or after, until it's opened.
  */
@@ -50,10 +54,13 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     id: "carl-achievement-grid",
     classes: ["carl-rpg", "carl-achievement-grid"],
     window: { title: "CARLRPG.Achievement.Grid.Title", icon: "fas fa-trophy", resizable: true },
-    position: { width: 720, height: "auto" },
+    // A set height, so the list and the editor beside it each scroll on
+    // their own (ruled 2026-11-21); wide enough for both.
+    position: { width: 1000, height: 700 },
     actions: {
       award: AchievementGrid.#onAward,
       toggleOffline: AchievementGrid.#onToggleOffline,
+      toggleCategory: AchievementGrid.#onToggleCategory,
       newAchievement: AchievementGrid.#onNew,
       editAchievement: AchievementGrid.#onEdit,
       closeEditor: AchievementGrid.#onCloseEditor,
@@ -65,7 +72,11 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
 
   /** @override */
   static PARTS = {
-    body: { template: "systems/carl-rpg/templates/apps/achievement-grid.hbs" },
+    // Awarding redraws the window: each column keeps where it was scrolled.
+    body: {
+      template: "systems/carl-rpg/templates/apps/achievement-grid.hbs",
+      scrollable: [".carl-grid-scroll", ".carl-achievement-editor"],
+    },
   };
 
   /**
@@ -122,6 +133,7 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     }
     const editing = defs.find((d) => d.uuid === this.editing) ?? null;
     if (!editing) this.editing = null;
+    const collapsed = collapsedCategories();
     const rowOf = (def) => ({
       uuid: def.uuid,
       name: def.name,
@@ -150,11 +162,20 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     });
     return {
       showOffline,
+      search: this.#search,
       columns: columns.map((a) => ({ id: a.id, name: a.name, img: a.img })),
       // Grouped by category, alphabetical (helpers/achievements.mjs).
+      // A category folded by its heading shows only that (ruled 2026-11-21).
       sections: achievementSections(defs).map((section) => ({
+        key: section.key,
         category: section.category,
-        rows: section.items.map(rowOf),
+        collapsed: !!section.key && collapsed.has(section.key),
+        count: section.items.length,
+        // What the search box finds it by: its name or its category.
+        rows: section.items.map((def) => ({
+          ...rowOf(def),
+          search: searchText(`${def.name} ${section.category ?? ""}`),
+        })),
       })),
       // A category heading spans the achievement column and every crawler's.
       span: columns.length + 1,
@@ -211,8 +232,38 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
   }
 
   /** @override */
+  _preSyncPartState(partId, newElement, priorElement, state) {
+    super._preSyncPartState(partId, newElement, priorElement, state);
+    // A redraw while the search box is being typed in (a player logging
+    // in): it keeps the cursor, where it was. Core's own focus keeping
+    // looks for ":focus", which matches nothing while the browser window
+    // isn't the one in front; the document's active element is still it.
+    const active = document.activeElement;
+    if (active?.matches?.(".carl-grid-search") && priorElement.contains(active)) {
+      state.carlSearchCursor = [active.selectionStart, active.selectionEnd];
+    }
+  }
+
+  /** @override */
+  _syncPartState(partId, newElement, priorElement, state) {
+    super._syncPartState(partId, newElement, priorElement, state);
+    if (!state.carlSearchCursor) return;
+    const search = newElement.querySelector(".carl-grid-search");
+    search?.focus();
+    search?.setSelectionRange(...state.carlSearchCursor);
+  }
+
+  /** @override */
   _onRender(context, options) {
     super._onRender(context, options);
+    // The search box filters as it's typed in, without a redraw (which
+    // would take the cursor out of it); a redraw keeps what's in it.
+    const search = this.element.querySelector(".carl-grid-search");
+    search?.addEventListener("input", () => {
+      this.#search = search.value;
+      this.#applySearch();
+    });
+    this.#applySearch();
     // Right-click a trophy: that crawler's loot box for it, as in the
     // editor (ruled 2026-11-19). Taking an award back is a left-click.
     for (const cell of this.element.querySelectorAll(".carl-grid-cell")) {
@@ -224,6 +275,10 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     }
     // The editor: each field saves as it changes.
     const editor = this.element.querySelector(".carl-achievement-editor");
+    // Another achievement opened: its editor starts at the top, not where
+    // the last one was scrolled to.
+    if (editor && editor.dataset.uuid !== this.#shownEditor) editor.scrollTop = 0;
+    this.#shownEditor = editor?.dataset.uuid ?? null;
     if (!editor) return;
     for (const field of editor.querySelectorAll("input[name], select[name], textarea[name]")) {
       field.addEventListener("change", () => {
@@ -271,6 +326,44 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     if (!actor || !definition) return;
     if (awardedCopy(actor, definition.uuid)) return this.#onRevoke(target);
     await awardAchievement(definition, actor);
+  }
+
+  /** The achievement the editor last showed (its scroll is kept only for it). */
+  #shownEditor = null;
+
+  /** What's in the search box (ruled 2026-11-21). */
+  #search = "";
+
+  /**
+   * Show only the achievements whose name or category holds the search
+   * text, in any category, folded or not (a fold opens while searching);
+   * a category with none is hidden, and a line says when nothing matches.
+   */
+  #applySearch() {
+    const root = this.element;
+    if (!root) return;
+    const query = searchText(this.#search);
+    root.querySelector(".carl-grid")?.classList.toggle("carl-grid-searching", !!query);
+    let shown = 0;
+    for (const group of root.querySelectorAll(".carl-grid-table tbody")) {
+      let any = false;
+      for (const row of group.querySelectorAll("tr.carl-grid-row")) {
+        const hit = !query || row.dataset.search.includes(query);
+        row.hidden = !hit;
+        if (hit) {
+          any = true;
+          shown++;
+        }
+      }
+      group.hidden = !!query && !any;
+    }
+    root.querySelector(".carl-grid-no-match")?.toggleAttribute("hidden", !query || shown > 0);
+  }
+
+  /** A category's heading: fold or unfold it. */
+  static async #onToggleCategory(event, target) {
+    await toggleCategory(target.dataset.key);
+    this.render();
   }
 
   static #onToggleOffline() {

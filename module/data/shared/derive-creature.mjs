@@ -40,7 +40,9 @@ export function defineStatsField(initial) {
 
 /**
  * Each Stat's bonus (from the modifier engine), effective value (capped by
- * any capMax ChangeEntry) and Mod.
+ * any capMax ChangeEntry) and Mod. A Stat is a whole number: once every
+ * bonus and cap is in, any fraction - a Strength of 2 x1.25 - is dropped
+ * (ruled 2026-11-21), so the Mod is Table 2's for the Stat shown.
  * @param {object} sys  The Actor's system data.
  */
 export function deriveStats(sys) {
@@ -49,7 +51,8 @@ export function deriveStats(sys) {
     if (!stat) continue;
     const bonus = sys.bonuses?.[`stats.${key}`] ?? 0;
     const cap = sys.caps?.[`stats.${key}`];
-    const effective = cap !== undefined ? Math.min(stat.value + bonus, cap) : stat.value + bonus;
+    const total = cap !== undefined ? Math.min(stat.value + bonus, cap) : stat.value + bonus;
+    const effective = Math.floor(total);
     stat.bonus = bonus;
     stat.effective = effective;
     stat.mod = getStatMod(effective);

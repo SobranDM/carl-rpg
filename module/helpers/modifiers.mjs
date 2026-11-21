@@ -1150,6 +1150,19 @@ function makeAggregationContext(actorSystem) {
 }
 
 /**
+ * A Rank is a whole number: once every bonus is in, any fraction - Rank 5
+ * x1.25 - is dropped (ruled 2026-11-21), as a Stat's is (derive-creature.mjs
+ * deriveStats). Both the live-Rank preview and the main pass end with it, so
+ * the Rank a Skill shows and the one its tiers unlock at agree.
+ * @param {Record<string, {rank?: number}>} skills  The skills bag.
+ */
+function wholeRanks(skills) {
+  for (const entry of Object.values(skills)) {
+    if (Number.isFinite(entry?.rank)) entry.rank = Math.floor(entry.rank);
+  }
+}
+
+/**
  * Each owned Skill/Spell/Damage Effect's live Rank (effectiveRank), for
  * aggregateActorBonuses to unlock Upgrade tiers at: its own Rank plus every
  * unconditional "skillRank" change - worn gear's "+1 Dagger", a Buff's,
@@ -1198,6 +1211,7 @@ function previewLiveRanks(items, actorSystem, ranks = null) {
         );
     }
   }
+  wholeRanks(ctx.skills);
   const live = new Map();
   for (const item of items) {
     const entry = RANKED_TYPES.has(item.type) ? ctx.skills[slugifySkillName(item.name)] : null;
@@ -1329,6 +1343,7 @@ export function aggregateActorBonuses(actorSystem) {
     }
   }
 
+  wholeRanks(skills);
   actorSystem.skills = skills;
   actorSystem.bonuses = bonuses;
   actorSystem.conditionalModifiers = conditionalModifiers;

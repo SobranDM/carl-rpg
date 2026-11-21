@@ -2146,6 +2146,10 @@
   font-size: 12px;
   opacity: 0.75;
 }
+.carl-rpg .carl-ai-text-label {
+  display: block;
+  margin-top: 12px;
+}
 .carl-rpg .carl-add-condition {
   align-items: center;
   gap: 6px;
@@ -4034,6 +4038,12 @@
 .carl-rpg .carl-item-page > prose-mirror {
   min-height: 3em;
 }
+.carl-rpg .carl-item-page > prose-mirror.active {
+  min-height: 200px;
+}
+.carl-rpg .carl-item-page > prose-mirror .editor-content {
+  flex: 1;
+}
 .carl-rpg .carl-item-group-title {
   display: flex;
   align-items: baseline;
@@ -4507,6 +4517,12 @@
 .carl-rpg .carl-box prose-mirror {
   min-height: 80px;
 }
+.carl-rpg .carl-box prose-mirror.active {
+  min-height: 200px;
+}
+.carl-rpg .carl-box prose-mirror .editor-content {
+  flex: 1;
+}
 .carl-rpg .carl-box-head {
   display: flex;
   align-items: center;
@@ -4691,6 +4707,9 @@
   min-width: 640px;
   min-height: 650px;
 }
+.carl-rpg.carl-achievement-grid .window-content {
+  overflow: hidden;
+}
 .carl-rpg .carl-achievement-boxes {
   display: flex;
   flex-direction: column;
@@ -4706,10 +4725,21 @@
   font-weight: bold;
 }
 .carl-rpg .carl-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-grid-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 8px;
 }
 .carl-rpg .carl-grid-controls {
   display: flex;
@@ -4728,7 +4758,8 @@
   gap: 4px;
 }
 .carl-rpg .carl-grid-scroll {
-  max-height: 70vh;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
 }
 .carl-rpg .carl-grid-table {
@@ -4773,15 +4804,44 @@
   text-transform: uppercase;
   color: var(--carl-gold);
 }
+.carl-rpg .carl-grid-group-head th a {
+  display: block;
+  color: inherit;
+  cursor: pointer;
+}
+.carl-rpg .carl-grid-group-head th i {
+  width: 1em;
+  font-size: 0.85em;
+}
+.carl-rpg .carl-grid-group-count {
+  display: none;
+  font-weight: normal;
+  letter-spacing: 0;
+  opacity: 0.8;
+}
+.carl-rpg .carl-grid:not(.carl-grid-searching) .carl-grid-collapsed .carl-grid-row {
+  display: none;
+}
+.carl-rpg .carl-grid:not(.carl-grid-searching) .carl-grid-collapsed .carl-grid-group-count {
+  display: inline;
+}
+.carl-rpg .carl-grid-controls .carl-grid-search {
+  flex: 1 1 160px;
+  min-width: 120px;
+  max-width: 280px;
+}
 .carl-rpg .carl-grid-editing .carl-grid-achievement {
   color: var(--carl-gold);
 }
 .carl-rpg .carl-achievement-editor {
+  flex: 0 0 380px;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--carl-border-soft);
+  padding-left: 8px;
+  border-left: 1px solid var(--carl-border-soft);
 }
 .carl-rpg .carl-achievement-editor prose-mirror {
   min-height: 200px;
@@ -4997,6 +5057,41 @@
 }
 .carl-rpg .carl-floor-clock-sep {
   opacity: 0.6;
+}
+
+/* A Mob's AI Text beside its hovered token (module/apps/ai-text-tooltip.mjs):
+   Foundry's tooltip, "AI" in its upper left. */
+#carl-ai-text-anchor {
+  position: fixed;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+#tooltip.carl-ai-tooltip {
+  max-width: 360px;
+  max-height: calc(100vh - 20px);
+  overflow: hidden;
+  text-align: left;
+}
+#tooltip.carl-ai-tooltip .carl-ai-tooltip-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+#tooltip.carl-ai-tooltip .carl-ai-badge {
+  align-self: flex-start;
+  padding: 0 0.4em;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-size: 0.8em;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+}
+#tooltip.carl-ai-tooltip p {
+  margin: 0 0 0.4em;
+}
+#tooltip.carl-ai-tooltip p:last-child {
+  margin-bottom: 0;
 }
 
 /* An item's description as its Foundry tooltip (the itemTooltip helper).

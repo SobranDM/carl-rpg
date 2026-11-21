@@ -21,6 +21,11 @@ export default function register(quench) {
           assert.equal(getStatMod(20), 5);
         });
 
+        it("drops a fraction: 2.5 is 2's band, not past the table (ruled 2026-11-21)", function () {
+          assert.equal(getStatMod(2.5), 1);
+          assert.equal(getStatMod(9.9), 3);
+        });
+
         it("clamps below the table's floor and above its ceiling", function () {
           assert.equal(getStatMod(0), 1);
           assert.equal(getStatMod(-5), 1);
