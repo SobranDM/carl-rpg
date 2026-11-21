@@ -268,6 +268,20 @@ function categoryKey(category) {
 }
 
 /**
+ * Text as the Achievements window's search compares it: capitals, accents
+ * and runs of spaces aside ("Café  Crawl" finds "cafe crawl").
+ * @param {string} text
+ * @returns {string}
+ */
+export function searchText(text) {
+  return categoryKey(
+    String(text ?? "")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+}
+
+/**
  * The categories in use, grouped, each with the spelling shown for it: the
  * most used one, ties going to the first in sort order - the same whatever
  * order the achievements come in.

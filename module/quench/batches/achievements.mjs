@@ -585,29 +585,88 @@ export default function register(quench) {
             await withSetting("achievementGridCollapsed", [], async () => {
               await waitFor(() => grid.rendered);
               await grid.render();
+              const seen = (el) => !!el && el.getClientRects().length > 0;
               const rowOf = (d) => grid.element.querySelector(`tr[data-uuid="${d.uuid}"]`);
               const head = () =>
                 [...grid.element.querySelectorAll('[data-action="toggleCategory"]')].find((a) =>
                   a.textContent.includes(category),
                 );
-              await waitFor(() => !!head() && !!rowOf(defs[0]));
+              const count = () => head()?.querySelector(".carl-grid-group-count");
+              await waitFor(() => !!head() && seen(rowOf(defs[0])));
+              assert.isFalse(seen(count()), "no count while open");
               head().click();
-              await waitFor(() => !rowOf(defs[0]) && !rowOf(defs[1]), {
+              await waitFor(() => !seen(rowOf(defs[0])) && !seen(rowOf(defs[1])), {
                 message: "its achievements never folded away",
               });
-              assert.include(head().textContent, "(2)", "how many it holds");
+              assert.isTrue(seen(count()), "how many it holds");
+              assert.include(count().textContent, "(2)");
               assert.equal(head().getAttribute("aria-expanded"), "false");
               assert.lengthOf(
                 game.settings.get("carl-rpg", "achievementGridCollapsed"),
                 1,
                 "remembered",
               );
+
+              // A search looks in a folded category too.
+              const search = grid.element.querySelector(".carl-grid-search");
+              search.value = "fold two";
+              search.dispatchEvent(new Event("input", { bubbles: true }));
+              assert.isTrue(seen(rowOf(defs[1])), "the match, though its category is folded");
+              assert.isFalse(seen(rowOf(defs[0])), "not the other");
+              search.value = "";
+              search.dispatchEvent(new Event("input", { bubbles: true }));
+              assert.isFalse(seen(rowOf(defs[1])), "folded again once the search is cleared");
+
               head().click();
-              await waitFor(() => !!rowOf(defs[0]) && !!rowOf(defs[1]), {
+              await waitFor(() => seen(rowOf(defs[0])) && seen(rowOf(defs[1])), {
                 message: "they never came back",
               });
-              assert.notInclude(head().textContent, "(2)");
+              assert.isFalse(seen(count()));
             });
+          } finally {
+            await grid.close();
+            for (const d of defs) await deleteLibraryAchievement(await fromUuid(d.uuid));
+          }
+        });
+
+        it("the search box shows the achievements whose name or category holds it, as it's typed (ruled 2026-11-21)", async function () {
+          const tag = foundry.utils.randomID();
+          const defs = [
+            await makeDefinition(
+              { lootBox: false, category: `Quench Café ${tag}` },
+              "Quench Seek One",
+            ),
+            await makeDefinition({ lootBox: false }, `Quench Seek Two ${tag}`),
+            await makeDefinition({ lootBox: false }, "Quench Seek Three"),
+          ];
+          const grid = AchievementGrid.open();
+          try {
+            await waitFor(() => grid.rendered);
+            await grid.render();
+            const seen = (d) =>
+              grid.element.querySelector(`tr[data-uuid="${d.uuid}"]`)?.getClientRects().length > 0;
+            await waitFor(() => defs.every(seen));
+            const type = (text) => {
+              const box = grid.element.querySelector(".carl-grid-search");
+              box.value = text;
+              box.dispatchEvent(new Event("input", { bubbles: true }));
+            };
+            type(`cafe ${tag}`);
+            assert.deepEqual(defs.map(seen), [true, false, false], "by category, accents aside");
+            type(`SEEK TWO ${tag}`);
+            assert.deepEqual(defs.map(seen), [false, true, false], "by name, capitals aside");
+            const noMatch = grid.element.querySelector(".carl-grid-no-match");
+            assert.isTrue(noMatch.hidden);
+            type(`nothing here ${tag}`);
+            assert.isFalse(noMatch.hidden, "says so when nothing matches");
+
+            type(`seek two ${tag}`);
+            await grid.render();
+            await waitFor(() => grid.rendered);
+            assert.equal(grid.element.querySelector(".carl-grid-search").value, `seek two ${tag}`);
+            assert.deepEqual(defs.map(seen), [false, true, false], "kept through a redraw");
+            type("");
+            assert.isTrue(defs.every(seen), "all back");
           } finally {
             await grid.close();
             for (const d of defs) await deleteLibraryAchievement(await fromUuid(d.uuid));

@@ -4814,9 +4814,21 @@
   font-size: 0.85em;
 }
 .carl-rpg .carl-grid-group-count {
+  display: none;
   font-weight: normal;
   letter-spacing: 0;
   opacity: 0.8;
+}
+.carl-rpg .carl-grid:not(.carl-grid-searching) .carl-grid-collapsed .carl-grid-row {
+  display: none;
+}
+.carl-rpg .carl-grid:not(.carl-grid-searching) .carl-grid-collapsed .carl-grid-group-count {
+  display: inline;
+}
+.carl-rpg .carl-grid-controls .carl-grid-search {
+  flex: 1 1 160px;
+  min-width: 120px;
+  max-width: 280px;
 }
 .carl-rpg .carl-grid-editing .carl-grid-achievement {
   color: var(--carl-gold);

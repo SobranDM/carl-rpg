@@ -1968,6 +1968,8 @@
         "Button": "Achievements",
         "Hint": "Award achievements to crawlers.",
         "ShowOffline": "Show crawlers whose player is offline",
+        "Search": "Search achievements",
+        "NoMatches": "No achievements match.",
         "New": "New Achievement",
         "Done": "Done",
         "Delete": "Delete",

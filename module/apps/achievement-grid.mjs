@@ -5,6 +5,7 @@ import {
   achievementCategories,
   achievementSections,
   collapsedCategories,
+  searchText,
   toggleCategory,
   awardAchievement,
   awardedCopy,
@@ -161,6 +162,7 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     });
     return {
       showOffline,
+      search: this.#search,
       columns: columns.map((a) => ({ id: a.id, name: a.name, img: a.img })),
       // Grouped by category, alphabetical (helpers/achievements.mjs).
       // A category folded by its heading shows only that (ruled 2026-11-21).
@@ -169,7 +171,11 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
         category: section.category,
         collapsed: !!section.key && collapsed.has(section.key),
         count: section.items.length,
-        rows: section.items.map(rowOf),
+        // What the search box finds it by: its name or its category.
+        rows: section.items.map((def) => ({
+          ...rowOf(def),
+          search: searchText(`${def.name} ${section.category ?? ""}`),
+        })),
       })),
       // A category heading spans the achievement column and every crawler's.
       span: columns.length + 1,
@@ -228,6 +234,14 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
   /** @override */
   _onRender(context, options) {
     super._onRender(context, options);
+    // The search box filters as it's typed in, without a redraw (which
+    // would take the cursor out of it); a redraw keeps what's in it.
+    const search = this.element.querySelector(".carl-grid-search");
+    search?.addEventListener("input", () => {
+      this.#search = search.value;
+      this.#applySearch();
+    });
+    this.#applySearch();
     // Right-click a trophy: that crawler's loot box for it, as in the
     // editor (ruled 2026-11-19). Taking an award back is a left-click.
     for (const cell of this.element.querySelectorAll(".carl-grid-cell")) {
@@ -289,6 +303,35 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
   }
 
   /** A category's heading: fold or unfold it. */
+  /** What's in the search box (ruled 2026-11-21). */
+  #search = "";
+
+  /**
+   * Show only the achievements whose name or category holds the search
+   * text, in any category, folded or not (a fold opens while searching);
+   * a category with none is hidden, and a line says when nothing matches.
+   */
+  #applySearch() {
+    const root = this.element;
+    if (!root) return;
+    const query = searchText(this.#search);
+    root.querySelector(".carl-grid")?.classList.toggle("carl-grid-searching", !!query);
+    let shown = 0;
+    for (const group of root.querySelectorAll(".carl-grid-table tbody")) {
+      let any = false;
+      for (const row of group.querySelectorAll("tr.carl-grid-row")) {
+        const hit = !query || row.dataset.search.includes(query);
+        row.hidden = !hit;
+        if (hit) {
+          any = true;
+          shown++;
+        }
+      }
+      group.hidden = !!query && !any;
+    }
+    root.querySelector(".carl-grid-no-match")?.toggleAttribute("hidden", !query || shown > 0);
+  }
+
   static async #onToggleCategory(event, target) {
     await toggleCategory(target.dataset.key);
     this.render();

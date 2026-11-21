@@ -292,9 +292,29 @@
   }
 
   .carl-grid-group-count {
+    display: none;
     font-weight: normal;
     letter-spacing: 0;
     opacity: 0.8;
+  }
+
+  // A folded category: its heading and count only - unless a search is
+  // under way, which looks in every category (ruled 2026-11-21).
+  .carl-grid:not(.carl-grid-searching) .carl-grid-collapsed {
+    .carl-grid-row {
+      display: none;
+    }
+
+    .carl-grid-group-count {
+      display: inline;
+    }
+  }
+
+  // The search box: the room left between Show Offline and New Achievement.
+  .carl-grid-controls .carl-grid-search {
+    flex: 1 1 160px;
+    min-width: 120px;
+    max-width: 280px;
   }
 
   .carl-grid-editing .carl-grid-achievement {
