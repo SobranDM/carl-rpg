@@ -136,8 +136,14 @@
     gap: 8px;
     padding: 8px;
 
+    // Room to write in, as on other item sheets (80px was too cramped,
+    // 0.8.1); the box fills it, open or not.
     prose-mirror {
-      min-height: 80px;
+      min-height: 200px;
+
+      .editor-content {
+        flex: 1;
+      }
     }
   }
 
@@ -264,8 +270,14 @@
     padding-top: 8px;
     border-top: 1px solid var(--carl-border-soft);
 
+    // Room to write in, as on other item sheets (80px was too cramped,
+    // 0.8.1); the box fills it, open or not.
     prose-mirror {
-      min-height: 80px;
+      min-height: 200px;
+
+      .editor-content {
+        flex: 1;
+      }
     }
   }
 
