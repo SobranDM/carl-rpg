@@ -561,6 +561,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
 
     const enrich = (html) => enrichDescription(html, actor, { rollData: context.rollData });
     context.biographyHTML = await enrich(actor.system.biography);
+    if (context.isMob) context.aiTextHTML = await enrich(actor.system.aiText);
     const descriptions = await itemDescriptions(actor.items);
     context.itemTooltips = itemTooltips(actor.items, descriptions);
     context.namedItemTooltips = namedItemTooltips(actor.items, descriptions);

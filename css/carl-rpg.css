@@ -2146,6 +2146,10 @@
   font-size: 12px;
   opacity: 0.75;
 }
+.carl-rpg .carl-ai-text-label {
+  display: block;
+  margin-top: 12px;
+}
 .carl-rpg .carl-add-condition {
   align-items: center;
   gap: 6px;

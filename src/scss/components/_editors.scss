@@ -130,4 +130,10 @@
     font-size: 12px;
     opacity: 0.75;
   }
+
+  // A Mob's AI Text, below its Notes on the Notes tab (description.hbs).
+  .carl-ai-text-label {
+    display: block;
+    margin-top: 12px;
+  }
 }

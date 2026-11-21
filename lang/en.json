@@ -540,6 +540,10 @@
       "Item": "CarlRPG Item Sheet",
       "LootBox": "CarlRPG Loot Box Sheet"
     },
+    "AiText": {
+      "Label": "AI Text",
+      "Badge": "AI"
+    },
     "Tab": {
       "Main": "Main",
       "Abilities": "Abilities",

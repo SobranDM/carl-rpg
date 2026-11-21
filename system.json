@@ -51,7 +51,7 @@
         ]
       },
       "mob": {
-        "htmlFields": ["biography"]
+        "htmlFields": ["biography", "aiText"]
       },
       "lootBox": {
         "htmlFields": ["description"]
