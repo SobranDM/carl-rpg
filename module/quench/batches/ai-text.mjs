@@ -189,7 +189,7 @@ export default function register(quench) {
       describe("Updating to 0.8.2", function () {
         useQuenchTimeout(this);
 
-        it("a world with content gets a card in chat saying to re-import", async function () {
+        it("a world with Mobs gets a card in chat saying to re-import", async function () {
           const entry = MIGRATIONS.find((m) => m.id === AI_TEXT_NOTICE_ID);
           assert.equal(entry?.version, "0.8.2");
           const others = MIGRATIONS.filter((m) => m.id !== AI_TEXT_NOTICE_ID).map((m) => m.id);
@@ -202,14 +202,21 @@ export default function register(quench) {
             0,
             "a new world: no card",
           );
-          const before = new Set(game.messages.keys());
-          const result = await announceAiText();
-          assert.deepEqual(result, { changed: 0, errors: 0 }, "nothing in the world changes");
-          const card = game.messages.find((m) => !before.has(m.id));
-          assert.exists(card);
-          assert.include(card.content, "Mobs get AI Text");
-          assert.include(card.content, "re-import mobs from the core rulebook");
-          assert.isTrue(!card.whisper?.length, "in chat for everyone");
+          // A Mob makes it a world the card is for (none, and no imported
+          // book: no card).
+          const mob = await createTestMob("ai notice");
+          try {
+            const before = new Set(game.messages.keys());
+            const result = await announceAiText();
+            assert.deepEqual(result, { changed: 0, errors: 0 }, "nothing in the world changes");
+            const card = game.messages.find((m) => !before.has(m.id));
+            assert.exists(card);
+            assert.include(card.content, "Mobs get AI Text");
+            assert.include(card.content, "re-import mobs from the core rulebook");
+            assert.isTrue(!card.whisper?.length, "in chat for everyone");
+          } finally {
+            await deleteTestActor(mob);
+          }
         });
       });
 
@@ -400,6 +407,30 @@ export default function register(quench) {
             blurbFor({ name: "Dr. Bones", level: 5, order: 100 }, blurbs).whole,
             nameKey("Dr. Bones"),
           );
+        });
+
+        it("a field a migration filled in isn't the GM's typing", function () {
+          // A 0.7.0 Spell's stamp has no Opposed Stat; 0.8.0 filled it in.
+          const flag = { v: 2, fields: ["name", "system.description"], hash: "x" };
+          const data = { name: "Test Charm", system: { description: "<p>d</p>", opposedStat: "" } };
+          const stored = {
+            name: "Test Charm",
+            system: { description: "<p>d</p>", opposedStat: "int" },
+          };
+          assert.deepEqual(textSinceImport(data, stored, flag), []);
+        });
+
+        it("a blurb no Mob takes stays in the Notes, as before", function () {
+          const [gloop] = parseMobs([
+            page([
+              ["TEST GLOOPS", "NeueKabel-ExtraBold", 16, 30],
+              ["Crawler #1,234. Quench Guide. Level 30.", AI_BOLD, 10, 31],
+              ["Quench text: a guide's, not a gloop's.", AI_REG, 10, 17.5],
+              ...statBlock("Test Gloop", "Mob; Small (2), Ooze", 4),
+            ]),
+          ]);
+          assert.equal(gloop.data.system.aiText, "", "it names no Mob");
+          assert.include(gloop.data.system.biography, "a guide's, not a gloop's");
         });
 
         it("a re-import leaves alone a Mob whose AI Text the GM typed since", function () {

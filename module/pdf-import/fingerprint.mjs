@@ -26,9 +26,9 @@
  * that rewrites imported fields on a document that was untouched before its
  * write calls restamp after it, so the change isn't read as a GM edit.
  *
- * A field a later version's import adds (a Mob's AI Text, 0.8.2) isn't in
- * an older stamp, so text the GM typed there is found by textSinceImport
- * instead.
+ * A free-text field a later version's import adds (a Mob's AI Text, 0.8.2)
+ * isn't in an older stamp, so text the GM typed there is found by
+ * textSinceImport instead.
  *
  * Pure (no Foundry globals).
  */
@@ -193,11 +193,19 @@ const bareText = (value) =>
     .replace(/\s+/g, "");
 
 /**
- * Text the GM wrote in a field the last import didn't write - one a later
- * version's import has added, such as a Mob's AI Text (0.8.2) - which this
- * import would replace. The fingerprint can't see such an edit (the field
- * isn't in it), so a re-import counts the document as edited when there is
- * any, and leaves it alone (ruled 2026-11-21).
+ * Free-text fields a later version's import added, which a GM may have
+ * typed in before the next re-import: a Mob's AI Text (0.8.2). Only these -
+ * a field a migration fills in (a Spell's Opposed Stat, 0.8.0) isn't the
+ * GM's typing.
+ */
+const ADDED_TEXT_FIELDS = new Set(["system.aiText"]);
+
+/**
+ * Text the GM wrote in a field the last import didn't write (one of
+ * ADDED_TEXT_FIELDS) which this import would replace. The fingerprint can't
+ * see such an edit (the field isn't in it), so a re-import counts the
+ * document as edited when there is any, and leaves it alone (ruled
+ * 2026-11-21).
  * @param {object} data    What the import would write.
  * @param {object} source  The document's stored data.
  * @param {object|undefined} flag  Its flags.carl-rpg.pdfImport.
@@ -209,7 +217,7 @@ export function textSinceImport(data, source, flag) {
   if (!Array.isArray(flag?.fields)) return [];
   const stamped = new Set(flag.fields);
   return writtenFields(data, source).filter((path) => {
-    if (stamped.has(path)) return false;
+    if (stamped.has(path) || !ADDED_TEXT_FIELDS.has(path)) return false;
     const stored = getPath(source, path);
     if (typeof stored !== "string" || !bareText(stored)) return false;
     return bareText(stored) !== bareText(getPath(data, path) ?? "");

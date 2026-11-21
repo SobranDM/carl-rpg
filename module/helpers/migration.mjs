@@ -2295,6 +2295,13 @@ export async function postWeaponSkillNotice({ filled, remaining }) {
  * @returns {Promise<{changed: number, errors: number}>}
  */
 export async function announceAiText() {
+  // Only where there are Mobs or an imported book to re-import.
+  const imported = game.packs.some(
+    (p) =>
+      p.metadata.packageType === "world" &&
+      (p.metadata.flags?.[SCOPE]?.pdfImport || p.metadata.name.startsWith("pdf-import-")),
+  );
+  if (!imported && !game.actors.some((a) => a.type === "mob")) return { changed: 0, errors: 0 };
   await createNoticeMessage({
     title: game.i18n.localize("CARLRPG.Migration.AiText.Title"),
     body: game.i18n.localize("CARLRPG.Migration.AiText.Body"),

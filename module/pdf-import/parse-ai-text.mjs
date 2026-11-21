@@ -175,6 +175,20 @@ function readHeader({ lines, isAi, startsBlock, startsHeader }, i) {
   return { name, header, level, rest, from };
 }
 
+/**
+ * Whether a line could be an AI Text header by its words alone - "Rat
+ * Brute, Level 4", "Level 8 Neighborhood Boss!" - for scan.mjs to know
+ * which pages' typefaces to read.
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function looksLikeHeader(text) {
+  const line = String(text).trim();
+  if (LEVEL_FIRST_RE.test(line)) return true;
+  const m = line.match(LEVEL_RE);
+  return !!m && AFTER_LEVEL_RE.test(line.slice(m.index + m[0].length));
+}
+
 /** A line that only adds the tier to a header: "Level 10 Neighborhood Boss!". */
 function headerContinues(text) {
   const m = text.trim().match(/^Level\s+\d+\b(.*)$/);

@@ -115,7 +115,12 @@ function scheduleAiText(token) {
   const delay = foundry.helpers.interaction.TooltipManager.TOOLTIP_ACTIVATION_MS;
   timer = setTimeout(() => {
     timer = null;
-    if (pendingFor === token && token.hover) showAiText(token);
+    if (pendingFor === token && token.hover) {
+      showAiText(token).catch((err) => {
+        if (pendingFor === token) pendingFor = null;
+        console.warn("carl-rpg | couldn't show a Mob's AI Text", err);
+      });
+    }
   }, delay);
 }
 

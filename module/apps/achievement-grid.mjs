@@ -302,7 +302,6 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     await awardAchievement(definition, actor);
   }
 
-  /** A category's heading: fold or unfold it. */
   /** What's in the search box (ruled 2026-11-21). */
   #search = "";
 
@@ -332,6 +331,7 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     root.querySelector(".carl-grid-no-match")?.toggleAttribute("hidden", !query || shown > 0);
   }
 
+  /** A category's heading: fold or unfold it. */
   static async #onToggleCategory(event, target) {
     await toggleCategory(target.dataset.key);
     this.render();

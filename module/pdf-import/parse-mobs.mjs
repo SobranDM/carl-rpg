@@ -69,7 +69,6 @@ export function parseMobs(pages) {
   // The AI Text blurbs (parse-ai-text.mjs), and where each line falls in
   // the book, to find the one nearest each stat block.
   const blurbs = findAiTexts(pages, sectionAt);
-  const inBlurb = new Set(blurbs.flatMap((b) => [...b.lines]));
   const order = lineOrder(pages);
   // A block can run onto the next page, which has no class line of its own.
   const lines = [];
@@ -106,18 +105,15 @@ export function parseMobs(pages) {
     return nameAt;
   });
 
-  const mobs = anchors.map((at, n) => {
+  // Each block's lines, as printed.
+  const blocks = anchors.map((at, n) => {
     const nameAt = nameStarts[n];
     // Flavor: prose between the nearest heading above and the name.
     // Reaching the previous block first means there is none.
     const floor = n > 0 ? anchors[n - 1] + 1 : 0;
     let start = nameAt;
     while (start - 1 >= floor && !lines[start - 1].heading) start--;
-    // A blurb there is the AI Text, not flavor.
-    const flavor = (lines[start - 1]?.heading ? lines.slice(start, nameAt) : []).filter(
-      (l) => !inBlurb.has(`${l.page}:${l.at}`),
-    );
-
+    const flavor = lines[start - 1]?.heading ? lines.slice(start, nameAt) : [];
     // Body: up to the next block's name, or a heading.
     let end = n + 1 < anchors.length ? nameStarts[n + 1] : lines.length;
     for (let i = at + 1; i < end; i++) {
@@ -126,24 +122,41 @@ export function parseMobs(pages) {
         break;
       }
     }
-    const name = joinText(lines.slice(nameAt, at).map((l) => l.text));
-    const section = sectionAt(lines[at].page, lines[at].at);
-    // The next Mob's AI Text, before its name, isn't this one's notes.
-    const body = lines.slice(at + 1, end).filter((l) => !inBlurb.has(`${l.page}:${l.at}`));
-    const mob = toMob(name, lines[at], body, flavor);
+    return {
+      name: joinText(lines.slice(nameAt, at).map((l) => l.text)),
+      classLine: lines[at],
+      flavor,
+      body: lines.slice(at + 1, end),
+      section: sectionAt(lines[at].page, lines[at].at),
+      order: order.get(`${lines[at].page}:${lines[at].at}`) ?? 0,
+    };
+  });
+
+  // Each Mob's AI Text (parse-ai-text.mjs blurbFor, by its name and Level).
+  // The lines of a blurb some Mob takes are its AI Text, not flavor or
+  // notes - a blurb no Mob takes (a Guide's) stays where it was.
+  const taken = blocks.map((block) => {
+    const mob = toMob(block.name, block.classLine, block.body, block.flavor);
     if (!mob) return null;
-    const blurb = blurbFor(
-      {
-        name: mob.name,
-        level: mob.data.system.level,
-        section,
-        order: order.get(`${lines[at].page}:${lines[at].at}`) ?? 0,
-      },
+    return blurbFor(
+      { name: mob.name, level: mob.data.system.level, section: block.section, order: block.order },
       blurbs,
     );
-    mob.data.system.aiText = blurb?.html ?? "";
+  });
+  const inBlurb = new Set(taken.filter(Boolean).flatMap((b) => [...b.lines]));
+  const ours = (l) => !inBlurb.has(`${l.page}:${l.at}`);
+
+  const mobs = blocks.map((block, n) => {
+    const mob = toMob(
+      block.name,
+      block.classLine,
+      block.body.filter(ours),
+      block.flavor.filter(ours),
+    );
+    if (!mob) return null;
+    mob.data.system.aiText = taken[n]?.html ?? "";
     // Where in the dungeon it's found (sections.mjs): files it on import.
-    return { ...mob, section };
+    return { ...mob, section: block.section };
   });
   // A Vehicle block is null (toMob).
   return mobs.filter(Boolean);

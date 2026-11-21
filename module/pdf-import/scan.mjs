@@ -12,15 +12,15 @@ import { isBoilerplate, layoutLines, titleCase, toTextItems } from "./page-text.
 import { parseAchievements } from "./parse-achievements.mjs";
 import { parseGear } from "./parse-gear.mjs";
 import { parseMobs } from "./parse-mobs.mjs";
+import { looksLikeHeader } from "./parse-ai-text.mjs";
 import { parseSpells } from "./parse-spells.mjs";
 
 // A page with less real text than this (letters and digits, outside the
 // margins) is mostly picture: a possible map.
 const MAP_TEXT_LIMIT = 150;
-// A page that may hold a Mob's AI Text ("Rat Brute, Level 4"): its
-// typefaces are read too (parse-ai-text.mjs tells the AI's voice by them),
-// and the next page's, where a blurb may run on.
-const MAY_HAVE_AI_TEXT_RE = /\bLevel\s+\d/;
+// A page with a line that could head a Mob's AI Text ("Rat Brute, Level
+// 4"): its typefaces are read too (parse-ai-text.mjs tells the AI's voice
+// by them), and the next page's, where a blurb may run on.
 // How long to wait for one font to load before going without its name.
 const FONT_WAIT_MS = 3000;
 
@@ -32,6 +32,8 @@ const FONT_WAIT_MS = 3000;
  */
 export async function readPages(pdfDoc, { onProgress } = {}) {
   const pages = [];
+  // Fonts are the document's, shared by its pages: each named once.
+  const fontNames = new Map();
   let lastMayHave = false;
   for (let n = 1; n <= pdfDoc.numPages; n++) {
     const page = await pdfDoc.getPage(n);
@@ -43,11 +45,15 @@ export async function readPages(pdfDoc, { onProgress } = {}) {
       x: i.x - x0,
       y: i.y - y0,
     }));
-    const mayHave = MAY_HAVE_AI_TEXT_RE.test(items.map((i) => i.str).join(" "));
-    if (mayHave || lastMayHave) await nameFaces(page, items);
-    lastMayHave = mayHave;
     const size = { width: x1 - x0, height: y1 - y0, page: n };
-    pages.push({ ...size, items, lines: layoutLines(items, size) });
+    let lines = layoutLines(items, size);
+    const mayHave = lines.some((l) => looksLikeHeader(l.text));
+    if (mayHave || lastMayHave) {
+      await nameFaces(page, items, fontNames);
+      lines = layoutLines(items, size);
+    }
+    lastMayHave = mayHave;
+    pages.push({ ...size, items, lines });
     page.cleanup();
     onProgress?.(n, pdfDoc.numPages);
   }
@@ -62,20 +68,24 @@ export async function readPages(pdfDoc, { onProgress } = {}) {
  * known in time keeps no face.
  * @param {object} page  A pdf.js page.
  * @param {object[]} items  From toTextItems; `font` is pdf.js's font id.
+ * @param {Map<string, string>} names  Font names already known, by id (pdf.js's
+ *   font ids are the document's): a page whose fonts are all known needn't
+ *   be drawn, and a font that didn't load in time isn't waited for again.
  */
-async function nameFaces(page, items) {
-  try {
-    await page.getOperatorList();
-  } catch {
-    return;
+async function nameFaces(page, items, names) {
+  const ids = [...new Set(items.map((i) => i.font).filter(Boolean))].filter((id) => !names.has(id));
+  if (ids.length) {
+    try {
+      await page.getOperatorList();
+    } catch {
+      return;
+    }
+    const fonts = await Promise.all(ids.map((id) => loadedFont(page, id)));
+    ids.forEach((id, k) => {
+      // "BDIFOQ+TextbookNew-Bold": the six letters name the subset, not the face.
+      names.set(id, String(fonts[k]?.name ?? "").replace(/^[A-Z]{6}\+/, ""));
+    });
   }
-  const ids = [...new Set(items.map((i) => i.font).filter(Boolean))];
-  const fonts = await Promise.all(ids.map((id) => loadedFont(page, id)));
-  const names = new Map();
-  ids.forEach((id, k) => {
-    // "BDIFOQ+TextbookNew-Bold": the six letters name the subset, not the face.
-    names.set(id, String(fonts[k]?.name ?? "").replace(/^[A-Z]{6}\+/, ""));
-  });
   for (const item of items) {
     const face = names.get(item.font);
     if (face) item.face = face;
