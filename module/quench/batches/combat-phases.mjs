@@ -5,21 +5,44 @@
 import { CarlRPGCombatTracker } from "../../apps/combat-tracker.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
 import { currentPhase, isPhased, usesPhases } from "../../helpers/combat-phases.mjs";
-import { declaredAttacks, recordDeclaration, removeDeclaration } from "../../helpers/declarations.mjs";
+import {
+  declaredAttacks,
+  recordDeclaration,
+  removeDeclaration,
+} from "../../helpers/declarations.mjs";
 import { DECLARED_MARK_NAME, declaredCounts, drawMark } from "../../helpers/declared-marks.mjs";
 import { CarlDeclareHud } from "../../apps/declare-hud.mjs";
 import CarlDice from "../../dice/dice.mjs";
 import { actionRecord, undoAction } from "../../helpers/actions.mjs";
 import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
 import {
-  applyOp, decorateReactionCard, reactionActionEntries, reactionCardFor, tauntRange, tokenDistance,
+  applyOp,
+  decorateReactionCard,
+  reactionActionEntries,
+  reactionCardFor,
+  tauntRange,
+  tokenDistance,
 } from "../../chat/reaction-card.mjs";
 import {
-  crawlerKey, decidingEvade, evadableHitsFor, hitEvadable, hitList, hitMissed, tauntList, tauntableMobs,
+  crawlerKey,
+  decidingEvade,
+  evadableHitsFor,
+  hitEvadable,
+  hitList,
+  hitMissed,
+  tauntList,
+  tauntableMobs,
 } from "../../helpers/reaction-state.mjs";
 import {
-  buildDamageState, catcherDr, damageCardActionEntries, damageCardFor, decorateDamageCard, postDamageCard, rollAllDamage,
-  rollAttackOnCard, unrolledAttacks,
+  buildDamageState,
+  catcherDr,
+  damageCardActionEntries,
+  damageCardFor,
+  decorateDamageCard,
+  postDamageCard,
+  rollAllDamage,
+  rollAttackOnCard,
+  unrolledAttacks,
 } from "../../helpers/reaction-resolve.mjs";
 import {
   createTestCharacter,
@@ -41,7 +64,10 @@ import {
 /** An unstarted combat with these actors as combatants. */
 async function combatOf(...actors) {
   const combat = await Combat.create({});
-  await combat.createEmbeddedDocuments("Combatant", actors.map((a) => ({ actorId: a.id })));
+  await combat.createEmbeddedDocuments(
+    "Combatant",
+    actors.map((a) => ({ actorId: a.id })),
+  );
   return combat;
 }
 
@@ -51,9 +77,14 @@ async function deleteNotices(combat) {
   // The round-start notice is posted from _onStartRound, just after the
   // update that started the round resolves.
   await settle(150);
-  const ids = game.messages.filter((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id
-    || m.getFlag("carl-rpg", "reaction")?.combatId === combat.id
-    || m.getFlag("carl-rpg", "reactionDamage")?.combatId === combat.id).map((m) => m.id);
+  const ids = game.messages
+    .filter(
+      (m) =>
+        m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id ||
+        m.getFlag("carl-rpg", "reaction")?.combatId === combat.id ||
+        m.getFlag("carl-rpg", "reactionDamage")?.combatId === combat.id,
+    )
+    .map((m) => m.id);
   if (ids.length) await ChatMessage.deleteDocuments(ids);
 }
 
@@ -125,7 +156,9 @@ export default function register(quench) {
           await combat.nextTurn();
           await combat.nextTurn();
           await combat.nextTurn();
-          await waitFor(() => remaining() === 1, { message: "Blinded never ticked down at End Round" });
+          await waitFor(() => remaining() === 1, {
+            message: "Blinded never ticked down at End Round",
+          });
         });
 
         it("a double-click on Next Phase advances one step", async function () {
@@ -142,11 +175,19 @@ export default function register(quench) {
           await combat.startCombat();
           await combat.nextTurn();
           await combat.previousTurn();
-          const notices = () => game.messages
-            .map((m) => m.getFlag("carl-rpg", "phaseNotice"))
-            .filter((n) => n?.combatId === combat.id && n.step === "declare");
-          await waitFor(() => notices().length === 2, { message: "expected the round-start and the rewind notices" });
-          assert.deepEqual(notices().map((n) => n.roundStart).sort(), [false, true]);
+          const notices = () =>
+            game.messages
+              .map((m) => m.getFlag("carl-rpg", "phaseNotice"))
+              .filter((n) => n?.combatId === combat.id && n.step === "declare");
+          await waitFor(() => notices().length === 2, {
+            message: "expected the round-start and the rewind notices",
+          });
+          assert.deepEqual(
+            notices()
+              .map((n) => n.roundStart)
+              .sort(),
+            [false, true],
+          );
         });
 
         it("Previous Phase steps back from react only", async function () {
@@ -190,10 +231,14 @@ export default function register(quench) {
         it("each step change posts a phase notice", async function () {
           await combat.startCombat();
           await combat.nextTurn();
-          await waitFor(() => game.messages.some((m) => {
-            const notice = m.getFlag("carl-rpg", "phaseNotice");
-            return notice?.combatId === combat.id && notice.step === "react";
-          }), { message: "no Reaction notice was posted" });
+          await waitFor(
+            () =>
+              game.messages.some((m) => {
+                const notice = m.getFlag("carl-rpg", "phaseNotice");
+                return notice?.combatId === combat.id && notice.step === "react";
+              }),
+            { message: "no Reaction notice was posted" },
+          );
         });
 
         it("the tracker shows the phase bar and groups Mobs and Crawlers", async function () {
@@ -201,12 +246,17 @@ export default function register(quench) {
           await combat.startCombat();
           await combat.activate();
           await ui.combat.render({ force: true, combat });
-          await waitFor(() => ui.combat.element?.querySelector(".carl-phase-step.active"), { message: "no phase bar" });
+          await waitFor(() => ui.combat.element?.querySelector(".carl-phase-step.active"), {
+            message: "no phase bar",
+          });
           const el = ui.combat.element;
           assert.equal(el.querySelector(".carl-phase-step.active").dataset.step, "declare");
           const groups = [...el.querySelectorAll(".carl-combat-group")].map((g) => g.dataset.group);
           assert.deepEqual(groups, ["mobs", "crawlers"]);
-          assert.notExists(el.querySelector(".combat-tracker .token-initiative"), "no initiative column");
+          assert.notExists(
+            el.querySelector(".combat-tracker .token-initiative"),
+            "no initiative column",
+          );
           assert.exists(el.querySelector(".carl-next-phase"), "the GM's Next Phase button");
         });
       });
@@ -214,14 +264,23 @@ export default function register(quench) {
       describe("Declaring Mob Attacks", function () {
         useQuenchTimeout(this);
 
-        const bite = { name: "Bite", toHit: "14+F", damage: "1d6+F", damageType: "piercing", range: "", effect: "" };
+        const bite = {
+          name: "Bite",
+          toHit: "14+F",
+          damage: "1d6+F",
+          damageType: "piercing",
+          range: "",
+          effect: "",
+        };
         let mob;
         let pc;
         let combat;
         beforeEach(async function () {
           // Several declarations a round: more Actions than a plain Mob's one
           // (helpers/actions.mjs - its own batch tests the budgets).
-          mob = await createTestMob("declare-mob", { system: { attacks: [bite], actionsPerRound: 6 } });
+          mob = await createTestMob("declare-mob", {
+            system: { attacks: [bite], actionsPerRound: 6 },
+          });
           pc = await createTestCharacter("declare-pc");
           combat = await combatOf(mob, pc);
           await combat.startCombat();
@@ -233,9 +292,16 @@ export default function register(quench) {
           await deleteTestActor(pc);
         });
 
-        const declare = () => withSetting("currentFloor", 2, () =>
-          withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true })));
-        const mobCards = () => game.messages.filter((m) => m.speaker?.actor === mob.id && m.getFlag("carl-rpg", "targetRows"));
+        const declare = () =>
+          withSetting("currentFloor", 2, () =>
+            withFakeTargets([{ actor: pc }], () =>
+              CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+            ),
+          );
+        const mobCards = () =>
+          game.messages.filter(
+            (m) => m.speaker?.actor === mob.id && m.getFlag("carl-rpg", "targetRows"),
+          );
 
         it("in Declaration an Attack is recorded, not rolled", async function () {
           const result = await declare();
@@ -261,7 +327,10 @@ export default function register(quench) {
           await declare();
           const [first, second] = declaredAttacks(combat);
           await removeDeclaration(combat, first.id);
-          assert.deepEqual(declaredAttacks(combat).map((d) => d.id), [second.id]);
+          assert.deepEqual(
+            declaredAttacks(combat).map((d) => d.id),
+            [second.id],
+          );
         });
 
         it("a new round starts with no declarations", async function () {
@@ -269,17 +338,29 @@ export default function register(quench) {
           assert.lengthOf(declaredAttacks(combat), 1);
           await combat.nextTurn();
           // The Attack lands on a crawler who hasn't Evaded: Lock Results asks first.
-          await withDialog(() => combat.nextTurn(), (dialog) => pressDialog(dialog, "yes"), "carl-lock-warning");
+          await withDialog(
+            () => combat.nextTurn(),
+            (dialog) => pressDialog(dialog, "yes"),
+            "carl-lock-warning",
+          );
           assert.equal(currentPhase(combat), "resolve");
           // Its damage is unrolled: leaving Resolution offers to roll it.
-          await withDialog(() => combat.nextTurn(), (dialog) => pressDialog(dialog, "yes"), "carl-unrolled-warning");
+          await withDialog(
+            () => combat.nextTurn(),
+            (dialog) => pressDialog(dialog, "yes"),
+            "carl-unrolled-warning",
+          );
           assert.equal(currentPhase(combat), "act");
           await combat.nextTurn();
           assert.equal(combat.round, 2);
           assert.lengthOf(declaredAttacks(combat), 0, "last round's are gone");
           await declare();
           assert.lengthOf(declaredAttacks(combat), 1);
-          assert.equal(combat.getFlag("carl-rpg", "declared").round, 2, "the store was replaced for the new round");
+          assert.equal(
+            combat.getFlag("carl-rpg", "declared").round,
+            2,
+            "the store was replaced for the new round",
+          );
           assert.lengthOf(Object.keys(combat.getFlag("carl-rpg", "declared").attacks), 1);
         });
 
@@ -297,11 +378,18 @@ export default function register(quench) {
         });
 
         it("with nothing targeted, Declaration refuses instead of posting a preview", async function () {
-          const result = await withFakeTargets([], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true }));
+          const result = await withFakeTargets([], () =>
+            CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+          );
           assert.isNull(result);
           assert.lengthOf(mobCards(), 0);
-          assert.lengthOf(game.messages.filter((m) => m.speaker?.actor === mob.id && m.getFlag("carl-rpg", "damageByType")), 0,
-            "no damage preview card");
+          assert.lengthOf(
+            game.messages.filter(
+              (m) => m.speaker?.actor === mob.id && m.getFlag("carl-rpg", "damageByType"),
+            ),
+            0,
+            "no damage preview card",
+          );
           assert.lengthOf(declaredAttacks(combat), 0);
         });
 
@@ -327,15 +415,26 @@ export default function register(quench) {
           const hud = game.carlrpg.declareHud;
           assert.instanceOf(hud, CarlDeclareHud);
           const original = CarlDeclareHud.declaringMobs;
-          const fakeToken = { id: "quenchFakeToken", name: mob.name, document: { uuid: "Scene.none.Token.quenchFakeToken" } };
+          const fakeToken = {
+            id: "quenchFakeToken",
+            name: mob.name,
+            document: { uuid: "Scene.none.Token.quenchFakeToken" },
+          };
           CarlDeclareHud.declaringMobs = () => [{ token: fakeToken, actor: mob, combat }];
           const button = () => hud.element?.querySelector('[data-action="declare"]');
-          const shiftClick = (el) => el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, shiftKey: true }));
+          const shiftClick = (el) =>
+            el.dispatchEvent(
+              new MouseEvent("click", { bubbles: true, cancelable: true, shiftKey: true }),
+            );
           try {
             await hud.render({ force: true });
             await waitFor(() => button(), { message: "the HUD never showed the Attack" });
             assert.equal(hud.element.parentElement?.id, "ui-right-column-1", "beside the sidebar");
-            assert.equal(getComputedStyle(hud.element).position, "absolute", "floating over the chat notifications, not pushing them up");
+            assert.equal(
+              getComputedStyle(hud.element).position,
+              "absolute",
+              "floating over the chat notifications, not pushing them up",
+            );
             assert.include(button().textContent, "Bite");
 
             await withFakeTargets([], async () => {
@@ -346,13 +445,23 @@ export default function register(quench) {
 
             await withFakeTargets([{ actor: pc }], async () => {
               shiftClick(button());
-              await waitFor(() => declaredAttacks(combat).length === 1, { message: "the click didn't declare" });
+              await waitFor(() => declaredAttacks(combat).length === 1, {
+                message: "the click didn't declare",
+              });
             });
-            assert.equal(declaredAttacks(combat)[0].attackId, mobAttacksOf(mob)[0].id, "it records the Attack item");
+            assert.equal(
+              declaredAttacks(combat)[0].attackId,
+              mobAttacksOf(mob)[0].id,
+              "it records the Attack item",
+            );
             await hud.render({ force: true });
-            await waitFor(() => hud.element?.querySelector('[data-action="removeDeclaration"]'), { message: "no declared entry" });
+            await waitFor(() => hud.element?.querySelector('[data-action="removeDeclaration"]'), {
+              message: "no declared entry",
+            });
             hud.element.querySelector('[data-action="removeDeclaration"]').click();
-            await waitFor(() => declaredAttacks(combat).length === 0, { message: "the remove button didn't withdraw" });
+            await waitFor(() => declaredAttacks(combat).length === 0, {
+              message: "the remove button didn't withdraw",
+            });
           } finally {
             CarlDeclareHud.declaringMobs = original;
             await hud.close({ animate: false });
@@ -362,7 +471,11 @@ export default function register(quench) {
         it("the HUD closes itself when no Mob in Declaration is selected", async function () {
           const hud = game.carlrpg.declareHud;
           const original = CarlDeclareHud.declaringMobs;
-          const fakeToken = { id: "quenchFakeToken", name: mob.name, document: { uuid: "Scene.none.Token.quenchFakeToken" } };
+          const fakeToken = {
+            id: "quenchFakeToken",
+            name: mob.name,
+            document: { uuid: "Scene.none.Token.quenchFakeToken" },
+          };
           CarlDeclareHud.declaringMobs = () => [{ token: fakeToken, actor: mob, combat }];
           try {
             await hud.render({ force: true });
@@ -370,14 +483,32 @@ export default function register(quench) {
           } finally {
             CarlDeclareHud.declaringMobs = original;
           }
-          assert.lengthOf(CarlDeclareHud.declaringMobs().filter((m) => m.actor === mob), 0, "no Mob token is controlled");
+          assert.lengthOf(
+            CarlDeclareHud.declaringMobs().filter((m) => m.actor === mob),
+            0,
+            "no Mob token is controlled",
+          );
           hud.refresh();
-          await waitFor(() => !hud.rendered, { message: "the HUD stayed open with nothing to show" });
+          await waitFor(() => !hud.rendered, {
+            message: "the HUD stayed open with nothing to show",
+          });
         });
 
         it("a declared Mob token is counted for its mark until Declaration ends", async function () {
-          await recordDeclaration(combat, { mobUuid: mob.uuid, tokenId: "quenchMarkToken", mobName: mob.name, attackName: "Bite", targetRows: {} });
-          await recordDeclaration(combat, { mobUuid: mob.uuid, tokenId: "quenchMarkToken", mobName: mob.name, attackName: "Claw", targetRows: {} });
+          await recordDeclaration(combat, {
+            mobUuid: mob.uuid,
+            tokenId: "quenchMarkToken",
+            mobName: mob.name,
+            attackName: "Bite",
+            targetRows: {},
+          });
+          await recordDeclaration(combat, {
+            mobUuid: mob.uuid,
+            tokenId: "quenchMarkToken",
+            mobName: mob.name,
+            attackName: "Claw",
+            targetRows: {},
+          });
           assert.equal(declaredCounts().get("quenchMarkToken"), 2);
           await combat.nextTurn();
           assert.isUndefined(declaredCounts().get("quenchMarkToken"), "gone once Reaction starts");
@@ -391,11 +522,18 @@ export default function register(quench) {
             drawMark(token, 1);
             const mark = token.getChildByName(DECLARED_MARK_NAME);
             assert.exists(mark);
-            assert.notExists(mark.children.find((c) => c instanceof PIXI.Text), "no count for one");
+            assert.notExists(
+              mark.children.find((c) => c instanceof PIXI.Text),
+              "no count for one",
+            );
             drawMark(token, 3);
             const counted = token.getChildByName(DECLARED_MARK_NAME);
             assert.equal(counted.children.find((c) => c instanceof PIXI.Text)?.text, "3");
-            assert.lengthOf(token.children.filter((c) => c.name === DECLARED_MARK_NAME), 1, "redrawn, not stacked");
+            assert.lengthOf(
+              token.children.filter((c) => c.name === DECLARED_MARK_NAME),
+              1,
+              "redrawn, not stacked",
+            );
             drawMark(token, 0);
             assert.notExists(token.getChildByName(DECLARED_MARK_NAME));
           } finally {
@@ -407,12 +545,16 @@ export default function register(quench) {
           await declare();
           await combat.activate();
           await ui.combat.render({ force: true, combat });
-          await waitFor(() => ui.combat.element?.querySelector(".carl-declared-item"), { message: "no declared list" });
+          await waitFor(() => ui.combat.element?.querySelector(".carl-declared-item"), {
+            message: "no declared list",
+          });
           const item = ui.combat.element.querySelector(".carl-declared-item");
           assert.include(item.textContent, "Bite");
           assert.include(item.textContent, pc.name);
           item.querySelector('[data-action="removeDeclaration"]').click();
-          await waitFor(() => declaredAttacks(combat).length === 0, { message: "remove button didn't withdraw it" });
+          await waitFor(() => declaredAttacks(combat).length === 0, {
+            message: "remove button didn't withdraw it",
+          });
         });
       });
 
@@ -420,8 +562,22 @@ export default function register(quench) {
         useQuenchTimeout(this);
 
         /** A rolled-Check payload, as a client sends it. */
-        const rolled = (total, naturalRoll, difficulty) => ({ total, naturalRoll, difficulty, formula: "1d20", breakdown: "", roll: null });
-        const attackWith = (toHit) => ({ name: "Maul", toHit, damage: "100", damageType: "", range: "", effect: "" });
+        const rolled = (total, naturalRoll, difficulty) => ({
+          total,
+          naturalRoll,
+          difficulty,
+          formula: "1d20",
+          breakdown: "",
+          roll: null,
+        });
+        const attackWith = (toHit) => ({
+          name: "Maul",
+          toHit,
+          damage: "100",
+          damageType: "",
+          range: "",
+          effect: "",
+        });
 
         let mob;
         let pc1;
@@ -431,7 +587,12 @@ export default function register(quench) {
           // 0: to-hit 16; 1: an easy 1; 2: an easy Area Attack; 3: a hard 40.
           mob = await createTestMob("react-mob", {
             system: {
-              attacks: [attackWith("16"), attackWith("1"), { ...attackWith("1"), name: "Blast", range: "20ft Burst" }, attackWith("40")],
+              attacks: [
+                attackWith("16"),
+                attackWith("1"),
+                { ...attackWith("1"), name: "Blast", range: "20ft Burst" },
+                attackWith("40"),
+              ],
               actionsPerRound: 6,
             },
           });
@@ -446,13 +607,22 @@ export default function register(quench) {
           for (const actor of [mob, pc1, pc2]) await deleteTestActor(actor);
         });
 
-        const declareOn = (target, index = 0) => withSetting("currentFloor", 1, () =>
-          withFakeTargets([{ actor: target }], () => CarlDice.rollMobAttack(mob, index, { skipDialog: true })));
+        const declareOn = (target, index = 0) =>
+          withSetting("currentFloor", 1, () =>
+            withFakeTargets([{ actor: target }], () =>
+              CarlDice.rollMobAttack(mob, index, { skipDialog: true }),
+            ),
+          );
         const startReaction = async () => {
           // The round-start notice lands just after startCombat - wait for it,
           // so "the card is the latest message" isn't racing it.
-          await waitFor(() => game.messages.some((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id),
-            { message: "no round-start notice" });
+          await waitFor(
+            () =>
+              game.messages.some(
+                (m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id,
+              ),
+            { message: "no round-start notice" },
+          );
           await combat.nextTurn();
           return reactionCardFor(combat);
         };
@@ -462,8 +632,16 @@ export default function register(quench) {
         const onlyHit = (card) => hitList(state(card))[0];
         const of = (actor) => combat.combatants.find((c) => c.actor === actor);
         const spentBy = (actor) => actionRecord(combat, of(actor).id).spent;
-        const hitOn = (card, actor) => hitList(state(card)).filter((h) => h.targetUuid === actor.uuid);
-        const taunt = (card, by, total) => op(card, "taunt", { byUuid: by.uuid, byName: by.name, mobUuid: mob.uuid, rank: 1, check: rolled(total, 12, 20) });
+        const hitOn = (card, actor) =>
+          hitList(state(card)).filter((h) => h.targetUuid === actor.uuid);
+        const taunt = (card, by, total) =>
+          op(card, "taunt", {
+            byUuid: by.uuid,
+            byName: by.name,
+            mobUuid: mob.uuid,
+            rank: 1,
+            check: rolled(total, 12, 20),
+          });
         const preset = { advantage: "normal", modifier: 0, checked: [], checkedDebuffs: null };
 
         it("Start Reaction posts the card last in chat, one entry per Attack and target", async function () {
@@ -499,9 +677,21 @@ export default function register(quench) {
         it("a successful Taunt pulls the Mob's Attacks; a failed one moves nothing", async function () {
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "taunt", { byUuid: pc2.uuid, byName: pc2.name, mobUuid: mob.uuid, rank: 1, check: rolled(5, 4, 20) });
+          await op(card, "taunt", {
+            byUuid: pc2.uuid,
+            byName: pc2.name,
+            mobUuid: mob.uuid,
+            rank: 1,
+            check: rolled(5, 4, 20),
+          });
           assert.equal(onlyHit(card).targetUuid, pc1.uuid, "failed: still on pc1");
-          await op(card, "taunt", { byUuid: pc2.uuid, byName: pc2.name, mobUuid: mob.uuid, rank: 1, check: rolled(25, 15, 20) });
+          await op(card, "taunt", {
+            byUuid: pc2.uuid,
+            byName: pc2.name,
+            mobUuid: mob.uuid,
+            rank: 1,
+            check: rolled(25, 15, 20),
+          });
           const hit = onlyHit(card);
           assert.equal(hit.targetUuid, pc2.uuid, "pulled onto the taunter");
           assert.equal(hit.tauntedBy.uuid, pc2.uuid);
@@ -513,7 +703,14 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           await withPinnedDice(PIN_D20_MID, () =>
-            op(card, "taunt", { byUuid: pc2.uuid, byName: pc2.name, mobUuid: mob.uuid, rank: 5, check: rolled(25, 15, 20) }));
+            op(card, "taunt", {
+              byUuid: pc2.uuid,
+              byName: pc2.name,
+              mobUuid: mob.uuid,
+              rank: 5,
+              check: rolled(25, 15, 20),
+            }),
+          );
           assert.exists(onlyHit(card).free, "free Evade from Rank 5");
         });
 
@@ -524,12 +721,19 @@ export default function register(quench) {
           const hit = onlyHit(card);
           assert.equal(hit.targetUuid, pc2.uuid);
           assert.equal(hit.caughtBy.uuid, pc2.uuid);
-          assert.lengthOf(evadableHitsFor(state(card), pc2.uuid), 0, "the Catcher's Evade skips it");
+          assert.lengthOf(
+            evadableHitsFor(state(card), pc2.uuid),
+            0,
+            "the Catcher's Evade skips it",
+          );
           assert.lengthOf(evadableHitsFor(state(card), pc1.uuid), 0, "it's no longer pc1's");
         });
 
         it("a Catcher gets +5 DR against what they Catch at Ranks 5, 10 and 15, adding up", async function () {
-          const catcher = await createTestItem(pc2, "skill", "Catcher", { name: "Catcher", system: { rank: 4 } });
+          const catcher = await createTestItem(pc2, "skill", "Catcher", {
+            name: "Catcher",
+            system: { rank: 4 },
+          });
           assert.equal(catcherDr(pc2), 0, "Rank 4: none yet");
           await catcher.update({ "system.rank": 5 });
           assert.equal(catcherDr(pc2), 5);
@@ -546,21 +750,42 @@ export default function register(quench) {
           const rowId = onlyHit(card).id;
           assert.equal(damage.getFlag("carl-rpg", "reactionDamage").rows[rowId].extraDr, 10);
           await rollAllDamage(damage);
-          await waitFor(() => damage.getFlag("carl-rpg", "reactionDamage").rows[rowId].result, { message: "not rolled" });
-          assert.equal(damage.getFlag("carl-rpg", "reactionDamage").rows[rowId].result.final, Math.max(0, 100 - ownDr - 10),
-            "the Maul's 100, less their DR and the Catcher's +10");
+          await waitFor(() => damage.getFlag("carl-rpg", "reactionDamage").rows[rowId].result, {
+            message: "not rolled",
+          });
+          assert.equal(
+            damage.getFlag("carl-rpg", "reactionDamage").rows[rowId].result.final,
+            Math.max(0, 100 - ownDr - 10),
+            "the Maul's 100, less their DR and the Catcher's +10",
+          );
         });
 
         it("the GM can let a Taunt pull a Mob's Area Attack: re-aimed at the taunter", async function () {
           // The Blast (index 2) lands on both crawlers.
           await withSetting("currentFloor", 1, () =>
-            withFakeTargets([{ actor: pc1 }, { actor: pc2 }], () => CarlDice.rollMobAttack(mob, 2, { skipDialog: true })));
+            withFakeTargets([{ actor: pc1 }, { actor: pc2 }], () =>
+              CarlDice.rollMobAttack(mob, 2, { skipDialog: true }),
+            ),
+          );
           const card = await startReaction();
           assert.lengthOf(hitList(state(card)), 2);
-          assert.deepEqual(tauntableMobs(state(card), pc1.uuid).map((m) => m.mobUuid), [mob.uuid],
-            "a Mob with only an Area Attack can still be Taunted");
-          await op(card, "taunt", { byUuid: pc1.uuid, byName: pc1.name, mobUuid: mob.uuid, rank: 1, check: rolled(25, 15, 20) });
-          assert.lengthOf(hitList(state(card)).filter((h) => h.targetUuid === pc1.uuid), 1, "nothing moves without the GM");
+          assert.deepEqual(
+            tauntableMobs(state(card), pc1.uuid).map((m) => m.mobUuid),
+            [mob.uuid],
+            "a Mob with only an Area Attack can still be Taunted",
+          );
+          await op(card, "taunt", {
+            byUuid: pc1.uuid,
+            byName: pc1.name,
+            mobUuid: mob.uuid,
+            rank: 1,
+            check: rolled(25, 15, 20),
+          });
+          assert.lengthOf(
+            hitList(state(card)).filter((h) => h.targetUuid === pc1.uuid),
+            1,
+            "nothing moves without the GM",
+          );
           const [taunt] = tauntList(state(card));
           assert.isTrue(await op(card, "pullArea", { tauntId: taunt.id }));
           const hits = hitList(state(card));
@@ -581,9 +806,19 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           const hitId = onlyHit(card).id;
-          assert.isTrue(await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(20, 12, 16) }, preset }), "no Open Evades");
+          assert.isTrue(
+            await op(card, "evade", {
+              uuid: pc1.uuid,
+              checks: { [hitId]: rolled(20, 12, 16) },
+              preset,
+            }),
+            "no Open Evades",
+          );
           assert.isTrue(onlyHit(card).evade.success);
-          assert.isFalse(await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(30, 19, 16) } }), "nothing left to Evade");
+          assert.isFalse(
+            await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(30, 19, 16) } }),
+            "nothing left to Evade",
+          );
           assert.lengthOf(spentBy(pc1), 1);
         });
 
@@ -592,10 +827,18 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           const [dodged, failed] = hitList(state(card));
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [dodged.id]: rolled(20, 12, 16), [failed.id]: rolled(8, 5, 16) }, preset });
+          await op(card, "evade", {
+            uuid: pc1.uuid,
+            checks: { [dodged.id]: rolled(20, 12, 16), [failed.id]: rolled(8, 5, 16) },
+            preset,
+          });
           assert.isTrue(await taunt(card, pc2, 25));
           assert.equal(state(card).hits[dodged.id].targetUuid, pc1.uuid, "the dodged one stays");
-          assert.equal(state(card).hits[failed.id].targetUuid, pc2.uuid, "the one still landing is pulled");
+          assert.equal(
+            state(card).hits[failed.id].targetUuid,
+            pc2.uuid,
+            "the one still landing is pulled",
+          );
           assert.isNull(state(card).hits[failed.id].evade, "pc1's failed Evade of it goes with it");
           assert.lengthOf(spentBy(pc1), 1, "pc1's Evade still covers the dodged one");
           assert.isFalse(await taunt(card, pc2, 25), "nothing left to pull: refused");
@@ -605,7 +848,11 @@ export default function register(quench) {
         it("an Evade left covering nothing gives its Action back, and the Taunt that did it can't be undone", async function () {
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [onlyHit(card).id]: rolled(8, 5, 16) }, preset });
+          await op(card, "evade", {
+            uuid: pc1.uuid,
+            checks: { [onlyHit(card).id]: rolled(8, 5, 16) },
+            preset,
+          });
           assert.lengthOf(spentBy(pc1), 1);
           await taunt(card, pc2, 25);
           assert.equal(onlyHit(card).targetUuid, pc2.uuid);
@@ -621,7 +868,11 @@ export default function register(quench) {
           await declareOn(pc2);
           const card = await startReaction();
           const [onPc1, onPc2] = hitList(state(card));
-          await op(card, "evade", { uuid: pc2.uuid, checks: { [onPc2.id]: rolled(20, 12, 16) }, preset });
+          await op(card, "evade", {
+            uuid: pc2.uuid,
+            checks: { [onPc2.id]: rolled(20, 12, 16) },
+            preset,
+          });
           await taunt(card, pc2, 25);
           const pulled = state(card).hits[onPc1.id];
           assert.equal(pulled.targetUuid, pc2.uuid);
@@ -637,9 +888,18 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           const [dodged, failed] = hitList(state(card));
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [dodged.id]: rolled(20, 12, 16), [failed.id]: rolled(8, 5, 16) }, preset });
-          assert.isFalse(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: dodged.id }), "nothing to catch");
-          assert.isTrue(await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: failed.id }));
+          await op(card, "evade", {
+            uuid: pc1.uuid,
+            checks: { [dodged.id]: rolled(20, 12, 16), [failed.id]: rolled(8, 5, 16) },
+            preset,
+          });
+          assert.isFalse(
+            await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: dodged.id }),
+            "nothing to catch",
+          );
+          assert.isTrue(
+            await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: failed.id }),
+          );
           const caught = state(card).hits[failed.id];
           assert.equal(caught.caughtBy.uuid, pc2.uuid);
           assert.isNull(caught.evade, "the failed Evade drops off");
@@ -653,8 +913,13 @@ export default function register(quench) {
           await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(15, 10, 16) } });
           assert.equal(onlyHit(card).evade.degree, "nearMissFail");
           const ref = { type: "hit", hitId, which: "evade" };
-          assert.isFalse(await op(card, "intervene", { byUuid: pc1.uuid, byName: pc1.name, ref, value: 4 }), "not your own Check");
-          assert.isTrue(await op(card, "intervene", { byUuid: pc2.uuid, byName: pc2.name, ref, value: 3 }));
+          assert.isFalse(
+            await op(card, "intervene", { byUuid: pc1.uuid, byName: pc1.name, ref, value: 4 }),
+            "not your own Check",
+          );
+          assert.isTrue(
+            await op(card, "intervene", { byUuid: pc2.uuid, byName: pc2.name, ref, value: 3 }),
+          );
           const evade = onlyHit(card).evade;
           assert.equal(evade.total, 18);
           assert.isTrue(evade.success);
@@ -668,12 +933,29 @@ export default function register(quench) {
           const hitId = onlyHit(card).id;
           await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(8, 5, 16) } });
           const ref = { type: "hit", hitId, which: "evade" };
-          assert.isTrue(await op(card, "reroll", { ref, naturalRoll: 18, total: 21, roll: null, breakdown: "" }));
+          assert.isTrue(
+            await op(card, "reroll", {
+              ref,
+              naturalRoll: 18,
+              total: 21,
+              roll: null,
+              breakdown: "",
+            }),
+          );
           const evade = onlyHit(card).evade;
           assert.isTrue(evade.success);
           assert.equal(evade.aiRerolled.base, 8, "the old result is kept for the record");
           assert.equal(pc1.system.details.aiFavor, 1, "1 AI Favor spent");
-          assert.isFalse(await op(card, "reroll", { ref, naturalRoll: 19, total: 22, roll: null, breakdown: "" }), "once per Check");
+          assert.isFalse(
+            await op(card, "reroll", {
+              ref,
+              naturalRoll: 19,
+              total: 22,
+              roll: null,
+              breakdown: "",
+            }),
+            "once per Check",
+          );
         });
 
         it("a Natural 1 can't be rerolled", async function () {
@@ -682,7 +964,15 @@ export default function register(quench) {
           const card = await startReaction();
           const hitId = onlyHit(card).id;
           await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(3, 1, 16) } });
-          assert.isFalse(await op(card, "reroll", { ref: { type: "hit", hitId, which: "evade" }, naturalRoll: 18, total: 20, roll: null, breakdown: "" }));
+          assert.isFalse(
+            await op(card, "reroll", {
+              ref: { type: "hit", hitId, which: "evade" },
+              naturalRoll: 18,
+              total: 20,
+              roll: null,
+              breakdown: "",
+            }),
+          );
           assert.equal(pc1.system.details.aiFavor, 2);
         });
 
@@ -692,17 +982,47 @@ export default function register(quench) {
           await declareOn(pc1);
           const card = await startReaction();
           const [great, ones] = hitList(state(card));
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [great.id]: rolled(25, 20, 16), [ones.id]: rolled(3, 1, 16) }, preset });
+          await op(card, "evade", {
+            uuid: pc1.uuid,
+            checks: { [great.id]: rolled(25, 20, 16), [ones.id]: rolled(3, 1, 16) },
+            preset,
+          });
           assert.isTrue(state(card).hits[great.id].evade.success, "a success to start with");
-          assert.equal(of(pc1).getFlag("carl-rpg", "advantageVsUuid"), mob.uuid, "a Natural 20 Evade's Advantage");
+          assert.equal(
+            of(pc1).getFlag("carl-rpg", "advantageVsUuid"),
+            mob.uuid,
+            "a Natural 20 Evade's Advantage",
+          );
           const ref = (hit) => ({ type: "hit", hitId: hit.id, which: "evade" });
-          assert.isTrue(await op(card, "reroll", { ref: ref(great), naturalRoll: 5, total: 10, roll: null, breakdown: "" }), "a success can be rerolled");
+          assert.isTrue(
+            await op(card, "reroll", {
+              ref: ref(great),
+              naturalRoll: 5,
+              total: 10,
+              roll: null,
+              breakdown: "",
+            }),
+            "a success can be rerolled",
+          );
           const rerolled = state(card).hits[great.id].evade;
           assert.isFalse(rerolled.success, "the new roll stands");
           assert.equal(rerolled.aiRerolled.natural, 20);
           assert.equal(pc1.system.details.aiFavor, 1);
-          assert.notEqual(of(pc1).getFlag("carl-rpg", "advantageVsUuid"), mob.uuid, "the Advantage went with it");
-          assert.isFalse(await op(card, "reroll", { ref: ref(ones), naturalRoll: 18, total: 20, roll: null, breakdown: "" }), "not a Natural 1");
+          assert.notEqual(
+            of(pc1).getFlag("carl-rpg", "advantageVsUuid"),
+            mob.uuid,
+            "the Advantage went with it",
+          );
+          assert.isFalse(
+            await op(card, "reroll", {
+              ref: ref(ones),
+              naturalRoll: 18,
+              total: 20,
+              roll: null,
+              breakdown: "",
+            }),
+            "not a Natural 1",
+          );
           assert.equal(pc1.system.details.aiFavor, 1);
         });
 
@@ -719,15 +1039,25 @@ export default function register(quench) {
           await combat.nextTurn(); // Lock Results
           assert.isTrue(state(card).locked, "the card is locked");
           assert.equal(currentPhase(combat), "resolve", "Resolution, waiting on the damage");
-          assert.isFalse(await op(card, "intervene", { byUuid: pc2.uuid, byName: pc2.name, ref: { type: "hit", hitId: hit1.id, which: "evade" }, value: 6 }),
-            "nothing changes once locked");
+          assert.isFalse(
+            await op(card, "intervene", {
+              byUuid: pc2.uuid,
+              byName: pc2.name,
+              ref: { type: "hit", hitId: hit1.id, which: "evade" },
+              value: 6,
+            }),
+            "nothing changes once locked",
+          );
 
           const damage = damageCardFor(combat);
           assert.exists(damage, "a Damage card was posted");
           assert.equal(game.messages.contents.at(-1).id, damage.id, "after the Resolution notice");
           assert.equal(hbOf(pc1), hb1, "nothing applied before the roll");
-          assert.deepEqual(unrolledAttacks(damage.getFlag("carl-rpg", "reactionDamage")), [hit1.attackId],
-            "only the Attack that landed waits on a roll");
+          assert.deepEqual(
+            unrolledAttacks(damage.getFlag("carl-rpg", "reactionDamage")),
+            [hit1.attackId],
+            "only the Attack that landed waits on a roll",
+          );
 
           // Before: one merged cell with the formula button. After: Damage and Slots.
           const html = document.createElement("div");
@@ -737,10 +1067,19 @@ export default function register(quench) {
           const button = html.querySelector(".carl-damage-roll-button");
           assert.include(button.textContent, "100", "the button shows the formula");
           assert.exists(button.closest(".carl-status-num"), "in the row's number column");
-          assert.include(html.querySelector(`[data-row-id="${hit1.id}"] .carl-status-sub`).textContent, "Maul · Evade 16",
-            "the Attack and its Evade target under the Mob's name");
-          assert.exists(html.querySelector(`[data-row-id="${hit1.id}"] .carl-status-chip[data-tone="bad"]`), "a Hit");
-          assert.exists(html.querySelector(`[data-row-id="${hit2.id}"] .carl-status-chip[data-tone="good"]`), "Evaded");
+          assert.include(
+            html.querySelector(`[data-row-id="${hit1.id}"] .carl-status-sub`).textContent,
+            "Maul · Evade 16",
+            "the Attack and its Evade target under the Mob's name",
+          );
+          assert.exists(
+            html.querySelector(`[data-row-id="${hit1.id}"] .carl-status-chip[data-tone="bad"]`),
+            "a Hit",
+          );
+          assert.exists(
+            html.querySelector(`[data-row-id="${hit2.id}"] .carl-status-chip[data-tone="good"]`),
+            "Evaded",
+          );
 
           const [entry] = damageCardActionEntries;
           await entry.onClick(new MouseEvent("click"), damage, button);
@@ -751,8 +1090,14 @@ export default function register(quench) {
           assert.equal(row.result.raw, 100);
           assert.isAbove(row.result.slots, 0);
           decorateDamageCard(damage, html);
-          assert.exists(html.querySelector(`[data-row-id="${hit1.id}"] .carl-damage-amount`), "the Damage cell");
-          assert.exists(html.querySelector(`[data-row-id="${hit1.id}"] .carl-damage-slots`), "the Slots cell");
+          assert.exists(
+            html.querySelector(`[data-row-id="${hit1.id}"] .carl-damage-amount`),
+            "the Damage cell",
+          );
+          assert.exists(
+            html.querySelector(`[data-row-id="${hit1.id}"] .carl-damage-slots`),
+            "the Slots cell",
+          );
           assert.notExists(html.querySelector(".carl-damage-roll-button"), "nothing left to roll");
 
           assert.isFalse(await rollAttackOnCard(damage, hit1.attackId), "an Attack rolls once");
@@ -775,11 +1120,17 @@ export default function register(quench) {
             (dialog) => pressDialog(dialog, "roll"),
             "carl-roll-dialog",
           );
-          await waitFor(() => hitList(state(card)).every((hit) => hit.evade), { message: "not every Attack got an Evade" });
+          await waitFor(() => hitList(state(card)).every((hit) => hit.evade), {
+            message: "not every Attack got an Evade",
+          });
           assert.lengthOf(hitList(state(card)), 2);
           assert.isTrue(state(card).crawlers[crawlerKey(pc1.uuid)].evaded);
-          assert.isTrue(hitList(state(card)).every((hit) => hit.evade.kind === "evade" && hit.evade.difficulty === 16),
-            "each Attack has its own Evade against its own Difficulty");
+          assert.isTrue(
+            hitList(state(card)).every(
+              (hit) => hit.evade.kind === "evade" && hit.evade.difficulty === 16,
+            ),
+            "each Attack has its own Evade against its own Difficulty",
+          );
         });
 
         it("two operations sent at once are applied one after the other", async function () {
@@ -790,17 +1141,32 @@ export default function register(quench) {
             op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(20, 12, 16) } }),
             op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(5, 3, 16) } }),
           ]);
-          assert.deepEqual(results, [true, false], "the second sees the first's result and is refused");
+          assert.deepEqual(
+            results,
+            [true, false],
+            "the second sees the first's result and is refused",
+          );
           assert.isTrue(onlyHit(card).evade.success);
         });
 
         it("an Intervene that turns a failed Taunt into a Success pulls the Attacks then", async function () {
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "taunt", { byUuid: pc2.uuid, byName: pc2.name, mobUuid: mob.uuid, rank: 1, check: rolled(18, 12, 20) });
+          await op(card, "taunt", {
+            byUuid: pc2.uuid,
+            byName: pc2.name,
+            mobUuid: mob.uuid,
+            rank: 1,
+            check: rolled(18, 12, 20),
+          });
           assert.equal(onlyHit(card).targetUuid, pc1.uuid, "a Near Miss: nothing moved yet");
           const [taunt] = tauntList(state(card));
-          await op(card, "intervene", { byUuid: pc1.uuid, byName: pc1.name, ref: { type: "taunt", tauntId: taunt.id }, value: 4 });
+          await op(card, "intervene", {
+            byUuid: pc1.uuid,
+            byName: pc1.name,
+            ref: { type: "taunt", tauntId: taunt.id },
+            value: 4,
+          });
           assert.equal(onlyHit(card).targetUuid, pc2.uuid, "pulled once it succeeded");
         });
 
@@ -810,10 +1176,17 @@ export default function register(quench) {
           const before = hbOf(pc1);
           assert.isAbove(before, 0);
           const damage = await postDamageCard(combat, state(card));
-          assert.equal(damage.getFlag("carl-rpg", "reactionDamage").rows[onlyHit(card).id].status, "pending");
+          assert.equal(
+            damage.getFlag("carl-rpg", "reactionDamage").rows[onlyHit(card).id].status,
+            "pending",
+          );
           await rollAllDamage(damage);
           await waitFor(() => hbOf(pc1) < before, { message: "no damage taken" });
-          assert.equal(damage.getFlag("carl-rpg", "reactionDamage").rows[onlyHit(card).id].result.raw, 100, "the full hit");
+          assert.equal(
+            damage.getFlag("carl-rpg", "reactionDamage").rows[onlyHit(card).id].result.raw,
+            100,
+            "the full hit",
+          );
         });
 
         it("a failed free Evade has no consequences of its own", async function () {
@@ -841,33 +1214,53 @@ export default function register(quench) {
           assert.isFalse(hitMissed(hit), "an Area Attack still lands");
           assert.isFalse(hitEvadable(hit), "nothing more to Evade");
           const damage = await postDamageCard(combat, state(card));
-          const tags = damage.getFlag("carl-rpg", "reactionDamage").rows[hit.id].tags.map((t) => t.key);
+          const tags = damage
+            .getFlag("carl-rpg", "reactionDamage")
+            .rows[hit.id].tags.map((t) => t.key);
           assert.include(tags, "CARLRPG.Resolve.EvadedHalf");
           await rollAllDamage(damage);
-          assert.equal(damage.getFlag("carl-rpg", "reactionDamage").rows[hit.id].result.raw, 50, "half of 100");
+          assert.equal(
+            damage.getFlag("carl-rpg", "reactionDamage").rows[hit.id].result.raw,
+            50,
+            "half of 100",
+          );
         });
 
         it("both cards show the Mob Attack's printed effect", async function () {
-          await mobAttacksOf(mob)[0].update({ "system.description": "<p>The target is Poisoned.</p>", "system.range": "Melee" });
+          await mobAttacksOf(mob)[0].update({
+            "system.description": "<p>The target is Poisoned.</p>",
+            "system.range": "Melee",
+          });
           await declareOn(pc1);
           const card = await startReaction();
           const html = document.createElement("div");
           html.innerHTML = `<div class="carl-reaction"></div>`;
           decorateReactionCard(card, html);
-          assert.include(html.querySelector(".carl-attack-effect")?.textContent, "Poisoned", "on the Reaction card");
+          assert.include(
+            html.querySelector(".carl-attack-effect")?.textContent,
+            "Poisoned",
+            "on the Reaction card",
+          );
           assert.include(html.querySelector(".carl-attack-range")?.textContent, "Melee");
 
           const damage = await postDamageCard(combat, state(card));
           const table = document.createElement("div");
           table.innerHTML = `<div class="carl-reaction-damage"></div>`;
           decorateDamageCard(damage, table);
-          assert.include(table.querySelector(".carl-status-detail .carl-attack-effect")?.textContent, "Poisoned", "on the Damage card");
+          assert.include(
+            table.querySelector(".carl-status-detail .carl-attack-effect")?.textContent,
+            "Poisoned",
+            "on the Damage card",
+          );
         });
 
         it("an opened roll breakdown stays open when the card redraws", async function () {
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [onlyHit(card).id]: rolled(20, 12, 16) } });
+          await op(card, "evade", {
+            uuid: pc1.uuid,
+            checks: { [onlyHit(card).id]: rolled(20, 12, 16) },
+          });
           const draw = () => {
             const html = document.createElement("div");
             html.innerHTML = `<div class="carl-reaction"></div>`;
@@ -886,7 +1279,10 @@ export default function register(quench) {
           }
           const second = draw();
           try {
-            assert.isTrue(second.querySelector("details.carl-status-row").open, "still open after the redraw");
+            assert.isTrue(
+              second.querySelector("details.carl-status-row").open,
+              "still open after the redraw",
+            );
             second.querySelector("details.carl-status-row").open = false;
             await settle(50);
           } finally {
@@ -894,7 +1290,10 @@ export default function register(quench) {
           }
           const third = draw();
           try {
-            assert.isFalse(third.querySelector("details.carl-status-row").open, "closed again when closed");
+            assert.isFalse(
+              third.querySelector("details.carl-status-row").open,
+              "closed again when closed",
+            );
           } finally {
             third.remove();
           }
@@ -924,30 +1323,71 @@ export default function register(quench) {
           assert.lengthOf(html.querySelectorAll(".carl-status-section"), 2);
           assert.lengthOf(html.querySelectorAll('.carl-status-chip[data-tone="incoming"]'), 2);
           const first = html.querySelector(".carl-status-row");
-          assert.notInclude(first.querySelector(".carl-status-what strong").textContent, "Maul", "the Mob's name on its own");
-          assert.include(first.querySelector(".carl-status-sub").textContent, "Maul", "the Attack under it");
-          assert.include(first.querySelector(".carl-status-sub").textContent, "Evade 16", "and the Evade target");
-          assert.include(html.querySelector(".carl-status-progress").textContent, "0", "0 of 2 settled");
+          assert.notInclude(
+            first.querySelector(".carl-status-what strong").textContent,
+            "Maul",
+            "the Mob's name on its own",
+          );
+          assert.include(
+            first.querySelector(".carl-status-sub").textContent,
+            "Maul",
+            "the Attack under it",
+          );
+          assert.include(
+            first.querySelector(".carl-status-sub").textContent,
+            "Evade 16",
+            "and the Evade target",
+          );
+          assert.include(
+            html.querySelector(".carl-status-progress").textContent,
+            "0",
+            "0 of 2 settled",
+          );
           assert.exists(html.querySelector(".carl-status-waiting"), "waiting on both");
-          assert.lengthOf(html.querySelectorAll('[data-op="evade"]'), 2, "an Evade in each section, from the start");
+          assert.lengthOf(
+            html.querySelectorAll('[data-op="evade"]'),
+            2,
+            "an Evade in each section, from the start",
+          );
           assert.exists(html.querySelector('[data-op="lock"]'));
           assert.notExists(html.querySelector('[data-op="openEvades"]'), "no Open Evades");
 
           const [hit1, hit2] = hitList(state(card));
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [hit1.id]: rolled(8, 5, 16) }, preset });
-          await op(card, "evade", { uuid: pc2.uuid, checks: { [hit2.id]: rolled(30, 15, 16) }, preset });
+          await op(card, "evade", {
+            uuid: pc1.uuid,
+            checks: { [hit1.id]: rolled(8, 5, 16) },
+            preset,
+          });
+          await op(card, "evade", {
+            uuid: pc2.uuid,
+            checks: { [hit2.id]: rolled(30, 15, 16) },
+            preset,
+          });
           html = draw();
           assert.exists(html.querySelector('.carl-status-chip[data-tone="bad"]'), "a Hit");
-          assert.lengthOf(html.querySelectorAll('[data-op="intervene"]'), 1,
-            "only on the failed Evade: a d6 can't change pc2's Amazing Success");
+          assert.lengthOf(
+            html.querySelectorAll('[data-op="intervene"]'),
+            1,
+            "only on the failed Evade: a d6 can't change pc2's Amazing Success",
+          );
           const reroll = html.querySelector('[data-op="reroll"]');
           assert.exists(reroll, "AI Reroll on the failed Evade's row");
-          assert.deepEqual(JSON.parse(reroll.dataset.ref), { type: "hit", hitId: hit1.id, which: "evade" });
-          assert.exists(html.querySelector('[data-op="intervene"]'), "the GM can Intervene with pc2");
+          assert.deepEqual(JSON.parse(reroll.dataset.ref), {
+            type: "hit",
+            hitId: hit1.id,
+            which: "evade",
+          });
+          assert.exists(
+            html.querySelector('[data-op="intervene"]'),
+            "the GM can Intervene with pc2",
+          );
 
           await taunt(card, pc2, 25);
           html = draw();
-          assert.exists(html.querySelector(".carl-status-row.is-ghost"), "the moved Attack, struck through in pc1's section");
+          assert.exists(
+            html.querySelector(".carl-status-row.is-ghost"),
+            "the moved Attack, struck through in pc1's section",
+          );
         });
       });
 
@@ -971,12 +1411,17 @@ export default function register(quench) {
             // The tracker renders core's controls and initiative column.
             await combat.activate();
             await ui.combat.render({ force: true, combat });
-            await waitFor(() => ui.combat.element?.querySelector('.combat-controls [data-action="nextRound"]'),
-              { message: "core's round controls never rendered" });
+            await waitFor(
+              () => ui.combat.element?.querySelector('.combat-controls [data-action="nextRound"]'),
+              { message: "core's round controls never rendered" },
+            );
             const el = ui.combat.element;
             assert.notExists(el.querySelector(".carl-phase-step"), "no phase bar");
             assert.notExists(el.querySelector(".carl-combat-group"), "no groups");
-            assert.exists(el.querySelector(".combat-tracker .token-initiative"), "initiative column");
+            assert.exists(
+              el.querySelector(".combat-tracker .token-initiative"),
+              "initiative column",
+            );
           } finally {
             await deleteTestCombat(combat);
             await deleteTestActor(a);

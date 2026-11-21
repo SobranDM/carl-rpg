@@ -31,7 +31,7 @@
     <li class="item flexrow">
       <div class="item-name">
         <input type="text" name="{{concat 'system.conditions.' index '.label'}}" value="{{condition.label}}"
-          title="{{debuffEffectHint ../config.debuffs condition.key (eq ../actor.type 'mob')}}" />
+          data-tooltip-text="{{debuffEffectHint ../config.debuffs condition.key (eq ../actor.type 'mob')}}" />
       </div>
       <div class="item-prop">
         <input type="text" class="carl-w-tiny" name="{{concat 'system.conditions.' index '.stacks'}}" value="{{condition.stacks}}" data-dtype="Number" />

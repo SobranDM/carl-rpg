@@ -1,4 +1,4 @@
-import { CARLRPG } from './config.mjs';
+import { CARLRPG } from "./config.mjs";
 
 /**
  * Look up a Stat's modifier via the Table 2 stepped lookup (NOT a linear
@@ -27,8 +27,8 @@ export function getStatMod(statValue) {
  */
 export function getRankDamageDie(rank) {
   const value = Number(rank) || 0;
-  if (value < 1) return '';
-  let best = '';
+  if (value < 1) return "";
+  let best = "";
   for (const [min, , formula] of CARLRPG.rankDamageDiceTable) {
     if (min <= value) best = formula;
     else break;
@@ -44,18 +44,28 @@ export function getRankDamageDie(rank) {
  * @returns {string} One of the CARLRPG.degreesOfSuccess keys.
  */
 export function getDegreeOfSuccess(naturalRoll, total, difficulty) {
-  if (naturalRoll === 20) return 'criticalHit';
-  if (naturalRoll === 1) return 'criticalFail';
+  if (naturalRoll === 20) return "criticalHit";
+  if (naturalRoll === 1) return "criticalFail";
   if (difficulty === null || difficulty === undefined) {
     // No Difficulty supplied - can only report the natural-roll-based degrees.
-    return total >= 10 ? 'standardSuccess' : 'standardFail';
+    return total >= 10 ? "standardSuccess" : "standardFail";
   }
   const margin = total - difficulty;
-  if (margin >= 10) return 'amazingSuccess';
-  if (margin >= 0) return 'standardSuccess';
-  if (margin >= -2) return 'nearMissFail';
-  if (margin >= -9) return 'standardFail';
-  return 'majorFail';
+  if (margin >= 10) return "amazingSuccess";
+  if (margin >= 0) return "standardSuccess";
+  if (margin >= -2) return "nearMissFail";
+  if (margin >= -9) return "standardFail";
+  return "majorFail";
+}
+
+/**
+ * A Degree of Success's localized name ("Major Fail"); an unknown key is
+ * shown as given.
+ * @param {string} degree
+ * @returns {string}
+ */
+export function degreeLabel(degree) {
+  return game.i18n.localize(CARLRPG.degreesOfSuccess[degree] ?? degree ?? "");
 }
 
 /**
@@ -67,18 +77,18 @@ export function getDegreeOfSuccess(naturalRoll, total, difficulty) {
  * @returns {{label: string, type: "hit"|"miss"|"warn"}}
  */
 export function degreeBadge(degree) {
-  const label = game.i18n.localize(CARLRPG.degreesOfSuccess[degree] ?? degree);
-  const type = ['criticalHit', 'amazingSuccess', 'standardSuccess'].includes(degree)
-    ? 'hit'
-    : ['criticalFail', 'majorFail'].includes(degree)
-      ? 'miss'
-      : 'warn';
+  const label = degreeLabel(degree);
+  const type = ["criticalHit", "amazingSuccess", "standardSuccess"].includes(degree)
+    ? "hit"
+    : ["criticalFail", "majorFail"].includes(degree)
+      ? "miss"
+      : "warn";
   return { label, type };
 }
 
 /** Whether a Degree of Success counts as a hit (vs. a miss/near-miss). */
 export function isHitDegree(degree) {
-  return ['criticalHit', 'amazingSuccess', 'standardSuccess'].includes(degree);
+  return ["criticalHit", "amazingSuccess", "standardSuccess"].includes(degree);
 }
 
 /**
@@ -105,6 +115,35 @@ export function evadeModifier(sys) {
 }
 
 /**
+ * Unopposed Difficulty (p.59): 10 + Floor Number x 2.
+ * @param {number} floor
+ * @returns {number}
+ */
+export function unopposedDifficulty(floor) {
+  return 10 + 2 * (Number(floor) || 0);
+}
+
+/**
+ * Stat Check Difficulty (p.59): 10 + Floor Number.
+ * @param {number} floor
+ * @returns {number}
+ */
+export function statDifficulty(floor) {
+  return 10 + (Number(floor) || 0);
+}
+
+/**
+ * Opposed Difficulty (p.59): 10 + the antagonist's relevant Stat Mod + Floor
+ * Number. With floor 0 it's the "+F" base a stat block prints ("13+F").
+ * @param {number} mod  The antagonist's Stat Mod.
+ * @param {number} floor
+ * @returns {number}
+ */
+export function opposedDifficulty(mod, floor) {
+  return 10 + (Number(mod) || 0) + (Number(floor) || 0);
+}
+
+/**
  * The roll dialog's Difficulty presets (The Core Mechanic, p.59), at the
  * current Floor: Unopposed "10 + [Floor Number x 2]", Stat Check "10 + Floor
  * Number", and - when there's an opponent - Opposed "10 + antagonist's
@@ -119,20 +158,45 @@ export function evadeModifier(sys) {
  * @param {{label: string, value: number}|null} [options.given]
  * @returns {{key: string, label: string, value: number|null, selected: boolean}[]}
  */
-export function buildDifficultyPresets({ floor, selected = "custom", opposed = null, given = null }) {
+export function buildDifficultyPresets({
+  floor,
+  selected = "custom",
+  opposed = null,
+  given = null,
+}) {
   const f = Number(floor) || 0;
   const i18n = game.i18n;
   const presets = [];
   if (given && given.value !== null && given.value !== undefined) {
     presets.push({ key: "given", label: `${given.label}: ${given.value}`, value: given.value });
   }
-  presets.push({ key: "unopposed", label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: 10 + 2 * f }), value: 10 + 2 * f });
-  presets.push({ key: "stat", label: i18n.format("CARLRPG.Dialog.Preset.Stat", { value: 10 + f }), value: 10 + f });
+  presets.push({
+    key: "unopposed",
+    label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: unopposedDifficulty(f) }),
+    value: unopposedDifficulty(f),
+  });
+  presets.push({
+    key: "stat",
+    label: i18n.format("CARLRPG.Dialog.Preset.Stat", { value: statDifficulty(f) }),
+    value: statDifficulty(f),
+  });
   if (opposed) {
-    const value = 10 + (Number(opposed.mod) || 0) + f;
-    presets.push({ key: "opposed", label: i18n.format("CARLRPG.Dialog.Preset.Opposed", { name: opposed.name, stat: opposed.stat, value }), value });
+    const value = opposedDifficulty(opposed.mod, f);
+    presets.push({
+      key: "opposed",
+      label: i18n.format("CARLRPG.Dialog.Preset.Opposed", {
+        name: opposed.name,
+        stat: opposed.stat,
+        value,
+      }),
+      value,
+    });
   }
-  presets.push({ key: "custom", label: i18n.localize("CARLRPG.Dialog.Preset.Custom"), value: null });
+  presets.push({
+    key: "custom",
+    label: i18n.localize("CARLRPG.Dialog.Preset.Custom"),
+    value: null,
+  });
   const pick = presets.some((p) => p.key === selected) ? selected : "custom";
   return presets.map((p) => ({ ...p, selected: p.key === pick }));
 }
@@ -144,4 +208,25 @@ export function buildDifficultyPresets({ floor, selected = "custom", opposed = n
  */
 export function selectedPresetValue(presets) {
   return presets.find((p) => p.selected)?.value ?? null;
+}
+
+/**
+ * What Intervene adds to a Check (p.82): the sum of its 1d6s.
+ * @param {{value: number}[]} [interventions]
+ * @returns {number}
+ */
+export function interventionTotal(interventions = []) {
+  return (interventions ?? []).reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+}
+
+/**
+ * Whether a Skill, Spell or Damage Effect is used untrained at this (live)
+ * Rank: Rank 0 - or below it, a negative Rank always counting as untrained
+ * (ruled 2026-11-19). Untrained, a Skill rolls with Disadvantage and no
+ * Rank term; a Spell can't be cast; a Damage Effect can't be used.
+ * @param {number} rank
+ * @returns {boolean}
+ */
+export function isUntrained(rank) {
+  return !((Number(rank) || 0) > 0);
 }

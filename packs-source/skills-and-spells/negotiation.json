@@ -39,7 +39,8 @@
     "range": "",
     "aiFavor": 0,
     "cooldown": "",
-    "limitations": "Does not work on members of your own party. Some items have a minimum price."
+    "limitations": "Does not work on members of your own party. Some items have a minimum price.",
+    "opposedStat": "int"
   },
   "effects": [],
   "_stats": {

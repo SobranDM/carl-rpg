@@ -47,7 +47,8 @@
       "Cleric",
       "Paladin"
     ],
-    "manaCostVariants": []
+    "manaCostVariants": [],
+    "opposedStat": "cha"
   },
   "effects": [],
   "_stats": {

@@ -29,3 +29,11 @@ export function withOwners(ownership, ids) {
   const OWNER = CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
   return { ...(ownership ?? {}), ...Object.fromEntries(ids.map((id) => [id, OWNER])) };
 }
+
+/**
+ * Every GM's user id - the whisper list of a GM-only card.
+ * @returns {string[]}
+ */
+export function gmUserIds() {
+  return game.users.filter((u) => u.isGM).map((u) => u.id);
+}

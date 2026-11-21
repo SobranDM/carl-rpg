@@ -1,0 +1,23 @@
+{{!-- The New Achievement! splash (module/apps/achievement-splash.mjs): a
+      frameless paint-splash banner (assets/paint-banner.webp), shown to the
+      crawler's player until they close it with its X. --}}
+<div class="carl-achievement-banner">
+  <button type="button" class="carl-achievement-close" data-action="close"
+    data-tooltip-text="{{localize 'CARLRPG.Achievement.Close'}}" aria-label="{{localize 'CARLRPG.Achievement.Close'}}">
+    <i class="fas fa-xmark"></i>
+  </button>
+  <div class="carl-achievement-content">
+    <img class="carl-achievement-icon" src="{{img}}" alt="" />
+    <div class="carl-achievement-text">
+      <div class="carl-achievement-tag">{{localize "CARLRPG.Achievement.New"}}</div>
+      <h2 class="carl-achievement-name">{{name}}</h2>
+      {{#if crawler}}<div class="carl-achievement-crawler">{{crawler}}</div>{{/if}}
+      <div class="carl-achievement-description">{{{descriptionHTML}}}</div>
+      {{#if reward}}
+      <div class="carl-achievement-reward">
+        <span class="carl-achievement-reward-label">{{localize "CARLRPG.Achievement.Reward"}}:</span> {{reward}}
+      </div>
+      {{/if}}
+    </div>
+  </div>
+</div>

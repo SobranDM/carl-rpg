@@ -1,10 +1,15 @@
 import CarlDice from "../dice/dice.mjs";
 import { recheckLevelGatedGrants } from "../helpers/race-class-grants.mjs";
-import { buildConditionEntry } from "../helpers/conditions.mjs";
+import { buildConditionEntry, changeConditions, dyingRounds } from "../helpers/conditions.mjs";
 import { syncDefeated } from "../helpers/defeat.mjs";
 import { isCrawler, isPet, isVehicle } from "../helpers/actor-kinds.mjs";
 import { explodeVehicle } from "../helpers/vehicle-ram.mjs";
-import { grantPetSkills, levelBondedPets, syncPetCommandStatus, syncPetOwnership } from "../helpers/pets.mjs";
+import {
+  grantPetSkills,
+  levelBondedPets,
+  syncPetCommandStatus,
+  syncPetOwnership,
+} from "../helpers/pets.mjs";
 
 /**
  * Token defaults for a new actor, by type (ruled 2026-11-18): Characters and
@@ -25,13 +30,34 @@ export function tokenDefaultsFor(type) {
   switch (type) {
     case "character":
     case "pet":
-      return { actorLink: true, sight: { enabled: true }, disposition: DISPOSITIONS.FRIENDLY, ...shown };
+      return {
+        actorLink: true,
+        sight: { enabled: true },
+        disposition: DISPOSITIONS.FRIENDLY,
+        ...shown,
+      };
     case "mob":
-      return { actorLink: false, sight: { enabled: false }, disposition: DISPOSITIONS.HOSTILE, ...shown };
+      return {
+        actorLink: false,
+        sight: { enabled: false },
+        disposition: DISPOSITIONS.HOSTILE,
+        ...shown,
+      };
     case "vehicle":
-      return { actorLink: true, sight: { enabled: false }, disposition: DISPOSITIONS.NEUTRAL, ...shown };
+      return {
+        actorLink: true,
+        sight: { enabled: false },
+        disposition: DISPOSITIONS.NEUTRAL,
+        ...shown,
+      };
     case "lootBox":
-      return { actorLink: true, sight: { enabled: false }, disposition: DISPOSITIONS.NEUTRAL, ...shown, displayBars: MODES.NONE };
+      return {
+        actorLink: true,
+        sight: { enabled: false },
+        disposition: DISPOSITIONS.NEUTRAL,
+        ...shown,
+        displayBars: MODES.NONE,
+      };
     default:
       return null;
   }
@@ -72,11 +98,17 @@ export class CarlRPGActor extends Actor {
    */
   static migrateData(source) {
     const system = source?.system;
-    const hasOld = source?.type === "character" && system && typeof system === "object" && ("pet" in system || "mount" in system);
+    const hasOld =
+      source?.type === "character" &&
+      system &&
+      typeof system === "object" &&
+      ("pet" in system || "mount" in system);
     if (hasOld && source.flags?.["carl-rpg"]?.companionsMigrated) {
       // Already converted (helpers/companion-migration.mjs), yet the database
       // still has the old keys: they're not brought back, only reported.
-      console.warn(`carl-rpg | ${source.name}: old Pet tab data is still stored after its migration; ignored.`);
+      console.warn(
+        `carl-rpg | ${source.name}: old Pet tab data is still stored after its migration; ignored.`,
+      );
     } else if (hasOld) {
       source.flags ??= {};
       source.flags["carl-rpg"] ??= {};
@@ -118,7 +150,12 @@ export class CarlRPGActor extends Actor {
     const update = isDelta ? current + value : value;
     if (update === current) return this;
     const updates = { [`system.${attribute}.value`]: Math.clamp(update, 0, attr.effectiveMax) };
-    const allowed = Hooks.call("modifyTokenAttribute", { attribute, value, isDelta, isBar }, updates, this);
+    const allowed = Hooks.call(
+      "modifyTokenAttribute",
+      { attribute, value, isDelta, isBar },
+      updates,
+      this,
+    );
     return allowed !== false ? this.update(updates) : this;
   }
 
@@ -151,11 +188,13 @@ export class CarlRPGActor extends Actor {
         foundry.utils.setProperty(changed, "system.bankedStatPoints", currentBanked + 3 * delta);
         // "Keep a running total of all your grinding hours and erase it only
         // when you level up" (p.171) - any Level gain, whatever its source.
-        if (this.type === "character") foundry.utils.setProperty(changed, "system.grindLevelHours", 0);
+        if (this.type === "character")
+          foundry.utils.setProperty(changed, "system.grindLevelHours", 0);
         // A crawler's bonded Pets level with it (_onUpdate, module/helpers/
         // pets.mjs) - _onUpdate can't see the old Level, so carry the gain,
         // keyed by actor (one options object serves a whole batched update).
-        if (isCrawler(this)) options.carlLevelDelta = { ...(options.carlLevelDelta ?? {}), [this.id]: delta };
+        if (isCrawler(this))
+          options.carlLevelDelta = { ...(options.carlLevelDelta ?? {}), [this.id]: delta };
       }
     }
 
@@ -164,15 +203,34 @@ export class CarlRPGActor extends Actor {
     // countdown (Table 11). Mobs instead die outright (see _onUpdate).
     // HB before this update, for _onUpdate's defeat sync (it only un-marks
     // "defeated" on a heal up from 0). Options travel with the update.
-    if (foundry.utils.hasProperty(changed, "system.hb.value")) options.carlPreviousHb = this.system.hb?.value ?? 0;
+    if (foundry.utils.hasProperty(changed, "system.hb.value"))
+      options.carlPreviousHb = this.system.hb?.value ?? 0;
+
+    // The Conditions this changes ride this update on the active GM's
+    // client (or with none online), or when it writes the list anyway;
+    // from another client the GM makes them just after, through the one
+    // writer of the list (_onUpdate, helpers/conditions.mjs changeConditions).
+    const gm = game.users.activeGM;
+    const here = !gm || gm.isSelf || foundry.utils.hasProperty(changed, "system.conditions");
 
     const droppedHb = foundry.utils.getProperty(changed, "system.hb.value");
-    if (isCrawler(this) && droppedHb !== undefined && Number(droppedHb) <= 0 && (this.system.hb?.value ?? 0) > 0) {
-      const conditions = foundry.utils.getProperty(changed, "system.conditions") ?? this.system.toObject().conditions ?? [];
-      if (!conditions.some((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown)) {
-        const dying = buildConditionEntry("dying", { source: game.i18n.localize("CARLRPG.Actor.HealthBar") });
+    if (
+      isCrawler(this) &&
+      droppedHb !== undefined &&
+      Number(droppedHb) <= 0 &&
+      (this.system.hb?.value ?? 0) > 0
+    ) {
+      const conditions =
+        foundry.utils.getProperty(changed, "system.conditions") ??
+        this.system.toObject().conditions ??
+        [];
+      if (!here) options.carlDyingFollowUp = true;
+      else if (!conditions.some((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown)) {
+        const dying = buildConditionEntry("dying", {
+          source: game.i18n.localize("CARLRPG.Actor.HealthBar"),
+        });
         dying.id = foundry.utils.randomID();
-        dying.remaining = Math.max(0, this.system.stats?.con?.mod ?? 0);
+        dying.remaining = dyingRounds(this.system);
         foundry.utils.setProperty(changed, "system.conditions", [...conditions, dying]);
       }
     }
@@ -181,10 +239,18 @@ export class CarlRPGActor extends Actor {
     // gain - Apply Healing, a rest, a hand edit on the sheet - ends every
     // `endsOnHealing` Debuff, in this same update.
     const newHb = foundry.utils.getProperty(changed, "system.hb.value");
-    if (newHb !== undefined && Number(newHb) > (this.system.hb?.value ?? 0)) {
-      const conditions = foundry.utils.getProperty(changed, "system.conditions") ?? this.system.toObject().conditions ?? [];
-      const kept = conditions.filter((c) => !CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.endsOnHealing);
-      if (kept.length !== conditions.length) foundry.utils.setProperty(changed, "system.conditions", kept);
+    if (newHb !== undefined && Number(newHb) > (this.system.hb?.value ?? 0) && !here) {
+      options.carlHealedFollowUp = true;
+    } else if (newHb !== undefined && Number(newHb) > (this.system.hb?.value ?? 0)) {
+      const conditions =
+        foundry.utils.getProperty(changed, "system.conditions") ??
+        this.system.toObject().conditions ??
+        [];
+      const kept = conditions.filter(
+        (c) => !CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.endsOnHealing,
+      );
+      if (kept.length !== conditions.length)
+        foundry.utils.setProperty(changed, "system.conditions", kept);
     }
   }
 
@@ -202,22 +268,51 @@ export class CarlRPGActor extends Actor {
     // Defeat/death marking (module/helpers/defeat.mjs): a Mob at 0 HB, or a
     // crawler whose Dying countdown has run out. The active GM does it, so it
     // works whoever applied the damage.
-    if (game.users.activeGM?.isSelf
-      && (foundry.utils.hasProperty(changed, "system.hb.value") || foundry.utils.hasProperty(changed, "system.conditions"))) {
-      syncDefeated(this, { previousHb: options.carlPreviousHb ?? null })
-        .catch((err) => console.error("CarlRPG | defeat sync failed", err));
+    if (
+      game.users.activeGM?.isSelf &&
+      (foundry.utils.hasProperty(changed, "system.hb.value") ||
+        foundry.utils.hasProperty(changed, "system.conditions"))
+    ) {
+      syncDefeated(this, { previousHb: options.carlPreviousHb ?? null }).catch((err) =>
+        console.error("CarlRPG | defeat sync failed", err),
+      );
+    }
+    // What another client's HB change does to the Conditions (_preUpdate):
+    // Dying at 0 HB (p.94), and any HB gain ending "until healed" Debuffs.
+    if (game.users.activeGM?.isSelf && (options.carlDyingFollowUp || options.carlHealedFollowUp)) {
+      const ops = [];
+      if (options.carlDyingFollowUp && (this.system.hb?.value ?? 0) <= 0) {
+        ops.push({
+          op: "add",
+          key: "dying",
+          options: { source: game.i18n.localize("CARLRPG.Actor.HealthBar") },
+        });
+      }
+      if (options.carlHealedFollowUp) ops.push({ op: "removeMechanic", flag: "endsOnHealing" });
+      if (ops.length) {
+        changeConditions(this, ops).catch((err) =>
+          console.error("CarlRPG | Conditions after an HB change failed", err),
+        );
+      }
     }
     if (game.users.activeGM?.isSelf) {
       const levelDelta = options.carlLevelDelta?.[this.id];
       if (levelDelta > 0) {
-        levelBondedPets(this, levelDelta)
-          .catch((err) => console.error("CarlRPG | pet levelling failed", err));
+        levelBondedPets(this, levelDelta).catch((err) =>
+          console.error("CarlRPG | pet levelling failed", err),
+        );
       }
       if (isPet(this)) this.#onPetUpdate(changed);
       // A vehicle brought to 0% HB explodes (p.73) - once, as it gets there.
-      if (isVehicle(this) && foundry.utils.hasProperty(changed, "system.hb.value")
-        && (options.carlPreviousHb ?? 0) > 0 && this.system.hb.value <= 0) {
-        explodeVehicle(this).catch((err) => console.error("CarlRPG | vehicle explosion failed", err));
+      if (
+        isVehicle(this) &&
+        foundry.utils.hasProperty(changed, "system.hb.value") &&
+        (options.carlPreviousHb ?? 0) > 0 &&
+        this.system.hb.value <= 0
+      ) {
+        explodeVehicle(this).catch((err) =>
+          console.error("CarlRPG | vehicle explosion failed", err),
+        );
       }
     }
     if (game.user.id !== userId) return;
@@ -254,7 +349,9 @@ export class CarlRPGActor extends Actor {
       if (this.system[key] && ids.includes(this.system[key])) cleared[`system.${key}`] = "";
     }
     if (foundry.utils.isEmpty(cleared)) return;
-    this.update(cleared).catch((err) => console.error("CarlRPG | clearing the active Race/Class failed", err));
+    this.update(cleared).catch((err) =>
+      console.error("CarlRPG | clearing the active Race/Class failed", err),
+    );
   }
 
   /**
@@ -269,16 +366,20 @@ export class CarlRPGActor extends Actor {
       grantPetSkills(this).catch((err) => console.error("CarlRPG | pet skill grant failed", err));
     }
     if (sys.ownerId) {
-      syncPetOwnership(this).catch((err) => console.error("CarlRPG | pet ownership sync failed", err));
+      syncPetOwnership(this).catch((err) =>
+        console.error("CarlRPG | pet ownership sync failed", err),
+      );
     }
     if (sys.command !== undefined) {
-      syncPetCommandStatus(this).catch((err) => console.error("CarlRPG | pet command status failed", err));
+      syncPetCommandStatus(this).catch((err) =>
+        console.error("CarlRPG | pet command status failed", err),
+      );
     }
   }
 
   /** @override */
   getRollData() {
-    return { ...super.getRollData(), ...this.system.getRollData?.() ?? null };
+    return { ...super.getRollData(), ...(this.system.getRollData?.() ?? null) };
   }
 
   /**
@@ -314,14 +415,17 @@ export class CarlRPGActor extends Actor {
    */
   async rollMarkedAdvancementChecks({ rankFilter = "all", floorBonus = true } = {}) {
     const results = [];
-    const marked = this.items.filter((i) =>
-      ["skill", "spell", "damageEffect"].includes(i.type) && i.system.marked
+    const marked = this.items.filter(
+      (i) => ["skill", "spell", "damageEffect"].includes(i.type) && i.system.marked,
     );
     for (const item of marked) {
       const rank = item.system.rank ?? 0;
       if (rankFilter === "lte4" && rank > 4) continue;
       if (rankFilter === "gte5" && rank < 5) continue;
-      const { success, newRank } = await CarlDice.rollAdvancementCheck(this, item, { silent: true, floorBonus });
+      const { success, newRank } = await CarlDice.rollAdvancementCheck(this, item, {
+        silent: true,
+        floorBonus,
+      });
       results.push({ item, success, newRank });
     }
     return results;

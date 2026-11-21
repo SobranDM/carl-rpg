@@ -54,7 +54,7 @@
           <li class="carl-chargen-skill-placeholder" aria-hidden="true">-</li>
           {{/each}}
           {{#each stage.skills as |skill|}}
-          <li class="{{#if skill.taken}}carl-chargen-taken{{/if}}" {{#if skill.taken}}title="{{localize 'CARLRPG.Chargen.TakenElsewhere'}}"{{/if}}>
+          <li class="{{#if skill.taken}}carl-chargen-taken{{/if}}" {{#if skill.taken}}data-tooltip-text="{{localize 'CARLRPG.Chargen.TakenElsewhere'}}"{{/if}}>
             <label>
               <input type="checkbox" name="stage.{{stage.key}}.skill.{{skill.index}}" {{checked skill.chosen}} {{disabled skill.disabled}} />
               {{skill.name}}{{#if skill.stat}} <span class="carl-hint">({{skill.stat}})</span>{{/if}}

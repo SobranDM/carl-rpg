@@ -64,6 +64,13 @@ import registerPartyCheck from "./batches/party-check.mjs";
 import registerShieldBlock from "./batches/shield-block.mjs";
 import registerTimers from "./batches/timers.mjs";
 import registerSkillNames from "./batches/skill-names.mjs";
+import registerRefactorRulings from "./batches/refactor-rulings.mjs";
+import registerLootGenerator from "./batches/loot-generator.mjs";
+import registerBoxes from "./batches/boxes.mjs";
+import registerAchievements from "./batches/achievements.mjs";
+import registerOpeningSession from "./batches/opening-session.mjs";
+import registerFloorClock from "./batches/floor-clock.mjs";
+import registerOpposed from "./batches/opposed.mjs";
 import { withMessageCleanup } from "./helpers.mjs";
 
 const BATCH_REGISTRARS = [
@@ -119,11 +126,19 @@ const BATCH_REGISTRARS = [
   registerShieldBlock,
   registerTimers,
   registerSkillNames,
+  registerRefactorRulings,
+  registerLootGenerator,
+  registerBoxes,
+  registerAchievements,
+  registerOpeningSession,
+  registerFloorClock,
+  registerOpposed,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {
   const withCleanup = {
-    registerBatch: (key, fn, options) => quench.registerBatch(key, withMessageCleanup(key, fn), options),
+    registerBatch: (key, fn, options) =>
+      quench.registerBatch(key, withMessageCleanup(key, fn), options),
   };
   for (const register of BATCH_REGISTRARS) register(withCleanup);
   console.log(`CarlRPG | Registered ${BATCH_REGISTRARS.length} Quench batches`);

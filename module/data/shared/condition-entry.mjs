@@ -20,21 +20,51 @@ export function defineConditionsField() {
   const fields = foundry.data.fields;
   return new fields.ArrayField(
     new fields.SchemaField({
-      id: new fields.StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() }),
+      id: new fields.StringField({
+        required: true,
+        blank: false,
+        initial: () => foundry.utils.randomID(),
+      }),
       key: new fields.StringField({ required: true, blank: false }), // key into CONFIG.CARLRPG.debuffs, or "custom"
       label: new fields.StringField({ required: false, blank: true, initial: "" }),
-      stacks: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 1, min: 1 }),
-      remaining: new fields.NumberField({ required: false, nullable: true, integer: true, initial: null }),
+      stacks: new fields.NumberField({
+        required: true,
+        nullable: false,
+        integer: true,
+        initial: 1,
+        min: 1,
+      }),
+      remaining: new fields.NumberField({
+        required: false,
+        nullable: true,
+        integer: true,
+        initial: null,
+      }),
       source: new fields.StringField({ required: false, blank: true, initial: "" }),
       durationType: new fields.StringField({
-        required: false, nullable: true, blank: false, initial: null,
+        required: false,
+        nullable: true,
+        blank: false,
+        initial: null,
         choices: ["rounds", "real-minutes", "until-condition"],
       }),
       expiresAt: new fields.NumberField({ required: false, nullable: true, initial: null }),
       changes: defineChangesField(),
       perRound: new fields.SchemaField({
-        hb: new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 0 }),
-        mana: new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 0 }),
+        hb: new fields.NumberField({
+          required: false,
+          nullable: true,
+          integer: true,
+          initial: null,
+          min: 0,
+        }),
+        mana: new fields.NumberField({
+          required: false,
+          nullable: true,
+          integer: true,
+          initial: null,
+          min: 0,
+        }),
       }),
     }),
     { required: false, initial: [] },

@@ -17,13 +17,18 @@
  * `healActorUuid` is the caster; a card from before recipients were
  * snapshotted has only that, and heals it.
  */
-import { removeConditionFromActor } from "../helpers/conditions.mjs";
+import {
+  changeConditions,
+  conditionOps,
+  removeConditionFromActor,
+} from "../helpers/conditions.mjs";
 import { findConditionWithMechanic, conditionLabel } from "../helpers/debuff-effects.mjs";
 import { shortRestUpdates, conditionsAfterRest, hbCeiling, restoreUpTo } from "../helpers/rest.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { askGM, registerAskHandler, updateCardMessage } from "../helpers/chat-socket.mjs";
 import { isVehicle } from "../helpers/actor-kinds.mjs";
-import { queueOn } from "../helpers/actor-queue.mjs";
+import { queueForCard } from "../helpers/actor-queue.mjs";
+import { ownsUuid } from "../helpers/token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/heal-footer.hbs";
@@ -37,7 +42,13 @@ const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/heal-footer.hbs";
  *   Rank 15). names: who it heals.
  * @returns {Promise<string>}
  */
-export async function buildHealFooter({ full = false, rest = full, amount = 0, canMend = false, names = [] } = {}) {
+export async function buildHealFooter({
+  full = false,
+  rest = full,
+  amount = 0,
+  canMend = false,
+  names = [],
+} = {}) {
   const { renderTemplate } = foundry.applications.handlebars;
   const who = names.join(", ");
   let summary;
@@ -46,7 +57,10 @@ export async function buildHealFooter({ full = false, rest = full, amount = 0, c
       ? game.i18n.localize(rest ? "CARLRPG.Heal.WillHealFull" : "CARLRPG.Heal.WillHealFullOnly")
       : game.i18n.format("CARLRPG.Heal.WillHeal", { amount });
   } else if (full) {
-    summary = game.i18n.format(rest ? "CARLRPG.Heal.WillHealFullRestNamed" : "CARLRPG.Heal.WillHealFullNamed", { names: who });
+    summary = game.i18n.format(
+      rest ? "CARLRPG.Heal.WillHealFullRestNamed" : "CARLRPG.Heal.WillHealFullNamed",
+      { names: who },
+    );
   } else {
     summary = game.i18n.format("CARLRPG.Heal.WillHealNamed", { names: who, amount });
   }
@@ -64,19 +78,6 @@ async function resolveHealActor(uuid) {
   return doc instanceof Actor ? doc : (doc.actor ?? null);
 }
 
-/** Whether a user (this one by default) owns the actor behind a token/actor uuid (a GM always does). */
-function ownsUuid(uuid, user = game.user) {
-  if (user.isGM) return true;
-  if (!uuid) return false;
-  try {
-    const doc = fromUuidSync(uuid);
-    const actor = doc instanceof Actor ? doc : doc?.actor;
-    return !!actor?.testUserPermission(user, "OWNER");
-  } catch (e) {
-    return false;
-  }
-}
-
 /**
  * The card's recipient rows: `healRecipients` in order, or - a card from
  * before those - the one actor it snapshotted.
@@ -92,7 +93,9 @@ export function healRows(message) {
       .map(([id, r]) => ({ id, uuid: r.uuid, name: r.name ?? "", applied: !!r.applied }));
   }
   const uuid = message.getFlag(SCOPE, "healActorUuid");
-  return uuid ? [{ id: "r0", uuid, name: "", applied: !!message.getFlag(SCOPE, "healApplied"), legacy: true }] : [];
+  return uuid
+    ? [{ id: "r0", uuid, name: "", applied: !!message.getFlag(SCOPE, "healApplied"), legacy: true }]
+    : [];
 }
 
 /**
@@ -178,8 +181,6 @@ export async function onApplyHeal(event, message) {
 }
 
 const HEAL = "healApply";
-// Heals, one at a time per Heal card (the GM's client).
-const healQueues = new Map();
 
 /**
  * The GM's side of a Heal's Apply (onApplyHeal), in the card's queue: the
@@ -191,7 +192,7 @@ const healQueues = new Map();
  * @returns {Promise<{healed: {id: string, name: string}[]}>}
  */
 export function healNow({ cardId, rowIds } = {}, user = game.user) {
-  return queueOn(healQueues, cardId, async () => {
+  return queueForCard(cardId, async () => {
     const message = game.messages.get(cardId);
     if (!message || message.getFlag(SCOPE, "healApplied")) return { healed: [] };
     const wanted = new Set(Array.isArray(rowIds) ? rowIds : []);
@@ -212,9 +213,9 @@ export function healNow({ cardId, rowIds } = {}, user = game.user) {
     const updates = all.some((r) => r.legacy)
       ? { healApplied: true }
       : {
-        healRecipients: Object.fromEntries(healed.map((r) => [r.id, { applied: true }])),
-        ...(all.every((r) => appliedIds.has(r.id)) ? { healApplied: true } : {}),
-      };
+          healRecipients: Object.fromEntries(healed.map((r) => [r.id, { applied: true }])),
+          ...(all.every((r) => appliedIds.has(r.id)) ? { healApplied: true } : {}),
+        };
     await message.update({ flags: { [SCOPE]: updates } });
     return { healed };
   });
@@ -233,7 +234,11 @@ registerAskHandler(HEAL, healNow);
 function healRefusal(actor) {
   if (isVehicle(actor)) return game.i18n.localize("CARLRPG.Vehicle.NotHealed");
   const taint = findConditionWithMechanic(actor.system, "noHealing");
-  if (taint) return game.i18n.format("CARLRPG.Heal.BlockedByDebuff", { name: actor.name, debuff: conditionLabel(taint) });
+  if (taint)
+    return game.i18n.format("CARLRPG.Heal.BlockedByDebuff", {
+      name: actor.name,
+      debuff: conditionLabel(taint),
+    });
   return null;
 }
 
@@ -253,11 +258,18 @@ async function healActor(actor, { full, rest, amount }) {
     // 15) reuses the Short Rest formula for the Mana half-restore, but
     // overrides hb.value straight to effectiveMax rather than the Short
     // Rest's flat "+5" - see docs/known-gaps.md 1.2 and module/helpers/rest.mjs.
-    updates = { ...shortRestUpdates(actor), "system.hb.value": Math.max(sys.hb?.value ?? 0, effectiveMax) };
+    updates = {
+      ...shortRestUpdates(actor),
+      "system.hb.value": Math.max(sys.hb?.value ?? 0, effectiveMax),
+    };
     // The Short Rest also ends whatever a short rest ends (Minor Injury -
     // rest.mjs's conditionsAfterRest), independent of the separate Mend
     // Debuff button, which still lets the caster pick one more to remove.
-    updates["system.conditions"] = conditionsAfterRest(sys.conditions, "short");
+    const before = sys.toObject().conditions ?? [];
+    await changeConditions(actor, conditionOps(before, conditionsAfterRest(before, "short")), {
+      updates,
+    });
+    return true;
   } else if (full) {
     // "Heal back to 100% Health Bar" (Heal Critter) - the Health Bar only.
     updates = { "system.hb.value": Math.max(sys.hb?.value ?? 0, effectiveMax) };
@@ -283,18 +295,32 @@ async function healActor(actor, { full, rest, amount }) {
 export async function onMendDebuff(event, message) {
   event.preventDefault();
   const actors = [];
+  let refused = false;
   for (const row of healRows(message).filter((r) => ownsUuid(r.uuid))) {
     const actor = await resolveHealActor(row.uuid);
-    if (actor && !actors.includes(actor)) actors.push(actor);
+    if (!actor || actors.includes(actor)) continue;
+    // Mending is healing (ruled 2026-11-19): not for a creature The Taint
+    // stops being healed, nor a vehicle.
+    const refusal = healRefusal(actor);
+    if (refusal) {
+      ui.notifications.warn(refusal);
+      refused = true;
+      continue;
+    }
+    actors.push(actor);
   }
   if (!actors.length) {
-    ui.notifications.warn(game.i18n.localize("CARLRPG.Heal.NoActor"));
+    if (!refused) ui.notifications.warn(game.i18n.localize("CARLRPG.Heal.NoActor"));
     return;
   }
 
-  const choices = actors.flatMap((actor) => (actor.system.conditions ?? []).map((c, index) => ({ actor, index, condition: c })));
+  const choices = actors.flatMap((actor) =>
+    (actor.system.conditions ?? []).map((c, index) => ({ actor, index, condition: c })),
+  );
   if (!choices.length) {
-    ui.notifications.warn(game.i18n.format("CARLRPG.Heal.NoConditions", { name: actors.map((a) => a.name).join(", ") }));
+    ui.notifications.warn(
+      game.i18n.format("CARLRPG.Heal.NoConditions", { name: actors.map((a) => a.name).join(", ") }),
+    );
     return;
   }
 

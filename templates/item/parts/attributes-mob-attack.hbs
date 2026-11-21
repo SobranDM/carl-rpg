@@ -59,14 +59,14 @@
           {{selectOptions ../config.debuffs selected=te.debuffKey localize=true}}
         </select>
         <input type="text" class="carl-w-tiny" name="{{concat 'system.targetEffects.' index '.stacks'}}" value="{{te.stacks}}"
-          data-dtype="Number" title="{{localize 'CARLRPG.TargetEffect.Stacks'}}" />
-        <select name="{{concat 'system.targetEffects.' index '.trigger'}}" title="{{localize 'CARLRPG.MobAttack.When'}}">
+          data-dtype="Number" data-tooltip-text="{{localize 'CARLRPG.TargetEffect.Stacks'}}" />
+        <select name="{{concat 'system.targetEffects.' index '.trigger'}}" data-tooltip-text="{{localize 'CARLRPG.MobAttack.When'}}">
           {{selectOptions ../config.mobAttackTriggers selected=te.trigger localize=true}}
         </select>
         <input type="text" class="carl-w-medium" name="{{concat 'system.targetEffects.' index '.label'}}" value="{{te.label}}"
           placeholder="{{localize 'CARLRPG.TargetEffect.LabelPlaceholder'}}" />
         <a class="item-control" data-action="deleteArrayItem" data-path="system.targetEffects" data-index="{{index}}"
-          title="{{localize 'CARLRPG.TargetEffect.Remove'}}"><i class="fas fa-trash"></i></a>
+          data-tooltip-text="{{localize 'CARLRPG.TargetEffect.Remove'}}"><i class="fas fa-trash"></i></a>
       </div>
       {{/each}}
       <a class="item-control carl-add-link" data-action="addArrayItem" data-path="system.targetEffects"

@@ -1,0 +1,218 @@
+{
+  "_id": "OxkDiJjSsiIG5M4W",
+  "name": "Gold Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>Rolled by the loot generator for a Gold box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "O76sTyfHmVQBWHM0",
+      "type": "document",
+      "name": "Potion of +2 Skill",
+      "img": "icons/consumables/potions/bottle-pear-corked-labeled-ornamental-purple.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.F6va6PJwCupK5LMH",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!OxkDiJjSsiIG5M4W.O76sTyfHmVQBWHM0"
+    },
+    {
+      "_id": "uBwo3EvqeZdKWhRq",
+      "type": "text",
+      "name": "Spellbook",
+      "img": "icons/sundries/books/book-backed-wood-tan.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!OxkDiJjSsiIG5M4W.uBwo3EvqeZdKWhRq"
+    },
+    {
+      "_id": "frXPvOMI8KNPGtQX",
+      "type": "text",
+      "name": "Spell Scroll",
+      "img": "icons/sundries/scrolls/scroll-bound-blue-red.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!OxkDiJjSsiIG5M4W.frXPvOMI8KNPGtQX"
+    },
+    {
+      "_id": "t7pxbik4rgqhQ6o2",
+      "type": "document",
+      "name": "Magic Paper",
+      "img": "icons/sundries/scrolls/scroll-plain-tan.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.AVxogJPJPHesmKSW",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!OxkDiJjSsiIG5M4W.t7pxbik4rgqhQ6o2"
+    },
+    {
+      "_id": "HeJ2XC8yyQiAOX9j",
+      "type": "document",
+      "name": "Crafting Table",
+      "img": "icons/tools/smithing/anvil.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.2thNBg9yW92m3FXp",
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!OxkDiJjSsiIG5M4W.HeJ2XC8yyQiAOX9j"
+    },
+    {
+      "_id": "Fy6wzcCVe9OQB0p3",
+      "type": "document",
+      "name": "Gold Standard Healing Potion",
+      "img": "icons/consumables/potions/bottle-round-corked-orante-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.ZGP8Gh17itzYF1r3",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!OxkDiJjSsiIG5M4W.Fy6wzcCVe9OQB0p3"
+    },
+    {
+      "_id": "Nntt1pEKzIYFUzJJ",
+      "type": "document",
+      "name": "Scroll of Upgrade",
+      "img": "icons/sundries/scrolls/scroll-symbol-triangle-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.1MCDeJyPTudgTzga",
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!OxkDiJjSsiIG5M4W.Nntt1pEKzIYFUzJJ"
+    }
+  ],
+  "formula": "1d7",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!OxkDiJjSsiIG5M4W"
+}

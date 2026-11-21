@@ -1,4 +1,4 @@
-import { buildLootItemData, generateMagicItem } from "./loot.mjs";
+import { generateLoot, generateMagicDraft, lootItemData, magicItemUpdate } from "./loot.mjs";
 
 /**
  * Loot Box Actor (module/data/loot-box.mjs) behavior: the GM rolls loot into
@@ -116,32 +116,40 @@ async function moveLootItem(item, actor) {
 }
 
 /**
- * Roll the box's tier `crawlers` times and add each result as a gear Item.
+ * Roll one box of the box's tier per crawler (helpers/loot.mjs
+ * generateLoot: consumables, mundane items, a magic item from Silver up)
+ * and put its items in. The gold is left out: gold goes to the crawler who
+ * opens a box (ruled 2026-11-19), and nobody opens a map Loot Box - Roll
+ * Loot's Give hands gold out. (The Loot Box actor is kept for 0.8.0 and
+ * phased out after.)
  * @param {Actor} box A Loot Box.
  * @returns {Promise<Item[]>}
  */
 export async function generateLootBoxItems(box) {
   const itemData = [];
   for (let i = 0; i < box.system.crawlers; i++) {
-    const result = await generateMagicItem(box.system.tier);
-    if (!result) break;
-    itemData.push(buildLootItemData(result));
+    const loot = await generateLoot(box.system.tier);
+    if (!loot) break;
+    for (const data of await lootItemData(loot)) {
+      foundry.utils.setProperty(data, "flags.carl-rpg.lootTier", box.system.tier);
+      itemData.push(data);
+    }
   }
   if (!itemData.length) return [];
   return box.createEmbeddedDocuments("Item", itemData);
 }
 
 /**
- * Replace one loot Item with a fresh roll at the box's current tier. Keeps
- * the Item (same id, image and anything else the GM set) and only rewrites
- * its name, description and tier flag.
+ * Roll a magic loot Item again at the box's current tier (Tables 38-41).
+ * Keeps the Item (same id, image and anything else the GM set) and rewrites
+ * its name, Bonuses, description and where it's worn. Only a rolled magic
+ * item (one with a magic draft) can be rerolled.
  * @param {Item} item An Item in a Loot Box.
  * @returns {Promise<Item|null>}
  */
 export async function rerollLootItem(item) {
-  if (!isLootBoxItem(item)) return null;
-  const result = await generateMagicItem(item.parent.system.tier);
-  if (!result) return null;
-  const { name, system, flags } = buildLootItemData(result);
-  return item.update({ name, "system.description": system.description, flags });
+  if (!isLootBoxItem(item) || !item.getFlag("carl-rpg", "magicDraft")) return null;
+  const draft = await generateMagicDraft(item.parent.system.tier);
+  if (!draft) return null;
+  return item.update(magicItemUpdate(draft));
 }

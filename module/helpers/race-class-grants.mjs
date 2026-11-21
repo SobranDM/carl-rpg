@@ -34,6 +34,9 @@
 import { applyScalarChange, slugifySkillName } from "./modifiers.mjs";
 import { CARLRPG } from "./config.mjs";
 import { queueForActor } from "./actor-queue.mjs";
+import { buildMatcher } from "../pdf-import/compendium-match.mjs";
+import { matchCandidates } from "../pdf-import/importer.mjs";
+import { copyData, stripCopyFields } from "./packs.mjs";
 
 const BAKEABLE_TARGET_TYPES = new Set(["stat", "skillRank"]);
 // Derived from the same table modifiers.mjs's isBakedGrant validates a
@@ -87,34 +90,30 @@ export function isEligibleNow(change, actorLevel) {
 }
 
 /**
- * Search world compendiums, then the world Items directory, for a
- * Skill/Spell/Damage-Effect by name - the "you gain it at that Rank
- * listed" case, where the actor doesn't already own a matching item.
- * Matched by slugified name (module/helpers/modifiers.mjs's
- * slugifySkillName), the same convention the live aggregation engine uses
- * everywhere else - a raw case/whitespace difference between a grant's
- * authored target and the real item name must not miss the match here.
+ * Find a Skill, Spell or Damage Effect (or another Item type) by name, in
+ * the PDF importer's priority (ruled 2026-11-19): the system's own
+ * compendiums, then the rulebook imports' compendiums, then the Items
+ * directory, then any other compendium (importer.mjs matchCandidates,
+ * compendium-match.mjs buildMatcher). Matched by name (case, apostrophes,
+ * dashes and parentheticals aside), else by Skill slug (modifiers.mjs
+ * slugifySkillName). Only `types` count: a Spellbook asking for a Spell
+ * isn't handed a same-named Skill.
  * @param {string} name
+ * @param {string[]} [types]
  * @returns {Promise<Item|null>}
  */
-export async function findSkillLikeItem(name) {
+export async function findSkillLikeItem(name, types = SKILL_LIKE_TYPES) {
+  const candidates = await matchCandidates(null);
+  // The same Skill slug first, best source first, so "Name (Base Skill)"
+  // isn't taken for "Name"; then the importer's looser name match.
   const slug = slugifySkillName(name);
-  for (const pack of game.packs) {
-    if (pack.documentName !== "Item") continue;
-    let index;
-    try {
-      index = await pack.getIndex({ fields: ["type"] });
-    } catch (e) {
-      continue;
-    }
-    const hit = index.find((e) => slugifySkillName(e.name) === slug && SKILL_LIKE_TYPES.includes(e.type));
-    if (hit) {
-      const doc = await pack.getDocument(hit._id);
-      if (doc) return doc;
-    }
-  }
-  const worldHit = game.items?.find((i) => slugifySkillName(i.name) === slug && SKILL_LIKE_TYPES.includes(i.type));
-  return worldHit ?? null;
+  const exact = buildMatcher(
+    candidates.filter((c) => slugifySkillName(c.name) === slug),
+    { slug: slugifySkillName },
+  );
+  const match =
+    exact(name, types) ?? buildMatcher(candidates, { slug: slugifySkillName })(name, types);
+  return match ? ((await fromUuid(match.ref)) ?? null) : null;
 }
 
 /**
@@ -141,13 +140,37 @@ export function findOwnedSkillLike(actor, name, types = SKILL_LIKE_TYPES) {
  * @returns {object}
  */
 export function cleanSkillLikeCopy(source, rank) {
-  const data = foundry.utils.deepClone(typeof source.toObject === "function" ? source.toObject() : source);
-  delete data._id;
-  delete data.folder;
-  delete data._stats;
-  delete data.ownership;
+  // A document is copied with its source (packs.mjs copyData); plain data
+  // keeps only a source it already names.
+  const data =
+    typeof source.toObject === "function"
+      ? copyData(source)
+      : stripCopyFields(foundry.utils.deepClone(source));
+  const compendiumSource = data._stats?.compendiumSource;
+  if (compendiumSource) data._stats = { compendiumSource };
+  else delete data._stats;
   data.system = { ...(data.system ?? {}), rank, marked: false };
   if (data.type === "spell") data.system.active = false;
+  return data;
+}
+
+/**
+ * Creation data for a Skill-like item found in no compendium: a bare item
+ * of that type at a Rank - a Skill is a Utility Skill.
+ * @param {string} name
+ * @param {number} rank
+ * @param {{type?: "skill"|"spell"|"damageEffect", img?: string, system?: object, flags?: object}} [options]
+ *   system: more system fields (over the defaults); flags: the item's flags.
+ * @returns {object}
+ */
+export function bareSkillLikeData(name, rank, { type = "skill", img, system = {}, flags } = {}) {
+  const data = {
+    name,
+    type,
+    system: { rank, ...(type === "skill" ? { category: "utility" } : {}), ...system },
+  };
+  if (img) data.img = img;
+  if (flags) data.flags = flags;
   return data;
 }
 
@@ -165,10 +188,14 @@ export async function skillOrUntrainedCopy(actor, name, fallback = {}) {
   const owned = findOwnedSkillLike(actor, name, ["skill"]);
   if (owned) return { skill: owned, trained: true };
   const source = await findSkillLikeItem(name);
-  const data = cleanSkillLikeCopy(source ?? {
-    name, type: "skill", img: fallback.img ?? "icons/svg/d20.svg",
-    system: { category: "utility", ...(fallback.system ?? {}) },
-  }, 0);
+  const data = cleanSkillLikeCopy(
+    source ??
+      bareSkillLikeData(name, 0, {
+        img: fallback.img ?? "icons/svg/d20.svg",
+        system: fallback.system,
+      }),
+    0,
+  );
   data._id = foundry.utils.randomID();
   return { skill: new CONFIG.Item.documentClass(data, { parent: actor }), trained: false };
 }
@@ -183,9 +210,7 @@ export async function skillOrUntrainedCopy(actor, name, fallback = {}) {
  */
 export async function learnSkillLike(actor, name, rank) {
   const found = await findSkillLikeItem(name);
-  const data = found
-    ? cleanSkillLikeCopy(found, rank)
-    : { name, type: "skill", system: { rank, category: "utility" } };
+  const data = found ? cleanSkillLikeCopy(found, rank) : bareSkillLikeData(name, rank);
   const [created] = await actor.createEmbeddedDocuments("Item", [data]);
   return created ?? null;
 }
@@ -265,8 +290,16 @@ async function bakeEligibleGrants(item, actor) {
   const pending = changes.filter((c) => !baked.has(c.id) && isEligibleNow(c, actorLevel));
   if (!pending.length) return;
 
-  const newlyBaked = [];
+  // Recorded as each write lands, so a grant that fails part-way doesn't
+  // leave the ones already written unrecorded (and re-applied next time).
+  const recorded = [...baked];
+  const record = (ids) => {
+    if (!ids.length) return undefined;
+    recorded.push(...ids);
+    return item.setFlag("carl-rpg", "bakedGrantIds", [...recorded]);
+  };
 
+  const statIds = [];
   const statUpdates = {};
   for (const change of pending) {
     if (change.targetType !== "stat" || !STAT_KEYS.has(change.target)) continue;
@@ -274,9 +307,10 @@ async function bakeEligibleGrants(item, actor) {
     const base = actor.system.stats?.[change.target]?.value ?? 0;
     const current = path in statUpdates ? statUpdates[path] : base;
     statUpdates[path] = applyScalarChange(current, change.mode, Number(change.value) || 0);
-    newlyBaked.push(change.id);
+    statIds.push(change.id);
   }
   if (Object.keys(statUpdates).length) await actor.update(statUpdates);
+  await record(statIds);
 
   // Skill-rank grants run sequentially (each may create/copy its own item,
   // and a later grant targeting the same Skill needs to see the prior one's
@@ -284,11 +318,7 @@ async function bakeEligibleGrants(item, actor) {
   for (const change of pending) {
     if (change.targetType !== "skillRank") continue;
     await bakeSkillRankGrant(actor, change);
-    newlyBaked.push(change.id);
-  }
-
-  if (newlyBaked.length) {
-    await item.setFlag("carl-rpg", "bakedGrantIds", [...baked, ...newlyBaked]);
+    await record([change.id]);
   }
 }
 

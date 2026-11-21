@@ -29,16 +29,24 @@
 import CarlDice from "../dice/dice.mjs";
 import { isCrawler } from "./actor-kinds.mjs";
 import { canAct, isInCombat, noteGear, takeAction } from "./actions.mjs";
-import { assignItemToSlot, hotlistWithout, isItemWorn, padList, resolveSlotValue, unwearItem } from "./equip-slots.mjs";
+import {
+  assignItemToSlot,
+  hotlistWithout,
+  isItemWorn,
+  padList,
+  resolveSlotValue,
+  unwearItem,
+} from "./equip-slots.mjs";
 import { useConsumable } from "./consumables.mjs";
 import { ownedRank } from "./modifiers.mjs";
 import { withoutOutclassedUnarmed } from "./hand-to-hand.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
 import { beginSwap, endSwap, refuseWhileSwapping } from "./swap-lock.mjs";
 import { attackReadiness } from "./weapons.mjs";
 import { activeCooldown, cooldownLabel } from "./cooldowns.mjs";
-import { isTwoHanded } from "./gear.mjs";
+import { isInHand, isTwoHanded } from "./gear.mjs";
+import { esc } from "./html.mjs";
 
 export { refuseWhileSwapping };
 
@@ -67,23 +75,10 @@ export function isInHotlist(actor, item) {
   return !!id && (actor?.system?.hotlist ?? []).includes(id);
 }
 
-/**
- * The item in this crawler's hands: what sits in the Main Hand or Off Hand
- * gear slot.
- * @param {Actor} actor
- * @param {string} itemId
- * @returns {boolean}
- */
-export function isInHand(actor, itemId) {
-  const slots = actor.system.gearSlots ?? {};
-  return !!itemId && (slots.mainHand === itemId || slots.offHand === itemId);
-}
-
 /** Worn: in a gear or accessory slot, or equipped with no slot. */
 function isWorn(actor, item) {
   return !!item.system.equipped || isItemWorn(actor, item.id);
 }
-
 
 /**
  * Why this item can't go in the Hotlist (a lang key), or null if it can.
@@ -93,11 +88,13 @@ function isWorn(actor, item) {
  */
 function hotlistRefusal(actor, item) {
   if (!isCrawler(actor) || item?.parent !== actor) return "CARLRPG.Hotlist.Refuse.Other";
-  if (item.type === "spell") return ownedRank(actor, item) >= 1 ? null : "CARLRPG.Hotlist.Refuse.Untrained";
+  if (item.type === "spell")
+    return ownedRank(actor, item) >= 1 ? null : "CARLRPG.Hotlist.Refuse.Untrained";
   if (item.type !== "item") return "CARLRPG.Hotlist.Refuse.Other";
   // Worn and in the Hotlist are exclusive - consumables too (p.98).
   if (isWorn(actor, item)) return "CARLRPG.Hotlist.Refuse.Worn";
-  if (item.system.consumable?.kind) return (item.system.quantity ?? 1) >= 1 ? null : "CARLRPG.Hotlist.Refuse.NoneLeft";
+  if (item.system.consumable?.kind)
+    return (item.system.quantity ?? 1) >= 1 ? null : "CARLRPG.Hotlist.Refuse.NoneLeft";
   return null;
 }
 
@@ -124,7 +121,10 @@ export function hotlistCandidates(actor) {
     if (isInHotlist(actor, item) || !canHotlist(actor, item)) continue;
     const entry = { id: item.id, name: item.name, img: item.img, detail: "" };
     if (item.type === "spell") {
-      entry.detail = game.i18n.format("CARLRPG.Hotlist.SpellDetail", { rank: ownedRank(actor, item), mana: item.system.manaCost ?? 0 });
+      entry.detail = game.i18n.format("CARLRPG.Hotlist.SpellDetail", {
+        rank: ownedRank(actor, item),
+        mana: item.system.manaCost ?? 0,
+      });
       groups.spells.push(entry);
     } else if (item.system.consumable?.kind) {
       entry.detail = `×${item.system.quantity ?? 1}`;
@@ -136,7 +136,11 @@ export function hotlistCandidates(actor) {
   const byName = (a, b) => a.name.localeCompare(b.name, game.i18n.lang, { sensitivity: "base" });
   return Object.entries(groups)
     .filter(([, entries]) => entries.length)
-    .map(([key, entries]) => ({ key, label: game.i18n.localize(`CARLRPG.Hotlist.Pick.Group.${key}`), entries: entries.sort(byName) }));
+    .map(([key, entries]) => ({
+      key,
+      label: game.i18n.localize(`CARLRPG.Hotlist.Pick.Group.${key}`),
+      entries: entries.sort(byName),
+    }));
 }
 
 /**
@@ -153,7 +157,13 @@ export function hotlistRows(actor) {
     const sys = item.system;
     const row = { ...slot, empty: false, type: item.type };
     if (item.type === "spell") {
-      Object.assign(row, { kind: "spell", action: "Cast", rank: ownedRank(actor, item), manaCost: sys.manaCost, active: !!sys.active });
+      Object.assign(row, {
+        kind: "spell",
+        action: "Cast",
+        rank: ownedRank(actor, item),
+        manaCost: sys.manaCost,
+        active: !!sys.active,
+      });
     } else if (item.type === "skill" || item.type === "damageEffect") {
       // Older data only: Skills can't be put in the Hotlist any more
       // (hotlistRefusal), but one already there still rolls.
@@ -162,7 +172,7 @@ export function hotlistRows(actor) {
       Object.assign(row, { kind: "consumable", action: "Use", quantity: sys.quantity });
     } else if (item.type === "item") {
       // Worn and in the Hotlist only happens with older data: nothing to do.
-      const inHand = isInHand(actor, item.id);
+      const inHand = isInHand(item);
       const worn = !inHand && isWorn(actor, item);
       Object.assign(row, { kind: "gear", action: inHand || worn ? null : "Ready", inHand, worn });
     } else {
@@ -170,7 +180,8 @@ export function hotlistRows(actor) {
     }
     // A Spell or Skill cooling down shows its chip (helpers/cooldowns.mjs).
     const cooldown = activeCooldown(item);
-    if (cooldown) Object.assign(row, { cooldown: cooldownLabel(cooldown), cooldownText: cooldown.text ?? "" });
+    if (cooldown)
+      Object.assign(row, { cooldown: cooldownLabel(cooldown), cooldownText: cooldown.text ?? "" });
     return row;
   });
 }
@@ -198,14 +209,19 @@ export async function placeInHotlist(actor, index, item, { expectEmpty = false }
     return false;
   }
   // In a fight it's the Retrieve Action (p.86) - only with one left.
-  const placed = await takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.Retrieve", { item: item.name }), async () => {
-    noteGear(actor);
-    const list = padList(hotlistWithout(actor, item.id) ?? actor.system.hotlist, hotlistSize());
-    list[index] = item.id;
-    await actor.update({ "system.hotlist": list });
-    if (isInCombat(actor)) await postRetrieveCard(actor, item);
-    return true;
-  });
+  const placed = await takeAction(
+    actor,
+    "other",
+    game.i18n.format("CARLRPG.Actions.Label.Retrieve", { item: item.name }),
+    async () => {
+      noteGear(actor);
+      const list = padList(hotlistWithout(actor, item.id) ?? actor.system.hotlist, hotlistSize());
+      list[index] = item.id;
+      await actor.update({ "system.hotlist": list });
+      if (isInCombat(actor)) await postRetrieveCard(actor, item);
+      return true;
+    },
+  );
   return !!placed;
 }
 
@@ -263,7 +279,8 @@ export async function promptHotlistPick(actor, index) {
         default: true,
         // The checked one - with a lone entry, form.elements.pick is that
         // input itself, whose value is set whether or not it's checked.
-        callback: (event, button) => button.form.querySelector('input[name="pick"]:checked')?.value || null,
+        callback: (event, button) =>
+          button.form.querySelector('input[name="pick"]:checked')?.value || null,
       },
       cancelButton(),
     ],
@@ -296,7 +313,9 @@ function wirePicker(root) {
       if (entry.hidden && radio) radio.checked = false;
     }
     for (const group of root.querySelectorAll(".carl-hotlist-pick-group")) {
-      group.hidden = ![...group.querySelectorAll(".carl-hotlist-pick-entry")].some((e) => !e.hidden);
+      group.hidden = ![...group.querySelectorAll(".carl-hotlist-pick-entry")].some(
+        (e) => !e.hidden,
+      );
     }
   });
   // A label click also forwards a click to its radio: pick only once.
@@ -318,8 +337,9 @@ async function postRetrieveCard(actor, item) {
   await createCardMessage({
     title: game.i18n.localize("CARLRPG.Hotlist.Retrieve.Title"),
     img: item.img,
-    body: `<p>${esc(game.i18n.format("CARLRPG.Hotlist.Retrieve.Body", { name: actor.name, item: item.name }))}</p>`
-      + `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Hotlist.Retrieve.Rule"))}</p>`,
+    body:
+      `<p>${esc(game.i18n.format("CARLRPG.Hotlist.Retrieve.Body", { name: actor.name, item: item.name }))}</p>` +
+      `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Hotlist.Retrieve.Rule"))}</p>`,
     actor,
   });
 }
@@ -334,7 +354,8 @@ async function postRetrieveCard(actor, item) {
  */
 export function outsideHotlist(actor, item) {
   if (!isCrawler(actor) || !item) return false;
-  const needsHotlist = item.type === "spell" || (item.type === "item" && !!item.system.consumable?.kind);
+  const needsHotlist =
+    item.type === "spell" || (item.type === "item" && !!item.system.consumable?.kind);
   return needsHotlist && isInCombat(actor) && !isInHotlist(actor, item);
 }
 
@@ -365,7 +386,8 @@ export async function useHotlistSlot(actor, index, { skipDialog = false } = {}) 
   const item = id ? actor.items.get(id) : null;
   if (!item) return null;
   if (refuseWhileSwapping(actor)) return null;
-  if (item.type === "item" && item.system.consumable?.kind) return useConsumable(actor, item, { skipDialog });
+  if (item.type === "item" && item.system.consumable?.kind)
+    return useConsumable(actor, item, { skipDialog });
   if (item.type !== "item") return item.roll();
   if (isWorn(actor, item)) return null;
 
@@ -397,34 +419,44 @@ async function combatSwap(actor, index, item, { skipDialog }) {
   const choice = skipDialog ? "swap" : await promptCombatSwap(actor, index, item);
   if (!choice) return null;
   if (choice === "swap") {
-    return takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.UseHotlist", { item: item.name }), async () => {
-      const swap = await readyHotlistItem(actor, index, item);
-      if (swap.failed) return null;
-      await postReadyCard(actor, item, swap, { free: false });
-      return true;
-    });
+    return takeAction(
+      actor,
+      "other",
+      game.i18n.format("CARLRPG.Actions.Label.UseHotlist", { item: item.name }),
+      async () => {
+        const swap = await readyHotlistItem(actor, index, item);
+        if (swap.failed) return null;
+        await postReadyCard(actor, item, swap, { free: false });
+        return true;
+      },
+    );
   }
   // One Attack Action, the swap part of it - so it's an Attack AI Favor's
   // Action can't pay for, and undoing it puts the weapons back too.
   const skill = actor.items.get(choice);
   if (!skill) return null;
-  return takeAction(actor, "attack", game.i18n.format("CARLRPG.Actions.Label.Attack", { name: skill.name }), async (ctx) => {
-    const swap = await readyHotlistItem(actor, index, item);
-    if (swap.failed) return null;
-    let result = null;
-    try {
-      result = await CarlDice.rollAttack(actor, skill, { within: ctx });
-    } catch (err) {
-      await undoOrRecord(actor, index, item, swap);
-      throw err;
-    }
-    if (!result) {
-      await undoOrRecord(actor, index, item, swap);
-      return null;
-    }
-    await postReadyCard(actor, item, swap, { free: true });
-    return result;
-  });
+  return takeAction(
+    actor,
+    "attack",
+    game.i18n.format("CARLRPG.Actions.Label.Attack", { name: skill.name }),
+    async (ctx) => {
+      const swap = await readyHotlistItem(actor, index, item);
+      if (swap.failed) return null;
+      let result = null;
+      try {
+        result = await CarlDice.rollAttack(actor, skill, { within: ctx });
+      } catch (err) {
+        await undoOrRecord(actor, index, item, swap);
+        throw err;
+      }
+      if (!result) {
+        await undoOrRecord(actor, index, item, swap);
+        return null;
+      }
+      await postReadyCard(actor, item, swap, { free: true });
+      return result;
+    },
+  );
 }
 
 /**
@@ -475,22 +507,33 @@ async function promptCombatSwap(actor, index, item) {
   const previous = previousId ? actor.items.get(previousId) : null;
   // The same Attacks the Attack! button offers (an outranked Unarmed Combat
   // isn't), with this item in the Main Hand.
-  const attacks = withoutOutclassedUnarmed(actor, actor.items
-    .filter((i) => i.type === "skill" && i.system.category === "attack")
-    .sort((a, b) => a.name.localeCompare(b.name)))
-    .filter((skill) => {
-      const readiness = attackReadiness(actor, skill, { mainHand: item });
-      return readiness.ready && !readiness.swap;
-    });
+  const attacks = withoutOutclassedUnarmed(
+    actor,
+    actor.items
+      .filter((i) => i.type === "skill" && i.system.category === "attack")
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  ).filter((skill) => {
+    const readiness = attackReadiness(actor, skill, { mainHand: item });
+    return readiness.ready && !readiness.swap;
+  });
   const body = previous
-    ? game.i18n.format("CARLRPG.Hotlist.Swap.BodySwap", { item: item.name, previous: previous.name })
+    ? game.i18n.format("CARLRPG.Hotlist.Swap.BodySwap", {
+        item: item.name,
+        previous: previous.name,
+      })
     : game.i18n.format("CARLRPG.Hotlist.Swap.Body", { item: item.name });
   return showCarlDialog({
     title: game.i18n.format("CARLRPG.Hotlist.Swap.Title", { item: item.name }),
     content: `<div class="carl-dialog-body"><p>${esc(body)}</p><p class="carl-dialog-hint">${esc(game.i18n.localize("CARLRPG.Hotlist.Swap.Rule"))}</p></div>`,
     classes: ["carl-hotlist-swap-dialog"],
     buttons: [
-      { action: "swap", icon: "fa-solid fa-right-left", label: "CARLRPG.Hotlist.Swap.Action", default: true, callback: () => "swap" },
+      {
+        action: "swap",
+        icon: "fa-solid fa-right-left",
+        label: "CARLRPG.Hotlist.Swap.Action",
+        default: true,
+        callback: () => "swap",
+      },
       ...attacks.map((skill) => ({
         action: `attack-${skill.id}`,
         icon: "fa-solid fa-hand-fist",
@@ -517,15 +560,20 @@ async function promptCombatSwap(actor, index, item) {
 async function readyHotlistItem(actor, index, item) {
   noteGear(actor);
   const previousId = actor.system.gearSlots?.mainHand || "";
-  const previous = previousId && previousId !== item.id ? actor.items.get(previousId) ?? null : null;
+  const previous =
+    previousId && previousId !== item.id ? (actor.items.get(previousId) ?? null) : null;
   // A two-handed item takes the Off Hand too: what's there is given back if
   // the swap is undone (undoOrRecord).
-  const previousOffId = isTwoHanded(item) ? (actor.system.gearSlots?.offHand || "") : "";
-  const previousOff = previousOffId && previousOffId !== item.id && previousOffId !== previousId
-    ? actor.items.get(previousOffId) ?? null : null;
+  const previousOffId = isTwoHanded(item) ? actor.system.gearSlots?.offHand || "" : "";
+  const previousOff =
+    previousOffId && previousOffId !== item.id && previousOffId !== previousId
+      ? (actor.items.get(previousOffId) ?? null)
+      : null;
   // Wearing it takes it out of the Hotlist (equip-slots.mjs); the slot then
   // takes the previous item - written directly, as a swap isn't a Retrieve.
-  await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, item, { duringSwap: true });
+  await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, item, {
+    duringSwap: true,
+  });
   if (actor.system.gearSlots?.mainHand !== item.id) {
     ui.notifications.warn(game.i18n.format("CARLRPG.Hotlist.Swap.Failed", { item: item.name }));
     return { previous, previousOff, stowed: false, failed: true };
@@ -550,8 +598,9 @@ async function readyHotlistItem(actor, index, item) {
  */
 async function undoOrRecord(actor, index, item, swap) {
   const { previous, previousOff, stowed } = swap;
-  const unchanged = actor.system.gearSlots?.mainHand === item.id
-    && hotlistValues(actor)[index] === (stowed ? previous.id : "");
+  const unchanged =
+    actor.system.gearSlots?.mainHand === item.id &&
+    hotlistValues(actor)[index] === (stowed ? previous.id : "");
   const record = async () => {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Hotlist.Swap.UndoSkipped"));
     await postReadyCard(actor, item, swap, { free: false });
@@ -563,14 +612,17 @@ async function undoOrRecord(actor, index, item, swap) {
     // Hand goes back to it - assignItemToSlot would take it out of the other.
     await actor.update({ "system.gearSlots.mainHand": back.id });
     // A two-handed item also left the Off Hand.
-    if (actor.system.gearSlots?.offHand === item.id) await actor.update({ "system.gearSlots.offHand": "" });
+    if (actor.system.gearSlots?.offHand === item.id)
+      await actor.update({ "system.gearSlots.offHand": "" });
     if (!isItemWorn(actor, item.id) && item.system.equipped) {
       await item.update({ "system.equipped": false }, { carlSwap: true });
     }
   } else if (back) {
     // Back into the Main Hand: it leaves the slot, and the clicked item is
     // taken off.
-    await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, back, { duringSwap: true });
+    await assignItemToSlot(actor, { slotType: "gear", slotKey: "mainHand" }, back, {
+      duringSwap: true,
+    });
     if (actor.system.gearSlots?.mainHand !== back.id) return record();
   } else {
     await unwearItem(actor, item, { duringSwap: true });
@@ -578,7 +630,9 @@ async function undoOrRecord(actor, index, item, swap) {
   // The Off Hand item a two-handed one took off, back in the Off Hand.
   const off = previousOff ? actor.items.get(previousOff.id) : null;
   if (off && !actor.system.gearSlots?.offHand && !isItemWorn(actor, off.id)) {
-    await assignItemToSlot(actor, { slotType: "gear", slotKey: "offHand" }, off, { duringSwap: true });
+    await assignItemToSlot(actor, { slotType: "gear", slotKey: "offHand" }, off, {
+      duringSwap: true,
+    });
   }
   const list = hotlistValues(actor);
   list[index] = item.id;
@@ -596,9 +650,15 @@ async function postReadyCard(actor, item, { previous, stowed }, { free }) {
   // Only name what was swapped out if it went to the Hotlist.
   if (!stowed) previous = null;
   const body = previous
-    ? game.i18n.format("CARLRPG.Hotlist.ReadiedSwap", { name: actor.name, item: item.name, previous: previous.name })
+    ? game.i18n.format("CARLRPG.Hotlist.ReadiedSwap", {
+        name: actor.name,
+        item: item.name,
+        previous: previous.name,
+      })
     : game.i18n.format("CARLRPG.Hotlist.Readied", { name: actor.name, item: item.name });
-  const rule = game.i18n.localize(free ? "CARLRPG.Hotlist.ReadyFreeRule" : "CARLRPG.Hotlist.ReadyRule");
+  const rule = game.i18n.localize(
+    free ? "CARLRPG.Hotlist.ReadyFreeRule" : "CARLRPG.Hotlist.ReadyRule",
+  );
   await createCardMessage({
     title: game.i18n.localize("CARLRPG.Hotlist.ReadyTitle"),
     img: item.img,

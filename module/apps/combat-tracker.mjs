@@ -14,9 +14,19 @@
  */
 import { PHASE_BAR_STEPS, currentPhase, usesPhases } from "../helpers/combat-phases.mjs";
 import { isCrawler, isPet, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
-import { declaredAttacks, describeDeclaration, removeDeclaration } from "../helpers/declarations.mjs";
 import {
-  actionBubbles, actionRecord, adjustActions, buyFavorAction, resetActions, spendBubble, undoAction,
+  declaredAttacks,
+  describeDeclaration,
+  removeDeclaration,
+} from "../helpers/declarations.mjs";
+import {
+  actionBubbles,
+  actionRecord,
+  adjustActions,
+  buyFavorAction,
+  resetActions,
+  spendBubble,
+  undoAction,
 } from "../helpers/actions.mjs";
 
 const { CombatTracker } = foundry.applications.sidebar.tabs;
@@ -88,13 +98,25 @@ export class CarlRPGCombatTracker extends CombatTracker {
       showSurpriseToggle,
       surpriseChecked: !!combat?.getFlag("carl-rpg", "surprise"),
       nextLabel: step ? i18n.localize(`CARLRPG.Phase.Next.${step}`) : "",
-      nextIcon: { surprise: "fa-forward", declare: "fa-shield-halved", react: "fa-lock", resolve: "fa-forward", act: "fa-flag-checkered" }[step] ?? "fa-forward",
+      nextIcon:
+        {
+          surprise: "fa-forward",
+          declare: "fa-shield-halved",
+          react: "fa-lock",
+          resolve: "fa-forward",
+          act: "fa-flag-checkered",
+        }[step] ?? "fa-forward",
       canRewind: step === "react",
       // The GM's list of this round's declared Attacks (p.81), while declaring.
       showDeclared: game.user.isGM && step === "declare",
-      declared: game.user.isGM && step === "declare"
-        ? declaredAttacks(combat).map((d) => ({ id: d.id, mob: d.mobName, label: describeDeclaration(d) }))
-        : [],
+      declared:
+        game.user.isGM && step === "declare"
+          ? declaredAttacks(combat).map((d) => ({
+              id: d.id,
+              mob: d.mobName,
+              label: describeDeclaration(d),
+            }))
+          : [],
     };
   }
 
@@ -107,7 +129,8 @@ export class CarlRPGCombatTracker extends CombatTracker {
     await super._prepareTrackerContext(context, options);
     const combat = this.viewed;
     if (!usesPhases(combat) || !context.turns) return;
-    if (currentPhase(combat)) for (const turn of context.turns) turn.actions = this._prepareActionContext(combat, turn.id);
+    if (currentPhase(combat))
+      for (const turn of context.turns) turn.actions = this._prepareActionContext(combat, turn.id);
     const actorOf = (turn) => combat.combatants.get(turn.id)?.actor ?? null;
     const mobs = [];
     const crawlers = [];
@@ -155,13 +178,16 @@ export class CarlRPGCombatTracker extends CombatTracker {
       entryId: b.spent?.id ?? "",
       tooltip: b.spent
         ? i18n.format(canClick ? "CARLRPG.Actions.SpentOnUndo" : "CARLRPG.Actions.SpentOn", {
-          label: b.spent.label || i18n.localize("CARLRPG.Actions.Other"),
-        })
+            label: b.spent.label || i18n.localize("CARLRPG.Actions.Other"),
+          })
         : i18n.localize(`CARLRPG.Actions.Pool.${b.pool}`),
     }));
     const actor = combatant.actor;
-    const canFavor = canClick && isCrawler(actor) && !actionRecord(combat, combatantId).favor
-      && (actor.system.details?.aiFavor ?? 0) >= 1;
+    const canFavor =
+      canClick &&
+      isCrawler(actor) &&
+      !actionRecord(combat, combatantId).favor &&
+      (actor.system.details?.aiFavor ?? 0) >= 1;
     return { bubbles, canClick, canFavor };
   }
 
@@ -174,12 +200,24 @@ export class CarlRPGCombatTracker extends CombatTracker {
     const phased = () => game.user.isGM && !!currentPhase(this.viewed);
     const id = (li) => li.dataset.combatantId;
     return [
-      { label: "CARLRPG.Actions.Menu.Add", icon: "fa-solid fa-circle-plus", visible: phased,
-        onClick: (event, li) => adjustActions(this.viewed, id(li), 1) },
-      { label: "CARLRPG.Actions.Menu.Remove", icon: "fa-solid fa-circle-minus", visible: phased,
-        onClick: (event, li) => adjustActions(this.viewed, id(li), -1) },
-      { label: "CARLRPG.Actions.Menu.Reset", icon: "fa-solid fa-rotate-left", visible: phased,
-        onClick: (event, li) => resetActions(this.viewed, id(li)) },
+      {
+        label: "CARLRPG.Actions.Menu.Add",
+        icon: "fa-solid fa-circle-plus",
+        visible: phased,
+        onClick: (event, li) => adjustActions(this.viewed, id(li), 1),
+      },
+      {
+        label: "CARLRPG.Actions.Menu.Remove",
+        icon: "fa-solid fa-circle-minus",
+        visible: phased,
+        onClick: (event, li) => adjustActions(this.viewed, id(li), -1),
+      },
+      {
+        label: "CARLRPG.Actions.Menu.Reset",
+        icon: "fa-solid fa-rotate-left",
+        visible: phased,
+        onClick: (event, li) => resetActions(this.viewed, id(li)),
+      },
       ...options,
     ];
   }
@@ -211,7 +249,9 @@ export class CarlRPGCombatTracker extends CombatTracker {
    */
   static async #onFavorAction(event, target) {
     event.stopPropagation();
-    const combatant = this.viewed?.combatants.get(target.closest("[data-combatant-id]")?.dataset.combatantId);
+    const combatant = this.viewed?.combatants.get(
+      target.closest("[data-combatant-id]")?.dataset.combatantId,
+    );
     if (combatant?.actor) await buyFavorAction(combatant.actor);
   }
 

@@ -1,3 +1,4 @@
+import { unlockedTiers } from "./modifiers.mjs";
 /**
  * Area Attack detection (Combat, p.83): whether an Attack affects an area -
  * a Blast, Burst, Cone, Line, or Splash - so the roll dialog can pre-tick
@@ -8,7 +9,8 @@
  * final word either way.
  */
 
-const AREA_PATTERN = /\d+\s*(?:ft|feet|foot)\.?\s*(?:Blast|Burst|Cone|Line)\b|\+\s*\d+\s*(?:ft|feet|foot)\.?\s*Splash\b/i;
+const AREA_PATTERN =
+  /\d+\s*(?:ft|feet|foot)\.?\s*(?:Blast|Burst|Cone|Line)\b|\+\s*\d+\s*(?:ft|feet|foot)\.?\s*Splash\b/i;
 
 /**
  * Whether a piece of text describes an area of effect.
@@ -16,7 +18,13 @@ const AREA_PATTERN = /\d+\s*(?:ft|feet|foot)\.?\s*(?:Blast|Burst|Cone|Line)\b|\+
  * @returns {boolean}
  */
 export function textDescribesArea(...texts) {
-  return texts.some((text) => AREA_PATTERN.test(String(text ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")));
+  return texts.some((text) =>
+    AREA_PATTERN.test(
+      String(text ?? "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/\s+/g, " "),
+    ),
+  );
 }
 
 /**
@@ -32,7 +40,7 @@ export function isAreaItem(item, rank = item?.system?.rank ?? 0) {
   if (!item) return false;
   const sys = item.system ?? {};
   if ((sys.castingKeywords ?? []).includes("areaOfEffect")) return true;
-  const unlocked = (sys.upgrades ?? []).filter((u) => rank >= (u.rankThreshold ?? Infinity)).map((u) => u.description);
+  const unlocked = unlockedTiers(item, rank).map((u) => u.description);
   return textDescribesArea(sys.range, sys.description, ...unlocked);
 }
 

@@ -4,7 +4,14 @@ import { addConditionToActor } from "../../helpers/conditions.mjs";
 import { applyGrindHours, isGrindTarget } from "../../helpers/grinding.mjs";
 import { grindSurplusTargets, postGrindSurplusCard } from "../../chat/grind-surplus-card.mjs";
 import {
-  createTestCharacter, createTestMob, createTestItem, deleteTestActor, settle, withSetting, withPinnedDice, useQuenchTimeout,
+  createTestCharacter,
+  createTestMob,
+  createTestItem,
+  deleteTestActor,
+  settle,
+  withSetting,
+  withPinnedDice,
+  useQuenchTimeout,
 } from "../helpers.mjs";
 
 const keys = (conditions) => conditions.map((c) => c.key);
@@ -25,15 +32,29 @@ export default function register(quench) {
       const { describe, it, assert } = context;
 
       describe("Rests end injuries by length (p.94/96)", function () {
-        const all = ["minorInjury", "majorInjury", "longTermMinorInjury", "longTermMajorInjury", "fatigued", "poisoned"]
-          .map((key, i) => ({ id: `c${i}`, key }));
+        const all = [
+          "minorInjury",
+          "majorInjury",
+          "longTermMinorInjury",
+          "longTermMajorInjury",
+          "fatigued",
+          "poisoned",
+        ].map((key, i) => ({ id: `c${i}`, key }));
 
         it("a short rest ends Minor Injury only", function () {
-          assert.sameMembers(keys(conditionsAfterRest(all, "short")),
-            ["majorInjury", "longTermMinorInjury", "longTermMajorInjury", "fatigued", "poisoned"]);
+          assert.sameMembers(keys(conditionsAfterRest(all, "short")), [
+            "majorInjury",
+            "longTermMinorInjury",
+            "longTermMajorInjury",
+            "fatigued",
+            "poisoned",
+          ]);
         });
         it("a long rest also ends Major, Long-Term Minor and Fatigued", function () {
-          assert.sameMembers(keys(conditionsAfterRest(all, "long")), ["longTermMajorInjury", "poisoned"]);
+          assert.sameMembers(keys(conditionsAfterRest(all, "long")), [
+            "longTermMajorInjury",
+            "poisoned",
+          ]);
         });
         it("a full day's rest also ends Long-Term Major", function () {
           assert.sameMembers(keys(conditionsAfterRest(all, "fullDay")), ["poisoned"]);
@@ -65,8 +86,16 @@ export default function register(quench) {
           assert.equal(doubleDiceCount("1d4 + @floor"), "2d4 + @floor");
           assert.equal(doubleDiceCount("(@rank)d6"), "(2*(@rank))d6");
           assert.equal(doubleDiceCount("(1+1)d8 + 2d6"), "(2*(1+1))d8 + 4d6");
-          assert.equal(doubleDiceCount("floor(@rank/2)d6"), "(2*floor(@rank/2))d6", "a function call doubles as a whole");
-          assert.equal(doubleDiceCount("(1d4)d6"), "(2*(1d4))d6", "dice inside a computed count aren't doubled too");
+          assert.equal(
+            doubleDiceCount("floor(@rank/2)d6"),
+            "(2*floor(@rank/2))d6",
+            "a function call doubles as a whole",
+          );
+          assert.equal(
+            doubleDiceCount("(1d4)d6"),
+            "(2*(1d4))d6",
+            "dice inside a computed count aren't doubled too",
+          );
         });
       });
 
@@ -76,7 +105,9 @@ export default function register(quench) {
         it("a Rank 0 Attack Spell can't be cast", async function () {
           const actor = await createTestCharacter();
           try {
-            const spell = await createTestItem(actor, "spell", "Zap", { system: { rank: 0, castingKeywords: ["attack"] } });
+            const spell = await createTestItem(actor, "spell", "Zap", {
+              system: { rank: 0, castingKeywords: ["attack"] },
+            });
             await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
             assert.isNull(await CarlDice.rollAttack(actor, spell, { skipDialog: true }));
           } finally {
@@ -87,9 +118,17 @@ export default function register(quench) {
         it("a Rank 0 Spell can't be used for an Opposed Check either", async function () {
           const actor = await createTestCharacter();
           try {
-            const spell = await createTestItem(actor, "spell", "Mind Spike", { system: { rank: 0 } });
+            const spell = await createTestItem(actor, "spell", "Mind Spike", {
+              system: { rank: 0 },
+            });
             await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
-            assert.isNull(await CarlDice.rollOpposedSkillCheck(actor, spell, { difficulty: 10, skipDialog: true, post: false }));
+            assert.isNull(
+              await CarlDice.rollOpposedSkillCheck(actor, spell, {
+                difficulty: 10,
+                skipDialog: true,
+                post: false,
+              }),
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -98,7 +137,9 @@ export default function register(quench) {
         it("a Rank 0 Heal Spell can't be cast", async function () {
           const actor = await createTestCharacter();
           try {
-            const spell = await createTestItem(actor, "spell", "Heal", { system: { rank: 0, castingKeywords: ["heal", "passive"] } });
+            const spell = await createTestItem(actor, "spell", "Heal", {
+              system: { rank: 0, castingKeywords: ["heal", "passive"] },
+            });
             await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
             assert.isNull(await CarlDice.rollHeal(actor, spell));
           } finally {
@@ -128,10 +169,19 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const skill = await createTestItem(actor, "skill", "Attack Skill", {
-              name: "Attack Skill", system: { category: "attack", isHandToHand: true, rank: 5, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Attack Skill",
+              system: {
+                category: "attack",
+                isHandToHand: true,
+                rank: 5,
+                governingStat: "",
+                baseDamage: { dice: "1d6" },
+              },
             });
             const unit = await unitForNatOne();
-            const message = await withPinnedDice(unit, () => CarlDice.rollAttack(actor, skill, { skipDialog: true }));
+            const message = await withPinnedDice(unit, () =>
+              CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+            );
             assert.notExists(message.getFlag("carl-rpg", "damageByType"));
           } finally {
             await deleteTestActor(actor);
@@ -142,10 +192,18 @@ export default function register(quench) {
           const mob = await createTestMob("dodger", { system: { stats: { dex: { value: 3 } } } }); // dex mod 2
           try {
             assert.equal(mob.system.evadeBase, 12);
-            await mob.createEmbeddedDocuments("Item", [{
-              name: "Dodgy Boots", type: "item",
-              system: { equipped: true, changes: [{ targetType: "rollMode", target: "evadeBonus", mode: "add", value: "2" }] },
-            }]);
+            await mob.createEmbeddedDocuments("Item", [
+              {
+                name: "Dodgy Boots",
+                type: "item",
+                system: {
+                  equipped: true,
+                  changes: [
+                    { targetType: "rollMode", target: "evadeBonus", mode: "add", value: "2" },
+                  ],
+                },
+              },
+            ]);
             await settle();
             assert.equal(mob.system.evadeBase, 14);
           } finally {
@@ -172,7 +230,9 @@ export default function register(quench) {
         it("hours below the Rank are stored, and the Skill can take more", async function () {
           const actor = await createTestCharacter();
           try {
-            const skill = await createTestItem(actor, "skill", "Lockpicking", { system: { category: "utility", rank: 5 } });
+            const skill = await createTestItem(actor, "skill", "Lockpicking", {
+              system: { category: "utility", rank: 5 },
+            });
             assert.isTrue(isGrindTarget(actor, skill));
             const result = await applyGrindHours(actor, skill, 3);
             assert.isFalse(result.rolled);
@@ -186,7 +246,9 @@ export default function register(quench) {
         it("reaching the Rank rolls the check, resets the hours, and returns the surplus", async function () {
           const actor = await createTestCharacter();
           try {
-            const skill = await createTestItem(actor, "skill", "Lockpicking", { system: { category: "utility", rank: 3 } });
+            const skill = await createTestItem(actor, "skill", "Lockpicking", {
+              system: { category: "utility", rank: 3 },
+            });
             const result = await applyGrindHours(actor, skill, 5);
             assert.isTrue(result.rolled);
             assert.equal(result.surplus, 2);
@@ -199,16 +261,28 @@ export default function register(quench) {
         it("Rank 0, capped and Passive-Spell Skills aren't grind targets", async function () {
           const actor = await createTestCharacter();
           try {
-            const untrained = await createTestItem(actor, "skill", "Juggling", { system: { rank: 0 } });
-            const capped = await createTestItem(actor, "skill", "Dancing", { system: { rank: 15 } });
-            const passive = await createTestItem(actor, "spell", "Torch", { system: { rank: 2, castingKeywords: ["passive"] } });
+            const untrained = await createTestItem(actor, "skill", "Juggling", {
+              system: { rank: 0 },
+            });
+            const capped = await createTestItem(actor, "skill", "Dancing", {
+              system: { rank: 15 },
+            });
+            const passive = await createTestItem(actor, "spell", "Torch", {
+              system: { rank: 2, castingKeywords: ["passive"] },
+            });
             const fresh = await createTestItem(actor, "skill", "Cooking", { system: { rank: 2 } });
             assert.isFalse(isGrindTarget(actor, untrained));
             assert.isFalse(isGrindTarget(actor, capped));
             assert.isFalse(isGrindTarget(actor, passive));
             assert.isTrue(isGrindTarget(actor, fresh));
-            assert.deepEqual(grindSurplusTargets(actor, fresh.id).map((i) => i.id), []);
-            assert.deepEqual(grindSurplusTargets(actor, "someOtherSkill").map((i) => i.id), [fresh.id]);
+            assert.deepEqual(
+              grindSurplusTargets(actor, fresh.id).map((i) => i.id),
+              [],
+            );
+            assert.deepEqual(
+              grindSurplusTargets(actor, "someOtherSkill").map((i) => i.id),
+              [fresh.id],
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -218,7 +292,9 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           let message;
           try {
-            const skill = await createTestItem(actor, "skill", "Lockpicking", { system: { rank: 3 } });
+            const skill = await createTestItem(actor, "skill", "Lockpicking", {
+              system: { rank: 3 },
+            });
             message = await postGrindSurplusCard(actor, skill, 2);
             const flag = message.getFlag("carl-rpg", "grindSurplus");
             assert.equal(flag.actorUuid, actor.uuid);
@@ -235,14 +311,37 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             // An exact name: the feature's advancementBonus targets the Skill by name.
-            const skill = await createTestItem(actor, "skill", "Lockpicking", { name: "Lockpicking", system: { rank: 3, marked: true } });
+            const skill = await createTestItem(actor, "skill", "Lockpicking", {
+              name: "Lockpicking",
+              system: { rank: 3, marked: true },
+            });
             await createTestItem(actor, "feature", "Nimble Fingers", {
-              system: { changes: [{ targetType: "advancementBonus", target: "Lockpicking", mode: "add", value: "1" }] },
+              system: {
+                changes: [
+                  {
+                    targetType: "advancementBonus",
+                    target: "Lockpicking",
+                    mode: "add",
+                    value: "1",
+                  },
+                ],
+              },
             });
             await settle();
-            const floorCheck = await CarlDice.rollAdvancementCheck(actor, skill, { apply: false, silent: true });
-            assert.notEqual(floorCheck.roll.formula, "1d20", "sanity: the end-of-floor check carries the +1");
-            const grindCheck = await CarlDice.rollAdvancementCheck(actor, skill, { silent: true, floorBonus: false, clearMark: false });
+            const floorCheck = await CarlDice.rollAdvancementCheck(actor, skill, {
+              apply: false,
+              silent: true,
+            });
+            assert.notEqual(
+              floorCheck.roll.formula,
+              "1d20",
+              "sanity: the end-of-floor check carries the +1",
+            );
+            const grindCheck = await CarlDice.rollAdvancementCheck(actor, skill, {
+              silent: true,
+              floorBonus: false,
+              clearMark: false,
+            });
             assert.equal(grindCheck.roll.formula, "1d20");
             assert.isTrue(skill.system.marked);
           } finally {
@@ -253,10 +352,17 @@ export default function register(quench) {
         it("the grinding Advancement Check applies Debuff penalties", async function () {
           const actor = await createTestCharacter();
           try {
-            const skill = await createTestItem(actor, "skill", "Lockpicking", { system: { rank: 3 } });
+            const skill = await createTestItem(actor, "skill", "Lockpicking", {
+              system: { rank: 3 },
+            });
             await addConditionToActor(actor, "fatigued");
             const result = await withSetting("currentFloor", 1, () =>
-              CarlDice.rollAdvancementCheck(actor, skill, { apply: false, silent: true, debuffs: true }));
+              CarlDice.rollAdvancementCheck(actor, skill, {
+                apply: false,
+                silent: true,
+                debuffs: true,
+              }),
+            );
             assert.include(result.roll.formula, "-1");
           } finally {
             await deleteTestActor(actor);

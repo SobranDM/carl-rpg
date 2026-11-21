@@ -1,44 +1,54 @@
-import { CarlRPGActor } from './documents/actor.mjs';
-import { CarlRPGItem } from './documents/item.mjs';
-import { CarlRPGTokenDocument } from './documents/token.mjs';
-import { CarlRPGCombat, CarlRPGCombatant } from './documents/combat.mjs';
-import { CarlRPGCombatTracker } from './apps/combat-tracker.mjs';
-import { reactionHandlers, registerPhaseSettings } from './helpers/combat-phases.mjs';
-import { registerReactionSocket, retireReaction, startReaction } from './chat/reaction-card.mjs';
-import { registerPartyCheckSocket } from './chat/party-check-card.mjs';
-import { finishResolution, lockResults } from './helpers/reaction-resolve.mjs';
-import { registerActionSocket } from './helpers/actions.mjs';
-import { registerActionUndo } from './helpers/action-undo.mjs';
-import { registerCheckRevisionSocket } from './chat/check-revision.mjs';
-import { registerDeclareHud } from './apps/declare-hud.mjs';
-import { registerDeclaredMarks } from './helpers/declared-marks.mjs';
-import { CarlRPGActorSheet } from './sheets/actor-sheet.mjs';
-import { CarlRPGItemSheet } from './sheets/item-sheet.mjs';
-import { CarlRPGLootBoxSheet } from './sheets/loot-box-sheet.mjs';
-import { preloadHandlebarsTemplates } from './helpers/templates.mjs';
-import { CARLRPG } from './helpers/config.mjs';
-import * as models from './data/_module.mjs';
-import CarlDice from './dice/dice.mjs';
-import CarlToolbox from './apps/gm-toolbox.mjs';
-import CarlSpendStatPointsDialog from './apps/spend-stat-points-dialog.mjs';
-import CrawlerCreation from './apps/crawler-creation.mjs';
-import { registerChargenSettings } from './helpers/chargen.mjs';
-import { registerChatListener } from './chat/chat-listener.mjs';
-import { registerChatSocket } from './helpers/chat-socket.mjs';
-import { registerLootBoxSocket } from './helpers/loot-box.mjs';
-import { registerVehicleHooks, registerVehicleSocket } from './helpers/vehicles.mjs';
-import { rollDrivingCheck } from './helpers/vehicle-driving.mjs';
-import { rollRam } from './helpers/vehicle-ram.mjs';
-import { registerExpirySweep } from './helpers/expiry.mjs';
-import { registerCooldowns } from './helpers/cooldowns.mjs';
-import { commandPet } from './helpers/pet-command.mjs';
-import { bakeItemGrants } from './helpers/race-class-grants.mjs';
-import { importCrawlerForgeCrawler } from './helpers/crawlerforge-import.mjs';
-import { openRulebookImporter, RulebookImportMenu } from './pdf-import/import-dialog.mjs';
-import { migrateWorld, registerMigrationSetting } from './helpers/migration.mjs';
-import { changeLineHtml, debuffLineHtml } from './helpers/sheet-rows.mjs';
+import { CarlRPGActor } from "./documents/actor.mjs";
+import { CarlRPGItem } from "./documents/item.mjs";
+import { CarlRPGTokenDocument } from "./documents/token.mjs";
+import { CarlRPGCombat, CarlRPGCombatant } from "./documents/combat.mjs";
+import { CarlRPGCombatTracker } from "./apps/combat-tracker.mjs";
+import { reactionHandlers, registerPhaseSettings } from "./helpers/combat-phases.mjs";
+import { retireReaction, startReaction } from "./chat/reaction-card.mjs";
+import { registerPartyCheckSocket } from "./chat/party-check-card.mjs";
+import { finishResolution, lockResults } from "./helpers/reaction-resolve.mjs";
+import { registerActionSocket } from "./helpers/actions.mjs";
+import { registerActionUndo } from "./helpers/action-undo.mjs";
+import { registerCheckRevisionSocket } from "./chat/check-revision.mjs";
+import { registerDeclareHud } from "./apps/declare-hud.mjs";
+import { registerDeclaredMarks } from "./helpers/declared-marks.mjs";
+import { CarlRPGActorSheet } from "./sheets/actor-sheet.mjs";
+import { CarlRPGItemSheet } from "./sheets/item-sheet.mjs";
+import { CarlRPGLootBoxSheet } from "./sheets/loot-box-sheet.mjs";
+import { CarlRPGBoxSheet } from "./sheets/box-sheet.mjs";
+import { CarlRPGAchievementSheet } from "./sheets/achievement-sheet.mjs";
+import { registerAchievementSettings } from "./helpers/achievements.mjs";
+import AchievementSplash from "./apps/achievement-splash.mjs";
+import OpeningSessionApp from "./apps/opening-session.mjs";
+import { registerSoundHooks, registerSoundSettings } from "./helpers/sounds.mjs";
+import { registerFloorClockSettings } from "./helpers/floor-clock.mjs";
+import FloorClockHud from "./apps/floor-clock-hud.mjs";
+import { registerOpeningSessionSetting, resumeSession } from "./helpers/opening-session.mjs";
+import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
+import { CARLRPG } from "./helpers/config.mjs";
+import * as models from "./data/_module.mjs";
+import CarlDice from "./dice/dice.mjs";
+import CarlToolbox from "./apps/gm-toolbox.mjs";
+import CarlSpendStatPointsDialog from "./apps/spend-stat-points-dialog.mjs";
+import CrawlerCreation from "./apps/crawler-creation.mjs";
+import { registerChargenSettings } from "./helpers/chargen.mjs";
+import { registerChatListener } from "./chat/chat-listener.mjs";
+import { registerChatSocket } from "./helpers/chat-socket.mjs";
+import { registerLootBoxSocket } from "./helpers/loot-box.mjs";
+import { registerVehicleHooks, registerVehicleSocket } from "./helpers/vehicles.mjs";
+import { rollDrivingCheck } from "./helpers/vehicle-driving.mjs";
+import { rollRam } from "./helpers/vehicle-ram.mjs";
+import { registerExpirySweep } from "./helpers/expiry.mjs";
+import { registerCooldowns } from "./helpers/cooldowns.mjs";
+import { commandPet } from "./helpers/pet-command.mjs";
+import { bakeItemGrants } from "./helpers/race-class-grants.mjs";
+import { importCrawlerForgeCrawler } from "./helpers/crawlerforge-import.mjs";
+import { openRulebookImporter, RulebookImportMenu } from "./pdf-import/import-dialog.mjs";
+import { migrateWorld, registerMigrationSetting } from "./helpers/migration.mjs";
+import { changeLineHtml, debuffLineHtml } from "./helpers/sheet-rows.mjs";
+import { unlinkedTokenActors } from "./helpers/token-resolution.mjs";
 
-Hooks.once('init', function () {
+Hooks.once("init", function () {
   game.carlrpg = {
     CarlRPGActor,
     CarlRPGItem,
@@ -58,18 +68,24 @@ Hooks.once('init', function () {
   registerMigrationSetting();
   // Character creation: which Stat and background methods, animal crawlers.
   registerChargenSettings();
+  registerAchievementSettings();
+  registerSoundSettings();
+  // The floor-collapse timer: its change redraws every client's bar.
+  registerFloorClockSettings(() => FloorClockHud.onClockChange());
+  // The box-opening session's state: its change redraws every client's window.
+  registerOpeningSessionSetting((state) => OpeningSessionApp.sync(state));
 
   // World-scope state for the GM Toolbox (module/apps/gm-toolbox.mjs).
   // gameTimer tracks REAL wall-clock time (Date.now()), unrelated to
   // Foundry's own in-world game.time used by the toolbox's Rest buttons.
-  game.settings.register('carl-rpg', 'gameTimer', {
-    scope: 'world',
+  game.settings.register("carl-rpg", "gameTimer", {
+    scope: "world",
     config: false,
     type: Object,
     default: { running: false, startedAt: null, notified: false },
   });
-  game.settings.register('carl-rpg', 'currentFloor', {
-    scope: 'world',
+  game.settings.register("carl-rpg", "currentFloor", {
+    scope: "world",
     config: false,
     type: Number,
     default: 1,
@@ -91,29 +107,26 @@ Hooks.once('init', function () {
     // so an HB clamped by a lower Floor stayed clamped when the Floor went
     // back up, and the next write saved the lost slot.
     onChange: () => {
+      // The floor-collapse bar's Floor (every client).
+      FloorClockHud.refresh();
       for (const actor of game.actors) {
         actor.reset();
         if (actor.sheet?.rendered) actor.sheet.render();
       }
-      for (const scene of game.scenes) {
-        for (const tokenDoc of scene.tokens) {
-          if (tokenDoc.actorLink) continue;
-          const actor = tokenDoc.actor;
-          if (!actor) continue;
-          actor.reset();
-          if (actor.sheet?.rendered) actor.sheet.render();
-        }
+      for (const actor of unlinkedTokenActors()) {
+        actor.reset();
+        if (actor.sheet?.rendered) actor.sheet.render();
       }
     },
   });
 
   // "Import Rulebook PDF" (module/pdf-import/): GM-only, also reachable from
   // the Items sidebar header button below.
-  game.settings.registerMenu('carl-rpg', 'rulebookImport', {
-    name: 'CARLRPG.PdfImport.Title',
-    label: 'CARLRPG.PdfImport.Open',
-    hint: 'CARLRPG.PdfImport.MenuHint',
-    icon: 'fa-solid fa-file-pdf',
+  game.settings.registerMenu("carl-rpg", "rulebookImport", {
+    name: "CARLRPG.PdfImport.Title",
+    label: "CARLRPG.PdfImport.Open",
+    hint: "CARLRPG.PdfImport.MenuHint",
+    icon: "fa-solid fa-file-pdf",
     type: RulebookImportMenu,
     restricted: true,
   });
@@ -128,12 +141,15 @@ Hooks.once('init', function () {
   // names it), so a normal end-user install never has these files on disk;
   // the try/catch keeps that expected 404 from surfacing as an error in the
   // rare case Quench is active in someone else's non-dev world.
-  Hooks.once('quenchReady', async (quench) => {
+  Hooks.once("quenchReady", async (quench) => {
     try {
-      const { registerCarlRpgQuenchTests } = await import('./quench/register.mjs');
+      const { registerCarlRpgQuenchTests } = await import("./quench/register.mjs");
       registerCarlRpgQuenchTests(quench);
     } catch (err) {
-      console.warn('CarlRPG | Quench dev-test batches unavailable (expected on a normal release install):', err);
+      console.warn(
+        "CarlRPG | Quench dev-test batches unavailable (expected on a normal release install):",
+        err,
+      );
     }
   });
 
@@ -148,7 +164,7 @@ Hooks.once('init', function () {
   // gives Mobs-first fixed values instead. This formula is only rolled for
   // PvP (crawlers only), every round (p.87).
   CONFIG.Combat.initiative = {
-    formula: '1d20 + @stats.dex.mod',
+    formula: "1d20 + @stats.dex.mod",
     decimals: 2,
   };
   // "Each round lasts for 10 seconds" (p.62). Core Combat advances world
@@ -164,7 +180,12 @@ Hooks.once('init', function () {
   // icons - shown on the token and in the combat tracker, offered on a
   // Pet's token HUD only. Set by the Pet's command state, not by hand.
   for (const def of Object.values(CONFIG.CARLRPG.petCommandStates)) {
-    CONFIG.statusEffects.push({ id: def.status, name: def.label, img: def.img, hud: { actorTypes: ["pet"] } });
+    CONFIG.statusEffects.push({
+      id: def.status,
+      name: def.label,
+      img: def.img,
+      hud: { actorTypes: ["pet"] },
+    });
   }
 
   // End-of-round/end-of-combat Debuff automation (module/helpers/round-end.mjs).
@@ -200,52 +221,75 @@ Hooks.once('init', function () {
     class: models.CarlRPGClass,
     race: models.CarlRPGRace,
     mobAttack: models.CarlRPGMobAttack,
+    box: models.CarlRPGBox,
+    achievement: models.CarlRPGAchievement,
   });
 
-  foundry.applications.apps.DocumentSheetConfig.registerSheet(Actor, 'carl-rpg', CarlRPGActorSheet, {
-    types: ['character', 'mob', 'pet', 'vehicle'],
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(
+    Actor,
+    "carl-rpg",
+    CarlRPGActorSheet,
+    {
+      types: ["character", "mob", "pet", "vehicle"],
+      makeDefault: true,
+      label: "CARLRPG.SheetLabels.Actor",
+    },
+  );
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(
+    Actor,
+    "carl-rpg",
+    CarlRPGLootBoxSheet,
+    {
+      types: ["lootBox"],
+      makeDefault: true,
+      label: "CARLRPG.SheetLabels.LootBox",
+    },
+  );
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(Item, "carl-rpg", CarlRPGItemSheet, {
+    types: ["item", "feature", "skill", "damageEffect", "spell", "class", "race", "mobAttack"],
     makeDefault: true,
-    label: 'CARLRPG.SheetLabels.Actor',
+    label: "CARLRPG.SheetLabels.Item",
   });
-  foundry.applications.apps.DocumentSheetConfig.registerSheet(Actor, 'carl-rpg', CarlRPGLootBoxSheet, {
-    types: ['lootBox'],
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(Item, "carl-rpg", CarlRPGBoxSheet, {
+    types: ["box"],
     makeDefault: true,
-    label: 'CARLRPG.SheetLabels.LootBox',
+    label: "CARLRPG.SheetLabels.Box",
   });
-  foundry.applications.apps.DocumentSheetConfig.registerSheet(Item, 'carl-rpg', CarlRPGItemSheet, {
-    types: ['item', 'feature', 'skill', 'damageEffect', 'spell', 'class', 'race', 'mobAttack'],
-    makeDefault: true,
-    label: 'CARLRPG.SheetLabels.Item',
-  });
+  foundry.applications.apps.DocumentSheetConfig.registerSheet(
+    Item,
+    "carl-rpg",
+    CarlRPGAchievementSheet,
+    {
+      types: ["achievement"],
+      makeDefault: true,
+      label: "CARLRPG.SheetLabels.Achievement",
+    },
+  );
 
   return preloadHandlebarsTemplates();
 });
 
-// Left-edge scene control icon that opens/closes the GM Toolbox - the only
-// reopen affordance once a GM has closed it (the singleton itself survives
-// close, only its window is torn down). No persisted toggle state is
-// needed: the button always fires (it's deliberately left out of
-// `activeTool` - see module/apps/gm-toolbox.mjs docs) and just checks the
-// toolbox's own `.rendered` state each click.
-Hooks.on('getSceneControlButtons', (controls) => {
-  if (!game.user.isGM) return;
-  controls.carlrpg = {
-    name: 'carlrpg',
-    title: 'CARLRPG.Toolbox.Title',
-    icon: 'fas fa-dice-d20',
+// The GM Toolbox's button in Token Controls (the scene controls' first
+// category): opens or closes it - the only way back once a GM has closed it
+// (the singleton survives close, only its window is torn down). A button
+// tool, so it never becomes the active tool; each click just checks the
+// toolbox's own `.rendered` state.
+Hooks.on("getSceneControlButtons", (controls) => {
+  if (!game.user.isGM || !controls.tokens) return;
+  // A tool in Token Controls, after Foundry's own (not a category of its own).
+  const tools = controls.tokens.tools;
+  const last = Math.max(0, ...Object.values(tools).map((t) => t.order ?? 0));
+  tools.carlToolbox = {
+    name: "carlToolbox",
+    order: last + 1,
+    title: "CARLRPG.Toolbox.Title",
+    icon: "fas fa-dice-d20",
+    button: true,
     visible: true,
-    tools: {
-      toolbox: {
-        name: 'toolbox',
-        title: 'CARLRPG.Toolbox.Title',
-        icon: 'fas fa-dice-d20',
-        button: true,
-        onChange: () => {
-          const toolbox = game.carlrpg.toolbox;
-          if (toolbox.rendered) toolbox.close();
-          else toolbox.render({ force: true });
-        },
-      },
+    onChange: () => {
+      const toolbox = game.carlrpg.toolbox;
+      if (toolbox.rendered) toolbox.close();
+      else toolbox.render({ force: true });
     },
   };
 });
@@ -254,29 +298,33 @@ Hooks.on('getSceneControlButtons', (controls) => {
 // crawlerforge.com crawler Export file into a new Character (see
 // module/helpers/crawlerforge-import.mjs). Only shown to users who can
 // create Actors.
-Hooks.on('renderActorDirectory', (app, html) => {
-  if (!game.user.can('ACTOR_CREATE')) return;
-  const actions = html.querySelector('.directory-header .header-actions');
-  if (!actions || actions.querySelector('.carl-crawlerforge-import')) return;
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.classList.add('carl-crawlerforge-import');
-  button.innerHTML = `<i class="fa-solid fa-file-import"></i> ${game.i18n.localize('CARLRPG.CrawlerForge.Import')}`;
-  button.addEventListener('click', () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json,application/json';
-    input.addEventListener('change', async () => {
+Hooks.on("renderActorDirectory", (app, html) => {
+  if (!game.user.can("ACTOR_CREATE")) return;
+  const actions = html.querySelector(".directory-header .header-actions");
+  if (!actions || actions.querySelector(".carl-crawlerforge-import")) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.classList.add("carl-crawlerforge-import");
+  button.innerHTML = `<i class="fa-solid fa-file-import"></i> ${game.i18n.localize("CARLRPG.CrawlerForge.Import")}`;
+  button.addEventListener("click", () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json,application/json";
+    input.addEventListener("change", async () => {
       const file = input.files?.[0];
       if (!file) return;
       try {
         const json = JSON.parse(await foundry.utils.readTextFromFile(file));
         const actor = await importCrawlerForgeCrawler(json);
-        ui.notifications.info(game.i18n.format('CARLRPG.CrawlerForge.Imported', { name: actor.name }));
+        ui.notifications.info(
+          game.i18n.format("CARLRPG.CrawlerForge.Imported", { name: actor.name }),
+        );
         actor.sheet.render({ force: true });
       } catch (err) {
-        console.error('CarlRPG | CrawlerForge import failed', err);
-        ui.notifications.error(game.i18n.format('CARLRPG.CrawlerForge.Failed', { error: err.message }));
+        console.error("CarlRPG | CrawlerForge import failed", err);
+        ui.notifications.error(
+          game.i18n.format("CARLRPG.CrawlerForge.Failed", { error: err.message }),
+        );
       }
     });
     input.click();
@@ -287,32 +335,39 @@ Hooks.on('renderActorDirectory', (app, html) => {
 // "Import Rulebook PDF" button in the Items sidebar header: reads the GM's
 // own copy of a rulebook into world Items, Mobs, Journal pages and Scenes
 // (see module/pdf-import/import-dialog.mjs). GM-only.
-Hooks.on('renderItemDirectory', (app, html) => {
+Hooks.on("renderItemDirectory", (app, html) => {
   if (!game.user.isGM) return;
-  const actions = html.querySelector('.directory-header .header-actions');
-  if (!actions || actions.querySelector('.carl-pdf-import-button')) return;
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.classList.add('carl-pdf-import-button');
-  button.innerHTML = `<i class="fa-solid fa-file-pdf"></i> ${game.i18n.localize('CARLRPG.PdfImport.Open')}`;
-  button.addEventListener('click', () => openRulebookImporter());
+  const actions = html.querySelector(".directory-header .header-actions");
+  if (!actions || actions.querySelector(".carl-pdf-import-button")) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.classList.add("carl-pdf-import-button");
+  button.innerHTML = `<i class="fa-solid fa-file-pdf"></i> ${game.i18n.localize("CARLRPG.PdfImport.Open")}`;
+  button.addEventListener("click", () => openRulebookImporter());
   actions.append(button);
 });
 
-Handlebars.registerHelper('toLowerCase', function (str) {
+Handlebars.registerHelper("toLowerCase", function (str) {
   return str.toLowerCase();
 });
 
 // "Ends in 29 min" for a timed condition entry (expiresAt, world seconds -
 // module/helpers/expiry.mjs), for the Conditions tab.
-Handlebars.registerHelper('conditionExpiry', function (expiresAt) {
-  if (expiresAt === null || expiresAt === undefined) return '';
+Handlebars.registerHelper("conditionExpiry", function (expiresAt) {
+  if (expiresAt === null || expiresAt === undefined) return "";
   const left = Math.max(0, expiresAt - (game.time?.worldTime ?? 0));
   let amount;
   let unit;
-  if (left < 60) { amount = Math.ceil(left); unit = 'Seconds'; }
-  else if (left < 3600) { amount = Math.ceil(left / 60); unit = 'Minutes'; }
-  else { amount = Math.round(left / 360) / 10; unit = 'Hours'; }
+  if (left < 60) {
+    amount = Math.ceil(left);
+    unit = "Seconds";
+  } else if (left < 3600) {
+    amount = Math.ceil(left / 60);
+    unit = "Minutes";
+  } else {
+    amount = Math.round(left / 360) / 10;
+    unit = "Hours";
+  }
   return game.i18n.format(`CARLRPG.Consumable.EndsIn.${unit}`, { amount });
 });
 
@@ -324,11 +379,11 @@ Handlebars.registerHelper('conditionExpiry', function (expiresAt) {
 // several debuffs need a differently-worded description for a creature that
 // never rolls its own d20 Checks); falls back to `effect` for every debuff
 // that has no Mob-specific wording, and for any Character.
-Handlebars.registerHelper('debuffEffectHint', function (debuffs, key, isMob) {
+Handlebars.registerHelper("debuffEffectHint", function (debuffs, key, isMob) {
   const preset = debuffs?.[key];
-  if (!preset) return '';
-  const effectKey = (isMob && preset.mobEffect) ? preset.mobEffect : preset.effect;
-  return effectKey ? game.i18n.localize(effectKey) : '';
+  if (!preset) return "";
+  const effectKey = isMob && preset.mobEffect ? preset.mobEffect : preset.effect;
+  return effectKey ? game.i18n.localize(effectKey) : "";
 });
 
 // Narrows the Change Entry editor's Mode <select> to whichever
@@ -357,26 +412,51 @@ Handlebars.registerHelper('debuffEffectHint', function (debuffs, key, isMob) {
 // at which point it self-heals to whatever the dropdown was showing (Add).
 // The item sheets' compact Bonus and Debuff rows (module/helpers/sheet-rows.mjs;
 // docs/skill-item-sheets.md): each row's summary line, from the entry.
-Handlebars.registerHelper('changeLine', (change) => new Handlebars.SafeString(changeLineHtml(change)));
-Handlebars.registerHelper('debuffLine', (te) => new Handlebars.SafeString(debuffLineHtml(te)));
+Handlebars.registerHelper(
+  "changeLine",
+  (change) => new Handlebars.SafeString(changeLineHtml(change)),
+);
+// An item's description as its Foundry tooltip (helpers/rich-text.mjs
+// itemTooltips): the attributes, or nothing for an item without one.
+Handlebars.registerHelper("itemTooltip", (html) =>
+  html
+    ? new Handlebars.SafeString(
+        ` data-tooltip-html="${foundry.utils.escapeHTML(String(html))}" data-tooltip-class="carl-item-tooltip"`,
+      )
+    : "",
+);
+Handlebars.registerHelper("debuffLine", (te) => new Handlebars.SafeString(debuffLineHtml(te)));
 
-Handlebars.registerHelper('changeModeChoices', function (allModes, modesByTarget, targetType, itemType) {
-  if (targetType === "stat" && (itemType === "class" || itemType === "race")) return allModes;
-  const allowed = modesByTarget?.[targetType];
-  if (!allowed) return allModes;
-  const filtered = {};
-  for (const key of allowed) {
-    if (key in allModes) filtered[key] = allModes[key];
-  }
-  return filtered;
-});
+Handlebars.registerHelper(
+  "changeModeChoices",
+  function (allModes, modesByTarget, targetType, itemType) {
+    if (targetType === "stat" && (itemType === "class" || itemType === "race")) return allModes;
+    const allowed = modesByTarget?.[targetType];
+    if (!allowed) return allModes;
+    const filtered = {};
+    for (const key of allowed) {
+      if (key in allModes) filtered[key] = allModes[key];
+    }
+    return filtered;
+  },
+);
 
-Hooks.once('ready', function () {
+Hooks.once("ready", function () {
   // Relays a player's chat-card button click (Apply Damage, Roll Evade,
   // etc.) to the active GM's client when the clicking user lacks direct
   // update permission on that ChatMessage (module/helpers/chat-socket.mjs) -
   // needs game.users/game.socket live, hence `ready` rather than `init`.
   registerChatSocket();
+  // A crawler's new achievements, shown to their player until closed.
+  AchievementSplash.registerHooks();
+  // A crawler's Level-up sound, for its player.
+  registerSoundHooks();
+  // The floor-collapse bar, on everyone's screen.
+  FloorClockHud.init();
+  // A box-opening session under way: its window, and (GM) a box left
+  // mid-opening by a reload.
+  OpeningSessionApp.sync();
+  resumeSession();
   // Players taking items out of a Loot Box they only observe (see
   // module/helpers/loot-box.mjs).
   registerLootBoxSocket();
@@ -387,7 +467,6 @@ Hooks.once('ready', function () {
   registerDeclareHud();
   registerDeclaredMarks();
   // Players' Reaction-card actions, applied on the active GM's client.
-  registerReactionSocket();
   // Players' Party Skill Check rolls, applied on the active GM's client.
   registerPartyCheckSocket();
   // Combat Actions spent and undone by players, recorded by the active GM
@@ -397,7 +476,7 @@ Hooks.once('ready', function () {
   // active GM's client (chat/check-revision.mjs).
   registerCheckRevisionSocket();
 
-  Hooks.on('hotbarDrop', (bar, data, slot) => createItemMacro(data, slot));
+  Hooks.on("hotbarDrop", (bar, data, slot) => createItemMacro(data, slot));
 
   // Persistent floating GM Toolbox singleton (see module/apps/gm-toolbox.mjs).
   // Rendered once and left alone thereafter - same lifecycle as core's own
@@ -422,11 +501,11 @@ Hooks.once('ready', function () {
       // One-time data fixes for a world from an older version - the active
       // GM only, once per world, before anything else writes
       // (helpers/migration.mjs).
-      await migrateWorld().catch((err) => console.error('carl-rpg | World migration failed', err));
+      await migrateWorld().catch((err) => console.error("carl-rpg | World migration failed", err));
       for (const actor of game.actors) {
-        if (actor.type !== 'character') continue;
+        if (actor.type !== "character") continue;
         for (const item of actor.items) {
-          if (item.type === 'class' || item.type === 'race') await bakeItemGrants(item);
+          if (item.type === "class" || item.type === "race") await bakeItemGrants(item);
         }
       }
     })();
@@ -434,24 +513,20 @@ Hooks.once('ready', function () {
 });
 
 async function createItemMacro(data, slot) {
-  if (data.type !== 'Item') return;
-  if (!data.uuid.includes('Actor.') && !data.uuid.includes('Token.')) {
-    return ui.notifications.warn(
-      'You can only create macro buttons for owned Items'
-    );
+  if (data.type !== "Item") return;
+  if (!data.uuid.includes("Actor.") && !data.uuid.includes("Token.")) {
+    return ui.notifications.warn("You can only create macro buttons for owned Items");
   }
   const item = await Item.fromDropData(data);
   const command = `game.carlrpg.rollItemMacro("${data.uuid}");`;
-  let macro = game.macros.find(
-    (m) => m.name === item.name && m.command === command
-  );
+  let macro = game.macros.find((m) => m.name === item.name && m.command === command);
   if (!macro) {
     macro = await Macro.create({
       name: item.name,
-      type: 'script',
+      type: "script",
       img: item.img,
       command: command,
-      flags: { 'carl-rpg.itemMacro': true },
+      flags: { "carl-rpg.itemMacro": true },
     });
   }
   game.user.assignHotbarMacro(macro, slot);
@@ -460,14 +535,14 @@ async function createItemMacro(data, slot) {
 
 function rollItemMacro(itemUuid) {
   const dropData = {
-    type: 'Item',
+    type: "Item",
     uuid: itemUuid,
   };
   Item.fromDropData(dropData).then((item) => {
     if (!item || !item.parent) {
       const itemName = item?.name ?? itemUuid;
       return ui.notifications.warn(
-        `Could not find item ${itemName}. You may need to delete and recreate this macro.`
+        `Could not find item ${itemName}. You may need to delete and recreate this macro.`,
       );
     }
     item.roll();

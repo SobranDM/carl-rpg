@@ -50,7 +50,9 @@ export function describeDefenses(sys) {
     // " +1d4" after the number on the Evade button.
     dice: dice.map((f) => (f.startsWith("-") ? ` ${f}` : ` +${f}`)).join(""),
     tooltip: sourcesTooltip(
-      game.i18n.format("CARLRPG.Actor.SourceDexMod", { value: `${dexMod >= 0 ? "+" : ""}${dexMod}` }),
+      game.i18n.format("CARLRPG.Actor.SourceDexMod", {
+        value: `${dexMod >= 0 ? "+" : ""}${dexMod}`,
+      }),
       [...(src.evadeBonus ?? []), ...(src.evadeDice ?? [])],
     ),
   };
@@ -62,7 +64,9 @@ export function describeDefenses(sys) {
     shown: sys.moveEffective !== undefined && sys.moveEffective !== details.move,
     blocked: blocked(sys.moveBlockedBy),
     tooltip: sourcesTooltip(base(details.move), src.move, [
-      sys.moveHalvedBy ? game.i18n.format("CARLRPG.Actor.MoveHalvedBy", { name: sys.moveHalvedBy }) : "",
+      sys.moveHalvedBy
+        ? game.i18n.format("CARLRPG.Actor.MoveHalvedBy", { name: sys.moveHalvedBy })
+        : "",
     ]),
   };
   const step = {

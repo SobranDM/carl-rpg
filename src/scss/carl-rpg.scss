@@ -26,6 +26,11 @@
 @use "components/status-rows";
 @use "components/mob-attacks";
 @use "components/item-sheet";
+@use "components/loot-forge";
+@use "components/boxes";
+@use "components/achievements";
+@use "components/opening-session";
+@use "components/floor-clock";
 
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
@@ -51,4 +56,31 @@
   @include chargen.styles;
   @include mob-attacks.styles;
   @include item-sheet.styles;
+  @include loot-forge.styles;
+  @include boxes.styles;
+  @include achievements.styles;
+  @include opening-session.styles;
+  @include floor-clock.styles;
+}
+
+/* An item's description as its Foundry tooltip (the itemTooltip helper).
+   The tooltip lives on <body>, outside any sheet. */
+#tooltip.carl-item-tooltip {
+  max-width: 360px;
+  max-height: 50vh;
+  overflow: hidden;
+  text-align: left;
+
+  p {
+    margin: 0 0 0.4em;
+  }
+
+  // The item's name above its description (Equipment Doll, Hotlist).
+  .carl-tooltip-name {
+    display: block;
+    margin-bottom: 0.3em;
+  }
+  p:last-child {
+    margin-bottom: 0;
+  }
 }

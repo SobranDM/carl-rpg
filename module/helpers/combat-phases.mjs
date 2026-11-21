@@ -38,7 +38,10 @@ export function registerPhaseSettings() {
     default: true,
     onChange: () => {
       // Switched on mid-fight: running PvE fights drop core's current turn.
-      for (const combat of game.combats) void syncPhaseState(combat).catch((err) => console.error("CarlRPG | phase sync failed", err));
+      for (const combat of game.combats)
+        void syncPhaseState(combat).catch((err) =>
+          console.error("CarlRPG | phase sync failed", err),
+        );
       ui.combat?.render();
     },
   });
@@ -113,7 +116,10 @@ export function phasedCombatFor(actor) {
 export async function syncPhaseState(combat) {
   if (!game.users.activeGM?.isSelf || !game.combats.has(combat?.id)) return;
   if (!isPhased(combat) || combat.turn === null) return;
-  await combat.update({ turn: null, [`flags.${SCOPE}.phase`]: roundStartPhase(combat.round, false) }, { turnEvents: false });
+  await combat.update(
+    { turn: null, [`flags.${SCOPE}.phase`]: roundStartPhase(combat.round, false) },
+    { turnEvents: false },
+  );
   await postPhaseNotice(combat, "declare", { roundStart: true });
 }
 
@@ -150,8 +156,14 @@ export async function nextPhase(combat) {
     const step = currentPhase(combat);
     if (!step) return combat;
     if (step === "act") return combat.nextRound();
-    if (step === "react" && reactionHandlers.lockResults) return reactionHandlers.lockResults(combat);
-    if (step === "resolve" && reactionHandlers.finishResolution && !(await reactionHandlers.finishResolution(combat))) return combat;
+    if (step === "react" && reactionHandlers.lockResults)
+      return reactionHandlers.lockResults(combat);
+    if (
+      step === "resolve" &&
+      reactionHandlers.finishResolution &&
+      !(await reactionHandlers.finishResolution(combat))
+    )
+      return combat;
     await setPhase(combat, NEXT_STEP[step]);
     if (step === "declare") await reactionHandlers.startReaction?.(combat);
     return combat;
@@ -240,13 +252,17 @@ export async function postPhaseNotice(combat, step, { roundStart = false } = {})
     : i18n.localize(`CARLRPG.Phase.Step.${step}`);
   const body = i18n.localize(`CARLRPG.Phase.Notice.${step}`);
   const esc = foundry.utils.escapeHTML;
-  const subtitle = roundStart ? `<span class="carl-phase-notice-step">${esc(i18n.localize(`CARLRPG.Phase.Step.${step}`))}</span>` : "";
+  const subtitle = roundStart
+    ? `<span class="carl-phase-notice-step">${esc(i18n.localize(`CARLRPG.Phase.Step.${step}`))}</span>`
+    : "";
   return ChatMessage.create({
     content: `<div class="carl-phase-notice" data-step="${esc(step)}">
       <strong>${esc(title)}</strong>${subtitle}
       <p>${esc(body)}</p>
     </div>`,
     speaker: { alias: i18n.localize("CARLRPG.Phase.Speaker") },
-    flags: { [SCOPE]: { phaseNotice: { combatId: combat.id, round: combat.round, step, roundStart } } },
+    flags: {
+      [SCOPE]: { phaseNotice: { combatId: combat.id, round: combat.round, step, roundStart } },
+    },
   });
 }

@@ -210,7 +210,8 @@
   --carl-danger: #7a1220;
   --carl-gold: #ffd700;
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
-  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-groove: 2px groove
+    color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
   --carl-accent-2: #9b59e0;
   --carl-border-soft-2: rgba(181, 123, 240, 0.55);
   --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
@@ -852,7 +853,8 @@
   --carl-danger: #7a1220;
   --carl-gold: #ffd700;
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
-  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-groove: 2px groove
+    color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
   --carl-accent-2: #9b59e0;
   --carl-border-soft-2: rgba(181, 123, 240, 0.55);
   --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
@@ -964,7 +966,8 @@
   --carl-danger: #7a1220;
   --carl-gold: #ffd700;
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
-  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-groove: 2px groove
+    color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
   --carl-accent-2: #9b59e0;
   --carl-border-soft-2: rgba(181, 123, 240, 0.55);
   --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
@@ -1094,7 +1097,8 @@
   --carl-danger: #7a1220;
   --carl-gold: #ffd700;
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
-  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-groove: 2px groove
+    color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
   --carl-accent-2: #9b59e0;
   --carl-border-soft-2: rgba(181, 123, 240, 0.55);
   --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
@@ -1125,7 +1129,8 @@
   --carl-danger: #7a1220;
   --carl-gold: #ffd700;
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
-  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-groove: 2px groove
+    color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
   --carl-accent-2: #9b59e0;
   --carl-border-soft-2: rgba(181, 123, 240, 0.55);
   --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
@@ -1534,6 +1539,43 @@
   font-size: 11px;
 }
 
+@keyframes carl-achievement-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.4) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-2deg);
+  }
+}
+@keyframes carl-box-shake {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(-3px, 1px) rotate(-4deg);
+  }
+  50% {
+    transform: translate(2px, -2px) rotate(3deg);
+  }
+  75% {
+    transform: translate(-2px, 2px) rotate(-2deg);
+  }
+}
+@keyframes carl-box-glow {
+  from {
+    filter: drop-shadow(0 0 0 transparent) brightness(1);
+  }
+  to {
+    filter: drop-shadow(0 0 24px #ffd76a) brightness(1.4);
+  }
+}
+@keyframes carl-floor-clock-pulse {
+  50% {
+    box-shadow: 0 0 12px rgba(224, 48, 48, 0.8);
+  }
+}
 /* Styles limited to carl-rpg sheets */
 .carl-rpg {
   --carl-accent: #c9273f;
@@ -1542,7 +1584,8 @@
   --carl-danger: #7a1220;
   --carl-gold: #ffd700;
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
-  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-groove: 2px groove
+    color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
   --carl-accent-2: #9b59e0;
   --carl-border-soft-2: rgba(181, 123, 240, 0.55);
   --carl-panel-bg-2: color-mix(in srgb, var(--carl-accent-2) 6%, var(--color-text-primary) 4%);
@@ -1583,7 +1626,11 @@
   background: var(--carl-header-bg);
   color: var(--carl-header-text);
 }
-.carl-rpg h1, .carl-rpg h2, .carl-rpg h3, .carl-rpg h4, .carl-rpg h5 {
+.carl-rpg h1,
+.carl-rpg h2,
+.carl-rpg h3,
+.carl-rpg h4,
+.carl-rpg h5 {
   font-family: inherit;
   font-size: inherit;
   color: inherit;
@@ -1754,6 +1801,19 @@
 .carl-rpg prose-mirror button.toggle > i {
   margin: 0;
   line-height: 1;
+}
+.carl-rpg .carl-dialog-opposed {
+  align-items: center;
+}
+.carl-rpg .carl-dialog-opposed .form-fields {
+  gap: 6px;
+}
+.carl-rpg .carl-dialog-opposed select {
+  flex: 1 1 auto;
+  width: auto;
+}
+.carl-rpg .carl-opposed-note {
+  margin: 0.25em 0;
 }
 .carl-rpg .resource-label {
   display: block;
@@ -2058,7 +2118,8 @@
   gap: 6px;
   margin-bottom: 4px;
 }
-.carl-rpg .carl-string-list-row input[type=text], .carl-rpg .carl-string-list-row select {
+.carl-rpg .carl-string-list-row input[type=text],
+.carl-rpg .carl-string-list-row select {
   flex: 1;
 }
 .carl-rpg .carl-skill-choice-editor {
@@ -4349,4 +4410,604 @@
   margin-right: 4px;
   font-size: 10px;
   opacity: 0.8;
+}
+.carl-rpg .carl-forge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-forge-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.carl-rpg .carl-forge-head label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 0;
+}
+.carl-rpg .carl-forge-head input[type=number] {
+  width: 100%;
+}
+.carl-rpg .carl-forge-head button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-forge-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 60vh;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.carl-rpg .carl-forge-entry {
+  padding: 4px 6px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 4px;
+  background: var(--carl-panel-bg);
+}
+.carl-rpg .carl-forge-magic {
+  border-color: var(--carl-gold);
+}
+.carl-rpg .carl-forge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-forge-row select {
+  flex: 0 1 auto;
+  width: auto;
+}
+.carl-rpg .carl-forge-icon {
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-forge-name,
+.carl-rpg .carl-forge-label,
+.carl-rpg .carl-forge-text {
+  flex: 1 1 auto;
+}
+.carl-rpg .carl-forge-effects {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 4px 0 0 18px;
+  padding: 0;
+  list-style: none;
+}
+.carl-rpg .carl-forge-kind {
+  flex: 0 0 110px;
+  color: var(--carl-text-muted);
+}
+.carl-rpg .carl-forge-drop {
+  margin: 0;
+  text-align: center;
+}
+.carl-rpg .carl-forge-footer {
+  display: flex;
+  gap: 6px;
+}
+.carl-rpg .carl-forge-footer button {
+  flex: 1 1 0;
+  white-space: nowrap;
+}
+.carl-rpg.carl-box-sheet .window-content {
+  padding: 0;
+}
+.carl-rpg .carl-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-box prose-mirror {
+  min-height: 80px;
+}
+.carl-rpg .carl-box-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.carl-rpg .carl-box-art {
+  flex: 0 0 96px;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg .carl-box-title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+}
+.carl-rpg .carl-box-title h1 {
+  margin: 0;
+  border: none;
+}
+.carl-rpg .carl-box-tier {
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-box-gm h3 {
+  margin: 4px 0;
+}
+.carl-rpg .carl-box-contents ul {
+  margin: 0;
+}
+.carl-rpg .carl-box-buttons {
+  display: flex;
+  gap: 6px;
+}
+.carl-rpg .carl-box-buttons button {
+  flex: 1 1 0;
+  white-space: nowrap;
+}
+.carl-rpg .carl-box-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.carl-rpg .carl-box-toggle {
+  width: 100%;
+}
+.carl-rpg .carl-box-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-box-chip img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg.carl-achievement-splash {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  z-index: 100;
+  width: 680px;
+  max-width: calc(100vw - 32px);
+  translate: -50% 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+.carl-rpg.carl-achievement-splash .window-content {
+  padding: 0;
+  background: none;
+  overflow: visible;
+}
+.carl-rpg .carl-achievement-banner {
+  position: relative;
+  padding: 48px 72px 52px;
+  background: url("../assets/paint-banner.webp") center/100% 100% no-repeat;
+  color: #fff;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.6));
+  transform: rotate(-2deg);
+  animation: carl-achievement-slam 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.carl-rpg .carl-achievement-content {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.carl-rpg .carl-achievement-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 3px 6px rgba(0, 0, 0, 0.8);
+}
+.carl-rpg .carl-achievement-icon {
+  flex: 0 0 96px;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border: none;
+  filter: drop-shadow(0 0 2px #fff) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+  transform: rotate(-6deg);
+}
+.carl-rpg .carl-achievement-tag {
+  font-size: 0.85em;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #ffe14d;
+}
+.carl-rpg .carl-achievement-name {
+  margin: 0;
+  border: none;
+  font-size: 2em;
+  font-weight: 900;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: #fff;
+}
+.carl-rpg .carl-achievement-crawler {
+  font-weight: bold;
+  opacity: 0.9;
+}
+.carl-rpg .carl-achievement-description p {
+  margin: 0 0 0.3em;
+}
+.carl-rpg .carl-achievement-description p:last-child {
+  margin-bottom: 0;
+}
+.carl-rpg .carl-achievement-reward {
+  font-weight: bold;
+}
+.carl-rpg .carl-achievement-reward-label {
+  color: #ffe14d;
+  text-transform: uppercase;
+}
+.carl-rpg .carl-achievement-close {
+  position: absolute;
+  top: 18px;
+  right: 34px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #111;
+  color: #fff;
+  line-height: 1;
+  cursor: pointer;
+  transform: rotate(2deg);
+}
+.carl-rpg .carl-achievement-close:hover {
+  background: #000;
+  box-shadow: 0 0 8px #fff;
+}
+.carl-rpg .carl-achievement-note span {
+  font-weight: bold;
+}
+.carl-rpg .carl-achievement-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-achievement-item prose-mirror {
+  min-height: 80px;
+}
+.carl-rpg .carl-achievement-note {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.carl-rpg.carl-achievement-grid {
+  min-width: 640px;
+  min-height: 650px;
+}
+.carl-rpg .carl-achievement-boxes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.carl-rpg .carl-achievement-box-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.carl-rpg .carl-achievement-box-name {
+  flex: 1 1 auto;
+  font-weight: bold;
+}
+.carl-rpg .carl-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+.carl-rpg .carl-grid-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.carl-rpg .carl-grid-controls button {
+  flex: 0 0 auto;
+  width: auto;
+}
+.carl-rpg .carl-grid-controls label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.carl-rpg .carl-grid-scroll {
+  max-height: 70vh;
+  overflow: auto;
+}
+.carl-rpg .carl-grid-table {
+  border-collapse: collapse;
+  margin: 0;
+}
+.carl-rpg .carl-grid-table th,
+.carl-rpg .carl-grid-table td {
+  padding: 2px 4px;
+  border: 1px solid var(--carl-border-soft);
+}
+.carl-rpg .carl-grid-crawler {
+  min-width: 64px;
+  text-align: center;
+  vertical-align: bottom;
+}
+.carl-rpg .carl-grid-crawler img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 2px;
+  object-fit: cover;
+  border: none;
+}
+.carl-rpg .carl-grid-achievement {
+  text-align: left;
+  white-space: nowrap;
+}
+.carl-rpg .carl-grid-achievement a {
+  cursor: pointer;
+}
+.carl-rpg .carl-grid-group {
+  border-top: 2px solid var(--carl-gold);
+  border-bottom: 2px solid var(--carl-gold);
+}
+.carl-rpg .carl-grid-group-head th {
+  padding: 4px 6px 2px;
+  text-align: left;
+  font-size: 0.85em;
+  font-weight: bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-grid-editing .carl-grid-achievement {
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-achievement-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--carl-border-soft);
+}
+.carl-rpg .carl-achievement-editor prose-mirror {
+  min-height: 80px;
+}
+.carl-rpg .carl-grid-cell {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  background: #1a1a1a;
+  cursor: pointer;
+}
+.carl-rpg .carl-grid-cell img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin: 0 auto;
+  object-fit: contain;
+  border: none;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.85));
+}
+.carl-rpg .carl-grid-none img {
+  opacity: 0.4;
+}
+.carl-rpg .carl-grid-none:hover img {
+  opacity: 0.8;
+}
+.carl-rpg .carl-grid-check {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  color: #ffd700;
+}
+.carl-rpg .carl-achievement-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.carl-rpg .carl-achievement-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+.carl-rpg .carl-achievement-row img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg .carl-achievement-row-name {
+  font-weight: bold;
+}
+.carl-rpg .carl-opening {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+}
+.carl-rpg .carl-opening-crawler {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.carl-rpg .carl-opening-crawler img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border: none;
+}
+.carl-rpg .carl-opening-crawler h2 {
+  flex: 1 1 auto;
+  margin: 0;
+  border: none;
+}
+.carl-rpg .carl-opening-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+.carl-rpg .carl-opening-box img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg .carl-opening-splash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.carl-rpg .carl-opening-splash > img {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg .carl-opening-splash h3 {
+  margin: 0;
+  border: none;
+}
+.carl-rpg .carl-opening-splash .carl-opening-title {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-opening-shake {
+  animation: carl-box-shake 0.35s ease-in-out infinite, carl-box-glow 1.25s ease-in forwards;
+}
+.carl-rpg .carl-opening-revealed > img {
+  width: 96px;
+  height: 96px;
+  filter: drop-shadow(0 0 12px var(--carl-gold));
+}
+.carl-rpg .carl-opening-loot {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.carl-rpg .carl-opening-loot li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-opening-loot img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border: none;
+}
+.carl-rpg .carl-opening-gold {
+  color: var(--carl-gold);
+  font-weight: bold;
+}
+.carl-rpg .carl-opening-done {
+  text-align: center;
+  font-weight: bold;
+}
+.carl-rpg .carl-opening-buttons {
+  display: flex;
+  gap: 6px;
+}
+.carl-rpg .carl-opening-buttons button {
+  flex: 1 1 0;
+  white-space: nowrap;
+}
+.carl-rpg .carl-opening-wait {
+  margin: 0;
+  text-align: center;
+}
+.carl-rpg .carl-opening-order {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.carl-rpg .carl-opening-order-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.carl-rpg .carl-opening-order-name {
+  flex: 1 1 auto;
+}
+.carl-rpg.carl-floor-clock {
+  position: fixed;
+  translate: -50% 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--carl-border-soft);
+  border-radius: 14px;
+  background: rgba(10, 10, 10, 0.85);
+  color: #f0f0f0;
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}
+.carl-rpg.carl-floor-clock.dragging {
+  cursor: grabbing;
+}
+.carl-rpg.carl-floor-clock[data-stage=lastDay] {
+  border-color: #f0a020;
+  color: #ffc860;
+}
+.carl-rpg.carl-floor-clock[data-stage=final], .carl-rpg.carl-floor-clock[data-stage=collapsed] {
+  border-color: #e03030;
+  color: #ff7070;
+}
+.carl-rpg.carl-floor-clock[data-stage=final] {
+  animation: carl-floor-clock-pulse 1.6s ease-in-out infinite;
+}
+.carl-rpg .carl-floor-clock-sep {
+  opacity: 0.6;
+}
+
+/* An item's description as its Foundry tooltip (the itemTooltip helper).
+   The tooltip lives on <body>, outside any sheet. */
+#tooltip.carl-item-tooltip {
+  max-width: 360px;
+  max-height: 50vh;
+  overflow: hidden;
+  text-align: left;
+}
+#tooltip.carl-item-tooltip p {
+  margin: 0 0 0.4em;
+}
+#tooltip.carl-item-tooltip .carl-tooltip-name {
+  display: block;
+  margin-bottom: 0.3em;
+}
+#tooltip.carl-item-tooltip p:last-child {
+  margin-bottom: 0;
 }

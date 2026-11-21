@@ -20,12 +20,19 @@ export function defineTargetEffectSchema() {
   const fields = foundry.data.fields;
   return {
     id: new fields.StringField({
-      required: true, blank: false,
+      required: true,
+      blank: false,
       initial: () => foundry.utils.randomID(),
     }),
     /** Key into CONFIG.CARLRPG.debuffs (module/helpers/config.mjs) - a closed enum, not free text. */
     debuffKey: new fields.StringField({ required: true, blank: true, initial: "" }),
-    stacks: new fields.NumberField({ required: true, nullable: false, integer: true, initial: 1, min: 1 }),
+    stacks: new fields.NumberField({
+      required: true,
+      nullable: false,
+      integer: true,
+      initial: 1,
+      min: 1,
+    }),
     /** Only surface/apply this effect when the triggering roll was a natural 20 (e.g. Iron Punch, Fear). */
     critOnly: new fields.BooleanField({ required: true, initial: false }),
     /**
@@ -68,11 +75,17 @@ export function defineTargetEffectsField(options = {}) {
  */
 export function defineGearTargetEffectsField() {
   const fields = foundry.data.fields;
-  return new fields.ArrayField(new fields.SchemaField({
-    ...defineTargetEffectSchema(),
-    skills: new fields.ArrayField(new fields.StringField({ required: true, blank: true }), { required: true, initial: [] }),
-    handToHandOnly: new fields.BooleanField({ required: true, initial: false }),
-  }), { required: false, initial: [] });
+  return new fields.ArrayField(
+    new fields.SchemaField({
+      ...defineTargetEffectSchema(),
+      skills: new fields.ArrayField(new fields.StringField({ required: true, blank: true }), {
+        required: true,
+        initial: [],
+      }),
+      handToHandOnly: new fields.BooleanField({ required: true, initial: false }),
+    }),
+    { required: false, initial: [] },
+  );
 }
 
 /**
@@ -87,11 +100,15 @@ export function defineUpgradeTierSchema() {
   const requiredInteger = { required: true, nullable: false, integer: true };
   return {
     id: new fields.StringField({
-      required: true, blank: false,
+      required: true,
+      blank: false,
       initial: () => foundry.utils.randomID(),
     }),
     rankThreshold: new fields.NumberField({
-      required: true, nullable: false, integer: true, initial: 5,
+      required: true,
+      nullable: false,
+      integer: true,
+      initial: 5,
       choices: [5, 10, 15],
     }),
     /** Free text shown on the sheet, e.g. "+1d4 base damage, and attacks targeting the back of a foe deal x2 damage." */
@@ -149,10 +166,12 @@ export function defineUpgradeTierSchema() {
      */
     damageTypes: new fields.ArrayField(
       new fields.StringField({
-        required: false, blank: true, initial: "",
+        required: false,
+        blank: true,
+        initial: "",
         choices: ["", ...Object.keys(CONFIG.CARLRPG.damageTypes)],
       }),
-      { required: false, initial: [] }
+      { required: false, initial: [] },
     ),
     /**
      * Shield-style secondary-HP-pool tiers only (docs/known-gaps.md 1.4,

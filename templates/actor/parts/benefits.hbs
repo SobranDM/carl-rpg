@@ -15,10 +15,10 @@
       <span class="carl-benefit-type">{{panel.typeLabel}}</span>
       {{#if panel.active}}<span class="carl-benefit-active">{{localize "CARLRPG.Actor.Active"}}</span>{{/if}}
       <span class="carl-benefit-controls">
-        <a class="item-control item-edit" data-action="editItem" title="{{localize 'DOCUMENT.Update' type=panel.typeLabel}}">
+        <a class="item-control item-edit" data-action="editItem" data-tooltip-text="{{localize 'DOCUMENT.Update' type=panel.typeLabel}}">
           <i class="fas fa-edit"></i>
         </a>
-        <a class="item-control item-delete" data-action="deleteItem" title="{{localize 'DOCUMENT.Delete' type=panel.typeLabel}}">
+        <a class="item-control item-delete" data-action="deleteItem" data-tooltip-text="{{localize 'DOCUMENT.Delete' type=panel.typeLabel}}">
           <i class="fas fa-trash"></i>
         </a>
       </span>
@@ -39,21 +39,21 @@
     <div class="carl-deity-line">
       <input type="text" class="carl-deity-name" name="system.deity.name" value="{{system.deity.name}}"
         placeholder="{{localize 'CARLRPG.Deity.NamePlaceholder'}}" />
-      <select class="carl-w-short" name="system.deity.tier" title="{{localize 'CARLRPG.Deity.Tier'}}">
+      <select class="carl-w-short" name="system.deity.tier" data-tooltip-text="{{localize 'CARLRPG.Deity.Tier'}}">
         {{selectOptions deity.tierChoices selected=system.deity.tier localize=true}}
       </select>
       {{#if deity.tithe}}
-      <span class="carl-deity-tithe" title="{{localize 'CARLRPG.Deity.TitheHint'}}">{{localize "CARLRPG.Deity.Tithe" percent=deity.tithe}}</span>
+      <span class="carl-deity-tithe" data-tooltip-text="{{localize 'CARLRPG.Deity.TitheHint'}}">{{localize "CARLRPG.Deity.Tithe" percent=deity.tithe}}</span>
       {{/if}}
     </div>
     <div class="carl-deity-line">
-      <span class="resource-label" title="{{localize 'CARLRPG.Deity.WorshipDaysHint'}}">{{localize "CARLRPG.Deity.WorshipDays"}}</span>
+      <span class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Deity.WorshipDaysHint'}}">{{localize "CARLRPG.Deity.WorshipDays"}}</span>
       <input type="text" class="carl-w-tiny" name="system.deity.worshipDays" value="{{system.deity.worshipDays}}" data-dtype="Number" />
-      <a class="carl-deity-add-day" data-action="addWorshipDay" title="{{localize 'CARLRPG.Deity.AddDay'}}"><i class="fas fa-plus"></i>1</a>
+      <a class="carl-deity-add-day" data-action="addWorshipDay" data-tooltip-text="{{localize 'CARLRPG.Deity.AddDay'}}"><i class="fas fa-plus"></i>1</a>
       <span class="carl-deity-next{{#if deity.boonDue}} due{{/if}}">
         {{#if deity.boonDue}}{{localize "CARLRPG.Deity.BoonDue"}}{{else}}{{localize "CARLRPG.Deity.DaysToBoon" days=deity.daysToNextBoon}}{{/if}}
       </span>
-      <button type="button" class="carl-deity-boon" data-action="receiveBoon" title="{{localize 'CARLRPG.Deity.ReceiveBoonHint'}}"
+      <button type="button" class="carl-deity-boon" data-action="receiveBoon" data-tooltip-text="{{localize 'CARLRPG.Deity.ReceiveBoonHint'}}"
         {{#unless (or deity.canReceive isGM)}}disabled{{/unless}}>
         <i class="fas fa-gift"></i> {{localize "CARLRPG.Deity.ReceiveBoon"}}
       </button>
@@ -63,12 +63,12 @@
       <span class="carl-missed-pips">
         {{#each deity.missedPips as |pip|}}
         <span class="carl-missed-pip{{#if pip.filled}} filled{{/if}}" data-action="setMissedOfferings" data-value="{{pip.value}}"
-          title="{{localize pip.hint}}"></span>
+          data-tooltip-text="{{localize pip.hint}}"></span>
         {{/each}}
       </span>
       <label class="carl-deity-flag"><input type="checkbox" name="system.deity.shunned" {{checked system.deity.shunned}} /> {{localize "CARLRPG.Deity.Shunned"}}</label>
       <label class="carl-deity-flag"><input type="checkbox" name="system.deity.fallen" {{checked system.deity.fallen}} /> {{localize "CARLRPG.Deity.Fallen"}}</label>
-      <select class="carl-w-short" name="system.deity.penitence" data-dtype="Number" title="{{localize 'CARLRPG.Deity.PenitenceHint'}}">
+      <select class="carl-w-short" name="system.deity.penitence" data-dtype="Number" data-tooltip-text="{{localize 'CARLRPG.Deity.PenitenceHint'}}">
         {{selectOptions deity.penitenceChoices selected=system.deity.penitence localize=true}}
       </select>
     </div>
@@ -119,21 +119,21 @@
 
 {{#*inline "benefitRow"}}
 <li class="item flexrow{{#unless item.applies}} carl-benefit-unreached{{/unless}}" data-item-id="{{item._id}}"
-  {{#unless item.applies}}title="{{localize item.inactiveHint}}"{{/unless}}>
-  <div class="item-name">
+  {{#unless item.applies}}data-tooltip-text="{{localize item.inactiveHint}}"{{/unless}}>
+  <div class="item-name"{{itemTooltip (lookup @root.itemTooltips item._id)}}>
     <div class="item-image">
       <a class="rollable" data-action="roll" data-roll-type="item">
-        <img src="{{item.img}}" title="{{item.name}}" width="24" height="24" />
+        <img src="{{item.img}}" alt="" width="24" height="24" />
       </a>
     </div>
     <h4>{{item.name}}</h4>
   </div>
   <div class="item-prop">{{#if item.tierLabel}}{{localize item.tierLabel}}{{/if}}</div>
   <div class="item-controls">
-    <a class="item-control item-edit" data-action="editItem" title="{{localize 'DOCUMENT.Update' type=(localize 'CARLRPG.Benefits.Benefit')}}">
+    <a class="item-control item-edit" data-action="editItem" data-tooltip-text="{{localize 'DOCUMENT.Update' type=(localize 'CARLRPG.Benefits.Benefit')}}">
       <i class="fas fa-edit"></i>
     </a>
-    <a class="item-control item-delete" data-action="deleteItem" title="{{localize 'DOCUMENT.Delete' type=(localize 'CARLRPG.Benefits.Benefit')}}">
+    <a class="item-control item-delete" data-action="deleteItem" data-tooltip-text="{{localize 'DOCUMENT.Delete' type=(localize 'CARLRPG.Benefits.Benefit')}}">
       <i class="fas fa-trash"></i>
     </a>
   </div>

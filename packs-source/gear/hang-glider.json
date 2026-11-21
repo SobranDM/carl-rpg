@@ -1,0 +1,34 @@
+{
+  "_id": "zBUhdukDOb0JYqSx",
+  "name": "Hang Glider",
+  "type": "item",
+  "folder": "XNAa1jnZvRWmGmEu",
+  "img": "icons/svg/wing.svg",
+  "system": {
+    "description": "<p>A hang glider.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "slots": [],
+    "weaponSkill": ""
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!zBUhdukDOb0JYqSx"
+}

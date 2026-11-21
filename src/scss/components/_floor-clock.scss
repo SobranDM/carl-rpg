@@ -1,0 +1,53 @@
+// The floor-collapse bar (apps/floor-clock-hud.mjs): on every screen, just
+// above the hotbar unless the user dragged it; amber in its last 30 hours,
+// red in its last 24.
+@mixin styles {
+  &.carl-floor-clock {
+    position: fixed;
+    // Anchored by its centre (floor-clock-hud.mjs): it grows both ways.
+    translate: -50% 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border: 1px solid var(--carl-border-soft);
+    border-radius: 14px;
+    background: rgba(10, 10, 10, 0.85);
+    color: #f0f0f0;
+    font-weight: bold;
+    white-space: nowrap;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+
+    &.dragging {
+      cursor: grabbing;
+    }
+
+    &[data-stage="lastDay"] {
+      border-color: #f0a020;
+      color: #ffc860;
+    }
+
+    &[data-stage="final"],
+    &[data-stage="collapsed"] {
+      border-color: #e03030;
+      color: #ff7070;
+    }
+
+    &[data-stage="final"] {
+      animation: carl-floor-clock-pulse 1.6s ease-in-out infinite;
+    }
+  }
+
+  .carl-floor-clock-sep {
+    opacity: 0.6;
+  }
+}
+
+@keyframes carl-floor-clock-pulse {
+  50% {
+    box-shadow: 0 0 12px rgba(224, 48, 48, 0.8);
+  }
+}

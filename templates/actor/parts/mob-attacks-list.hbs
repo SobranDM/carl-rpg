@@ -19,7 +19,7 @@
             <i class="fas {{attack.kindIcon}}" aria-hidden="true"></i>{{localize attack.kindLabel}}
           </span>
           <span class="carl-mob-attack-what">
-            <strong>{{attack.name}}</strong>
+            <strong{{itemTooltip (lookup @root.itemTooltips attack.id)}}>{{attack.name}}</strong>
             <span class="carl-mob-attack-notes">
               {{#each attack.notes as |note|}}<span>{{note}}</span>{{/each}}
               {{#each attack.effects as |effect|}}

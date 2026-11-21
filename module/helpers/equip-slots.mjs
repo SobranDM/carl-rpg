@@ -15,7 +15,16 @@
 
 import { refuseWhileSwapping } from "./swap-lock.mjs";
 import { noteGear, takeAction } from "./actions.mjs";
-import { HANDS, WEAR_SLOT_OF_GEAR_SLOT, accessoryKindOf, canWear, fitsSlot, isConsumable, isTwoHanded, slotsOf } from "./gear.mjs";
+import {
+  HANDS,
+  WEAR_SLOT_OF_GEAR_SLOT,
+  accessoryKindOf,
+  canWear,
+  fitsSlot,
+  isConsumable,
+  isTwoHanded,
+  slotsOf,
+} from "./gear.mjs";
 
 /** A stored value that looks like a Foundry document id, not free text. */
 const ID_PATTERN = /^[a-zA-Z0-9]{16}$/;
@@ -106,7 +115,11 @@ export function freeSlotFor(actor, item) {
   for (const wear of Object.keys(CONFIG.CARLRPG.wearSlots).filter((key) => worn.has(key))) {
     if (wear === "accessory") {
       const raw = actor.system.accessories ?? [];
-      if (raw.filter((id) => slotHolds(actor, id)).length >= CONFIG.CARLRPG.characterListSlots.accessories) continue;
+      if (
+        raw.filter((id) => slotHolds(actor, id)).length >=
+        CONFIG.CARLRPG.characterListSlots.accessories
+      )
+        continue;
       // Appended: the index past the stored list, as writeSlot reads it.
       const slot = { slotType: "accessory", slotKey: String(raw.length) };
       if (!slotRefusal(actor, slot, item)) return slot;
@@ -116,7 +129,9 @@ export function freeSlotFor(actor, item) {
       if (HANDS.every(free)) return { slotType: "gear", slotKey: HANDS[0] };
       continue;
     }
-    const keys = Object.keys(WEAR_SLOT_OF_GEAR_SLOT).filter((key) => WEAR_SLOT_OF_GEAR_SLOT[key] === wear && key in gearSlots);
+    const keys = Object.keys(WEAR_SLOT_OF_GEAR_SLOT).filter(
+      (key) => WEAR_SLOT_OF_GEAR_SLOT[key] === wear && key in gearSlots,
+    );
     for (const key of keys) if (free(key)) return { slotType: "gear", slotKey: key };
   }
   return null;
@@ -144,11 +159,17 @@ export function slotHolds(actor, value) {
  */
 export async function placeInFreeSlot(actor, { slotType, slotKey }, item) {
   const gearSlots = Object.fromEntries(
-    Object.entries(actor.system.gearSlots ?? {}).map(([key, id]) => [key, id === item.id ? "" : id]),
+    Object.entries(actor.system.gearSlots ?? {}).map(([key, id]) => [
+      key,
+      id === item.id ? "" : id,
+    ]),
   );
-  let accessories = (actor.system.accessories ?? []).filter((id) => id !== item.id && resolveSlotValue(actor, id).name);
+  let accessories = (actor.system.accessories ?? []).filter(
+    (id) => id !== item.id && resolveSlotValue(actor, id).name,
+  );
   if (slotType === "gear") {
-    for (const key of HANDS.includes(slotKey) && isTwoHanded(item) ? HANDS : [slotKey]) gearSlots[key] = item.id;
+    for (const key of HANDS.includes(slotKey) && isTwoHanded(item) ? HANDS : [slotKey])
+      gearSlots[key] = item.id;
   } else accessories = [...accessories, item.id];
   await actor.update({ "system.gearSlots": gearSlots, "system.accessories": accessories });
 }
@@ -163,7 +184,10 @@ export async function placeInFreeSlot(actor, { slotType, slotKey }, item) {
 export async function takeOutOfSlots(actor, item) {
   if (!isItemWorn(actor, item.id)) return;
   const gearSlots = Object.fromEntries(
-    Object.entries(actor.system.gearSlots ?? {}).map(([key, id]) => [key, id === item.id ? "" : id]),
+    Object.entries(actor.system.gearSlots ?? {}).map(([key, id]) => [
+      key,
+      id === item.id ? "" : id,
+    ]),
   );
   await actor.update({
     "system.gearSlots": gearSlots,
@@ -186,9 +210,12 @@ export function slotRefusal(actor, { slotType, slotKey }, item) {
   // A consumable is never worn, not even in a hand (docs/gear-slots.md).
   if (isConsumable(item)) return i18n.format("CARLRPG.Gear.ConsumableNotWorn", { item: item.name });
   // Anything else can be held in a hand (fitsSlot).
-  if (!canWear(item) && !fitsSlot(item, { slotType, slotKey })) return i18n.format("CARLRPG.Gear.NoSlot", { item: item.name });
+  if (!canWear(item) && !fitsSlot(item, { slotType, slotKey }))
+    return i18n.format("CARLRPG.Gear.NoSlot", { item: item.name });
   if (!fitsSlot(item, { slotType, slotKey })) {
-    const where = slotsOf(item).map((s) => i18n.localize(CONFIG.CARLRPG.wearSlots[s] ?? s)).join(", ");
+    const where = slotsOf(item)
+      .map((s) => i18n.localize(CONFIG.CARLRPG.wearSlots[s] ?? s))
+      .join(", ");
     return i18n.format("CARLRPG.Gear.WrongSlot", { item: item.name, slots: where });
   }
   const kind = slotType === "accessory" ? accessoryKindOf(item) : "";
@@ -201,7 +228,8 @@ export function slotRefusal(actor, { slotType, slotKey }, item) {
       .find((worn) => worn && accessoryKindOf(worn) === kind);
     if (other) {
       return i18n.format("CARLRPG.Gear.OneKind", {
-        kind: i18n.localize(CONFIG.CARLRPG.accessoryKinds[kind]), item: other.name,
+        kind: i18n.localize(CONFIG.CARLRPG.accessoryKinds[kind]),
+        item: other.name,
       });
     }
   }
@@ -219,13 +247,18 @@ export function slotRefusal(actor, { slotType, slotKey }, item) {
  * @returns {Promise<void>}
  */
 async function retrieve(actor, item, change) {
-  await takeAction(actor, "other", game.i18n.format("CARLRPG.Actions.Label.Retrieve", { item: item.name }), async (ctx) => {
-    const before = wornState(actor, item.id);
-    noteGear(actor);
-    await change();
-    if (wornState(actor, item.id) !== before) ctx.use();
-    else ctx.free();
-  });
+  await takeAction(
+    actor,
+    "other",
+    game.i18n.format("CARLRPG.Actions.Label.Retrieve", { item: item.name }),
+    async (ctx) => {
+      const before = wornState(actor, item.id);
+      noteGear(actor);
+      await change();
+      if (wornState(actor, item.id) !== before) ctx.use();
+      else ctx.free();
+    },
+  );
 }
 
 /**
@@ -237,7 +270,9 @@ async function retrieve(actor, item, change) {
  */
 export function wornState(actor, itemId) {
   const item = actor.items.get(itemId);
-  const slots = Object.entries(actor.system.gearSlots ?? {}).filter(([, id]) => id === itemId).map(([key]) => key);
+  const slots = Object.entries(actor.system.gearSlots ?? {})
+    .filter(([, id]) => id === itemId)
+    .map(([key]) => key);
   const accessory = (actor.system.accessories ?? []).includes(itemId);
   return `${!!item?.system.equipped}|${slots.sort().join(",")}|${accessory}`;
 }
@@ -249,7 +284,9 @@ async function writeSlot(actor, { slotType, slotKey }, item, duringSwap) {
   const gearSlots = Object.fromEntries(
     Object.entries(system.gearSlots).map(([key, id]) => [key, id === item.id ? "" : id]),
   );
-  const wornAccessories = system.accessories.filter((id) => resolveSlotValue(actor, id).name).length;
+  const wornAccessories = system.accessories.filter(
+    (id) => resolveSlotValue(actor, id).name,
+  ).length;
   let accessories = [...system.accessories];
   const displaced = [];
   let target = -1;
@@ -307,7 +344,11 @@ async function writeSlot(actor, { slotType, slotKey }, item, duringSwap) {
     }
   }
   // Paid for by this Retrieve, or the swap's Action (CarlRPGItem#_preUpdate).
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { carlSwap: duringSwap, carlInAction: true });
+  if (updates.length)
+    await actor.updateEmbeddedDocuments("Item", updates, {
+      carlSwap: duringSwap,
+      carlInAction: true,
+    });
 }
 
 /**
@@ -326,7 +367,8 @@ export async function unwearItem(actor, item, { duringSwap = false } = {}) {
     );
     const accessories = actor.system.accessories.filter((id) => id !== item.id);
     await actor.update({ "system.gearSlots": gearSlots, "system.accessories": accessories });
-    if (item.system.equipped) await item.update({ "system.equipped": false }, { carlSwap: duringSwap, carlInAction: true });
+    if (item.system.equipped)
+      await item.update({ "system.equipped": false }, { carlSwap: duringSwap, carlInAction: true });
   };
   await (duringSwap ? write() : retrieve(actor, item, write));
 }
@@ -350,20 +392,26 @@ export async function clearSlot(actor, { slotType, slotKey }) {
     return;
   }
   if (!["gear", "accessory"].includes(slotType)) return;
-  const removed = slotType === "gear" ? system.gearSlots[slotKey] : system.accessories[Number(slotKey)];
+  const removed =
+    slotType === "gear" ? system.gearSlots[slotKey] : system.accessories[Number(slotKey)];
   const item = removed ? actor.items.get(removed) : null;
   const write = async () => {
     noteGear(actor);
     if (slotType === "gear") {
       // A two-handed item leaves both hands (each hand holding it).
-      const keys = HANDS.includes(slotKey) && item && isTwoHanded(item)
-        ? HANDS.filter((hand) => actor.system.gearSlots[hand] === item.id) : [slotKey];
+      const keys =
+        HANDS.includes(slotKey) && item && isTwoHanded(item)
+          ? HANDS.filter((hand) => actor.system.gearSlots[hand] === item.id)
+          : [slotKey];
       await actor.update(Object.fromEntries(keys.map((key) => [`system.gearSlots.${key}`, ""])));
     } else {
       const index = Number(slotKey);
-      await actor.update({ "system.accessories": actor.system.accessories.filter((_, i) => i !== index) });
+      await actor.update({
+        "system.accessories": actor.system.accessories.filter((_, i) => i !== index),
+      });
     }
-    if (item?.system.equipped && !isItemWorn(actor, item.id)) await item.update({ "system.equipped": false }, { carlInAction: true });
+    if (item?.system.equipped && !isItemWorn(actor, item.id))
+      await item.update({ "system.equipped": false }, { carlInAction: true });
   };
   // A slot holding a typed name (no item) costs nothing to clear.
   await (item ? retrieve(actor, item, write) : write());

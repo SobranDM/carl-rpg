@@ -1,0 +1,36 @@
+{
+  "_id": "kz4OB32RPxavSjDR",
+  "name": "Canoe and Paddle",
+  "type": "item",
+  "folder": "XNAa1jnZvRWmGmEu",
+  "img": "icons/magic/air/wind-weather-sailing-ship.webp",
+  "system": {
+    "description": "<p>A canoe, and a paddle that fights as a Staff (p.216).</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "slots": [
+      "held"
+    ],
+    "weaponSkill": "Quarterstaff"
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!kz4OB32RPxavSjDR"
+}

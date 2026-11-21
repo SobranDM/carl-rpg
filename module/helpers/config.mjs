@@ -119,8 +119,22 @@ CARLRPG.sizes = {
  * work too.
  */
 CARLRPG.weaponSkills = [
-  "Axe", "Bow", "Club", "Crossbow", "Dagger", "Handgun", "Javelin", "Lance", "Longsword",
-  "Polearm", "Quarterstaff", "Rapier", "Shotgun", "Shuriken", "Slingshot", "Warhammer",
+  "Axe",
+  "Bow",
+  "Club",
+  "Crossbow",
+  "Dagger",
+  "Handgun",
+  "Javelin",
+  "Lance",
+  "Longsword",
+  "Polearm",
+  "Quarterstaff",
+  "Rapier",
+  "Shotgun",
+  "Shuriken",
+  "Slingshot",
+  "Warhammer",
 ];
 
 /**
@@ -412,10 +426,26 @@ CARLRPG.petAltMoveFeet = { swim: 30, burrow: 30, flight: 50, jump: 50 };
 CARLRPG.petStartingSkills = ["Slice Attack"];
 CARLRPG.petRoleSkills = { aggressive: ["Back Claw", "Bite"] };
 CARLRPG.petCommandStates = {
-  free: { label: "CARLRPG.Pet.Command.States.free", status: "carlPetFree", img: "icons/svg/upgrade.svg" },
-  restricted: { label: "CARLRPG.Pet.Command.States.restricted", status: "carlPetRestricted", img: "icons/svg/target.svg" },
-  stayingOut: { label: "CARLRPG.Pet.Command.States.stayingOut", status: "carlPetStayingOut", img: "icons/svg/downgrade.svg" },
-  hiding: { label: "CARLRPG.Pet.Command.States.hiding", status: "carlPetHiding", img: "icons/svg/invisible.svg" },
+  free: {
+    label: "CARLRPG.Pet.Command.States.free",
+    status: "carlPetFree",
+    img: "icons/svg/upgrade.svg",
+  },
+  restricted: {
+    label: "CARLRPG.Pet.Command.States.restricted",
+    status: "carlPetRestricted",
+    img: "icons/svg/target.svg",
+  },
+  stayingOut: {
+    label: "CARLRPG.Pet.Command.States.stayingOut",
+    status: "carlPetStayingOut",
+    img: "icons/svg/downgrade.svg",
+  },
+  hiding: {
+    label: "CARLRPG.Pet.Command.States.hiding",
+    status: "carlPetHiding",
+    img: "icons/svg/invisible.svg",
+  },
 };
 CARLRPG.petLevelStepCap = 15;
 
@@ -433,30 +463,151 @@ CARLRPG.petLevelStepCap = 15;
  *  Mounted-only weapons (a Lance) are marked on the Skill (system.mounted).
  */
 CARLRPG.vehiclePresets = {
-  skateboard: { label: "CARLRPG.Vehicle.Presets.skateboard", move: 30, size: 2, dr: 0, occupancy: 1, cargo: 0, driveSkill: "Driving" },
-  bicycle: { label: "CARLRPG.Vehicle.Presets.bicycle", move: 40, size: 3, dr: 0, occupancy: 2, cargo: 0, driveSkill: "Chopper Pilot" },
-  tank: { label: "CARLRPG.Vehicle.Presets.tank", move: 50, size: 6, dr: 10, occupancy: 4, cargo: 0, driveSkill: "Driving" },
-  eighteenWheeler: { label: "CARLRPG.Vehicle.Presets.eighteenWheeler", move: 60, size: 7, dr: 4, occupancy: 4, cargo: 50, driveSkill: "Driving" },
-  largeTruck: { label: "CARLRPG.Vehicle.Presets.largeTruck", move: 70, size: 6, dr: 4, occupancy: 3, cargo: 5, driveSkill: "Driving" },
-  sedan: { label: "CARLRPG.Vehicle.Presets.sedan", move: 80, size: 5, dr: 3, occupancy: 6, cargo: 0, driveSkill: "Driving" },
-  sportscar: { label: "CARLRPG.Vehicle.Presets.sportscar", move: 100, size: 5, dr: 2, occupancy: 2, cargo: 0, driveSkill: "Driving" },
-  motorcycle: { label: "CARLRPG.Vehicle.Presets.motorcycle", move: 120, size: 4, dr: 1, occupancy: 2, cargo: 0, driveSkill: "Chopper Pilot" },
+  skateboard: {
+    label: "CARLRPG.Vehicle.Presets.skateboard",
+    move: 30,
+    size: 2,
+    dr: 0,
+    occupancy: 1,
+    cargo: 0,
+    driveSkill: "Driving",
+  },
+  bicycle: {
+    label: "CARLRPG.Vehicle.Presets.bicycle",
+    move: 40,
+    size: 3,
+    dr: 0,
+    occupancy: 2,
+    cargo: 0,
+    driveSkill: "Chopper Pilot",
+  },
+  tank: {
+    label: "CARLRPG.Vehicle.Presets.tank",
+    move: 50,
+    size: 6,
+    dr: 10,
+    occupancy: 4,
+    cargo: 0,
+    driveSkill: "Driving",
+  },
+  eighteenWheeler: {
+    label: "CARLRPG.Vehicle.Presets.eighteenWheeler",
+    move: 60,
+    size: 7,
+    dr: 4,
+    occupancy: 4,
+    cargo: 50,
+    driveSkill: "Driving",
+  },
+  largeTruck: {
+    label: "CARLRPG.Vehicle.Presets.largeTruck",
+    move: 70,
+    size: 6,
+    dr: 4,
+    occupancy: 3,
+    cargo: 5,
+    driveSkill: "Driving",
+  },
+  sedan: {
+    label: "CARLRPG.Vehicle.Presets.sedan",
+    move: 80,
+    size: 5,
+    dr: 3,
+    occupancy: 6,
+    cargo: 0,
+    driveSkill: "Driving",
+  },
+  sportscar: {
+    label: "CARLRPG.Vehicle.Presets.sportscar",
+    move: 100,
+    size: 5,
+    dr: 2,
+    occupancy: 2,
+    cargo: 0,
+    driveSkill: "Driving",
+  },
+  motorcycle: {
+    label: "CARLRPG.Vehicle.Presets.motorcycle",
+    move: 120,
+    size: 4,
+    dr: 1,
+    occupancy: 2,
+    cargo: 0,
+    driveSkill: "Chopper Pilot",
+  },
 };
 CARLRPG.vehicleRoles = {
   driver: "CARLRPG.Vehicle.Roles.driver",
   passenger: "CARLRPG.Vehicle.Roles.passenger",
 };
 CARLRPG.drivingOutcomes = {
-  criticalHit: { factor: 1, delta: 0, damageSlots: 0, advantageNext: false, critChoice: true, stall: false },
-  amazingSuccess: { factor: 1, delta: 0, damageSlots: 0, advantageNext: true, critChoice: false, stall: false },
-  standardSuccess: { factor: 1, delta: 0, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
-  nearMissFail: { factor: 1, delta: -5, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
-  standardFail: { factor: 0.5, delta: 0, damageSlots: 0, advantageNext: false, critChoice: false, stall: false },
-  majorFail: { factor: 0.5, delta: 0, damageSlots: 1, advantageNext: false, critChoice: false, stall: false },
-  criticalFail: { factor: 0, delta: 0, damageSlots: 3, advantageNext: false, critChoice: false, stall: true },
+  criticalHit: {
+    factor: 1,
+    delta: 0,
+    damageSlots: 0,
+    advantageNext: false,
+    critChoice: true,
+    stall: false,
+  },
+  amazingSuccess: {
+    factor: 1,
+    delta: 0,
+    damageSlots: 0,
+    advantageNext: true,
+    critChoice: false,
+    stall: false,
+  },
+  standardSuccess: {
+    factor: 1,
+    delta: 0,
+    damageSlots: 0,
+    advantageNext: false,
+    critChoice: false,
+    stall: false,
+  },
+  nearMissFail: {
+    factor: 1,
+    delta: -5,
+    damageSlots: 0,
+    advantageNext: false,
+    critChoice: false,
+    stall: false,
+  },
+  standardFail: {
+    factor: 0.5,
+    delta: 0,
+    damageSlots: 0,
+    advantageNext: false,
+    critChoice: false,
+    stall: false,
+  },
+  majorFail: {
+    factor: 0.5,
+    delta: 0,
+    damageSlots: 1,
+    advantageNext: false,
+    critChoice: false,
+    stall: false,
+  },
+  criticalFail: {
+    factor: 0,
+    delta: 0,
+    damageSlots: 3,
+    advantageNext: false,
+    critChoice: false,
+    stall: true,
+  },
 };
 /** Degrees in order, worst to best - Shock Absorbers step a Fail up one. */
-CARLRPG.degreeOrder = ["criticalFail", "majorFail", "standardFail", "nearMissFail", "standardSuccess", "amazingSuccess", "criticalHit"];
+CARLRPG.degreeOrder = [
+  "criticalFail",
+  "majorFail",
+  "standardFail",
+  "nearMissFail",
+  "standardSuccess",
+  "amazingSuccess",
+  "criticalHit",
+];
 /** Nitrous Oxide: "Double Move for 3 rounds" (p.73). */
 CARLRPG.nitrousRounds = 3;
 
@@ -498,6 +649,7 @@ CARLRPG.consumableMend = {
   "": "CARLRPG.Consumable.Mend.none",
   minor: "CARLRPG.Consumable.Mend.minor",
   any: "CARLRPG.Consumable.Mend.any",
+  all: "CARLRPG.Consumable.Mend.all",
 };
 CARLRPG.consumablePermanent = {
   "": "CARLRPG.Consumable.Permanent.none",
@@ -511,39 +663,180 @@ CARLRPG.consumableUnits = {
 };
 
 /**
- * Randomized Magic Items (Skills, Spells & Gear, p.219-220): a loot box's
- * tier sets how many times to roll on the Item Type sub-table it lands on
- * to build up one item's properties (0 for Bronze - the item stays
- * mundane, no rolls at all), and `xValues` is the book's own GM-facing
- * guidance text for what a "+X Stat/Skill Bonus" result is worth at that
- * tier - deliberately never auto-rolled/computed (see module/helpers/
- * loot.mjs), since Platinum+ are percentages needing a specific
- * character's current Stat to resolve, and Buffs/Inherent Spells/Passive
- * Skill results already have no master list to automate against either.
+ * Loot box tiers, Bronze to Celestial (p.21), and what a box of each holds
+ * (Loot, pp.215-220; docs/loot-and-achievements.md, ruled 2026-11-19).
+ *  - rolls: how many times a magic item's effect table is rolled (p.219);
+ *    Bronze 0 - its item is mundane.
+ *  - gold: "And almost always ... Gold" (pp.216-218), a Roll formula; ""
+ *    for none (Celestial: "Sorry, no Gold").
+ *  - magicItems: magic items per box (Tables 38-42); weakMagicChance: the
+ *    chance of one "weak magic" item from the Bronze Box: Weak Magic table.
+ *  - consumables / mundane: how many rows to draw from the tier's
+ *    "<Tier> Box: Consumables" / "<Tier> Box: Mundane" tables (a formula or
+ *    a number; 0 for none).
+ *  - spellRank: a Spell Scroll's or Spellbook's Rank (Table 25, p.116 for
+ *    Bronze to Platinum; Legendary and Celestial provisional).
+ *  - skillX / statX: what "+X Skill/Stat Bonus" is worth (p.220). A
+ *    percentage Stat bonus is of the recipient's Stat, rounded down and
+ *    fixed when gained. `min` is the least it gives: Platinum +4 (the
+ *    p.218 sample), rising with the tier - Legendary +5, Celestial +6 - so
+ *    a rarer box never gives less than a Gold box's +3-5 (ruled 2026-11-19).
+ *  - img / achievementImg: the tier's box art and achievement icon.
+ *  - xValues: the p.220 text, shown with a rolled item.
  */
 CARLRPG.lootBoxTiers = {
-  bronze: { label: "CARLRPG.LootBox.Bronze.Label", rolls: 0 },
+  bronze: {
+    label: "CARLRPG.LootBox.Bronze.Label",
+    rolls: 0,
+    gold: "1d10",
+    magicItems: 0,
+    weakMagicChance: 1 / 3,
+    consumables: "1d2",
+    mundane: 1,
+    spellRank: "1d4",
+    skillX: null,
+    statX: null,
+    img: "systems/carl-rpg/assets/loot-boxes/bronze-box.webp",
+    achievementImg: "systems/carl-rpg/assets/achievements/bronze-achievement.svg",
+  },
   silver: {
     label: "CARLRPG.LootBox.Silver.Label",
     rolls: 1,
     xValues: "CARLRPG.LootBox.Silver.XValues",
+    gold: "1d10*100",
+    magicItems: 1,
+    weakMagicChance: 0,
+    consumables: "1d2",
+    mundane: 1,
+    spellRank: "2d4",
+    skillX: { min: 1, max: 1 },
+    statX: { min: 2, max: 2 },
+    img: "systems/carl-rpg/assets/loot-boxes/silver-box.webp",
+    achievementImg: "systems/carl-rpg/assets/achievements/silver-achievement.svg",
   },
-  gold: { label: "CARLRPG.LootBox.Gold.Label", rolls: 2, xValues: "CARLRPG.LootBox.Gold.XValues" },
+  gold: {
+    label: "CARLRPG.LootBox.Gold.Label",
+    rolls: 2,
+    xValues: "CARLRPG.LootBox.Gold.XValues",
+    gold: "1d6*1000",
+    magicItems: 1,
+    weakMagicChance: 0,
+    consumables: "1d2",
+    mundane: 0,
+    spellRank: "1d4",
+    skillX: { min: 1, max: 3 },
+    statX: { min: 3, max: 5 },
+    img: "systems/carl-rpg/assets/loot-boxes/gold-box.webp",
+    achievementImg: "systems/carl-rpg/assets/achievements/gold-achievement.svg",
+  },
   platinum: {
     label: "CARLRPG.LootBox.Platinum.Label",
     rolls: 3,
     xValues: "CARLRPG.LootBox.Platinum.XValues",
+    gold: "2d6*1000",
+    magicItems: 1,
+    weakMagicChance: 0,
+    consumables: "1d2",
+    mundane: 0,
+    spellRank: "2d4",
+    skillX: { min: 2, max: 4 },
+    statX: { percent: 5, min: 4 },
+    img: "systems/carl-rpg/assets/loot-boxes/platinum-box.webp",
+    achievementImg: "systems/carl-rpg/assets/achievements/platinum-achievement.svg",
   },
   legendary: {
     label: "CARLRPG.LootBox.Legendary.Label",
     rolls: 4,
     xValues: "CARLRPG.LootBox.Legendary.XValues",
+    gold: "1d10*10000",
+    magicItems: 1,
+    weakMagicChance: 0,
+    consumables: "1d2",
+    mundane: 0,
+    spellRank: "3d4",
+    skillX: { min: 5, max: 5 },
+    statX: { percent: 10, min: 5 },
+    img: "systems/carl-rpg/assets/loot-boxes/legendary-box.webp",
+    achievementImg: "systems/carl-rpg/assets/achievements/legendary-achievement.svg",
   },
   celestial: {
     label: "CARLRPG.LootBox.Celestial.Label",
     rolls: 5,
     xValues: "CARLRPG.LootBox.Celestial.XValues",
+    gold: "",
+    magicItems: 1,
+    weakMagicChance: 0,
+    consumables: "1d2",
+    mundane: 0,
+    spellRank: "4d4",
+    skillX: { min: 6, max: 6 },
+    statX: { percent: 20, min: 6 },
+    img: "systems/carl-rpg/assets/loot-boxes/celestial-box.webp",
+    achievementImg: "systems/carl-rpg/assets/achievements/celestial-achievement.svg",
   },
+};
+
+/**
+ * Damage types Table 10 (p.93) lists as Uncommon - what Enchanted
+ * Clothing's "Resistance to an uncommon damage type" (Table 40) picks from.
+ */
+CARLRPG.uncommonDamageTypes = [
+  "acid",
+  "electric",
+  "force",
+  "holy",
+  "ice",
+  "necrotic",
+  "psychic",
+  "sonic",
+];
+
+/**
+ * Words a rolled magic item's name is made from (p.220: "The [thing] of the
+ * [adjective] [creator/mob/deity/boss]", with "Enchanted" in front at Gold,
+ * Platinum and Legendary) - the GM renames it at will. A thing names where
+ * it's worn: `slot` (a CARLRPG.wearSlots key) and, for an Accessory, its
+ * `accessoryKind`.
+ */
+CARLRPG.magicItemNames = {
+  enchantedTiers: ["gold", "platinum", "legendary"],
+  things: {
+    mundane: [
+      { name: "Frying Pan", slot: "held" },
+      { name: "Umbrella", slot: "held" },
+      { name: "Tire Iron", slot: "held" },
+      { name: "Garden Gnome", slot: "held" },
+      { name: "Selfie Stick", slot: "held" },
+      { name: "Lunchbox", slot: "held" },
+    ],
+    clothing: [
+      { name: "Cap", slot: "head" },
+      { name: "Hoodie", slot: "torso" },
+      { name: "Bracers", slot: "arms" },
+      { name: "Mittens", slot: "gloves" },
+      { name: "Sweatpants", slot: "legs" },
+      { name: "Sneakers", slot: "feet" },
+    ],
+    accessory: [
+      { name: "Ring", slot: "accessory" },
+      { name: "Amulet", slot: "accessory" },
+      { name: "Patch", slot: "accessory" },
+      { name: "Tattoo", slot: "accessory" },
+      { name: "Belt", slot: "accessory", accessoryKind: "belt" },
+      { name: "Cape", slot: "accessory", accessoryKind: "cape" },
+    ],
+  },
+  adjectives: [
+    "Bewildered",
+    "Sweaty",
+    "Furious",
+    "Overconfident",
+    "Slippery",
+    "Forgotten",
+    "Smug",
+    "Hungry",
+  ],
+  creators: ["Goblin", "Gnome", "Bopca", "Llama", "Raccoon", "Hobgoblin", "Fairy", "Troll"],
 };
 
 /**
@@ -695,7 +988,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.Fatigued.MobEffect",
     durationType: "until-condition",
     stackable: true,
-    mechanics: { penalty: 1, endsOnRest: 'long', halveMove: true },
+    mechanics: { penalty: 1, endsOnRest: "long", halveMove: true },
   },
   held: {
     label: "CARLRPG.Debuff.Held.Label",
@@ -710,7 +1003,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.LongTermMajorInjury.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { penalty: 5, endsOnRest: 'fullDay' },
+    mechanics: { penalty: 5, endsOnRest: "fullDay" },
   },
   longTermMinorInjury: {
     label: "CARLRPG.Debuff.LongTermMinorInjury.Label",
@@ -718,7 +1011,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.LongTermMinorInjury.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { penalty: 2, endsOnRest: 'long' },
+    mechanics: { penalty: 2, endsOnRest: "long" },
   },
   majorInjury: {
     label: "CARLRPG.Debuff.MajorInjury.Label",
@@ -726,7 +1019,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.MajorInjury.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { penalty: 5, endsOnRest: 'long' },
+    mechanics: { penalty: 5, endsOnRest: "long" },
   },
   minorInjury: {
     label: "CARLRPG.Debuff.MinorInjury.Label",
@@ -734,7 +1027,7 @@ CARLRPG.debuffs = {
     mobEffect: "CARLRPG.Debuff.MinorInjury.MobEffect",
     durationType: "until-condition",
     stackable: false,
-    mechanics: { penalty: 2, endsOnRest: 'short' },
+    mechanics: { penalty: 2, endsOnRest: "short" },
   },
   muted: {
     label: "CARLRPG.Debuff.Muted.Label",

@@ -16,21 +16,17 @@
  */
 import { extractNaturalD20 } from "../dice/dice.mjs";
 import { rerollFormula } from "../helpers/ai-favor.mjs";
-import { esc } from "./chat-card.mjs";
 import { rerollBase, rerollSources, rollIcons, sendRevision } from "./check-revision.mjs";
 import { rowAt, rowCheck, rowRerollSources } from "./row-evade.mjs";
+import { esc } from "../helpers/html.mjs";
+import { actorFromUuid } from "../helpers/token-resolution.mjs";
 
 const SCOPE = "carl-rpg";
 const inFlight = new Set();
 
 /** @returns {Actor|null} The crawler who rolled the Check. */
 function rerollActor(spec) {
-  try {
-    const doc = spec?.actorUuid ? fromUuidSync(spec.actorUuid) : null;
-    return doc instanceof Actor ? doc : (doc?.actor ?? null);
-  } catch (err) {
-    return null;
-  }
+  return actorFromUuid(spec?.actorUuid);
 }
 
 /**
@@ -44,13 +40,16 @@ export function canReroll(message) {
 
 /** One source's name, for the button's tooltip and the picker. */
 function sourceLabel(source) {
-  if (source.key === "fuzzyDice") return game.i18n.format("CARLRPG.Reroll.Source.fuzzyDice", { vehicle: source.vehicle.name });
+  if (source.key === "fuzzyDice")
+    return game.i18n.format("CARLRPG.Reroll.Source.fuzzyDice", { vehicle: source.vehicle.name });
   return game.i18n.format("CARLRPG.Reroll.Source.favor", { favor: source.favor });
 }
 
 /** The button's tooltip: the one source the click will use, or "Reroll" when it asks. */
 function buttonHint(sources) {
-  return game.i18n.localize(`CARLRPG.Reroll.Tooltip.${sources.length > 1 ? "choose" : sources[0].key}`);
+  return game.i18n.localize(
+    `CARLRPG.Reroll.Tooltip.${sources.length > 1 ? "choose" : sources[0].key}`,
+  );
 }
 
 /**
@@ -66,7 +65,9 @@ export function decorateAiReroll(message, html) {
   if (!card) return;
   if (flags.aiRerolled) {
     card.classList.add("carl-rerolled");
-    card.querySelectorAll(".carl-chat-footer button").forEach((button) => { button.disabled = true; });
+    card.querySelectorAll(".carl-chat-footer button").forEach((button) => {
+      button.disabled = true;
+    });
     const note = document.createElement("p");
     note.className = "carl-reroll-superseded";
     note.textContent = game.i18n.localize("CARLRPG.Reroll.Superseded");
@@ -78,8 +79,11 @@ export function decorateAiReroll(message, html) {
   const sources = rerollSources(message);
   if (!sources.length) return;
   const hint = esc(buttonHint(sources));
-  rollIcons(html)?.insertAdjacentHTML("beforeend", `<button type="button" class="carl-status-icon carl-ai-reroll-button" data-action="aiReroll"
-      data-tooltip="${hint}" aria-label="${hint}"><i class="fas fa-dice-d20" aria-hidden="true"></i></button>`);
+  rollIcons(html)?.insertAdjacentHTML(
+    "beforeend",
+    `<button type="button" class="carl-status-icon carl-ai-reroll-button" data-action="aiReroll"
+      data-tooltip="${hint}" aria-label="${hint}"><i class="fas fa-dice-d20" aria-hidden="true"></i></button>`,
+  );
 }
 
 /**
@@ -88,14 +92,21 @@ export function decorateAiReroll(message, html) {
  * @returns {Promise<object|null>}
  */
 async function pickSource(sources) {
-  const options = sources.map((s, i) => `<label class="carl-reroll-source">
+  const options = sources
+    .map(
+      (s, i) => `<label class="carl-reroll-source">
       <input type="radio" name="source" value="${esc(s.key)}"${i === 0 ? " checked" : ""}> ${esc(sourceLabel(s))}
-    </label>`).join("");
+    </label>`,
+    )
+    .join("");
   const key = await foundry.applications.api.DialogV2.prompt({
     window: { title: game.i18n.localize("CARLRPG.Reroll.PickTitle") },
     classes: ["carl-reroll-pick"],
     content: `<fieldset><legend>${esc(game.i18n.localize("CARLRPG.Reroll.PickLabel"))}</legend>${options}</fieldset>`,
-    ok: { label: game.i18n.localize("CARLRPG.Reroll.Button"), callback: (event, button) => button.form.elements.source.value },
+    ok: {
+      label: game.i18n.localize("CARLRPG.Reroll.Button"),
+      callback: (event, button) => button.form.elements.source.value,
+    },
     rejectClose: false,
   });
   return sources.find((s) => s.key === key) ?? null;
@@ -136,14 +147,20 @@ export async function rerollMessage(message, { source = null } = {}) {
 
   inFlight.add(message.id);
   try {
-    const chosen = source ? sources.find((s) => s.key === source)
-      : sources.length === 1 ? sources[0] : await pickSource(sources);
+    const chosen = source
+      ? sources.find((s) => s.key === source)
+      : sources.length === 1
+        ? sources[0]
+        : await pickSource(sources);
     if (!chosen) return false;
     const base = rerollBase(message);
     const roll = await new Roll(rerollFormula(base)).evaluate();
     if (game.dice3d) await game.dice3d.showForRoll(roll, game.user, true);
     return await sendRevision(message, "reroll", {
-      source: chosen.key, natural: extractNaturalD20(roll), total: roll.total, roll: roll.toJSON(),
+      source: chosen.key,
+      natural: extractNaturalD20(roll),
+      total: roll.total,
+      roll: roll.toJSON(),
     });
   } finally {
     inFlight.delete(message.id);
@@ -180,11 +197,21 @@ export async function rerollRow(message, rowId, which) {
   const check = rowCheck(rowAt(message, rowId), which);
   inFlight.add(key);
   try {
-    const roll = await new Roll(rerollFormula({ formula: check.formula, natural: check.natural, total: check.base })).evaluate();
+    const roll = await new Roll(
+      rerollFormula({ formula: check.formula, natural: check.natural, total: check.base }),
+    ).evaluate();
     if (game.dice3d) await game.dice3d.showForRoll(roll, game.user, true);
     return await sendRevision(message, "reroll", {
-      rowId, which, source: "favor", natural: extractNaturalD20(roll), total: roll.total, roll: roll.toJSON(),
-      breakdown: game.i18n.format("CARLRPG.Reaction.RerollBreakdown", { formula: roll.formula, total: roll.total }),
+      rowId,
+      which,
+      source: "favor",
+      natural: extractNaturalD20(roll),
+      total: roll.total,
+      roll: roll.toJSON(),
+      breakdown: game.i18n.format("CARLRPG.Reaction.RerollBreakdown", {
+        formula: roll.formula,
+        total: roll.total,
+      }),
     });
   } finally {
     inFlight.delete(key);

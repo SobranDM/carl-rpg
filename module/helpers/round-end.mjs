@@ -43,19 +43,27 @@
  */
 import { CARLRPG } from "./config.mjs";
 import { computeDamageApplication } from "./damage-pipeline.mjs";
-import { collectDebuffRows, resolveRollerRows, consumedConditionIds, conditionLabel } from "./debuff-effects.mjs";
+import {
+  collectDebuffRows,
+  resolveRollerRows,
+  consumedConditionIds,
+  conditionLabel,
+} from "./debuff-effects.mjs";
 import { resolveD20Formula } from "../dice/dice.mjs";
-import { createRollMessage, createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createRollMessage, createCardMessage } from "../chat/chat-card.mjs";
 import { queueForActor } from "./actor-queue.mjs";
 import { restorePerRound, restoresPerRound } from "./rest.mjs";
 import { diesAtZeroHb, isCrawler } from "./actor-kinds.mjs";
 import { endCombatSpellTimers, spellEndedLines } from "./spell-timers.mjs";
+import { statDifficulty } from "./rules.mjs";
+import { changeConditions, conditionOps, dyingRounds } from "./conditions.mjs";
+import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 /** An entry's own duration type (Potion Sickness's Poisoned) wins over its preset's. */
 function durationTypeOf(condition) {
   return condition.durationType ?? CARLRPG.debuffs[condition.key]?.durationType ?? null;
 }
-
 
 function mechanicsOf(condition) {
   return CARLRPG.debuffs[condition.key]?.mechanics ?? null;
@@ -129,9 +137,14 @@ async function applyPerRoundRestores(actor, lines) {
     updates["system.hb.value"] = hb;
     for (const condition of sys.conditions ?? []) {
       if (!mechanicsOf(condition)?.endsOnHealing) continue;
-      lines.push(mechanicsOf(condition).countdown
-        ? game.i18n.format("CARLRPG.RoundEnd.DyingHealed", { name })
-        : game.i18n.format("CARLRPG.RoundEnd.EndedByHealing", { name, debuff: esc(conditionLabel(condition)) }));
+      lines.push(
+        mechanicsOf(condition).countdown
+          ? game.i18n.format("CARLRPG.RoundEnd.DyingHealed", { name })
+          : game.i18n.format("CARLRPG.RoundEnd.EndedByHealing", {
+              name,
+              debuff: esc(conditionLabel(condition)),
+            }),
+      );
     }
   }
   if (mana !== startMana) updates["system.mana.value"] = mana;
@@ -141,7 +154,7 @@ async function applyPerRoundRestores(actor, lines) {
 async function runActorRoundEnd(actor) {
   if (!(actor.system.conditions ?? []).length) return null;
 
-  const floor = game.settings.get("carl-rpg", "currentFloor");
+  const floor = currentFloor();
   const rollData = actor.getRollData();
   const name = esc(actor.name);
   const lines = [];
@@ -164,7 +177,7 @@ async function runActorRoundEnd(actor) {
 
   const dying = conditions.find((c) => mechanicsOf(c)?.countdown) ?? null;
   if (dying && (dying.remaining === null || dying.remaining === undefined)) {
-    dying.remaining = Math.max(0, sys.stats?.con?.mod ?? 0);
+    dying.remaining = dyingRounds(sys);
   }
   // Once the countdown has hit 0 and been announced (keyed to this Dying
   // entry's id, so a later, fresh Dying starts over) nothing more ticks or
@@ -194,24 +207,34 @@ async function runActorRoundEnd(actor) {
     const formula = Array.from({ length: stacks }, () => `(${dot.formula})`).join(" + ");
     const roll = await new Roll(formula, rollData).evaluate();
     rolls.push(roll);
-    rollMeta.push({ label: `${actor.name}: ${conditionLabel(condition)}`, breakdown: roll.formula });
+    rollMeta.push({
+      label: `${actor.name}: ${conditionLabel(condition)}`,
+      breakdown: roll.formula,
+    });
 
-    const result = computeDamageApplication({ [dot.damageType ?? ""]: roll.total }, actor, true, { ignoreDr: true });
+    const result = computeDamageApplication({ [dot.damageType ?? ""]: roll.total }, actor, true, {
+      ignoreDr: true,
+    });
 
     if (isCrawler(actor) && hb > 0 && hb - result.slotsLost <= 0) {
       // An automatic CON Stat Check - the crawler's own Debuffs (Minor
       // Injury's -2, Shit-Faced's Disadvantage, Stunned...) still apply. It
       // isn't an Action, so Queasy/Staggered neither apply nor end.
-      const difficulty = 10 + floor;
+      const difficulty = statDifficulty(floor);
       const conMod = sys.stats?.con?.mod ?? 0;
       const checkRows = collectDebuffRows(sys, "check", { ownAction: false });
       const effect = resolveRollerRows(checkRows);
       const penalty = effect.penalties.reduce((sum, p) => sum + p.value, 0);
-      const check = await new Roll(`${resolveD20Formula(false, "normal", effect)} + (${conMod}) + (${penalty})`).evaluate();
+      const check = await new Roll(
+        `${resolveD20Formula(false, "normal", effect)} + (${conMod}) + (${penalty})`,
+      ).evaluate();
       for (const id of consumedConditionIds(effect.applied)) removeIds.add(id);
       rolls.push(check);
       rollMeta.push({
-        label: game.i18n.format("CARLRPG.RoundEnd.FatalCheckLabel", { name: actor.name, difficulty }),
+        label: game.i18n.format("CARLRPG.RoundEnd.FatalCheckLabel", {
+          name: actor.name,
+          difficulty,
+        }),
         breakdown: check.formula,
       });
       if (check.total >= difficulty) {
@@ -225,10 +248,22 @@ async function runActorRoundEnd(actor) {
     const slotsLost = Math.min(result.slotsLost, hb);
     hb -= slotsLost;
     slotsLostTotal += slotsLost;
-    lines.push(game.i18n.format("CARLRPG.RoundEnd.DotDamage", { name, debuff: label, amount: result.totalFinalDamage }));
-    gmLines.push(game.i18n.format("CARLRPG.RoundEnd.DotDigest", {
-      name, debuff: label, raw: roll.total, final: result.totalFinalDamage, slots: slotsLost,
-    }));
+    lines.push(
+      game.i18n.format("CARLRPG.RoundEnd.DotDamage", {
+        name,
+        debuff: label,
+        amount: result.totalFinalDamage,
+      }),
+    );
+    gmLines.push(
+      game.i18n.format("CARLRPG.RoundEnd.DotDigest", {
+        name,
+        debuff: label,
+        raw: roll.total,
+        final: result.totalFinalDamage,
+        slots: slotsLost,
+      }),
+    );
   }
 
   // 2. "...or you take at least 1 HB slot damage" (Terrified) - slots
@@ -237,7 +272,12 @@ async function runActorRoundEnd(actor) {
     for (const condition of conditions) {
       if (mechanicsOf(condition)?.endsOnHbLoss && !removeIds.has(condition.id)) {
         removeIds.add(condition.id);
-        lines.push(game.i18n.format("CARLRPG.RoundEnd.EndedByDamage", { name, debuff: esc(conditionLabel(condition)) }));
+        lines.push(
+          game.i18n.format("CARLRPG.RoundEnd.EndedByDamage", {
+            name,
+            debuff: esc(conditionLabel(condition)),
+          }),
+        );
       }
     }
   }
@@ -246,9 +286,11 @@ async function runActorRoundEnd(actor) {
   if (dyingActive) {
     dying.remaining = Math.max(0, dying.remaining - 1);
     announceDeath = dying.remaining === 0;
-    lines.push(announceDeath
-      ? game.i18n.format("CARLRPG.RoundEnd.DyingDead", { name })
-      : game.i18n.format("CARLRPG.RoundEnd.DyingCountdown", { name, rounds: dying.remaining }));
+    lines.push(
+      announceDeath
+        ? game.i18n.format("CARLRPG.RoundEnd.DyingDead", { name })
+        : game.i18n.format("CARLRPG.RoundEnd.DyingCountdown", { name, rounds: dying.remaining }),
+    );
   }
 
   // 4. "rounds"-duration ticks (Debuffs, and Buffs measured in rounds).
@@ -259,7 +301,12 @@ async function runActorRoundEnd(actor) {
     condition.remaining -= 1;
     if (condition.remaining <= 0) {
       removeIds.add(condition.id);
-      lines.push(game.i18n.format("CARLRPG.RoundEnd.Expired", { name, debuff: esc(conditionLabel(condition)) }));
+      lines.push(
+        game.i18n.format("CARLRPG.RoundEnd.Expired", {
+          name,
+          debuff: esc(conditionLabel(condition)),
+        }),
+      );
     }
   }
 
@@ -268,10 +315,12 @@ async function runActorRoundEnd(actor) {
   // by step 0.
   const kept = conditions.filter((c) => !removeIds.has(c.id));
   const updates = {};
-  if (JSON.stringify(kept) !== JSON.stringify(sys.conditions ?? [])) updates["system.conditions"] = kept;
   if (hb !== startHb) updates["system.hb.value"] = hb;
   if (announceDeath) updates["flags.carl-rpg.dyingAnnounced"] = dying.id;
-  if (Object.keys(updates).length) await actor.update(updates);
+  await changeConditions(actor, conditionOps(sys.toObject().conditions ?? [], kept), {
+    updates,
+    inQueue: true,
+  });
 
   return { lines, gmLines, rolls, rollMeta };
 }
@@ -312,7 +361,14 @@ export async function processRoundEnd(combat, round) {
   const title = game.i18n.format("CARLRPG.RoundEnd.Title", { round });
   const subtitle = game.i18n.localize("CARLRPG.RoundEnd.Subtitle");
   if (rolls.length) {
-    return createRollMessage({ rolls, rollMeta, title, subtitle, body, flags: { roundEnd: round } });
+    return createRollMessage({
+      rolls,
+      rollMeta,
+      title,
+      subtitle,
+      body,
+      flags: { roundEnd: round },
+    });
   }
   return createCardMessage({ title, subtitle, body, flags: { roundEnd: round } });
 }
@@ -333,19 +389,40 @@ function restoreLines(sys, name, current, condition, rounds, lines) {
   const source = esc(conditionLabel(condition));
   const next = restorePerRound(sys, current, condition.perRound, rounds);
   if (next.mana > current.mana) {
-    lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreMana", { name, amount: next.mana - current.mana, source }));
+    lines.push(
+      game.i18n.format("CARLRPG.RoundEnd.RestoreMana", {
+        name,
+        amount: next.mana - current.mana,
+        source,
+      }),
+    );
   }
   if (next.taint) {
-    lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHbBlocked", { name, source, debuff: esc(conditionLabel(next.taint)) }));
+    lines.push(
+      game.i18n.format("CARLRPG.RoundEnd.RestoreHbBlocked", {
+        name,
+        source,
+        debuff: esc(conditionLabel(next.taint)),
+      }),
+    );
   } else if (next.hb > current.hb) {
-    lines.push(game.i18n.format("CARLRPG.RoundEnd.RestoreHb", { name, amount: next.hb - current.hb, source }));
+    lines.push(
+      game.i18n.format("CARLRPG.RoundEnd.RestoreHb", {
+        name,
+        amount: next.hb - current.hb,
+        source,
+      }),
+    );
   }
   return { hb: next.hb, mana: next.mana };
 }
 
 /** A consumable's timed Buff (module/helpers/consumables.mjs), not a Debuff. */
 function isConsumableBuff(condition) {
-  return condition.key === "custom" && (restoresPerRound(condition.perRound) || (condition.changes ?? []).length > 0);
+  return (
+    condition.key === "custom" &&
+    (restoresPerRound(condition.perRound) || (condition.changes ?? []).length > 0)
+  );
 }
 
 /**
@@ -379,7 +456,10 @@ export async function processCombatEnd(combat) {
           // Bonuses carry on, on the clock, for the rounds they had left.
           if ((c.changes ?? []).length && left) {
             kept.push({
-              ...c, durationType: null, remaining: null, perRound: { hb: null, mana: null },
+              ...c,
+              durationType: null,
+              remaining: null,
+              perRound: { hb: null, mana: null },
               expiresAt: game.time.worldTime + left * (CONFIG.time.roundTime || 10),
             });
           } else {
@@ -392,15 +472,17 @@ export async function processCombatEnd(combat) {
       }
       if (hb !== (sys.hb?.value ?? 0)) updates["system.hb.value"] = hb;
       if (mana !== (sys.mana?.value ?? 0)) updates["system.mana.value"] = mana;
-      if (JSON.stringify(kept) !== JSON.stringify(sys.conditions ?? [])) updates["system.conditions"] = kept;
-      if (!Object.keys(updates).length) return;
+      const ops = conditionOps(sys.toObject().conditions ?? [], kept);
+      if (!ops.length && !Object.keys(updates).length) return;
       try {
-        await actor.update(updates);
+        await changeConditions(actor, ops, { updates, inQueue: true });
         if (ending.length) {
-          lines.push(game.i18n.format("CARLRPG.RoundEnd.CombatEnded", {
-            name,
-            debuffs: ending.map((c) => esc(conditionLabel(c))).join(", "),
-          }));
+          lines.push(
+            game.i18n.format("CARLRPG.RoundEnd.CombatEnded", {
+              name,
+              debuffs: ending.map((c) => esc(conditionLabel(c))).join(", "),
+            }),
+          );
         }
       } catch (err) {
         console.error(`CarlRPG | End-of-combat cleanup failed for ${actor.name}`, err);

@@ -33,7 +33,11 @@ import { driverPerks, vehicleSeatOf, vehicleStatus } from "./vehicle-state.mjs";
  *   builtIn: firing one of the vehicle's built-in weapons.
  * @returns {object[]} Debuff-row-shaped rows (undecorated).
  */
-export function collectVehicleRows(actor, rollKind, { skillItem = null, builtIn = false, mode = "roll" } = {}) {
+export function collectVehicleRows(
+  actor,
+  rollKind,
+  { skillItem = null, builtIn = false, mode = "roll" } = {},
+) {
   if (!actor || isVehicle(actor)) return [];
   const seat = vehicleSeatOf(actor);
   if (!seat) return [];
@@ -44,17 +48,22 @@ export function collectVehicleRows(actor, rollKind, { skillItem = null, builtIn 
   const perks = driving ? driverPerks(actor, vehicle) : null;
 
   const rows = [];
-  const add = (id, kind, value, key, defaultOn = true) => rows.push({
-    id: `vehicle-${id}`,
-    key: "vehicle",
-    conditionId: null,
-    kind,
-    value,
-    defaultOn,
-    consume: false,
-    situational: true,
-    label: game.i18n.format(`CARLRPG.Vehicle.Rows.${key}`, { vehicle: vehicle.name, value, skill: perks?.item?.name ?? sys.driveSkill }),
-  });
+  const add = (id, kind, value, key, defaultOn = true) =>
+    rows.push({
+      id: `vehicle-${id}`,
+      key: "vehicle",
+      conditionId: null,
+      kind,
+      value,
+      defaultOn,
+      consume: false,
+      situational: true,
+      label: game.i18n.format(`CARLRPG.Vehicle.Rows.${key}`, {
+        vehicle: vehicle.name,
+        value,
+        skill: perks?.item?.name ?? sys.driveSkill,
+      }),
+    });
 
   if (rollKind === "evade") {
     if (status.evadeBuff > 0) add("evade-buff", "penalty", status.evadeBuff, "EvadeBuff");

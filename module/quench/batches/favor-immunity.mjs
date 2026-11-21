@@ -1,12 +1,25 @@
 import CarlDice from "../../dice/dice.mjs";
-import { DAMAGE_TYPE_KEYS, findDamageType, findDamageTypes, normalizeDamageType } from "../../helpers/damage-types.mjs";
+import {
+  DAMAGE_TYPE_KEYS,
+  findDamageType,
+  findDamageTypes,
+  normalizeDamageType,
+} from "../../helpers/damage-types.mjs";
 import { computeDamageApplication, isImmuneToAllDamage } from "../../helpers/damage-pipeline.mjs";
 import { aiRerollFlags, keptD20, rerollFormula, rerollOpen } from "../../helpers/ai-favor.mjs";
 import { canReroll, rerollMessage } from "../../chat/ai-favor-reroll.mjs";
 import { applyRow } from "../../chat/attack-targets-card.mjs";
 import {
-  createTestCharacter, createTestMob, createTestItem, deleteTestActor,
-  settle, withFakeTargets, withPinnedDice, PIN_D20_MID, withSetting, useQuenchTimeout,
+  createTestCharacter,
+  createTestMob,
+  createTestItem,
+  deleteTestActor,
+  settle,
+  withFakeTargets,
+  withPinnedDice,
+  PIN_D20_MID,
+  withSetting,
+  useQuenchTimeout,
 } from "../helpers.mjs";
 
 /** Chat messages created while `fn` runs (removed afterwards). */
@@ -47,7 +60,9 @@ export default function register(quench) {
         });
 
         it("a Resistance applies to another spelling of its type", function () {
-          const target = { system: { dr: 0, resistances: { ice: "resist" }, hb: { slotValue: 1 } } };
+          const target = {
+            system: { dr: 0, resistances: { ice: "resist" }, hb: { slotValue: 1 } },
+          };
           const result = computeDamageApplication({ cold: 10 }, target);
           assert.equal(result.totalFinalDamage, 5);
         });
@@ -55,35 +70,75 @@ export default function register(quench) {
 
       describe("Immunity ignores the Debuffs that come with the damage (p.93)", function () {
         useQuenchTimeout(this);
-        const immuneTo = (types) => ({ system: { resistancesEffective: Object.fromEntries(types.map((t) => [t, "immune"])) } });
+        const immuneTo = (types) => ({
+          system: { resistancesEffective: Object.fromEntries(types.map((t) => [t, "immune"])) },
+        });
 
         it("only when the target is Immune to every damage type the hit carries", function () {
           assert.isTrue(isImmuneToAllDamage({ fire: 8 }, immuneTo(["fire"])));
           assert.isTrue(isImmuneToAllDamage({ cold: 8 }, immuneTo(["ice"])), "another spelling");
-          assert.isFalse(isImmuneToAllDamage({ fire: 8, force: 4 }, immuneTo(["fire"])), "Force still lands");
-          assert.isTrue(isImmuneToAllDamage({ fire: 8, "": 2 }, immuneTo(["fire"])), "the untyped +Floor bonus doesn't count");
-          assert.isFalse(isImmuneToAllDamage({ "": 6 }, immuneTo(["fire"])), "untyped damage alone isn't covered");
-          assert.isFalse(isImmuneToAllDamage({}, immuneTo(["fire"])), "a hit with no damage isn't covered");
+          assert.isFalse(
+            isImmuneToAllDamage({ fire: 8, force: 4 }, immuneTo(["fire"])),
+            "Force still lands",
+          );
+          assert.isTrue(
+            isImmuneToAllDamage({ fire: 8, "": 2 }, immuneTo(["fire"])),
+            "the untyped +Floor bonus doesn't count",
+          );
+          assert.isFalse(
+            isImmuneToAllDamage({ "": 6 }, immuneTo(["fire"])),
+            "untyped damage alone isn't covered",
+          );
+          assert.isFalse(
+            isImmuneToAllDamage({}, immuneTo(["fire"])),
+            "a hit with no damage isn't covered",
+          );
           assert.isFalse(isImmuneToAllDamage({ fire: 8 }, immuneTo([])));
         });
 
         it("an Attack row skips its Debuffs for an Immune target, and applies them otherwise", async function () {
-          const immune = await createTestCharacter("immune", { system: { resistances: { fire: "immune" } } });
+          const immune = await createTestCharacter("immune", {
+            system: { resistances: { fire: "immune" } },
+          });
           const plain = await createTestCharacter("plain");
           let message;
           try {
             const rowFor = (id, actor) => ({
-              id, uuid: actor.uuid, name: actor.name, isCharacter: true, zone: "full", difficulty: 13,
-              hit: true, amazing: false, freeEvade: false, freeUsed: false, evade: null, applied: false, replaced: false,
+              id,
+              uuid: actor.uuid,
+              name: actor.name,
+              isCharacter: true,
+              zone: "full",
+              difficulty: 13,
+              hit: true,
+              amazing: false,
+              freeEvade: false,
+              freeUsed: false,
+              evade: null,
+              applied: false,
+              replaced: false,
             });
             message = await ChatMessage.create({
               content: '<div class="carl-chat-card"></div>',
-              flags: { "carl-rpg": {
-                isArea: false, floor: 1, damageIsMagic: true, damageByType: { fire: 1 },
-                targetEffects: [{ id: "te1", debuffKey: "staggered", stacks: 1, label: "", sourceLabel: "Test" }],
-                targetUuids: [immune.uuid, plain.uuid],
-                targetRows: { t0: rowFor("t0", immune), t1: rowFor("t1", plain) },
-              } },
+              flags: {
+                "carl-rpg": {
+                  isArea: false,
+                  floor: 1,
+                  damageIsMagic: true,
+                  damageByType: { fire: 1 },
+                  targetEffects: [
+                    {
+                      id: "te1",
+                      debuffKey: "staggered",
+                      stacks: 1,
+                      label: "",
+                      sourceLabel: "Test",
+                    },
+                  ],
+                  targetUuids: [immune.uuid, plain.uuid],
+                  targetRows: { t0: rowFor("t0", immune), t1: rowFor("t1", plain) },
+                },
+              },
             });
             const rows = () => message.getFlag("carl-rpg", "targetRows");
             const lines = await applyRow(message, rows().t0);
@@ -91,7 +146,10 @@ export default function register(quench) {
             await settle();
             const keys = (actor) => (actor.system.conditions ?? []).map((c) => c.key);
             assert.notInclude(keys(immune), "staggered");
-            assert.isTrue(lines.some((l) => l.includes(immune.name)), "the GM digest says why");
+            assert.isTrue(
+              lines.some((l) => l.includes(immune.name)),
+              "the GM digest says why",
+            );
             assert.include(keys(plain), "staggered");
           } finally {
             await message?.delete();
@@ -105,13 +163,19 @@ export default function register(quench) {
         useQuenchTimeout(this);
 
         it("an opposed Spell Check spends the Spell's Mana", async function () {
-          const actor = await createTestCharacter("caster", { system: { mana: { value: 10, max: 10 } } });
+          const actor = await createTestCharacter("caster", {
+            system: { mana: { value: 10, max: 10 } },
+          });
           try {
             const spell = await createTestItem(actor, "spell", "Charm", {
-              name: "Charm", system: { rank: 2, manaCost: 3, governingStat: "cha" },
+              name: "Charm",
+              system: { rank: 2, manaCost: 3, governingStat: "cha" },
             });
-            await capturingMessages(() => withPinnedDice(PIN_D20_MID, () =>
-              CarlDice.rollOpposedSkillCheck(actor, spell, { difficulty: 12, skipDialog: true })));
+            await capturingMessages(() =>
+              withPinnedDice(PIN_D20_MID, () =>
+                CarlDice.rollOpposedSkillCheck(actor, spell, { difficulty: 12, skipDialog: true }),
+              ),
+            );
             assert.equal(actor.system.mana.value, 7);
           } finally {
             await deleteTestActor(actor);
@@ -123,8 +187,17 @@ export default function register(quench) {
         useQuenchTimeout(this);
 
         it("pure helpers: who gets one, the reroll formula, the kept die", function () {
-          assert.deepEqual(aiRerollFlags({ type: "mob" }, { kind: "check", formula: "1d20", natural: 12, total: 15 }), {});
-          const flags = aiRerollFlags({ type: "character", uuid: "Actor.x" }, { kind: "check", formula: "2d20kh", natural: 12, total: 15 });
+          assert.deepEqual(
+            aiRerollFlags(
+              { type: "mob" },
+              { kind: "check", formula: "1d20", natural: 12, total: 15 },
+            ),
+            {},
+          );
+          const flags = aiRerollFlags(
+            { type: "character", uuid: "Actor.x" },
+            { kind: "check", formula: "2d20kh", natural: 12, total: 15 },
+          );
           assert.equal(flags.aiReroll.formula, "2d20kh");
           assert.isFalse(flags.aiReroll.used);
           assert.equal(rerollFormula({ formula: "2d20kh", natural: 12, total: 15 }), "2d20kh + 3");
@@ -139,10 +212,14 @@ export default function register(quench) {
         });
 
         it("a Stat Check reroll spends 1 AI Favor and updates the card in place", async function () {
-          const actor = await createTestCharacter("favored", { system: { details: { aiFavor: 2 } } });
+          const actor = await createTestCharacter("favored", {
+            system: { details: { aiFavor: 2 } },
+          });
           try {
             await capturingMessages(async (created) => {
-              const original = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollStatCheck(actor, "str", { skipDialog: true }));
+              const original = await withPinnedDice(PIN_D20_MID, () =>
+                CarlDice.rollStatCheck(actor, "str", { skipDialog: true }),
+              );
               assert.exists(original.getFlag("carl-rpg", "aiReroll"));
               assert.isTrue(canReroll(original));
               const total = original.rolls[0].total;
@@ -150,7 +227,11 @@ export default function register(quench) {
               assert.isTrue(await withPinnedDice(PIN_D20_MID, () => rerollMessage(original)));
               await settle();
               assert.equal(actor.system.details.aiFavor, 1);
-              assert.lengthOf(created().filter((m) => m.id !== original.id), 0, "no new card");
+              assert.lengthOf(
+                created().filter((m) => m.id !== original.id),
+                0,
+                "no new card",
+              );
               const card = game.messages.get(original.id);
               assert.notOk(card.getFlag("carl-rpg", "aiRerolled"), "not marked replaced");
               assert.isTrue(card.getFlag("carl-rpg", "aiReroll").used);
@@ -167,10 +248,14 @@ export default function register(quench) {
           const mob = await createTestMob("mob");
           try {
             await capturingMessages(async () => {
-              const message = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollStatCheck(broke, "str", { skipDialog: true }));
+              const message = await withPinnedDice(PIN_D20_MID, () =>
+                CarlDice.rollStatCheck(broke, "str", { skipDialog: true }),
+              );
               assert.isFalse(canReroll(message), "0 AI Favor");
               assert.isFalse(await rerollMessage(message));
-              const mobRoll = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollStatCheck(mob, "str", { skipDialog: true }));
+              const mobRoll = await withPinnedDice(PIN_D20_MID, () =>
+                CarlDice.rollStatCheck(mob, "str", { skipDialog: true }),
+              );
               assert.notExists(mobRoll?.getFlag("carl-rpg", "aiReroll"));
             });
           } finally {
@@ -180,15 +265,32 @@ export default function register(quench) {
         });
 
         it("an Attack reroll re-resolves its target rows; an acted-on Attack can't be rerolled", async function () {
-          const actor = await createTestCharacter("attacker", { system: { details: { aiFavor: 2 } } });
-          const target = await createTestMob("target", { system: { stats: { dex: { value: 3 } } } }); // Evade 13 at Floor 1
+          const actor = await createTestCharacter("attacker", {
+            system: { details: { aiFavor: 2 } },
+          });
+          const target = await createTestMob("target", {
+            system: { stats: { dex: { value: 3 } } },
+          }); // Evade 13 at Floor 1
           try {
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Punch", system: { category: "attack", isHandToHand: true, rank: 3, governingStat: "", baseDamage: { dice: "1d6" } },
+              name: "Punch",
+              system: {
+                category: "attack",
+                isHandToHand: true,
+                rank: 3,
+                governingStat: "",
+                baseDamage: { dice: "1d6" },
+              },
             });
             await capturingMessages(async (created) => {
-              const roll = () => withSetting("currentFloor", 1, () => withPinnedDice(PIN_D20_MID, () =>
-                withFakeTargets([{ actor: target }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true }))));
+              const roll = () =>
+                withSetting("currentFloor", 1, () =>
+                  withPinnedDice(PIN_D20_MID, () =>
+                    withFakeTargets([{ actor: target }], () =>
+                      CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+                    ),
+                  ),
+                );
               const original = await roll();
               const targetUuid = original.getFlag("carl-rpg", "targetRows").t0.uuid;
               assert.isTrue(canReroll(original));

@@ -18,6 +18,7 @@
  * module/pdf-import/debuff-text.mjs).
  */
 import { isAreaMobAttack } from "./area.mjs";
+import { RollParts } from "../dice/roll-parts.mjs";
 
 const SCOPE = "carl-rpg";
 export const MOB_ATTACK_TYPE = "mobAttack";
@@ -31,8 +32,9 @@ export const LEGACY_FLAG = "legacyAttack";
  * @returns {Item[]}
  */
 export function mobAttacksOf(actor) {
-  return (actor?.items?.filter((i) => i.type === MOB_ATTACK_TYPE) ?? [])
-    .sort((a, b) => (a.sort - b.sort) || a.name.localeCompare(b.name));
+  return (actor?.items?.filter((i) => i.type === MOB_ATTACK_TYPE) ?? []).sort(
+    (a, b) => a.sort - b.sort || a.name.localeCompare(b.name),
+  );
 }
 
 /**
@@ -44,7 +46,9 @@ export function mobAttacksOf(actor) {
  */
 export function attackKind(attack) {
   if (attack?.isArea) return "area";
-  const range = String(attack?.range ?? "").trim().toLowerCase();
+  const range = String(attack?.range ?? "")
+    .trim()
+    .toLowerCase();
   if (!range || /\b(melee|touch|reach|adjacent)\b/.test(range)) return "melee";
   const feet = Number(range.match(/(\d+)\s*(?:ft|feet|foot)\b/)?.[1]);
   return Number.isFinite(feet) && feet > 5 ? "ranged" : "melee";
@@ -81,10 +85,16 @@ export function mobAttackData(item) {
     isArea: !!sys.isArea,
     splash: !!sys.isArea && !!sys.splash,
     armorPiercing: !!sys.armorPiercing,
-    targetEffects: (sys.targetEffects ?? []).filter((te) => te.debuffKey).map((te) => ({
-      id: te.id, debuffKey: te.debuffKey, stacks: te.stacks || 1, trigger: te.trigger || "hit", label: te.label || "",
-      sourceLabel: item.name,
-    })),
+    targetEffects: (sys.targetEffects ?? [])
+      .filter((te) => te.debuffKey)
+      .map((te) => ({
+        id: te.id,
+        debuffKey: te.debuffKey,
+        stacks: te.stacks || 1,
+        trigger: te.trigger || "hit",
+        label: te.label || "",
+        sourceLabel: item.name,
+      })),
   };
 }
 
@@ -147,27 +157,33 @@ export function legacyAttackItems(attacks, { startSort = 0, indexes = null } = {
     const effect = String(attack?.effect ?? "").trim();
     const triggers = CONFIG.CARLRPG.mobAttackTriggers ?? {};
     const targetEffects = (Array.isArray(attack?.targetEffects) ? attack.targetEffects : []).filter(
-      (te) => Object.hasOwn(CONFIG.CARLRPG.debuffs, te?.debuffKey ?? "") && Object.hasOwn(triggers, te?.trigger ?? "hit"),
+      (te) =>
+        Object.hasOwn(CONFIG.CARLRPG.debuffs, te?.debuffKey ?? "") &&
+        Object.hasOwn(triggers, te?.trigger ?? "hit"),
     );
-    return [{
-      _id: foundry.utils.randomID(),
-      name: String(attack?.name ?? "").trim() || game.i18n.localize("CARLRPG.MobAttack.Unnamed"),
-      type: MOB_ATTACK_TYPE,
-      img: "icons/svg/sword.svg",
-      sort: startSort + (index + 1) * 1000,
-      system: {
-        toHit: String(attack?.toHit ?? ""),
-        damage: String(attack?.damage ?? ""),
-        damageType: Object.hasOwn(CONFIG.CARLRPG.damageTypes, attack?.damageType ?? "") ? attack.damageType : "",
-        range: String(attack?.range ?? ""),
-        isArea,
-        splash: isArea && /\bsplash\b/i.test(text),
-        armorPiercing: !!attack?.armorPiercing,
-        targetEffects,
-        description: effect ? `<p>${esc(effect)}</p>` : "",
+    return [
+      {
+        _id: foundry.utils.randomID(),
+        name: String(attack?.name ?? "").trim() || game.i18n.localize("CARLRPG.MobAttack.Unnamed"),
+        type: MOB_ATTACK_TYPE,
+        img: "icons/svg/sword.svg",
+        sort: startSort + (index + 1) * 1000,
+        system: {
+          toHit: String(attack?.toHit ?? ""),
+          damage: String(attack?.damage ?? ""),
+          damageType: Object.hasOwn(CONFIG.CARLRPG.damageTypes, attack?.damageType ?? "")
+            ? attack.damageType
+            : "",
+          range: String(attack?.range ?? ""),
+          isArea,
+          splash: isArea && /\bsplash\b/i.test(text),
+          armorPiercing: !!attack?.armorPiercing,
+          targetEffects,
+          description: effect ? `<p>${esc(effect)}</p>` : "",
+        },
+        flags: { [SCOPE]: { [LEGACY_FLAG]: index } },
       },
-      flags: { [SCOPE]: { [LEGACY_FLAG]: index } },
-    }];
+    ];
   });
 }
 
@@ -181,12 +197,17 @@ export function legacyAttackItems(attacks, { startSort = 0, indexes = null } = {
  */
 export async function convertLegacyAttacks(actor, { attacks = actor.system?.attacks ?? [] } = {}) {
   if (!attacks.length) return 0;
-  const done = new Set(actor.items.filter((i) => i.type === MOB_ATTACK_TYPE)
-    .map((i) => i.getFlag(SCOPE, LEGACY_FLAG)).filter((n) => Number.isInteger(n)));
+  const done = new Set(
+    actor.items
+      .filter((i) => i.type === MOB_ATTACK_TYPE)
+      .map((i) => i.getFlag(SCOPE, LEGACY_FLAG))
+      .filter((n) => Number.isInteger(n)),
+  );
   const indexes = attacks.map((_, i) => i).filter((i) => !done.has(i));
   const startSort = Math.max(0, ...actor.items.map((i) => i.sort ?? 0));
   const items = legacyAttackItems(attacks, { startSort, indexes });
-  if (items.length) await actor.createEmbeddedDocuments("Item", items, { keepId: true, carlMigration: true });
+  if (items.length)
+    await actor.createEmbeddedDocuments("Item", items, { keepId: true, carlMigration: true });
   await actor.update({ "system.attacks": [] }, { carlMigration: true });
   return items.length;
 }
@@ -202,9 +223,34 @@ export function attacksToCheck(attacks) {
   const debuffNames = Object.values(CONFIG.CARLRPG.debuffs ?? {})
     .map((d) => game.i18n.localize(d.label ?? "").toLowerCase())
     .filter((name) => name.length > 2);
-  return (attacks ?? []).filter((attack) => {
-    if (isAreaMobAttack(attack ?? {})) return true;
-    const effect = String(attack?.effect ?? "").toLowerCase();
-    return debuffNames.some((name) => effect.includes(name));
-  }).map((attack) => String(attack?.name ?? "").trim() || game.i18n.localize("CARLRPG.MobAttack.Unnamed"));
+  return (attacks ?? [])
+    .filter((attack) => {
+      if (isAreaMobAttack(attack ?? {})) return true;
+      const effect = String(attack?.effect ?? "").toLowerCase();
+      return debuffNames.some((name) => effect.includes(name));
+    })
+    .map(
+      (attack) =>
+        String(attack?.name ?? "").trim() || game.i18n.localize("CARLRPG.MobAttack.Unnamed"),
+    );
+}
+
+/**
+ * A Mob Attack's printed damage, rolled: "F" is the Floor (p.267: "add the
+ * current Floor Number to values with '+F'"), read from the roll data's
+ * `floor`. A formula that won't roll warns and gives null.
+ * @param {object} rollData  The Mob's roll data (or one with at least `floor`).
+ * @param {string} damage  The printed formula ("2d6+F").
+ * @param {string} label  The roll term's label.
+ * @returns {Promise<{roll: Roll, total: number, breakdown: string}|null>}
+ */
+export async function rollMobDamage(rollData, damage, label) {
+  const parts = new RollParts(rollData);
+  parts.add(String(damage).replace(/\bF\b/g, "@floor"), label);
+  try {
+    return await parts.evaluate();
+  } catch (err) {
+    ui.notifications.warn(game.i18n.format("CARLRPG.MobAttack.BadDamage", { formula: damage }));
+    return null;
+  }
 }

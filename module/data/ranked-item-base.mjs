@@ -1,5 +1,6 @@
 import CarlRPGItemBase from "./item-base.mjs";
 import { defineTargetEffectsField, defineUpgradesField } from "./shared/upgrade-tier.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 /**
  * Shared base for the three Rank-progression Item types: Skill, Spell, and
@@ -7,7 +8,6 @@ import { defineTargetEffectsField, defineUpgradesField } from "./shared/upgrade-
  * Ranks 5, 10, and 15" pattern (Skill Upgrades, p. 173-174).
  */
 export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const requiredInteger = { required: true, nullable: false, integer: true };
@@ -35,8 +35,10 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     schema.isPassive = new fields.BooleanField({ required: true, initial: false });
 
     schema.advancementGate = new fields.StringField({
-      required: true, blank: false, initial: "normal",
-      choices: ["normal", "passive-until-5", "magic-only"],
+      required: true,
+      blank: false,
+      initial: "normal",
+      choices: () => Object.keys(CONFIG.CARLRPG.advancementGates),
     });
 
     // Optional: only meaningful for attack-capable entries.
@@ -58,8 +60,10 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     // "pets" - pets and minions only (Heal Critter), "anyone". Blank: by
     // Range - "Self only" is "self", anything else "anyone".
     schema.heals = new fields.StringField({
-      required: true, blank: true, initial: "",
-      choices: ["", "self", "others", "pets", "anyone"],
+      required: true,
+      blank: true,
+      initial: "",
+      choices: () => Object.keys(CONFIG.CARLRPG.healsChoices),
     });
     // The heal restores the target's whole Health Bar at any Rank, with no
     // dice (Heal Critter: "heal back to 100% Health Bar"). HB only - unlike
@@ -109,7 +113,7 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
     // A Floor change re-prepares every actor and its items (carl-rpg.mjs).
     this.rankIsFloor = this.parent?.actor?.type === "pet";
     if (this.rankIsFloor) {
-      const floor = game.settings.get("carl-rpg", "currentFloor");
+      const floor = currentFloor();
       this.rank = Math.min(Math.max(1, floor), 20);
     }
   }
@@ -119,6 +123,6 @@ export default class CarlRPGRankedItemBase extends CarlRPGItemBase {
    * @returns {object[]}
    */
   get unlockedUpgrades() {
-    return this.upgrades.filter(u => this.rank >= u.rankThreshold);
+    return this.upgrades.filter((u) => this.rank >= u.rankThreshold);
   }
 }

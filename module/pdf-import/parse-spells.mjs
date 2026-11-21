@@ -168,6 +168,8 @@ function toItem(rawName, page, s) {
   const dmgType = findDamageType(dmgText) || findDamageType(lowerType);
   const governingStat = STATS[statWord] ?? (STAT_ABBR.has(dmgStat) ? dmgStat : "int");
 
+  const opposedStat = opposedStatOf(joinText(s.description));
+
   const paras = [];
   if (s.flavor.length) paras.push(`<p><em>${joinText(s.flavor)}</em></p>`);
   for (const key of ["Limitations", "AI Favor"])
@@ -193,7 +195,12 @@ function toItem(rawName, page, s) {
           // "the target gains the Woozy Debuff", "on a Critical Hit, ...
           // gain the Paralyzed Debuff" (debuff-text.mjs). A Spell with a
           // compendium copy takes the copy's instead (importer.mjs).
-          return { rankThreshold: u.rank, description, changes: [], targetEffects: itemTargetEffects(description, "spell") };
+          return {
+            rankThreshold: u.rank,
+            description,
+            changes: [],
+            targetEffects: itemTargetEffects(description, "spell"),
+          };
         }),
         manaCost: Number.isFinite(manaCost) ? manaCost : 0,
         range: f.Range ?? "",
@@ -201,7 +208,20 @@ function toItem(rawName, page, s) {
         cooldown: f.Cooldown ?? "",
         castingKeywords: keywords,
         favoredClasses,
+        opposedStat,
       },
     },
   };
+}
+
+/**
+ * The Stat a Skill or Spell is Opposed by, from its text: "Make an
+ * Int-Opposed Spell Check" (p.59) is "int". "" when it says none. The
+ * book's line breaks can split the word ("Int-Op posed").
+ * @param {string} text
+ * @returns {string}
+ */
+export function opposedStatOf(text) {
+  const m = String(text ?? "").match(/\b(Str|Dex|Con|Int|Cha)-\s?Op\s?posed\b/);
+  return m ? m[1].toLowerCase() : "";
 }

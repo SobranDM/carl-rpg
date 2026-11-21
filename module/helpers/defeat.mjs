@@ -26,7 +26,9 @@ export function shouldBeDefeated(actor) {
   const sys = actor?.system;
   if (!sys) return false;
   if (diesAtZeroHb(actor)) return (sys.hb?.value ?? 1) <= 0;
-  const dying = (sys.conditions ?? []).find((c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown);
+  const dying = (sys.conditions ?? []).find(
+    (c) => CONFIG.CARLRPG.debuffs[c.key]?.mechanics?.countdown,
+  );
   return !!dying && (dying.remaining ?? 1) <= 0;
 }
 
@@ -62,6 +64,7 @@ export async function setDefeated(actor, defeated) {
  */
 export async function syncDefeated(actor, { previousHb = null } = {}) {
   if (shouldBeDefeated(actor)) return setDefeated(actor, true);
-  const healedFromZero = previousHb !== null && previousHb <= 0 && (actor.system?.hb?.value ?? 0) > 0;
+  const healedFromZero =
+    previousHb !== null && previousHb <= 0 && (actor.system?.hb?.value ?? 0) > 0;
   if (healedFromZero && actor.statuses?.has(defeatedStatusId())) return setDefeated(actor, false);
 }

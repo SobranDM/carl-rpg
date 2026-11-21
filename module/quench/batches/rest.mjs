@@ -1,7 +1,14 @@
 import { restorePerRound, shortRestUpdates } from "../../helpers/rest.mjs";
 import { ownerIds, withOwners } from "../../helpers/ownership.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
-import { createTestCharacter, deleteTestActor, pressDialog, useQuenchTimeout, waitFor, withDialog } from "../helpers.mjs";
+import {
+  createTestCharacter,
+  deleteTestActor,
+  pressDialog,
+  useQuenchTimeout,
+  waitFor,
+  withDialog,
+} from "../helpers.mjs";
 import CarlToolbox from "../../apps/gm-toolbox.mjs";
 
 export default function register(quench) {
@@ -12,7 +19,9 @@ export default function register(quench) {
 
       describe("shortRestUpdates (p.94: +5 HB, +half Mana, both clamped to max)", function () {
         it("adds 5 HB slots, clamped at effectiveMax", async function () {
-          const actor = await createTestCharacter("character", { system: { hb: { value: 3, max: 10 } } });
+          const actor = await createTestCharacter("character", {
+            system: { hb: { value: 3, max: 10 } },
+          });
           try {
             assert.equal(shortRestUpdates(actor)["system.hb.value"], 8);
           } finally {
@@ -21,7 +30,9 @@ export default function register(quench) {
         });
 
         it("clamps at effectiveMax rather than overshooting", async function () {
-          const actor = await createTestCharacter("character", { system: { hb: { value: 8, max: 10 } } });
+          const actor = await createTestCharacter("character", {
+            system: { hb: { value: 8, max: 10 } },
+          });
           try {
             assert.equal(shortRestUpdates(actor)["system.hb.value"], 10);
           } finally {
@@ -30,7 +41,9 @@ export default function register(quench) {
         });
 
         it("restores half of max Mana (floored), clamped at max", async function () {
-          const actor = await createTestCharacter("character", { system: { stats: { int: { value: 10 } }, mana: { value: 2 } } });
+          const actor = await createTestCharacter("character", {
+            system: { stats: { int: { value: 10 } }, mana: { value: 2 } },
+          });
           try {
             // mana.max derives from effective INT (10) -> restore floor(10/2)=5 -> 2+5=7.
             assert.equal(shortRestUpdates(actor)["system.mana.value"], 7);
@@ -44,7 +57,9 @@ export default function register(quench) {
       // outside a fight (round-end.mjs, consumables.mjs).
       describe("restorePerRound", function () {
         it("restores per round x rounds, each up to its max; The Taint blocks only the Health Bar", async function () {
-          const actor = await createTestCharacter("restore", { system: { hb: { value: 2, max: 10 }, stats: { int: { value: 10 } } } });
+          const actor = await createTestCharacter("restore", {
+            system: { hb: { value: 2, max: 10 }, stats: { int: { value: 10 } } },
+          });
           try {
             const sys = actor.system;
             const maxMana = sys.mana.max;
@@ -53,9 +68,15 @@ export default function register(quench) {
             r = restorePerRound(sys, { hb: 9, mana: maxMana }, { hb: 5, mana: 5 });
             assert.equal(r.hb, 10, "capped at max");
             assert.equal(r.mana, maxMana, "never past max");
-            assert.equal(restorePerRound(sys, { hb: 12, mana: 0 }, { hb: 1 }).hb, 12, "never lowered");
+            assert.equal(
+              restorePerRound(sys, { hb: 12, mana: 0 }, { hb: 1 }).hb,
+              12,
+              "never lowered",
+            );
 
-            const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(([, d]) => d.mechanics?.noHealing)?.[0];
+            const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(
+              ([, d]) => d.mechanics?.noHealing,
+            )?.[0];
             await addConditionToActor(actor, taintKey);
             r = restorePerRound(actor.system, { hb: 2, mana: 0 }, { hb: 1, mana: 2 }, 3);
             assert.equal(r.hb, 2, "no Health Bar under The Taint");
@@ -93,30 +114,52 @@ export default function register(quench) {
           try {
             await pc.update({ "system.hb.value": 1, "system.mana.value": 0 });
             await toolbox.render({ force: true });
-            await waitFor(() => toolbox.element?.querySelector('[data-action="rest"]'), { message: "no Rest button" });
+            await waitFor(() => toolbox.element?.querySelector('[data-action="rest"]'), {
+              message: "no Rest button",
+            });
             const before = game.time.worldTime;
-            await withDialog(async () => toolbox.element.querySelector('[data-action="rest"]').click(), async (dialog) => {
-              const root = dialog.element;
-              const rule = (kind) => root.querySelector(`[data-rest-rule="${kind}"]`);
-              assert.isFalse(rule("short").hidden, "Short is picked first");
-              assert.isTrue(rule("long").hidden);
-              assert.equal(rule("short").querySelector("p").textContent.trim(), game.i18n.localize("CARLRPG.Toolbox.Rest.Rule.short"));
+            await withDialog(
+              async () => toolbox.element.querySelector('[data-action="rest"]').click(),
+              async (dialog) => {
+                const root = dialog.element;
+                const rule = (kind) => root.querySelector(`[data-rest-rule="${kind}"]`);
+                assert.isFalse(rule("short").hidden, "Short is picked first");
+                assert.isTrue(rule("long").hidden);
+                assert.equal(
+                  rule("short").querySelector("p").textContent.trim(),
+                  game.i18n.localize("CARLRPG.Toolbox.Rest.Rule.short"),
+                );
 
-              const long = root.querySelector('input[name="carl-rest-kind"][value="long"]');
-              long.checked = true;
-              long.dispatchEvent(new Event("change"));
-              assert.isFalse(rule("long").hidden, "the picked length's words");
-              assert.isTrue(rule("short").hidden);
-              assert.include(root.querySelector("[data-advance-time-hint]").textContent,
-                game.i18n.format("CARLRPG.Toolbox.HoursCount", { n: 8 }));
+                const long = root.querySelector('input[name="carl-rest-kind"][value="long"]');
+                long.checked = true;
+                long.dispatchEvent(new Event("change"));
+                assert.isFalse(rule("long").hidden, "the picked length's words");
+                assert.isTrue(rule("short").hidden);
+                assert.include(
+                  root.querySelector("[data-advance-time-hint]").textContent,
+                  game.i18n.format("CARLRPG.Toolbox.HoursCount", { n: 8 }),
+                );
 
-              root.querySelector("[data-advance-time]").checked = false;
-              for (const box of root.querySelectorAll("input[data-actor-id]")) box.checked = box.dataset.actorId === pc.id;
-              pressDialog(dialog, "roll");
-            }, "carl-pick-actors");
-            await waitFor(() => pc.system.hb.value === pc.system.hb.effectiveMax, { message: "the Long Rest never applied" });
-            assert.equal(pc.system.mana.value, pc.system.mana.max, "a Long Rest restores Mana in full");
-            assert.equal(game.time.worldTime, before, "Advance time unticked: the clock didn't move");
+                root.querySelector("[data-advance-time]").checked = false;
+                for (const box of root.querySelectorAll("input[data-actor-id]"))
+                  box.checked = box.dataset.actorId === pc.id;
+                pressDialog(dialog, "roll");
+              },
+              "carl-pick-actors",
+            );
+            await waitFor(() => pc.system.hb.value === pc.system.hb.effectiveMax, {
+              message: "the Long Rest never applied",
+            });
+            assert.equal(
+              pc.system.mana.value,
+              pc.system.mana.max,
+              "a Long Rest restores Mana in full",
+            );
+            assert.equal(
+              game.time.worldTime,
+              before,
+              "Advance time unticked: the clock didn't move",
+            );
           } finally {
             if (!wasOpen && toolbox.rendered) await toolbox.close();
             await deleteTestActor(pc);

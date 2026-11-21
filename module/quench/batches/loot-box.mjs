@@ -35,40 +35,49 @@ export default function register(quench) {
           }
         });
 
-        it("generates one item per crawler at the box's tier", async function () {
-          const box = await createTestLootBox({ tier: "gold", crawlers: 3 });
+        it("rolls a whole box per crawler: its items in the box, no gold (gold goes to whoever opens a box; ruled 2026-11-19)", async function () {
+          useQuenchTimeout(this, 60000);
+          const box = await createTestLootBox({ tier: "gold", crawlers: 2 });
           try {
             const created = await generateLootBoxItems(box);
-            assert.lengthOf(created, 3);
+            assert.isAtLeast(created.length, 4, "a magic item and 1d2 consumables each");
             for (const item of box.items) {
               assert.equal(item.type, "item");
               assert.equal(item.getFlag("carl-rpg", "lootTier"), "gold");
-              assert.match(item.name, /^Gold /);
-              assert.include(item.system.description, "<ol>");
             }
+            const magic = box.items.filter((i) => i.getFlag("carl-rpg", "magicDraft"));
+            assert.lengthOf(magic, 2, "one magic item per crawler");
+            for (const item of magic) assert.include(item.system.description, "<ul>");
+            assert.notProperty(box.system, "gold");
           } finally {
             await deleteTestActor(box);
           }
         });
 
-        it("rolls a mundane item for Bronze", async function () {
+        it("Bronze: mundane things, no magic item", async function () {
+          useQuenchTimeout(this, 60000);
           const box = await createTestLootBox({ tier: "bronze" });
           try {
-            const [item] = await generateLootBoxItems(box);
-            assert.equal(item.name, "Bronze Mundane Item");
+            await generateLootBoxItems(box);
+            assert.isAbove(box.items.size, 0);
+            assert.isFalse(box.items.some((i) => i.getFlag("carl-rpg", "magicDraft")));
           } finally {
             await deleteTestActor(box);
           }
         });
 
-        it("reroll keeps the item but rewrites it at the box's current tier", async function () {
-          const box = await createTestLootBox({ tier: "bronze" });
+        it("reroll rewrites a magic item at the box's current tier, keeping the Item; a plain item isn't rerolled", async function () {
+          useQuenchTimeout(this, 60000);
+          const box = await createTestLootBox({ tier: "silver" });
           try {
-            const [item] = await generateLootBoxItems(box);
-            await box.update({ "system.tier": "silver" });
+            await generateLootBoxItems(box);
+            const item = box.items.find((i) => i.getFlag("carl-rpg", "magicDraft"));
+            const plain = box.items.find((i) => !i.getFlag("carl-rpg", "magicDraft"));
+            await box.update({ "system.tier": "gold" });
             await rerollLootItem(item);
-            assert.equal(box.items.size, 1);
-            assert.equal(box.items.get(item.id).getFlag("carl-rpg", "lootTier"), "silver");
+            assert.equal(box.items.get(item.id).getFlag("carl-rpg", "lootTier"), "gold");
+            assert.equal(box.items.get(item.id).getFlag("carl-rpg", "magicDraft").tierKey, "gold");
+            if (plain) assert.isNull(await rerollLootItem(plain));
           } finally {
             await deleteTestActor(box);
           }
@@ -99,7 +108,11 @@ export default function register(quench) {
           const actor = await createTestCharacter("looter");
           try {
             const item = await createTestItem(box, "item", "worn loot", {
-              system: { equipped: true, slots: ["head"], changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }] },
+              system: {
+                equipped: true,
+                slots: ["head"],
+                changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }],
+              },
             });
             assert.isTrue(item.system.equipped, "test setup: equipped in the box");
             await takeLootItem(item, actor);

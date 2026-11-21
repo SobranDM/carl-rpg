@@ -1,6 +1,7 @@
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 import DragDropMixin from "./mixins/drag-drop-mixin.mjs";
+import LootForge from "../apps/loot-forge.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import {
   generateLootBoxItems,
@@ -8,6 +9,10 @@ import {
   rerollLootItem,
   takeLootItem,
 } from "../helpers/loot-box.mjs";
+import { enrichDescription } from "../helpers/rich-text.mjs";
+import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-arrays.mjs";
+import { itemFor } from "../helpers/sheet-rows.mjs";
+import { labelChoices } from "../helpers/html.mjs";
 
 /**
  * Loot Box sheet: pick a tier, roll loot (GM), take items out (everyone).
@@ -16,9 +21,7 @@ import {
  * @mixes {HandlebarsApplication}
  * @mixes {DragDropMixin}
  */
-export class CarlRPGLootBoxSheet extends DragDropMixin(
-  HandlebarsApplicationMixin(ActorSheetV2),
-) {
+export class CarlRPGLootBoxSheet extends DragDropMixin(HandlebarsApplicationMixin(ActorSheetV2)) {
   /** @override */
   static DEFAULT_OPTIONS = {
     classes: ["carl-rpg", "sheet", "actor", "loot-box"],
@@ -32,6 +35,7 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
       takeItem: CarlRPGLootBoxSheet.#onTakeItem,
       editItem: CarlRPGLootBoxSheet.#onEditItem,
       deleteItem: CarlRPGLootBoxSheet.#onDeleteItem,
+      reforgeItem: CarlRPGLootBoxSheet.#onReforgeItem,
     },
   };
 
@@ -47,15 +51,12 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const actor = this.actor;
-    const TextEditor = foundry.applications.ux.TextEditor.implementation;
 
     context.actor = actor;
     context.system = actor.system;
     context.config = CONFIG.CARLRPG;
     context.isGM = game.user.isGM;
-    context.tierChoices = Object.fromEntries(
-      Object.entries(CONFIG.CARLRPG.lootBoxTiers).map(([key, tier]) => [key, tier.label]),
-    );
+    context.tierChoices = labelChoices(CONFIG.CARLRPG.lootBoxTiers);
 
     // "Take" puts the item on the user's assigned Character; without one
     // they can still drag a card onto any sheet they own.
@@ -69,17 +70,16 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
         name: item.name,
         img: item.img || Item.DEFAULT_ICON,
         tierLabel: CONFIG.CARLRPG.lootBoxTiers[item.getFlag("carl-rpg", "lootTier")]?.label ?? "",
-        descriptionHTML: await TextEditor.enrichHTML(item.system.description ?? "", {
-          relativeTo: item,
+        // A rolled magic item: the GM can reroll or reforge it.
+        isMagic: !!item.getFlag("carl-rpg", "magicDraft"),
+        // A loot item's GM Secrets are the GM's, even to a player who owns the box.
+        descriptionHTML: await enrichDescription(item.system.description, item, {
           secrets: game.user.isGM,
         }),
       })),
     );
 
-    context.descriptionHTML = await TextEditor.enrichHTML(actor.system.description ?? "", {
-      relativeTo: actor,
-      secrets: actor.isOwner,
-    });
+    context.descriptionHTML = await enrichDescription(actor.system.description, actor);
 
     return context;
   }
@@ -117,7 +117,22 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
    * @returns {Item|undefined}
    */
   #itemFor(target) {
-    return this.actor.items.get(target.closest("[data-item-id]")?.dataset.itemId);
+    return itemFor(this.actor, target);
+  }
+
+  /**
+   * A cleared number input (Crawlers) keeps the stored value, and the
+   * submission is merged onto what's stored, as the other sheets do
+   * (helpers/form-arrays.mjs).
+   * @override
+   */
+  _processFormData(event, form, formData) {
+    keepStoredForBlankNumbers(formData.object, this.actor.system, form);
+    const data = super._processFormData(event, form, formData);
+    if (data.system && typeof data.system === "object") {
+      data.system = mergeSystemSubmit(this.actor.system, data.system, { objectArraysOnly: true });
+    }
+    return data;
   }
 
   /** @private */
@@ -161,6 +176,13 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(
   static #onEditItem(event, target) {
     event.preventDefault();
     this.#itemFor(target)?.sheet.render(true);
+  }
+
+  /** @private */
+  static async #onReforgeItem(event, target) {
+    event.preventDefault();
+    const item = this.#itemFor(target);
+    if (item) await LootForge.reforge(item);
   }
 
   /** @private */

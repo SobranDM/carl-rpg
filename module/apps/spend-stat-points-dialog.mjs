@@ -36,7 +36,7 @@ export default class CarlSpendStatPointsDialog extends HandlebarsApplicationMixi
     // decrement button only undoes points spent THIS session, it's never a
     // general way to lower a Stat below where it already was.
     this.initialStats = Object.fromEntries(
-      Object.entries(actor.system.stats ?? {}).map(([key, stat]) => [key, stat.value])
+      Object.entries(actor.system.stats ?? {}).map(([key, stat]) => [key, stat.value]),
     );
   }
 
@@ -123,7 +123,8 @@ export default class CarlSpendStatPointsDialog extends HandlebarsApplicationMixi
     // alongside the Stat; a Mob's is derived fresh from Level/Tier/current
     // stat totals every pass, so incrementing the Stat alone is already
     // enough for #remainingPoints() to read correctly next render.
-    if (!this.isMob) updates["system.bankedStatPoints"] = (this.actor.system.bankedStatPoints ?? 0) - 1;
+    if (!this.isMob)
+      updates["system.bankedStatPoints"] = (this.actor.system.bankedStatPoints ?? 0) - 1;
     await this.actor.update(updates);
     this.render();
   }
@@ -135,7 +136,8 @@ export default class CarlSpendStatPointsDialog extends HandlebarsApplicationMixi
     // undoes points spent this session, see constructor's initialStats.
     if (current <= (this.initialStats[key] ?? 1)) return;
     const updates = { [`system.stats.${key}.value`]: current - 1 };
-    if (!this.isMob) updates["system.bankedStatPoints"] = (this.actor.system.bankedStatPoints ?? 0) + 1;
+    if (!this.isMob)
+      updates["system.bankedStatPoints"] = (this.actor.system.bankedStatPoints ?? 0) + 1;
     await this.actor.update(updates);
     this.render();
   }

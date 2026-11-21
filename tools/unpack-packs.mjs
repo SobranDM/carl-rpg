@@ -26,10 +26,14 @@ const SRC_ROOT = path.join(ROOT, "packs");
 const DEST_ROOT = path.join(ROOT, "packs-source");
 
 function slugify(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
-const packNames = fs.readdirSync(SRC_ROOT, { withFileTypes: true })
+const packNames = fs
+  .readdirSync(SRC_ROOT, { withFileTypes: true })
   .filter((e) => e.isDirectory())
   .map((e) => e.name);
 

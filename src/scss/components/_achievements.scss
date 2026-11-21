@@ -1,0 +1,354 @@
+// Achievements (data/achievement.mjs): the splash (templates/apps/
+// achievement-splash.hbs), the GM's grid (achievement-grid.hbs), the sheet
+// (templates/item/achievement-sheet.hbs) and a Character's list
+// (templates/actor/parts/details.hbs).
+@mixin styles {
+  // The splash: no window chrome - a red paint-splash banner
+  // (assets/paint-banner.webp) slammed onto the screen, white text with a
+  // heavy black outline (~5:1 on the red before the outline).
+  &.carl-achievement-splash {
+    position: fixed;
+    top: 100px;
+    left: 50%;
+    z-index: 100;
+    width: 680px;
+    max-width: calc(100vw - 32px);
+    translate: -50% 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+
+    .window-content {
+      padding: 0;
+      background: none;
+      overflow: visible;
+    }
+  }
+
+  .carl-achievement-banner {
+    position: relative;
+    padding: 48px 72px 52px;
+    background: url("../assets/paint-banner.webp") center / 100% 100% no-repeat;
+    color: #fff;
+    filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.6));
+    transform: rotate(-2deg);
+    animation: carl-achievement-slam 0.35s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+
+  .carl-achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .carl-achievement-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    text-shadow:
+      -2px -2px 0 #000,
+      2px -2px 0 #000,
+      -2px 2px 0 #000,
+      2px 2px 0 #000,
+      0 3px 6px rgba(0, 0, 0, 0.8);
+  }
+
+  .carl-achievement-icon {
+    flex: 0 0 96px;
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+    border: none;
+    filter: drop-shadow(0 0 2px #fff) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.7));
+    transform: rotate(-6deg);
+  }
+
+  .carl-achievement-tag {
+    font-size: 0.85em;
+    font-weight: 900;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #ffe14d;
+  }
+
+  .carl-achievement-name {
+    margin: 0;
+    border: none;
+    font-size: 2em;
+    font-weight: 900;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: #fff;
+  }
+
+  .carl-achievement-crawler {
+    font-weight: bold;
+    opacity: 0.9;
+  }
+
+  .carl-achievement-description p {
+    margin: 0 0 0.3em;
+  }
+
+  .carl-achievement-description p:last-child {
+    margin-bottom: 0;
+  }
+
+  .carl-achievement-reward {
+    font-weight: bold;
+  }
+
+  .carl-achievement-reward-label {
+    color: #ffe14d;
+    text-transform: uppercase;
+  }
+
+  .carl-achievement-close {
+    position: absolute;
+    top: 18px;
+    right: 34px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: #111;
+    color: #fff;
+    line-height: 1;
+    cursor: pointer;
+    transform: rotate(2deg);
+
+    &:hover {
+      background: #000;
+      box-shadow: 0 0 8px #fff;
+    }
+  }
+
+  .carl-achievement-note span {
+    font-weight: bold;
+  }
+
+  .carl-achievement-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+
+    prose-mirror {
+      min-height: 80px;
+    }
+  }
+
+  .carl-achievement-note {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  // The grid: room to make achievements before there are any.
+  &.carl-achievement-grid {
+    min-width: 640px;
+    min-height: 650px;
+  }
+
+  .carl-achievement-boxes {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .carl-achievement-box-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .carl-achievement-box-name {
+    flex: 1 1 auto;
+    font-weight: bold;
+  }
+
+  .carl-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .carl-grid-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    button {
+      flex: 0 0 auto;
+      width: auto;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+
+  .carl-grid-scroll {
+    max-height: 70vh;
+    overflow: auto;
+  }
+
+  .carl-grid-table {
+    border-collapse: collapse;
+    margin: 0;
+
+    th,
+    td {
+      padding: 2px 4px;
+      border: 1px solid var(--carl-border-soft);
+    }
+  }
+
+  .carl-grid-crawler {
+    min-width: 64px;
+    text-align: center;
+    vertical-align: bottom;
+
+    img {
+      display: block;
+      width: 32px;
+      height: 32px;
+      margin: 0 auto 2px;
+      object-fit: cover;
+      border: none;
+    }
+  }
+
+  .carl-grid-achievement {
+    text-align: left;
+    white-space: nowrap;
+
+    a {
+      cursor: pointer;
+    }
+  }
+
+  // A category: its own section, its name on top, a line above and below.
+  .carl-grid-group {
+    border-top: 2px solid var(--carl-gold);
+    border-bottom: 2px solid var(--carl-gold);
+  }
+
+  .carl-grid-group-head th {
+    padding: 4px 6px 2px;
+    text-align: left;
+    font-size: 0.85em;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--carl-gold);
+  }
+
+  .carl-grid-editing .carl-grid-achievement {
+    color: var(--carl-gold);
+  }
+
+  // The editor, below the grid.
+  .carl-achievement-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--carl-border-soft);
+
+    prose-mirror {
+      min-height: 80px;
+    }
+  }
+
+  // A trophy's cell: an opaque dark neutral, whatever the theme (ruled
+  // 2026-11-19, Celestial left out of it). The trophies run from near-black
+  // to their metal: on #1a1a1a the metal halves pass WCAG 1.4.11's 3:1
+  // (Legendary and Platinum all through), and a 1px light outline gives
+  // every trophy's edge ~17:1, so its near-black half keeps its shape.
+  .carl-grid-cell {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+    background: #1a1a1a;
+    cursor: pointer;
+
+    img {
+      display: block;
+      width: 32px;
+      height: 32px;
+      margin: 0 auto;
+      object-fit: contain;
+      border: none;
+      filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.85));
+    }
+  }
+
+  // Not awarded yet: dimmed, keeping its grade's colour (grayscale made
+  // Bronze read as dark silver, and every grade alike).
+  .carl-grid-none img {
+    opacity: 0.4;
+  }
+
+  .carl-grid-none:hover img {
+    opacity: 0.8;
+  }
+
+  // Gold: ~12:1 on the cell's dark ground.
+  .carl-grid-check {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    color: #ffd700;
+  }
+
+  // A Character's list.
+  .carl-achievement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .carl-achievement-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+
+    img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+      border: none;
+    }
+  }
+
+  .carl-achievement-row-name {
+    font-weight: bold;
+  }
+}
+
+@keyframes carl-achievement-slam {
+  from {
+    opacity: 0;
+    transform: scale(1.4) rotate(-8deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(-2deg);
+  }
+}

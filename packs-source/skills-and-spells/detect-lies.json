@@ -69,7 +69,8 @@
     "range": "",
     "aiFavor": 0,
     "cooldown": "",
-    "limitations": ""
+    "limitations": "",
+    "opposedStat": "cha"
   },
   "effects": [],
   "_stats": {

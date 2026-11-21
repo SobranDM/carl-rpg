@@ -9,7 +9,6 @@ import { defineSkillChoiceGrantsField } from "./shared/skill-choice-grant.mjs";
  * CarlRPGItemBase) are simply always active while the Race item is owned.
  */
 export default class CarlRPGRace extends CarlRPGItemBase {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const schema = super.defineSchema();

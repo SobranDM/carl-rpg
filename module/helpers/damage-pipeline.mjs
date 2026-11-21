@@ -43,7 +43,7 @@ export function splitDamageProportionally(total, weights) {
     return { type, index, floor: Math.floor(exact), frac: exact - Math.floor(exact) };
   });
   let remainder = amount - shares.reduce((s, x) => s + x.floor, 0);
-  for (const share of [...shares].sort((a, b) => (b.frac - a.frac) || (a.index - b.index))) {
+  for (const share of [...shares].sort((a, b) => b.frac - a.frac || a.index - b.index)) {
     if (remainder <= 0) break;
     share.floor += 1;
     remainder -= 1;
@@ -93,8 +93,9 @@ export function splitDamageEvenly(total, types) {
 export function isImmuneToAllDamage(damageByType, target) {
   const sys = target?.system ?? {};
   const resistances = sys.resistancesEffective ?? sys.resistances ?? {};
-  const portions = Object.entries(damageByType ?? {})
-    .filter(([type, amount]) => type !== "" && (Number(amount) || 0) > 0);
+  const portions = Object.entries(damageByType ?? {}).filter(
+    ([type, amount]) => type !== "" && (Number(amount) || 0) > 0,
+  );
   if (!portions.length) return false;
   return portions.every(([type]) => {
     const key = normalizeDamageType(type);
@@ -164,7 +165,8 @@ export function computeSlotsLost(totalDamage, slotValue) {
 export function reduceViaShield(rawTotal, shield) {
   const slotValue = Number(shield?.slotValue) || 0;
   const value = Math.max(0, Number(shield?.value) || 0);
-  if (slotValue <= 0 || value <= 0) return { remaining: Math.max(0, rawTotal), slotsLost: 0, absorbed: 0 };
+  if (slotValue <= 0 || value <= 0)
+    return { remaining: Math.max(0, rawTotal), slotsLost: 0, absorbed: 0 };
   const slotsLost = Math.min(computeSlotsLost(rawTotal, slotValue), value);
   const absorbed = slotsLost * slotValue;
   return { remaining: Math.max(0, rawTotal - absorbed), slotsLost, absorbed };
@@ -199,7 +201,12 @@ export function reduceViaShield(rawTotal, shield) {
  *   shieldAbsorbed: number,
  * }}
  */
-export function computeDamageApplication(damageByType, target, isMagic = true, { ignoreDr = false, extraDr = 0, armorPiercing = false } = {}) {
+export function computeDamageApplication(
+  damageByType,
+  target,
+  isMagic = true,
+  { ignoreDr = false, extraDr = 0, armorPiercing = false } = {},
+) {
   const sys = target?.system ?? {};
   // drEffective/resistancesEffective (module/data/character.mjs,mob.mjs) fold
   // in any Race/Class/feature-granted DR bonus or Resistance/Immunity
@@ -240,8 +247,12 @@ export function computeDamageApplication(damageByType, target, isMagic = true, {
   const slotsLost = computeSlotsLost(totalFinalDamage, slotValue);
 
   return {
-    perType, totalFinalDamage, slotsLost, slotValue,
-    shieldSlotsLost: shieldResult.slotsLost, shieldAbsorbed: shieldResult.absorbed,
+    perType,
+    totalFinalDamage,
+    slotsLost,
+    slotValue,
+    shieldSlotsLost: shieldResult.slotsLost,
+    shieldAbsorbed: shieldResult.absorbed,
   };
 }
 

@@ -12,7 +12,10 @@ export class CarlRPGTokenDocument extends foundry.documents.TokenDocument {
   getBarAttribute(barName, options = {}) {
     const data = super.getBarAttribute(barName, options);
     if (data?.type !== "bar") return data;
-    const effectiveMax = foundry.utils.getProperty(this.actor?.system ?? {}, `${data.attribute}.effectiveMax`);
+    const effectiveMax = foundry.utils.getProperty(
+      this.actor?.system ?? {},
+      `${data.attribute}.effectiveMax`,
+    );
     if (Number.isFinite(effectiveMax)) data.max = effectiveMax;
     return data;
   }

@@ -12,7 +12,7 @@
     </select>
     {{#with (lookup ../system.resistancesEffective type) as |effectiveState|}}
     {{#unless (eq effectiveState (lookup ../../system.resistances type))}}
-    <span class="carl-resistance-granted" title="{{localize 'CARLRPG.Actor.ResistanceGrantedHint'}}">
+    <span class="carl-resistance-granted" data-tooltip-text="{{localize 'CARLRPG.Actor.ResistanceGrantedHint'}}">
       ({{localize (lookup ../../config.resistanceStates effectiveState)}})
     </span>
     {{/unless}}

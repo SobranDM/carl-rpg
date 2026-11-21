@@ -1,5 +1,54 @@
 # CHANGELOG
 
+## 0.8.0
+
+Achievements and loot boxes, a floor collapse timer and Opposed Checks, plus behind-the-scenes tidying to make future work easier.
+
+### Deprecation Warning
+
+- **The Map Loot Box Actor Is Deprecated** and will be removed in a later release. Its Generate Loot now rolls a whole box per crawler but no gold (gold goes to the crawler who opens a box), and Reroll works on magic items only. It's labelled "Loot Box (Map)" when creating an Actor.
+
+### Achievements and Loot Boxes
+
+- **Achievements:** a new Achievement item with a description, a Reward, a grade (Bronze to Celestial, which sets its icon) and an option to give a loot box. The GM makes, edits and awards them all in the GM Toolbox's Achievements window; they're kept in an Achievements compendium the system looks after.
+  - The crawler's player sees a New Achievement! splash, which stays until they close it, even if they were offline when it was awarded.
+  - An optional Category groups achievements together in the window, Bronze to Celestial.
+  - A world setting posts awarded achievements to chat (off by default).
+  - A Character's Details tab lists their achievements.
+- **Loot Boxes Live in the Inventory** (p.21), behind a Show Loot Boxes button: from an achievement (titled from its Reward), a Boss kill (p.22), or given from the GM Toolbox. Players see a box's art and title, never what's inside, and can't change or delete it. The GM can prepare each crawler's box ahead of time, even before an achievement is awarded, or leave it to be rolled when it's opened.
+- **Opening Loot Boxes Together:** the GM Toolbox's Open Loot Boxes starts a session everyone watches, one crawler at a time. Each box shakes, glows and shows what came out, which goes straight onto the sheet. Only that crawler's player or the GM can move on, and the GM can skip a player.
+- **Fuller Loot** (pp.215-220): boxes hold gold, consumables and mundane items as well as magic items, from new Roll Tables for each tier. Magic items get real bonuses, in their tier's range and to a Skill the crawler has.
+  - 13 new items from the book's sample boxes: potions, dynamite, a canoe, a bicycle, coupons and more.
+  - A copy of a box table in the world or a world compendium replaces the system's, so GMs can change what boxes hold.
+- **The Loot Forge:** where the GM prepares a box's contents: gold, quantities, and each magic item's name, slot, bonuses and (for a mundane item) the Weapon Skill that makes it a weapon, with rerolls. Something Unique shows how powerful it is: one step for each roll it stopped (p.220). Reforge reopens a rolled magic item later.
+- **Sounds:** earning an achievement and gaining a Level play a sound for the crawler's player, and opening a loot box plays one for everyone. Each can be muted in your own settings.
+- **Potions Can Mend All Injuries**, as the Heal Severe Injury Potion does (p.218).
+- **The Rulebook Import** puts achievements in the Achievements compendium, a folder per book, with their grade and loot box read from the Reward, instead of a journal. An earlier import's journal is left as it is.
+
+### Floors
+
+- **The Floor Collapse Timer** (pp.62-63): everyone sees the Floor and the time left before it collapses, in 30-hour days, on a bar just above the hotbar that each player can drag elsewhere.
+  - It follows Foundry's in-world clock, so rests, grinding and combat move it. Automatically compatible with Calendar modules as a result.
+  - End Floor starts the next floor's timer at the book's length, the GM Toolbox's Collapse Timer changes or stops it, and each floor keeps its own, so a misclick can be corrected without losing the old timer.
+  - The bar turns amber in the last 30 hours and red in the last 24, when everyone gets a warning.
+
+### Sheets
+
+- **Descriptions of Races, Classes, Features and Mob Attacks** on the character sheet now show links and inline rolls as their own sheets do.
+- **The GM Toolbox** is reorganized into Downtime, Rewards and Party sections, and its button is now a tool in Token Controls instead of a category of its own.
+
+### Combat and Rolls
+
+- **Opposed Checks** (p.59): any Skill or Stat Check, and the Party Skill Check, can be Opposed. Pick who (a targeted or on-scene creature, or a number such as a Spell Rank) and their Stat, and the Difficulty becomes 10 + their Mod + the Floor. Skills and Spells the book calls Opposed (Stealth, Intimidate, Detect Lies, Turn Undead and more) start Opposed against a targeted creature; with several targeted, the hardest counts. Crawlers' existing copies of those Skills and Spells are updated when the world loads, keeping their Ranks.
+- **Opposed Checks That Aren't Actions** (Party Skill Checks, Driving Checks, ramming) no longer suffer or use up Queasy and Staggered.
+- **A Negative Rank Counts as Untrained** and roll with Disadvantage.
+- **A Natural 20 Evade's Advantage** follows the fight the crawler is in, resolving issues when multiple fights are running.
+
+### Characters and Items
+
+- **The Taint Stops Mending Too:** Mending an injury counts as healing, so a potion that heals or mends is kept, and a Heal Spell's Mend Debuff is refused, while The Taint lasts.
+- **Items Copied from a Compendium** remember where they came from, so later updates can refresh them.
+
 ## 0.7.0
 
 ### Before you update

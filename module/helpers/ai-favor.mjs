@@ -1,3 +1,4 @@
+import { fightStamp } from "./fights.mjs";
 /**
  * AI Favor rerolls (p.61): "During play, you can spend 1 point of AI Favor
  * to: Once per Check, reroll a d20 before the GM announces the result. You
@@ -33,27 +34,27 @@
  * @param {number|null} spec.difficulty
  * @returns {{aiReroll?: object}}
  */
-export function aiRerollFlags(actor, { kind, formula, natural, total, difficulty = null, ...rest }) {
-  if (actor?.type !== "character" || !formula || natural === null || natural === undefined) return {};
+export function aiRerollFlags(
+  actor,
+  { kind, formula, natural, total, difficulty = null, ...rest },
+) {
+  if (actor?.type !== "character" || !formula || natural === null || natural === undefined)
+    return {};
   return {
     aiReroll: {
-      kind, actorUuid: actor.uuid, formula, natural, total, difficulty, used: false,
+      kind,
+      actorUuid: actor.uuid,
+      formula,
+      natural,
+      total,
+      difficulty,
+      used: false,
       // The fight and round it was rolled in: an Intervene is open until the
       // round ends (module/chat/check-revision.mjs).
       fight: fightStamp(actor),
       ...rest,
     },
   };
-}
-
-/**
- * The started fight this actor is a combatant in, and its round, or null.
- * @param {Actor} actor
- * @returns {{combatId: string, round: number}|null}
- */
-export function fightStamp(actor) {
-  const combat = game.combats.find((c) => c.started && c.combatants.some((cb) => cb.actor === actor));
-  return combat ? { combatId: combat.id, round: combat.round } : null;
 }
 
 /**

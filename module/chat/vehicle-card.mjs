@@ -16,14 +16,21 @@
  * Check has replaced.
  */
 import { CARLRPG } from "../helpers/config.mjs";
-import { isHitDegree } from "../helpers/rules.mjs";
+import { degreeLabel, isHitDegree } from "../helpers/rules.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
-import { appendCardSection, esc } from "./chat-card.mjs";
+import { appendCardSection } from "./chat-card.mjs";
 import { resolveOccupant, stepUpDegree } from "../helpers/vehicle-state.mjs";
 import { updateVehicle } from "../helpers/vehicles.mjs";
 import {
-  canDrive, cardOutcome, commitDrivingRound, drivingCardCurrent, drivingOutcomeText, upgradeReady,
+  canDrive,
+  cardOutcome,
+  commitDrivingRound,
+  drivingCardCurrent,
+  drivingOutcomeText,
+  upgradeReady,
 } from "../helpers/vehicle-driving.mjs";
+import { esc } from "../helpers/html.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 const SCOPE = "carl-rpg";
 /** Cards with a button mid-click - a double click mustn't apply twice. */
@@ -31,7 +38,10 @@ const inFlight = new Set();
 
 /** The card's vehicle and driver, resolved synchronously for drawing. */
 function cardDocs(driving) {
-  return { vehicle: resolveOccupant(driving?.vehicleUuid), driver: resolveOccupant(driving?.driverUuid) };
+  return {
+    vehicle: resolveOccupant(driving?.vehicleUuid),
+    driver: resolveOccupant(driving?.driverUuid),
+  };
 }
 
 /**
@@ -52,17 +62,34 @@ function drivingButtons(message) {
   const buttons = [];
   if (outcome?.critChoice && !driving.critChoice && driverSide && current) {
     buttons.push({ action: "drivingCritMove", icon: "fa-gauge-high", label: loc("CritMove") });
-    if (driver.type === "character") buttons.push({ action: "drivingCritFavor", icon: "fa-star", label: loc("CritFavor") });
+    if (driver.type === "character")
+      buttons.push({ action: "drivingCritFavor", icon: "fa-star", label: loc("CritFavor") });
   }
   const failed = !isHitDegree(driving.degree);
-  if (driving.mode === "table6" && failed && !driving.absorbed && !driving.damageApplied && driverSide && current
-    && upgradeReady(vehicle, "shockAbsorbers")) {
+  if (
+    driving.mode === "table6" &&
+    failed &&
+    !driving.absorbed &&
+    !driving.damageApplied &&
+    driverSide &&
+    current &&
+    upgradeReady(vehicle, "shockAbsorbers")
+  ) {
     buttons.push({ action: "drivingAbsorb", icon: "fa-water", label: loc("Absorb") });
   }
   if (outcome?.damageSlots && !driving.damageApplied && (game.user.isGM || vehicle.isOwner)) {
-    buttons.push({ action: "drivingDamage", icon: "fa-car-burst", label: loc("Damage", { slots: outcome.damageSlots }) });
+    buttons.push({
+      action: "drivingDamage",
+      icon: "fa-car-burst",
+      label: loc("Damage", { slots: outcome.damageSlots }),
+    });
   }
-  if (driving.mode === "stop" && !failed && !vehicle.system.parked && (driverSide || vehicle.isOwner)) {
+  if (
+    driving.mode === "stop" &&
+    !failed &&
+    !vehicle.system.parked &&
+    (driverSide || vehicle.isOwner)
+  ) {
     buttons.push({ action: "drivingPark", icon: "fa-parking", label: loc("Park") });
   }
   return buttons;
@@ -77,8 +104,12 @@ function drivingButtons(message) {
 export function decorateDrivingCard(message, html) {
   const container = html.querySelector(".carl-driving-buttons");
   if (!container) return;
-  container.innerHTML = drivingButtons(message).map((b) => `<button type="button" data-action="${b.action}">
-    <i class="fas ${b.icon}"></i> ${esc(b.label)}</button>`).join("");
+  container.innerHTML = drivingButtons(message)
+    .map(
+      (b) => `<button type="button" data-action="${b.action}">
+    <i class="fas ${b.icon}"></i> ${esc(b.label)}</button>`,
+    )
+    .join("");
 }
 
 /**
@@ -103,13 +134,18 @@ async function run(message, action, fn) {
 
 /** Note what a button did on the card. */
 function noteOnCard(message, text) {
-  return updateCardMessage(message, { content: appendCardSection(message, `<p class="carl-driving-note">${esc(text)}</p>`) });
+  return updateCardMessage(message, {
+    content: appendCardSection(message, `<p class="carl-driving-note">${esc(text)}</p>`),
+  });
 }
 
 const handlers = {
   async drivingCritMove(message) {
     await run(message, "drivingCritMove", async ({ driving, vehicle }) => {
-      await commitDrivingRound(vehicle, "criticalHit", { critChoice: "move", checkId: driving.checkId });
+      await commitDrivingRound(vehicle, "criticalHit", {
+        critChoice: "move",
+        checkId: driving.checkId,
+      });
       await updateCardMessage(message, { flags: { [SCOPE]: { driving: { critChoice: "move" } } } });
       await noteOnCard(message, game.i18n.localize("CARLRPG.Vehicle.Card.CritMoveDone"));
     });
@@ -117,28 +153,52 @@ const handlers = {
   async drivingCritFavor(message) {
     await run(message, "drivingCritFavor", async ({ driving, vehicle, driver }) => {
       await driver.update({ "system.details.aiFavor": (driver.system.details?.aiFavor ?? 0) + 1 });
-      await commitDrivingRound(vehicle, "criticalHit", { critChoice: "favor", checkId: driving.checkId });
-      await updateCardMessage(message, { flags: { [SCOPE]: { driving: { critChoice: "favor" } } } });
-      await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.CritFavorDone", { name: driver.name }));
+      await commitDrivingRound(vehicle, "criticalHit", {
+        critChoice: "favor",
+        checkId: driving.checkId,
+      });
+      await updateCardMessage(message, {
+        flags: { [SCOPE]: { driving: { critChoice: "favor" } } },
+      });
+      await noteOnCard(
+        message,
+        game.i18n.format("CARLRPG.Vehicle.Card.CritFavorDone", { name: driver.name }),
+      );
     });
   },
   async drivingDamage(message) {
     await run(message, "drivingDamage", async ({ driving, vehicle }) => {
       const slots = cardOutcome(driving)?.damageSlots ?? 0;
-      await updateCardMessage(message, { flags: { [SCOPE]: { driving: { damageApplied: true } } } });
+      await updateCardMessage(message, {
+        flags: { [SCOPE]: { driving: { damageApplied: true } } },
+      });
       await vehicle.update({ "system.hb.value": Math.max(0, vehicle.system.hb.value - slots) });
-      await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.DamageDone", { vehicle: vehicle.name, slots }));
+      await noteOnCard(
+        message,
+        game.i18n.format("CARLRPG.Vehicle.Card.DamageDone", { vehicle: vehicle.name, slots }),
+      );
     });
   },
   async drivingAbsorb(message) {
     await run(message, "drivingAbsorb", async ({ driving, vehicle }) => {
       const degree = stepUpDegree(driving.degree);
-      if (!await updateVehicle(vehicle, { "system.upgrades.shockAbsorbers.usedFloor": game.settings.get(SCOPE, "currentFloor") })) return;
+      if (
+        !(await updateVehicle(vehicle, {
+          "system.upgrades.shockAbsorbers.usedFloor": currentFloor(),
+        }))
+      )
+        return;
       await commitDrivingRound(vehicle, degree, { checkId: driving.checkId });
-      await updateCardMessage(message, { flags: { [SCOPE]: { driving: { degree, absorbed: true } } } });
-      await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.AbsorbDone", {
-        result: game.i18n.localize(CARLRPG.degreesOfSuccess[degree]), outcome: drivingOutcomeText("table6", degree),
-      }));
+      await updateCardMessage(message, {
+        flags: { [SCOPE]: { driving: { degree, absorbed: true } } },
+      });
+      await noteOnCard(
+        message,
+        game.i18n.format("CARLRPG.Vehicle.Card.AbsorbDone", {
+          result: degreeLabel(degree),
+          outcome: drivingOutcomeText("table6", degree),
+        }),
+      );
     });
   },
   async drivingPark(message) {
@@ -146,7 +206,10 @@ const handlers = {
       await updateVehicle(vehicle, { "system.parked": true });
       // Its result is used: no reroll or Intervene after this.
       await updateCardMessage(message, { flags: { [SCOPE]: { driving: { parked: true } } } });
-      await noteOnCard(message, game.i18n.format("CARLRPG.Vehicle.Card.Parked", { vehicle: vehicle.name }));
+      await noteOnCard(
+        message,
+        game.i18n.format("CARLRPG.Vehicle.Card.Parked", { vehicle: vehicle.name }),
+      );
     });
   },
 };

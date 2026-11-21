@@ -29,7 +29,8 @@ export const isPet = (a) => typeOf(a) === "pet";
  * (actions.mjs petCommanded, pet-command.mjs). A dedicated mount isn't one.
  * @param {Actor|{type?: string, system?: object}|null|undefined} a
  */
-export const isMinion = (a) => isPet(a) && typeof a === "object" && !!a.system?.isMinion && !a.system?.isMount;
+export const isMinion = (a) =>
+  isPet(a) && typeof a === "object" && !!a.system?.isMinion && !a.system?.isMount;
 
 /**
  * Rolls its own d20 Attacks and Evades and acts in the Crawler phase:

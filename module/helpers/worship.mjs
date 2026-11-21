@@ -1,4 +1,7 @@
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
+import { PACKS } from "./packs.mjs";
+import { esc } from "./html.mjs";
+import { changeConditions } from "./conditions.mjs";
 
 /**
  * Worship (Character Creation, pp.163-168; Gods, pp.312-313): the
@@ -12,7 +15,6 @@ export const BOON_DAYS = 5;
 /** "Advantage on all Stat or Skill Checks for one stat for 30 hours" - a Boon's usual span (Table 63, p.313). */
 export const BOON_HOURS = 30;
 
-const ROLL_TABLES_PACK = `${game.system?.id ?? "carl-rpg"}.roll-tables`;
 const BOONS_TABLE_NAME = "Boons";
 
 /**
@@ -117,7 +119,7 @@ export function describeDeity(deity) {
  * @returns {Promise<TableResult|null>}
  */
 export async function receiveBoon(actor) {
-  const pack = game.packs.get(ROLL_TABLES_PACK);
+  const pack = game.packs.get(PACKS.rollTables);
   const index = await pack?.getIndex();
   const entry = index?.find((e) => e.name === BOONS_TABLE_NAME);
   const table = entry ? await pack.getDocument(entry._id) : null;
@@ -130,8 +132,7 @@ export async function receiveBoon(actor) {
   if (!result) return null;
 
   const deityName = actor.system.deity.name || game.i18n.localize("CARLRPG.Actor.Deity");
-  const conditions = foundry.utils.deepClone(actor.system.conditions ?? []);
-  conditions.push({
+  const boon = {
     id: foundry.utils.randomID(),
     key: "custom",
     label: result.name,
@@ -141,12 +142,16 @@ export async function receiveBoon(actor) {
     remaining: null,
     expiresAt: game.time.worldTime + BOON_HOURS * 3600,
     changes: [],
-  });
+  };
   const worshipDays = Math.max(0, (actor.system.deity.worshipDays ?? 0) - BOON_DAYS);
-  await actor.update({ "system.conditions": conditions, "system.deity.worshipDays": worshipDays });
+  await changeConditions(actor, [{ op: "push", entry: boon }], {
+    updates: { "system.deity.worshipDays": worshipDays },
+  });
 
   const description = result.description
-    ? await foundry.applications.ux.TextEditor.implementation.enrichHTML(result.description, { relativeTo: actor })
+    ? await foundry.applications.ux.TextEditor.implementation.enrichHTML(result.description, {
+        relativeTo: actor,
+      })
     : "";
   await createCardMessage({
     title: game.i18n.localize("CARLRPG.Deity.BoonCardTitle"),

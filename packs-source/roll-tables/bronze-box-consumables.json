@@ -1,0 +1,191 @@
+{
+  "_id": "y2UU3u6hz79DwKhZ",
+  "name": "Bronze Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>Rolled by the loot generator for a Bronze box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "IpEDoQ2OIk6kSLKJ",
+      "type": "document",
+      "name": "Healing Potion",
+      "img": "icons/consumables/potions/bottle-round-corked-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.pE9m1aDQwwYqj0gK",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!y2UU3u6hz79DwKhZ.IpEDoQ2OIk6kSLKJ"
+    },
+    {
+      "_id": "MhajZ4MxvReVYbas",
+      "type": "document",
+      "name": "Mana Potion",
+      "img": "icons/consumables/potions/bottle-round-corked-blue.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.8E8AilR8wiJrLSPR",
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!y2UU3u6hz79DwKhZ.MhajZ4MxvReVYbas"
+    },
+    {
+      "_id": "LPEJOknJWzUVaVbN",
+      "type": "document",
+      "name": "Bandages (1d6)",
+      "img": "icons/tools/medical/bandages-adhesive.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.TQamJzIgqLFpxzn4",
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!y2UU3u6hz79DwKhZ.LPEJOknJWzUVaVbN"
+    },
+    {
+      "_id": "OrwroQnmXro2j2so",
+      "type": "document",
+      "name": "Stick of Basic Dynamite",
+      "img": "icons/weapons/thrown/dynamite-simple-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.mzq0hzwJv2wJ6Xku",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!y2UU3u6hz79DwKhZ.OrwroQnmXro2j2so"
+    },
+    {
+      "_id": "E3F6oJoYBxrt7JPK",
+      "type": "text",
+      "name": "Spell Scroll",
+      "img": "icons/sundries/scrolls/scroll-bound-blue-red.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!y2UU3u6hz79DwKhZ.E3F6oJoYBxrt7JPK"
+    },
+    {
+      "_id": "ErcNryv5JQZlKtpR",
+      "type": "text",
+      "name": "Magic Tome",
+      "img": "icons/sundries/books/book-backed-wood-tan.webp",
+      "description": "",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!y2UU3u6hz79DwKhZ.ErcNryv5JQZlKtpR"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!y2UU3u6hz79DwKhZ"
+}

@@ -22,15 +22,22 @@
  * Attack card.
  */
 import CarlDice from "../dice/dice.mjs";
-import { degreeBadge, isHitDegree } from "../helpers/rules.mjs";
+import { degreeBadge, isHitDegree, opposedDifficulty } from "../helpers/rules.mjs";
 import { resolveActingActor } from "../helpers/token-resolution.mjs";
 import { createRollMessage } from "./chat-card.mjs";
 import { askGM, registerAskHandler } from "../helpers/chat-socket.mjs";
 import { noteUndo, takeAction } from "../helpers/actions.mjs";
-import { withCardQueue } from "./check-revision.mjs";
-import { activeRows, crawlerAttackDifficulty, crawlerAttackRow, mobAttackRow, nextRowId } from "../helpers/attack-targets.mjs";
+import {
+  activeRows,
+  crawlerAttackDifficulty,
+  crawlerAttackRow,
+  mobAttackRow,
+  nextRowId,
+} from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { ownedSkill } from "../helpers/modifiers.mjs";
+import { queueForCard } from "../helpers/actor-queue.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/taunt-footer.hbs";
 
@@ -54,7 +61,9 @@ export async function buildTauntLinkFooter() {
 export function isCardLocked(message) {
   if (LOCK_FLAGS.some((flag) => !!message.getFlag("carl-rpg", flag))) return true;
   // A Shield Block counts as a reaction too (helpers/shield-block.mjs).
-  return activeRows(message.getFlag("carl-rpg", "targetRows")).some((row) => row.applied || row.evade || row.block);
+  return activeRows(message.getFlag("carl-rpg", "targetRows")).some(
+    (row) => row.applied || row.evade || row.block,
+  );
 }
 
 /**
@@ -70,13 +79,20 @@ function taunterRow(message, taunter) {
   const id = nextRowId(flags.targetRows);
   const target = { uuid: taunter.token?.uuid ?? taunter.actor.uuid, actor: taunter.actor };
   if (!rollsLikeCrawler(flags.attackerType)) {
-    return mobAttackRow({ id, target, base: flags.mobBase ?? flags.targetDifficulty, ownRows: flags.mobOwnRows ?? [] }).row;
+    return mobAttackRow({
+      id,
+      target,
+      base: flags.mobBase ?? flags.targetDifficulty,
+      ownRows: flags.mobOwnRows ?? [],
+    }).row;
   }
-  const floor = flags.floor ?? game.settings.get("carl-rpg", "currentFloor");
+  const floor = flags.floor ?? currentFloor();
   return crawlerAttackRow({
-    id, target,
+    id,
+    target,
     difficulty: crawlerAttackDifficulty(taunter.actor, floor).difficulty,
-    attackTotal: flags.attackTotal, naturalRoll: flags.naturalRoll ?? null,
+    attackTotal: flags.attackTotal,
+    naturalRoll: flags.naturalRoll ?? null,
   });
 }
 
@@ -176,56 +192,78 @@ export async function tauntAttack(message, { taunter = null, skipDialog = false 
   }
 
   const statKey = tauntItem.system.opposedStat || "int";
-  const statMod = attackerActor.system.stats?.[statKey]?.mod ?? 0;
-  const floor = game.settings.get("carl-rpg", "currentFloor");
-  const difficulty = 10 + statMod + floor;
+  const difficulty = opposedDifficulty(attackerActor.system.stats?.[statKey]?.mod, currentFloor());
   // The rows the redirect would replace, as they are before the dialog: if
   // they change meanwhile, the redirect is refused (tauntRedirectNow).
   const seen = activeRows(message.getFlag("carl-rpg", "targetRows")).map((row) => row.id);
 
-  return takeAction(resolved.actor, "other", game.i18n.localize("CARLRPG.Reaction.Op.taunt"), async () => {
-    // The attacking Mob's own Debuffs lower this Difficulty too (p.96) -
-    // rollOpposedSkillCheck offers them as dialog rows via `opponent`.
-    const rollData = await CarlDice.rollOpposedSkillCheck(resolved.actor, tauntItem, {
-      difficulty, opponent: attackerActor, skipDialog, post: false,
-    });
-    if (!rollData) return null; // Dialog cancelled - nothing to record, no Action spent.
-    const { roll, breakdown, degree, debuffNote } = rollData;
-    const success = isHitDegree(degree);
+  return takeAction(
+    resolved.actor,
+    "other",
+    game.i18n.localize("CARLRPG.Reaction.Op.taunt"),
+    async () => {
+      // The attacking Mob's own Debuffs lower this Difficulty too (p.96) -
+      // rollOpposedSkillCheck offers them as dialog rows via `opponent`.
+      const rollData = await CarlDice.rollOpposedSkillCheck(resolved.actor, tauntItem, {
+        difficulty,
+        opponent: attackerActor,
+        skipDialog,
+        post: false,
+      });
+      if (!rollData) return null; // Dialog cancelled - nothing to record, no Action spent.
+      const { roll, breakdown, degree, debuffNote } = rollData;
+      const success = isHitDegree(degree);
 
-    const answer = await askGM(TAUNT, { cardId: message.id, taunterUuid, success, seen },
-      { local: message.canUserModify(game.user, "update") });
-    const outcome = answer?.outcome ?? null;
+      const answer = await askGM(
+        TAUNT,
+        { cardId: message.id, taunterUuid, success, seen },
+        { local: message.canUserModify(game.user, "update") },
+      );
+      const outcome = answer?.outcome ?? null;
 
-    // Posted once the card's writer has answered, so it says what happened.
-    let subtitle = "CARLRPG.Taunt.Fail";
-    if (outcome === "redirected") subtitle = "CARLRPG.Taunt.Success";
-    else if (success) subtitle = outcome === "refused" ? "CARLRPG.Taunt.SuccessTooLate" : "CARLRPG.Taunt.SuccessUnanswered";
-    await createRollMessage({
-      rolls: [roll],
-      rollMeta: [{ label: tauntItem.name, detail: `vs. ${attackerActor.name}`, breakdown }],
-      title: game.i18n.format("CARLRPG.Taunt.RollTitle", { name: resolved.actor.name }),
-      img: resolved.actor.img,
-      subtitle: game.i18n.localize(subtitle),
-      badge: degreeBadge(degree),
-      body: debuffNote ?? "",
-      actor: resolved.actor,
-      token: resolved.token,
-    });
-    // Undone (helpers/action-undo.mjs): the roll card goes (chat-card.mjs
-    // notes it), and the Taunt button it used comes back. A redirect can't
-    // be taken back - that Taunt's undo is refused.
-    if (outcome === "redirected") noteUndo(resolved.actor, { t: "blocked", reason: "TauntRedirected" });
-    else if (answer?.marked) noteUndo(resolved.actor, { t: "set", uuid: message.uuid, data: { "flags.carl-rpg.tauntedBy": null } });
+      // Posted once the card's writer has answered, so it says what happened.
+      let subtitle = "CARLRPG.Taunt.Fail";
+      if (outcome === "redirected") subtitle = "CARLRPG.Taunt.Success";
+      else if (success)
+        subtitle =
+          outcome === "refused"
+            ? "CARLRPG.Taunt.SuccessTooLate"
+            : "CARLRPG.Taunt.SuccessUnanswered";
+      await createRollMessage({
+        rolls: [roll],
+        rollMeta: [{ label: tauntItem.name, detail: `vs. ${attackerActor.name}`, breakdown }],
+        title: game.i18n.format("CARLRPG.Taunt.RollTitle", { name: resolved.actor.name }),
+        img: resolved.actor.img,
+        subtitle: game.i18n.localize(subtitle),
+        badge: degreeBadge(degree),
+        body: debuffNote ?? "",
+        actor: resolved.actor,
+        token: resolved.token,
+      });
+      // Undone (helpers/action-undo.mjs): the roll card goes (chat-card.mjs
+      // notes it), and the Taunt button it used comes back. A redirect can't
+      // be taken back - that Taunt's undo is refused.
+      if (outcome === "redirected")
+        noteUndo(resolved.actor, { t: "blocked", reason: "TauntRedirected" });
+      else if (answer?.marked)
+        noteUndo(resolved.actor, {
+          t: "set",
+          uuid: message.uuid,
+          data: { "flags.carl-rpg.tauntedBy": null },
+        });
 
-    const name = resolved.actor.name;
-    if (outcome === "redirected") ui.notifications.info(game.i18n.format("CARLRPG.Taunt.RedirectedNotice", { name }));
-    else if (outcome === "failed") ui.notifications.info(game.i18n.format("CARLRPG.Taunt.FailedNotice", { name }));
-    else if (outcome === "refused") ui.notifications.warn(game.i18n.format("CARLRPG.Taunt.TooLate", { name }));
-    // Unanswered (no GM, or none in time - askGM said so): the roll was
-    // still made, so the Action is still spent.
-    return outcome ?? "unanswered";
-  });
+      const name = resolved.actor.name;
+      if (outcome === "redirected")
+        ui.notifications.info(game.i18n.format("CARLRPG.Taunt.RedirectedNotice", { name }));
+      else if (outcome === "failed")
+        ui.notifications.info(game.i18n.format("CARLRPG.Taunt.FailedNotice", { name }));
+      else if (outcome === "refused")
+        ui.notifications.warn(game.i18n.format("CARLRPG.Taunt.TooLate", { name }));
+      // Unanswered (no GM, or none in time - askGM said so): the roll was
+      // still made, so the Action is still spent.
+      return outcome ?? "unanswered";
+    },
+  );
 }
 
 const TAUNT = "tauntRedirect";
@@ -246,7 +284,7 @@ const TAUNT = "tauntRedirect";
  * @returns {Promise<{outcome: "redirected"|"failed"|"refused", marked: boolean}|null>}
  */
 export function tauntRedirectNow({ cardId, taunterUuid, success, seen } = {}, user = game.user) {
-  return withCardQueue(cardId, async () => {
+  return queueForCard(cardId, async () => {
     const message = game.messages.get(cardId);
     const taunter = taunterFrom(taunterUuid);
     if (!message || !taunter) return null;
@@ -313,12 +351,14 @@ function taunterFrom(uuid) {
  * chat-listener.mjs) - see evadeActionEntries in module/chat/
  * evade-link-card.mjs for the exact shape this mirrors.
  */
-export const tauntActionEntries = [{
-  action: "tauntAttack",
-  buttonSelector: ".carl-taunt-attack",
-  wrapperSelector: ".carl-taunt-link",
-  canAct: canActTaunt,
-  doneFlag: "tauntedBy",
-  doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Taunt.Done")}`,
-  onClick: onTauntAttack,
-}];
+export const tauntActionEntries = [
+  {
+    action: "tauntAttack",
+    buttonSelector: ".carl-taunt-attack",
+    wrapperSelector: ".carl-taunt-link",
+    canAct: canActTaunt,
+    doneFlag: "tauntedBy",
+    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Taunt.Done")}`,
+    onClick: onTauntAttack,
+  },
+];

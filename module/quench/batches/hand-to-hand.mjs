@@ -1,5 +1,9 @@
 import CarlDice from "../../dice/dice.mjs";
-import { isHandToHand, takesDamageEffects, withoutOutclassedUnarmed } from "../../helpers/hand-to-hand.mjs";
+import {
+  isHandToHand,
+  takesDamageEffects,
+  withoutOutclassedUnarmed,
+} from "../../helpers/hand-to-hand.mjs";
 import { attackChoices } from "../../helpers/weapons.mjs";
 import {
   createTestCharacter,
@@ -13,7 +17,10 @@ import {
 
 /** An Attack Skill with this exact name and Rank. */
 function attackSkill(actor, name, rank, extra = {}) {
-  return createTestItem(actor, "skill", name, { name, system: { category: "attack", rank, ...extra } });
+  return createTestItem(actor, "skill", name, {
+    name,
+    system: { category: "attack", rank, ...extra },
+  });
 }
 
 /** A hand-to-hand one (the Hand-to-Hand box ticked). */
@@ -58,15 +65,37 @@ export default function register(quench) {
         });
 
         it("the compendium's five hand-to-hand Skills (p.179) have the box ticked, and only they do", async function () {
-          const index = await game.packs.get(PACK).getIndex({ fields: ["system.category", "system.isHandToHand"] });
-          const ticked = index.filter((e) => e.system?.isHandToHand).map((e) => e.name).sort();
-          assert.deepEqual(ticked, ["Foot Soldier", "Noggin Nocker", "Pugilism", "Unarmed Combat", "Wrasslin'"]);
+          const index = await game.packs
+            .get(PACK)
+            .getIndex({ fields: ["system.category", "system.isHandToHand"] });
+          const ticked = index
+            .filter((e) => e.system?.isHandToHand)
+            .map((e) => e.name)
+            .sort();
+          assert.deepEqual(ticked, [
+            "Foot Soldier",
+            "Noggin Nocker",
+            "Pugilism",
+            "Unarmed Combat",
+            "Wrasslin'",
+          ]);
         });
 
         it("the compendium's Skills have their setting boxes ticked: Needs no weapon, No Damage Effects, Commands pets", async function () {
-          const index = await game.packs.get(PACK).getIndex({ fields: ["system.noWeapon", "system.noDamageEffects", "system.commandsPets"] });
-          const ticked = (box) => index.filter((e) => e.system?.[box]).map((e) => e.name).sort();
-          assert.deepEqual(ticked("noWeapon"), ["Back Claw", "Bite", "Improvised Weapons", "Slice Attack"]);
+          const index = await game.packs.get(PACK).getIndex({
+            fields: ["system.noWeapon", "system.noDamageEffects", "system.commandsPets"],
+          });
+          const ticked = (box) =>
+            index
+              .filter((e) => e.system?.[box])
+              .map((e) => e.name)
+              .sort();
+          assert.deepEqual(ticked("noWeapon"), [
+            "Back Claw",
+            "Bite",
+            "Improvised Weapons",
+            "Slice Attack",
+          ]);
           assert.deepEqual(ticked("noDamageEffects"), ["Unarmed Combat"]);
           assert.deepEqual(ticked("commandsPets"), ["Animal Handling"]);
         });
@@ -76,14 +105,20 @@ export default function register(quench) {
           try {
             const unarmed = await unarmedCombat(actor, 3);
             const sword = await attackSkill(actor, "Longsword", 8);
-            const list = () => withoutOutclassedUnarmed(actor, actor.items.filter((i) => i.type === "skill"));
+            const list = () =>
+              withoutOutclassedUnarmed(
+                actor,
+                actor.items.filter((i) => i.type === "skill"),
+              );
             assert.include(list(), unarmed, "a weapon Skill doesn't count");
 
             const pugilism = await handToHand(actor, "Pugilism", 3);
             assert.include(list(), unarmed, "equal isn't higher");
 
             await pugilism.update({ "system.rank": 4 });
-            await waitFor(() => !list().includes(unarmed), { message: "Rank 4 Pugilism should outclass Rank 3 Unarmed Combat" });
+            await waitFor(() => !list().includes(unarmed), {
+              message: "Rank 4 Pugilism should outclass Rank 3 Unarmed Combat",
+            });
             assert.includeMembers(list(), [sword, pugilism]);
 
             // A homebrew one counts too, once its box is ticked.
@@ -91,7 +126,9 @@ export default function register(quench) {
             const elbow = await attackSkill(actor, "Flying Elbow", 6);
             await waitFor(() => list().includes(unarmed));
             await elbow.update({ "system.isHandToHand": true });
-            await waitFor(() => !list().includes(unarmed), { message: "a ticked homebrew Skill should outclass it too" });
+            await waitFor(() => !list().includes(unarmed), {
+              message: "a ticked homebrew Skill should outclass it too",
+            });
           } finally {
             await deleteTestActor(actor);
           }
@@ -103,7 +140,11 @@ export default function register(quench) {
             const shove = await handToHand(actor, "Feeble Shove", 2, { noDamageEffects: true });
             const plain = await handToHand(actor, "Unarmed Combat", 2);
             const pugilism = await handToHand(actor, "Pugilism", 5);
-            const list = () => withoutOutclassedUnarmed(actor, actor.items.filter((i) => i.type === "skill"));
+            const list = () =>
+              withoutOutclassedUnarmed(
+                actor,
+                actor.items.filter((i) => i.type === "skill"),
+              );
             assert.notInclude(list(), shove, "a homebrew Skill with the box, outranked");
             assert.include(list(), plain, "Unarmed Combat by name, without the box");
             assert.include(list(), pugilism);
@@ -125,7 +166,11 @@ export default function register(quench) {
             const offered = attackChoices(actor).map((c) => c.skill.id);
             assert.include(offered, pugilism.id);
             assert.notInclude(offered, unarmed.id);
-            assert.exists(sheet.element.querySelector(`section.tab[data-tab="skills"] [data-item-id="${unarmed.id}"]`));
+            assert.exists(
+              sheet.element.querySelector(
+                `section.tab[data-tab="skills"] [data-item-id="${unarmed.id}"]`,
+              ),
+            );
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
@@ -147,28 +192,52 @@ export default function register(quench) {
             assert.isNull(await CarlDice.rollDamageEffect(actor, onlyUnarmed), "refused");
 
             const radios = (d) => d.element.querySelectorAll('input[name="damageEffectId"]').length;
-            await withDialog(() => CarlDice.rollAttack(actor, unarmed), (d) => {
-              assert.equal(radios(d), 0, "Unarmed Combat: no Damage Effect list");
-              pressDialog(d, "cancel");
-            }, "carl-roll-dialog");
-            await withDialog(() => CarlDice.rollAttack(actor, pugilism), (d) => {
-              assert.isAbove(radios(d), 0, "Pugilism still gets its Damage Effects");
-              pressDialog(d, "cancel");
-            }, "carl-roll-dialog");
+            await withDialog(
+              () => CarlDice.rollAttack(actor, unarmed),
+              (d) => {
+                assert.equal(radios(d), 0, "Unarmed Combat: no Damage Effect list");
+                pressDialog(d, "cancel");
+              },
+              "carl-roll-dialog",
+            );
+            await withDialog(
+              () => CarlDice.rollAttack(actor, pugilism),
+              (d) => {
+                assert.isAbove(radios(d), 0, "Pugilism still gets its Damage Effects");
+                pressDialog(d, "cancel");
+              },
+              "carl-roll-dialog",
+            );
 
             // A homebrew Skill with the No Damage Effects box: none offered either.
             // (Hand-to-hand, so it needs no weapon to roll.)
             const slap = await handToHand(actor, "Gentle Slap", 3, { noDamageEffects: true });
-            await createTestItem(actor, "damageEffect", "slap boost", { system: { rank: 1, parentSkills: [slap.name] } });
-            await withDialog(() => CarlDice.rollAttack(actor, slap), (d) => {
-              assert.equal(radios(d), 0, "a homebrew No Damage Effects Skill: no Damage Effect list");
-              pressDialog(d, "cancel");
-            }, "carl-roll-dialog");
+            await createTestItem(actor, "damageEffect", "slap boost", {
+              system: { rank: 1, parentSkills: [slap.name] },
+            });
+            await withDialog(
+              () => CarlDice.rollAttack(actor, slap),
+              (d) => {
+                assert.equal(
+                  radios(d),
+                  0,
+                  "a homebrew No Damage Effects Skill: no Damage Effect list",
+                );
+                pressDialog(d, "cancel");
+              },
+              "carl-roll-dialog",
+            );
 
             // Not even one handed in directly (a macro).
-            const message = await CarlDice.rollAttack(actor, unarmed, { damageEffectItem: onlyUnarmed, skipDialog: true });
+            const message = await CarlDice.rollAttack(actor, unarmed, {
+              damageEffectItem: onlyUnarmed,
+              skipDialog: true,
+            });
             try {
-              assert.isNull(message.getFlag("carl-rpg", "aiReroll")?.damageEffectItemId ?? null, "the Damage Effect was dropped");
+              assert.isNull(
+                message.getFlag("carl-rpg", "aiReroll")?.damageEffectItemId ?? null,
+                "the Damage Effect was dropped",
+              );
             } finally {
               await message?.delete();
             }

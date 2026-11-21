@@ -22,9 +22,18 @@ export default function register(quench) {
           const queues = new Map();
           const order = [];
           let release;
-          const gate = new Promise((resolve) => { release = resolve; });
-          const first = queueOn(queues, "card", async () => { await gate; order.push(1); return "a"; });
-          const second = queueOn(queues, "card", async () => { order.push(2); return "b"; });
+          const gate = new Promise((resolve) => {
+            release = resolve;
+          });
+          const first = queueOn(queues, "card", async () => {
+            await gate;
+            order.push(1);
+            return "a";
+          });
+          const second = queueOn(queues, "card", async () => {
+            order.push(2);
+            return "b";
+          });
           assert.isTrue(queues.has("card"), "kept while tasks are waiting");
           release();
           assert.deepEqual(await Promise.all([first, second]), ["a", "b"]);
@@ -34,10 +43,14 @@ export default function register(quench) {
 
         it("a failed task rejects its own caller, the next still runs, and the key is still dropped", async function () {
           const queues = new Map();
-          const failed = queueOn(queues, "actor", async () => { throw new Error("boom"); });
+          const failed = queueOn(queues, "actor", async () => {
+            throw new Error("boom");
+          });
           const next = queueOn(queues, "actor", async () => "ran");
           let error = null;
-          await failed.catch((err) => { error = err; });
+          await failed.catch((err) => {
+            error = err;
+          });
           assert.equal(error?.message, "boom");
           assert.equal(await next, "ran");
           await waitFor(() => queues.size === 0, { message: "the key was never dropped" });
@@ -55,11 +68,16 @@ export default function register(quench) {
             message = await ChatMessage.create({ content: "<p>Quench memory-hygiene</p>" });
             const id = message.id;
             opened.add(`${id}:t0:evade`).add("someOtherCard:t0");
-            local.set(`${id}:t0`, { applied: true }).set(id, true).set("someOtherCard:t1", { evaded: true });
+            local
+              .set(`${id}:t0`, { applied: true })
+              .set(id, true)
+              .set("someOtherCard:t1", { evaded: true });
             await message.delete();
             message = null;
-            await waitFor(() => !opened.has(`${id}:t0:evade`) && !local.has(`${id}:t0`) && !local.has(id),
-              { message: "the deleted card's entries stayed" });
+            await waitFor(
+              () => !opened.has(`${id}:t0:evade`) && !local.has(`${id}:t0`) && !local.has(id),
+              { message: "the deleted card's entries stayed" },
+            );
             assert.isTrue(opened.has("someOtherCard:t0"), "another card's open row stays");
             assert.isTrue(local.has("someOtherCard:t1"), "another card's local result stays");
           } finally {
@@ -75,7 +93,14 @@ export default function register(quench) {
 
         it("deletes the messages posted while the batch ran, and keeps older ones", async function () {
           const hooks = {};
-          const fakeContext = { before: (fn) => { hooks.before = fn; }, after: (fn) => { hooks.after = fn; } };
+          const fakeContext = {
+            before: (fn) => {
+              hooks.before = fn;
+            },
+            after: (fn) => {
+              hooks.after = fn;
+            },
+          };
           const wrapped = withMessageCleanup("carl-rpg.memory-hygiene-fake", (ctx) => {
             assert.strictEqual(ctx, fakeContext, "the batch gets the same context");
             return "registered";

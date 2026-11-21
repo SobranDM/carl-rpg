@@ -39,7 +39,8 @@
     "range": "",
     "aiFavor": 0,
     "cooldown": "",
-    "limitations": "You must be out of sight of all foes to begin this Check."
+    "limitations": "You must be out of sight of all foes to begin this Check.",
+    "opposedStat": "int"
   },
   "effects": [],
   "_stats": {

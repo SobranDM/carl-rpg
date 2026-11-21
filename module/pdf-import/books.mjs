@@ -47,15 +47,25 @@ export const BOOKS = Object.freeze({
     id: "core",
     title: "CARLRPG.PdfImport.Books.core",
     cover: /\bCORE RULEBOOK\b/,
-    legacy: Object.freeze(["carl-rpg", "carl-rpg-lq", "core-rulebook", "carl-rpg-core-rulebook", "dungeon-crawler-carl-core-rulebook"]),
+    legacy: Object.freeze([
+      "carl-rpg",
+      "carl-rpg-lq",
+      "core-rulebook",
+      "carl-rpg-core-rulebook",
+      "dungeon-crawler-carl-core-rulebook",
+    ]),
   }),
   toolkit: Object.freeze({
     id: "toolkit",
     title: "CARLRPG.PdfImport.Books.toolkit",
     cover: /\bGAME ?MASTERS? (?:CAMPAIGN )?TOOLKIT\b/,
     legacy: Object.freeze([
-      "starter-set-gamemaster-s-toolkit", "starter-set-gamemaster-s-toolkit-lq", "gamemasters-toolkit",
-      "gamemaster-s-toolkit", "game-master-s-toolkit", "game-master-s-campaign-toolkit",
+      "starter-set-gamemaster-s-toolkit",
+      "starter-set-gamemaster-s-toolkit-lq",
+      "gamemasters-toolkit",
+      "gamemaster-s-toolkit",
+      "game-master-s-toolkit",
+      "game-master-s-campaign-toolkit",
     ]),
   }),
 });
@@ -85,7 +95,10 @@ function normalize(text) {
  * @returns {string}  "" when the page has no big text.
  */
 export function titleText(items) {
-  const level = (items ?? []).filter((i) => Math.abs(i.angle ?? 0) <= TITLE_MAX_TILT && !isBoilerplate(i.str) && /\p{L}/u.test(i.str));
+  const level = (items ?? []).filter(
+    (i) =>
+      Math.abs(i.angle ?? 0) <= TITLE_MAX_TILT && !isBoilerplate(i.str) && /\p{L}/u.test(i.str),
+  );
   if (!level.length) return "";
   const biggest = Math.max(...level.map((i) => i.size));
   if (biggest < TITLE_MIN_SIZE) return "";

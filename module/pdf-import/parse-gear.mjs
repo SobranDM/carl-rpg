@@ -12,18 +12,13 @@ import { bodySize, escapeHtml, isHeading, joinText, titleCase } from "./page-tex
 import { changeEntry, toBlocks } from "./shared.mjs";
 import { normalizeDamageType } from "../helpers/damage-types.mjs";
 import { parseGearSlotLine, slotsFromName } from "../helpers/gear-text.mjs";
+import { bulletToChanges } from "../helpers/enchantments.mjs";
 
 const SLOT_RE = /^Gear Slot:\s*(.*)$/;
 // Section headings on the gear pages that aren't items: the loot box
 // tiers ("GOLD BOXES"), and tables and lists of many items.
-const NOT_GEAR_RE = /^(?:\w+ Boxes|Randomized Magic Items\b.*|Memorial and Soul Crystals|Faction Wars Items)$/i;
-const STAT_WORDS = {
-  strength: "str",
-  dexterity: "dex",
-  constitution: "con",
-  intelligence: "int",
-  charisma: "cha",
-};
+const NOT_GEAR_RE =
+  /^(?:\w+ Boxes|Randomized Magic Items\b.*|Memorial and Soul Crystals|Faction Wars Items)$/i;
 /**
  * @param {object[]} pages  From scan.mjs readPages.
  * @returns {{name: string, page: number, data: object}[]}
@@ -55,46 +50,9 @@ export function parseGear(pages) {
   return entries.filter((e) => e.lines.length && !NOT_GEAR_RE.test(e.name)).map(toGearItem);
 }
 
-/** Map one benefit bullet onto ChangeEntries, or none when it is prose. */
-export function bulletToChanges(text, label) {
-  const value = (sign, n) => (sign === "+" ? n : `-${n}`);
-  let m = text.match(/^([+−-])(\d+) (Strength|Dexterity|Constitution|Intelligence|Charisma)$/i);
-  if (m)
-    return [
-      changeEntry({
-        label,
-        targetType: "stat",
-        target: STAT_WORDS[m[3].toLowerCase()],
-        value: value(m[1], m[2]),
-      }),
-    ];
-  // "+3 Double Tap Skill", "+5 to the Skullcracker Skill". "+1 to all Skill
-  // or Stat Checks" names no one Skill: it stays prose.
-  m = text.match(/^([+−-])(\d+) (?!(?:to )?(?:all|any)\b)(?:to (?:the |your )?)?(.+?) Skill\b/);
-  if (m)
-    return [
-      changeEntry({
-        label,
-        targetType: "skillRank",
-        target: m[3].trim(),
-        value: value(m[1], m[2]),
-      }),
-    ];
-  m = text.match(/^(Resistance|Immunity|Vulnerability) to (.+?) damage$/i);
-  if (m) {
-    const state = { resistance: "resist", immunity: "immune", vulnerability: "vulnerable" }[
-      m[1].toLowerCase()
-    ];
-    return m[2]
-      .split(/,|\band\b/)
-      .map((t) => normalizeDamageType(t))
-      .filter(Boolean)
-      .map((t) =>
-        changeEntry({ label, targetType: "resistance", target: t, mode: "override", value: state }),
-      );
-  }
-  return [];
-}
+// Benefit bullets -> ChangeEntries live in helpers/enchantments.mjs (shared
+// with the loot generator); re-exported for the importer's callers.
+export { bulletToChanges };
 
 /**
  * Where an entry is worn (docs/gear-slots.md): its "Gear Slot:" line, else
@@ -109,7 +67,8 @@ function gearSlotData(slot, name) {
   const slots = fromLine?.slots ?? fromName?.slots ?? [];
   const out = { slots };
   if (fromLine?.twoHanded) out.twoHanded = true;
-  if (fromName?.accessoryKind && slots.includes("accessory")) out.accessoryKind = fromName.accessoryKind;
+  if (fromName?.accessoryKind && slots.includes("accessory"))
+    out.accessoryKind = fromName.accessoryKind;
   return out;
 }
 

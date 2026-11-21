@@ -1,7 +1,19 @@
 import CarlDice from "../../dice/dice.mjs";
 import { rowOutcome } from "../../helpers/attack-targets.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
-import { createTestCharacter, createTestMob, createTestPet, createTestItem, deleteTestActor, settle, withFakeTargets, withPinnedDice, PIN_D20_MID, withSetting, useQuenchTimeout } from "../helpers.mjs";
+import {
+  createTestCharacter,
+  createTestMob,
+  createTestPet,
+  createTestItem,
+  deleteTestActor,
+  settle,
+  withFakeTargets,
+  withPinnedDice,
+  PIN_D20_MID,
+  withSetting,
+  useQuenchTimeout,
+} from "../helpers.mjs";
 
 export default function register(quench) {
   quench.registerBatch(
@@ -14,7 +26,9 @@ export default function register(quench) {
 
         it("adds untyped damage equal to the current Floor Number on an Amazing Success", async function () {
           const actor = await createTestCharacter();
-          const target = await createTestMob("target", { system: { stats: { dex: { value: 3 } } } }); // dex mod 2
+          const target = await createTestMob("target", {
+            system: { stats: { dex: { value: 3 } } },
+          }); // dex mod 2
           try {
             const skill = await createTestItem(actor, "skill", "Attack Skill", {
               name: "Attack Skill",
@@ -26,7 +40,9 @@ export default function register(quench) {
             // total = pinned d20 (10) + rank (15) = 25; difficulty = 10 + dexMod(2) + floor(1) = 13; margin 12 -> amazingSuccess.
             const message = await withSetting("currentFloor", 1, () =>
               withPinnedDice(PIN_D20_MID, () =>
-                withFakeTargets([{ actor: target }], () => CarlDice.rollAttack(actor, skill, { skipDialog: true })),
+                withFakeTargets([{ actor: target }], () =>
+                  CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+                ),
               ),
             );
             assert.exists(message);
@@ -34,8 +50,16 @@ export default function register(quench) {
             // Success and adds it when applied (module/helpers/attack-targets.mjs).
             const row = message.getFlag("carl-rpg", "targetRows").t0;
             assert.isTrue(row.amazing);
-            const outcome = rowOutcome(row, { damageByType: message.getFlag("carl-rpg", "damageByType") ?? {}, isArea: false, floor: 1 });
-            assert.equal(outcome.damage[""], 1, "the skill has no base damage of its own, so only the +Floor bonus should appear");
+            const outcome = rowOutcome(row, {
+              damageByType: message.getFlag("carl-rpg", "damageByType") ?? {},
+              isArea: false,
+              floor: 1,
+            });
+            assert.equal(
+              outcome.damage[""],
+              1,
+              "the skill has no base damage of its own, so only the +Floor bonus should appear",
+            );
             // Not covered here: a GM's dialog-entered Difficulty override
             // surviving onto this same flag (the A3 regression fix) - that
             // needs simulating promptRollOptions' own dialog resolution, which
@@ -54,7 +78,10 @@ export default function register(quench) {
         it("does not roll, does not change Rank, and reports 'at cap' once Rank meets its cap", async function () {
           const actor = await createTestCharacter();
           try {
-            const skill = await createTestItem(actor, "skill", "Capped Skill", { name: "Capped Skill", system: { rank: 15 } }); // default rankCap 15
+            const skill = await createTestItem(actor, "skill", "Capped Skill", {
+              name: "Capped Skill",
+              system: { rank: 15 },
+            }); // default rankCap 15
             const result = await actor.rollAdvancementCheck(skill.id, { silent: true });
             assert.isFalse(result.success);
             assert.isNull(result.roll);
@@ -67,15 +94,29 @@ export default function register(quench) {
         it("an advancementBonus grant participates in the roll and can turn a failure into a success", async function () {
           const actor = await createTestCharacter();
           try {
-            const skill = await createTestItem(actor, "skill", "Almost Capped", { name: "Almost Capped", system: { rank: 14 } });
+            const skill = await createTestItem(actor, "skill", "Almost Capped", {
+              name: "Almost Capped",
+              system: { rank: 14 },
+            });
             await createTestItem(actor, "race", "race", {
-              system: { changes: [{ targetType: "advancementBonus", target: "Almost Capped", mode: "add", value: "10" }] },
+              system: {
+                changes: [
+                  {
+                    targetType: "advancementBonus",
+                    target: "Almost Capped",
+                    mode: "add",
+                    value: "10",
+                  },
+                ],
+              },
             });
             await settle();
             // Pinned d20 (10) alone is below currentRank (14) - would fail
             // without the +10 bonus; 10+10=20 >= 14 succeeds. newRank lands
             // exactly at the cap (14+1=15), the boundary the clamp exists for.
-            const result = await withPinnedDice(PIN_D20_MID, () => actor.rollAdvancementCheck(skill.id, { silent: true }));
+            const result = await withPinnedDice(PIN_D20_MID, () =>
+              actor.rollAdvancementCheck(skill.id, { silent: true }),
+            );
             assert.isTrue(result.success);
             assert.equal(result.newRank, 15);
           } finally {
@@ -113,7 +154,9 @@ export default function register(quench) {
         it("blocks a Passive Skill from being Checked regardless of Rank", async function () {
           const actor = await createTestCharacter();
           try {
-            const skill = await createTestItem(actor, "skill", "skill", { system: { isPassive: true, rank: 5 } });
+            const skill = await createTestItem(actor, "skill", "skill", {
+              system: { isPassive: true, rank: 5 },
+            });
             const result = await CarlDice.rollSkillCheck(actor, skill, { skipDialog: true });
             assert.isNull(result);
           } finally {
@@ -129,7 +172,11 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const spell = await createTestItem(actor, "spell", "Heal Self", {
-              system: { rank: 15, castingKeywords: ["heal"], upgrades: [{ rankThreshold: 15, healToFull: true }] },
+              system: {
+                rank: 15,
+                castingKeywords: ["heal"],
+                upgrades: [{ rankThreshold: 15, healToFull: true }],
+              },
             });
             const message = await CarlDice.rollHeal(actor, spell, { skipDialog: true });
             assert.isTrue(message.getFlag("carl-rpg", "healFull"));
@@ -142,7 +189,11 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const spell = await createTestItem(actor, "spell", "Heal Self", {
-              system: { rank: 5, castingKeywords: ["heal"], upgrades: [{ rankThreshold: 5, healDice: "1d6" }] },
+              system: {
+                rank: 5,
+                castingKeywords: ["heal"],
+                upgrades: [{ rankThreshold: 5, healDice: "1d6" }],
+              },
             });
             const message = await CarlDice.rollHeal(actor, spell, { skipDialog: true });
             assert.isNumber(message.getFlag("carl-rpg", "healAmount"));
@@ -158,7 +209,9 @@ export default function register(quench) {
         it("blocks turning on an untrained (Rank 0) toggle Spell", async function () {
           const actor = await createTestCharacter();
           try {
-            const spell = await createTestItem(actor, "spell", "spell", { system: { isToggled: true, active: false, rank: 0 } });
+            const spell = await createTestItem(actor, "spell", "spell", {
+              system: { isToggled: true, active: false, rank: 0 },
+            });
             await spell.update({ "system.rank": 0 }); // a new Spell arrives at Rank 1 (CarlRPGItem#_preCreate)
             const result = await CarlDice.rollToggleSpell(actor, spell);
             assert.isNull(result);
@@ -171,7 +224,9 @@ export default function register(quench) {
         it("turning on a shield-granting toggle Spell fills shield.value to its effective max", async function () {
           const actor = await createTestCharacter();
           try {
-            const spell = await createTestItem(actor, "spell", "Shield", { system: { isToggled: true, active: false, rank: 5, shieldSlots: 4 } });
+            const spell = await createTestItem(actor, "spell", "Shield", {
+              system: { isToggled: true, active: false, rank: 5, shieldSlots: 4 },
+            });
             await CarlDice.rollToggleSpell(actor, spell);
             await settle();
             assert.equal(actor.system.shield.value, 4);
@@ -187,7 +242,11 @@ export default function register(quench) {
         it("rollEvadeCheck returns raw roll data instead of posting a ChatMessage", async function () {
           const actor = await createTestCharacter();
           try {
-            const result = await CarlDice.rollEvadeCheck(actor, { difficulty: 10, skipDialog: true, post: false });
+            const result = await CarlDice.rollEvadeCheck(actor, {
+              difficulty: 10,
+              skipDialog: true,
+              post: false,
+            });
             assert.containsAllKeys(result, ["roll", "total", "breakdown", "naturalRoll", "degree"]);
           } finally {
             await deleteTestActor(actor);
@@ -198,7 +257,11 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             const skill = await createTestItem(actor, "skill", "Taunt", { system: { rank: 5 } });
-            const result = await CarlDice.rollOpposedSkillCheck(actor, skill, { difficulty: 10, skipDialog: true, post: false });
+            const result = await CarlDice.rollOpposedSkillCheck(actor, skill, {
+              difficulty: 10,
+              skipDialog: true,
+              post: false,
+            });
             assert.containsAllKeys(result, ["roll", "total", "breakdown", "naturalRoll", "degree"]);
           } finally {
             await deleteTestActor(actor);
@@ -213,9 +276,15 @@ export default function register(quench) {
             const skill = await createTestItem(actor, "skill", "Taunt", { system: { rank: 5 } });
             await addConditionToActor(mob, "fatigued");
             await addConditionToActor(pet, "fatigued");
-            const vs = async (opponent) => (await CarlDice.rollOpposedSkillCheck(actor, skill, {
-              difficulty: 10, opponent, skipDialog: true, post: false,
-            })).difficulty;
+            const vs = async (opponent) =>
+              (
+                await CarlDice.rollOpposedSkillCheck(actor, skill, {
+                  difficulty: 10,
+                  opponent,
+                  skipDialog: true,
+                  post: false,
+                })
+              ).difficulty;
             assert.equal(await vs(mob), 9, "Fatigued (-1) lowers a Mob's static Difficulty");
             assert.equal(await vs(pet), 10, "a Pet's Debuffs stay on its own rolls");
           } finally {

@@ -21,22 +21,22 @@
         <legend>{{localize "CARLRPG.Actor.Defenses"}}</legend>
         <div class="carl-defenses-row">
           <button type="button" class="carl-evade-button" data-action="rollEvade"
-            title="{{localize 'CARLRPG.Actor.EvadeTotalHint'}}&#10;{{defenses.evade.tooltip}}">
+            data-tooltip-text="{{localize 'CARLRPG.Actor.EvadeTotalHint'}}&#10;{{defenses.evade.tooltip}}">
             <i class="fas fa-shield-alt"></i> {{localize "CARLRPG.Roll.Evade"}}
             <span class="carl-evade-total">{{numberFormat evadeTotal sign=true}}{{defenses.evade.dice}}</span>
           </button>
-          <label class="carl-defense-field" title="{{defenses.dr.tooltip}}">
+          <label class="carl-defense-field" data-tooltip-text="{{defenses.dr.tooltip}}">
             <span class="resource-label">{{localize "CARLRPG.Actor.DrShort"}}</span>
             <span class="carl-stat-value carl-dr-value">{{system.drEffective}}</span>
           </label>
-          <label class="carl-defense-field{{#if defenses.move.blocked}} carl-defense-blocked{{/if}}" title="{{defenses.move.tooltip}}">
+          <label class="carl-defense-field{{#if defenses.move.blocked}} carl-defense-blocked{{/if}}" data-tooltip-text="{{defenses.move.tooltip}}">
             <span class="resource-label">{{localize "CARLRPG.Actor.Move"}}</span>
             <input type="text" class="carl-w-tiny" name="system.details.move" value="{{system.details.move}}" data-dtype="Number" />
             {{#if defenses.move.shown}}
             <span class="carl-stat-value">= {{system.moveEffective}} ft</span>
             {{/if}}
           </label>
-          <label class="carl-defense-field{{#if defenses.step.blocked}} carl-defense-blocked{{/if}}" title="{{defenses.step.tooltip}}">
+          <label class="carl-defense-field{{#if defenses.step.blocked}} carl-defense-blocked{{/if}}" data-tooltip-text="{{defenses.step.tooltip}}">
             <span class="resource-label">{{localize "CARLRPG.Actor.Step"}}</span>
             <input type="text" class="carl-w-tiny" name="system.details.step" value="{{system.details.step}}" data-dtype="Number" />
             {{#if defenses.step.shown}}

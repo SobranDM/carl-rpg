@@ -39,7 +39,8 @@
     "range": "",
     "aiFavor": 0,
     "cooldown": "",
-    "limitations": "This Skill doesn't work on crawlers, Bosses, or Elites. You can only make a Skill Check against individuals, not groups."
+    "limitations": "This Skill doesn't work on crawlers, Bosses, or Elites. You can only make a Skill Check against individuals, not groups.",
+    "opposedStat": "int"
   },
   "effects": [],
   "_stats": {

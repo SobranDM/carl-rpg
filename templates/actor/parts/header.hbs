@@ -5,16 +5,16 @@
       roll data (@floor, the GM Toolbox's world setting). --}}
 <header class="sheet-header">
   <div class="carl-portrait-column">
-    <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" title="{{actor.name}}" height="100" width="100" />
+    <img class="profile-img" src="{{actor.img}}" data-edit="img" data-action="editImage" data-tooltip-text="{{actor.name}}" height="100" width="100" />
     <div class="carl-portrait-stats">
       <label class="carl-portrait-stat">
         <span class="resource-label">{{localize "CARLRPG.Actor.Level"}}</span>
         <input type="text" name="system.attributes.level.value" value="{{system.attributes.level.value}}" data-dtype="Number" />
       </label>
       <label class="carl-portrait-stat">
-        <span class="resource-label" title="{{localize 'CARLRPG.Actor.AiFavorHint'}}">{{localize "CARLRPG.Actor.AiFavor"}}</span>
+        <span class="resource-label" data-tooltip-text="{{localize 'CARLRPG.Actor.AiFavorHint'}}">{{localize "CARLRPG.Actor.AiFavor"}}</span>
         <input type="text" name="system.details.aiFavor" value="{{system.details.aiFavor}}" data-dtype="Number"
-          title="{{localize 'CARLRPG.Actor.AiFavorHint'}}" />
+          data-tooltip-text="{{localize 'CARLRPG.Actor.AiFavorHint'}}" />
       </label>
     </div>
   </div>
@@ -22,7 +22,7 @@
     <div class="carl-name-row flexrow">
       <h1 class="charname"><input name="name" type="text" value="{{actor.name}}" placeholder="Name" /></h1>
       {{#if canCreateCrawler}}
-      <button type="button" class="carl-create-crawler" data-action="createCrawler" title="{{localize 'CARLRPG.Chargen.OpenHint'}}">
+      <button type="button" class="carl-create-crawler" data-action="createCrawler" data-tooltip-text="{{localize 'CARLRPG.Chargen.OpenHint'}}">
         <i class="fas fa-user-plus"></i> {{localize "CARLRPG.Chargen.Open"}}
       </button>
       {{/if}}

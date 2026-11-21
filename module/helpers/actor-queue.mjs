@@ -22,6 +22,26 @@ export function queueForActor(key, task) {
   return queueOn(queues, key, task);
 }
 
+// Chat cards' write queues (the writer's client - the active GM's, or with
+// none online the one client that can write the card), by card id: the
+// Reaction card, Check/Attack/Driving cards' revisions (and a row's Evade,
+// Apply, Taunt redirect and undo, which share their Attack card's), Heal and
+// Party Check cards. A card is only ever one of these kinds.
+const cards = new Map();
+
+/**
+ * Run `task` in a card's write queue: after every write on that card already
+ * queued, before the next. Never call it from inside a task on the same
+ * card: the queue would wait on itself.
+ * @template T
+ * @param {string} cardId
+ * @param {() => Promise<T>|T} task
+ * @returns {Promise<T>}
+ */
+export function queueForCard(cardId, task) {
+  return queueOn(cards, cardId, task);
+}
+
 /**
  * Run `task` after every earlier task queued in `queues` under `key`: a
  * Promise chain per key. The key is dropped once its last task settles, so

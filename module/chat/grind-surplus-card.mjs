@@ -14,12 +14,12 @@
  * can overshoot again, which simply posts another card.
  */
 import { applyGrindHours, isGrindTarget, grindTargetOptions } from "../helpers/grinding.mjs";
-import { createCardMessage, esc } from "./chat-card.mjs";
+import { createCardMessage } from "./chat-card.mjs";
 import { canActOnUuidFlag, resolveTargetActor } from "./evade-link-card.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "../apps/carl-dialog.mjs";
 import { trackPerCard } from "./status-rows.mjs";
-
+import { esc } from "../helpers/html.mjs";
 
 /** Surplus cards this client is applying right now - blocks a second click before the first lands. */
 const inFlight = new Set();
@@ -62,7 +62,9 @@ export async function postGrindSurplusCard(actor, sourceItem, hours) {
     title: game.i18n.localize("CARLRPG.Grind.SurplusTitle"),
     subtitle: game.i18n.format("CARLRPG.Grind.SurplusSubtitle", { hours }),
     body: `<p>${game.i18n.format("CARLRPG.Grind.SurplusBody", {
-      name: esc(actor.name), hours, skill: esc(sourceItem.name),
+      name: esc(actor.name),
+      hours,
+      skill: esc(sourceItem.name),
     })}</p>`,
     footer: button,
     actor,
@@ -136,12 +138,14 @@ async function applySurplus(message) {
   await grindAndOfferSurplus(actor, item, hours);
 }
 
-export const grindSurplusActionEntries = [{
-  action: "applyGrindSurplus",
-  buttonSelector: ".carl-grind-surplus-apply",
-  wrapperSelector: ".carl-grind-surplus",
-  canAct: (m) => canActOnUuidFlag(m, "grindSurplus.actorUuid"),
-  doneFlag: "grindSurplusApplied",
-  doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Grind.Applied")}`,
-  onClick: onApplyGrindSurplus,
-}];
+export const grindSurplusActionEntries = [
+  {
+    action: "applyGrindSurplus",
+    buttonSelector: ".carl-grind-surplus-apply",
+    wrapperSelector: ".carl-grind-surplus",
+    canAct: (m) => canActOnUuidFlag(m, "grindSurplus.actorUuid"),
+    doneFlag: "grindSurplusApplied",
+    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Grind.Applied")}`,
+    onClick: onApplyGrindSurplus,
+  },
+];

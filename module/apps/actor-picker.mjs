@@ -15,12 +15,14 @@
  */
 import { isPet } from "../helpers/actor-kinds.mjs";
 import { petOwner } from "../helpers/pets.mjs";
-
-const esc = (value) => foundry.utils.escapeHTML(String(value ?? ""));
+import { esc } from "../helpers/html.mjs";
 
 /** Does a connected, non-GM user own this actor? */
 export function ownedByActivePlayer(actor) {
-  return game.users.some((u) => u.active && !u.isGM && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
+  return game.users.some(
+    (u) =>
+      u.active && !u.isGM && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+  );
 }
 
 /**
@@ -29,8 +31,12 @@ export function ownedByActivePlayer(actor) {
  * @returns {string}
  */
 export function playedBy(actor) {
-  const players = game.users.filter((u) => !u.isGM && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER));
-  return players.length ? players.map((u) => u.name).join(", ") : game.i18n.localize("CARLRPG.Toolbox.ActorPicker.GmOnly");
+  const players = game.users.filter(
+    (u) => !u.isGM && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+  );
+  return players.length
+    ? players.map((u) => u.name).join(", ")
+    : game.i18n.localize("CARLRPG.Toolbox.ActorPicker.GmOnly");
 }
 
 /**
@@ -60,11 +66,19 @@ export function pickerGroups({ includePets = false } = {}) {
  *   time - gm-toolbox.mjs).
  * @returns {string}
  */
-export function actorPickerContent({ active, other, pets }, prompt, { before = "", after = "" } = {}) {
+export function actorPickerContent(
+  { active, other, pets },
+  prompt,
+  { before = "", after = "" } = {},
+) {
   const i18n = game.i18n;
   // data-actor-id is read straight off the DOM by the confirm button (see
   // gm-toolbox.mjs), not through FormDataExtended's name expansion.
-  const row = (actor, checked, who) => `<label class="carl-actor-picker-option" data-actor-name="${esc(actor.name.toLowerCase())}">
+  const row = (
+    actor,
+    checked,
+    who,
+  ) => `<label class="carl-actor-picker-option" data-actor-name="${esc(actor.name.toLowerCase())}">
       <input type="checkbox" data-actor-id="${actor.id}" ${checked ? "checked" : ""} />
       <span class="carl-actor-picker-name">${esc(actor.name)}</span>
       <span class="carl-actor-picker-who">${esc(who)}</span>
@@ -87,11 +101,15 @@ export function actorPickerContent({ active, other, pets }, prompt, { before = "
   const petSection = pets.length
     ? `<details class="carl-actor-picker-group carl-actor-picker-pets" data-group="pets" open>
         <summary class="carl-actor-picker-heading">${esc(i18n.format("CARLRPG.Toolbox.ActorPicker.Pets", { count: pets.length }))}</summary>
-        ${pets.map((p) => {
-          const owner = petOwner(p);
-          const who = owner ? i18n.format("CARLRPG.Toolbox.ActorPicker.PetOf", { crawler: owner.name }) : "";
-          return row(p, !!owner && ownedByActivePlayer(owner), who);
-        }).join("")}
+        ${pets
+          .map((p) => {
+            const owner = petOwner(p);
+            const who = owner
+              ? i18n.format("CARLRPG.Toolbox.ActorPicker.PetOf", { crawler: owner.name })
+              : "";
+            return row(p, !!owner && ownedByActivePlayer(owner), who);
+          })
+          .join("")}
       </details>`
     : "";
 
@@ -144,7 +162,8 @@ export function wireActorPicker(root) {
     if (selectAll) selectAll.checked = all.length > 0 && all.every((b) => b.checked);
     if (countEl) {
       countEl.textContent = game.i18n.format("CARLRPG.Toolbox.ActorPicker.SelectedCount", {
-        count: all.filter((b) => b.checked).length, total: all.length,
+        count: all.filter((b) => b.checked).length,
+        total: all.length,
       });
     }
   };

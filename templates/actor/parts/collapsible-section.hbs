@@ -26,13 +26,13 @@
     {{/if}}
     {{#if showAddSpell}}
     {{!-- A Character's Skills header with no Spells yet (skills-tab.hbs). --}}
-    <a class="carl-drawer-add-spell" data-action="createItem" data-type="spell" title="{{localize 'DOCUMENT.New' type=(localize 'TYPES.Item.spell')}}">
+    <a class="carl-drawer-add-spell" data-action="createItem" data-type="spell" data-tooltip-text="{{localize 'DOCUMENT.New' type=(localize 'TYPES.Item.spell')}}">
       <i class="fas fa-plus"></i> {{localize "TYPES.Item.spell"}}
     </a>
     {{/if}}
     {{#if showLockToggle}}
     <a class="carl-drawer-lock-toggle" data-action="toggleDrawer" data-scope="actor" data-path="system.uiState.itemsLocked"
-      title="{{#if locked}}{{localize 'CARLRPG.Ranked.Unlock'}}{{else}}{{localize 'CARLRPG.Ranked.Lock'}}{{/if}}">
+      data-tooltip-text="{{#if locked}}{{localize 'CARLRPG.Ranked.Unlock'}}{{else}}{{localize 'CARLRPG.Ranked.Lock'}}{{/if}}">
       <i class="fas {{#if locked}}fa-lock{{else}}fa-lock-open{{/if}}"></i>
     </a>
     {{/if}}

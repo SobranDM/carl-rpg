@@ -22,8 +22,9 @@
  * "a pet or minion" is any `pet` actor.
  */
 import { isPet, isVehicle } from "./actor-kinds.mjs";
-import { effectiveRank } from "./modifiers.mjs";
+import { effectiveRank, unlockedTiers } from "./modifiers.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
+import { esc } from "./html.mjs";
 
 export const HEALS_MODES = Object.freeze(["self", "others", "pets", "anyone"]);
 
@@ -45,9 +46,7 @@ export function healsMode(item) {
  * @returns {boolean}
  */
 export function healsAllTargets(item) {
-  const sys = item?.system ?? {};
-  const rank = effectiveRank(item);
-  return (sys.upgrades ?? []).some((u) => u.healAllTargets && rank >= u.rankThreshold);
+  return unlockedTiers(item).some((u) => u.healAllTargets);
 }
 
 /** A pet or minion, for a heal's limits: any Pet actor (see above). */
@@ -70,7 +69,9 @@ function sameCreature(a, b) {
 export function resolveHealRecipients(caster, item, targets = []) {
   const mode = healsMode(item);
   const self = { actor: caster, uuid: caster.uuid, name: caster.name };
-  const refuse = (key, data = {}) => ({ refusal: game.i18n.format(`CARLRPG.Heals.Refuse.${key}`, { spell: item.name, ...data }) });
+  const refuse = (key, data = {}) => ({
+    refusal: game.i18n.format(`CARLRPG.Heals.Refuse.${key}`, { spell: item.name, ...data }),
+  });
   if (mode === "self") return { recipients: [self] };
 
   const list = targets.filter((t) => t?.actor);
@@ -101,7 +102,11 @@ export function resolveHealRecipients(caster, item, targets = []) {
 export function userHealTargets() {
   return [...(game.user.targets ?? [])]
     .filter((t) => t?.actor)
-    .map((t) => ({ actor: t.actor, uuid: t.document?.uuid ?? t.actor.uuid, name: t.document?.name ?? t.name ?? t.actor.name }));
+    .map((t) => ({
+      actor: t.actor,
+      uuid: t.document?.uuid ?? t.actor.uuid,
+      name: t.document?.name ?? t.name ?? t.actor.name,
+    }));
 }
 
 /**
@@ -115,14 +120,24 @@ export function userHealTargets() {
  * @returns {Promise<{actor: Actor, uuid: string, name: string}|null>}  null when cancelled.
  */
 export async function chooseHealRecipient(item, caster, target) {
-  const esc = (v) => foundry.utils.escapeHTML(String(v ?? ""));
   const choice = await showCarlDialog({
     title: item.name,
     content: `<div class="carl-dialog-body"><p>${esc(game.i18n.format("CARLRPG.Heals.ChooseRecipient", { spell: item.name, name: target.name }))}</p></div>`,
     classes: ["carl-heal-recipient"],
     buttons: [
-      { action: "self", icon: "fa-solid fa-heart", label: game.i18n.localize("CARLRPG.Heals.HealYourself"), default: true, callback: () => "self" },
-      { action: "target", icon: "fa-solid fa-hand-holding-medical", label: game.i18n.format("CARLRPG.Heals.HealTarget", { name: target.name }), callback: () => "target" },
+      {
+        action: "self",
+        icon: "fa-solid fa-heart",
+        label: game.i18n.localize("CARLRPG.Heals.HealYourself"),
+        default: true,
+        callback: () => "self",
+      },
+      {
+        action: "target",
+        icon: "fa-solid fa-hand-holding-medical",
+        label: game.i18n.format("CARLRPG.Heals.HealTarget", { name: target.name }),
+        callback: () => "target",
+      },
       cancelButton(),
     ],
   });

@@ -2,7 +2,13 @@ import { CarlRPGActorSheet } from "../../sheets/actor-sheet.mjs";
 import { refreshTimedSheets } from "../../helpers/expiry.mjs";
 import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
 import { placeInHotlist } from "../../helpers/hotlist.mjs";
-import { BOON_HOURS, boonAvailable, deityTithe, describeDeity, receiveBoon } from "../../helpers/worship.mjs";
+import {
+  BOON_HOURS,
+  boonAvailable,
+  deityTithe,
+  describeDeity,
+  receiveBoon,
+} from "../../helpers/worship.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -39,10 +45,18 @@ export default function register(quench) {
           const sheet = actor.sheet;
           const calls = [];
           try {
-            await actor.update({ "system.conditions": [{
-              key: "custom", label: "Iron Skin", stacks: 1, remaining: null, source: "Iron Skin Potion",
-              expiresAt: game.time.worldTime + 3600,
-            }] });
+            await actor.update({
+              "system.conditions": [
+                {
+                  key: "custom",
+                  label: "Iron Skin",
+                  stacks: 1,
+                  remaining: null,
+                  source: "Iron Skin Potion",
+                  expiresAt: game.time.worldTime + 3600,
+                },
+              ],
+            });
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
             const render = sheet.render;
@@ -127,23 +141,49 @@ export default function register(quench) {
             await createTestItem(actor, "skill", "sneak", { system: { category: "utility" } });
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
-            assert.deepEqual(tabs.slice(0, 3), ["abilities", "items", "skills"], "Combat, Inventory, Skills");
-            assert.include(sheet.element.querySelector('nav [data-tab="abilities"]').textContent, game.i18n.localize("CARLRPG.Tab.Combat"));
+            const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map(
+              (el) => el.dataset.tab,
+            );
+            assert.deepEqual(
+              tabs.slice(0, 3),
+              ["abilities", "items", "skills"],
+              "Combat, Inventory, Skills",
+            );
+            assert.include(
+              sheet.element.querySelector('nav [data-tab="abilities"]').textContent,
+              game.i18n.localize("CARLRPG.Tab.Combat"),
+            );
             const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
             assert.exists(combat.querySelector(".carl-stats-column"));
             assert.equal(combat.querySelectorAll(".carl-hotlist-row").length, 10);
-            const empties = combat.querySelectorAll('.carl-hotlist-row [data-action="pickHotlist"]');
+            const empties = combat.querySelectorAll(
+              '.carl-hotlist-row [data-action="pickHotlist"]',
+            );
             assert.lengthOf(empties, 10, "every empty slot is clickable");
             assert.include(empties[0].textContent, game.i18n.localize("CARLRPG.Hotlist.Empty"));
-            const header = [...sheet.element.querySelectorAll(".carl-name-row .resource-label")].map((el) => el.textContent.trim());
-            assert.deepEqual(header, [game.i18n.localize("CARLRPG.Actor.Race"), game.i18n.localize("CARLRPG.Actor.Class")], "Race before Class");
-            assert.exists(combat.querySelector('.carl-stats-column [data-action="chooseAttack"]'), "the Attack! button");
+            const header = [
+              ...sheet.element.querySelectorAll(".carl-name-row .resource-label"),
+            ].map((el) => el.textContent.trim());
+            assert.deepEqual(
+              header,
+              [game.i18n.localize("CARLRPG.Actor.Race"), game.i18n.localize("CARLRPG.Actor.Class")],
+              "Race before Class",
+            );
+            assert.exists(
+              combat.querySelector('.carl-stats-column [data-action="chooseAttack"]'),
+              "the Attack! button",
+            );
             assert.notExists(combat.querySelector(".carl-combat-attacks"), "no Attacks list");
             const skillsTab = sheet.element.querySelector('section.tab[data-tab="skills"]');
             assert.exists(skillsTab.querySelector(".carl-skills-list"));
-            assert.notExists(combat.querySelector(".carl-gear-grid"), "the Equipment Doll isn't on the Combat tab");
-            assert.exists(sheet.element.querySelector('section.tab[data-tab="items"] .carl-gear-grid'), "it's on the Inventory tab");
+            assert.notExists(
+              combat.querySelector(".carl-gear-grid"),
+              "the Equipment Doll isn't on the Combat tab",
+            );
+            assert.exists(
+              sheet.element.querySelector('section.tab[data-tab="items"] .carl-gear-grid'),
+              "it's on the Inventory tab",
+            );
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
@@ -155,7 +195,9 @@ export default function register(quench) {
         useQuenchTimeout(this);
 
         it("a Character's Description slot is its Details tab: the Crawler section, Tier, Size and rich text boxes", async function () {
-          const actor = await createTestCharacter("details", { system: { permanentPotions: { stat: 1, skill: 2 } } });
+          const actor = await createTestCharacter("details", {
+            system: { permanentPotions: { stat: 1, skill: 2 } },
+          });
           const sheet = actor.sheet;
           try {
             await sheet.render({ force: true });
@@ -165,26 +207,57 @@ export default function register(quench) {
             const tab = sheet.element.querySelector('section.tab[data-tab="description"]');
             // Pronouns and Crawler# moved here from the header - one input each.
             // Pronouns, Crawler#, Size and Popularity moved here from the header - one input each.
-            for (const name of ["system.details.pronouns", "system.details.crawlerNumber", "system.details.size", "system.details.popularity"]) {
+            for (const name of [
+              "system.details.pronouns",
+              "system.details.crawlerNumber",
+              "system.details.size",
+              "system.details.popularity",
+            ]) {
               assert.exists(tab.querySelector(`.carl-crawler-box [name="${name}"]`), name);
-              assert.lengthOf(sheet.element.querySelectorAll(`[name="${name}"]`), 1, `${name} only once on the sheet`);
+              assert.lengthOf(
+                sheet.element.querySelectorAll(`[name="${name}"]`),
+                1,
+                `${name} only once on the sheet`,
+              );
             }
             const potions = tab.querySelector(".carl-potions-used");
             assert.exists(potions, "Potions used");
             if (game.user.isGM) {
-              assert.equal(potions.querySelector('input[name="system.permanentPotions.stat"]').value, "1");
-              assert.equal(potions.querySelector('input[name="system.permanentPotions.skill"]').value, "2");
+              assert.equal(
+                potions.querySelector('input[name="system.permanentPotions.stat"]').value,
+                "1",
+              );
+              assert.equal(
+                potions.querySelector('input[name="system.permanentPotions.skill"]').value,
+                "2",
+              );
             }
-            assert.include(potions.querySelector(".carl-potions-heading").textContent, game.i18n.localize("CARLRPG.Actor.PotionsUsed"));
+            assert.include(
+              potions.querySelector(".carl-potions-heading").textContent,
+              game.i18n.localize("CARLRPG.Actor.PotionsUsed"),
+            );
             const limits = [...potions.querySelectorAll("input.carl-potion-limit")];
             assert.lengthOf(limits, 2, "Stat and Skill, each out of its limit");
-            assert.isTrue(limits.every((i) => i.disabled && i.value === "2"), "the limit can't be edited");
+            assert.isTrue(
+              limits.every((i) => i.disabled && i.value === "2"),
+              "the limit can't be edited",
+            );
             assert.exists(tab.querySelector('input[name="system.personalSpace.tier"]'));
             assert.exists(tab.querySelector('input[name="system.personalSpace.size"]'));
-            for (const name of ["personalSpace.notes", "sponsors", "clubs", "importantKills", "story", "biography"]) {
+            for (const name of [
+              "personalSpace.notes",
+              "sponsors",
+              "clubs",
+              "importantKills",
+              "story",
+              "biography",
+            ]) {
               assert.exists(tab.querySelector(`prose-mirror[name="system.${name}"]`), name);
             }
-            assert.notExists(tab.querySelector('[name^="system.deity"]'), "the Deity is on the Benefits tab");
+            assert.notExists(
+              tab.querySelector('[name^="system.deity"]'),
+              "the Deity is on the Benefits tab",
+            );
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
@@ -207,20 +280,40 @@ export default function register(quench) {
           const mob = await createTestMob("tabs");
           try {
             const sheet = await openSheet(actor);
-            const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
+            const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map(
+              (el) => el.dataset.tab,
+            );
             assert.notInclude(tabs, "defenses");
             assert.notExists(sheet.element.querySelector('section.tab[data-tab="defenses"]'));
-            assert.include(sheet.element.querySelector('nav [data-tab="features"]').textContent, game.i18n.localize("CARLRPG.Tab.Benefits"));
+            assert.include(
+              sheet.element.querySelector('nav [data-tab="features"]').textContent,
+              game.i18n.localize("CARLRPG.Tab.Benefits"),
+            );
             await sheet.close();
 
             // A Mob's tabs are the Character's (docs/mob-sheet.md): its DR and
             // Resistances are on the Combat tab, and it never rolls an Evade.
             const mobSheet = await openSheet(mob);
-            const mobTabs = [...mobSheet.element.querySelectorAll("nav [data-tab]")].map((el) => el.dataset.tab);
-            assert.deepEqual(mobTabs, ["abilities", "items", "features", "conditions", "description"], "no Skills tab on a Mob");
-            assert.include(mobSheet.element.querySelector('nav [data-tab="features"]').textContent, game.i18n.localize("CARLRPG.Tab.Boons"));
-            assert.exists(mobSheet.element.querySelector(".carl-mob-defenses"), "the Combat tab's Defenses");
-            assert.notExists(mobSheet.element.querySelector('.carl-stats-column [data-action="rollEvade"]'), "no Evade roll");
+            const mobTabs = [...mobSheet.element.querySelectorAll("nav [data-tab]")].map(
+              (el) => el.dataset.tab,
+            );
+            assert.deepEqual(
+              mobTabs,
+              ["abilities", "items", "features", "conditions", "description"],
+              "no Skills tab on a Mob",
+            );
+            assert.include(
+              mobSheet.element.querySelector('nav [data-tab="features"]').textContent,
+              game.i18n.localize("CARLRPG.Tab.Boons"),
+            );
+            assert.exists(
+              mobSheet.element.querySelector(".carl-mob-defenses"),
+              "the Combat tab's Defenses",
+            );
+            assert.notExists(
+              mobSheet.element.querySelector('.carl-stats-column [data-action="rollEvade"]'),
+              "no Evade roll",
+            );
             await mobSheet.close();
           } finally {
             await deleteTestActor(actor);
@@ -233,24 +326,58 @@ export default function register(quench) {
             system: { stats: { dex: { value: 14 } }, details: { move: 25, step: 5 } },
           });
           try {
-            await createTestItem(actor, "race", "armored", { system: { changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }] } });
+            await createTestItem(actor, "race", "armored", {
+              system: {
+                changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }],
+              },
+            });
             const sheet = await openSheet(actor);
             const combat = sheet.element.querySelector('section.tab[data-tab="abilities"]');
             const column = combat.querySelector(".carl-stats-column");
             const expected = actor.system.stats.dex.mod + (actor.system.bonuses?.evadeBonus ?? 0);
-            assert.notExists(column.querySelector('[data-action="rollEvade"]'), "Evade left the Stats column");
-            assert.notExists(column.querySelector('[name="system.dr"]'), "no longer in the Stats column");
+            assert.notExists(
+              column.querySelector('[data-action="rollEvade"]'),
+              "Evade left the Stats column",
+            );
+            assert.notExists(
+              column.querySelector('[name="system.dr"]'),
+              "no longer in the Stats column",
+            );
 
             const row = combat.querySelector(".carl-abilities-main .carl-combat-defenses");
             assert.exists(row);
             const evade = row.querySelector('.carl-defenses-row > [data-action="rollEvade"]');
             assert.exists(evade);
-            assert.strictEqual(row.querySelector(".carl-defenses-row").firstElementChild, evade, "Evade comes first");
-            assert.equal(Number(evade.querySelector(".carl-evade-total").textContent.trim()), expected);
-            assert.strictEqual(combat.querySelector(".carl-abilities-main").firstElementChild, row, "first in the main column");
-            assert.isTrue(!!(row.compareDocumentPosition(combat.querySelector(".carl-hotlist")) & Node.DOCUMENT_POSITION_FOLLOWING), "above the Hotlist");
-            assert.notExists(row.querySelector('input[name="system.dr"]'), "a crawler's base DR is locked at 0");
-            assert.equal(row.querySelector(".carl-dr-value").textContent.trim(), "2", "DR from the Race only");
+            assert.strictEqual(
+              row.querySelector(".carl-defenses-row").firstElementChild,
+              evade,
+              "Evade comes first",
+            );
+            assert.equal(
+              Number(evade.querySelector(".carl-evade-total").textContent.trim()),
+              expected,
+            );
+            assert.strictEqual(
+              combat.querySelector(".carl-abilities-main").firstElementChild,
+              row,
+              "first in the main column",
+            );
+            assert.isTrue(
+              !!(
+                row.compareDocumentPosition(combat.querySelector(".carl-hotlist")) &
+                Node.DOCUMENT_POSITION_FOLLOWING
+              ),
+              "above the Hotlist",
+            );
+            assert.notExists(
+              row.querySelector('input[name="system.dr"]'),
+              "a crawler's base DR is locked at 0",
+            );
+            assert.equal(
+              row.querySelector(".carl-dr-value").textContent.trim(),
+              "2",
+              "DR from the Race only",
+            );
             assert.equal(row.querySelector('input[name="system.details.move"]').value, "25");
             assert.equal(row.querySelector('input[name="system.details.step"]').value, "5");
             assert.exists(row.querySelector('[data-action="showResistances"]'));
@@ -264,7 +391,11 @@ export default function register(quench) {
           const actor = await createTestCharacter("resist dialog");
           try {
             const charm = await createTestItem(actor, "feature", "fire charm", {
-              system: { changes: [{ targetType: "resistance", target: "fire", mode: "add", value: "immune" }] },
+              system: {
+                changes: [
+                  { targetType: "resistance", target: "fire", mode: "add", value: "immune" },
+                ],
+              },
             });
             const sheet = await openSheet(actor);
             assert.include(
@@ -273,16 +404,26 @@ export default function register(quench) {
             );
             sheet.element.querySelector('[data-action="showResistances"]').click();
             let dialog;
-            await waitFor(() => (dialog = document.querySelector(".carl-resistances-dialog")), { message: "dialog never opened" });
+            await waitFor(() => (dialog = document.querySelector(".carl-resistances-dialog")), {
+              message: "dialog never opened",
+            });
             assert.notExists(dialog.querySelector("select, input"), "nothing to edit");
             const rows = [...dialog.querySelectorAll(".carl-resistance-table tbody tr")];
             assert.lengthOf(rows, 1, "only the states that aren't None");
-            assert.include(rows[0].textContent, game.i18n.localize(CONFIG.CARLRPG.damageTypes.fire));
-            assert.include(rows[0].textContent, game.i18n.localize(CONFIG.CARLRPG.resistanceStates.immune));
+            assert.include(
+              rows[0].textContent,
+              game.i18n.localize(CONFIG.CARLRPG.damageTypes.fire),
+            );
+            assert.include(
+              rows[0].textContent,
+              game.i18n.localize(CONFIG.CARLRPG.resistanceStates.immune),
+            );
             assert.include(rows[0].textContent, charm.name, "its source");
             assert.notExists(dialog.querySelector('button[data-action="save"]'));
             dialog.querySelector('button[data-action="close"]').click();
-            await waitFor(() => !document.querySelector(".carl-resistances-dialog"), { message: "dialog never closed" });
+            await waitFor(() => !document.querySelector(".carl-resistances-dialog"), {
+              message: "dialog never closed",
+            });
             assert.equal(actor.system.resistances.fire, "none", "the base is untouched");
             await sheet.close();
           } finally {
@@ -292,33 +433,64 @@ export default function register(quench) {
         });
 
         it("the header: Level then AI Favor under the portrait, Race, Class, HB and an editable Mana bar - no Floor", async function () {
-          const actor = await createTestCharacter("header", { system: { attributes: { level: { value: 7 } }, details: { aiFavor: 2, gold: 40 } } });
+          const actor = await createTestCharacter("header", {
+            system: { attributes: { level: { value: 7 } }, details: { aiFavor: 2, gold: 40 } },
+          });
           try {
             const sheet = await openSheet(actor);
             const header = sheet.element.querySelector(".sheet-header");
             const portrait = header.querySelector(".carl-portrait-column .carl-portrait-stats");
             const names = [...portrait.querySelectorAll("input")].map((el) => el.name);
-            assert.deepEqual(names, ["system.attributes.level.value", "system.details.aiFavor"], "Level, then AI Favor");
-            assert.equal(portrait.querySelector('[name="system.attributes.level.value"]').value, "7");
+            assert.deepEqual(
+              names,
+              ["system.attributes.level.value", "system.details.aiFavor"],
+              "Level, then AI Favor",
+            );
+            assert.equal(
+              portrait.querySelector('[name="system.attributes.level.value"]').value,
+              "7",
+            );
 
             const mana = header.querySelector(".carl-mana-resource");
             assert.exists(mana);
             assert.exists(mana.querySelector('input[name="system.mana.value"]'));
             assert.include(mana.textContent, `/ ${actor.system.mana.max}`);
-            assert.lengthOf(sheet.element.querySelectorAll('[name="system.mana.value"]'), 1, "one Mana input on the form");
+            assert.lengthOf(
+              sheet.element.querySelectorAll('[name="system.mana.value"]'),
+              1,
+              "one Mana input on the form",
+            );
 
-            for (const name of ["system.details.size", "system.details.popularity", "system.details.gold",
-              "system.details.pronouns", "system.details.crawlerNumber"]) {
+            for (const name of [
+              "system.details.size",
+              "system.details.popularity",
+              "system.details.gold",
+              "system.details.pronouns",
+              "system.details.crawlerNumber",
+            ]) {
               assert.notExists(header.querySelector(`[name="${name}"]`), `${name} left the header`);
             }
             assert.notExists(header.querySelector("#carl-floor-display"), "no Floor");
             assert.notInclude(header.textContent, game.i18n.localize("CARLRPG.Actor.Floor"));
-            assert.notExists(header.querySelector(".carl-details-row"), "the second header row is gone");
-            for (const name of ["system.attributes.level.value", "system.details.aiFavor", "system.details.gold"]) {
-              assert.lengthOf(sheet.element.querySelectorAll(`[name="${name}"]`), 1, `${name} only once on the sheet`);
+            assert.notExists(
+              header.querySelector(".carl-details-row"),
+              "the second header row is gone",
+            );
+            for (const name of [
+              "system.attributes.level.value",
+              "system.details.aiFavor",
+              "system.details.gold",
+            ]) {
+              assert.lengthOf(
+                sheet.element.querySelectorAll(`[name="${name}"]`),
+                1,
+                `${name} only once on the sheet`,
+              );
             }
 
-            const gold = sheet.element.querySelector('section.tab[data-tab="items"] .carl-inventory-bar input[name="system.details.gold"]');
+            const gold = sheet.element.querySelector(
+              'section.tab[data-tab="items"] .carl-inventory-bar input[name="system.details.gold"]',
+            );
             assert.exists(gold, "Gold is on the Inventory tab");
             assert.equal(gold.value, "40");
             await sheet.close();
@@ -333,12 +505,24 @@ export default function register(quench) {
             const sheet = await openSheet(actor);
             const skillsTab = () => sheet.element.querySelector('section.tab[data-tab="skills"]');
             assert.notExists(skillsTab().querySelector('[data-section-id="spells"]'));
-            assert.exists(skillsTab().querySelector('[data-section-id="skills"] .carl-drawer-add-spell[data-type="spell"]'), "+ Spell link");
+            assert.exists(
+              skillsTab().querySelector(
+                '[data-section-id="skills"] .carl-drawer-add-spell[data-type="spell"]',
+              ),
+              "+ Spell link",
+            );
 
             await createTestItem(actor, "spell", "magic missile");
-            await waitFor(() => skillsTab()?.querySelector('[data-section-id="spells"]'), { message: "Spells section never appeared" });
+            await waitFor(() => skillsTab()?.querySelector('[data-section-id="spells"]'), {
+              message: "Spells section never appeared",
+            });
             assert.notExists(skillsTab().querySelector(".carl-drawer-add-spell"));
-            assert.notExists(skillsTab().querySelector('[data-section-id="spells"] input[name="system.mana.value"]'), "Mana is read-only there");
+            assert.notExists(
+              skillsTab().querySelector(
+                '[data-section-id="spells"] input[name="system.mana.value"]',
+              ),
+              "Mana is read-only there",
+            );
             await sheet.close();
           } finally {
             await deleteTestActor(actor);
@@ -354,10 +538,16 @@ export default function register(quench) {
             system: { deity: { name: "Apito", tier: "acolyte", worshipDays: 3, penitence: 1 } },
           });
           try {
-            const race = await createTestItem(actor, "race", "elf", { system: { description: "<ul><li>Pointy ears</li></ul>" } });
+            const race = await createTestItem(actor, "race", "elf", {
+              system: { description: "<ul><li>Pointy ears</li></ul>" },
+            });
             await actor.update({ "system.race": race.id });
-            const acolyte = await createTestItem(actor, "feature", "acolyte perk", { system: { tier: "acolyte" } });
-            const zealot = await createTestItem(actor, "feature", "zealot perk", { system: { tier: "zealot" } });
+            const acolyte = await createTestItem(actor, "feature", "acolyte perk", {
+              system: { tier: "acolyte" },
+            });
+            const zealot = await createTestItem(actor, "feature", "zealot perk", {
+              system: { tier: "zealot" },
+            });
             const title = await createTestItem(actor, "feature", "title");
             const sheet = actor.sheet;
             await sheet.render({ force: true });
@@ -373,9 +563,20 @@ export default function register(quench) {
             assert.equal(deityTithe(actor.system.deity), 10, "5% doubled by penance");
             assert.include(deity.querySelector(".carl-deity-tithe").textContent, "10%");
             assert.include(deity.querySelector(".carl-deity-next").textContent, "2");
-            assert.exists(deity.querySelector(`.carl-deity-benefits [data-item-id="${acolyte.id}"]:not(.carl-benefit-unreached)`));
-            assert.exists(deity.querySelector(`.carl-deity-benefits [data-item-id="${zealot.id}"].carl-benefit-unreached`));
-            assert.exists(tab.querySelector(`.carl-perks [data-item-id="${title.id}"]`), "untiered features list below");
+            assert.exists(
+              deity.querySelector(
+                `.carl-deity-benefits [data-item-id="${acolyte.id}"]:not(.carl-benefit-unreached)`,
+              ),
+            );
+            assert.exists(
+              deity.querySelector(
+                `.carl-deity-benefits [data-item-id="${zealot.id}"].carl-benefit-unreached`,
+              ),
+            );
+            assert.exists(
+              tab.querySelector(`.carl-perks [data-item-id="${title.id}"]`),
+              "untiered features list below",
+            );
             assert.notExists(deity.querySelector(`[data-item-id="${title.id}"]`));
             await sheet.close();
           } finally {
@@ -384,7 +585,15 @@ export default function register(quench) {
         });
 
         it("a Boon is due from the fifth day until received, and only with a Tier and worship not suspended", function () {
-          const deity = (data) => ({ tier: "acolyte", worshipDays: 5, missedOfferings: 0, penitence: 0, shunned: false, fallen: false, ...data });
+          const deity = (data) => ({
+            tier: "acolyte",
+            worshipDays: 5,
+            missedOfferings: 0,
+            penitence: 0,
+            shunned: false,
+            fallen: false,
+            ...data,
+          });
           assert.isTrue(describeDeity(deity({ worshipDays: 5 })).boonDue);
           assert.isTrue(describeDeity(deity({ worshipDays: 7 })).boonDue, "still due past five");
           assert.isFalse(describeDeity(deity({ worshipDays: 4 })).boonDue);
@@ -397,19 +606,27 @@ export default function register(quench) {
         });
 
         it("recording a missed offering breaks the streak; taking it back doesn't", async function () {
-          const actor = await createTestCharacter("missed", { system: { deity: { name: "Apito", tier: "acolyte", worshipDays: 4 } } });
+          const actor = await createTestCharacter("missed", {
+            system: { deity: { name: "Apito", tier: "acolyte", worshipDays: 4 } },
+          });
           const sheet = actor.sheet;
           try {
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
             sheet.changeTab("features", "primary");
             sheet.element.querySelector('.carl-missed-pip[data-value="1"]').click();
-            await waitFor(() => actor.system.deity.missedOfferings === 1, { message: "miss never recorded" });
+            await waitFor(() => actor.system.deity.missedOfferings === 1, {
+              message: "miss never recorded",
+            });
             assert.equal(actor.system.deity.worshipDays, 0);
             await actor.update({ "system.deity.worshipDays": 2 });
-            await waitFor(() => sheet.element.querySelector('.carl-missed-pip[data-value="1"].filled'));
+            await waitFor(() =>
+              sheet.element.querySelector('.carl-missed-pip[data-value="1"].filled'),
+            );
             sheet.element.querySelector('.carl-missed-pip[data-value="1"]').click();
-            await waitFor(() => actor.system.deity.missedOfferings === 0, { message: "miss never taken back" });
+            await waitFor(() => actor.system.deity.missedOfferings === 0, {
+              message: "miss never taken back",
+            });
             assert.equal(actor.system.deity.worshipDays, 2);
           } finally {
             await sheet.close();
@@ -421,18 +638,23 @@ export default function register(quench) {
           const pack = game.packs.get(`${game.system.id}.roll-tables`);
           const index = await pack?.getIndex();
           if (!index?.find((e) => e.name === "Boons")) this.skip();
-          const actor = await createTestCharacter("boon", { system: { deity: { name: "Apito", tier: "acolyte", worshipDays: 7 } } });
+          const actor = await createTestCharacter("boon", {
+            system: { deity: { name: "Apito", tier: "acolyte", worshipDays: 7 } },
+          });
           const before = new Set(game.messages.map((m) => m.id));
           try {
             const result = await receiveBoon(actor);
             assert.exists(result);
-            const buff = actor.system.conditions.find((c) => c.key === "custom" && c.source === "Apito");
+            const buff = actor.system.conditions.find(
+              (c) => c.key === "custom" && c.source === "Apito",
+            );
             assert.exists(buff);
             assert.equal(buff.label, result.name);
             assert.approximately(buff.expiresAt, game.time.worldTime + BOON_HOURS * 3600, 1);
             assert.equal(actor.system.deity.worshipDays, 2, "days past five carry over");
           } finally {
-            for (const message of game.messages.filter((m) => !before.has(m.id))) await message.delete();
+            for (const message of game.messages.filter((m) => !before.has(m.id)))
+              await message.delete();
             await deleteTestActor(actor);
           }
         });
@@ -491,13 +713,19 @@ export default function register(quench) {
         };
 
         const worldItem = (label, data = {}) =>
-          Item.create({ name: `Quench ${label} ${foundry.utils.randomID()}`, type: "item", ...data });
+          Item.create({
+            name: `Quench ${label} ${foundry.utils.randomID()}`,
+            type: "item",
+            ...data,
+          });
 
         const hotlistSlot = (sheet, index = 0) =>
           sheet.element.querySelector(`[data-slot-type="hotlist"][data-slot-key="${index}"]`);
 
         const inventoryRow = (sheet, itemId) =>
-          sheet.element.querySelector(`section.tab[data-tab="items"] li.item[data-item-id="${itemId}"]`);
+          sheet.element.querySelector(
+            `section.tab[data-tab="items"] li.item[data-item-id="${itemId}"]`,
+          );
 
         it("Characters, Mobs and Loot Boxes all use core ActorSheetV2", async function () {
           const crawler = await createTestCharacter("v2");
@@ -525,7 +753,11 @@ export default function register(quench) {
               const sheet = await openSheet(actor);
               const actions = sheet._getHeaderControls().map((c) => c.action);
               assert.include(actions, "configurePrototypeToken", actor.type);
-              assert.notInclude(actions, "configureToken", `${actor.type}: a world actor has no placed Token`);
+              assert.notInclude(
+                actions,
+                "configureToken",
+                `${actor.type}: a world actor has no placed Token`,
+              );
               await sheet.close();
             }
           } finally {
@@ -541,12 +773,15 @@ export default function register(quench) {
           try {
             const sheet = await openSheet(actor);
             sheet.options.actions.configurePrototypeToken.call(sheet, new PointerEvent("click"));
-            await waitFor(() => {
-              config = [...foundry.applications.instances.values()].find(
-                (app) => app instanceof CONFIG.Token.prototypeSheetClass && app.actor === actor,
-              );
-              return config?.rendered;
-            }, { message: "the prototype token config never opened" });
+            await waitFor(
+              () => {
+                config = [...foundry.applications.instances.values()].find(
+                  (app) => app instanceof CONFIG.Token.prototypeSheetClass && app.actor === actor,
+                );
+                return config?.rendered;
+              },
+              { message: "the prototype token config never opened" },
+            );
             await sheet.close();
           } finally {
             await config?.close();
@@ -605,7 +840,11 @@ export default function register(quench) {
           const source = await worldItem("potion");
           try {
             const sheet = await openSheet(actor);
-            const { dispatches, result } = await dropOn(sheet, hotlistSlot(sheet, 0), source.toDragData());
+            const { dispatches, result } = await dropOn(
+              sheet,
+              hotlistSlot(sheet, 0),
+              source.toDragData(),
+            );
             assert.equal(dispatches, 1);
             assert.equal(actor.items.filter((i) => i.name === source.name).length, 1);
             assert.notInclude(actor.system.hotlist, result.id);
@@ -637,7 +876,11 @@ export default function register(quench) {
             const first = await createTestItem(actor, "item", "first", { sort: 100 });
             const second = await createTestItem(actor, "item", "second", { sort: 200 });
             const sheet = await openSheet(actor);
-            const { dispatches, result } = await dropOn(sheet, inventoryRow(sheet, first.id), second.toDragData());
+            const { dispatches, result } = await dropOn(
+              sheet,
+              inventoryRow(sheet, first.id),
+              second.toDragData(),
+            );
             assert.equal(dispatches, 1);
             assert.isNull(result);
             assert.equal(actor.items.size, 2, "no copy");
@@ -697,8 +940,13 @@ export default function register(quench) {
             const loot = await createTestItem(box, "item", "card");
             const sheet = await openSheet(box);
             const start = makeDragEvent("dragstart");
-            sheet.element.querySelector(`.carl-loot-card[data-item-id="${loot.id}"]`).dispatchEvent(start);
-            assert.deepEqual(JSON.parse(start.dataTransfer.getData("text/plain")), loot.toDragData());
+            sheet.element
+              .querySelector(`.carl-loot-card[data-item-id="${loot.id}"]`)
+              .dispatchEvent(start);
+            assert.deepEqual(
+              JSON.parse(start.dataTransfer.getData("text/plain")),
+              loot.toDragData(),
+            );
 
             const { dispatches } = await dropOn(sheet, sheet.element, source.toDragData());
             assert.equal(dispatches, 1);
@@ -737,10 +985,14 @@ export default function register(quench) {
         it("a dropActorSheetData hook returning false blocks the drop", async function () {
           const actor = await createTestCharacter("hooked");
           const source = await worldItem("blocked");
-          const hookId = Hooks.on("dropActorSheetData", (target) => (target === actor ? false : undefined));
+          const hookId = Hooks.on("dropActorSheetData", (target) =>
+            target === actor ? false : undefined,
+          );
           try {
             const sheet = await openSheet(actor);
-            const { dispatches } = await dropOn(sheet, sheet.element, source.toDragData(), { expectDispatch: false });
+            const { dispatches } = await dropOn(sheet, sheet.element, source.toDragData(), {
+              expectDispatch: false,
+            });
             assert.equal(dispatches, 0);
             assert.equal(actor.items.size, 0);
             await sheet.close();
@@ -758,31 +1010,59 @@ export default function register(quench) {
           const actor = await createTestCharacter("one place");
           const sheet = actor.sheet;
           try {
-            const helm = await createTestItem(actor, "item", "helm", { system: { slots: ["head"] } });
-            const ring = await createTestItem(actor, "item", "ring", { system: { slots: ["accessory"] } });
+            const helm = await createTestItem(actor, "item", "helm", {
+              system: { slots: ["head"] },
+            });
+            const ring = await createTestItem(actor, "item", "ring", {
+              system: { slots: ["accessory"] },
+            });
             const rope = await createTestItem(actor, "item", "rope", { system: { slots: [] } });
-            const torch = await createTestItem(actor, "item", "torch", { system: { slots: ["held"] } });
+            const torch = await createTestItem(actor, "item", "torch", {
+              system: { slots: ["held"] },
+            });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "head" }, helm);
             await assignItemToSlot(actor, { slotType: "accessory", slotKey: "0" }, ring);
             await placeInHotlist(actor, 0, torch);
             await sheet.render({ force: true });
-            await waitFor(() => sheet.rendered && sheet.element.querySelector(".carl-equip-panel"), { message: "no doll" });
+            await waitFor(
+              () => sheet.rendered && sheet.element.querySelector(".carl-equip-panel"),
+              { message: "no doll" },
+            );
 
-            const listed = [...sheet.element.querySelectorAll('section.tab[data-tab="items"] ol.items-list > li.item[data-item-id]')]
-              .map((li) => li.dataset.itemId);
-            assert.deepEqual(listed, [rope.id], "only the rope: the helm and ring are worn, the torch is Hotlisted");
+            const listed = [
+              ...sheet.element.querySelectorAll(
+                'section.tab[data-tab="items"] ol.items-list > li.item[data-item-id]',
+              ),
+            ].map((li) => li.dataset.itemId);
+            assert.deepEqual(
+              listed,
+              [rope.id],
+              "only the rope: the helm and ring are worn, the torch is Hotlisted",
+            );
 
-            for (const [type, key, item] of [["gear", "head", helm], ["accessory", "0", ring]]) {
-              const slot = sheet.element.querySelector(`.carl-equip-slot[data-slot-type="${type}"][data-slot-key="${key}"]`);
+            for (const [type, key, item] of [
+              ["gear", "head", helm],
+              ["accessory", "0", ring],
+            ]) {
+              const slot = sheet.element.querySelector(
+                `.carl-equip-slot[data-slot-type="${type}"][data-slot-key="${key}"]`,
+              );
               assert.equal(slot?.dataset.itemId, item.id, `${type} ${key} carries its item`);
               const edit = slot.querySelector(".carl-slot-edit");
               assert.exists(edit, `${type} ${key} has an edit control`);
               edit.click();
-              await waitFor(() => actor.items.get(item.id).sheet.rendered, { message: `${item.name}'s sheet never opened` });
+              await waitFor(() => actor.items.get(item.id).sheet.rendered, {
+                message: `${item.name}'s sheet never opened`,
+              });
               await actor.items.get(item.id).sheet.close();
             }
-            const emptySlot = sheet.element.querySelector('.carl-equip-slot[data-slot-type="gear"][data-slot-key="feet"]');
-            assert.notExists(emptySlot.querySelector(".carl-slot-edit"), "an empty slot has nothing to edit");
+            const emptySlot = sheet.element.querySelector(
+              '.carl-equip-slot[data-slot-type="gear"][data-slot-key="feet"]',
+            );
+            assert.notExists(
+              emptySlot.querySelector(".carl-slot-edit"),
+              "an empty slot has nothing to edit",
+            );
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
@@ -793,20 +1073,34 @@ export default function register(quench) {
           const actor = await createTestCharacter("drag off");
           const sheet = actor.sheet;
           try {
-            const helm = await createTestItem(actor, "item", "helm", { system: { slots: ["head"] } });
-            const ring = await createTestItem(actor, "item", "ring", { system: { slots: ["accessory"] } });
+            const helm = await createTestItem(actor, "item", "helm", {
+              system: { slots: ["head"] },
+            });
+            const ring = await createTestItem(actor, "item", "ring", {
+              system: { slots: ["accessory"] },
+            });
             await assignItemToSlot(actor, { slotType: "gear", slotKey: "head" }, helm);
             await assignItemToSlot(actor, { slotType: "accessory", slotKey: "0" }, ring);
             await sheet.render({ force: true });
-            await waitFor(() => sheet.rendered && sheet.element.querySelector(".carl-equip-panel"), { message: "no doll" });
-            const list = () => sheet.element.querySelector('section.tab[data-tab="items"] .carl-inventory-layout > ol.items-list');
+            await waitFor(
+              () => sheet.rendered && sheet.element.querySelector(".carl-equip-panel"),
+              { message: "no doll" },
+            );
+            const list = () =>
+              sheet.element.querySelector(
+                'section.tab[data-tab="items"] .carl-inventory-layout > ol.items-list',
+              );
 
             for (const item of [helm, ring]) {
               await dropOn(sheet, list(), actor.items.get(item.id).toDragData());
-              await waitFor(() => !actor.items.get(item.id).system.equipped, { message: `${item.name} never taken off` });
+              await waitFor(() => !actor.items.get(item.id).system.equipped, {
+                message: `${item.name} never taken off`,
+              });
               assert.notInclude(Object.values(actor.system.gearSlots), item.id);
               assert.notInclude(actor.system.accessories, item.id);
-              await waitFor(() => list().querySelector(`li.item[data-item-id="${item.id}"]`), { message: `${item.name} never listed` });
+              await waitFor(() => list().querySelector(`li.item[data-item-id="${item.id}"]`), {
+                message: `${item.name} never listed`,
+              });
             }
             assert.equal(actor.items.size, 2, "moved, not copied");
 
@@ -827,9 +1121,24 @@ export default function register(quench) {
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
             const tab = sheet.element.querySelector('section.tab[data-tab="items"]');
-            assert.exists(tab.querySelector('.carl-equip-panel .carl-inventory-bar input[name="system.details.gold"]'), "Gold is in the doll's panel");
-            assert.equal(tab.querySelector(".carl-inventory-layout").firstElementChild?.matches("ol.items-list"), true, "the list comes first in the layout");
-            assert.notEqual(getComputedStyle(tab).scrollbarGutter, "stable", "no reserved scrollbar strip");
+            assert.exists(
+              tab.querySelector(
+                '.carl-equip-panel .carl-inventory-bar input[name="system.details.gold"]',
+              ),
+              "Gold is in the doll's panel",
+            );
+            assert.equal(
+              tab
+                .querySelector(".carl-inventory-layout")
+                .firstElementChild?.matches("ol.items-list"),
+              true,
+              "the list comes first in the layout",
+            );
+            assert.notEqual(
+              getComputedStyle(tab).scrollbarGutter,
+              "stable",
+              "no reserved scrollbar strip",
+            );
           } finally {
             await sheet.close();
             await deleteTestActor(actor);
@@ -844,13 +1153,18 @@ export default function register(quench) {
         // Points and wiped the grind hours (CarlRPGActor#_preUpdate).
         it("a blank Level keeps 20, and retyping 20 levels up nothing", async function () {
           const actor = await createTestCharacter("blank level", {
-            system: { attributes: { level: { value: 20 } }, bankedStatPoints: 0, grindLevelHours: 5 },
+            system: {
+              attributes: { level: { value: 20 } },
+              bankedStatPoints: 0,
+              grindLevelHours: 5,
+            },
           });
           const sheet = actor.sheet;
           try {
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
-            const level = () => sheet.element.querySelector('input[name="system.attributes.level.value"]');
+            const level = () =>
+              sheet.element.querySelector('input[name="system.attributes.level.value"]');
             level().value = "";
             await sheet.submit();
             assert.equal(actor.system.attributes.level.value, 20, "the blank didn't save");
@@ -891,11 +1205,17 @@ export default function register(quench) {
           try {
             const sheet = await openSheet(actor);
             await dropOn(sheet, sheet.element, first.toDragData());
-            await waitFor(() => active(actor, "class") === first.name, { message: "the first Class never became active" });
+            await waitFor(() => active(actor, "class") === first.name, {
+              message: "the first Class never became active",
+            });
             await actor.items.get(actor.system.class).delete();
-            await waitFor(() => actor.system.class === "", { message: "the deleted Class stayed active" });
+            await waitFor(() => actor.system.class === "", {
+              message: "the deleted Class stayed active",
+            });
             await dropOn(sheet, sheet.element, second.toDragData());
-            await waitFor(() => active(actor, "class") === second.name, { message: "the new Class never became active" });
+            await waitFor(() => active(actor, "class") === second.name, {
+              message: "the new Class never became active",
+            });
             await sheet.close();
           } finally {
             await deleteTestActor(actor);
@@ -911,7 +1231,9 @@ export default function register(quench) {
             await actor.update({ "system.race": foundry.utils.randomID() });
             const sheet = await openSheet(actor);
             await dropOn(sheet, sheet.element, race.toDragData());
-            await waitFor(() => active(actor, "race") === race.name, { message: "the dropped Race never became active" });
+            await waitFor(() => active(actor, "race") === race.name, {
+              message: "the dropped Race never became active",
+            });
             await sheet.close();
           } finally {
             await deleteTestActor(actor);
@@ -931,12 +1253,15 @@ export default function register(quench) {
             skill = await createTestItem(mob, "skill", "drawer", {
               system: {
                 detailsExpanded: true,
-                description: `<p>Everyone sees this.</p><section class="secret" id="secret-quench"><p>GM only</p></section>`
-                  + `<p>@UUID[${mob.uuid}]{The Mob}</p>`,
+                description:
+                  `<p>Everyone sees this.</p><section class="secret" id="secret-quench"><p>GM only</p></section>` +
+                  `<p>@UUID[${mob.uuid}]{The Mob}</p>`,
               },
             });
-            const drawer = () => sheet.element
-              .querySelector(`li.item[data-item-id="${skill.id}"] + li.carl-nested-drawer .carl-skill-description`);
+            const drawer = () =>
+              sheet.element.querySelector(
+                `li.item[data-item-id="${skill.id}"] + li.carl-nested-drawer .carl-skill-description`,
+              );
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
             assert.exists(drawer()?.querySelector("section.secret"), "the owner sees the Secret");
@@ -945,9 +1270,15 @@ export default function register(quench) {
             Object.defineProperty(skill, "isOwner", { get: () => false, configurable: true });
             await sheet.render();
             assert.include(drawer()?.textContent ?? "", "Everyone sees this.");
-            assert.notExists(drawer()?.querySelector("section.secret"), "no Secret for a non-owner");
+            assert.notExists(
+              drawer()?.querySelector("section.secret"),
+              "no Secret for a non-owner",
+            );
             assert.notInclude(drawer()?.textContent ?? "", "GM only");
-            assert.exists(drawer()?.querySelector("a.content-link"), "the link is drawn for a non-owner too");
+            assert.exists(
+              drawer()?.querySelector("a.content-link"),
+              "the link is drawn for a non-owner too",
+            );
             assert.notInclude(drawer()?.textContent ?? "", "@UUID");
           } finally {
             if (skill) delete skill.isOwner;

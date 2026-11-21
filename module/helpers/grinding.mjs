@@ -49,12 +49,16 @@ export function isGrindTarget(actor, item) {
  * @returns {string}
  */
 export function grindTargetOptions(items) {
-  return items.map((item) => {
-    const label = game.i18n.format("CARLRPG.Grind.TargetOption", {
-      name: item.name, rank: item.system.rank, accrued: item.getFlag(SCOPE, "grindHours") ?? 0,
-    });
-    return `<option value="${item.id}">${foundry.utils.escapeHTML(label)}</option>`;
-  }).join("");
+  return items
+    .map((item) => {
+      const label = game.i18n.format("CARLRPG.Grind.TargetOption", {
+        name: item.name,
+        rank: item.system.rank,
+        accrued: item.getFlag(SCOPE, "grindHours") ?? 0,
+      });
+      return `<option value="${item.id}">${foundry.utils.escapeHTML(label)}</option>`;
+    })
+    .join("");
 }
 
 /**
@@ -69,17 +73,26 @@ export function grindTargetOptions(items) {
  */
 export async function applyGrindHours(actor, item, hours) {
   const rank = item.system.rank ?? 0;
-  const accrued = (item.getFlag(SCOPE, "grindHours") ?? 0) + Math.max(0, Math.floor(Number(hours) || 0));
+  const accrued =
+    (item.getFlag(SCOPE, "grindHours") ?? 0) + Math.max(0, Math.floor(Number(hours) || 0));
 
   if (accrued < rank) {
     await item.setFlag(SCOPE, "grindHours", accrued);
-    ui.notifications.info(game.i18n.format("CARLRPG.Toolbox.GrindProgress", { name: item.name, accrued, rank }));
+    ui.notifications.info(
+      game.i18n.format("CARLRPG.Toolbox.GrindProgress", { name: item.name, accrued, rank }),
+    );
     return { rolled: false, accrued, surplus: 0 };
   }
 
   await item.setFlag(SCOPE, "grindHours", 0);
-  ui.notifications.info(game.i18n.format("CARLRPG.Toolbox.GrindThresholdReached", { name: item.name }));
-  await CarlDice.rollAdvancementCheck(actor, item, { debuffs: true, floorBonus: false, clearMark: false });
+  ui.notifications.info(
+    game.i18n.format("CARLRPG.Toolbox.GrindThresholdReached", { name: item.name }),
+  );
+  await CarlDice.rollAdvancementCheck(actor, item, {
+    debuffs: true,
+    floorBonus: false,
+    clearMark: false,
+  });
   return { rolled: true, accrued: rank, surplus: accrued - rank };
 }
 

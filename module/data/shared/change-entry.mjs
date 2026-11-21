@@ -24,20 +24,25 @@ export function defineChangeEntrySchema() {
   const fields = foundry.data.fields;
   return {
     id: new fields.StringField({
-      required: true, blank: false,
+      required: true,
+      blank: false,
       initial: () => foundry.utils.randomID(),
     }),
     /** Optional display label for this change; falls back to the owning item's name in tooltips. */
     label: new fields.StringField({ required: false, blank: true }),
     targetType: new fields.StringField({
-      required: true, blank: false, initial: "skillDamage",
-      choices: ["stat", "skillRank", "skillDamage", "resource", "rollMode", "custom", "resistance", "advancementBonus"],
+      required: true,
+      blank: false,
+      initial: "skillDamage",
+      choices: () => Object.keys(CONFIG.CARLRPG.changeTargetTypes),
     }),
     /** Dotted path or arbitrary skill/resource name. Resolved dynamically - no master list required. */
     target: new fields.StringField({ required: true, blank: true }),
     mode: new fields.StringField({
-      required: true, blank: false, initial: "add",
-      choices: ["add", "subtract", "multiply", "override", "upgrade", "downgrade"],
+      required: true,
+      blank: false,
+      initial: "add",
+      choices: () => Object.keys(CONFIG.CARLRPG.changeModes),
     }),
     /** Formula string; may include dice notation and @-refs (e.g. "1d4", "2", "@rank"). For targetType "resistance", one of "resist"|"vulnerable"|"immune" instead of a number. */
     value: new fields.StringField({ required: true, blank: true, initial: "0" }),
@@ -74,8 +79,10 @@ export function defineChangeEntrySchema() {
      *                old copies of those to "base".
      */
     damageDiceKind: new fields.StringField({
-      required: false, blank: true, initial: "",
-      choices: ["", "base", "rankDie", "flat", "multiplier"],
+      required: false,
+      blank: true,
+      initial: "",
+      choices: () => ["", ...Object.keys(CONFIG.CARLRPG.damageDiceKinds)],
     }),
     /**
      * Only meaningful when targetType is "skillDamage" (see
@@ -88,16 +95,22 @@ export function defineChangeEntrySchema() {
      * only ever carries the author's override, never a resolved value.
      */
     damageType: new fields.StringField({
-      required: false, blank: true, initial: "",
+      required: false,
+      blank: true,
+      initial: "",
       choices: ["", ...Object.keys(CONFIG.CARLRPG.damageTypes)],
     }),
     conditions: new fields.ArrayField(
       new fields.SchemaField({
-        id: new fields.StringField({ required: true, blank: false, initial: () => foundry.utils.randomID() }),
+        id: new fields.StringField({
+          required: true,
+          blank: false,
+          initial: () => foundry.utils.randomID(),
+        }),
         label: new fields.StringField({ required: true, blank: true }),
         default: new fields.BooleanField({ required: false, initial: false }),
       }),
-      { required: false, initial: [] }
+      { required: false, initial: [] },
     ),
   };
 }

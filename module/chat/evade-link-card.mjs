@@ -12,6 +12,7 @@
 import { addConditionToActor } from "../helpers/conditions.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
+import { ownsUuid } from "../helpers/token-resolution.mjs";
 
 /**
  * Resolve a snapshotted token/actor UUID back to its Actor, if it (and its
@@ -28,23 +29,6 @@ export async function resolveTargetActor(uuid) {
 }
 
 /**
- * Whether the current user owns the actor behind a token/actor uuid (a GM
- * always does).
- * @param {string} uuid
- * @returns {boolean}
- */
-export function userOwnsUuid(uuid) {
-  if (game.user.isGM) return true;
-  try {
-    const doc = fromUuidSync(uuid);
-    const actor = doc instanceof Actor ? doc : doc?.actor;
-    return !!actor?.isOwner;
-  } catch (e) {
-    return false;
-  }
-}
-
-/**
  * @param {ChatMessage} message
  * @param {string} flagKey  A flag holding either one UUID or an array of them.
  * @returns {boolean} Whether the current user may act on this button - a GM
@@ -53,7 +37,7 @@ export function userOwnsUuid(uuid) {
 export function canActOnUuidFlag(message, flagKey) {
   if (game.user.isGM) return true;
   const uuids = [message.getFlag("carl-rpg", flagKey)].flat().filter(Boolean);
-  return uuids.some((uuid) => userOwnsUuid(uuid));
+  return uuids.some((uuid) => ownsUuid(uuid));
 }
 
 /**
@@ -64,8 +48,15 @@ export function canActOnUuidFlag(message, flagKey) {
  * @param {{attackerType: string, defenderType: string, attackTotal: number, targetDifficulty: number|null}} args
  * @returns {number|null}
  */
-export function resolveEvadeDifficulty({ attackerType, defenderType, attackTotal, targetDifficulty }) {
-  return (rollsLikeCrawler(attackerType) && rollsLikeCrawler(defenderType)) ? attackTotal : targetDifficulty;
+export function resolveEvadeDifficulty({
+  attackerType,
+  defenderType,
+  attackTotal,
+  targetDifficulty,
+}) {
+  return rollsLikeCrawler(attackerType) && rollsLikeCrawler(defenderType)
+    ? attackTotal
+    : targetDifficulty;
 }
 
 /**
@@ -85,7 +76,12 @@ async function onAddEvadeDebuff(event, message) {
     return;
   }
 
-  await addConditionToActor(actor, debuffKey, { source: game.i18n.localize("CARLRPG.Roll.Evade") });
+  if (
+    !(await addConditionToActor(actor, debuffKey, {
+      source: game.i18n.localize("CARLRPG.Roll.Evade"),
+    }))
+  )
+    return;
   await updateCardMessage(message, { flags: { "carl-rpg": { debuffAdded: true } } });
   ui.notifications.info(game.i18n.format("CARLRPG.Evade.DebuffAddedNotice", { name: actor.name }));
 }
@@ -111,7 +107,8 @@ export const evadeActionEntries = [
     wrapperSelector: ".carl-evade-consequence",
     canAct: (m) => canActOnUuidFlag(m, "debuffActorUuid"),
     doneFlag: "debuffAdded",
-    doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Evade.DebuffAdded")}`,
+    doneLabel: () =>
+      `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.Evade.DebuffAdded")}`,
     onClick: onAddEvadeDebuff,
   },
 ];

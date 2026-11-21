@@ -23,14 +23,15 @@
  * Attack card (module/chat/check-revision.mjs), and can go backwards (an
  * undone d6, a worse reroll).
  */
-import { gradeCheck, makeCheck } from "../helpers/reaction-state.mjs";
-import { aiRerollAllowed, fightStamp } from "../helpers/ai-favor.mjs";
+import { applyAiReroll, gradeCheck, makeCheck } from "../helpers/reaction-state.mjs";
+import { aiRerollAllowed } from "../helpers/ai-favor.mjs";
 import { isCrawler } from "../helpers/actor-kinds.mjs";
 import { addConditionToActor } from "../helpers/conditions.mjs";
-import { resolveCombatantFor } from "../helpers/token-resolution.mjs";
+import { actorFromUuid, resolveCombatantFor } from "../helpers/token-resolution.mjs";
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { vehicleSeatOf } from "../helpers/vehicle-state.mjs";
-import { cardFight } from "./check-revision.mjs";
+import { cardFight, fightHelpers } from "./check-revision.mjs";
+import { fightStamp } from "../helpers/fights.mjs";
 
 const SCOPE = "carl-rpg";
 const GREAT_EVADE = ["criticalHit", "amazingSuccess"];
@@ -42,16 +43,6 @@ export async function resolveRowTarget(row) {
   if (!doc) return null;
   if (doc instanceof Actor) return { actor: doc, token: null };
   return doc.actor ? { actor: doc.actor, token: doc } : null;
-}
-
-/** An Actor from a uuid (sync), or null. */
-function actorOf(uuid) {
-  try {
-    const doc = uuid ? fromUuidSync(uuid) : null;
-    return doc instanceof Actor ? doc : (doc?.actor ?? null);
-  } catch {
-    return null;
-  }
 }
 
 /** A row of an Attack card, by id. */
@@ -106,8 +97,10 @@ export function rowInjury(row) {
 function rowSummary(row, checks, { isArea, target }) {
   const deciding = checks.evade ?? (checks.free?.success ? checks.free : null);
   // Not an Area Attack: the vehicle is caught in it on its own row.
-  const seat = deciding && !deciding.success && deciding.degree === "nearMissFail" && !isArea && target
-    ? vehicleSeatOf(target.actor) : null;
+  const seat =
+    deciding && !deciding.success && deciding.degree === "nearMissFail" && !isArea && target
+      ? vehicleSeatOf(target.actor)
+      : null;
   const summary = {
     evade: deciding ? { degree: deciding.degree, success: deciding.success } : null,
     freeUsed: !!checks.free || !!row.freeUsed,
@@ -117,7 +110,9 @@ function rowSummary(row, checks, { isArea, target }) {
   // A Shield Block's outcome (attack-targets-card.mjs) - only on a row that
   // has had one, so an Evade's write leaves other rows as they were.
   if (checks.block || "block" in row) {
-    summary.block = checks.block ? { degree: checks.block.degree, success: checks.block.success } : null;
+    summary.block = checks.block
+      ? { degree: checks.block.degree, success: checks.block.success }
+      : null;
   }
   return summary;
 }
@@ -158,8 +153,15 @@ export async function recordRowEvade(attack, row, target, result, { free }) {
   };
   const checks = { ...(row.checks ?? {}), [which]: check };
   const summary = rowSummary(row, checks, { isArea: !!attack.flags[SCOPE].isArea, target });
-  await moveAdvantage(attack, target, decidingRowCheck(row)?.degree ?? null, summary.evade?.degree ?? null);
-  await updateCardMessage(attack, { flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { [which]: check }, ...summary } } } } });
+  await moveAdvantage(
+    attack,
+    target,
+    decidingRowCheck(row)?.degree ?? null,
+    summary.evade?.degree ?? null,
+  );
+  await updateCardMessage(attack, {
+    flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { [which]: check }, ...summary } } } },
+  });
   return check;
 }
 
@@ -186,7 +188,9 @@ export async function recordRowBlock(attack, row, target, result, { shield, rank
   };
   const checks = { ...(row.checks ?? {}), block: check };
   const summary = rowSummary(row, checks, { isArea: !!attack.flags[SCOPE].isArea, target });
-  await updateCardMessage(attack, { flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { block: check }, ...summary } } } } });
+  await updateCardMessage(attack, {
+    flags: { [SCOPE]: { targetRows: { [row.id]: { checks: { block: check }, ...summary } } } },
+  });
   return check;
 }
 
@@ -235,7 +239,7 @@ export function rowCheckOpen(attack, rowId, which) {
 export function rowInterveneOpen(attack, rowId, which) {
   const check = rowCheck(rowAt(attack, rowId), which);
   if (!check || check.natural === 1 || check.natural === 20) return false;
-  if (!isCrawler(actorOf(check.actorUuid))) return false;
+  if (!isCrawler(actorFromUuid(check.actorUuid))) return false;
   return rowCheckOpen(attack, rowId, which) && !!cardFight(check);
 }
 
@@ -246,15 +250,7 @@ export function rowInterveneOpen(attack, rowId, which) {
  */
 export function rowInterveners(attack, rowId, which, user = game.user) {
   const check = rowCheck(rowAt(attack, rowId), which);
-  const combat = check ? cardFight(check) : null;
-  if (!combat) return [];
-  const roller = actorOf(check.actorUuid);
-  const seen = new Set();
-  return combat.combatants.map((c) => c.actor).filter((actor) => {
-    if (!actor || !isCrawler(actor) || actor === roller || seen.has(actor.uuid)) return false;
-    seen.add(actor.uuid);
-    return user.isGM || actor.testUserPermission(user, "OWNER");
-  });
+  return fightHelpers(check ? cardFight(check) : null, check?.actorUuid, user);
 }
 
 /**
@@ -266,7 +262,7 @@ export function rowInterveners(attack, rowId, which, user = game.user) {
 export function rowRerollSources(attack, rowId, which, user = game.user) {
   if (!rowCheckOpen(attack, rowId, which)) return [];
   const check = rowCheck(rowAt(attack, rowId), which);
-  const actor = actorOf(check.actorUuid);
+  const actor = actorFromUuid(check.actorUuid);
   if (!aiRerollAllowed(check, actor, user)) return [];
   return [{ key: "favor", actor, favor: actor.system.details?.aiFavor ?? 0 }];
 }
@@ -287,12 +283,7 @@ export async function reviseRow(attack, rowId, which, { interventions = [], rero
   const target = row ? await resolveRowTarget(row) : null;
   if (!check || !target) return null;
   const before = decidingRowCheck(row)?.degree ?? null;
-  if (reroll) {
-    check.aiRerolled = { natural: check.natural, base: check.base, breakdown: check.breakdown, roll: check.roll };
-    Object.assign(check, {
-      natural: reroll.natural ?? null, base: Number(reroll.total) || 0, roll: reroll.roll ?? null, breakdown: String(reroll.breakdown ?? ""),
-    });
-  }
+  if (reroll) applyAiReroll(check, reroll);
   check.interventions = interventions;
   gradeCheck(check);
   const checks = { ...row.checks, [which]: check };
@@ -301,7 +292,15 @@ export async function reviseRow(attack, rowId, which, { interventions = [], rero
     write: async () => {
       await moveAdvantage(attack, target, before, summary.evade?.degree ?? null);
       const { ForcedReplacement } = foundry.data.operators;
-      await attack.update({ flags: { [SCOPE]: { targetRows: { [rowId]: { checks: { [which]: ForcedReplacement.create(check) }, ...summary } } } } });
+      await attack.update({
+        flags: {
+          [SCOPE]: {
+            targetRows: {
+              [rowId]: { checks: { [which]: ForcedReplacement.create(check) }, ...summary },
+            },
+          },
+        },
+      });
     },
   };
 }
@@ -322,11 +321,21 @@ export async function clearRowEvade(attack, rowId, checkId, which = "evade") {
   if (!row || !["evade", "block"].includes(which) || row.checks?.[which]?.id !== checkId) return;
   const target = await resolveRowTarget(row);
   const checks = { ...row.checks, [which]: null };
-  const summary = rowSummary(which === "evade" ? { ...row, freeUsed: false } : row, checks, { isArea: !!attack.flags[SCOPE].isArea, target });
+  const summary = rowSummary(which === "evade" ? { ...row, freeUsed: false } : row, checks, {
+    isArea: !!attack.flags[SCOPE].isArea,
+    target,
+  });
   const { ForcedDeletion } = foundry.data.operators;
-  await attack.update({
-    flags: { [SCOPE]: { targetRows: { [rowId]: { checks: { [which]: new ForcedDeletion() }, ...summary } } } },
-  }, { carlUndo: true });
+  await attack.update(
+    {
+      flags: {
+        [SCOPE]: {
+          targetRows: { [rowId]: { checks: { [which]: new ForcedDeletion() }, ...summary } },
+        },
+      },
+    },
+    { carlUndo: true },
+  );
 }
 
 /**
@@ -345,8 +354,14 @@ export async function addRowInjury(attack, rowId) {
     ui.notifications.warn(game.i18n.localize("CARLRPG.Evade.NoActor"));
     return false;
   }
-  await updateCardMessage(attack, { flags: { [SCOPE]: { targetRows: { [rowId]: { injuryAdded: true } } } } });
-  await addConditionToActor(target.actor, key, { source: game.i18n.localize("CARLRPG.Roll.Evade") });
-  ui.notifications.info(game.i18n.format("CARLRPG.Evade.DebuffAddedNotice", { name: target.actor.name }));
+  await updateCardMessage(attack, {
+    flags: { [SCOPE]: { targetRows: { [rowId]: { injuryAdded: true } } } },
+  });
+  await addConditionToActor(target.actor, key, {
+    source: game.i18n.localize("CARLRPG.Roll.Evade"),
+  });
+  ui.notifications.info(
+    game.i18n.format("CARLRPG.Evade.DebuffAddedNotice", { name: target.actor.name }),
+  );
   return true;
 }

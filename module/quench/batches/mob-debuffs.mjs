@@ -13,7 +13,11 @@ import { applyOp, reactionCardFor } from "../../chat/reaction-card.mjs";
 import { debuffLandsOn } from "../../helpers/modifiers.mjs";
 import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
 import { hitList } from "../../helpers/reaction-state.mjs";
-import { decorateDamageCard, postDamageCard, rollAttackOnCard } from "../../helpers/reaction-resolve.mjs";
+import {
+  decorateDamageCard,
+  postDamageCard,
+  rollAttackOnCard,
+} from "../../helpers/reaction-resolve.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -34,12 +38,16 @@ const EFFECTS = [
   { debuffKey: "stunned", stacks: 1, trigger: "criticalFail", label: "" },
 ];
 const keys = (actor) => (actor.system.conditions ?? []).map((c) => c.key);
-const effectsOf = (list) => list.map((te, i) => ({ id: `te${i}`, sourceLabel: "Test Maul", ...te }));
+const effectsOf = (list) =>
+  list.map((te, i) => ({ id: `te${i}`, sourceLabel: "Test Maul", ...te }));
 
 /** An unstarted combat with these actors as combatants. */
 async function combatOf(...actors) {
   const combat = await Combat.create({});
-  await combat.createEmbeddedDocuments("Combatant", actors.map((a) => ({ actorId: a.id })));
+  await combat.createEmbeddedDocuments(
+    "Combatant",
+    actors.map((a) => ({ actorId: a.id })),
+  );
   return combat;
 }
 
@@ -47,9 +55,14 @@ async function combatOf(...actors) {
 async function deleteNotices(combat) {
   if (!combat?.id) return;
   await settle(150);
-  const ids = game.messages.filter((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id
-    || m.getFlag("carl-rpg", "reaction")?.combatId === combat.id
-    || m.getFlag("carl-rpg", "reactionDamage")?.combatId === combat.id).map((m) => m.id);
+  const ids = game.messages
+    .filter(
+      (m) =>
+        m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id ||
+        m.getFlag("carl-rpg", "reaction")?.combatId === combat.id ||
+        m.getFlag("carl-rpg", "reactionDamage")?.combatId === combat.id,
+    )
+    .map((m) => m.id);
   if (ids.length) await ChatMessage.deleteDocuments(ids);
 }
 
@@ -60,26 +73,43 @@ export default function register(quench) {
       const { describe, it, assert, beforeEach, afterEach } = context;
 
       describe("which Debuffs land, by trigger", function () {
-        const lands = (row) => EFFECTS.filter((te) => debuffLandsOn(te, row)).map((te) => te.debuffKey);
+        const lands = (row) =>
+          EFFECTS.filter((te) => debuffLandsOn(te, row)).map((te) => te.debuffKey);
 
         it("no Evade rolled: every trigger lands", function () {
           assert.deepEqual(lands({ evade: null }), ["burned", "poisoned", "stunned"]);
         });
 
         it("a failed Evade lands by its Degree", function () {
-          assert.deepEqual(lands({ evade: { degree: "standardFail", success: false } }), ["burned"]);
-          assert.deepEqual(lands({ evade: { degree: "nearMissFail", success: false } }), ["burned"]);
-          assert.deepEqual(lands({ evade: { degree: "majorFail", success: false } }), ["burned", "poisoned"]);
-          assert.deepEqual(lands({ evade: { degree: "criticalFail", success: false } }), ["burned", "poisoned", "stunned"]);
+          assert.deepEqual(lands({ evade: { degree: "standardFail", success: false } }), [
+            "burned",
+          ]);
+          assert.deepEqual(lands({ evade: { degree: "nearMissFail", success: false } }), [
+            "burned",
+          ]);
+          assert.deepEqual(lands({ evade: { degree: "majorFail", success: false } }), [
+            "burned",
+            "poisoned",
+          ]);
+          assert.deepEqual(lands({ evade: { degree: "criticalFail", success: false } }), [
+            "burned",
+            "poisoned",
+            "stunned",
+          ]);
         });
 
         it("landDebuffs adds them to a crawler; none to an Immune one", async function () {
           const plain = await createTestCharacter("lands");
-          const immune = await createTestCharacter("immune", { system: { resistances: { fire: "immune" } } });
+          const immune = await createTestCharacter("immune", {
+            system: { resistances: { fire: "immune" } },
+          });
           try {
             const row = { evade: { degree: "majorFail", success: false } };
             const done = await landDebuffs(plain, effectsOf(EFFECTS), row, { fire: 4 });
-            assert.deepEqual(done.landed.map((t) => t.debuffKey), ["burned", "poisoned"]);
+            assert.deepEqual(
+              done.landed.map((t) => t.debuffKey),
+              ["burned", "poisoned"],
+            );
             assert.includeMembers(keys(plain), ["burned", "poisoned"]);
             assert.notInclude(keys(plain), "stunned");
             const skipped = await landDebuffs(immune, effectsOf(EFFECTS), row, { fire: 4 });
@@ -98,18 +128,35 @@ export default function register(quench) {
 
         it("carries the Attack's Debuffs; an unEvaded row lands every trigger", async function () {
           const mob = await createTestMob("card-mob", {
-            system: { attacks: [{ name: "Maul", toHit: "16", damage: "3", damageType: "", range: "", effect: "" }] },
+            system: {
+              attacks: [
+                { name: "Maul", toHit: "16", damage: "3", damageType: "", range: "", effect: "" },
+              ],
+            },
           });
           const pc = await createTestCharacter("card-pc");
           let message;
           try {
             await mobAttacksOf(mob)[0].update({ "system.targetEffects": EFFECTS });
             message = await withSetting("currentFloor", 1, () =>
-              withFakeTargets([{ actor: pc }], () => CarlDice.rollMobAttack(mob, 0, { skipDialog: true })));
+              withFakeTargets([{ actor: pc }], () =>
+                CarlDice.rollMobAttack(mob, 0, { skipDialog: true }),
+              ),
+            );
             const effects = message.getFlag("carl-rpg", "targetEffects") ?? [];
-            assert.deepEqual(effects.map((t) => [t.debuffKey, t.trigger]),
-              [["burned", "hit"], ["poisoned", "majorFail"], ["stunned", "criticalFail"]]);
-            assert.include(message.content, game.i18n.localize("CARLRPG.MobAttack.Trigger.majorFail"), "the pill says when");
+            assert.deepEqual(
+              effects.map((t) => [t.debuffKey, t.trigger]),
+              [
+                ["burned", "hit"],
+                ["poisoned", "majorFail"],
+                ["stunned", "criticalFail"],
+              ],
+            );
+            assert.include(
+              message.content,
+              game.i18n.localize("CARLRPG.MobAttack.Trigger.majorFail"),
+              "the pill says when",
+            );
             const row = Object.values(message.getFlag("carl-rpg", "targetRows"))[0];
             await applyRow(message, row);
             await settle();
@@ -130,16 +177,33 @@ export default function register(quench) {
           let message;
           try {
             const row = {
-              id: "t0", uuid: pc.uuid, name: pc.name, isCharacter: true, zone: "full", difficulty: 16,
-              hit: true, amazing: false, freeEvade: false, freeUsed: false,
-              evade: { degree: "standardFail", success: false }, applied: false, replaced: false,
+              id: "t0",
+              uuid: pc.uuid,
+              name: pc.name,
+              isCharacter: true,
+              zone: "full",
+              difficulty: 16,
+              hit: true,
+              amazing: false,
+              freeEvade: false,
+              freeUsed: false,
+              evade: { degree: "standardFail", success: false },
+              applied: false,
+              replaced: false,
             };
             message = await ChatMessage.create({
               content: '<div class="carl-chat-card"></div>',
-              flags: { "carl-rpg": {
-                isArea: false, floor: 1, damageIsMagic: false, damageByType: { "": 1 },
-                targetEffects: effectsOf(EFFECTS), targetUuids: [pc.uuid], targetRows: { t0: row },
-              } },
+              flags: {
+                "carl-rpg": {
+                  isArea: false,
+                  floor: 1,
+                  damageIsMagic: false,
+                  damageByType: { "": 1 },
+                  targetEffects: effectsOf(EFFECTS),
+                  targetUuids: [pc.uuid],
+                  targetRows: { t0: row },
+                },
+              },
             });
             await applyRow(message, message.getFlag("carl-rpg", "targetRows").t0);
             await settle();
@@ -156,7 +220,14 @@ export default function register(quench) {
       describe("the Damage card (Declaration and Reaction)", function () {
         useQuenchTimeout(this);
 
-        const rolled = (total, naturalRoll, difficulty) => ({ total, naturalRoll, difficulty, formula: "1d20", breakdown: "", roll: null });
+        const rolled = (total, naturalRoll, difficulty) => ({
+          total,
+          naturalRoll,
+          difficulty,
+          formula: "1d20",
+          breakdown: "",
+          roll: null,
+        });
         const preset = { advantage: "normal", modifier: 0, checked: [], checkedDebuffs: null };
         let mob;
         let pc1;
@@ -173,7 +244,8 @@ export default function register(quench) {
               actionsPerRound: 6,
             },
           });
-          for (const item of mobAttacksOf(mob)) await item.update({ "system.targetEffects": EFFECTS });
+          for (const item of mobAttacksOf(mob))
+            await item.update({ "system.targetEffects": EFFECTS });
           pc1 = await createTestCharacter("debuff-pc1");
           pc2 = await createTestCharacter("debuff-pc2");
           combat = await combatOf(mob, pc1, pc2);
@@ -185,11 +257,20 @@ export default function register(quench) {
           for (const actor of [mob, pc1, pc2]) await deleteTestActor(actor);
         });
 
-        const declareOn = (target, index = 0) => withSetting("currentFloor", 1, () =>
-          withFakeTargets([{ actor: target }], () => CarlDice.rollMobAttack(mob, index, { skipDialog: true })));
+        const declareOn = (target, index = 0) =>
+          withSetting("currentFloor", 1, () =>
+            withFakeTargets([{ actor: target }], () =>
+              CarlDice.rollMobAttack(mob, index, { skipDialog: true }),
+            ),
+          );
         const startReaction = async () => {
-          await waitFor(() => game.messages.some((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id),
-            { message: "no round-start notice" });
+          await waitFor(
+            () =>
+              game.messages.some(
+                (m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id,
+              ),
+            { message: "no round-start notice" },
+          );
           await combat.nextTurn();
           return reactionCardFor(combat);
         };
@@ -229,8 +310,16 @@ export default function register(quench) {
           const card = await startReaction();
           const [h1, h2] = hitList(state(card));
           // pc1 fails by 6 (a plain fail); pc2 fails by 11 (Major Fail).
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [h1.id]: rolled(10, 6, 16) }, preset });
-          await op(card, "evade", { uuid: pc2.uuid, checks: { [h2.id]: rolled(5, 2, 16) }, preset });
+          await op(card, "evade", {
+            uuid: pc1.uuid,
+            checks: { [h1.id]: rolled(10, 6, 16) },
+            preset,
+          });
+          await op(card, "evade", {
+            uuid: pc2.uuid,
+            checks: { [h2.id]: rolled(5, 2, 16) },
+            preset,
+          });
           await resolveAll(card);
           assert.include(keys(pc1), "burned");
           assert.notInclude(keys(pc1), "poisoned");
@@ -241,7 +330,11 @@ export default function register(quench) {
         it("a successful Evade: none", async function () {
           await declareOn(pc1);
           const card = await startReaction();
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [onlyHit(card).id]: rolled(20, 12, 16) }, preset });
+          await op(card, "evade", {
+            uuid: pc1.uuid,
+            checks: { [onlyHit(card).id]: rolled(20, 12, 16) },
+            preset,
+          });
           await resolveAll(card);
           assert.lengthOf(keys(pc1), 0);
         });
@@ -265,7 +358,10 @@ export default function register(quench) {
           assert.lengthOf(keys(pc2), 0);
           const row = Object.values(data().rows)[0];
           assert.isTrue(row.ignoreDebuffs);
-          assert.isTrue(row.tags.some((t) => t.key === "CARLRPG.Resolve.CatcherNoDebuffs"), "the row says so");
+          assert.isTrue(
+            row.tags.some((t) => t.key === "CARLRPG.Resolve.CatcherNoDebuffs"),
+            "the row says so",
+          );
         });
 
         it("an Attack with Debuffs and no damage gets Apply, and lands them", async function () {
@@ -274,7 +370,7 @@ export default function register(quench) {
           const damage = await postDamageCard(combat, state(card));
           const data = () => damage.getFlag("carl-rpg", "reactionDamage");
           const row = Object.values(data().rows)[0];
-          assert.equal(row.status, "pending", "not \"no damage\": it has Debuffs to apply");
+          assert.equal(row.status, "pending", 'not "no damage": it has Debuffs to apply');
           assert.isTrue(await rollAttackOnCard(damage, row.attackId));
           await settle();
           assert.includeMembers(keys(pc1), ["burned", "poisoned", "stunned"]);
@@ -304,10 +400,21 @@ export default function register(quench) {
             return html.querySelector(".carl-reaction-damage").textContent;
           };
           const burned = game.i18n.localize(CONFIG.CARLRPG.debuffs.burned.label);
-          assert.include(draw(), game.i18n.format("CARLRPG.Resolve.WillGain", { debuffs: `${burned} ×1` }), "before: what will land");
-          await rollAttackOnCard(damage, Object.keys(damage.getFlag("carl-rpg", "reactionDamage").attacks)[0]);
+          assert.include(
+            draw(),
+            game.i18n.format("CARLRPG.Resolve.WillGain", { debuffs: `${burned} ×1` }),
+            "before: what will land",
+          );
+          await rollAttackOnCard(
+            damage,
+            Object.keys(damage.getFlag("carl-rpg", "reactionDamage").attacks)[0],
+          );
           await settle();
-          assert.include(draw(), game.i18n.format("CARLRPG.Resolve.Gained", { debuffs: `${burned} ×1` }), "after: what did");
+          assert.include(
+            draw(),
+            game.i18n.format("CARLRPG.Resolve.Gained", { debuffs: `${burned} ×1` }),
+            "after: what did",
+          );
         });
       });
     },

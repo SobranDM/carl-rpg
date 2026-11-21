@@ -1,9 +1,13 @@
 import CarlRPGActorBase from "./actor-base.mjs";
 import { ownerIds, withOwners } from "../helpers/ownership.mjs";
 import { deriveDefenses } from "./shared/derive-creature.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 /** The driving Skill keys a vehicle stored before 0.7.0, and the Skills they named. */
-export const LEGACY_DRIVE_SKILLS = Object.freeze({ driving: "Driving", chopperPilot: "Chopper Pilot" });
+export const LEGACY_DRIVE_SKILLS = Object.freeze({
+  driving: "Driving",
+  chopperPilot: "Chopper Pilot",
+});
 
 /**
  * Vehicle actor (Vehicles, p.72-73; docs/companions-and-vehicles.md). An
@@ -27,7 +31,10 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
     // Before 0.7.0 the driving Skill was a key: read it as the Skill's name,
     // in memory on every load (world vehicles, tokens, compendiums). The
     // 0.7.0 migration saves it (migration.mjs migrateVehicleSkillSettings).
-    if (typeof source.driveSkill === "string" && Object.hasOwn(LEGACY_DRIVE_SKILLS, source.driveSkill)) {
+    if (
+      typeof source.driveSkill === "string" &&
+      Object.hasOwn(LEGACY_DRIVE_SKILLS, source.driveSkill)
+    ) {
       source.driveSkill = LEGACY_DRIVE_SKILLS[source.driveSkill];
     }
     return super.migrateData(source);
@@ -37,12 +44,16 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
     const fields = foundry.data.fields;
     const requiredInteger = { required: true, nullable: false, integer: true };
     const nullableInteger = { required: false, nullable: true, integer: true, initial: null };
-    const choice = (keys, initial) => new fields.StringField({ required: true, blank: initial === "", initial, choices: keys });
+    const choice = (keys, initial) =>
+      new fields.StringField({ required: true, blank: initial === "", initial, choices: keys });
     const schema = super.defineSchema();
 
     schema.model = new fields.StringField({ required: true, blank: true, initial: "" });
     schema.size = new fields.NumberField({
-      ...requiredInteger, initial: 5, min: 1, max: 8,
+      ...requiredInteger,
+      initial: 5,
+      min: 1,
+      max: 8,
       choices: Object.keys(CONFIG.CARLRPG.sizes).map(Number),
     });
     // Base Move (Table 7). This round's Move: vehicleStatus().
@@ -61,11 +72,14 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
 
     // Aboard: each occupant's Actor uuid (a token's synthetic actor for an
     // unlinked Mob), its seat, and its name (shown if the token is gone).
-    schema.occupants = new fields.ArrayField(new fields.SchemaField({
-      uuid: new fields.StringField({ required: true, blank: false }),
-      role: choice(Object.keys(CONFIG.CARLRPG.vehicleRoles), "passenger"),
-      name: new fields.StringField({ required: true, blank: true, initial: "" }),
-    }), { required: true, initial: [] });
+    schema.occupants = new fields.ArrayField(
+      new fields.SchemaField({
+        uuid: new fields.StringField({ required: true, blank: false }),
+        role: choice(Object.keys(CONFIG.CARLRPG.vehicleRoles), "passenger"),
+        name: new fields.StringField({ required: true, blank: true, initial: "" }),
+      }),
+      { required: true, initial: [] },
+    );
     // Standing still: Move 0, and attacks against it are at Difficulty 10.
     schema.parked = new fields.BooleanField({ initial: true });
 
@@ -81,7 +95,13 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
       round: new fields.NumberField(nullableInteger),
       degree: choice(["", ...CONFIG.CARLRPG.degreeOrder], ""),
       critChoice: choice(["", "move", "favor"], ""),
-      ramFactor: new fields.NumberField({ required: true, nullable: false, initial: 1, min: 0, max: 1 }),
+      ramFactor: new fields.NumberField({
+        required: true,
+        nullable: false,
+        initial: 1,
+        min: 0,
+        max: 1,
+      }),
     });
     // Amazing Success: "Advantage on your next Skill Check to operate this vehicle."
     schema.nextCheckAdvantage = new fields.BooleanField({ initial: false });
@@ -108,19 +128,24 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
     // Built-in weapons - a Mob's Attack shape (so a GM-crewed vehicle fires
     // through CarlDice.rollMobAttack), plus the Attack Skill and Stat a
     // crawler occupant fires it with (module/helpers/vehicle-weapons.mjs).
-    schema.attacks = new fields.ArrayField(new fields.SchemaField({
-      name: new fields.StringField({ required: true, blank: true, initial: "" }),
-      toHit: new fields.StringField({ required: true, blank: true, initial: "" }),
-      damage: new fields.StringField({ required: true, blank: true, initial: "" }),
-      damageType: new fields.StringField({
-        required: true, blank: true, initial: "",
-        choices: ["", ...Object.keys(CONFIG.CARLRPG.damageTypes)],
+    schema.attacks = new fields.ArrayField(
+      new fields.SchemaField({
+        name: new fields.StringField({ required: true, blank: true, initial: "" }),
+        toHit: new fields.StringField({ required: true, blank: true, initial: "" }),
+        damage: new fields.StringField({ required: true, blank: true, initial: "" }),
+        damageType: new fields.StringField({
+          required: true,
+          blank: true,
+          initial: "",
+          choices: ["", ...Object.keys(CONFIG.CARLRPG.damageTypes)],
+        }),
+        range: new fields.StringField({ required: true, blank: true, initial: "" }),
+        effect: new fields.StringField({ required: true, blank: true, initial: "" }),
+        skill: new fields.StringField({ required: true, blank: true, initial: "" }),
+        stat: choice(Object.keys(CONFIG.CARLRPG.stats), "dex"),
       }),
-      range: new fields.StringField({ required: true, blank: true, initial: "" }),
-      effect: new fields.StringField({ required: true, blank: true, initial: "" }),
-      skill: new fields.StringField({ required: true, blank: true, initial: "" }),
-      stat: choice(Object.keys(CONFIG.CARLRPG.stats), "dex"),
-    }), { required: false, initial: [] });
+      { required: false, initial: [] },
+    );
 
     return schema;
   }
@@ -141,7 +166,8 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
     if (sys.resistances?.psychic === undefined) updates.system.resistances = { psychic: "immune" };
     // Not for one the 0.7.0 migration makes: it sets the Character's owners
     // itself, and the migrating GM's own crawler has nothing to do with it.
-    const crawler = !options?.carlMigration && user?.character?.type === "character" ? user.character : null;
+    const crawler =
+      !options?.carlMigration && user?.character?.type === "character" ? user.character : null;
     const owners = ownerIds(crawler);
     if (owners.length) updates.ownership = withOwners(data.ownership, owners);
     this.parent.updateSource(updates);
@@ -171,6 +197,6 @@ export default class CarlRPGVehicle extends CarlRPGActorBase {
   }
 
   getRollData() {
-    return { floor: game.settings.get("carl-rpg", "currentFloor"), size: this.size, move: this.move };
+    return { floor: currentFloor(), size: this.size, move: this.move };
   }
 }

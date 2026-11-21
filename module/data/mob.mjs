@@ -1,13 +1,18 @@
 import CarlRPGActorBase from "./actor-base.mjs";
-import { staticEvade } from "../helpers/rules.mjs";
+import { opposedDifficulty, staticEvade } from "../helpers/rules.mjs";
 import { aggregateActorBonuses } from "../helpers/modifiers.mjs";
 import { defineConditionsField } from "./shared/condition-entry.mjs";
 import {
-  defineStatsField, deriveStats, deriveDefenses, deriveResourceCaps, creatureRollData,
+  defineStatsField,
+  deriveStats,
+  deriveDefenses,
+  deriveResourceCaps,
+  creatureRollData,
 } from "./shared/derive-creature.mjs";
 import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effects.mjs";
 import { legacyAttackItems } from "../helpers/mob-attacks.mjs";
 import { parseSize } from "../helpers/size.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
 
 /**
  * Mob actor ("Building a Mob", p.270-272) - a GM-built monster/NPC stat
@@ -17,7 +22,6 @@ import { parseSize } from "../helpers/size.mjs";
  * formulas (see prepareDerivedData), not the fields available.
  */
 export default class CarlRPGMob extends CarlRPGActorBase {
-
   /** @override */
   static migrateData(source) {
     // Size was free text before 0.7.0 ("Large (5)", "Huge"): read as its
@@ -34,8 +38,10 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     const schema = super.defineSchema();
 
     schema.mobTier = new fields.StringField({
-      required: false, blank: true, initial: "",
-      choices: ["", "neighborhood", "borough", "city", "province", "country", "floor"],
+      required: false,
+      blank: true,
+      initial: "",
+      choices: () => ["", ...Object.keys(CONFIG.CARLRPG.mobTiers)],
     });
 
     // Plain GM-set number, no XP/leveling-up mechanism (Mobs don't accrue
@@ -50,7 +56,10 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // Character's, Pet's and Vehicle's; null when not set. It was free text
     // ("Colossal (7)") before 0.7.0: migrateData reads that as its value.
     schema.size = new fields.NumberField({
-      required: false, nullable: true, integer: true, initial: null,
+      required: false,
+      nullable: true,
+      integer: true,
+      initial: null,
       choices: () => Object.keys(CONFIG.CARLRPG.sizes).map(Number),
     });
     // Flavor text (e.g. "Humanoid", "Undead"). Named creatureType, not type,
@@ -66,14 +75,26 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // formula"; set once a GM wants to deviate from it, or preserved by the
     // one-time actor-type migration for a Mob that already had a hand-set
     // hb.max before this field existed (see carl-rpg.mjs's ready hook).
-    schema.hbSlotsOverride = new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 1 });
+    schema.hbSlotsOverride = new fields.NumberField({
+      required: false,
+      nullable: true,
+      integer: true,
+      initial: null,
+      min: 1,
+    });
 
     // Actions a round (helpers/actions.mjs). An Elite, like a Boss (any
     // mobTier), gets "1 Action per crawler each round, unless their Stat
     // Block says otherwise" (p.81); a plain Mob 1 Move + 1 Action (p.270).
     // actionsPerRound: a stat block's own count, used instead of either.
     schema.isElite = new fields.BooleanField({ required: true, initial: false });
-    schema.actionsPerRound = new fields.NumberField({ required: false, nullable: true, integer: true, initial: null, min: 0 });
+    schema.actionsPerRound = new fields.NumberField({
+      required: false,
+      nullable: true,
+      integer: true,
+      initial: null,
+      min: 0,
+    });
 
     // The OLD Attacks list (printed text: name, to-hit, damage + type, range,
     // effect). A Mob's Attacks are `mobAttack` items now (module/data/
@@ -87,13 +108,15 @@ export default class CarlRPGMob extends CarlRPGActorBase {
         toHit: new fields.StringField({ required: false, blank: true, initial: "" }),
         damage: new fields.StringField({ required: false, blank: true, initial: "" }),
         damageType: new fields.StringField({
-          required: true, blank: true, initial: "",
+          required: true,
+          blank: true,
+          initial: "",
           choices: ["", ...Object.keys(CONFIG.CARLRPG.damageTypes)],
         }),
         range: new fields.StringField({ required: false, blank: true, initial: "" }),
         effect: new fields.StringField({ required: false, blank: true, initial: "" }),
       }),
-      { required: false, initial: [] }
+      { required: false, initial: [] },
     );
 
     // Shape shared with Characters and Pets (data/shared/derive-creature.mjs).
@@ -136,8 +159,14 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // the roll dialog is where a per-roll call (e.g. sight-based Blinded on
     // a Surprise check) gets made. *DebuffDelta lets the sheet flag a
     // debuffed value.
-    const evade = resolveDifficultyRows(staticEvade(this), collectDebuffRows(this, "evade", { ownAction: false }));
-    const surprise = resolveDifficultyRows(10 + (this.stats.int?.mod ?? 0), collectDebuffRows(this, "check", { ownAction: false }));
+    const evade = resolveDifficultyRows(
+      staticEvade(this),
+      collectDebuffRows(this, "evade", { ownAction: false }),
+    );
+    const surprise = resolveDifficultyRows(
+      opposedDifficulty(this.stats.int?.mod, 0),
+      collectDebuffRows(this, "check", { ownAction: false }),
+    );
     this.evadeBase = evade.difficulty;
     this.evadeDebuffDelta = evade.delta;
     this.surpriseBase = surprise.difficulty;
@@ -155,7 +184,7 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     this.statPointsPerLevel = tier ? tier.statsPerLevel : CONFIG.CARLRPG.mobStatPointsPerLevel;
     this.statPointsAvailable = this.level * this.statPointsPerLevel;
     const statTotal = Object.values(this.stats).reduce((sum, s) => sum + (s.value ?? 0), 0);
-    this.statPointsSpent = statTotal - (5 * this.statPointsBase);
+    this.statPointsSpent = statTotal - 5 * this.statPointsBase;
 
     // HB slots (p.270): a plain Mob's slot count equals its Level, capped at
     // 10; a Boss instead uses Table 50's per-tier base + the current Floor.
@@ -164,7 +193,7 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     // (actor-base.mjs) that gets overwritten every derived-data pass here,
     // the same pattern actor-base.mjs's own mana.max already uses for a
     // fully-derived resource.
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     this.hbSlotsRule = tier ? tier.hbSlotsBase + floor : Math.min(this.level, 10);
     this.hb.max = this.hbSlotsOverride ?? this.hbSlotsRule;
 

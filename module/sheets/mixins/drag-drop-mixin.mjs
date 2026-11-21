@@ -30,7 +30,7 @@ export default function DragDropMixin(Base) {
      * @override
      */
     get _dragDrop() {
-      return this.#carlDragDrop ??= new ux.DragDrop.implementation({
+      return (this.#carlDragDrop ??= new ux.DragDrop.implementation({
         dragSelector: "[data-item-id]",
         dropSelector: null,
         permissions: {
@@ -42,7 +42,7 @@ export default function DragDropMixin(Base) {
           dragover: this._onDragOver.bind(this),
           drop: this._onDrop.bind(this),
         },
-      });
+      }));
     }
 
     /**

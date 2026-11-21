@@ -21,13 +21,26 @@ import CarlDice, { checkSubtitle } from "../dice/dice.mjs";
 import { degreeBadge } from "./rules.mjs";
 import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
-import { baseRow, childRowId, crawlerAttackDifficulty, crawlerAttackRow } from "./attack-targets.mjs";
+import {
+  baseRow,
+  childRowId,
+  crawlerAttackDifficulty,
+  crawlerAttackRow,
+} from "./attack-targets.mjs";
 import { updateCardMessage } from "./chat-socket.mjs";
-import { actorSizeValue, vehicleDriver, vehicleFight, vehicleOccupants, vehicleStatus } from "./vehicle-state.mjs";
+import {
+  actorSizeValue,
+  roundStamp,
+  vehicleDriver,
+  vehicleOccupants,
+  vehicleStatus,
+} from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
 import { canDrive } from "./vehicle-driving.mjs";
-import { createRollMessage, esc } from "../chat/chat-card.mjs";
+import { createRollMessage } from "../chat/chat-card.mjs";
 import { buildAttackTargetsFooter } from "../chat/attack-targets-card.mjs";
+import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -51,7 +64,8 @@ export function ramFormula(vehicle) {
  * @returns {Promise<ChatMessage|null>}
  */
 export async function rollRam(vehicle, { skipDialog = false } = {}) {
-  const loc = (key, data = {}) => game.i18n.format(`CARLRPG.Vehicle.${key}`, { vehicle: vehicle.name, ...data });
+  const loc = (key, data = {}) =>
+    game.i18n.format(`CARLRPG.Vehicle.${key}`, { vehicle: vehicle.name, ...data });
   const driver = vehicleDriver(vehicle);
   if (!driver || !rollsLikeCrawler(driver)) {
     ui.notifications.warn(driver ? loc("MobDriver", { name: driver.name }) : loc("NoDriver"));
@@ -72,7 +86,7 @@ export async function rollRam(vehicle, { skipDialog = false } = {}) {
     return null;
   }
 
-  const floor = game.settings.get(SCOPE, "currentFloor");
+  const floor = currentFloor();
   const primary = targets[0];
   // The Skill the vehicle names (Driving, Chopper Pilot or homebrew).
   const driveSkill = vehicle.system.driveSkill.trim();
@@ -80,10 +94,17 @@ export async function rollRam(vehicle, { skipDialog = false } = {}) {
     ui.notifications.warn(loc("NoDriveSkill"));
     return null;
   }
-  const { skill, trained } = await skillOrUntrainedCopy(driver, driveSkill, { system: { governingStat: "dex" } });
+  const { skill, trained } = await skillOrUntrainedCopy(driver, driveSkill, {
+    system: { governingStat: "dex" },
+  });
   const check = await CarlDice.rollOpposedSkillCheck(driver, skill, {
     difficulty: crawlerAttackDifficulty(primary.actor, floor).difficulty,
-    opponent: null, skipDialog, post: false, markUse: trained,
+    // A ram spends no Action (known-gaps 7.3), so it isn't one here either.
+    opponent: null,
+    skipDialog,
+    post: false,
+    markUse: trained,
+    isAction: false,
   });
   if (!check) return null;
   // A ram is a Check to operate the vehicle: it spends an Amazing Success's Advantage.
@@ -91,16 +112,18 @@ export async function rollRam(vehicle, { skipDialog = false } = {}) {
     await updateVehicle(vehicle, { "system.nextCheckAdvantage": false });
   }
 
-  const rows = targets.map((t, i) => crawlerAttackRow({
-    id: `t${i}`,
-    target: { uuid: t.document?.uuid ?? t.actor.uuid, actor: t.actor },
-    difficulty: i === 0 ? check.difficulty : crawlerAttackDifficulty(t.actor, floor).difficulty,
-    attackTotal: check.total,
-    naturalRoll: check.naturalRoll,
-    // A ram hits the vehicle or the creature it's aimed at - no Near Miss redirect.
-    vehicle: null,
-    redirect: false,
-  }));
+  const rows = targets.map((t, i) =>
+    crawlerAttackRow({
+      id: `t${i}`,
+      target: { uuid: t.document?.uuid ?? t.actor.uuid, actor: t.actor },
+      difficulty: i === 0 ? check.difficulty : crawlerAttackDifficulty(t.actor, floor).difficulty,
+      attackTotal: check.total,
+      naturalRoll: check.naturalRoll,
+      // A ram hits the vehicle or the creature it's aimed at - no Near Miss redirect.
+      vehicle: null,
+      redirect: false,
+    }),
+  );
 
   const damageRoll = await new Roll(ramFormula(vehicle), { floor }).evaluate();
   const raw = damageRoll.total;
@@ -136,7 +159,9 @@ export async function rollRam(vehicle, { skipDialog = false } = {}) {
   };
   const body = [
     `<p>${esc(loc(larger ? "Ram.LargerTarget" : "Ram.Recoil"))}</p>`,
-    trained ? "" : `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Vehicle.Untrained"))}</p>`,
+    trained
+      ? ""
+      : `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Vehicle.Untrained"))}</p>`,
     check.debuffNote ?? "",
   ].join("");
   return createRollMessage({
@@ -173,25 +198,23 @@ export async function afterRamRowApplied(message, row, recipient, damage) {
   if (!flags.ram || !isVehicle(recipient)) return [];
   const lines = [];
   if (row.role === "recoil") {
-    const status = vehicleStatus(recipient);
-    const fight = vehicleFight(recipient);
-    const current = recipient.system.round;
+    // This round's Driving Check card (and result) is kept.
     await updateVehicle(recipient, {
-      "system.round": {
-        combatId: fight?.id ?? "",
-        // This round's Driving Check card still owns its result.
-        checkId: status.roundActive ? current.checkId : "",
-        round: fight?.round ?? null,
-        degree: status.roundActive ? current.degree : "",
-        critChoice: status.roundActive ? current.critChoice : "",
-        ramFactor: row.moveFactor ?? 0.5,
-      },
+      "system.round": roundStamp(recipient, { ramFactor: row.moveFactor ?? 0.5 }),
     });
-    lines.push(game.i18n.format(row.moveFactor === 0 ? "CARLRPG.Vehicle.Ram.Stopped" : "CARLRPG.Vehicle.Ram.Slowed", { vehicle: esc(recipient.name) }));
+    lines.push(
+      game.i18n.format(
+        row.moveFactor === 0 ? "CARLRPG.Vehicle.Ram.Stopped" : "CARLRPG.Vehicle.Ram.Slowed",
+        { vehicle: esc(recipient.name) },
+      ),
+    );
   }
 
   const taken = Object.values(damage ?? {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
-  const share = Math.max(0, Math.floor(taken / 2) - (recipient.system.drEffective ?? recipient.system.dr ?? 0));
+  const share = Math.max(
+    0,
+    Math.floor(taken / 2) - (recipient.system.drEffective ?? recipient.system.dr ?? 0),
+  );
   const occupants = vehicleOccupants(recipient).filter((o) => o.actor);
   if (!share || !occupants.length) return lines;
   const added = {};
@@ -209,7 +232,12 @@ export async function afterRamRowApplied(message, row, recipient, damage) {
     });
   }
   await updateCardMessage(message, { flags: { [SCOPE]: { targetRows: added } } });
-  lines.push(game.i18n.format("CARLRPG.Vehicle.Ram.OccupantsAdded", { vehicle: esc(recipient.name), damage: share }));
+  lines.push(
+    game.i18n.format("CARLRPG.Vehicle.Ram.OccupantsAdded", {
+      vehicle: esc(recipient.name),
+      damage: share,
+    }),
+  );
   return lines;
 }
 
@@ -223,19 +251,21 @@ export async function afterRamRowApplied(message, row, recipient, damage) {
  */
 export async function explodeVehicle(vehicle) {
   if (!isVehicle(vehicle)) return null;
-  const floor = game.settings.get(SCOPE, "currentFloor");
+  const floor = currentFloor();
   const formula = `${vehicle.system.size}d6 + @floor`;
   const roll = await new Roll(formula, { floor }).evaluate();
   const occupants = vehicleOccupants(vehicle).filter((o) => o.actor);
-  const rows = occupants.map((o, i) => baseRow({
-    id: `t${i}`,
-    target: { uuid: o.uuid, actor: o.actor },
-    difficulty: null,
-    hit: true,
-    amazing: false,
-    canEvade: false,
-    role: "occupant",
-  }));
+  const rows = occupants.map((o, i) =>
+    baseRow({
+      id: `t${i}`,
+      target: { uuid: o.uuid, actor: o.actor },
+      difficulty: null,
+      hit: true,
+      amazing: false,
+      canEvade: false,
+      role: "occupant",
+    }),
+  );
   const damageByType = { fire: roll.total };
   const message = await createRollMessage({
     rolls: [roll],
@@ -243,18 +273,22 @@ export async function explodeVehicle(vehicle) {
     title: game.i18n.format("CARLRPG.Vehicle.Explosion.Title", { vehicle: vehicle.name }),
     img: vehicle.img,
     body: `<p>${esc(game.i18n.localize(occupants.length ? "CARLRPG.Vehicle.Explosion.Body" : "CARLRPG.Vehicle.Explosion.Empty"))}</p>`,
-    footer: rows.length ? buildAttackTargetsFooter({ damageByType, targetEffects: [], isArea: false }) : undefined,
-    flags: rows.length ? {
-      targetUuids: rows.map((r) => r.uuid),
-      targetRows: Object.fromEntries(rows.map((r) => [r.id, r])),
-      damageByType,
-      damageIsMagic: false,
-      isArea: false,
-      floor,
-      attackerType: "vehicle",
-      attackerUuid: vehicle.uuid,
-      explosion: { vehicleUuid: vehicle.uuid },
-    } : {},
+    footer: rows.length
+      ? buildAttackTargetsFooter({ damageByType, targetEffects: [], isArea: false })
+      : undefined,
+    flags: rows.length
+      ? {
+          targetUuids: rows.map((r) => r.uuid),
+          targetRows: Object.fromEntries(rows.map((r) => [r.id, r])),
+          damageByType,
+          damageIsMagic: false,
+          isArea: false,
+          floor,
+          attackerType: "vehicle",
+          attackerUuid: vehicle.uuid,
+          explosion: { vehicleUuid: vehicle.uuid },
+        }
+      : {},
   });
   await vehicle.update({ "system.occupants": [], "system.parked": true });
   return message;

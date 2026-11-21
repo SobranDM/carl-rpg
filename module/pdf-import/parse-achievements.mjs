@@ -15,6 +15,7 @@
  */
 
 import { escapeHtml, joinText } from "./page-text.mjs";
+import { rewardBox } from "../helpers/reward-text.mjs";
 
 const ANCHOR_RE = /^NEW ACHIEVE/;
 const SKIP_RE = /^(NEW ACHIEVE\w*!?|MENT!)$/;
@@ -42,7 +43,7 @@ export function parseAchievements(pages) {
       if (box) found.push({ ...box, page: page.page });
     }
   }
-  return found.map(toPage);
+  return found.map(toItem);
 }
 
 /** The value of `key` shared by the most text on the page. */
@@ -109,20 +110,28 @@ function readBox(items, anchor, anchors) {
     title,
     description: joinText(before.map((l) => l.text)),
     reward: joinText((contentsAt >= 0 ? after.slice(0, contentsAt) : after).map((l) => l.text)),
-    contents:
-      contentsAt >= 0
-        ? joinText(after.slice(contentsAt).map((l) => l.text)).replace(/^Contents\s*[—-]\s*/, "")
-        : "",
   };
 }
 
-function toPage({ title, description, reward, contents, page }) {
-  const html = [`<p>${escapeHtml(description)}</p>`];
-  if (reward) html.push(`<p><strong>Reward:</strong> ${escapeHtml(reward)}</p>`);
-  if (contents) html.push(`<p><strong>Contents:</strong> ${escapeHtml(contents)}</p>`);
+/**
+ * A box as an Achievement item (data/achievement.mjs): its Reward line as
+ * printed; a loot box, its tier the achievement's grade, if the Reward
+ * gives one ("You've received a Bronze Crafter's Box!"). Its icon comes from its grade (documents/item.mjs).
+ */
+function toItem({ title, description, reward, page }) {
+  const box = rewardBox(reward);
   return {
     name: title,
     page,
-    data: { name: title, type: "text", text: { content: html.join(""), format: 1 } },
+    data: {
+      name: title,
+      type: "achievement",
+      system: {
+        description: description ? `<p>${escapeHtml(description)}</p>` : "",
+        reward,
+        grade: box?.tier ?? "bronze",
+        lootBox: !!box,
+      },
+    },
   };
 }

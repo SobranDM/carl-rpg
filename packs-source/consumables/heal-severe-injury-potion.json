@@ -1,0 +1,65 @@
+{
+  "_id": "Bm4AKmHCuolWYOvc",
+  "name": "Heal Severe Injury Potion",
+  "type": "item",
+  "folder": "vCFDxrAT5809BESA",
+  "img": "icons/consumables/potions/bottle-bulb-corked-glowing-red.webp",
+  "system": {
+    "description": "<p>Heals 9 Health Bar slots and mends all Injuries.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "consumable": {
+      "kind": "potion",
+      "heal": {
+        "slots": 9,
+        "full": false,
+        "mend": "all"
+      },
+      "mana": {
+        "amount": null,
+        "full": false
+      },
+      "cures": [],
+      "permanent": {
+        "kind": "",
+        "target": "",
+        "value": 1
+      },
+      "buff": {
+        "label": "",
+        "duration": 0,
+        "unit": "minutes",
+        "changes": [],
+        "perRound": {
+          "hb": null,
+          "mana": null
+        }
+      },
+      "spell": {
+        "name": "",
+        "uuid": "",
+        "rank": null
+      }
+    }
+  },
+  "effects": [],
+  "_stats": {
+    "systemId": null,
+    "systemVersion": null,
+    "coreVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!Bm4AKmHCuolWYOvc"
+}

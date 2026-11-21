@@ -38,7 +38,13 @@ function cfSkill(name, rank, definition) {
 
 const cfItem = (name, extra = {}) => ({
   id: `test-item-${name.toLowerCase().replace(/\W+/g, "-")}`,
-  name, quantity: 1, notes: "", slot: null, equipped: false, effects: [], ...extra,
+  name,
+  quantity: 1,
+  notes: "",
+  slot: null,
+  equipped: false,
+  effects: [],
+  ...extra,
 });
 
 /**
@@ -73,64 +79,145 @@ function testExport() {
     campaign: "Test Campaign",
     skills: [
       cfSkill("Unarmed Combat", 3, {
-        category: "attack", stat: "str", checkType: "evade",
-        attack: { type: "melee", weaponCategory: "handToHand", baseDamage: { dice: "1d4", damageType: "bludgeoning" } },
+        category: "attack",
+        stat: "str",
+        checkType: "evade",
+        attack: {
+          type: "melee",
+          weaponCategory: "handToHand",
+          baseDamage: { dice: "1d4", damageType: "bludgeoning" },
+        },
       }),
       cfSkill("Heal", 1, {
-        category: "spell", stat: "int", passive: true, interrupt: true, checkType: "none",
+        category: "spell",
+        stat: "int",
+        passive: true,
+        interrupt: true,
+        checkType: "none",
         spell: { type: "passive", manaCost: "2", heal: { target: "self", amount: "2" } },
       }),
       cfSkill("Handgun", 2, {
-        category: "attack", stat: "dex", checkType: "evade",
-        attack: { type: "ranged", weaponCategory: "ranged", baseDamage: { dice: "1d8", damageType: "piercing" } },
+        category: "attack",
+        stat: "dex",
+        checkType: "evade",
+        attack: {
+          type: "ranged",
+          weaponCategory: "ranged",
+          baseDamage: { dice: "1d8", damageType: "piercing" },
+        },
       }),
       cfSkill("Test Tinker", 2, {
-        category: "utility", stat: "int", description: "Made-up utility Skill.",
+        category: "utility",
+        stat: "int",
+        description: "Made-up utility Skill.",
         upgrades: { rank5: "Tinkers faster." },
       }),
       cfSkill("Test Pistol", 3, {
-        category: "attack", stat: "dex", checkType: "evade", description: "Made-up attack Skill.",
+        category: "attack",
+        stat: "dex",
+        checkType: "evade",
+        description: "Made-up attack Skill.",
         upgrades: { rank5: "+1d4 base damage.", rank10: "Add 1 Rank damage die." },
-        upgradeRiders: { rank5: [{ type: "baseDice", dice: "1d4" }], rank10: [{ type: "rankDamageDie", rankOf: "attack" }] },
-        attack: { type: "ranged", weaponCategory: "ranged", range: "60 ft", baseDamage: { dice: "1d8", damageType: "piercing" } },
+        upgradeRiders: {
+          rank5: [{ type: "baseDice", dice: "1d4" }],
+          rank10: [{ type: "rankDamageDie", rankOf: "attack" }],
+        },
+        attack: {
+          type: "ranged",
+          weaponCategory: "ranged",
+          range: "60 ft",
+          baseDamage: { dice: "1d8", damageType: "piercing" },
+        },
       }),
       cfSkill("Test Greatclub", 1, {
-        category: "attack", stat: "str", checkType: "evade", description: "Made-up two-handed weapon Skill.",
-        attack: { type: "melee", weaponCategory: "bashing", baseDamage: { dice: "1d10", damageType: "bludgeoning" } },
+        category: "attack",
+        stat: "str",
+        checkType: "evade",
+        description: "Made-up two-handed weapon Skill.",
+        attack: {
+          type: "melee",
+          weaponCategory: "bashing",
+          baseDamage: { dice: "1d10", damageType: "bludgeoning" },
+        },
       }),
       cfSkill("Test Zap", 2, {
-        category: "spell", stat: "int", checkType: "evade", description: "Made-up attack Spell.",
+        category: "spell",
+        stat: "int",
+        checkType: "evade",
+        description: "Made-up attack Spell.",
         upgrades: { rank5: "+1d6 base damage." },
         upgradeRiders: { rank5: [{ type: "baseDice", dice: "1d6" }] },
         attack: { type: "ranged", range: "30 ft", baseDamage: { dice: "1d6", damageType: "fire" } },
-        spell: { type: "attack", manaCost: "3", range: "30 ft", duration: "1 minute", cooldown: "1 round" },
+        spell: {
+          type: "attack",
+          manaCost: "3",
+          range: "30 ft",
+          duration: "1 minute",
+          cooldown: "1 round",
+        },
       }),
     ],
-    race: { definition: { id: "human", name: "Human", crawlerforge: true, description: "CrawlerForge's Human.", build: { benefits: [] } } },
+    race: {
+      definition: {
+        id: "human",
+        name: "Human",
+        crawlerforge: true,
+        description: "CrawlerForge's Human.",
+        build: { benefits: [] },
+      },
+    },
     class: {
       definition: {
-        id: "test-class", name: "Test Class", crawlerforge: true, description: "Made-up Class.", classTypes: ["rogue"],
+        id: "test-class",
+        name: "Test Class",
+        crawlerforge: true,
+        description: "Made-up Class.",
+        classTypes: ["rogue"],
         build: {
           benefits: [
-            { id: "g", text: "+2 Test Granted Skill", effects: [{ type: "skill", skill: { kind: "named", name: "Test Granted Skill" }, ranks: 2 }] },
-            { id: "m", text: "Membership in the Test Club", effects: [{ type: "membership", club: "Test Club" }] },
+            {
+              id: "g",
+              text: "+2 Test Granted Skill",
+              effects: [
+                { type: "skill", skill: { kind: "named", name: "Test Granted Skill" }, ranks: 2 },
+              ],
+            },
+            {
+              id: "m",
+              text: "Membership in the Test Club",
+              effects: [{ type: "membership", club: "Test Club" }],
+            },
           ],
         },
       },
     },
   };
   const items = [
-    cfItem("Standard Mana Potion", { quantity: 5, notes: "From choosing a Spell as your starting attack." }),
+    cfItem("Standard Mana Potion", {
+      quantity: 5,
+      notes: "From choosing a Spell as your starting attack.",
+    }),
     cfItem("Plain Clothes", { slot: "torso", equipped: true }),
     cfItem("Clothes"),
     cfItem("Handgun", { slot: "hand", equipped: true }),
-    cfItem("Test Shield", { slot: "offhand", equipped: true, effects: [{ type: "dr", amount: 1 }] }),
+    cfItem("Test Shield", {
+      slot: "offhand",
+      equipped: true,
+      effects: [{ type: "dr", amount: 1 }],
+    }),
     cfItem("Test Greatclub", { slot: "hands", equipped: true }),
     cfItem("Test Helmet", { slot: "head", equipped: true }),
     cfItem("Test Hat", { slot: "head", equipped: true }),
     cfItem("Test Banner", { slot: "hands" }),
     cfItem("Standard Test Lamp"),
-    cfItem("Test Ring", { slot: "accessory", equipped: true, effects: [{ type: "stat", stat: "dex", amount: 1 }, { type: "membership", club: "Ring Club" }] }),
+    cfItem("Test Ring", {
+      slot: "accessory",
+      equipped: true,
+      effects: [
+        { type: "stat", stat: "dex", amount: 1 },
+        { type: "membership", club: "Ring Club" },
+      ],
+    }),
   ];
   return {
     schemaVersion: 1,
@@ -139,28 +226,95 @@ function testExport() {
     events: [
       cfEvent("crawler.created", crawler),
       ...items.map((item) => cfEvent("item.added", item)),
-      cfEvent("hotlist.set", { entries: ["Handgun", "Standard Mana Potion", "Test Helmet", "Heal"] }),
+      cfEvent("hotlist.set", {
+        entries: ["Handgun", "Standard Mana Potion", "Test Helmet", "Heal"],
+      }),
     ],
   };
 }
 
 /** Compendium candidates as importer.mjs matchCandidates gives them, without the world. */
 const testCandidates = () => [
-  { name: "Unarmed Combat", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", ref: "uc" },
-  { name: "Handgun", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", ref: "hg-skill" },
-  { name: "Heal", type: "spell", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", ref: "heal" },
-  { name: "Mana Potion", type: "item", tier: TIERS.system, order: 1, source: "carl-rpg.consumables", consumable: true, ref: "mana" },
-  { name: "Plain Clothes", type: "item", tier: TIERS.system, order: 2, source: "carl-rpg.gear", ref: "clothes" },
-  { name: "Handgun", type: "item", tier: TIERS.system, order: 2, source: "carl-rpg.gear", weaponSkill: "Handgun", ref: "hg-gear" },
-  { name: "Test Tinker", type: "skill", tier: TIERS.other, source: "some-module.pack", ref: "never" },
-  { name: "Test Lamp", type: "item", tier: TIERS.system, order: 2, source: "carl-rpg.gear", ref: "lamp" },
+  {
+    name: "Unarmed Combat",
+    type: "skill",
+    tier: TIERS.system,
+    order: 0,
+    source: "carl-rpg.skills-and-spells",
+    ref: "uc",
+  },
+  {
+    name: "Handgun",
+    type: "skill",
+    tier: TIERS.system,
+    order: 0,
+    source: "carl-rpg.skills-and-spells",
+    ref: "hg-skill",
+  },
+  {
+    name: "Heal",
+    type: "spell",
+    tier: TIERS.system,
+    order: 0,
+    source: "carl-rpg.skills-and-spells",
+    ref: "heal",
+  },
+  {
+    name: "Mana Potion",
+    type: "item",
+    tier: TIERS.system,
+    order: 1,
+    source: "carl-rpg.consumables",
+    consumable: true,
+    ref: "mana",
+  },
+  {
+    name: "Plain Clothes",
+    type: "item",
+    tier: TIERS.system,
+    order: 2,
+    source: "carl-rpg.gear",
+    ref: "clothes",
+  },
+  {
+    name: "Handgun",
+    type: "item",
+    tier: TIERS.system,
+    order: 2,
+    source: "carl-rpg.gear",
+    weaponSkill: "Handgun",
+    ref: "hg-gear",
+  },
+  {
+    name: "Test Tinker",
+    type: "skill",
+    tier: TIERS.other,
+    source: "some-module.pack",
+    ref: "never",
+  },
+  {
+    name: "Test Lamp",
+    type: "item",
+    tier: TIERS.system,
+    order: 2,
+    source: "carl-rpg.gear",
+    ref: "lamp",
+  },
 ];
 const testRaceClass = () => [
   { name: "Human (Primal)", type: "race", system: { changes: [] } },
   {
-    name: "Human", type: "race",
+    name: "Human",
+    type: "race",
     system: {
-      changes: ["str", "dex", "con", "int", "cha"].map((stat) => ({ id: "", targetType: "stat", target: stat, mode: "add", value: "2", conditions: [] })),
+      changes: ["str", "dex", "con", "int", "cha"].map((stat) => ({
+        id: "",
+        targetType: "stat",
+        target: stat,
+        mode: "add",
+        value: "2",
+        conditions: [],
+      })),
     },
   },
 ];
@@ -220,14 +374,20 @@ export default function register(quench) {
           assert.equal(plan["Duct Tape Greaves"].slotKey, "legs");
           assert.equal(plan["Gutter Ring"].slotType, "accessory");
           const rebar = data.items.find((i) => i.name === "Rebar Club");
-          assert.equal(rebar.weapon?.skill, "Rebar Club", "named like its Attack Skill: a weapon for it");
+          assert.equal(
+            rebar.weapon?.skill,
+            "Rebar Club",
+            "named like its Attack Skill: a weapon for it",
+          );
         });
 
         it("pre-marks every Race/Class grant as baked", async function () {
           const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(await loadFixture()));
           for (const item of [data.race, data.class]) {
             // Grants are Stat and Skill Rank changes (race-class-grants.mjs); DR and the rest are live bonuses.
-            const ids = item.system.changes.filter((c) => ["stat", "skillRank"].includes(c.targetType)).map((c) => c.id);
+            const ids = item.system.changes
+              .filter((c) => ["stat", "skillRank"].includes(c.targetType))
+              .map((c) => c.id);
             assert.isNotEmpty(ids);
             assert.deepEqual(item.flags["carl-rpg"].bakedGrantIds, ids);
           }
@@ -235,7 +395,8 @@ export default function register(quench) {
 
         it("copies compendium Skills/Spells at the export's Rank and flags the invented ones", function () {
           const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), {
-            candidates: testCandidates(), raceClass: testRaceClass(),
+            candidates: testCandidates(),
+            raceClass: testRaceClass(),
           });
           const byName = Object.fromEntries(data.skills.map((s) => [s.name, s]));
           assert.deepEqual(byName["Unarmed Combat"].copy, { ref: "uc", rank: 3 });
@@ -267,68 +428,201 @@ export default function register(quench) {
           assert.equal(rank10.changes[0].damageDiceKind, "rankDie");
           assert.isTrue(pistol.flags["carl-rpg"].crawlerforge.notInRulebook);
 
-          assert.sameMembers(data.report.invented.map((e) => e.name), ["Test Pistol", "Test Greatclub", "Test Zap", "Test Class"]);
-          assert.include(data.report.weaponsWithoutItem, "Test Pistol", "an Attack Skill with no weapon in the export");
+          assert.sameMembers(
+            data.report.invented.map((e) => e.name),
+            ["Test Pistol", "Test Greatclub", "Test Zap", "Test Class"],
+          );
+          assert.include(
+            data.report.weaponsWithoutItem,
+            "Test Pistol",
+            "an Attack Skill with no weapon in the export",
+          );
         });
 
         it("grants: one Skill whatever its punctuation, stacked grants capped at 10, a granted Attack Skill's weapon checked", function () {
           const state = foldCrawlerForgeEvents(testExport());
-          state.crawler.skills.push(cfSkill("Hand to Hand Combat", 2, { category: "utility", stat: "str" }));
-          const grant = (target, value) => ({ id: "", targetType: "skillRank", target, mode: "add", value: String(value), conditions: [] });
-          const raceClass = testRaceClass().map((rc) => (rc.name !== "Human" ? rc : {
-            ...rc,
-            system: { changes: [...rc.system.changes, grant("Hand-to-Hand Combat", 3), grant("Test Stack", 6), grant("Test Stack", 6), grant("Longsword", 2)] },
-          }));
+          state.crawler.skills.push(
+            cfSkill("Hand to Hand Combat", 2, { category: "utility", stat: "str" }),
+          );
+          const grant = (target, value) => ({
+            id: "",
+            targetType: "skillRank",
+            target,
+            mode: "add",
+            value: String(value),
+            conditions: [],
+          });
+          const raceClass = testRaceClass().map((rc) =>
+            rc.name !== "Human"
+              ? rc
+              : {
+                  ...rc,
+                  system: {
+                    changes: [
+                      ...rc.system.changes,
+                      grant("Hand-to-Hand Combat", 3),
+                      grant("Test Stack", 6),
+                      grant("Test Stack", 6),
+                      grant("Longsword", 2),
+                    ],
+                  },
+                },
+          );
           const candidates = [
             ...testCandidates(),
-            { name: "Longsword", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", category: "attack", ref: "ls" },
+            {
+              name: "Longsword",
+              type: "skill",
+              tier: TIERS.system,
+              order: 0,
+              source: "carl-rpg.skills-and-spells",
+              category: "attack",
+              ref: "ls",
+            },
           ];
           const data = buildCrawlerForgeActorData(state, { candidates, raceClass });
           const names = data.skills.map((s) => s.name);
-          assert.lengthOf(names.filter((n) => /^hand.to.hand combat$/i.test(n)), 1, "the listed Skill isn't made again from the grant");
-          assert.equal(data.skills.find((s) => s.name === "Test Stack")?.data.system.rank, 10, "6, then +6 up to 10 (p.127)");
+          assert.lengthOf(
+            names.filter((n) => /^hand.to.hand combat$/i.test(n)),
+            1,
+            "the listed Skill isn't made again from the grant",
+          );
+          assert.equal(
+            data.skills.find((s) => s.name === "Test Stack")?.data.system.rank,
+            10,
+            "6, then +6 up to 10 (p.127)",
+          );
           assert.equal(data.skills.find((s) => s.name === "Longsword")?.copy.rank, 2);
-          assert.include(data.report.weaponsWithoutItem, "Longsword", "a granted Attack Skill with no weapon is reported");
+          assert.include(
+            data.report.weaponsWithoutItem,
+            "Longsword",
+            "a granted Attack Skill with no weapon is reported",
+          );
         });
 
-        it("matches Skills by the system's Skill slug: \"Hand to Hand\" is the pack's \"Hand-to-Hand\", and its weapon arms it", function () {
+        it('matches Skills by the system\'s Skill slug: "Hand to Hand" is the pack\'s "Hand-to-Hand", and its weapon arms it', function () {
           const state = foldCrawlerForgeEvents(testExport());
           state.crawler.skills.push(
-            cfSkill("Test Hand to Hand", 2, { category: "attack", stat: "str", attack: { type: "melee", weaponCategory: "handToHand" } }),
-            cfSkill("Test Long Blade", 1, { category: "attack", stat: "str", attack: { type: "melee", weaponCategory: "blades" } }),
-            cfSkill("Test Tail Swipe", 1, { category: "attack", stat: "str", attack: { type: "melee", weaponCategory: "natural" } }),
+            cfSkill("Test Hand to Hand", 2, {
+              category: "attack",
+              stat: "str",
+              attack: { type: "melee", weaponCategory: "handToHand" },
+            }),
+            cfSkill("Test Long Blade", 1, {
+              category: "attack",
+              stat: "str",
+              attack: { type: "melee", weaponCategory: "blades" },
+            }),
+            cfSkill("Test Tail Swipe", 1, {
+              category: "attack",
+              stat: "str",
+              attack: { type: "melee", weaponCategory: "natural" },
+            }),
           );
           state.items.push(cfItem("Test Long-Blade", { slot: "hand" }));
           const candidates = [
             ...testCandidates(),
-            { name: "Test Hand-to-Hand", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", category: "attack", handToHand: true, ref: "hth" },
-            { name: "Test Long-Blade", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", category: "attack", ref: "lb" },
-            { name: "Test Hand to Hand", type: "item", tier: TIERS.system, order: 2, source: "carl-rpg.gear", ref: "not-a-skill" },
-            { name: "Test Tail Swipe", type: "skill", tier: TIERS.system, order: 0, source: "carl-rpg.skills-and-spells", category: "attack", noWeapon: true, ref: "ts" },
+            {
+              name: "Test Hand-to-Hand",
+              type: "skill",
+              tier: TIERS.system,
+              order: 0,
+              source: "carl-rpg.skills-and-spells",
+              category: "attack",
+              handToHand: true,
+              ref: "hth",
+            },
+            {
+              name: "Test Long-Blade",
+              type: "skill",
+              tier: TIERS.system,
+              order: 0,
+              source: "carl-rpg.skills-and-spells",
+              category: "attack",
+              ref: "lb",
+            },
+            {
+              name: "Test Hand to Hand",
+              type: "item",
+              tier: TIERS.system,
+              order: 2,
+              source: "carl-rpg.gear",
+              ref: "not-a-skill",
+            },
+            {
+              name: "Test Tail Swipe",
+              type: "skill",
+              tier: TIERS.system,
+              order: 0,
+              source: "carl-rpg.skills-and-spells",
+              category: "attack",
+              noWeapon: true,
+              ref: "ts",
+            },
           ];
-          const data = buildCrawlerForgeActorData(state, { candidates, raceClass: testRaceClass() });
+          const data = buildCrawlerForgeActorData(state, {
+            candidates,
+            raceClass: testRaceClass(),
+          });
           const byName = Object.fromEntries(data.skills.map((s) => [s.name, s]));
-          assert.equal(byName["Test Hand-to-Hand"]?.copy.ref, "hth", "copied from the pack, by slug");
+          assert.equal(
+            byName["Test Hand-to-Hand"]?.copy.ref,
+            "hth",
+            "copied from the pack, by slug",
+          );
           assert.equal(byName["Test Long-Blade"]?.copy.ref, "lb");
           const blade = data.items.find((i) => i.name === "Test Long-Blade");
-          assert.deepEqual(blade.weapon, { skill: "Test Long-Blade", twoHanded: false }, "the item named for it is its weapon");
-          assert.notInclude(data.report.weaponsWithoutItem, "Test Long-Blade", "so it isn't reported weaponless");
-          assert.notInclude(data.report.weaponsWithoutItem, "Test Hand-to-Hand", "hand-to-hand needs none");
-          assert.notInclude(data.report.weaponsWithoutItem, "Test Tail Swipe", "nor one with Needs no weapon");
+          assert.deepEqual(
+            blade.weapon,
+            { skill: "Test Long-Blade", twoHanded: false },
+            "the item named for it is its weapon",
+          );
+          assert.notInclude(
+            data.report.weaponsWithoutItem,
+            "Test Long-Blade",
+            "so it isn't reported weaponless",
+          );
+          assert.notInclude(
+            data.report.weaponsWithoutItem,
+            "Test Hand-to-Hand",
+            "hand-to-hand needs none",
+          );
+          assert.notInclude(
+            data.report.weaponsWithoutItem,
+            "Test Tail Swipe",
+            "nor one with Needs no weapon",
+          );
         });
 
         it("grants: the Rank-10 ceiling caps the gain, as baking does (p.127)", function () {
-          const grant = (target, value) => ({ id: "", targetType: "skillRank", target, mode: "add", value: String(value), conditions: [] });
-          const raceClass = testRaceClass().map((rc) => (rc.name !== "Human" ? rc : {
-            ...rc,
-            system: { changes: [
-              ...rc.system.changes,
-              grant("Test High", 12), grant("Test High", 2),
-              grant("Test Eight", 8), grant("Test Eight", 3),
-              grant("Test Twelve", 12),
-            ] },
-          }));
-          const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), { raceClass });
+          const grant = (target, value) => ({
+            id: "",
+            targetType: "skillRank",
+            target,
+            mode: "add",
+            value: String(value),
+            conditions: [],
+          });
+          const raceClass = testRaceClass().map((rc) =>
+            rc.name !== "Human"
+              ? rc
+              : {
+                  ...rc,
+                  system: {
+                    changes: [
+                      ...rc.system.changes,
+                      grant("Test High", 12),
+                      grant("Test High", 2),
+                      grant("Test Eight", 8),
+                      grant("Test Eight", 3),
+                      grant("Test Twelve", 12),
+                    ],
+                  },
+                },
+          );
+          const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), {
+            raceClass,
+          });
           const rank = (name) => data.skills.find((s) => s.name === name)?.data.system.rank;
           assert.equal(rank("Test High"), 12, "Rank 12 plus 2 stays 12");
           assert.equal(rank("Test Eight"), 10, "Rank 8 plus 3 stops at 10");
@@ -337,16 +631,26 @@ export default function register(quench) {
 
         it("a compendium copy keeps a fallback of its own type, from the export", function () {
           const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), {
-            candidates: testCandidates(), raceClass: testRaceClass(),
+            candidates: testCandidates(),
+            raceClass: testRaceClass(),
           });
           const heal = data.skills.find((s) => s.name === "Heal");
-          assert.equal(heal.fallback?.type, "spell", "a Spell stays a Spell if its copy can't be read");
+          assert.equal(
+            heal.fallback?.type,
+            "spell",
+            "a Spell stays a Spell if its copy can't be read",
+          );
           assert.isTrue(heal.fallback.flags["carl-rpg"].crawlerforge.notInRulebook);
-          assert.equal(data.skills.find((s) => s.name === "Unarmed Combat").fallback?.type, "skill");
+          assert.equal(
+            data.skills.find((s) => s.name === "Unarmed Combat").fallback?.type,
+            "skill",
+          );
         });
 
         it("takes our Race by exact name, pre-baked, and reads species as the kind of crawler", function () {
-          const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), { raceClass: testRaceClass() });
+          const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), {
+            raceClass: testRaceClass(),
+          });
           assert.equal(data.race.name, "Human", "not Human (Primal)");
           const ids = data.race.system.changes.map((c) => c.id);
           assert.lengthOf(ids, 5);
@@ -359,23 +663,44 @@ export default function register(quench) {
           // The Class's Skill the export doesn't list is made at its Rank.
           const granted = data.skills.find((s) => s.name === "Test Granted Skill");
           assert.equal(granted?.data.system.rank, 2);
-          assert.deepInclude(data.report.unmappedEffects, { owner: "Test Class", text: "Membership in the Test Club" });
+          assert.deepInclude(data.report.unmappedEffects, {
+            owner: "Test Class",
+            text: "Membership in the Test Club",
+          });
         });
 
         it("matches gear by name only, reports near-misses, and arms weapons", function () {
-          const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), { candidates: testCandidates() });
+          const data = buildCrawlerForgeActorData(foldCrawlerForgeEvents(testExport()), {
+            candidates: testCandidates(),
+          });
           const byName = Object.fromEntries(data.items.map((i) => [i.name, i]));
-          assert.equal(byName["Standard Mana Potion"].copy.ref, "mana", "the book's Standard Mana Potion is our Mana Potion");
+          assert.equal(
+            byName["Standard Mana Potion"].copy.ref,
+            "mana",
+            "the book's Standard Mana Potion is our Mana Potion",
+          );
           assert.equal(byName["Plain Clothes"].copy.ref, "clothes");
           assert.exists(byName.Clothes.data, "Clothes isn't Plain Clothes");
-          assert.deepInclude(data.report.nearMisses, { name: "Clothes", candidates: ["Plain Clothes"] });
+          assert.deepInclude(data.report.nearMisses, {
+            name: "Clothes",
+            candidates: ["Plain Clothes"],
+          });
           assert.deepEqual(byName.Handgun.weapon, { skill: "Handgun", twoHanded: false });
-          assert.deepEqual(byName["Test Greatclub"].weapon, { skill: "Test Greatclub", twoHanded: true });
+          assert.deepEqual(byName["Test Greatclub"].weapon, {
+            skill: "Test Greatclub",
+            twoHanded: true,
+          });
           assert.deepEqual(byName["Test Banner"].data.system.slots, ["held"]);
           assert.isTrue(byName["Test Banner"].data.system.twoHanded);
-          assert.exists(byName["Standard Test Lamp"].data, "the Standard alias is for consumables only");
+          assert.exists(
+            byName["Standard Test Lamp"].data,
+            "the Standard alias is for consumables only",
+          );
           assert.lengthOf(byName["Test Ring"].data.system.changes, 1);
-          assert.deepInclude(data.report.unmappedEffects, { owner: "Test Ring", text: "membership: Ring Club" });
+          assert.deepInclude(data.report.unmappedEffects, {
+            owner: "Test Ring",
+            text: "membership: Ring Club",
+          });
         });
 
         it("checks background text against the book's tables", function () {
@@ -385,10 +710,15 @@ export default function register(quench) {
             regrets: [],
           };
           const crawler = foldCrawlerForgeEvents(testExport()).crawler;
-          assert.deepEqual(backgroundTableMisses(crawler, tables), [{ field: "looseEnds", text: "Loose End Test" }]);
+          assert.deepEqual(backgroundTableMisses(crawler, tables), [
+            { field: "looseEnds", text: "Loose End Test" },
+          ]);
           // Without its full stop it's still the book's entry.
           assert.deepEqual(
-            backgroundTableMisses({ ...crawler, pastTrauma: "I was abused by someone I trusted" }, tables),
+            backgroundTableMisses(
+              { ...crawler, pastTrauma: "I was abused by someone I trusted" },
+              tables,
+            ),
             [{ field: "looseEnds", text: "Loose End Test" }],
           );
         });
@@ -416,7 +746,10 @@ export default function register(quench) {
             assert.deepEqual(system.classItem.system.classTypes, ["Bard", "Rogue"]);
             // Kept through item._preCreate (carlPreBaked), which empties it on a plain copy.
             for (const item of [system.raceItem, system.classItem]) {
-              assert.isNotEmpty(item.getFlag("carl-rpg", "bakedGrantIds"), `${item.name} keeps its pre-baked record`);
+              assert.isNotEmpty(
+                item.getFlag("carl-rpg", "bakedGrantIds"),
+                `${item.name} keeps its pre-baked record`,
+              );
             }
 
             const skills = actor.items.filter((i) => i.type === "skill");
@@ -446,7 +779,11 @@ export default function register(quench) {
             assert.equal(system.gearSlots.legs, gearItem("Duct Tape Greaves").id);
             assert.deepEqual(system.accessories, [gearItem("Gutter Ring").id]);
             // Worn gear is never in the Hotlist (p.98).
-            for (const id of system.hotlist) assert.notInclude([...Object.values(system.gearSlots), ...system.accessories], id || "-");
+            for (const id of system.hotlist)
+              assert.notInclude(
+                [...Object.values(system.gearSlots), ...system.accessories],
+                id || "-",
+              );
 
             assert.equal(system.details.gold, 140);
             assert.notExists(actor.items.find((i) => i.name === "Gold"));
@@ -465,8 +802,12 @@ export default function register(quench) {
           try {
             await settle(300);
             const system = actor.system;
-            const named = (type, name) => actor.items.find((i) => i.type === type && i.name === name);
-            const fromPack = (item, pack) => String(item?._stats?.compendiumSource ?? "").startsWith(`Compendium.carl-rpg.${pack}.`);
+            const named = (type, name) =>
+              actor.items.find((i) => i.type === type && i.name === name);
+            const fromPack = (item, pack) =>
+              String(item?._stats?.compendiumSource ?? "").startsWith(
+                `Compendium.carl-rpg.${pack}.`,
+              );
 
             // Compendium copies at the export's Rank.
             const unarmed = named("skill", "Unarmed Combat");
@@ -506,7 +847,10 @@ export default function register(quench) {
             assert.equal(potion.system.quantity, 5);
             const clothes = named("item", "Plain Clothes");
             assert.isTrue(fromPack(clothes, "gear"));
-            assert.isFalse(fromPack(named("item", "Clothes"), "gear"), "not matched to Plain Clothes");
+            assert.isFalse(
+              fromPack(named("item", "Clothes"), "gear"),
+              "not matched to Plain Clothes",
+            );
 
             // The weapon: its Weapon Skill and the Gear item for it.
             const handgun = named("item", "Handgun");
@@ -523,26 +867,48 @@ export default function register(quench) {
             const greatclub = named("item", "Test Greatclub");
             const hat = named("item", "Test Hat");
             assert.equal(greatclub.system.weaponSkill, "Test Greatclub");
-            assert.isTrue(greatclub.system.twoHanded, "CrawlerForge's \"hands\" slot");
+            assert.isTrue(greatclub.system.twoHanded, 'CrawlerForge\'s "hands" slot');
             assert.isFalse(greatclub.system.equipped, "two-handed, with both hands full");
             assert.isFalse(hat.system.equipped, "the head is taken");
             assert.notInclude(Object.values(system.gearSlots), greatclub.id);
 
             // The Hotlist: worn gear out, the potion and Heal in.
-            const worn = [...Object.values(system.gearSlots), ...system.accessories].filter(Boolean);
+            const worn = [...Object.values(system.gearSlots), ...system.accessories].filter(
+              Boolean,
+            );
             for (const id of system.hotlist) assert.notInclude(worn, id || "-");
             assert.include(system.hotlist, potion.id);
             assert.include(system.hotlist, heal.id);
 
             // One GM whisper summing it up.
-            const reports = game.messages.filter((m) => m.getFlag("carl-rpg", "kind") === "crawlerforgeReport" && m.speaker?.actor === actor.id);
+            const reports = game.messages.filter(
+              (m) =>
+                m.getFlag("carl-rpg", "kind") === "crawlerforgeReport" &&
+                m.speaker?.actor === actor.id,
+            );
             assert.lengthOf(reports, 1);
             const [report] = reports;
-            assert.sameMembers(report.whisper, game.users.filter((u) => u.isGM).map((u) => u.id));
-            for (const text of ["Test Zap", "Test Pistol", "Test Class", "Test Greatclub", "Test Hat", "Plain Clothes", "Loose End Test", "Ring Club"]) {
+            assert.sameMembers(
+              report.whisper,
+              game.users.filter((u) => u.isGM).map((u) => u.id),
+            );
+            for (const text of [
+              "Test Zap",
+              "Test Pistol",
+              "Test Class",
+              "Test Greatclub",
+              "Test Hat",
+              "Plain Clothes",
+              "Loose End Test",
+              "Ring Club",
+            ]) {
               assert.include(report.content, text);
             }
-            assert.notInclude(report.content, "I was abused by someone I trusted.", "a book table entry isn't reported");
+            assert.notInclude(
+              report.content,
+              "I was abused by someone I trusted.",
+              "a book table entry isn't reported",
+            );
           } finally {
             await deleteTestActor(actor);
             await deleteReports();
@@ -553,10 +919,18 @@ export default function register(quench) {
           const exported = testExport();
           // Only the crawler; then our own items and Hotlist.
           exported.events = exported.events.filter((e) => e.type === "crawler.created");
-          const add = (type, payload, second) => exported.events.push({
-            id: `test-event-extra-${second}`, type, occurredAt: `2026-11-18T07:32:${String(second).padStart(2, "0")}.000Z`, payload,
-          });
-          add("item.added", cfItem("Test Dagger", { id: "test-dagger-worn", slot: "hand", equipped: true }), 10);
+          const add = (type, payload, second) =>
+            exported.events.push({
+              id: `test-event-extra-${second}`,
+              type,
+              occurredAt: `2026-11-18T07:32:${String(second).padStart(2, "0")}.000Z`,
+              payload,
+            });
+          add(
+            "item.added",
+            cfItem("Test Dagger", { id: "test-dagger-worn", slot: "hand", equipped: true }),
+            10,
+          );
           add("item.added", cfItem("Test Dagger", { id: "test-dagger-spare" }), 11);
           // A Gear compendium Torch is held, not an Accessory: it goes in a free hand.
           add("item.added", cfItem("Torch", { slot: "accessory", equipped: true }), 12);
@@ -566,13 +940,21 @@ export default function register(quench) {
             await settle(300);
             const daggers = actor.items.filter((i) => i.name === "Test Dagger");
             assert.lengthOf(daggers, 2);
-            const worn = daggers.find((d) => d.getFlag("carl-rpg", "crawlerforge")?.id === "test-dagger-worn");
-            const spare = daggers.find((d) => d.getFlag("carl-rpg", "crawlerforge")?.id === "test-dagger-spare");
+            const worn = daggers.find(
+              (d) => d.getFlag("carl-rpg", "crawlerforge")?.id === "test-dagger-worn",
+            );
+            const spare = daggers.find(
+              (d) => d.getFlag("carl-rpg", "crawlerforge")?.id === "test-dagger-spare",
+            );
             assert.equal(actor.system.gearSlots.mainHand, worn.id);
             assert.equal(actor.system.hotlist[0], spare.id, "the unworn Test Dagger is hotlisted");
             const torch = actor.items.find((i) => i.name === "Torch");
             assert.equal(actor.system.gearSlots.offHand, torch.id, "placed in the free hand");
-            const [report] = game.messages.filter((m) => m.getFlag("carl-rpg", "kind") === "crawlerforgeReport" && m.speaker?.actor === actor.id);
+            const [report] = game.messages.filter(
+              (m) =>
+                m.getFlag("carl-rpg", "kind") === "crawlerforgeReport" &&
+                m.speaker?.actor === actor.id,
+            );
             assert.include(report?.content ?? "", "Torch: worn in", "the move is reported");
           } finally {
             await deleteTestActor(actor);
@@ -587,6 +969,8 @@ export default function register(quench) {
 
 /** The GM reports the imports above whispered. */
 async function deleteReports() {
-  const ids = game.messages.filter((m) => m.getFlag("carl-rpg", "kind") === "crawlerforgeReport").map((m) => m.id);
+  const ids = game.messages
+    .filter((m) => m.getFlag("carl-rpg", "kind") === "crawlerforgeReport")
+    .map((m) => m.id);
   if (ids.length) await ChatMessage.implementation.deleteDocuments(ids);
 }

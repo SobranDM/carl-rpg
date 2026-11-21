@@ -35,6 +35,7 @@ import { getRankDamageDie } from "./rules.mjs";
 import { CARLRPG } from "./config.mjs";
 import { deityBenefitApplies } from "./worship.mjs";
 import { drGroupOf, givesBonuses, isWeaponFor } from "./gear.mjs";
+import { currentFloor } from "./floor.mjs";
 
 const RANKED_TYPES = new Set(["skill", "spell", "damageEffect"]);
 
@@ -98,9 +99,10 @@ export function ownedRank(actor, item) {
 export function ownedSkill(actor, name, types = ["skill"]) {
   if (!actor?.items || !nameSlug(name)) return null;
   const counted = actor.items.get(actor.system?.skills?.[slugifySkillName(name)]?.itemId ?? "");
-  const item = counted && types.includes(counted.type) && sameSkillName(counted.name, name)
-    ? counted
-    : actor.items.find((i) => types.includes(i.type) && sameSkillName(i.name, name));
+  const item =
+    counted && types.includes(counted.type) && sameSkillName(counted.name, name)
+      ? counted
+      : actor.items.find((i) => types.includes(i.type) && sameSkillName(i.name, name));
   return item ? { item, rank: effectiveRank(item) } : null;
 }
 
@@ -113,7 +115,9 @@ export function ownedSkill(actor, name, types = ["skill"]) {
  */
 export function damageEffectFits(damageEffect, parentItem) {
   if (parentItem?.type !== "skill" && parentItem?.type !== "spell") return false;
-  return (damageEffect?.system?.parentSkills ?? []).some((name) => sameSkillName(name, parentItem.name));
+  return (damageEffect?.system?.parentSkills ?? []).some((name) =>
+    sameSkillName(name, parentItem.name),
+  );
 }
 
 /**
@@ -139,16 +143,30 @@ export function effectiveRank(item) {
 }
 
 /**
- * A Skill, Spell or Damage Effect's Upgrade tiers unlocked at its live Rank
- * (effectiveRank) - unlike system.unlockedUpgrades, which reads its own Rank.
- * @param {Item|null} item
+ * A Skill, Spell or Damage Effect's Upgrade tiers unlocked at a Rank, in
+ * authored order. The Rank defaults to the item's live Rank (effectiveRank:
+ * tier gating, ruled 2026-11-18); a caller that gates on something else -
+ * the item's own Rank, a Scroll's fixed Rank - passes it.
+ * @param {Item|{system: object}|null} item
+ * @param {number} [rank]
  * @returns {object[]}
  */
-export function unlockedTiers(item) {
+export function unlockedTiers(item, rank) {
   const upgrades = item?.system?.upgrades;
   if (!Array.isArray(upgrades) || !upgrades.length) return [];
-  const rank = effectiveRank(item);
-  return upgrades.filter((u) => rank >= u.rankThreshold);
+  const at = rank ?? effectiveRank(item);
+  return upgrades.filter((u) => at >= u.rankThreshold);
+}
+
+/**
+ * The unlocked tiers, highest Rank first - the order in which "the highest
+ * unlocked tier that sets X wins".
+ * @param {Item|{system: object}|null} item
+ * @param {number} [rank]  As unlockedTiers.
+ * @returns {object[]}
+ */
+export function tiersHighestFirst(item, rank) {
+  return unlockedTiers(item, rank).sort((a, b) => b.rankThreshold - a.rankThreshold);
 }
 
 function emptySkillEntry(name) {
@@ -184,13 +202,20 @@ export function applyScalarChange(current, mode, delta) {
   const cur = Number(current) || 0;
   const val = Number(delta) || 0;
   switch (mode) {
-    case "add": return cur + val;
-    case "subtract": return cur - val;
-    case "multiply": return cur * val;
-    case "override": return val;
-    case "upgrade": return Math.max(cur, val);
-    case "downgrade": return Math.min(cur, val);
-    default: return cur;
+    case "add":
+      return cur + val;
+    case "subtract":
+      return cur - val;
+    case "multiply":
+      return cur * val;
+    case "override":
+      return val;
+    case "upgrade":
+      return Math.max(cur, val);
+    case "downgrade":
+      return Math.min(cur, val);
+    default:
+      return cur;
   }
 }
 
@@ -221,7 +246,8 @@ function resolveValue(formula, rollData) {
   if (formula === null || formula === undefined || formula === "") return 0;
   let resolved = String(formula);
   if (resolved.includes("@")) {
-    const ReplaceFn = foundry?.dice?.Roll?.replaceFormulaData ?? globalThis.Roll?.replaceFormulaData;
+    const ReplaceFn =
+      foundry?.dice?.Roll?.replaceFormulaData ?? globalThis.Roll?.replaceFormulaData;
     if (typeof ReplaceFn === "function") {
       resolved = ReplaceFn(resolved, rollData, { missing: "0" });
     }
@@ -263,14 +289,20 @@ function collectItemChanges(item, rank = item.system.rank ?? 0) {
   // read back via that same ad-hoc merge at roll time); only a change
   // targeting something ELSE is excluded.
   const isDamageEffect = item.type === "damageEffect";
-  const targetsSelf = (change) => !change.target || slugifySkillName(change.target) === slugifySkillName(item.name);
+  const targetsSelf = (change) =>
+    !change.target || slugifySkillName(change.target) === slugifySkillName(item.name);
   for (const change of sys.changes ?? []) {
     if (isDamageEffect && !targetsSelf(change)) continue;
-    out.push({ change, sourceLabel: item.name, sourceItemId: item.id, sourceItemRank, sourceItemType: item.type });
+    out.push({
+      change,
+      sourceLabel: item.name,
+      sourceItemId: item.id,
+      sourceItemRank,
+      sourceItemType: item.type,
+    });
   }
   if (Array.isArray(sys.upgrades)) {
-    for (const upgrade of sys.upgrades) {
-      if (sourceItemRank < upgrade.rankThreshold) continue;
+    for (const upgrade of unlockedTiers(item, sourceItemRank)) {
       for (const change of upgrade.changes ?? []) {
         if (isDamageEffect && !targetsSelf(change)) continue;
         out.push({
@@ -317,7 +349,10 @@ function collectItemChanges(item, rank = item.system.rank ?? 0) {
  *   `amazingSuccessOnly`, for each target to decide (attackTargetEffects).
  * @returns {Array<{id: string, debuffKey: string, stacks: number, label: string, sourceLabel: string, amazingSuccessOnly: boolean}>}
  */
-export function collectItemTargetEffects(item, { isCrit = false, isAmazingSuccess = false, skillName = null, handToHand = undefined } = {}) {
+export function collectItemTargetEffects(
+  item,
+  { isCrit = false, isAmazingSuccess = false, skillName = null, handToHand = undefined } = {},
+) {
   const sys = item.system;
   const sourceItemRank = effectiveRank(item);
   const out = [];
@@ -327,7 +362,8 @@ export function collectItemTargetEffects(item, { isCrit = false, isAmazingSucces
     if (te.critOnly && !isCrit) return;
     if (te.amazingSuccessOnly && isAmazingSuccess === false) return;
     const only = (te.skills ?? []).map((s) => String(s ?? "").trim()).filter(Boolean);
-    const named = only.length > 0 && !!skillSlug && only.some((s) => slugifySkillName(s) === skillSlug);
+    const named =
+      only.length > 0 && !!skillSlug && only.some((s) => slugifySkillName(s) === skillSlug);
     if (te.handToHandOnly && handToHand !== undefined) {
       if (!handToHand && !named) return;
     } else if (skillSlug && only.length && !named) return;
@@ -342,9 +378,9 @@ export function collectItemTargetEffects(item, { isCrit = false, isAmazingSucces
   };
   // The base list: at any Rank.
   for (const te of sys.targetEffects ?? []) take(te, item.name);
-  for (const upgrade of Array.isArray(sys.upgrades) ? sys.upgrades : []) {
-    if (sourceItemRank < upgrade.rankThreshold) continue;
-    for (const te of upgrade.targetEffects ?? []) take(te, `${item.name} (Rank ${upgrade.rankThreshold})`);
+  for (const upgrade of unlockedTiers(item, sourceItemRank)) {
+    for (const te of upgrade.targetEffects ?? [])
+      take(te, `${item.name} (Rank ${upgrade.rankThreshold})`);
   }
   return out;
 }
@@ -364,12 +400,20 @@ export function collectItemTargetEffects(item, { isCrit = false, isAmazingSucces
  * @param {{damageEffectItem?: Item|null, isCrit?: boolean, isAmazingSuccess?: boolean|null}} [options]
  * @returns {object[]}  collectItemTargetEffects's entries.
  */
-export function attackTargetEffects(actor, skillItem, { damageEffectItem = null, isCrit = false, isAmazingSuccess = null } = {}) {
+export function attackTargetEffects(
+  actor,
+  skillItem,
+  { damageEffectItem = null, isCrit = false, isAmazingSuccess = null } = {},
+) {
   // Hand-to-hand: the Skill's own box (hand-to-hand.mjs isHandToHand, not
   // imported - it imports this module).
-  const handToHand = skillItem ? skillItem.type === "skill" && !!skillItem.system?.isHandToHand : undefined;
+  const handToHand = skillItem
+    ? skillItem.type === "skill" && !!skillItem.system?.isHandToHand
+    : undefined;
   const options = { isCrit, isAmazingSuccess, skillName: skillItem?.name ?? null, handToHand };
-  const gear = (actor?.items ?? []).filter((i) => i.type === "item" && givesBonuses(i) && (i.system.targetEffects ?? []).length);
+  const gear = (actor?.items ?? []).filter(
+    (i) => i.type === "item" && givesBonuses(i) && (i.system.targetEffects ?? []).length,
+  );
   return [skillItem, damageEffectItem, ...gear]
     .filter(Boolean)
     .flatMap((item) => collectItemTargetEffects(item, options));
@@ -386,8 +430,7 @@ export function itemIsArmorPiercing(item) {
   const sys = item?.system;
   if (!sys) return false;
   if (sys.armorPiercing) return true;
-  const rank = effectiveRank(item);
-  return (Array.isArray(sys.upgrades) ? sys.upgrades : []).some((u) => u.armorPiercing && rank >= u.rankThreshold);
+  return unlockedTiers(item).some((u) => u.armorPiercing);
 }
 
 /**
@@ -404,8 +447,10 @@ export function itemIsArmorPiercing(item) {
  */
 export function attackIsArmorPiercing(actor, skillItem, { damageEffectItem = null } = {}) {
   if (itemIsArmorPiercing(skillItem) || itemIsArmorPiercing(damageEffectItem)) return true;
-  return (actor?.items ?? []).some((i) => i.type === "item" && i.system.armorPiercing
-    && givesBonuses(i) && isWeaponFor(i, skillItem));
+  return (actor?.items ?? []).some(
+    (i) =>
+      i.type === "item" && i.system.armorPiercing && givesBonuses(i) && isWeaponFor(i, skillItem),
+  );
 }
 
 /**
@@ -457,11 +502,7 @@ export function computeActiveShieldSlots(items) {
     if (item.type !== "spell" || !item.system.isToggled || !item.system.active) continue;
     const sys = item.system;
     if (!sys.shieldSlots) continue;
-    const rank = effectiveRank(item);
-    const unlocked = (sys.upgrades ?? [])
-      .filter((u) => rank >= u.rankThreshold && u.shieldSlots)
-      .sort((a, b) => b.rankThreshold - a.rankThreshold);
-    return unlocked[0]?.shieldSlots ?? sys.shieldSlots;
+    return tiersHighestFirst(item).find((u) => u.shieldSlots)?.shieldSlots ?? sys.shieldSlots;
   }
   return 0;
 }
@@ -493,7 +534,13 @@ export function buildItemSkillEntry(actorSystem, item) {
   const { skills } = ctx;
   seedSkillFromItem(skills, item);
   const key = slugifySkillName(item.name);
-  for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
+  for (const {
+    change,
+    sourceLabel,
+    sourceItemId,
+    sourceItemRank,
+    sourceItemType,
+  } of collectItemChanges(item)) {
     // Only what the Spell does to itself - not a change it makes to some
     // other Skill, which would land in a bag nothing reads.
     if (change.target && slugifySkillName(change.target) !== key) continue;
@@ -530,7 +577,11 @@ function seedSkillFromItem(skills, item) {
   entry.category = item.system.category ?? (item.type === "spell" ? "spell" : null);
   if (item.system.baseDamage?.dice) {
     entry.baseDamage = foundry.utils.deepClone(item.system.baseDamage);
-    entry.damage.baseDice.push({ formula: item.system.baseDamage.dice, label: item.name, mode: "add" });
+    entry.damage.baseDice.push({
+      formula: item.system.baseDamage.dice,
+      label: item.name,
+      mode: "add",
+    });
   }
 }
 
@@ -546,8 +597,9 @@ function uncountedSelfChange(skills, item) {
   if (!RANKED_TYPES.has(item.type)) return null;
   const key = slugifySkillName(item.name);
   if (!skills[key] || skills[key].itemId === item.id) return null;
-  return (change) => (change.targetType === "skillRank" || change.targetType === "skillDamage")
-    && slugifySkillName(change.target) === key;
+  return (change) =>
+    (change.targetType === "skillRank" || change.targetType === "skillDamage") &&
+    slugifySkillName(change.target) === key;
 }
 
 /**
@@ -557,8 +609,25 @@ function uncountedSelfChange(skills, item) {
  * `conditionalModifiers` instead, for a roll dialog to offer as checkboxes
  * (see module/dice/roll-parts.mjs, Milestone 2) and apply only if checked.
  */
-export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType) {
-  const { skills, bonuses, rollData, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps, actorSystem } = ctx;
+export function applyOneChange(
+  change,
+  sourceLabel,
+  sourceItemId,
+  sourceItemRank,
+  ctx,
+  sourceItemType,
+) {
+  const {
+    skills,
+    bonuses,
+    rollData,
+    conditionalModifiers,
+    caps,
+    resistances,
+    advancementBonuses,
+    rankCaps,
+    actorSystem,
+  } = ctx;
   // Race/Class stat and skillRank grants are one-time, permanent bumps to
   // the actor's BASE value (module/helpers/race-class-grants.mjs bakes them
   // in on the way in, via a real actor.update/item.update) - NOT a live
@@ -577,9 +646,10 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
   // invalid-target grant neither baked nor live. "skillRank" has no
   // equivalent validity gate on the baking side - every skillRank change
   // that reaches bakeItemGrants' pending list gets baked unconditionally.
-  const isBakedGrant = (sourceItemType === "class" || sourceItemType === "race")
-    && (change.targetType === "skillRank"
-      || (change.targetType === "stat" && !!CARLRPG.statAbbreviations[change.target]));
+  const isBakedGrant =
+    (sourceItemType === "class" || sourceItemType === "race") &&
+    (change.targetType === "skillRank" ||
+      (change.targetType === "stat" && !!CARLRPG.statAbbreviations[change.target]));
   // Level-gated grants (e.g. Bune's "At Level 50, +2 Dexterity") simply don't
   // apply at all below the threshold - re-evaluated fresh every
   // prepareDerivedData pass, so it turns on automatically the moment the
@@ -642,7 +712,8 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       if (change.capMax) {
         const key = slugifySkillName(change.target);
         const cap = resolveValue(change.capMax, scopedRollData);
-        if (typeof cap === "number") rankCaps[key] = key in rankCaps ? Math.max(rankCaps[key], cap) : cap;
+        if (typeof cap === "number")
+          rankCaps[key] = key in rankCaps ? Math.max(rankCaps[key], cap) : cap;
       }
       break;
     }
@@ -659,16 +730,26 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       // stays Fire). Blank means "inherit the item's own baseDamage.damageType
       // (or an unlocked upgrade tier's damageTypes override)" - resolved by
       // module/dice/dice.mjs's buildDamageRollParts at roll time, not here.
-      const term = { formula: resolvedFormula, label, mode: change.mode, damageType: change.damageType || "" };
+      const term = {
+        formula: resolvedFormula,
+        label,
+        mode: change.mode,
+        damageType: change.damageType || "",
+      };
       if (change.mode === "multiply") {
         // "base": scales the base damage dice only (Powerful Strike); any
         // other kind, the total damage (Choke Out) - buildDamageRollParts.
-        entry.damage.multipliers.push({ ...term, kind, factor: resolveValue(change.value, scopedRollData) });
+        entry.damage.multipliers.push({
+          ...term,
+          kind,
+          factor: resolveValue(change.value, scopedRollData),
+        });
       } else if (change.mode === "override") {
         entry.damage.overrides.push(term);
       } else {
-        if (kind === "rankDie") { if (resolvedFormula) entry.damage.rankDice.push(term); }
-        else if (kind === "base") entry.damage.baseDice.push(term);
+        if (kind === "rankDie") {
+          if (resolvedFormula) entry.damage.rankDice.push(term);
+        } else if (kind === "base") entry.damage.baseDice.push(term);
         else entry.damage.flatBonuses.push(term);
       }
       break;
@@ -696,8 +777,13 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       // the real persisted base value, not stale derived data.
       const statBase = rollData.stats?.[change.target]?.value;
       if (!isBakedGrant) {
-        accumulateBonus(bonuses, `stats.${change.target}`, change, scopedRollData,
-          typeof statBase === "number" ? statBase : undefined);
+        accumulateBonus(
+          bonuses,
+          `stats.${change.target}`,
+          change,
+          scopedRollData,
+          typeof statBase === "number" ? statBase : undefined,
+        );
       }
       accumulateCap(caps, `stats.${change.target}`, change, scopedRollData);
       break;
@@ -731,8 +817,13 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       // (documented) no-op-for-a-single-item behavior rather than silently
       // reading a stale/wrong number.
       const resourceBase = RESOURCE_BASES[change.target]?.(actorSystem);
-      const value = accumulateBonus(bonuses, change.target, change, scopedRollData,
-        typeof resourceBase === "number" ? resourceBase : undefined);
+      const value = accumulateBonus(
+        bonuses,
+        change.target,
+        change,
+        scopedRollData,
+        typeof resourceBase === "number" ? resourceBase : undefined,
+      );
       if (value !== null) recordSource(ctx, change.target, label, value, change.mode);
       accumulateCap(caps, change.target, change, scopedRollData);
       break;
@@ -758,7 +849,8 @@ export function applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank
       // name, same convention as the skills bag itself.
       const key = slugifySkillName(change.target);
       const value = resolveValue(change.value, scopedRollData);
-      if (typeof value === "number") advancementBonuses[key] = (advancementBonuses[key] ?? 0) + value;
+      if (typeof value === "number")
+        advancementBonuses[key] = (advancementBonuses[key] ?? 0) + value;
       break;
     }
     default: {
@@ -870,8 +962,12 @@ function recordSource(ctx, target, label, value, mode) {
  * @returns {boolean}
  */
 function isArmorDrBonus(change) {
-  return change.targetType === "resource" && change.target === "dr"
-    && (change.mode === "add" || change.mode === "subtract") && !change.conditions?.length;
+  return (
+    change.targetType === "resource" &&
+    change.target === "dr" &&
+    (change.mode === "add" || change.mode === "subtract") &&
+    !change.conditions?.length
+  );
 }
 
 /**
@@ -887,6 +983,26 @@ function armorDr(item, rollData) {
 }
 
 /**
+ * The total of armor DR bonuses (isArmorDrBonus) among these changes that
+ * apply at the wearer's Level (levelGate), each resolved as applyOneChange
+ * resolves it (@rank is its item's).
+ * @param {{change: object, rank: number}[]} entries
+ * @param {object} rollData
+ * @returns {number}
+ */
+function armorDrTotal(entries, rollData) {
+  let total = 0;
+  for (const { change, rank } of entries) {
+    if (!isArmorDrBonus(change)) continue;
+    if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
+    const value = resolveValue(change.value, { ...rollData, rank });
+    if (typeof value !== "number") continue;
+    total += change.mode === "add" ? value : -value;
+  }
+  return total;
+}
+
+/**
  * A piece's armor DR before and after Shield damage: a Shield's DR is
  * lowered by its `shieldDamage` (Shield Block, p.198), to no less than 0 -
  * "It breaks at 0 DR". Other gear is unaffected.
@@ -895,14 +1011,13 @@ function armorDr(item, rollData) {
  * @returns {{base: number, damage: number, dr: number}}
  */
 function shieldDrParts(item, rollData) {
-  let base = 0;
-  for (const { change, sourceItemRank } of collectItemChanges(item)) {
-    if (!isArmorDrBonus(change)) continue;
-    if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
-    const value = resolveValue(change.value, { ...rollData, rank: sourceItemRank });
-    if (typeof value !== "number") continue;
-    base += change.mode === "add" ? value : -value;
-  }
+  const base = armorDrTotal(
+    collectItemChanges(item).map(({ change, sourceItemRank }) => ({
+      change,
+      rank: sourceItemRank,
+    })),
+    rollData,
+  );
   const damage = item?.system?.shield ? Math.max(0, Number(item.system.shieldDamage) || 0) : 0;
   if (!damage) return { base, damage: 0, dr: base };
   return { base, damage, dr: Math.max(0, Math.min(base, base - damage)) };
@@ -921,7 +1036,10 @@ function shieldDamageChange(item, rollData) {
   const lost = base - dr;
   if (!(lost > 0)) return null;
   return {
-    targetType: "resource", target: "dr", mode: "subtract", value: String(lost),
+    targetType: "resource",
+    target: "dr",
+    mode: "subtract",
+    value: String(lost),
     label: game.i18n.format("CARLRPG.ShieldBlock.DamageSource", { name: item.name }),
   };
 }
@@ -939,14 +1057,11 @@ function shieldDamageChange(item, rollData) {
  */
 export function shieldDrState(item) {
   const rollData = makeAggregationContext(item?.actor?.system ?? {}).rollData;
-  let base = 0;
-  for (const change of item?.system?.changes ?? []) {
-    if (!isArmorDrBonus(change)) continue;
-    if (change.levelGate && Number(change.levelGate) > (rollData.lvl ?? 1)) continue;
-    const value = resolveValue(change.value, { ...rollData, rank: item.system.rank ?? 0 });
-    if (typeof value !== "number") continue;
-    base += change.mode === "add" ? value : -value;
-  }
+  const rank = item?.system?.rank ?? 0;
+  const base = armorDrTotal(
+    (item?.system?.changes ?? []).map((change) => ({ change, rank })),
+    rollData,
+  );
   const damage = Math.max(0, Number(item?.system?.shieldDamage) || 0);
   const dr = Math.max(0, base - damage);
   return { base, damage, dr, broken: damage > 0 && base > 0 && dr <= 0 };
@@ -1011,7 +1126,7 @@ function makeAggregationContext(actorSystem) {
     rollData: {
       stats: actorSystem.stats ? foundry.utils.deepClone(actorSystem.stats) : {},
       lvl: actorSystem.attributes?.level?.value ?? 1,
-      floor: game.settings.get("carl-rpg", "currentFloor"),
+      floor: currentFloor(),
     },
     conditionalModifiers: [],
     caps: {},
@@ -1050,14 +1165,29 @@ function previewLiveRanks(items, actorSystem) {
   for (const item of items) {
     if (deity && !deityBenefitApplies(item, deity)) continue;
     const skipSelf = uncountedSelfChange(ctx.skills, item);
-    for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item)) {
+    for (const {
+      change,
+      sourceLabel,
+      sourceItemId,
+      sourceItemRank,
+      sourceItemType,
+    } of collectItemChanges(item)) {
       if (skipSelf?.(change)) continue;
-      if (rankChange(change)) applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
+      if (rankChange(change))
+        applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }
   }
   for (const condition of actorSystem.conditions ?? []) {
     for (const change of condition.changes ?? []) {
-      if (rankChange(change)) applyOneChange(change, condition.label || condition.source || "", null, 0, ctx, "condition");
+      if (rankChange(change))
+        applyOneChange(
+          change,
+          condition.label || condition.source || "",
+          null,
+          0,
+          ctx,
+          "condition",
+        );
     }
   }
   const ranks = new Map();
@@ -1098,7 +1228,8 @@ export function aggregateActorBonuses(actorSystem) {
   const items = actor?.items ? Array.from(actor.items) : [];
 
   const ctx = makeAggregationContext(actorSystem);
-  const { skills, bonuses, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps } = ctx;
+  const { skills, bonuses, conditionalModifiers, caps, resistances, advancementBonuses, rankCaps } =
+    ctx;
 
   for (const item of items) {
     if (RANKED_TYPES.has(item.type)) seedSkillFromItem(skills, item);
@@ -1116,14 +1247,25 @@ export function aggregateActorBonuses(actorSystem) {
     if (deity && !deityBenefitApplies(item, deity)) continue;
     const rank = liveRanks.get(item.id) ?? item.system.rank ?? 0;
     const skipSelf = uncountedSelfChange(skills, item);
-    for (const { change, sourceLabel, sourceItemId, sourceItemRank, sourceItemType } of collectItemChanges(item, rank)) {
+    for (const {
+      change,
+      sourceLabel,
+      sourceItemId,
+      sourceItemRank,
+      sourceItemType,
+    } of collectItemChanges(item, rank)) {
       if (skipSelf?.(change)) continue;
       if (superseded.has(item.id) && isArmorDrBonus(change)) continue;
       applyOneChange(change, sourceLabel, sourceItemId, sourceItemRank, ctx, sourceItemType);
     }
     // A damaged Shield's lost DR (Shield Block, p.198) - only where its DR
     // counts at all (worn, not outclassed in its slot type).
-    if (item.type === "item" && item.system.shield && givesBonuses(item) && !superseded.has(item.id)) {
+    if (
+      item.type === "item" &&
+      item.system.shield &&
+      givesBonuses(item) &&
+      !superseded.has(item.id)
+    ) {
       const lost = shieldDamageChange(item, ctx.rollData);
       if (lost) applyOneChange(lost, lost.label, item.id, item.system.rank ?? 0, ctx, item.type);
     }
@@ -1135,7 +1277,13 @@ export function aggregateActorBonuses(actorSystem) {
   // scales it like the rest of DR and keeps it within drEffective.
   let antiPiercingDr = 0;
   for (const item of items) {
-    if (item.type !== "item" || !item.system.antiPiercing || superseded.has(item.id) || !givesBonuses(item)) continue;
+    if (
+      item.type !== "item" ||
+      !item.system.antiPiercing ||
+      superseded.has(item.id) ||
+      !givesBonuses(item)
+    )
+      continue;
     antiPiercingDr += armorDr(item, ctx.rollData);
   }
   actorSystem.drAntiPiercingBase = antiPiercingDr;

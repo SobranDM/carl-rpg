@@ -14,19 +14,56 @@
  *    advance), which is unrelated to wall-clock time and only moves
  *    when a GM clicks a button.
  */
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { showCarlDialog, rollButton, cancelButton } from "./carl-dialog.mjs";
-import { shortRestUpdates, fullRestoreUpdates, conditionsAfterRest, mendingUpdates } from "../helpers/rest.mjs";
-import { BOSS_TIERS, collapseDays, endOfFloorPopularityDelta } from "../helpers/floor.mjs";
+import {
+  shortRestUpdates,
+  fullRestoreUpdates,
+  conditionsAfterRest,
+  mendingUpdates,
+} from "../helpers/rest.mjs";
+import {
+  BOSS_TIERS,
+  collapseDays,
+  currentFloor,
+  endOfFloorPopularityDelta,
+} from "../helpers/floor.mjs";
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
-import { rollMagicItem } from "../helpers/loot.mjs";
+import AchievementGrid from "./achievement-grid.mjs";
+import OpeningSessionApp from "./opening-session.mjs";
 import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 import { queueForActor } from "../helpers/actor-queue.mjs";
 import { dropExpiredConditions } from "../helpers/expiry.mjs";
-import { actorPickerContent, advanceTimeField, pickerGroups, wireActorPicker } from "./actor-picker.mjs";
+import {
+  actorPickerContent,
+  advanceTimeField,
+  pickerGroups,
+  wireActorPicker,
+} from "./actor-picker.mjs";
 import { postPartyCheck } from "../chat/party-check-card.mjs";
 import { startNewScene } from "../helpers/cooldowns.mjs";
+import { unopposedDifficulty } from "../helpers/rules.mjs";
+import { esc, labelChoices, optionsHtml } from "../helpers/html.mjs";
+import { changeConditions, conditionOps } from "../helpers/conditions.mjs";
+import { boxesOf, giveBox } from "../helpers/boxes.mjs";
+import { sessionState, startSession } from "../helpers/opening-session.mjs";
+import {
+  clearCollapseTimer,
+  DAY_HOURS,
+  defaultCollapseHours,
+  hasFloorClock,
+  hoursLeft,
+  setCollapseTimer,
+  setTimeLeft,
+} from "../helpers/floor-clock.mjs";
+import {
+  buildOpposedChoice,
+  opposedFieldsHtml,
+  readOpposed,
+  wireOpposed,
+} from "../dice/opposed.mjs";
+import { findSkillLikeItem } from "../helpers/race-class-grants.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -44,7 +81,6 @@ async function advanceWorldTime(seconds) {
   if (game.time?.advance) await game.time.advance(seconds);
   else if (game.time?.advanceTime) await game.time.advanceTime(seconds);
 }
-
 
 /**
  * A card's line saying whether the world clock moved (Rest, Mend).
@@ -100,13 +136,16 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       toggleTimer: CarlToolbox.#onToggleTimer,
       resolveTwoHourTick: CarlToolbox.#onResolveTwoHourTick,
       endFloor: CarlToolbox.#onEndFloor,
+      collapseTimer: CarlToolbox.#onCollapseTimer,
       bossKilled: CarlToolbox.#onBossKilled,
+      giveBox: CarlToolbox.#onGiveBox,
+      achievements: CarlToolbox.#onAchievements,
+      openBoxes: CarlToolbox.#onOpenBoxes,
       mend: CarlToolbox.#onMend,
       floorIncrement: CarlToolbox.#onFloorIncrement,
       floorDecrement: CarlToolbox.#onFloorDecrement,
       rest: CarlToolbox.#onRest,
       grind: CarlToolbox.#onGrind,
-      rollLoot: CarlToolbox.#onRollLoot,
       partyCheck: CarlToolbox.#onPartyCheck,
       newScene: CarlToolbox.#onNewScene,
     },
@@ -126,7 +165,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       timerRunning: timer.running,
       elapsedLabel: formatElapsed(elapsedMs),
       thresholdReached: timer.running && elapsedMs >= TWO_HOURS_MS,
-      floor: game.settings.get("carl-rpg", "currentFloor"),
+      floor: currentFloor(),
     };
   }
 
@@ -209,7 +248,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     if (elapsedEl) elapsedEl.textContent = formatElapsed(elapsedMs);
 
     const reached = timer.running && elapsedMs >= TWO_HOURS_MS;
-    for (const el of this.element.querySelectorAll('[data-pulse-target]')) {
+    for (const el of this.element.querySelectorAll("[data-pulse-target]")) {
       el.classList.toggle("pulse", reached);
     }
 
@@ -227,9 +266,17 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     if (!game.user.isGM) return;
     const timer = game.settings.get("carl-rpg", "gameTimer");
     if (timer.running) {
-      await game.settings.set("carl-rpg", "gameTimer", { running: false, startedAt: null, notified: false });
+      await game.settings.set("carl-rpg", "gameTimer", {
+        running: false,
+        startedAt: null,
+        notified: false,
+      });
     } else {
-      await game.settings.set("carl-rpg", "gameTimer", { running: true, startedAt: Date.now(), notified: false });
+      await game.settings.set("carl-rpg", "gameTimer", {
+        running: true,
+        startedAt: Date.now(),
+        notified: false,
+      });
     }
     this.render();
   }
@@ -251,10 +298,15 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
     const digest = [];
     for (const actor of actors) {
-      const results = await actor.rollMarkedAdvancementChecks({ rankFilter: "lte4", floorBonus: false });
+      const results = await actor.rollMarkedAdvancementChecks({
+        rankFilter: "lte4",
+        floorBonus: false,
+      });
       digest.push(...CarlToolbox.#advancementLines(actor, results));
       const level = await CarlToolbox.#gainLevels(actor, 1);
-      digest.push(game.i18n.format("CARLRPG.Toolbox.LevelGained", { name: esc(actor.name), level }));
+      digest.push(
+        game.i18n.format("CARLRPG.Toolbox.LevelGained", { name: esc(actor.name), level }),
+      );
     }
 
     await createCardMessage({
@@ -264,7 +316,11 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoCharactersPicked")}</p>`,
     });
 
-    await game.settings.set("carl-rpg", "gameTimer", { running: false, startedAt: null, notified: false });
+    await game.settings.set("carl-rpg", "gameTimer", {
+      running: false,
+      startedAt: null,
+      notified: false,
+    });
     this.render();
   }
 
@@ -282,13 +338,25 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
    */
   static async #onEndFloor(event, target) {
     if (!game.user.isGM) return;
-    const floor = game.settings.get("carl-rpg", "currentFloor");
-    const actors = await CarlToolbox.#promptActorPicker({
+    const floor = currentFloor();
+    // The next floor's collapse timer: the book's length (p.63), the GM's
+    // to change; blank, no timer.
+    const nextDays = collapseDays(floor + 1) ?? "";
+    const picked = await CarlToolbox.#pickActors({
       titleKey: "CARLRPG.Toolbox.EndFloorTitle",
       promptKey: "CARLRPG.Toolbox.EndFloorPickerPrompt",
       confirmLabelKey: "CARLRPG.Toolbox.EndFloorConfirm",
+      after: `<div class="form-group carl-end-floor-clock">
+          <label>${esc(game.i18n.format("CARLRPG.FloorClock.NextFloorDays", { floor: floor + 1 }))}</label>
+          <input type="number" name="collapseDays" value="${nextDays}" min="0" step="1"
+            placeholder="${esc(game.i18n.localize("CARLRPG.FloorClock.NoTimer"))}" />
+        </div>`,
+      read: (form) => ({
+        days: Math.max(0, Number(form.querySelector('input[name="collapseDays"]')?.value) || 0),
+      }),
     });
-    if (!actors) return;
+    if (!picked) return;
+    const actors = picked.actors;
 
     const digest = [];
     for (const actor of actors) {
@@ -297,7 +365,10 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
       const stillMarked = actor.items.filter((i) => i.system?.marked);
       if (stillMarked.length) {
-        await actor.updateEmbeddedDocuments("Item", stillMarked.map((i) => ({ _id: i.id, "system.marked": false })));
+        await actor.updateEmbeddedDocuments(
+          "Item",
+          stillMarked.map((i) => ({ _id: i.id, "system.marked": false })),
+        );
       }
 
       // Popularity can't drop below 0 (system.details.popularity has min 0),
@@ -306,17 +377,27 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       const popularity = actor.system.details?.popularity ?? 0;
       if (delta && popularity + delta >= 0) {
         await actor.update({ "system.details.popularity": popularity + delta });
-        digest.push(game.i18n.format(delta > 0 ? "CARLRPG.Toolbox.EndFloorPopularityUp" : "CARLRPG.Toolbox.EndFloorPopularityDown", {
-          name: esc(actor.name), limit: delta > 0 ? 5 * floor : 2 * floor,
-        }));
+        digest.push(
+          game.i18n.format(
+            delta > 0
+              ? "CARLRPG.Toolbox.EndFloorPopularityUp"
+              : "CARLRPG.Toolbox.EndFloorPopularityDown",
+            {
+              name: esc(actor.name),
+              limit: delta > 0 ? 5 * floor : 2 * floor,
+            },
+          ),
+        );
       }
     }
 
     const next = floor + 1;
     await game.settings.set("carl-rpg", "currentFloor", next);
+    const days = picked.data.days;
+    if (days > 0) await setCollapseTimer(days * DAY_HOURS);
+    else await clearCollapseTimer();
     this.render();
 
-    const days = collapseDays(next);
     const reminders = [
       game.i18n.localize("CARLRPG.Toolbox.EndFloorReminder.Cooldowns"),
       game.i18n.localize("CARLRPG.Toolbox.EndFloorReminder.Popularity"),
@@ -339,19 +420,29 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
   /**
    * Boss Killed (p.170): "When a party kills a Boss, each member gains Levels
-   * based on the tier of the Boss" - Neighborhood 1 up to Floor Boss 6.
+   * based on the tier of the Boss" - Neighborhood 1 up to Floor Boss 6. And
+   * a Boss Box of the Boss's tier each (p.22: Neighborhood Bronze up to
+   * Floor Boss Celestial), unless the GM unticks it.
    */
   static async #onBossKilled(event, target) {
     if (!game.user.isGM) return;
     const options = Object.entries(BOSS_TIERS)
-      .map(([key, tier]) => `<option value="${key}">${game.i18n.format("CARLRPG.Toolbox.BossTierOption", {
-        tier: game.i18n.localize(tier.label), levels: tier.levels,
-      })}</option>`).join("");
+      .map(
+        ([key, tier]) =>
+          `<option value="${key}">${game.i18n.format("CARLRPG.Toolbox.BossTierOption", {
+            tier: game.i18n.localize(tier.label),
+            levels: tier.levels,
+          })}</option>`,
+      )
+      .join("");
     const choice = await showCarlDialog({
       title: game.i18n.localize("CARLRPG.Toolbox.BossKilledTitle"),
       content: `<div class="carl-dialog-body"><div class="form-group">
         <label>${game.i18n.localize("CARLRPG.Toolbox.BossTierLabel")}</label>
         <select name="tier">${options}</select>
+      </div><div class="form-group">
+        <label>${game.i18n.localize("CARLRPG.Toolbox.GiveBossBox")}</label>
+        <input type="checkbox" name="bossBox" checked />
       </div></div>`,
       buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
     });
@@ -367,7 +458,21 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     const lines = [];
     for (const actor of actors) {
       const level = await CarlToolbox.#gainLevels(actor, tier.levels);
-      lines.push(game.i18n.format("CARLRPG.Toolbox.LevelsGained", { name: esc(actor.name), levels: tier.levels, level }));
+      lines.push(
+        game.i18n.format("CARLRPG.Toolbox.LevelsGained", {
+          name: esc(actor.name),
+          levels: tier.levels,
+          level,
+        }),
+      );
+      const box = choice.bossBox
+        ? await giveBox(actor, { tierKey: tier.box, source: { kind: "boss" } })
+        : null;
+      if (box) {
+        lines.push(
+          game.i18n.format("CARLRPG.Box.Received", { name: esc(actor.name), box: esc(box.name) }),
+        );
+      }
     }
     await createCardMessage({
       title: game.i18n.localize("CARLRPG.Toolbox.BossKilledTitle"),
@@ -376,10 +481,134 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     });
   }
 
+  /**
+   * Open Loot Boxes: the party opens its unopened boxes together, one
+   * crawler at a time (helpers/opening-session.mjs). The GM picks who takes
+   * part and in what order - crawlers with boxes whose player is online are
+   * ticked, in the players list's order. With a session already on, this
+   * shows its window.
+   */
+  static async #onOpenBoxes() {
+    if (!game.user.isGM) return;
+    if (sessionState().active) {
+      OpeningSessionApp.sync();
+      return;
+    }
+    const players = game.users.contents.filter((u) => !u.isGM);
+    const seat = (actor) => {
+      const i = players.findIndex(
+        (u) => u.active && actor.testUserPermission(u, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER),
+      );
+      return i < 0 ? Infinity : i;
+    };
+    const crawlers = game.actors
+      .filter((a) => a.type === "character" && boxesOf(a).length)
+      .sort((a, b) => seat(a) - seat(b) || a.name.localeCompare(b.name));
+    if (!crawlers.length) {
+      ui.notifications.warn(game.i18n.localize("CARLRPG.Opening.NoBoxes"));
+      return;
+    }
+    const rows = crawlers
+      .map(
+        (a) => `<li class="carl-opening-order-row" data-actor-id="${a.id}">
+          <input type="checkbox" ${seat(a) < Infinity ? "checked" : ""} />
+          <span class="carl-opening-order-name">${esc(a.name)}</span>
+          <span class="carl-hint">${esc(game.i18n.format("CARLRPG.Opening.BoxCount", { count: boxesOf(a).length }))}</span>
+          <a class="item-control" data-move="-1" data-tooltip-text="${esc(game.i18n.localize("CARLRPG.Opening.MoveUp"))}"><i class="fas fa-arrow-up"></i></a>
+          <a class="item-control" data-move="1" data-tooltip-text="${esc(game.i18n.localize("CARLRPG.Opening.MoveDown"))}"><i class="fas fa-arrow-down"></i></a>
+        </li>`,
+      )
+      .join("");
+    const result = await showCarlDialog({
+      title: game.i18n.localize("CARLRPG.Opening.Title"),
+      content: `<div class="carl-dialog-body"><p>${esc(game.i18n.localize("CARLRPG.Opening.StartPrompt"))}</p><ol class="carl-opening-order">${rows}</ol></div>`,
+      buttons: [
+        {
+          action: "start",
+          icon: "fas fa-box-open",
+          label: "CARLRPG.Opening.Start",
+          default: true,
+          // In the list's order, as the GM left it.
+          callback: (event, button) =>
+            [...(button.form ?? button.closest("form")).querySelectorAll("[data-actor-id]")]
+              .filter((li) => li.querySelector("input").checked)
+              .map((li) => li.dataset.actorId),
+        },
+        cancelButton(),
+      ],
+      onRender: (event, dialog) => {
+        for (const control of dialog.element.querySelectorAll("[data-move]")) {
+          control.addEventListener("click", () => {
+            const row = control.closest("li");
+            if (control.dataset.move === "-1") row.previousElementSibling?.before(row);
+            else row.nextElementSibling?.after(row);
+          });
+        }
+      },
+    });
+    if (Array.isArray(result) && result.length) await startSession(result);
+  }
+
+  /** Achievements: the grid to award them from (apps/achievement-grid.mjs). */
+  static #onAchievements() {
+    AchievementGrid.open();
+  }
+
+  /**
+   * Give Box: an unopened loot box (data/box.mjs) of a tier, with a title
+   * ("Bronze Crafter's Box"; default "Bronze Box"), to each picked crawler.
+   * Its contents are rolled when it's opened, unless the GM prepares them
+   * on its sheet.
+   */
+  static async #onGiveBox(event, target) {
+    if (!game.user.isGM) return;
+    const tiers = optionsHtml(labelChoices(CONFIG.CARLRPG.lootBoxTiers));
+    const choice = await showCarlDialog({
+      title: game.i18n.localize("CARLRPG.Box.GiveTitle"),
+      content: `<div class="carl-dialog-body"><div class="form-group">
+        <label>${game.i18n.localize("CARLRPG.Toolbox.LootTierLabel")}</label>
+        <select name="tier">${tiers}</select>
+      </div><div class="form-group">
+        <label>${game.i18n.localize("CARLRPG.Box.Title")}</label>
+        <input type="text" name="name" placeholder="${esc(game.i18n.localize("CARLRPG.Box.TitlePlaceholder"))}" />
+      </div></div>`,
+      buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
+    });
+    if (!choice?.tier) return;
+    const actors = await CarlToolbox.#promptActorPicker({
+      titleKey: "CARLRPG.Box.GiveTitle",
+      promptKey: "CARLRPG.Box.GivePrompt",
+    });
+    if (!actors?.length) return;
+    const lines = [];
+    for (const actor of actors) {
+      const box = await giveBox(actor, {
+        tierKey: choice.tier,
+        name: String(choice.name ?? "").trim(),
+        source: { kind: "gift" },
+      });
+      if (box) {
+        lines.push(
+          game.i18n.format("CARLRPG.Box.Received", { name: esc(actor.name), box: esc(box.name) }),
+        );
+      }
+    }
+    if (lines.length) {
+      await createCardMessage({
+        title: game.i18n.localize("CARLRPG.Box.GiveTitle"),
+        body: `<ul>${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
+      });
+    }
+  }
+
   /** "{name} - {skill}: Rank N / no change" lines for a card. */
   static #advancementLines(actor, results) {
-    return results.map((r) => `${esc(actor.name)} - ${esc(r.item.name)}: ${r.success
-      ? `Rank ${r.newRank}` : game.i18n.localize("CARLRPG.Toolbox.NoChange")}`);
+    return results.map(
+      (r) =>
+        `${esc(actor.name)} - ${esc(r.item.name)}: ${
+          r.success ? `Rank ${r.newRank}` : game.i18n.localize("CARLRPG.Toolbox.NoChange")
+        }`,
+    );
   }
 
   /**
@@ -393,22 +622,69 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     return level;
   }
 
-  static async #onFloorIncrement(event, target) {
+  /**
+   * Collapse Timer: set the time left before this floor collapses (in
+   * 30-hour days and hours), or stop it. Opens on the time left now, or
+   * the floor's default length (p.63).
+   */
+  static async #onCollapseTimer() {
     if (!game.user.isGM) return;
-    const floor = game.settings.get("carl-rpg", "currentFloor");
-    await game.settings.set("carl-rpg", "currentFloor", floor + 1);
+    const left = hoursLeft();
+    const hours = left !== null ? Math.max(0, left) : (defaultCollapseHours() ?? 0);
+    const days = Math.floor(hours / DAY_HOURS);
+    const rest = Math.floor(hours - days * DAY_HOURS);
+    const result = await showCarlDialog({
+      title: game.i18n.localize("CARLRPG.FloorClock.DialogTitle"),
+      content: `<div class="carl-dialog-body">
+        <p class="carl-dialog-hint">${esc(game.i18n.format("CARLRPG.FloorClock.DialogHint", { floor: currentFloor() }))}</p>
+        <div class="form-group">
+          <label>${esc(game.i18n.localize("CARLRPG.FloorClock.Days"))}</label>
+          <input type="number" name="days" value="${days}" min="0" step="1" />
+        </div>
+        <div class="form-group">
+          <label>${esc(game.i18n.localize("CARLRPG.FloorClock.Hours"))}</label>
+          <input type="number" name="hours" value="${rest}" min="0" step="1" />
+        </div></div>`,
+      buttons: [
+        rollButton({ label: "CARLRPG.FloorClock.Set" }),
+        {
+          action: "clear",
+          icon: "fas fa-ban",
+          label: "CARLRPG.FloorClock.Clear",
+          callback: () => ({ clear: true }),
+        },
+        cancelButton(),
+      ],
+    });
+    if (!result) return;
+    if (result.clear) await clearCollapseTimer();
+    else {
+      const total =
+        Math.max(0, Number(result.days) || 0) * DAY_HOURS + Math.max(0, Number(result.hours) || 0);
+      await setTimeLeft(total);
+    }
     this.render();
   }
 
+  /**
+   * Floor +: a floor whose timer was started (a misclick put right) picks
+   * it up where it is; a new one asks for its timer (ruled 2026-11-19).
+   */
+  static async #onFloorIncrement(event, target) {
+    if (!game.user.isGM) return;
+    const next = currentFloor() + 1;
+    await game.settings.set("carl-rpg", "currentFloor", next);
+    this.render();
+    if (!hasFloorClock(next)) await CarlToolbox.#onCollapseTimer.call(this);
+  }
+
+  /** Floor -: back to that floor, and its own timer if it had one. */
   static async #onFloorDecrement(event, target) {
     if (!game.user.isGM) return;
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     await game.settings.set("carl-rpg", "currentFloor", Math.max(0, floor - 1));
     this.render();
   }
-
-
-
 
   /**
    * Hourly mending (p.95): "For every full hour spent outside of combat or
@@ -454,10 +730,16 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
 
     await createCardMessage({
       title: game.i18n.localize("CARLRPG.Toolbox.MendTitle"),
-      subtitle: game.i18n.format("CARLRPG.Toolbox.MendSubtitle", { hours, hb: hours, mana: 5 * hours }),
-      body: (actors.length
-        ? `<ul>${actors.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>`
-        : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoCharactersPicked")}</p>`) + clockLine(advance, hours),
+      subtitle: game.i18n.format("CARLRPG.Toolbox.MendSubtitle", {
+        hours,
+        hb: hours,
+        mana: 5 * hours,
+      }),
+      body:
+        (actors.length
+          ? `<ul>${actors.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>`
+          : `<p>${game.i18n.localize("CARLRPG.Toolbox.NoCharactersPicked")}</p>`) +
+        clockLine(advance, hours),
     });
   }
 
@@ -471,14 +753,25 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   static async #onRest(event, target) {
     if (!game.user.isGM) return;
     const i18n = game.i18n;
-    const options = Object.entries(REST_CONFIG).map(([kind, rest], i) => `<label class="carl-rest-option">
+    const options = Object.entries(REST_CONFIG)
+      .map(
+        ([kind, rest], i) => `<label class="carl-rest-option">
         <input type="radio" name="carl-rest-kind" value="${kind}" data-hours="${rest.hours}" ${i === 0 ? "checked" : ""} />
         ${esc(i18n.localize(`CARLRPG.Toolbox.Rest.Kind.${kind}`))}
-      </label>`).join("");
-    const rules = Object.keys(REST_CONFIG).map((kind, i) => `<blockquote class="carl-rest-rule" data-rest-rule="${kind}" ${i === 0 ? "" : "hidden"}>
+      </label>`,
+      )
+      .join("");
+    const rules = Object.keys(REST_CONFIG)
+      .map(
+        (
+          kind,
+          i,
+        ) => `<blockquote class="carl-rest-rule" data-rest-rule="${kind}" ${i === 0 ? "" : "hidden"}>
         <p>${esc(i18n.localize(`CARLRPG.Toolbox.Rest.Rule.${kind}`))}</p>
         <cite>${esc(i18n.localize("CARLRPG.Toolbox.Rest.Source"))}</cite>
-      </blockquote>`).join("");
+      </blockquote>`,
+      )
+      .join("");
     const before = `<fieldset class="carl-rest-length">
         <legend>${esc(i18n.localize("CARLRPG.Toolbox.Rest.Length"))}</legend>
         <div class="carl-rest-options">${options}</div>
@@ -491,7 +784,9 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       confirmLabelKey: "CARLRPG.Toolbox.Rest.Confirm",
       includePets: true,
       before,
-      after: advanceTimeField(i18n.format("CARLRPG.Toolbox.HoursCount", { n: REST_CONFIG.short.hours })),
+      after: advanceTimeField(
+        i18n.format("CARLRPG.Toolbox.HoursCount", { n: REST_CONFIG.short.hours }),
+      ),
       read: (form) => ({
         kind: form.querySelector('input[name="carl-rest-kind"]:checked')?.value ?? "short",
         advance: !!form.querySelector("[data-advance-time]")?.checked,
@@ -501,7 +796,8 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         const hint = root.querySelector("[data-advance-time-hint]");
         for (const radio of root.querySelectorAll('input[name="carl-rest-kind"]')) {
           radio.addEventListener("change", () => {
-            for (const rule of root.querySelectorAll("[data-rest-rule]")) rule.hidden = rule.dataset.restRule !== radio.value;
+            for (const rule of root.querySelectorAll("[data-rest-rule]"))
+              rule.hidden = rule.dataset.restRule !== radio.value;
             if (hint) {
               hint.textContent = i18n.format("CARLRPG.Toolbox.AdvanceTimeHint", {
                 hours: i18n.format("CARLRPG.Toolbox.HoursCount", { n: radio.dataset.hours }),
@@ -524,25 +820,26 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         await dropExpiredConditions(actor, endsAt);
         const sys = actor.system;
 
-        const updates = kind === "short"
-          ? shortRestUpdates(actor)
-          : fullRestoreUpdates(actor);
+        const updates = kind === "short" ? shortRestUpdates(actor) : fullRestoreUpdates(actor);
 
         // Injuries and Fatigued end by rest length (rest.mjs's conditionsAfterRest).
-        const conditions = conditionsAfterRest(sys.conditions, kind);
-        if (conditions.length !== (sys.conditions ?? []).length) updates["system.conditions"] = conditions;
-
-        await actor.update(updates);
+        const before = sys.toObject().conditions ?? [];
+        await changeConditions(actor, conditionOps(before, conditionsAfterRest(before, kind)), {
+          updates,
+          inQueue: true,
+        });
       });
     }
     if (data.advance) await advanceWorldTime(seconds);
 
     await createCardMessage({
       title: game.i18n.localize(config.titleKey),
-      body: (selectedActors.length
-        ? `<p>${game.i18n.format("CARLRPG.Toolbox.RestApplied", { count: selectedActors.length })}</p>
+      body:
+        (selectedActors.length
+          ? `<p>${game.i18n.format("CARLRPG.Toolbox.RestApplied", { count: selectedActors.length })}</p>
            <ul>${selectedActors.map((a) => `<li>${esc(a.name)}</li>`).join("")}</ul>`
-        : `<p>${game.i18n.localize("CARLRPG.Toolbox.RestAppliedNone")}</p>`) + clockLine(data.advance, config.hours),
+          : `<p>${game.i18n.localize("CARLRPG.Toolbox.RestAppliedNone")}</p>`) +
+        clockLine(data.advance, config.hours),
     });
   }
 
@@ -569,8 +866,14 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
    * @returns {Promise<{actors: Actor[], data: object}|null>}
    */
   static async #pickActors({
-    titleKey, promptKey, confirmLabelKey = "CARLRPG.Toolbox.ActorPicker.Confirm", includePets = false,
-    before = "", after = "", read = () => ({}), onRender = null,
+    titleKey,
+    promptKey,
+    confirmLabelKey = "CARLRPG.Toolbox.ActorPicker.Confirm",
+    includePets = false,
+    before = "",
+    after = "",
+    read = () => ({}),
+    onRender = null,
   }) {
     const groups = pickerGroups({ includePets });
     const actors = [...groups.active, ...groups.other, ...groups.pets];
@@ -628,11 +931,13 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoCharacters"));
       return;
     }
-    const actorOptions = actors.map((a) => `<option value="${a.id}">${a.name}</option>`).join("");
+    const actorOptions = actors
+      .map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`)
+      .join("");
     const actorResult = await showCarlDialog({
       title: game.i18n.localize("CARLRPG.Toolbox.GrindTitle"),
       content: `<div class="carl-dialog-body">
-        <div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.GrindActor")}</label>
+        <div class="form-group"><label>${esc(game.i18n.localize("CARLRPG.Toolbox.GrindActor"))}</label>
           <select name="actorId">${actorOptions}</select></div>
         <div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.GrindHours")}</label>
           <input type="number" name="hours" value="1" min="1" /></div>
@@ -674,8 +979,18 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   static async #onPartyCheck(event, target) {
     if (!game.user.isGM) return;
     const i18n = game.i18n;
-    const floor = game.settings.get("carl-rpg", "currentFloor");
+    const floor = currentFloor();
     const names = await CarlToolbox.#skillNames();
+    // Opposed (p.59; ruled 2026-11-20): against a target, a Stat or a number.
+    const opposedChoice = buildOpposedChoice({
+      statKey: "int",
+      base: {
+        value: unopposedDifficulty(floor),
+        label: i18n.format("CARLRPG.Dialog.Preset.Unopposed", {
+          value: unopposedDifficulty(floor),
+        }),
+      },
+    });
     const before = `<div class="carl-party-check-setup">
         <div class="form-group">
           <label>${esc(i18n.localize("CARLRPG.PartyCheck.Skill"))}</label>
@@ -684,8 +999,10 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
         </div>
         <div class="form-group">
           <label>${esc(i18n.localize("CARLRPG.Dialog.Difficulty"))}</label>
-          <input type="number" name="carl-party-difficulty" value="${10 + 2 * floor}" />
+          <input type="number" name="carl-party-difficulty" value="${unopposedDifficulty(floor)}" />
         </div>
+        <p class="carl-dialog-hint carl-party-difficulty-basis">${esc(opposedChoice.label)}</p>
+        ${opposedFieldsHtml(opposedChoice)}
         <p class="carl-dialog-hint">${esc(i18n.localize("CARLRPG.PartyCheck.Rule"))}</p>
       </div>`;
     const picked = await CarlToolbox.#pickActors({
@@ -693,10 +1010,38 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       promptKey: "CARLRPG.PartyCheck.PickerPrompt",
       confirmLabelKey: "CARLRPG.PartyCheck.Confirm",
       before,
-      read: (form) => ({
-        skill: form.querySelector('input[name="carl-party-skill"]')?.value ?? "",
-        difficulty: form.querySelector('input[name="carl-party-difficulty"]')?.value ?? "",
-      }),
+      read: (form) => {
+        const field = (name) => form.querySelector(`[name="${name}"]`);
+        return {
+          skill: field("carl-party-skill")?.value ?? "",
+          difficulty: field("carl-party-difficulty")?.value ?? "",
+          opposed: readOpposed(
+            {
+              opposed: !!field("opposed")?.checked,
+              opposedBy: field("opposedBy")?.value,
+              opposedStat: field("opposedStat")?.value,
+              opposedNumber: field("opposedNumber")?.value,
+            },
+            opposedChoice,
+          ),
+        };
+      },
+      onRender: (root) => {
+        const opposed = wireOpposed(root, {
+          difficulty: root.querySelector('input[name="carl-party-difficulty"]'),
+          basis: root.querySelector(".carl-party-difficulty-basis"),
+          choice: opposedChoice,
+        });
+        // The Skill typed: its own opposed Stat, ticked at a target - as the
+        // same Skill rolled from a sheet.
+        root
+          .querySelector('input[name="carl-party-skill"]')
+          ?.addEventListener("change", async (e) => {
+            const skill = await findSkillLikeItem(String(e.target.value ?? "").trim());
+            const statKey = skill?.system?.opposedStat;
+            if (statKey) opposed?.setStat(statKey, true);
+          });
+      },
     });
     if (!picked) return;
     const skill = String(picked.data.skill ?? "").trim();
@@ -709,7 +1054,12 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       ui.notifications.warn(i18n.localize("CARLRPG.Toolbox.NoCharactersPicked"));
       return;
     }
-    await postPartyCheck({ skill, difficulty, actors: picked.actors });
+    await postPartyCheck({
+      skill,
+      difficulty,
+      actors: picked.actors,
+      opposed: picked.data.opposed,
+    });
   }
 
   /**
@@ -738,27 +1088,5 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       for (const item of actor.items) if (item.type === "skill") names.add(item.name);
     }
     return [...names].sort((a, b) => a.localeCompare(b));
-  }
-
-  /**
-   * Roll Loot: prompts for a loot box tier, then runs the full Randomized
-   * Magic Item pipeline (Item Type -> matching sub-table x N rolls, with
-   * the Something Unique early-stop/power-multiplier rule) via
-   * module/helpers/loot.mjs's rollMagicItem, which posts the one
-   * consolidated result card itself.
-   */
-  static async #onRollLoot(event, target) {
-    if (!game.user.isGM) return;
-
-    const options = Object.entries(CONFIG.CARLRPG.lootBoxTiers)
-      .map(([key, tier]) => `<option value="${key}">${game.i18n.localize(tier.label)}</option>`)
-      .join("");
-    const result = await showCarlDialog({
-      title: game.i18n.localize("CARLRPG.Toolbox.RollLootTitle"),
-      content: `<div class="carl-dialog-body"><div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.LootTierLabel")}</label><select name="tier">${options}</select></div></div>`,
-      buttons: [rollButton(), cancelButton()],
-    });
-    if (!result) return;
-    await rollMagicItem(result.tier);
   }
 }

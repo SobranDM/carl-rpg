@@ -85,7 +85,11 @@ $splatter-height: 213px; // preserves the source's 1536x1024 (3:2) aspect ratio
   // Roboto typography and surrounding context size instead of jumping out
   // in a different, larger display face. Margins are left alone - several
   // components already reset those where needed (e.g. .item-name h3/h4).
-  h1, h2, h3, h4, h5 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
     font-family: inherit;
     font-size: inherit;
     color: inherit;

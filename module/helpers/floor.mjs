@@ -1,29 +1,39 @@
 /**
- * Floor-level rules the GM Toolbox's End Floor and Boss Killed actions use.
+ * Floor-level rules the GM Toolbox's End Floor and Boss Killed actions use,
+ * and the current Floor.
  */
+
+/**
+ * The Floor the party is on (the world setting the GM Toolbox moves).
+ * @returns {number}
+ */
+export function currentFloor() {
+  return game.settings.get("carl-rpg", "currentFloor");
+}
 
 /**
  * "When a party kills a Boss, each member gains Levels based on the tier of
  * the Boss" (Crawler Advancement, p.170).
  */
 export const BOSS_TIERS = {
-  neighborhood: { label: "CARLRPG.Toolbox.BossTier.Neighborhood", levels: 1 },
-  borough: { label: "CARLRPG.Toolbox.BossTier.Borough", levels: 2 },
-  city: { label: "CARLRPG.Toolbox.BossTier.City", levels: 3 },
-  province: { label: "CARLRPG.Toolbox.BossTier.Province", levels: 4 },
-  country: { label: "CARLRPG.Toolbox.BossTier.Country", levels: 5 },
-  floor: { label: "CARLRPG.Toolbox.BossTier.Floor", levels: 6 },
+  neighborhood: { label: "CARLRPG.Toolbox.BossTier.Neighborhood", levels: 1, box: "bronze" },
+  borough: { label: "CARLRPG.Toolbox.BossTier.Borough", levels: 2, box: "silver" },
+  city: { label: "CARLRPG.Toolbox.BossTier.City", levels: 3, box: "gold" },
+  province: { label: "CARLRPG.Toolbox.BossTier.Province", levels: 4, box: "platinum" },
+  country: { label: "CARLRPG.Toolbox.BossTier.Country", levels: 5, box: "legendary" },
+  floor: { label: "CARLRPG.Toolbox.BossTier.Floor", levels: 6, box: "celestial" },
 };
 
 /**
- * Default days before a floor collapses (Time, p.63): "Third Floor: 8
- * days... Fourth Floor: 10 days... Fifth Floor: 15 days" (30-hour days). The
- * GM may set their own; floors without a default return null.
+ * Default days before a floor collapses (30-hour days): the First Floor 5
+ * and the Second 6 (Atlas, "Time to Level Collapse"), the Third 8, the
+ * Fourth 10 and the Fifth 15 (Time, p.63). The GM may set their own; floors
+ * without a default return null.
  * @param {number} floor
  * @returns {number|null}
  */
 export function collapseDays(floor) {
-  return { 3: 8, 4: 10, 5: 15 }[floor] ?? null;
+  return { 1: 5, 2: 6, 3: 8, 4: 10, 5: 15 }[floor] ?? null;
 }
 
 /**

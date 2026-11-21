@@ -12,8 +12,19 @@
 
 /** The book's 13 damage types, in Table 10 order. */
 export const DAMAGE_TYPE_KEYS = [
-  "acid", "bludgeoning", "electric", "fire", "force", "holy", "ice",
-  "necrotic", "piercing", "poison", "psychic", "slashing", "sonic",
+  "acid",
+  "bludgeoning",
+  "electric",
+  "fire",
+  "force",
+  "holy",
+  "ice",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "slashing",
+  "sonic",
 ];
 
 /**
@@ -49,7 +60,9 @@ export const DAMAGE_TYPE_ALIASES = {
  * @returns {string}
  */
 export function normalizeDamageType(word) {
-  const key = String(word ?? "").trim().toLowerCase();
+  const key = String(word ?? "")
+    .trim()
+    .toLowerCase();
   if (DAMAGE_TYPE_KEYS.includes(key)) return key;
   return DAMAGE_TYPE_ALIASES[key] ?? "";
 }
@@ -81,4 +94,15 @@ export function findDamageTypes(text) {
  */
 export function findDamageType(text) {
   return findDamageTypes(text)[0] ?? "";
+}
+
+/**
+ * A damage type's localized name, or "Damage" for none. Reads
+ * CONFIG.CARLRPG at call time (this module stays loadable in Node).
+ * @param {string} [type]
+ * @returns {string}
+ */
+export function damageTypeLabel(type) {
+  if (!type) return game.i18n.localize("CARLRPG.Roll.Damage");
+  return game.i18n.localize(CONFIG.CARLRPG.damageTypes[type] ?? type);
 }

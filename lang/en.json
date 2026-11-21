@@ -99,7 +99,7 @@
         "NotRolled": "Roll your Stats.",
         "ArrayIncomplete": "Place a score in every Stat.",
         "ArrayOnce": "Use each of 2, 3, 4, 5 and 6 once.",
-      "AlreadyDone": "{name} has already been through character creation."
+        "AlreadyDone": "{name} has already been through character creation."
       },
       "Summary": {
         "Title": "New crawler: {name}",
@@ -146,6 +146,10 @@
         "Line": "{name}: {items}",
         "CheckMove": "(base Move {move} ft, Step {step} ft were typed in by hand: check they don't already include what these now add)",
         "ItemsDirectory": "Items directory"
+      },
+      "OpposedStats": {
+        "Title": "Skills and Spells that are Opposed",
+        "Body": "These Skills and Spells are Opposed in the book (\"Make an Int-Opposed Skill Check\"), so a Check with them now opens Opposed against a targeted creature. Each copy below was given the Stat it's Opposed by (nothing else on it changed):"
       },
       "GearSlots": {
         "Title": "Gear says where it's worn now",
@@ -247,7 +251,7 @@
         "AttackWith": "Swap weapon and Attack with {skill} (free)",
         "InProgress": "Finish the swap that's under way first.",
         "UndoSkipped": "The Attack didn't happen, but your hands or Hotlist changed meanwhile, so the swap stands (an Action).",
-      "Failed": "{item} couldn't go into your Main Hand: nothing was swapped."
+        "Failed": "{item} couldn't go into your Main Hand: nothing was swapped."
       },
       "ReadyTitle": "Hotlist",
       "Readied": "{name} readies {item}.",
@@ -530,6 +534,8 @@
       "Cha": { "long": "Charisma", "abbr": "CHA" }
     },
     "SheetLabels": {
+      "Box": "CarlRPG Box Sheet",
+      "Achievement": "CarlRPG Achievement Sheet",
       "Actor": "CarlRPG Actor Sheet",
       "Item": "CarlRPG Item Sheet",
       "LootBox": "CarlRPG Loot Box Sheet"
@@ -690,11 +696,12 @@
         "Popularity": "Other end-of-floor Popularity calls (p.280): +1 for a cute Pet moment or a memorable catchphrase; -1 for a boring d10+ main Attack, entering the stairwell 30+ hours early, or grinding 15+ of the final 30 hours.",
         "Boxes": "Fan Box for high performers (one per Floor); a Benefactor Box if they have a Sponsor (once per Floor).",
         "RaceClass": "Race/Class end-of-floor features, e.g. Human's or Hobgoblin's extra Advancement Check with Advantage.",
-        "Collapse": "Floor {floor} collapses in {days} days (30-hour days) unless you set your own.",
-        "CollapseCustom": "Set Floor {floor}'s collapse timer and announce it."
+        "Collapse": "Floor {floor}'s collapse timer is running: {days} days (30-hour days). Announce it.",
+        "CollapseCustom": "Floor {floor} has no collapse timer: set one with the GM Toolbox's Collapse Timer, and announce it."
       },
       "BossKilled": "Boss Killed",
-      "BossKilledHint": "Award Levels for a Boss kill by its tier (p.170).",
+      "BossKilledHint": "Award Levels for a Boss kill by its tier (p.170), and a Boss Box (p.22).",
+      "GiveBossBox": "Give each a Boss Box of its tier (p.22)",
       "BossKilledTitle": "Boss Killed",
       "BossTierLabel": "Boss tier",
       "BossTierOption": "{tier} (+{levels} Level(s))",
@@ -720,7 +727,9 @@
       "FloorProgress": "Floor Progress",
       "FloorIncrement": "Increment Floor",
       "FloorDecrement": "Decrement Floor",
-      "InWorldRest": "In-World Rest",
+      "Downtime": "Downtime",
+      "Rewards": "Rewards",
+      "Party": "Party",
       "Rest": {
         "Title": "Rest",
         "Button": "Rest",
@@ -762,7 +771,6 @@
         "Pets": "Pets ({count})",
         "Confirm": "Confirm"
       },
-      "Other": "Other",
       "NewScene": "New scene",
       "NewSceneHint": "Start a new scene: every \"Once per scene\" cooldown ends, for every actor.",
       "NewSceneDone": "New scene: \"Once per scene\" cooldowns are cleared.",
@@ -775,8 +783,6 @@
       "GrindThresholdReached": "{name} has accrued enough hours - rolling a Skill Advancement Check.",
       "GrindProgress": "{name}: {accrued}/{rank} hours accrued.",
       "NoCharacters": "No character Actors found.",
-      "RollLoot": "Roll Loot",
-      "RollLootTitle": "Roll Loot",
       "LootTierLabel": "Loot Box Tier",
       "LootNoItemTypeTable": "Could not find the \"Item Type\" table in the Roll Tables compendium.",
       "LootCardTitle": "Random Magic Item",
@@ -1119,7 +1125,12 @@
       "Cap": "max {cap}",
       "OnlyWhen": "Only when: {conditions}",
       "FromLevel": "From Level {level}",
-      "Resist": { "none": "None", "resist": "Resistant", "vulnerable": "Vulnerable", "immune": "Immune" },
+      "Resist": {
+        "none": "None",
+        "resist": "Resistant",
+        "vulnerable": "Vulnerable",
+        "immune": "Immune"
+      },
       "Kind": {
         "stat": "Stat",
         "skillRank": "Skill Rank",
@@ -1144,7 +1155,12 @@
       "OnlyWithOrHandToHand": "Only with: {skills} or any Hand-to-Hand Attack",
       "AddSkill": "Add a Skill",
       "RemoveSkill": "Remove this Skill",
-      "Trigger": { "hit": "On a hit", "crit": "Critical Hit", "amazing": "Amazing Success", "both": "Crit + Amazing" },
+      "Trigger": {
+        "hit": "On a hit",
+        "crit": "Critical Hit",
+        "amazing": "Amazing Success",
+        "both": "Crit + Amazing"
+      },
       "TriggerHint": {
         "hit": "Lands on any hit the target doesn't Evade.",
         "crit": "Lands only on a Critical Hit.",
@@ -1180,7 +1196,12 @@
       "AddHealing": "Healing",
       "AddShieldSlots": "Shield slots",
       "AddVehicle": "Vehicle",
-      "Count": { "Bonus": "{n} Bonus", "Bonuses": "{n} Bonuses", "Debuff": "{n} Debuff", "Debuffs": "{n} Debuffs" },
+      "Count": {
+        "Bonus": "{n} Bonus",
+        "Bonuses": "{n} Bonuses",
+        "Debuff": "{n} Debuff",
+        "Debuffs": "{n} Debuffs"
+      },
       "ManaChip": "{n} Mana",
       "RankChip": "Rank {n}",
       "MarkedHint": "Marked for an Advancement Check",
@@ -1188,7 +1209,12 @@
       "AlsoBar": "Also:",
       "ConsumableUse": "Consumable use",
       "WeaponChip": "Weapon · {skill}",
-      "KindChip": { "potion": "Potion", "scroll": "Scroll", "spellbook": "Spellbook", "other": "Single-use" },
+      "KindChip": {
+        "potion": "Potion",
+        "scroll": "Scroll",
+        "spellbook": "Spellbook",
+        "other": "Single-use"
+      },
       "Consumable": {
         "Heals": "Heals",
         "Mana": "Restores Mana",
@@ -1434,7 +1460,8 @@
       "Mend": {
         "none": "Nothing",
         "minor": "One Minor Injury",
-        "any": "One Minor or Major Injury"
+        "any": "One Minor or Major Injury",
+        "all": "All Injuries"
       },
       "ManaAmount": "Restore Mana",
       "ManaFull": "Full Mana",
@@ -1509,6 +1536,7 @@
         "HealFull": "Heals to full",
         "MendMinor": "Mends one Minor Injury",
         "MendAny": "Mends one Minor or Major Injury",
+        "MendAll": "Mends all Injuries",
         "Mana": "Restores {amount} Mana",
         "ManaFull": "Restores full Mana",
         "Cure": "Cures {debuff}",
@@ -1828,7 +1856,6 @@
       "View": "View item",
       "Empty": "This box is empty.",
       "EmptyGM": "Empty. Pick a tier and click Generate Loot, or drop items here.",
-      "MundaneItem": "Mundane Item",
       "Taken": "{actor} took {item} from {box}.",
       "TakeFailed": "{item} couldn't be given out, so it stayed in the box.",
       "NoCharacter": "You have no assigned Character. Drag the item onto your sheet instead.",
@@ -1840,6 +1867,214 @@
       "Platinum": { "Label": "Platinum", "XValues": "+2–4 Skill Rank or +5% Stat" },
       "Legendary": { "Label": "Legendary", "XValues": "+5 Skill Rank or +10% Stat" },
       "Celestial": { "Label": "Celestial", "XValues": "+6 Skill Rank or +20% Stat" }
+    },
+    "Loot": {
+      "Enchantment": {
+        "stat": "+{value} {stat}",
+        "statFromPercent": "+{value} {stat} ({percent}% of their {stat} when gained)",
+        "statPercent": "+{percent}% {stat} (of the Stat, set when gained)",
+        "skill": "+{value} {skill} Skill",
+        "skillChoice": "+{value} to a Skill of your choice",
+        "passiveSkill": "{skill} (Passive) at Rank {value}",
+        "passiveSkillChoice": "A Passive Skill at Rank {value} (GM's choice)",
+        "resistance": "Resistance to {type} damage",
+        "dr": "+{value} Damage Resistance",
+        "inherentSpell": "Inherent Spell: {spell} at Rank {rank}, no Mana cost (Cooldown {hours} hours)",
+        "unique": "Something Unique (×{multiplier}): {text}"
+      },
+      "ScrollName": "Scroll of {spell} (Rank {rank})",
+      "ScrollText": "Casts {spell} once at Rank {rank}. The caster pays no Mana.",
+      "SpellbookName": "Spellbook of {spell}",
+      "SpellbookText": "Reading it teaches {spell} at Rank {rank} before the book disappears.",
+      "Gold": "{gold} Gold",
+      "Nothing": "Nothing.",
+      "CardTitle": "Loot",
+      "CardTitleFor": "Loot for {name}",
+      "Forge": {
+        "Title": "Loot Forge",
+        "ReforgeTitle": "Reforge: {name}",
+        "Reforge": "Reforge",
+        "Tier": "Tier",
+        "Gold": "Gold",
+        "RerollAll": "Reroll everything",
+        "RerollItem": "Reroll this item",
+        "RerollEffect": "Reroll this effect",
+        "Remove": "Remove",
+        "Slot": "Worn on",
+        "NoSlot": "(not worn)",
+        "AccessoryKind": "Accessory kind",
+        "Quantity": "Quantity",
+        "SkillPlaceholder": "Skill",
+        "SpellPlaceholder": "Spell",
+        "DropHint": "Drop items here from the sidebar, a compendium or a sheet to add them.",
+        "AddMagic": "Add Magic Item",
+        "Save": "Save",
+        "UniqueTimes": "Something Unique ×{times}",
+        "WeaponHeld": "A weapon is held in a hand.",
+        "NoMagicAtTier": "This tier has no magic items. Pick Silver or higher.",
+        "Kind": {
+          "stat": "+X Stat",
+          "skill": "+X Skill",
+          "passiveSkill": "Passive Skill",
+          "resistance": "Resistance",
+          "dr": "Damage Resistance",
+          "inherentSpell": "Inherent Spell",
+          "buff": "Buff",
+          "externalBuff": "External Buff",
+          "unique": "Something Unique",
+          "text": "Effect"
+        }
+      }
+    },
+    "Achievement": {
+      "New": "New Achievement!",
+      "NewName": "New Achievement",
+      "Close": "Close",
+      "Library": "Achievements",
+      "Plural": "Achievements",
+      "Reward": "Reward",
+      "RewardPlaceholder": "e.g. You've received a Bronze Crafter's Box!",
+      "Grade": "Grade",
+      "Category": "Category",
+      "CategoryPlaceholder": "Optional, e.g. Boss Kills",
+      "CategoryHint": "Optional. The Achievements window groups achievements of the same category together, Bronze to Celestial.",
+      "LootBox": "Gives a loot box",
+      "LootBoxHint": "Awarding it gives the crawler a loot box of its grade, titled from the Reward (\"Bronze Crafter's Box\").",
+      "AwardedOn": "Awarded on Floor {floor}.",
+      "BoxOpened": "Its loot box has been opened.",
+      "BoxUnopened": "Its loot box hasn't been opened yet.",
+      "CardSubtitle": "{name}: {achievement}",
+      "DropRefused": "Only the GM awards achievements, to a Character: drop it on their sheet, or use the Achievements grid.",
+      "Settings": {
+        "PostToChat": "Post achievements to chat",
+        "PostToChatHint": "When an achievement is awarded, post it to chat for everyone. Off: only the crawler's player sees it, in its splash."
+      },
+      "Grid": {
+        "Title": "Achievements",
+        "Button": "Achievements",
+        "Hint": "Award achievements to crawlers.",
+        "ShowOffline": "Show crawlers whose player is offline",
+        "New": "New Achievement",
+        "Done": "Done",
+        "Delete": "Delete",
+        "PrepareTitle": "{achievement}: {name}'s Loot Box",
+        "Box": {
+          "Legend": "Each crawler's loot box",
+          "Prepare": "Prepare this crawler's box",
+          "Random": "Rolled when opened",
+          "Prepared": "Prepared",
+          "AwardedRandom": "Awarded, unopened: rolled when opened",
+          "AwardedPrepared": "Awarded, unopened: prepared",
+          "Opened": "Opened"
+        },
+        "DeleteTitle": "Delete an Achievement",
+        "DeleteText": "Delete {achievement}? Crawlers who were awarded it keep it.",
+        "Award": "Click to award {achievement} to {name}.",
+        "Awarded": "{name} has {achievement}. Click to take it back.",
+        "RightClickPrepare": "Right-click to prepare their loot box.",
+        "NoLootBox": "This achievement gives no loot box.",
+        "BoxOpened": "That loot box has already been opened.",
+        "RevokeTitle": "Take Back an Achievement",
+        "RevokeText": "Take {achievement} back from {name}? Its loot box goes too, if it hasn't been opened.",
+        "NoAchievements": "No achievements yet. Click New Achievement to make one.",
+        "NoCrawlers": "No crawlers to show. Tick \"Show crawlers whose player is offline\" to see the rest."
+      }
+    },
+    "Sound": {
+      "achievement": {
+        "Name": "Mute the achievement sound",
+        "Hint": "Don't play the sound when one of your crawlers earns an achievement."
+      },
+      "levelUp": {
+        "Name": "Mute the Level-up sound",
+        "Hint": "Don't play the sound when one of your crawlers gains a Level."
+      },
+      "lootBox": {
+        "Name": "Mute the loot box sound",
+        "Hint": "Don't play the sound when a loot box opens while the party opens its boxes together."
+      }
+    },
+    "Opposed": {
+      "Label": "Opposed",
+      "Hint": "Opposed (p.59): someone or something stands in the way. The Difficulty is 10 + their Stat Mod + the Floor; the GM doesn't roll.",
+      "By": "Opposed by",
+      "Stat": "Their Stat",
+      "Number": "Their number",
+      "NumberHint": "In place of a Stat Mod: a Spell Rank, a size class, or whatever force the crawler is up against.",
+      "Targeted": "Targeted",
+      "Scene": "On the scene",
+      "Hardest": "The hardest of the {count} targeted",
+      "Other": "A number (a Spell Rank, a size class...)",
+      "LabelNumber": "Opposed by {number}: {value}",
+      "Note": "Opposed by {name}'s {stat} ({mod})",
+      "NoteNumber": "Opposed by {mod} (a Spell Rank, a size class or another force)"
+    },
+    "FloorClock": {
+      "Floor": "Floor {floor}",
+      "Left": "{time} to collapse",
+      "Collapsed": "Floor collapsed",
+      "CollapsedNotice": "System message: the floor has collapsed.",
+      "Warning": "System message: less than 24 hours until the floor collapses! Get to a stairwell.",
+      "Hint": "Time until this floor collapses (30-hour days). Drag to move it; double-click to put it back.",
+      "Button": "Collapse Timer",
+      "ButtonHint": "Set the time until this floor collapses, or stop the timer.",
+      "DialogTitle": "Floor Collapse Timer",
+      "DialogHint": "Time left before Floor {floor} collapses. A dungeon day is 30 hours.",
+      "Days": "Days",
+      "Hours": "Hours",
+      "Set": "Set",
+      "Clear": "No Timer",
+      "NextFloorDays": "Floor {floor} collapses in (days)",
+      "NoTimer": "no timer"
+    },
+    "Opening": {
+      "Title": "Opening Loot Boxes",
+      "Button": "Open Loot",
+      "Hint": "The party opens its unopened loot boxes together, one crawler at a time.",
+      "StartPrompt": "Who opens their boxes, in this order:",
+      "Start": "Start",
+      "MoveUp": "Earlier",
+      "MoveDown": "Later",
+      "NoBoxes": "No crawler has an unopened loot box.",
+      "BoxCount": "{count} box(es)",
+      "BoxOf": "Box {at} of {of}",
+      "Open": "Open!",
+      "Next": "Next!",
+      "NextCrawler": "Next Crawler!",
+      "Skip": "Skip Player",
+      "End": "End",
+      "Done": "Every box is open.",
+      "Failed": "This box couldn't be opened: something in it no longer exists. The GM can fix its contents; it stays unopened.",
+      "Waiting": "Waiting for this crawler's player (or the GM)."
+    },
+    "Box": {
+      "Name": "{tier} Box",
+      "BossName": "{tier} Boss Box",
+      "Show": "Show Loot Boxes ({count})",
+      "Hide": "Hide Loot Boxes",
+      "Unopened": "An unopened loot box. What's inside is a surprise.",
+      "Contents": "Contents",
+      "RandomHint": "Rolled for this crawler when it's opened. Prepare it to choose what's inside.",
+      "PrepareContents": "Prepare Contents",
+      "EditContents": "Edit Contents",
+      "PrepareTitle": "Prepare: {name}",
+      "Randomize": "Roll When Opened",
+      "Open": "Open Now",
+      "OpenedTitle": "{name} opened {box}",
+      "MissingContents": "{name} couldn't be opened: something prepared in it no longer exists. Edit its contents.",
+      "CharactersOnly": "Loot boxes only go to Characters.",
+      "Give": "Give Box",
+      "GiveHint": "Give crawlers an unopened loot box.",
+      "GiveTitle": "Give a Loot Box",
+      "GivePrompt": "Who gets one?",
+      "Title": "Title",
+      "TitlePlaceholder": "e.g. Bronze Crafter's Box (blank: Bronze Box)",
+      "Received": "{name} received a {box}.",
+      "Source": {
+        "achievement": "From an achievement",
+        "boss": "From a Boss kill",
+        "gift": "Given by the GM"
+      }
     },
     "Degree": {
       "CriticalHit": "Critical Hit",
@@ -2262,7 +2497,7 @@
     "Actor": {
       "character": "Character",
       "mob": "Mob",
-      "lootBox": "Loot Box",
+      "lootBox": "Loot Box (Map)",
       "pet": "Pet",
       "vehicle": "Vehicle"
     },
@@ -2274,7 +2509,9 @@
       "spell": "Spell",
       "class": "Class",
       "race": "Race",
-      "mobAttack": "Mob Attack"
+      "mobAttack": "Mob Attack",
+      "box": "Loot Box",
+      "achievement": "Achievement"
     }
   }
 }

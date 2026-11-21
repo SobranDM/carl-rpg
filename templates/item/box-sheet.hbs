@@ -1,0 +1,48 @@
+{{!-- A Box (module/sheets/box-sheet.mjs). Everyone: its art, title, tier
+      and description. The GM: its source, its contents (random, or
+      prepared in the Loot Forge) and Open. A player never sees what's in
+      it (helpers/boxes.mjs boxView). --}}
+<div class="carl-box">
+  <header class="carl-box-head">
+    <img class="carl-box-art" src="{{view.img}}" alt="" {{#if isGM}}data-edit="img" data-action="editImage"{{/if}} />
+    <div class="carl-box-title">
+      {{#if isGM}}
+      <input type="text" name="name" value="{{item.name}}" placeholder="{{localize 'Name'}}" />
+      <select name="system.tier">{{selectOptions tierChoices selected=system.tier localize=true}}</select>
+      {{else}}
+      <h1>{{view.name}}</h1>
+      <div class="carl-box-tier">{{localize view.tierLabel}}</div>
+      {{/if}}
+    </div>
+  </header>
+
+  {{#if isGM}}
+  <section class="carl-box-gm">
+    {{#if view.gm.sourceLabel}}
+    <p class="carl-hint">{{localize view.gm.sourceLabel}}{{#if view.gm.sourceUuid}} - @UUID[{{view.gm.sourceUuid}}]{{/if}}</p>
+    {{/if}}
+    <h3>{{localize "CARLRPG.Box.Contents"}}</h3>
+    {{#if view.gm.prepared}}
+    <div class="carl-box-contents">{{{view.gm.contentsHTML}}}</div>
+    {{else}}
+    <p class="carl-hint">{{localize "CARLRPG.Box.RandomHint"}}</p>
+    {{/if}}
+    <div class="carl-box-buttons">
+      <button type="button" data-action="prepareContents"><i class="fas fa-hammer"></i>
+        {{localize (ifThen view.gm.prepared "CARLRPG.Box.EditContents" "CARLRPG.Box.PrepareContents")}}</button>
+      {{#if view.gm.prepared}}
+      <button type="button" data-action="clearContents"><i class="fas fa-dice"></i> {{localize "CARLRPG.Box.Randomize"}}</button>
+      {{/if}}
+      {{#if view.gm.canOpen}}
+      <button type="button" data-action="openBox"><i class="fas fa-box-open"></i> {{localize "CARLRPG.Box.Open"}}</button>
+      {{/if}}
+    </div>
+  </section>
+  <prose-mirror name="system.description" toggled value="{{system.description}}" data-document-uuid="{{item.uuid}}">
+    {{{descriptionHTML}}}
+  </prose-mirror>
+  {{else}}
+  <p class="carl-hint">{{localize "CARLRPG.Box.Unopened"}}</p>
+  {{#if system.description}}<div class="carl-box-description">{{{descriptionHTML}}}</div>{{/if}}
+  {{/if}}
+</div>

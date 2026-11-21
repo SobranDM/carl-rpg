@@ -108,7 +108,11 @@ function localizedDebuffLabel(condition, preset) {
  *   disadvantageScopeApplies). False for a Mob's Difficulty a crawler rolls against.
  * @returns {DebuffRow[]}
  */
-export function collectDebuffRows(sys, rollKind, { usesDex = rollKind === "evade", ownerName = "", idPrefix = "self", ownAction = true } = {}) {
+export function collectDebuffRows(
+  sys,
+  rollKind,
+  { usesDex = rollKind === "evade", ownerName = "", idPrefix = "self", ownAction = true } = {},
+) {
   const rows = [];
   const dexMod = sys?.stats?.dex?.mod ?? 0;
   for (const condition of sys?.conditions ?? []) {
@@ -117,15 +121,18 @@ export function collectDebuffRows(sys, rollKind, { usesDex = rollKind === "evade
     if (!mech) continue;
     const base = localizedDebuffLabel(condition, preset);
     const label = ownerName ? `${base} (${ownerName})` : base;
-    const row = (kind, value, extra = {}) => rows.push({
-      id: `${idPrefix}-${condition.id}-${kind}`,
-      key: condition.key,
-      conditionId: condition.id,
-      kind, value, label,
-      defaultOn: true,
-      consume: false,
-      ...extra,
-    });
+    const row = (kind, value, extra = {}) =>
+      rows.push({
+        id: `${idPrefix}-${condition.id}-${kind}`,
+        key: condition.key,
+        conditionId: condition.id,
+        kind,
+        value,
+        label,
+        defaultOn: true,
+        consume: false,
+        ...extra,
+      });
 
     if (mech.penalty) {
       const stacks = Math.max(1, Number(condition.stacks) || 1);
@@ -137,7 +144,12 @@ export function collectDebuffRows(sys, rollKind, { usesDex = rollKind === "evade
         consume: CONSUMED_SCOPES.has(mech.disadvantage),
       });
     }
-    if (mech.noDexMod && usesDex && (rollKind === "attack" || rollKind === "evade") && dexMod !== 0) {
+    if (
+      mech.noDexMod &&
+      usesDex &&
+      (rollKind === "attack" || rollKind === "evade") &&
+      dexMod !== 0
+    ) {
       row("noDex", -dexMod);
     }
   }
@@ -151,7 +163,10 @@ export function collectDebuffRows(sys, rollKind, { usesDex = rollKind === "evade
  * @param {{ownerName?: string, idPrefix?: string}} [options]
  * @returns {DebuffRow[]}
  */
-export function collectAdvantageAgainstRows(defenderSys, { ownerName = "", idPrefix = "target" } = {}) {
+export function collectAdvantageAgainstRows(
+  defenderSys,
+  { ownerName = "", idPrefix = "target" } = {},
+) {
   const rows = [];
   for (const condition of defenderSys?.conditions ?? []) {
     const preset = CARLRPG.debuffs[condition.key];
@@ -187,7 +202,9 @@ export function resolveRollerRows(rows, checked = null) {
   return {
     // Woozy's "no DEX Mod" is folded in as its own negative term (rather
     // than silently dropping the DEX row) so the roll breakdown shows why.
-    penalties: applied.filter((r) => r.kind === "penalty" || r.kind === "noDex").map((r) => ({ label: r.label, value: r.value })),
+    penalties: applied
+      .filter((r) => r.kind === "penalty" || r.kind === "noDex")
+      .map((r) => ({ label: r.label, value: r.value })),
     advantageCount: applied.filter((r) => r.kind === "advantage").length,
     disadvantageCount: applied.filter((r) => r.kind === "disadvantage").length,
     applied,
@@ -235,15 +252,23 @@ export function describeRow(row, mode) {
   // reads "+4", not "4".
   const signed = row.value > 0 ? `+${row.value}` : String(row.value);
   if (row.kind === "penalty") {
-    text = mode === "difficulty"
-      ? i18n.format("CARLRPG.DebuffRow.Difficulty", { value: signed })
-      : signed;
+    text =
+      mode === "difficulty"
+        ? i18n.format("CARLRPG.DebuffRow.Difficulty", { value: signed })
+        : signed;
   } else if (row.kind === "noDex") {
-    text = i18n.format(mode === "difficulty" ? "CARLRPG.DebuffRow.NoDexDifficulty" : "CARLRPG.DebuffRow.NoDex", { value: row.value });
+    text = i18n.format(
+      mode === "difficulty" ? "CARLRPG.DebuffRow.NoDexDifficulty" : "CARLRPG.DebuffRow.NoDex",
+      { value: row.value },
+    );
   } else if (row.kind === "disadvantage") {
-    text = i18n.localize(mode === "difficulty" ? "CARLRPG.DebuffRow.MobDisadvantage" : "CARLRPG.Dialog.Disadvantage");
+    text = i18n.localize(
+      mode === "difficulty" ? "CARLRPG.DebuffRow.MobDisadvantage" : "CARLRPG.Dialog.Disadvantage",
+    );
   } else {
-    text = i18n.localize(mode === "difficulty" ? "CARLRPG.DebuffRow.MobAdvantage" : "CARLRPG.Dialog.Advantage");
+    text = i18n.localize(
+      mode === "difficulty" ? "CARLRPG.DebuffRow.MobAdvantage" : "CARLRPG.Dialog.Advantage",
+    );
   }
   if (row.consume) text += ` · ${i18n.localize("CARLRPG.DebuffRow.Consumed")}`;
   return text;
@@ -285,8 +310,18 @@ export function buildDebuffNote(appliedRows) {
   };
   // Riding in a vehicle (module/helpers/vehicle-rows.mjs) isn't a Debuff -
   // it gets its own line.
-  return line(appliedRows.filter((r) => !r.situational), "fa-skull-crossbones", "CARLRPG.DebuffRow.NoteTitle")
-    + line(appliedRows.filter((r) => r.situational), "fa-car", "CARLRPG.Vehicle.Rows.NoteTitle");
+  return (
+    line(
+      appliedRows.filter((r) => !r.situational),
+      "fa-skull-crossbones",
+      "CARLRPG.DebuffRow.NoteTitle",
+    ) +
+    line(
+      appliedRows.filter((r) => r.situational),
+      "fa-car",
+      "CARLRPG.Vehicle.Rows.NoteTitle",
+    )
+  );
 }
 
 /**
@@ -309,8 +344,9 @@ export function findConditionWithMechanic(sys, flag) {
  */
 export function getActionBlockReason(actor, { isSpell = false } = {}) {
   const sys = actor?.system;
-  const blocking = findConditionWithMechanic(sys, "noActions")
-    ?? (isSpell ? findConditionWithMechanic(sys, "noSpells") : null);
+  const blocking =
+    findConditionWithMechanic(sys, "noActions") ??
+    (isSpell ? findConditionWithMechanic(sys, "noSpells") : null);
   if (!blocking) return null;
   const preset = CARLRPG.debuffs[blocking.key];
   return game.i18n.format("CARLRPG.Warning.DebuffBlocksAction", {

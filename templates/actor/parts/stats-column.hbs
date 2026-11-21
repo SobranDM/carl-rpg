@@ -6,7 +6,7 @@
   {{!-- Pick an Attack Skill the crawler can use now - a weapon for it in
         hand or in the Hotlist, or none needed - then the Attack dialog
         (CarlDice.chooseAttack, module/helpers/weapons.mjs). --}}
-  <button type="button" class="carl-attack-button" data-action="chooseAttack" title="{{localize 'CARLRPG.Weapon.AttackButtonHint'}}">
+  <button type="button" class="carl-attack-button" data-action="chooseAttack" data-tooltip-text="{{localize 'CARLRPG.Weapon.AttackButtonHint'}}">
     <i class="fas fa-hand-fist"></i> {{localize "CARLRPG.Weapon.AttackButton"}}
   </button>
   {{/if}}
@@ -25,9 +25,9 @@
     <div class="carl-stat">
       <label class="resource-label rollable" data-action="rollStat" data-stat="{{key}}">{{stat.label}}</label>
       <div class="carl-stat-row">
-        <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.EffectiveValue'}}">{{stat.effective}}</span>
+        <span class="carl-stat-value" data-tooltip-text="{{localize 'CARLRPG.Actor.EffectiveValue'}}">{{stat.effective}}</span>
         <span class="carl-stat-mod rollable" data-action="rollStat" data-stat="{{key}}"
-          title="{{localize 'CARLRPG.Actor.EffectiveMod'}}">{{numberFormat stat.mod sign=true}}</span>
+          data-tooltip-text="{{localize 'CARLRPG.Actor.EffectiveMod'}}">{{numberFormat stat.mod sign=true}}</span>
       </div>
     </div>
     {{/each}}
@@ -45,7 +45,7 @@
       </legend>
       <div class="carl-banked-stat-points-row">
         {{#if (eq actor.type "mob")}}
-        <span class="carl-stat-value" title="{{localize 'CARLRPG.Actor.StatPointsRemainingHint'}}">{{statPointsRemaining}}</span>
+        <span class="carl-stat-value" data-tooltip-text="{{localize 'CARLRPG.Actor.StatPointsRemainingHint'}}">{{statPointsRemaining}}</span>
         {{else}}
         <input type="text" class="carl-w-tiny" name="system.bankedStatPoints" value="{{system.bankedStatPoints}}" data-dtype="Number" />
         {{/if}}

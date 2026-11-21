@@ -30,8 +30,23 @@
 export const ROUND_SECONDS = 10;
 
 const NUMBER_WORDS = {
-  a: 1, an: 1, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-  eleven: 11, twelve: 12, fifteen: 15, twenty: 20, thirty: 30,
+  a: 1,
+  an: 1,
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+  eleven: 11,
+  twelve: 12,
+  fifteen: 15,
+  twenty: 20,
+  thirty: 30,
 };
 
 const UNIT_SECONDS = { second: 1, sec: 1, minute: 60, min: 60, hour: 3600, hr: 3600 };
@@ -40,7 +55,10 @@ const UNIT_SECONDS = { second: 1, sec: 1, minute: 60, min: 60, hour: 3600, hr: 3
 const PHRASES = [
   { re: /^once per round$/, set: { perRound: true } },
   { re: /^once per scene$/, set: { perScene: true } },
-  { re: /,?\s*or until the caster chooses to end (?:the|this) effect/, set: { casterMayEnd: true } },
+  {
+    re: /,?\s*or until the caster chooses to end (?:the|this) effect/,
+    set: { casterMayEnd: true },
+  },
   { re: /until the end of (?:the )?combat/, set: { untilCombatEnd: true } },
 ];
 
@@ -66,7 +84,9 @@ const PHRASES = [
  */
 export function parseTimerText(text) {
   const original = String(text ?? "");
-  let rest = original.trim().toLowerCase()
+  let rest = original
+    .trim()
+    .toLowerCase()
     .replace(/[×]/g, "x")
     .replace(/\s+/g, " ")
     .replace(/[.;]+$/, "")
@@ -74,12 +94,23 @@ export function parseTimerText(text) {
   if (!rest) return null;
 
   const result = {
-    text: original, seconds: null, rounds: null, perRank: null, perInt: null,
-    untilCombatEnd: false, perScene: false, perRound: false, casterMayEnd: false, partial: false, manual: false,
+    text: original,
+    seconds: null,
+    rounds: null,
+    perRank: null,
+    perInt: null,
+    untilCombatEnd: false,
+    perScene: false,
+    perRound: false,
+    casterMayEnd: false,
+    partial: false,
+    manual: false,
   };
 
   // Number words to digits ("two full rounds").
-  rest = rest.replace(/\b([a-z]+)\b/g, (word) => (word in NUMBER_WORDS && word !== "a" && word !== "an" ? String(NUMBER_WORDS[word]) : word));
+  rest = rest.replace(/\b([a-z]+)\b/g, (word) =>
+    word in NUMBER_WORDS && word !== "a" && word !== "an" ? String(NUMBER_WORDS[word]) : word,
+  );
 
   for (const phrase of PHRASES) {
     if (phrase.re.test(rest)) {
@@ -114,12 +145,18 @@ export function parseTimerText(text) {
     },
   );
 
-  const timed = result.seconds !== null || result.rounds !== null || result.perRank !== null || result.perInt !== null;
+  const timed =
+    result.seconds !== null ||
+    result.rounds !== null ||
+    result.perRank !== null ||
+    result.perInt !== null;
   // "Until the end of the combat" alone is still read: it ends with the fight.
   const marker = result.perRound || result.perScene || result.untilCombatEnd;
   // What's left once the read parts are gone: joiners only, or words the
   // parser doesn't know.
-  const leftover = rest.replace(/\b(?:until|the|end|of|or|and|plus|for|duration)\b/g, " ").replace(/[\s,+&()-]+/g, "");
+  const leftover = rest
+    .replace(/\b(?:until|the|end|of|or|and|plus|for|duration)\b/g, " ")
+    .replace(/[\s,+&()-]+/g, "");
   if (!timed && !marker) {
     result.manual = true;
   } else if (leftover) {
@@ -135,13 +172,18 @@ export function parseTimerText(text) {
  * @param {{rank?: number, intelligence?: number, roundSeconds?: number}} [context]
  * @returns {number|null}  null when there's no time to count.
  */
-export function resolveTimerSeconds(parsed, { rank = 0, intelligence = 0, roundSeconds = ROUND_SECONDS } = {}) {
+export function resolveTimerSeconds(
+  parsed,
+  { rank = 0, intelligence = 0, roundSeconds = ROUND_SECONDS } = {},
+) {
   if (!parsed || parsed.manual) return null;
   const options = [];
   if (parsed.seconds !== null || parsed.perRank !== null || parsed.perInt !== null) {
-    options.push((parsed.seconds ?? 0)
-      + (parsed.perRank ?? 0) * Math.max(0, Number(rank) || 0)
-      + (parsed.perInt ?? 0) * Math.max(0, Number(intelligence) || 0));
+    options.push(
+      (parsed.seconds ?? 0) +
+        (parsed.perRank ?? 0) * Math.max(0, Number(rank) || 0) +
+        (parsed.perInt ?? 0) * Math.max(0, Number(intelligence) || 0),
+    );
   }
   if (parsed.rounds !== null) options.push(parsed.rounds * roundSeconds);
   if (!options.length) return null;

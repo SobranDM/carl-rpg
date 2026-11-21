@@ -37,7 +37,7 @@
       {{!-- The heading, then Stat and Skill indented under it: each count
             (the GM can correct it) out of the limit, both inputs on the
             right; the limit and a player's count can't be edited. --}}
-      <div class="carl-potions-used" title="{{localize 'CARLRPG.Actor.PotionsUsedHint'}}">
+      <div class="carl-potions-used" data-tooltip-text="{{localize 'CARLRPG.Actor.PotionsUsedHint'}}">
         <span class="carl-potions-heading">{{localize "CARLRPG.Actor.PotionsUsed"}}</span>
         {{#each (object stat="CARLRPG.Actor.PotionsStat" skill="CARLRPG.Actor.PotionsSkill") as |label kind|}}
         <div class="carl-sheet-line carl-potion-count">
@@ -80,6 +80,23 @@
       </prose-mirror>
     </fieldset>
     {{/each}}
+
+    {{!-- Awarded achievements (data/achievement.mjs), newest first: its
+          icon and name, its description as the tooltip; click to read it. --}}
+    {{#if achievements.length}}
+    <fieldset class="carl-details-box wide carl-achievements-box">
+      <legend>{{localize "CARLRPG.Achievement.Plural"}}</legend>
+      <ol class="carl-achievement-list">
+        {{#each achievements as |item|}}
+        <li class="carl-achievement-row" data-item-id="{{item._id}}" data-action="editItem"{{itemTooltip (lookup @root.itemTooltips item._id)}}>
+          <img src="{{item.img}}" alt="" />
+          <span class="carl-achievement-row-name">{{item.name}}</span>
+          {{#if item.system.reward}}<span class="carl-hint">{{item.system.reward}}</span>{{/if}}
+        </li>
+        {{/each}}
+      </ol>
+    </fieldset>
+    {{/if}}
 
     {{!-- The editor shows no chrome until hovered - the legend is the only
           sign the section exists while it's empty. --}}

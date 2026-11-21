@@ -20,14 +20,28 @@
  * intervene.md, stage 2) by an AI Favor or Fuzzy Dice reroll and by an
  * Intervene: it keeps its `checkId`, and the vehicle's round follows.
  */
-import CarlDice, { checkSubtitle, interventionRolls } from "../dice/dice.mjs";
-import { degreeBadge, getDegreeOfSuccess, isHitDegree } from "./rules.mjs";
+import CarlDice, { checkSubtitle, interventionRolls, rerollNote } from "../dice/dice.mjs";
+import {
+  degreeBadge,
+  getDegreeOfSuccess,
+  interventionTotal,
+  isHitDegree,
+  unopposedDifficulty,
+} from "./rules.mjs";
 import { rollsLikeCrawler } from "./actor-kinds.mjs";
 import { skillOrUntrainedCopy } from "./race-class-grants.mjs";
 import { aiRerollFlags } from "./ai-favor.mjs";
-import { createRollMessage, esc } from "../chat/chat-card.mjs";
-import { drivingOutcome, resolveOccupant, vehicleDriver, vehicleFight, vehicleStatus } from "./vehicle-state.mjs";
+import { createRollMessage } from "../chat/chat-card.mjs";
+import {
+  drivingOutcome,
+  resolveOccupant,
+  roundStamp,
+  vehicleDriver,
+  vehicleStatus,
+} from "./vehicle-state.mjs";
 import { updateVehicle } from "./vehicles.mjs";
+import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 const SCOPE = "carl-rpg";
 
@@ -41,7 +55,9 @@ const SCOPE = "carl-rpg";
  */
 export function canDrive(vehicle, user = game.user) {
   const driver = vehicleDriver(vehicle);
-  return !!driver && rollsLikeCrawler(driver) && (user.isGM || driver.testUserPermission(user, "OWNER"));
+  return (
+    !!driver && rollsLikeCrawler(driver) && (user.isGM || driver.testUserPermission(user, "OWNER"))
+  );
 }
 
 /**
@@ -55,17 +71,8 @@ export function canDrive(vehicle, user = game.user) {
  * @returns {Promise<void>}
  */
 export async function commitDrivingRound(vehicle, degree, { critChoice = "", checkId = "" } = {}) {
-  const fight = vehicleFight(vehicle);
-  const status = vehicleStatus(vehicle);
   await updateVehicle(vehicle, {
-    "system.round": {
-      combatId: fight?.id ?? "",
-      checkId,
-      round: fight?.round ?? null,
-      degree,
-      critChoice,
-      ramFactor: status.roundActive ? vehicle.system.round.ramFactor : 1,
-    },
+    "system.round": roundStamp(vehicle, { checkId, degree, critChoice }),
     "system.nextCheckAdvantage": degree === "amazingSuccess",
     "system.parked": false,
   });
@@ -79,7 +86,8 @@ export async function commitDrivingRound(vehicle, degree, { critChoice = "", che
  */
 export async function rollDrivingCheck(vehicle, { mode = "table6", skipDialog = false } = {}) {
   const driver = vehicleDriver(vehicle);
-  const loc = (key, data = {}) => game.i18n.format(`CARLRPG.Vehicle.${key}`, { vehicle: vehicle.name, ...data });
+  const loc = (key, data = {}) =>
+    game.i18n.format(`CARLRPG.Vehicle.${key}`, { vehicle: vehicle.name, ...data });
   if (!driver) {
     ui.notifications.warn(loc("NoDriver"));
     return null;
@@ -98,13 +106,21 @@ export async function rollDrivingCheck(vehicle, { mode = "table6", skipDialog = 
     ui.notifications.warn(loc("NoDriveSkill"));
     return null;
   }
-  const { skill, trained } = await skillOrUntrainedCopy(driver, driveSkill, { system: { governingStat: "dex" } });
-  const floor = game.settings.get("carl-rpg", "currentFloor");
+  const { skill, trained } = await skillOrUntrainedCopy(driver, driveSkill, {
+    system: { governingStat: "dex" },
+  });
+  const floor = currentFloor();
   const status = vehicleStatus(vehicle);
   // Unopposed: 10 + Floor x 2 (p.59). Stopping in time: 10 + Move ÷ 5.
-  const difficulty = mode === "stop" ? status.stopDifficulty : 10 + 2 * floor;
+  const difficulty = mode === "stop" ? status.stopDifficulty : unopposedDifficulty(floor);
   const result = await CarlDice.rollOpposedSkillCheck(driver, skill, {
-    difficulty, opponent: null, skipDialog, post: false, markUse: trained,
+    // Part of driving, not an Action of its own (it spends none).
+    difficulty,
+    opponent: null,
+    skipDialog,
+    post: false,
+    markUse: trained,
+    isAction: false,
   });
   if (!result) return null;
 
@@ -115,9 +131,18 @@ export async function rollDrivingCheck(vehicle, { mode = "table6", skipDialog = 
   else if (usedAdvantage) await updateVehicle(vehicle, { "system.nextCheckAdvantage": false });
 
   await postDrivingCard(vehicle, driver, {
-    mode, checkId, degree: result.degree, roll: result.roll, natural: result.naturalRoll, total: result.total,
-    difficulty: result.difficulty, formula: result.formula, breakdown: result.breakdown,
-    label: skill.name, debuffNote: result.debuffNote, trained,
+    mode,
+    checkId,
+    degree: result.degree,
+    roll: result.roll,
+    natural: result.naturalRoll,
+    total: result.total,
+    difficulty: result.difficulty,
+    formula: result.formula,
+    breakdown: result.breakdown,
+    label: skill.name,
+    debuffNote: result.debuffNote,
+    trained,
   });
   return result.degree;
 }
@@ -144,24 +169,43 @@ export function drivingOutcomeText(mode, degree) {
  * @param {string[]} [data.rerolledBy]  The rerolls made on it ("favor", "fuzzyDice").
  * @returns {object}  createRollMessage / renderRollCard parts.
  */
-function drivingCardParts(vehicle, driver, {
-  mode, degree, difficulty, rolls, rollMeta, extraRollRows = [], debuffNote = "", trained = true, rerolledBy = [],
-}) {
-  const notes = rerolledBy.map((by) => `<p class="carl-reroll-note">${esc(game.i18n.localize(
-    by === "favor" ? "CARLRPG.Reroll.Note" : "CARLRPG.Vehicle.Card.FuzzyNote"))}</p>`);
+function drivingCardParts(
+  vehicle,
+  driver,
+  {
+    mode,
+    degree,
+    difficulty,
+    rolls,
+    rollMeta,
+    extraRollRows = [],
+    debuffNote = "",
+    trained = true,
+    rerolledBy = [],
+  },
+) {
+  const notes = rerolledBy.map((by) =>
+    rerollNote(by === "favor" ? "CARLRPG.Reroll.Note" : "CARLRPG.Vehicle.Card.FuzzyNote"),
+  );
   return {
     rolls,
     rollMeta,
     extraRollRows,
-    title: game.i18n.format(mode === "stop" ? "CARLRPG.Vehicle.StopTitle" : "CARLRPG.Vehicle.DrivingTitle", {
-      name: driver.name, vehicle: vehicle.name,
-    }),
+    title: game.i18n.format(
+      mode === "stop" ? "CARLRPG.Vehicle.StopTitle" : "CARLRPG.Vehicle.DrivingTitle",
+      {
+        name: driver.name,
+        vehicle: vehicle.name,
+      },
+    ),
     subtitle: checkSubtitle(degree, difficulty),
     img: vehicle.img,
     badge: degreeBadge(degree),
     body: [
       `<p>${esc(drivingOutcomeText(mode, degree))}</p>`,
-      trained ? "" : `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Vehicle.Untrained"))}</p>`,
+      trained
+        ? ""
+        : `<p class="carl-hint">${esc(game.i18n.localize("CARLRPG.Vehicle.Untrained"))}</p>`,
       debuffNote ?? "",
       ...notes,
     ].join(""),
@@ -179,21 +223,62 @@ function drivingCardParts(vehicle, driver, {
  * @param {object} data
  * @returns {Promise<ChatMessage>}
  */
-export async function postDrivingCard(vehicle, driver, {
-  mode, checkId = "", degree, roll, natural, total, difficulty, formula, breakdown, label, debuffNote = "", trained = true,
-}) {
+export async function postDrivingCard(
+  vehicle,
+  driver,
+  {
+    mode,
+    checkId = "",
+    degree,
+    roll,
+    natural,
+    total,
+    difficulty,
+    formula,
+    breakdown,
+    label,
+    debuffNote = "",
+    trained = true,
+  },
+) {
   const parts = drivingCardParts(vehicle, driver, {
-    mode, degree, difficulty, rolls: [roll], rollMeta: [{ label, detail: vehicle.name, breakdown }], debuffNote, trained,
+    mode,
+    degree,
+    difficulty,
+    rolls: [roll],
+    rollMeta: [{ label, detail: vehicle.name, breakdown }],
+    debuffNote,
+    trained,
   });
-  const rollSpec = { formula, natural, total, difficulty, breakdown, label, title: parts.title, img: vehicle.img };
+  const rollSpec = {
+    formula,
+    natural,
+    total,
+    difficulty,
+    breakdown,
+    label,
+    title: parts.title,
+    img: vehicle.img,
+  };
   return createRollMessage({
     ...parts,
     actor: driver,
     flags: {
       driving: {
-        vehicleUuid: vehicle.uuid, driverUuid: driver.uuid, mode, checkId, degree, trained,
-        critChoice: "", damageApplied: false, absorbed: false, parked: false, roll: rollSpec, debuffNote,
-        rerolledBy: [], favorUsed: false,
+        vehicleUuid: vehicle.uuid,
+        driverUuid: driver.uuid,
+        mode,
+        checkId,
+        degree,
+        trained,
+        critChoice: "",
+        damageApplied: false,
+        absorbed: false,
+        parked: false,
+        roll: rollSpec,
+        debuffNote,
+        rerolledBy: [],
+        favorUsed: false,
       },
       ...aiRerollFlags(driver, { kind: "driving", ...rollSpec, body: debuffNote }),
     },
@@ -235,7 +320,7 @@ export function drivingResultSettled(driving) {
  */
 export function upgradeReady(vehicle, key) {
   const upgrade = vehicle?.system.upgrades?.[key];
-  return !!upgrade?.installed && upgrade.usedFloor !== game.settings.get(SCOPE, "currentFloor");
+  return !!upgrade?.installed && upgrade.usedFloor !== currentFloor();
 }
 
 /**
@@ -280,22 +365,37 @@ export async function reviseDriving(message, { interventions = [], reroll = null
     driving.rerolledBy = [...(driving.rerolledBy ?? []), reroll.source];
     if (reroll.source === "favor") driving.favorUsed = true;
     // The Intervene window and the AI Favor reroll read the d20 from here.
-    if (aiReroll) Object.assign(aiReroll, { natural: reroll.natural, total: reroll.total, used: aiReroll.used || reroll.source === "favor" });
+    if (aiReroll)
+      Object.assign(aiReroll, {
+        natural: reroll.natural,
+        total: reroll.total,
+        used: aiReroll.used || reroll.source === "favor",
+      });
   }
-  const total = spec.total + interventions.reduce((sum, i) => sum + (Number(i.value) || 0), 0);
+  const total = spec.total + interventionTotal(interventions);
   const degree = getDegreeOfSuccess(spec.natural, total, spec.difficulty);
   driving.degree = degree;
   const d6 = interventionRolls(interventions);
   const rerolled = (driving.rerolledBy ?? []).length > 0;
   const parts = drivingCardParts(vehicle, driver, {
-    mode: driving.mode, degree, difficulty: spec.difficulty,
+    mode: driving.mode,
+    degree,
+    difficulty: spec.difficulty,
     rolls: [base, ...d6.rolls],
     rollMeta: [
-      { label: spec.label, detail: rerolled ? `${vehicle.name} · ${game.i18n.localize("CARLRPG.Reroll.Rerolled")}` : vehicle.name, breakdown: spec.breakdown },
+      {
+        label: spec.label,
+        detail: rerolled
+          ? `${vehicle.name} · ${game.i18n.localize("CARLRPG.Reroll.Rerolled")}`
+          : vehicle.name,
+        breakdown: spec.breakdown,
+      },
       ...d6.meta,
     ],
     extraRollRows: d6.totalRow(total),
-    debuffNote: driving.debuffNote ?? aiReroll?.body ?? "", trained: driving.trained, rerolledBy: driving.rerolledBy ?? [],
+    debuffNote: driving.debuffNote ?? aiReroll?.body ?? "",
+    trained: driving.trained,
+    rerolledBy: driving.rerolledBy ?? [],
   });
   const newFlags = { driving, interventions };
   if (aiReroll) newFlags.aiReroll = aiReroll;
@@ -303,7 +403,10 @@ export async function reviseDriving(message, { interventions = [], reroll = null
     ...parts,
     flags: newFlags,
     unset: [],
-    after: driving.mode === "table6" ? () => commitDrivingRound(vehicle, degree, { checkId: driving.checkId }) : null,
+    after:
+      driving.mode === "table6"
+        ? () => commitDrivingRound(vehicle, degree, { checkId: driving.checkId })
+        : null,
   };
 }
 

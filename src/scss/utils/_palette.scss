@@ -24,7 +24,8 @@
   --carl-gold: #ffd700;
 
   --carl-panel-bg: color-mix(in srgb, var(--carl-accent) 6%, var(--color-text-primary) 4%);
-  --carl-groove: 2px groove color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
+  --carl-groove: 2px groove
+    color-mix(in srgb, var(--carl-accent) 30%, var(--color-border-dark-secondary) 70%);
 
   // Nesting-level accents: several places box a bordered/panel-tinted
   // element directly inside another one of the same kind (a chat card's

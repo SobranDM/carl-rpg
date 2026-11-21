@@ -1,0 +1,191 @@
+{
+  "_id": "FkbxRsePK11iKknt",
+  "name": "Bronze Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>Rolled by the loot generator for a Bronze box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "EioJPnadgriE9sJR",
+      "type": "document",
+      "name": "Rope (50 feet)",
+      "img": "icons/sundries/survival/rope-coiled-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.2UjptOBPYaGXaxpY",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.EioJPnadgriE9sJR"
+    },
+    {
+      "_id": "mCh5vJmI0guoCBlA",
+      "type": "document",
+      "name": "Canoe and Paddle",
+      "img": "icons/magic/air/wind-weather-sailing-ship.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.kz4OB32RPxavSjDR",
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.mCh5vJmI0guoCBlA"
+    },
+    {
+      "_id": "aeaJR2j4upPXucml",
+      "type": "document",
+      "name": "Bicycle",
+      "img": "icons/commodities/tech/cog-brass.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.FMToyEuOPpWGxM0Y",
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.aeaJR2j4upPXucml"
+    },
+    {
+      "_id": "w2ZtiCDerkfiBS6Z",
+      "type": "document",
+      "name": "Hang Glider",
+      "img": "icons/svg/wing.svg",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.zBUhdukDOb0JYqSx",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.w2ZtiCDerkfiBS6Z"
+    },
+    {
+      "_id": "3jquzpyy79OIE1bO",
+      "type": "document",
+      "name": "Torch ×10",
+      "img": "icons/sundries/lights/torch-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.Tqrr1xlzwN6Z8QNl",
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.3jquzpyy79OIE1bO"
+    },
+    {
+      "_id": "KuW5QPujfRwr5Xs3",
+      "type": "document",
+      "name": "Crawler Biscuits ×10",
+      "img": "icons/consumables/food/bread-toast-tan.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.d0B1Wfh8RiGQg9hQ",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.KuW5QPujfRwr5Xs3"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!FkbxRsePK11iKknt"
+}

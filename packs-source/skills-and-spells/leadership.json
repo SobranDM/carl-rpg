@@ -39,7 +39,8 @@
     "range": "",
     "aiFavor": 0,
     "cooldown": "",
-    "limitations": ""
+    "limitations": "",
+    "opposedStat": "int"
   },
   "effects": [],
   "_stats": {

@@ -19,7 +19,11 @@ export function defaultRollRowLabel() {
  *   no current caller passes one, kept as reusable infrastructure.
  * @returns {Promise<object[]>}
  */
-export async function buildRollRows(rolls = [], rollMeta = [], { isPrivate = false, extraRows = [] } = {}) {
+export async function buildRollRows(
+  rolls = [],
+  rollMeta = [],
+  { isPrivate = false, extraRows = [] } = {},
+) {
   const rows = [];
   for (let i = 0; i < rolls.length; i++) {
     const roll = rolls[i];
@@ -34,7 +38,7 @@ export async function buildRollRows(rolls = [], rollMeta = [], { isPrivate = fal
       detail: meta.detail ?? "",
       breakdown: isPrivate ? "" : (meta.breakdown ?? ""),
       formula: isPrivate ? "???" : String(roll?._formula ?? roll?.formula ?? ""),
-      total: isPrivate ? "?" : (evaluated && roll?.total != null ? String(roll.total) : ""),
+      total: isPrivate ? "?" : evaluated && roll?.total != null ? String(roll.total) : "",
       tooltipHtml,
       rowClass: meta.rowClass ?? "",
     });

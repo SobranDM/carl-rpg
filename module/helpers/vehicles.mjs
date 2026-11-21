@@ -14,11 +14,18 @@
 import CarlDice from "../dice/dice.mjs";
 import { isVehicle, rollsLikeCrawler } from "./actor-kinds.mjs";
 import {
-  invalidateSeatIndex, occupantKey, resolveOccupant, vehicleSeatOf, vehicleStatus,
+  BLANK_ROUND,
+  invalidateSeatIndex,
+  occupantKey,
+  resolveOccupant,
+  vehicleSeatOf,
+  vehicleStatus,
 } from "./vehicle-state.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { isHitDegree } from "./rules.mjs";
 import { noteUndo, takeAction } from "./actions.mjs";
+import { esc } from "./html.mjs";
+import { currentFloor } from "./floor.mjs";
 
 const SOCKET = "system.carl-rpg";
 const FLAG_SCOPE = "carl-rpg";
@@ -31,11 +38,14 @@ const FLAG_SCOPE = "carl-rpg";
  */
 function redrawDrivingCards(vehicleUuid) {
   if (!ui.chat) return;
-  const ids = new Set([...document.querySelectorAll("[data-message-id]")].map((li) => li.dataset.messageId));
+  const ids = new Set(
+    [...document.querySelectorAll("[data-message-id]")].map((li) => li.dataset.messageId),
+  );
   for (const id of ids) {
     const message = game.messages.get(id);
     const driving = message?.flags?.[FLAG_SCOPE]?.driving;
-    if (driving && (!vehicleUuid || driving.vehicleUuid === vehicleUuid)) ui.chat.updateMessage(message);
+    if (driving && (!vehicleUuid || driving.vehicleUuid === vehicleUuid))
+      ui.chat.updateMessage(message);
   }
 }
 const UPDATE_ACTION = "vehicleUpdate";
@@ -88,14 +98,20 @@ export async function updateVehicle(vehicle, changes) {
 export function relayAllowed(vehicle, changes, user) {
   const flat = foundry.utils.flattenObject(changes);
   const paths = Object.keys(flat);
-  if (!paths.length || !paths.every((p) => RELAYED_PATHS.some((allowed) => p === allowed || p.startsWith(`${allowed}.`)))) {
+  if (
+    !paths.length ||
+    !paths.every((p) =>
+      RELAYED_PATHS.some((allowed) => p === allowed || p.startsWith(`${allowed}.`)),
+    )
+  ) {
     return false;
   }
   if (!upgradeUseAllowed(vehicle, flat)) return false;
   const owns = (uuid) => resolveOccupant(uuid)?.testUserPermission(user, "OWNER") ?? false;
   const before = vehicle.system.occupants;
   // Read the list itself (whether or not flattening went into the array).
-  const after = changes["system.occupants"] ?? foundry.utils.getProperty(changes, "system.occupants");
+  const after =
+    changes["system.occupants"] ?? foundry.utils.getProperty(changes, "system.occupants");
   if (after) {
     const roleOf = (list, uuid) => list.find((o) => o.uuid === uuid)?.role ?? null;
     const uuids = new Set([...before.map((o) => o.uuid), ...after.map((o) => o.uuid)]);
@@ -126,9 +142,10 @@ function upgradeUseAllowed(vehicle, flat) {
   if (nitrousInstalled !== undefined || nitrousEnds !== undefined) {
     const seconds = CONFIG.CARLRPG.nitrousRounds * (CONFIG.time.roundTime || 10);
     if (!vehicle.system.upgrades.nitrous.installed || nitrousInstalled !== false) return false;
-    if (!(typeof nitrousEnds === "number" && nitrousEnds <= game.time.worldTime + seconds + 1)) return false;
+    if (!(typeof nitrousEnds === "number" && nitrousEnds <= game.time.worldTime + seconds + 1))
+      return false;
   }
-  const floor = game.settings.get("carl-rpg", "currentFloor");
+  const floor = currentFloor();
   for (const key of ["shockAbsorbers", "fuzzyDice"]) {
     const used = flat[`system.upgrades.${key}.usedFloor`];
     if (used !== undefined && used !== floor) return false;
@@ -156,16 +173,26 @@ export function registerVehicleSocket() {
  */
 export function registerVehicleHooks() {
   /** Open Vehicle sheets. */
-  const openSheets = () => [...foundry.applications.instances.values()]
-    .filter((app) => app.rendered && isVehicle(app.document));
+  const openSheets = () =>
+    [...foundry.applications.instances.values()].filter(
+      (app) => app.rendered && isVehicle(app.document),
+    );
   const rerender = foundry.utils.debounce(() => {
     // Only what shows Move - a full render would drop typing on Details.
     for (const app of openSheets()) app.render({ parts: ["header", "abilities"] });
   }, 50);
   // A change to an actor (or its Skills) only matters if it's aboard an open one.
-  const aboardOpenVehicle = (actor) => !!actor && !isVehicle(actor)
-    && openSheets().some((app) => app.document.system.occupants.some((o) => o.uuid === actor.uuid));
-  for (const hook of ["updateCombat", "deleteCombat", "createCombatant", "deleteCombatant", "updateWorldTime"]) {
+  const aboardOpenVehicle = (actor) =>
+    !!actor &&
+    !isVehicle(actor) &&
+    openSheets().some((app) => app.document.system.occupants.some((o) => o.uuid === actor.uuid));
+  for (const hook of [
+    "updateCombat",
+    "deleteCombat",
+    "createCombatant",
+    "deleteCombatant",
+    "updateWorldTime",
+  ]) {
     Hooks.on(hook, rerender);
   }
   for (const hook of ["updateItem", "createItem", "deleteItem"]) {
@@ -200,8 +227,16 @@ export function registerVehicleHooks() {
       if (isVehicle(actor)) invalidateSeatIndex();
     });
   }
-  for (const hook of ["createToken", "updateToken", "deleteToken", "deleteScene", "canvasReady",
-    "createCombat", "updateCombat", "deleteCombat"]) {
+  for (const hook of [
+    "createToken",
+    "updateToken",
+    "deleteToken",
+    "deleteScene",
+    "canvasReady",
+    "createCombat",
+    "updateCombat",
+    "deleteCombat",
+  ]) {
     Hooks.on(hook, invalidateSeatIndex);
   }
 }
@@ -215,9 +250,18 @@ export function registerVehicleHooks() {
  * @param {{role?: "driver"|"passenger", skipDialog?: boolean}} [options]
  * @returns {Promise<boolean>}  Whether the actor got in.
  */
-export async function boardVehicle(vehicle, actor, { role = "passenger", skipDialog = false } = {}) {
+export async function boardVehicle(
+  vehicle,
+  actor,
+  { role = "passenger", skipDialog = false } = {},
+) {
   if (!isVehicle(vehicle) || !actor || isVehicle(actor)) return false;
-  const loc = (key, data = {}) => game.i18n.format(`CARLRPG.Vehicle.${key}`, { name: actor.name, vehicle: vehicle.name, ...data });
+  const loc = (key, data = {}) =>
+    game.i18n.format(`CARLRPG.Vehicle.${key}`, {
+      name: actor.name,
+      vehicle: vehicle.name,
+      ...data,
+    });
   const key = occupantKey(actor);
   if (vehicle.system.occupants.some((o) => o.uuid === key)) {
     ui.notifications.info(loc("AlreadyAboard"));
@@ -237,7 +281,11 @@ export async function boardVehicle(vehicle, actor, { role = "passenger", skipDia
   const label = game.i18n.format("CARLRPG.Actions.Label.Board", { vehicle: vehicle.name });
   const boarded = await takeAction(actor, "move", label, async (ctx) => {
     const result = await CarlDice.rollStatCheck(actor, "dex", {
-      difficulty: status.boardDifficulty, skipDialog, returnResult: true, title: loc("BoardCheckTitle"), within: ctx,
+      difficulty: status.boardDifficulty,
+      skipDialog,
+      returnResult: true,
+      title: loc("BoardCheckTitle"),
+      within: ctx,
     });
     if (!result) return false;
     ctx.use();
@@ -260,13 +308,21 @@ async function takeSeat(vehicle, actor, role, note) {
   const other = vehicleSeatOf(actor);
   if (other && other.vehicle !== vehicle) await exitVehicle(other.vehicle, actor, { silent: true });
 
-  const occupants = vehicle.system.toObject().occupants
-    .map((o) => (role === "driver" && o.role === "driver" ? { ...o, role: "passenger" } : o));
+  const occupants = vehicle.system
+    .toObject()
+    .occupants.map((o) =>
+      role === "driver" && o.role === "driver" ? { ...o, role: "passenger" } : o,
+    );
   occupants.push({ uuid: key, role, name: actor.name });
   // Undone: this one out again - anyone else's seat is their own business.
   noteUndo(actor, { t: "seat", uuid: vehicle.uuid, key, entry: null });
-  if (!await updateVehicle(vehicle, { "system.occupants": occupants })) return false;
-  await createCardMessage({ title: vehicle.name, img: vehicle.img, body: `<p>${esc(note)}</p>`, actor });
+  if (!(await updateVehicle(vehicle, { "system.occupants": occupants }))) return false;
+  await createCardMessage({
+    title: vehicle.name,
+    img: vehicle.img,
+    body: `<p>${esc(note)}</p>`,
+    actor,
+  });
   return true;
 }
 
@@ -289,14 +345,27 @@ export async function exitVehicle(vehicle, actorOrUuid, { silent = false } = {})
     const seat = vehicle.system.toObject().occupants.find((o) => o.uuid === key);
     noteUndo(actor, { t: "seat", uuid: vehicle.uuid, key, entry: seat ?? null });
     const occupants = vehicle.system.toObject().occupants.filter((o) => o.uuid !== key);
-    if (!await updateVehicle(vehicle, { "system.occupants": occupants })) return false;
+    if (!(await updateVehicle(vehicle, { "system.occupants": occupants }))) return false;
     if (silent) return true;
-    const body = game.i18n.format("CARLRPG.Vehicle.Exited", { name: actor?.name ?? leaving.name, vehicle: vehicle.name });
-    await createCardMessage({ title: vehicle.name, img: vehicle.img, body: `<p>${esc(body)}</p>`, actor: actor ?? undefined });
+    const body = game.i18n.format("CARLRPG.Vehicle.Exited", {
+      name: actor?.name ?? leaving.name,
+      vehicle: vehicle.name,
+    });
+    await createCardMessage({
+      title: vehicle.name,
+      img: vehicle.img,
+      body: `<p>${esc(body)}</p>`,
+      actor: actor ?? undefined,
+    });
     return true;
   };
   if (silent || !actor) return leave();
-  return !!(await takeAction(actor, "move", game.i18n.format("CARLRPG.Actions.Label.Exit", { vehicle: vehicle.name }), leave));
+  return !!(await takeAction(
+    actor,
+    "move",
+    game.i18n.format("CARLRPG.Actions.Label.Exit", { vehicle: vehicle.name }),
+    leave,
+  ));
 }
 
 /**
@@ -307,7 +376,8 @@ export async function exitVehicle(vehicle, actorOrUuid, { silent = false } = {})
  */
 export async function setDriver(vehicle, uuid) {
   const occupants = vehicle.system.toObject().occupants.map((o) => ({
-    ...o, role: o.uuid === uuid ? "driver" : "passenger",
+    ...o,
+    role: o.uuid === uuid ? "driver" : "passenger",
   }));
   await updateVehicle(vehicle, { "system.occupants": occupants });
 }
@@ -323,7 +393,7 @@ export async function setDriver(vehicle, uuid) {
 export async function toggleParked(vehicle) {
   return updateVehicle(vehicle, {
     "system.parked": !vehicle.system.parked,
-    "system.round": { combatId: "", checkId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
+    "system.round": { ...BLANK_ROUND },
   });
 }
 
@@ -342,7 +412,10 @@ export async function activateNitrous(vehicle) {
     "system.upgrades.nitrous": { installed: false, endsAt: game.time.worldTime + seconds },
   });
   if (!fired) return;
-  const body = game.i18n.format("CARLRPG.Vehicle.NitrousFired", { vehicle: vehicle.name, rounds: CONFIG.CARLRPG.nitrousRounds });
+  const body = game.i18n.format("CARLRPG.Vehicle.NitrousFired", {
+    vehicle: vehicle.name,
+    rounds: CONFIG.CARLRPG.nitrousRounds,
+  });
   await createCardMessage({ title: vehicle.name, img: vehicle.img, body: `<p>${esc(body)}</p>` });
 }
 

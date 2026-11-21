@@ -1,5 +1,4 @@
 export default class CarlRPGActorBase extends foundry.abstract.TypeDataModel {
-
   static defineSchema() {
     const fields = foundry.data.fields;
     const requiredInteger = { required: true, nullable: false, integer: true };
@@ -89,8 +88,10 @@ export default class CarlRPGActorBase extends foundry.abstract.TypeDataModel {
     const resistancesSchema = {};
     for (const type of Object.keys(CONFIG.CARLRPG.damageTypes)) {
       resistancesSchema[type] = new fields.StringField({
-        required: true, blank: false, initial: "none",
-        choices: ["none", "resist", "vulnerable", "immune"],
+        required: true,
+        blank: false,
+        initial: "none",
+        choices: () => Object.keys(CONFIG.CARLRPG.resistanceStates),
       });
     }
     schema.resistances = new fields.SchemaField(resistancesSchema);

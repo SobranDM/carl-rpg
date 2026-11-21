@@ -14,9 +14,12 @@
  * spell-timers.mjs).
  */
 import { queueForActor } from "./actor-queue.mjs";
-import { removeConditionsById } from "./conditions.mjs";
-import { createCardMessage, esc } from "../chat/chat-card.mjs";
+import { createCardMessage } from "../chat/chat-card.mjs";
 import { expireSpellTimers, hasSpellTimers, spellEndedLines } from "./spell-timers.mjs";
+import { gmUserIds } from "./ownership.mjs";
+import { esc } from "./html.mjs";
+import { changeConditions } from "./conditions.mjs";
+import { unlinkedTokenActors } from "./token-resolution.mjs";
 
 /**
  * Ids of the condition entries that have run out by `worldTime`.
@@ -53,12 +56,10 @@ export function durationSeconds(duration, unit) {
 export function sweepableActors() {
   const actors = new Map();
   for (const actor of game.actors) actors.set(actor.uuid, actor);
-  const scenes = new Set([canvas?.scene, ...game.combats.filter((c) => c.started).map((c) => c.scene)].filter(Boolean));
-  for (const scene of scenes) {
-    for (const token of scene.tokens) {
-      if (!token.actorLink && token.actor) actors.set(token.actor.uuid, token.actor);
-    }
-  }
+  const scenes = new Set(
+    [canvas?.scene, ...game.combats.filter((c) => c.started).map((c) => c.scene)].filter(Boolean),
+  );
+  for (const actor of unlinkedTokenActors(scenes)) actors.set(actor.uuid, actor);
   return [...actors.values()];
 }
 
@@ -75,7 +76,7 @@ export async function dropExpiredConditions(actor, worldTime) {
   const ids = expiredConditionIds(current, worldTime);
   if (!ids.length) return [];
   const ended = current.filter((c) => ids.includes(c.id)).map((c) => c.label || c.source || c.key);
-  await removeConditionsById(actor, ids);
+  await changeConditions(actor, [{ op: "remove", ids }], { inQueue: true });
   return ended;
 }
 
@@ -117,13 +118,18 @@ export function registerExpirySweep() {
     if (!game.users.activeGM?.isSelf) return;
     const lines = [];
     for (const actor of sweepableActors()) {
-      if (actor.system?.conditions?.some?.((c) => c.expiresAt !== null && c.expiresAt !== undefined)) {
+      if (
+        actor.system?.conditions?.some?.((c) => c.expiresAt !== null && c.expiresAt !== undefined)
+      ) {
         try {
           const ended = await expireConditions(actor, worldTime);
           if (ended.length) {
-            lines.push(game.i18n.format("CARLRPG.Consumable.Expired", {
-              name: esc(actor.name), effects: ended.map(esc).join(", "),
-            }));
+            lines.push(
+              game.i18n.format("CARLRPG.Consumable.Expired", {
+                name: esc(actor.name),
+                effects: ended.map(esc).join(", "),
+              }),
+            );
           }
         } catch (err) {
           console.error(`CarlRPG | Expiring timed effects failed for ${actor.name}`, err);
@@ -141,7 +147,7 @@ export function registerExpirySweep() {
       await createCardMessage({
         title: game.i18n.localize("CARLRPG.Consumable.ExpiredTitle"),
         body: `<ul class="carl-round-end-list">${lines.map((l) => `<li>${l}</li>`).join("")}</ul>`,
-        whisper: game.users.filter((u) => u.isGM).map((u) => u.id),
+        whisper: gmUserIds(),
       });
     }
   });

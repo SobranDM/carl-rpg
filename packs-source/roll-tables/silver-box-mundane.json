@@ -1,0 +1,137 @@
+{
+  "_id": "97QlATZEnOEShAri",
+  "name": "Silver Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>Rolled by the loot generator for a Silver box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "A2bCA0hKPThTa4FC",
+      "type": "document",
+      "name": "Crawler Biscuits ×100",
+      "img": "icons/consumables/food/bread-toast-tan.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.d0B1Wfh8RiGQg9hQ",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!97QlATZEnOEShAri.A2bCA0hKPThTa4FC"
+    },
+    {
+      "_id": "pK2bXJ827I9jwhRm",
+      "type": "document",
+      "name": "Torch ×10",
+      "img": "icons/sundries/lights/torch-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.Tqrr1xlzwN6Z8QNl",
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!97QlATZEnOEShAri.pK2bXJ827I9jwhRm"
+    },
+    {
+      "_id": "gIrJ4rKvqsgGYptz",
+      "type": "document",
+      "name": "Rope (50 feet)",
+      "img": "icons/sundries/survival/rope-coiled-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.2UjptOBPYaGXaxpY",
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!97QlATZEnOEShAri.gIrJ4rKvqsgGYptz"
+    },
+    {
+      "_id": "DA8ZkCwlFYmBsdB3",
+      "type": "document",
+      "name": "Lantern",
+      "img": "icons/sundries/lights/lantern-iron-yellow.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.MjUxikPYZEoxdm7z",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!97QlATZEnOEShAri.DA8ZkCwlFYmBsdB3"
+    }
+  ],
+  "formula": "1d4",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!97QlATZEnOEShAri"
+}

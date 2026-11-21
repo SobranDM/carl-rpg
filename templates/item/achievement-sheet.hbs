@@ -1,0 +1,50 @@
+{{!-- An Achievement (module/sheets/achievement-sheet.mjs). The GM edits
+      it; a player reads it. On an awarded copy: the
+      Floor it was awarded on, and whether its loot box is opened. --}}
+<div class="carl-achievement-item">
+  <header class="carl-box-head">
+    <img class="carl-box-art" src="{{item.img}}" alt="" {{#if isGM}}data-edit="img" data-action="editImage"{{/if}} />
+    <div class="carl-box-title">
+      {{#if isGM}}
+      <input type="text" name="name" value="{{item.name}}" placeholder="{{localize 'Name'}}" />
+      <label class="carl-sheet-line">
+        <span>{{localize "CARLRPG.Achievement.Grade"}}</span>
+        <select name="system.grade">{{selectOptions gradeChoices selected=system.grade localize=true}}</select>
+      </label>
+      {{else}}
+      <h1>{{item.name}}</h1>
+      <div class="carl-box-tier">{{localize gradeLabel}}</div>
+      {{/if}}
+    </div>
+  </header>
+
+  {{#if isGM}}
+  <label class="carl-sheet-line">
+    <span>{{localize "CARLRPG.Achievement.Reward"}}</span>
+    <input type="text" name="system.reward" value="{{system.reward}}" placeholder="{{localize 'CARLRPG.Achievement.RewardPlaceholder'}}" />
+  </label>
+  <label class="carl-sheet-line" data-tooltip-text="{{localize 'CARLRPG.Achievement.CategoryHint'}}">
+    <span>{{localize "CARLRPG.Achievement.Category"}}</span>
+    <input type="text" name="system.category" value="{{system.category}}" placeholder="{{localize 'CARLRPG.Achievement.CategoryPlaceholder'}}" />
+  </label>
+  <label class="carl-sheet-line" data-tooltip-text="{{localize 'CARLRPG.Achievement.LootBoxHint'}}">
+    <span>{{localize "CARLRPG.Achievement.LootBox"}}</span>
+    <input type="checkbox" name="system.lootBox" {{checked system.lootBox}} />
+  </label>
+  <prose-mirror name="system.description" toggled value="{{system.description}}" data-document-uuid="{{item.uuid}}">
+    {{{descriptionHTML}}}
+  </prose-mirror>
+  {{else}}
+  <div class="carl-achievement-description">{{{descriptionHTML}}}</div>
+  {{#if system.reward}}
+  <p><strong>{{localize "CARLRPG.Achievement.Reward"}}:</strong> {{system.reward}}</p>
+  {{/if}}
+  {{/if}}
+
+  {{#if awarded}}
+  <p class="carl-hint">
+    {{#if system.awardedFloor}}{{localize "CARLRPG.Achievement.AwardedOn" floor=system.awardedFloor}}{{/if}}
+    {{#if system.lootBox}}{{localize (ifThen system.rewarded "CARLRPG.Achievement.BoxOpened" "CARLRPG.Achievement.BoxUnopened")}}{{/if}}
+  </p>
+  {{/if}}
+</div>

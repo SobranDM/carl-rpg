@@ -31,7 +31,6 @@ export function takesDamageEffects(skill) {
   return !(skill?.type === "skill" && skill.system?.noDamageEffects);
 }
 
-
 /**
  * The Attack Skills to offer, without each hand-to-hand Skill with No
  * Damage Effects (Unarmed Combat) that another hand-to-hand Skill the
@@ -44,7 +43,9 @@ export function withoutOutclassedUnarmed(actor, attackSkills) {
   const outclassed = (skill) => {
     if (!isHandToHand(skill) || takesDamageEffects(skill)) return false;
     const rank = ownedRank(actor, skill);
-    return actor.items.some((i) => i.id !== skill.id && isHandToHand(i) && ownedRank(actor, i) > rank);
+    return actor.items.some(
+      (i) => i.id !== skill.id && isHandToHand(i) && ownedRank(actor, i) > rank,
+    );
   };
   return attackSkills.filter((s) => !outclassed(s));
 }

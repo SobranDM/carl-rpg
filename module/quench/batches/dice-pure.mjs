@@ -30,12 +30,18 @@ export default function register(quench) {
         });
 
         it("returns the active result's face value among several inactive kept-die results", function () {
-          const roll = mockD20Roll([{ result: 14, active: true }, { result: 3, active: false }]);
+          const roll = mockD20Roll([
+            { result: 14, active: true },
+            { result: 3, active: false },
+          ]);
           assert.equal(extractNaturalD20(roll), 14);
         });
 
         it("returns null when no result is marked active", function () {
-          const roll = mockD20Roll([{ result: 14, active: false }, { result: 3, active: false }]);
+          const roll = mockD20Roll([
+            { result: 14, active: false },
+            { result: 3, active: false },
+          ]);
           assert.isNull(extractNaturalD20(roll));
         });
       });

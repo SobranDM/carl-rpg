@@ -1,6 +1,7 @@
 import { getStatMod } from "../../helpers/rules.mjs";
 import { computeActiveShieldSlots } from "../../helpers/modifiers.mjs";
 import { conditionLabel, findConditionWithMechanic } from "../../helpers/debuff-effects.mjs";
+import { currentFloor } from "../../helpers/floor.mjs";
 
 /**
  * The stat block and derived values every creature Actor shares - Characters
@@ -125,7 +126,9 @@ export function deriveResourceCaps(sys) {
   sys.mana.max = (sys.stats.int?.effective ?? 0) + (sys.bonuses?.["mana.max"] ?? 0);
 
   sys.shield.slotValue = sys.stats.con?.mod ?? 0;
-  sys.shield.effectiveMax = computeActiveShieldSlots(sys.parent?.items ? Array.from(sys.parent.items) : []);
+  sys.shield.effectiveMax = computeActiveShieldSlots(
+    sys.parent?.items ? Array.from(sys.parent.items) : [],
+  );
   if (sys.shield.value > sys.shield.effectiveMax) sys.shield.value = sys.shield.effectiveMax;
 }
 
@@ -144,6 +147,6 @@ export function creatureRollData(sys, lvl) {
   }
   if (sys.skills) data.skills = foundry.utils.deepClone(sys.skills);
   data.lvl = lvl;
-  data.floor = game.settings.get("carl-rpg", "currentFloor");
+  data.floor = currentFloor();
   return data;
 }

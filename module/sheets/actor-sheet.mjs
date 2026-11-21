@@ -2,7 +2,12 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 import { onAddArrayItem, onDeleteArrayItem } from "../helpers/array-editor.mjs";
 import { onToggleDrawer } from "../helpers/drawer-toggle.mjs";
-import { addConditionToActor } from "../helpers/conditions.mjs";
+import {
+  addConditionToActor,
+  changeConditions,
+  conditionOps,
+  removeConditionFromActor,
+} from "../helpers/conditions.mjs";
 import { cooldownSignature } from "../helpers/cooldowns.mjs";
 import DragDropMixin from "./mixins/drag-drop-mixin.mjs";
 import CarlSpendStatPointsDialog from "../apps/spend-stat-points-dialog.mjs";
@@ -21,13 +26,31 @@ import { MOB_ATTACK_TYPE, attackKind, mobAttacksOf } from "../helpers/mob-attack
 import { isLootBoxItem, takeLootItem } from "../helpers/loot-box.mjs";
 import { useConsumable } from "../helpers/consumables.mjs";
 import { isCrawler, isPet, isVehicle, rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
-import { resolveOccupant, vehicleOccupants, vehicleStatus } from "../helpers/vehicle-state.mjs";
 import {
-  activateNitrous, applyVehiclePreset, boardVehicle, exitVehicle, setDriver, toggleParked, updateVehicle,
+  BLANK_ROUND,
+  resolveOccupant,
+  roundStamp,
+  vehicleOccupants,
+  vehicleStatus,
+} from "../helpers/vehicle-state.mjs";
+import {
+  activateNitrous,
+  applyVehiclePreset,
+  boardVehicle,
+  exitVehicle,
+  setDriver,
+  toggleParked,
+  updateVehicle,
 } from "../helpers/vehicles.mjs";
 import { canDrive, rollDrivingCheck } from "../helpers/vehicle-driving.mjs";
 import {
-  canHotlist, hotlistRows, isInHotlist, promptHotlistPick, refuseWhileSwapping, toggleHotlist, useHotlistSlot,
+  canHotlist,
+  hotlistRows,
+  isInHotlist,
+  promptHotlistPick,
+  refuseWhileSwapping,
+  toggleHotlist,
+  useHotlistSlot,
 } from "../helpers/hotlist.mjs";
 import { rollRam } from "../helpers/vehicle-ram.mjs";
 import { fireVehicleWeapon } from "../helpers/vehicle-weapons.mjs";
@@ -37,13 +60,29 @@ import { commandPet, describePetCommand, petFight } from "../helpers/pet-command
 import { showCarlDialog } from "../apps/carl-dialog.mjs";
 import { PERMANENT_POTION_LIMIT } from "../helpers/consumables.mjs";
 import {
-  boonAvailable, deityBenefitApplies, describeDeity, receiveBoon, tierRank, worshipSuspended,
+  boonAvailable,
+  deityBenefitApplies,
+  describeDeity,
+  receiveBoon,
+  tierRank,
+  worshipSuspended,
 } from "../helpers/worship.mjs";
-import { evadeModifier } from "../helpers/rules.mjs";
+import { degreeLabel, evadeModifier } from "../helpers/rules.mjs";
 import { describeDefenses } from "../helpers/bonus-sources.mjs";
-import { keepStoredForBlankNumbers, mergeSubmitted } from '../helpers/form-arrays.mjs';
-import { attackDifficultyParts } from '../helpers/attack-targets.mjs';
-import { resolveDifficultyRows } from '../helpers/debuff-effects.mjs';
+import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-arrays.mjs";
+import { attackDifficultyParts } from "../helpers/attack-targets.mjs";
+import { resolveDifficultyRows } from "../helpers/debuff-effects.mjs";
+import { currentFloor } from "../helpers/floor.mjs";
+import {
+  enrichDescription,
+  itemDescriptions,
+  itemTooltips,
+  namedItemTooltips,
+} from "../helpers/rich-text.mjs";
+import { labelChoices } from "../helpers/html.mjs";
+import { itemFor, itemRow } from "../helpers/sheet-rows.mjs";
+import { boxTierRank } from "../helpers/boxes.mjs";
+import { achievementsOf, awardAchievement, definitionFor } from "../helpers/achievements.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -99,6 +138,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       addArrayItem: CarlRPGActorSheet.#onAddArrayItem,
       deleteArrayItem: CarlRPGActorSheet.#onDeleteArrayItem,
       toggleDrawer: CarlRPGActorSheet.#onToggleDrawer,
+      toggleBoxes: CarlRPGActorSheet.#onToggleBoxes,
       setHbValue: CarlRPGActorSheet.#onSetHbValue,
       setShieldValue: CarlRPGActorSheet.#onSetShieldValue,
       spendStatPoints: CarlRPGActorSheet.#onSpendStatPoints,
@@ -231,12 +271,21 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static PART_TEMPLATES = {
     header: {
-      character: "systems/carl-rpg/templates/actor/parts/header.hbs", mob: "systems/carl-rpg/templates/actor/parts/header-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/header-pet.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/header-vehicle.hbs",
+      character: "systems/carl-rpg/templates/actor/parts/header.hbs",
+      mob: "systems/carl-rpg/templates/actor/parts/header-mob.hbs",
+      pet: "systems/carl-rpg/templates/actor/parts/header-pet.hbs",
+      vehicle: "systems/carl-rpg/templates/actor/parts/header-vehicle.hbs",
     },
     abilities: {
-      character: "systems/carl-rpg/templates/actor/parts/abilities.hbs", mob: "systems/carl-rpg/templates/actor/parts/abilities-mob.hbs", pet: "systems/carl-rpg/templates/actor/parts/abilities-pet.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle.hbs",
+      character: "systems/carl-rpg/templates/actor/parts/abilities.hbs",
+      mob: "systems/carl-rpg/templates/actor/parts/abilities-mob.hbs",
+      pet: "systems/carl-rpg/templates/actor/parts/abilities-pet.hbs",
+      vehicle: "systems/carl-rpg/templates/actor/parts/vehicle.hbs",
     },
-    pet: { pet: "systems/carl-rpg/templates/actor/parts/pet-details.hbs", vehicle: "systems/carl-rpg/templates/actor/parts/vehicle-details.hbs" },
+    pet: {
+      pet: "systems/carl-rpg/templates/actor/parts/pet-details.hbs",
+      vehicle: "systems/carl-rpg/templates/actor/parts/vehicle-details.hbs",
+    },
     // A Character's "features" slot is its Benefits tab: Race and Class
     // benefits, the Deity block and other perks.
     features: { character: "systems/carl-rpg/templates/actor/parts/benefits.hbs" },
@@ -251,10 +300,22 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @type {Object<string, Object<string, string>>}
    */
   static TAB_LABELS_BY_TYPE = {
-    character: { abilities: "CARLRPG.Tab.Combat", features: "CARLRPG.Tab.Benefits", description: "CARLRPG.Tab.Details" },
-    mob: { abilities: "CARLRPG.Tab.Combat", conditions: "CARLRPG.Tab.Debuffs", description: "CARLRPG.Tab.Notes" },
+    character: {
+      abilities: "CARLRPG.Tab.Combat",
+      features: "CARLRPG.Tab.Benefits",
+      description: "CARLRPG.Tab.Details",
+    },
+    mob: {
+      abilities: "CARLRPG.Tab.Combat",
+      conditions: "CARLRPG.Tab.Debuffs",
+      description: "CARLRPG.Tab.Notes",
+    },
     pet: { items: "CARLRPG.Tab.PetGear", pet: "CARLRPG.Tab.Details" },
-    vehicle: { abilities: "CARLRPG.Tab.Vehicle", items: "CARLRPG.Tab.Cargo", pet: "CARLRPG.Tab.Details" },
+    vehicle: {
+      abilities: "CARLRPG.Tab.Vehicle",
+      items: "CARLRPG.Tab.Cargo",
+      pet: "CARLRPG.Tab.Details",
+    },
   };
 
   /**
@@ -283,6 +344,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   #listSort = {};
 
+  /** The Inventory's unopened loot boxes are shown (Show Loot Boxes). */
+  #showBoxes = false;
+
   /**
    * Rows of an array of objects (the Conditions tab) submit only the fields
    * they show, keyed by index ("system.conditions.0.label"). Foundry
@@ -300,16 +364,26 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const data = super._processFormData(event, form, formData);
     const submitted = data.system;
     if (!submitted || typeof submitted !== "object") return data;
-    const source = this.actor.system.toObject();
     if (isPet(this.actor) && submitted.command) this.#processCommandOverride(submitted);
     if (isVehicle(this.actor) && submitted.round) this.#processVehicleRoundOverride(submitted);
-    for (const [key, value] of Object.entries(submitted)) {
-      const current = source[key];
-      if (!Array.isArray(current) || !value || typeof value !== "object" || Array.isArray(value)) continue;
-      if (!current.some((entry) => entry && typeof entry === "object")) continue;
-      submitted[key] = mergeSubmitted(current, value);
-    }
+    data.system = mergeSystemSubmit(this.actor.system, submitted, { objectArraysOnly: true });
     return data;
+  }
+
+  /**
+   * The Conditions tab's edits go through the one writer of the list
+   * (helpers/conditions.mjs changeConditions), as the fields they change;
+   * the rest of the form is saved as usual.
+   * @override
+   */
+  async _processSubmitData(event, form, submitData, options = {}) {
+    const conditions = submitData.system?.conditions;
+    if (Array.isArray(conditions)) {
+      delete submitData.system.conditions;
+      const ops = conditionOps(this.actor.system.toObject().conditions ?? [], conditions);
+      if (ops.length) await changeConditions(this.actor, ops);
+    }
+    return super._processSubmitData(event, form, submitData, options);
   }
 
   /**
@@ -344,16 +418,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       delete submitted.round;
       return;
     }
-    const current = this.actor.system.round;
-    submitted.round = {
-      combatId: status.fight?.id ?? "",
-      // Set by hand: no Driving Check card's buttons may change it now.
-      checkId: "",
-      round: status.fight?.round ?? null,
-      degree: picked,
-      critChoice: "",
-      ramFactor: status.roundActive ? current.ramFactor : 1,
-    };
+    // Set by hand: no Driving Check card's buttons may change it now.
+    submitted.round = roundStamp(this.actor, { checkId: "", degree: picked, critChoice: "" });
   }
 
   /** @override */
@@ -427,8 +493,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.isGM = game.user.isGM;
     // The Create Crawler wizard (apps/crawler-creation.mjs): only until a
     // Character has been through it, for everyone (the GM too).
-    context.canCreateCrawler = actor.type === "character" && actor.isOwner
-      && !actor.getFlag("carl-rpg", "chargen")?.done;
+    context.canCreateCrawler =
+      actor.type === "character" && actor.isOwner && !actor.getFlag("carl-rpg", "chargen")?.done;
     // An HB slot count the GM can hand-set over the rule (hb-bar.hbs). A
     // Pet's is set up once, on its Details tab.
     context.hbOverridable = context.isMob;
@@ -438,7 +504,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Floor is a single world-wide value owned by the GM Toolbox, shown
     // read-only here for player visibility - never per-actor. See
     // module/data/character.mjs#getRollData.
-    context.currentFloor = game.settings.get("carl-rpg", "currentFloor");
+    context.currentFloor = currentFloor();
 
     // Active Class/Race display (header.hbs) - resolved on Character actors
     // only, see module/data/character.mjs#prepareDerivedData. Undefined on
@@ -460,7 +526,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     }
 
     if (context.isPet) context.pet = this.#preparePetContext(actor, context.currentFloor);
-    if (context.isVehicle) context.vehicle = this.#prepareVehicleContext(actor, context.currentFloor);
+    if (context.isVehicle)
+      context.vehicle = this.#prepareVehicleContext(actor, context.currentFloor);
 
     // Template convenience variables
     context.cssClass = [...this.options.classes, actor.type].join(" ");
@@ -492,11 +559,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Add roll data for TinyMCE editors.
     context.rollData = actor.getRollData();
 
-    const enrich = (html) => foundry.applications.ux.TextEditor.implementation.enrichHTML(
-      html ?? "",
-      { relativeTo: actor, secrets: actor.isOwner, rollData: context.rollData },
-    );
+    const enrich = (html) => enrichDescription(html, actor, { rollData: context.rollData });
     context.biographyHTML = await enrich(actor.system.biography);
+    const descriptions = await itemDescriptions(actor.items);
+    context.itemTooltips = itemTooltips(actor.items, descriptions);
+    context.namedItemTooltips = namedItemTooltips(actor.items, descriptions);
     context.drawerHTML = await this.#prepareDrawerDescriptions(context);
     if (context.isMob) {
       context.mobAttacks = await this.#prepareMobAttacks(enrich, context.currentFloor);
@@ -519,12 +586,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @returns {Promise<Record<string, string>>}  HTML by item id.
    */
   async #prepareDrawerDescriptions(context) {
-    const open = [...(context.skills ?? []), ...(context.spells ?? [])]
-      .filter((item) => item.system.detailsExpanded && item.system.description);
-    const html = await Promise.all(open.map((item) => foundry.applications.ux.TextEditor.implementation.enrichHTML(
-      item.system.description,
-      { relativeTo: item, secrets: item.isOwner, rollData: item.getRollData() },
-    )));
+    const open = [...(context.skills ?? []), ...(context.spells ?? [])].filter(
+      (item) => item.system.detailsExpanded && item.system.description,
+    );
+    const html = await Promise.all(
+      open.map((item) => enrichDescription(item.system.description, item)),
+    );
     return Object.fromEntries(open.map((item, i) => [item.id, html[i]]));
   }
 
@@ -543,12 +610,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       { field: "importantKills", label: "CARLRPG.Actor.ImportantKills", wide: true },
       { field: "story", label: "CARLRPG.Actor.Story", wide: true },
     ];
-    context.detailsBoxes = await Promise.all(boxes.map(async (box) => ({
-      ...box,
-      name: `system.${box.field}`,
-      value: sys[box.field] ?? "",
-      html: await enrich(sys[box.field]),
-    })));
+    context.detailsBoxes = await Promise.all(
+      boxes.map(async (box) => ({
+        ...box,
+        name: `system.${box.field}`,
+        value: sys[box.field] ?? "",
+        html: await enrich(sys[box.field]),
+      })),
+    );
   }
 
   /**
@@ -560,7 +629,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   #prepareCrawlerContext(context) {
     const sys = context.system;
     const mana = sys.mana;
-    context.manaPercent = mana.max > 0 ? Math.round(Math.min(1, Math.max(0, mana.value / mana.max)) * 100) : 0;
+    context.manaPercent =
+      mana.max > 0 ? Math.round(Math.min(1, Math.max(0, mana.value / mana.max)) * 100) : 0;
     // The same terms CarlDice.rollEvadeCheck adds to the d20.
     context.evadeTotal = evadeModifier(sys);
     // Evade, DR, Move and Step with their source tooltips (bonus-sources.mjs).
@@ -597,7 +667,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.hasSpells = (context.spells ?? []).length > 0;
     const areas = (context.mobAttacks ?? []).filter((a) => a.kind === "area").length;
     context.mobAttackSummary = areas
-      ? game.i18n.format("CARLRPG.MobAttack.CountWithArea", { n: context.mobAttacks.length, area: areas })
+      ? game.i18n.format("CARLRPG.MobAttack.CountWithArea", {
+          n: context.mobAttacks.length,
+          area: areas,
+        })
       : String((context.mobAttacks ?? []).length);
   }
 
@@ -612,24 +685,29 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   async #prepareBenefits(context, enrich) {
     const sys = context.system;
     const activeIds = new Set([context.raceId, context.classId].filter(Boolean));
-    const ordered = [...context.raceAndClass].sort((a, b) =>
-      (activeIds.has(a.id) ? 0 : 1) - (activeIds.has(b.id) ? 0 : 1));
-    context.benefitPanels = await Promise.all(ordered.map(async (item) => ({
-      id: item.id,
-      name: item.name,
-      img: item.img,
-      typeLabel: item.typeLabel,
-      active: activeIds.has(item.id),
-      expanded: sys.uiState[`${item.type}Expanded`] ?? true,
-      togglePath: `system.uiState.${item.type}Expanded`,
-      html: await enrich(item.system.description),
-    })));
+    const ordered = [...context.raceAndClass].sort(
+      (a, b) => (activeIds.has(a.id) ? 0 : 1) - (activeIds.has(b.id) ? 0 : 1),
+    );
+    context.benefitPanels = await Promise.all(
+      ordered.map(async (item) => ({
+        id: item.id,
+        name: item.name,
+        img: item.img,
+        typeLabel: item.typeLabel,
+        active: activeIds.has(item.id),
+        expanded: sys.uiState[`${item.type}Expanded`] ?? true,
+        togglePath: `system.uiState.${item.type}Expanded`,
+        html: await enrichDescription(item.system.description, item),
+      })),
+    );
 
     // A tiered feature is one of the deity's church benefits. One that
     // doesn't apply - above the crawler's Tier, or while worship is
     // suspended - still lists, dimmed, so it can be opened or deleted; the
     // modifier engine skips it (aggregateActorBonuses).
-    const inactiveHint = worshipSuspended(sys.deity) ? "CARLRPG.Deity.BenefitSuspended" : "CARLRPG.Deity.TierNotReached";
+    const inactiveHint = worshipSuspended(sys.deity)
+      ? "CARLRPG.Deity.BenefitSuspended"
+      : "CARLRPG.Deity.TierNotReached";
     const row = (item) => ({
       _id: item.id,
       name: item.name,
@@ -677,18 +755,24 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // if it isn't aboard already. The GM boards selected tokens instead.
     let boarder = null;
     if (!isGM) {
-      const token = (canvas.tokens?.controlled ?? []).find((t) => t.actor?.isOwner && !isVehicle(t.actor));
+      const token = (canvas.tokens?.controlled ?? []).find(
+        (t) => t.actor?.isOwner && !isVehicle(t.actor),
+      );
       boarder = token?.actor ?? game.user.character ?? null;
       if (boarder && sys.occupants.some((o) => o.uuid === boarder.uuid)) boarder = null;
     }
     const loc = (key) => game.i18n.localize(key);
-    const degreeLabel = status.roundDegree ? loc(cfg.degreesOfSuccess[status.roundDegree]) : "";
+    const roundDegreeLabel = status.roundDegree ? degreeLabel(status.roundDegree) : "";
     let roundLabel = "";
     if (!sys.parked && (status.roundDegree || (status.roundActive && sys.round.ramFactor < 1))) {
       roundLabel = [
-        degreeLabel ? game.i18n.format("CARLRPG.Vehicle.RoundResult", { result: degreeLabel }) : "",
+        roundDegreeLabel
+          ? game.i18n.format("CARLRPG.Vehicle.RoundResult", { result: roundDegreeLabel })
+          : "",
         status.roundActive && sys.round.ramFactor < 1 ? loc("CARLRPG.Vehicle.Ram.MoveLost") : "",
-      ].filter(Boolean).join(" - ");
+      ]
+        .filter(Boolean)
+        .join(" - ");
     }
     const full = status.occupantCount >= status.capacity;
     return {
@@ -701,23 +785,41 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       canDrive: canDrive(vehicle),
       canControl: isGM || vehicle.isOwner || owns(driver),
       roundLabel,
-      moveHint: game.i18n.format("CARLRPG.Vehicle.MoveHint", { max: status.maxMove, base: sys.move, bonus: status.driveBonus }),
+      moveHint: game.i18n.format("CARLRPG.Vehicle.MoveHint", {
+        max: status.maxMove,
+        base: sys.move,
+        bonus: status.driveBonus,
+      }),
       nitrousReady: sys.upgrades.nitrous.installed && !status.nitrousActive,
       weapons: sys.attacks.map((w, index) => ({
         ...w,
         index,
         damageTypeLabel: w.damageType ? loc(cfg.damageTypes[w.damageType]) : "",
-        canFire: occupants.some((o) => !o.missing && owns(resolveOccupant(o.uuid)) && rollsLikeCrawler(resolveOccupant(o.uuid))),
+        canFire: occupants.some(
+          (o) =>
+            !o.missing &&
+            owns(resolveOccupant(o.uuid)) &&
+            rollsLikeCrawler(resolveOccupant(o.uuid)),
+        ),
       })),
       perFloor: ["shockAbsorbers", "fuzzyDice"]
         .filter((key) => sys.upgrades[key].installed)
-        .map((key) => ({ label: `CARLRPG.Vehicle.Upgrades.${key}`, available: sys.upgrades[key].usedFloor !== floor })),
-      presetChoices: Object.fromEntries(Object.entries(cfg.vehiclePresets).map(([k, p]) => [k, p.label])),
+        .map((key) => ({
+          label: `CARLRPG.Vehicle.Upgrades.${key}`,
+          available: sys.upgrades[key].usedFloor !== floor,
+        })),
+      presetChoices: labelChoices(cfg.vehiclePresets),
       // "Driven with" suggestions: Table 7's Skills and those its occupants have.
-      driveSkillNames: [...new Set([
-        ...Object.values(cfg.vehiclePresets).map((p) => p.driveSkill),
-        ...vehicleOccupants(vehicle).flatMap((o) => (o.actor?.items ?? []).filter((i) => i.type === "skill").map((i) => i.name)),
-      ])].filter(Boolean).sort((a, b) => a.localeCompare(b)),
+      driveSkillNames: [
+        ...new Set([
+          ...Object.values(cfg.vehiclePresets).map((p) => p.driveSkill),
+          ...vehicleOccupants(vehicle).flatMap((o) =>
+            (o.actor?.items ?? []).filter((i) => i.type === "skill").map((i) => i.name),
+          ),
+        ]),
+      ]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b)),
       degreeChoices: cfg.degreesOfSuccess,
     };
   }
@@ -730,9 +832,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   #preparePetContext(pet, floor) {
     const owner = petOwner(pet);
-    const ownerChoices = Object.fromEntries(game.actors
-      .filter((a) => isCrawler(a) && a.testUserPermission(game.user, "LIMITED"))
-      .map((a) => [a.id, a.name]));
+    const ownerChoices = Object.fromEntries(
+      game.actors
+        .filter((a) => isCrawler(a) && a.testUserPermission(game.user, "LIMITED"))
+        .map((a) => [a.id, a.name]),
+    );
     // Keep a set owner selectable even if this user can't see it.
     if (pet.system.ownerId && !ownerChoices[pet.system.ownerId]) {
       ownerChoices[pet.system.ownerId] = owner?.name ?? pet.system.ownerId;
@@ -765,22 +869,37 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const abilities = sys.specialAbilities;
     const traits = [];
     if (sys.role && !sys.isMount) {
-      traits.push({ label: loc(CONFIG.CARLRPG.petRoles[sys.role]), text: loc(`CARLRPG.Pet.RoleRules.${sys.role}`) });
+      traits.push({
+        label: loc(CONFIG.CARLRPG.petRoles[sys.role]),
+        text: loc(`CARLRPG.Pet.RoleRules.${sys.role}`),
+      });
     }
     if (abilities.move60) traits.push({ label: loc("CARLRPG.Pet.Move60") });
     if (abilities.altMove) {
-      traits.push({ label: `${loc(CONFIG.CARLRPG.petAltMoves[abilities.altMove])} ${sys.altMoveValue}ft` });
+      traits.push({
+        label: `${loc(CONFIG.CARLRPG.petAltMoves[abilities.altMove])} ${sys.altMoveValue}ft`,
+      });
     }
     if (abilities.tauntOrCatcher) {
-      traits.push({ label: loc(`CARLRPG.Pet.${abilities.tauntOrCatcher === "taunt" ? "Taunt" : "Catcher"}`), text: loc("CARLRPG.Pet.RankIsFloor") });
+      traits.push({
+        label: loc(`CARLRPG.Pet.${abilities.tauntOrCatcher === "taunt" ? "Taunt" : "Catcher"}`),
+        text: loc("CARLRPG.Pet.RankIsFloor"),
+      });
     }
     if (abilities.heightenedSenses) {
-      traits.push({ label: loc("CARLRPG.Pet.HeightenedSenses"), text: loc("CARLRPG.Pet.HeightenedSensesHint") });
+      traits.push({
+        label: loc("CARLRPG.Pet.HeightenedSenses"),
+        text: loc("CARLRPG.Pet.HeightenedSensesHint"),
+      });
     }
     if (abilities.resistance) {
-      traits.push({ label: loc("CARLRPG.Pet.Resistance"), text: loc(CONFIG.CARLRPG.damageTypes[abilities.resistance]) });
+      traits.push({
+        label: loc("CARLRPG.Pet.Resistance"),
+        text: loc(CONFIG.CARLRPG.damageTypes[abilities.resistance]),
+      });
     }
-    if (sys.matureBenefit) traits.push({ label: loc("CARLRPG.Pet.MatureBenefit"), text: sys.matureBenefit });
+    if (sys.matureBenefit)
+      traits.push({ label: loc("CARLRPG.Pet.MatureBenefit"), text: sys.matureBenefit });
     return traits;
   }
 
@@ -796,10 +915,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const spells = [];
     const damageEffects = [];
     const raceAndClass = [];
+    const boxes = [];
+    const achievements = [];
 
     for (let i of context.items) {
       i.img = i.img || Item.DEFAULT_ICON;
       if (i.type === "item") gear.push(i);
+      else if (i.type === "box") boxes.push(i);
+      else if (i.type === "achievement") achievements.push(i);
       else if (i.type === "feature") features.push(i);
       else if (i.type === "skill") skills.push(i);
       else if (i.type === "spell") spells.push(i);
@@ -822,7 +945,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // Fixed ordering for every list: Skills by category (Attack, Utility,
     // Passive) then name; everything else by name (Race before Class).
     const byName = (a, b) => a.name.localeCompare(b.name, game.i18n.lang, { sensitivity: "base" });
-    skills.sort((a, b) => (skillCategoryRank(a.system.category) - skillCategoryRank(b.system.category)) || byName(a, b));
+    skills.sort(
+      (a, b) =>
+        skillCategoryRank(a.system.category) - skillCategoryRank(b.system.category) || byName(a, b),
+    );
     for (const list of [gear, features, spells, damageEffects]) list.sort(byName);
     if (this.actor.type === "character") {
       for (const item of gear) {
@@ -841,10 +967,13 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // or in the Hotlist isn't listed; the doll's slots have their own edit
     // control, and the Hotlist's (x) puts an item back in the list.
     // (Equipped with no slot - old data - stays listed, so it's reachable.)
-    const listed = this.actor.type === "character"
-      ? gear.filter((item) => !isItemWorn(this.actor, item.id) && !item.inHotlist)
-      : gear;
-    raceAndClass.sort((a, b) => (a.type === b.type ? 0 : a.type === "race" ? -1 : 1) || byName(a, b));
+    const listed =
+      this.actor.type === "character"
+        ? gear.filter((item) => !isItemWorn(this.actor, item.id) && !item.inHotlist)
+        : gear;
+    raceAndClass.sort(
+      (a, b) => (a.type === b.type ? 0 : a.type === "race" ? -1 : 1) || byName(a, b),
+    );
 
     context.gear = listed;
     context.features = features;
@@ -852,6 +981,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     context.spells = spells;
     context.damageEffects = damageEffects;
     context.raceAndClass = raceAndClass;
+    // Awarded achievements (data/achievement.mjs), newest first.
+    const order = achievementsOf(this.actor).map((i) => i.id);
+    context.achievements = achievements.sort((a, b) => order.indexOf(a._id) - order.indexOf(b._id));
+    context.showBoxes = this.#showBoxes;
+    // Unopened loot boxes (data/box.mjs), Bronze to Celestial.
+    context.boxes = boxes.sort(
+      (a, b) => boxTierRank(a.system.tier) - boxTierRank(b.system.tier) || byName(a, b),
+    );
 
     // Header-click column sort (see #onSortList) on top of the fixed order
     // above, which is what "off" falls back to. Damage Effects nest under
@@ -904,11 +1041,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
             numeric: true,
             sensitivity: "base",
           });
-    items.sort(
-      (a, b) =>
-        dir * compare(value(a), value(b)) ||
-        compare(a.name, b.name),
-    );
+    items.sort((a, b) => dir * compare(value(a), value(b)) || compare(a.name, b.name));
   }
 
   /**
@@ -970,7 +1103,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   _buildEquipSlots(system) {
     const accessoryMax = CONFIG.CARLRPG.characterListSlots.accessories;
     const gear = Object.entries(CONFIG.CARLRPG.gearSlots).map(([key, { label, icon }]) => ({
-      key, label, icon, ...resolveSlotValue(this.actor, system.gearSlots[key]),
+      key,
+      label,
+      icon,
+      ...resolveSlotValue(this.actor, system.gearSlots[key]),
     }));
     // Keep each Accessory's index in the list (clearSlot removes by it).
     const accessories = system.accessories
@@ -997,8 +1133,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   _onDragStart(event) {
     super._onDragStart(event);
     if (this.actor.type !== "character") return;
-    const row = event.target.closest?.("[data-item-id]");
-    const item = this.actor.items.get(row?.dataset.itemId);
+    const item = itemFor(this.actor, event.target);
     const panel = this.element.querySelector(".carl-equip-panel");
     if (item?.type !== "item" || !panel) return;
     panel.classList.add("is-dragging");
@@ -1025,7 +1160,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     injectBloodSplatter(this);
     // A Character just made from the Actors sidebar (core renders its sheet
     // with renderContext "createActor") opens the Create Crawler wizard.
-    if (options.renderContext === "createActor" && context.canCreateCrawler && !this.actor.items.size) {
+    if (
+      options.renderContext === "createActor" &&
+      context.canCreateCrawler &&
+      !this.actor.items.size
+    ) {
       CrawlerCreation.open(this.actor);
     }
   }
@@ -1039,9 +1178,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static #editItem(event, target) {
     // [data-item-id], not .item: the Skill details drawer's Edit button
     // sits in the drawer below the row and carries the id itself.
-    const li = target.closest("[data-item-id]");
-    const item = this.actor.items.get(li.dataset.itemId);
-    item.sheet.render(true);
+    itemFor(this.actor, target)?.sheet.render(true);
   }
 
   /**
@@ -1053,7 +1190,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static async #createItem(event, target) {
     event.preventDefault();
     const type = target.dataset.type;
-    const name = target.dataset.name ? game.i18n.localize(target.dataset.name) : `New ${type.capitalize()}`;
+    const name = target.dataset.name
+      ? game.i18n.localize(target.dataset.name)
+      : `New ${type.capitalize()}`;
     const itemData = {
       name: name,
       type: type,
@@ -1061,7 +1200,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // The Benefits tab's Church Benefits list makes a Boon at a Tier.
     if (target.dataset.tier) itemData.system = { tier: target.dataset.tier };
     // A new Attack goes last in the Mob's list.
-    if (type === MOB_ATTACK_TYPE) itemData.sort = Math.max(0, ...mobAttacksOf(this.actor).map((i) => i.sort ?? 0)) + 1000;
+    if (type === MOB_ATTACK_TYPE)
+      itemData.sort = Math.max(0, ...mobAttacksOf(this.actor).map((i) => i.sort ?? 0)) + 1000;
     return await Item.create(itemData, { parent: this.actor });
   }
 
@@ -1072,8 +1212,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * @private
    */
   static async #deleteItem(event, target) {
-    const li = target.closest(".item");
-    const item = this.actor.items.get(li.dataset.itemId);
+    const li = itemRow(target);
+    const item = itemFor(this.actor, target);
+    if (!item) return;
     await item.delete();
     // Use native DOM to hide the element
     li.style.display = "none";
@@ -1094,8 +1235,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // for gear/features/damage effects - see CarlRPGItem#roll()).
     if (dataset.rollType) {
       if (dataset.rollType == "item") {
-        const itemId = target.closest(".item").dataset.itemId;
-        const item = this.actor.items.get(itemId);
+        const item = itemFor(this.actor, target);
         if (item) return item.roll();
       }
     }
@@ -1151,8 +1291,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     event.preventDefault();
     // A Mob's Attack by its item; a Vehicle's weapon (fired as a Mob Attack
     // by its crew) by its place in the Vehicle's list.
-    const itemId = target.closest("[data-item-id]")?.dataset.itemId;
-    const ref = itemId ?? (target.dataset.index !== undefined ? Number(target.dataset.index) : null);
+    const itemId = itemRow(target)?.dataset.itemId;
+    const ref =
+      itemId ?? (target.dataset.index !== undefined ? Number(target.dataset.index) : null);
     return ref === null ? null : CarlDice.rollMobAttack(this.actor, ref);
   }
 
@@ -1167,31 +1308,35 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   async #prepareMobAttacks(enrich, floor) {
     const { damageTypes, debuffs, mobAttackKinds } = CONFIG.CARLRPG;
-    return Promise.all(mobAttacksOf(this.actor).map(async (item) => {
-      const sys = item.system;
-      const kind = attackKind(sys);
-      return {
-        id: item.id,
-        name: item.name,
-        img: item.img,
-        kind,
-        kindLabel: mobAttackKinds[kind],
-        kindIcon: { melee: "fa-hand-fist", ranged: "fa-bullseye", area: "fa-burst" }[kind],
-        toHit: sys.toHit,
-        toHitValue: evaluateMobConstant(sys.toHit, floor),
-        damage: sys.damage,
-        notes: [
-          sys.range,
-          sys.damageType ? game.i18n.localize(damageTypes[sys.damageType] ?? sys.damageType) : "",
-          sys.isArea && sys.splash ? game.i18n.localize("CARLRPG.MobAttack.Splash") : "",
-        ].filter(Boolean),
-        effects: (sys.targetEffects ?? []).filter((te) => te.debuffKey).map((te) => ({
-          label: te.label || game.i18n.localize(debuffs[te.debuffKey]?.label ?? te.debuffKey),
-          when: `CARLRPG.MobAttack.TriggerShort.${te.trigger || "hit"}`,
-        })),
-        descriptionHTML: await enrich(sys.description),
-      };
-    }));
+    return Promise.all(
+      mobAttacksOf(this.actor).map(async (item) => {
+        const sys = item.system;
+        const kind = attackKind(sys);
+        return {
+          id: item.id,
+          name: item.name,
+          img: item.img,
+          kind,
+          kindLabel: mobAttackKinds[kind],
+          kindIcon: { melee: "fa-hand-fist", ranged: "fa-bullseye", area: "fa-burst" }[kind],
+          toHit: sys.toHit,
+          toHitValue: evaluateMobConstant(sys.toHit, floor),
+          damage: sys.damage,
+          notes: [
+            sys.range,
+            sys.damageType ? game.i18n.localize(damageTypes[sys.damageType] ?? sys.damageType) : "",
+            sys.isArea && sys.splash ? game.i18n.localize("CARLRPG.MobAttack.Splash") : "",
+          ].filter(Boolean),
+          effects: (sys.targetEffects ?? [])
+            .filter((te) => te.debuffKey)
+            .map((te) => ({
+              label: te.label || game.i18n.localize(debuffs[te.debuffKey]?.label ?? te.debuffKey),
+              when: `CARLRPG.MobAttack.TriggerShort.${te.trigger || "hit"}`,
+            })),
+          descriptionHTML: await enrichDescription(sys.description, item),
+        };
+      }),
+    );
   }
 
   /**
@@ -1202,8 +1347,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     event.preventDefault();
     // A Pet's Ranks are the Floor and never advance (p.231).
     if (isPet(this.actor)) return;
-    const li = target.closest(".item");
-    const item = this.actor.items.get(li.dataset.itemId);
+    const item = itemFor(this.actor, target);
     if (!item) return;
     return item.update({ "system.marked": !item.system.marked });
   }
@@ -1215,12 +1359,12 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onToggleEquipped(event, target) {
     event.preventDefault();
-    const li = target.closest(".item");
-    const item = this.actor.items.get(li.dataset.itemId);
+    const item = itemFor(this.actor, target);
     if (!item) return;
     // In a fight either is the Retrieve Action (helpers/equip-slots.mjs,
     // CarlRPGItem#_preUpdate).
-    if (this.actor.type === "character" && isItemWorn(this.actor, item.id)) return unwearItem(this.actor, item);
+    if (this.actor.type === "character" && isItemWorn(this.actor, item.id))
+      return unwearItem(this.actor, item);
     // Equipping takes it out of the Hotlist (CarlRPGItem#_preUpdate).
     return item.update({ "system.equipped": !item.system.equipped });
   }
@@ -1232,8 +1376,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onUseItem(event, target) {
     event.preventDefault();
-    const itemId = target.dataset.itemId ?? target.closest("[data-item-id]")?.dataset.itemId;
-    const item = this.actor.items.get(itemId);
+    const item = itemFor(this.actor, target);
     if (!item) return;
     return useConsumable(this.actor, item);
   }
@@ -1266,7 +1409,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   static #onToggleHotlist(event, target) {
     event.preventDefault();
-    const item = this.actor.items.get(target.closest("[data-item-id]")?.dataset.itemId);
+    const item = itemFor(this.actor, target);
     if (item) return toggleHotlist(this.actor, item);
   }
 
@@ -1318,6 +1461,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   }
 
   static #onDeleteArrayItem(event, target) {
+    // A Condition goes through the one writer of the list (helpers/conditions.mjs).
+    if (target.dataset.path === "system.conditions") {
+      event.preventDefault();
+      return removeConditionFromActor(this.actor, Number(target.dataset.index));
+    }
     return onDeleteArrayItem(event, target, this.actor);
   }
 
@@ -1328,12 +1476,15 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    * `system.damageEffectsExpanded`, resolved from the closest `[data-item-id]`.
    * @private
    */
+  /** Show Loot Boxes / Hide Loot Boxes (the Inventory). */
+  static #onToggleBoxes() {
+    this.#showBoxes = !this.#showBoxes;
+    this.render();
+  }
+
   static #onToggleDrawer(event, target) {
     const scope = target.dataset.scope;
-    const doc =
-      scope === "item"
-        ? this.actor.items.get(target.closest("[data-item-id]")?.dataset.itemId)
-        : this.actor;
+    const doc = scope === "item" ? itemFor(this.actor, target) : this.actor;
     return onToggleDrawer(event, target, doc);
   }
 
@@ -1412,7 +1563,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /** Board with this player's selected token or crawler. @private */
   static #onBoardVehicle(event, target) {
     event.preventDefault();
-    const token = (canvas.tokens?.controlled ?? []).find((t) => t.actor?.isOwner && !isVehicle(t.actor));
+    const token = (canvas.tokens?.controlled ?? []).find(
+      (t) => t.actor?.isOwner && !isVehicle(t.actor),
+    );
     const actor = token?.actor ?? game.user.character;
     if (!actor) return ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.NoBoarder"));
     return boardVehicle(this.actor, actor);
@@ -1421,8 +1574,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   /** GM: board every selected token (the way to put unlinked Mobs aboard). @private */
   static async #onBoardSelected(event, target) {
     event.preventDefault();
-    const actors = (canvas.tokens?.controlled ?? []).map((t) => t.actor).filter((a) => a && !isVehicle(a));
-    if (!actors.length) return ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.NoneSelected"));
+    const actors = (canvas.tokens?.controlled ?? [])
+      .map((t) => t.actor)
+      .filter((a) => a && !isVehicle(a));
+    if (!actors.length)
+      return ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.NoneSelected"));
     for (const actor of actors) await boardVehicle(this.actor, actor);
   }
 
@@ -1454,7 +1610,7 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static #onResetVehicleRound(event, target) {
     event.preventDefault();
     return updateVehicle(this.actor, {
-      "system.round": { combatId: "", checkId: "", round: null, degree: "", critChoice: "", ramFactor: 1 },
+      "system.round": { ...BLANK_ROUND },
     });
   }
 
@@ -1497,7 +1653,14 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       template: "systems/carl-rpg/templates/dialog/resistances.hbs",
       context: { rows: CarlRPGActorSheet.#resistanceRows(this.actor.system) },
       classes: ["carl-resistances-dialog"],
-      buttons: [{ action: "close", icon: "fa-solid fa-check", label: "CARLRPG.Dialog.Close", default: true }],
+      buttons: [
+        {
+          action: "close",
+          icon: "fa-solid fa-check",
+          label: "CARLRPG.Dialog.Close",
+          default: true,
+        },
+      ],
     });
   }
 
@@ -1518,7 +1681,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
           label,
           state,
           stateLabel: resistanceStates[state] ?? state,
-          source: granted ? (sys.grantedResistanceSources?.[type] ?? "") : game.i18n.localize("CARLRPG.Actor.ResistanceBase"),
+          source: granted
+            ? (sys.grantedResistanceSources?.[type] ?? "")
+            : game.i18n.localize("CARLRPG.Actor.ResistanceBase"),
         };
       })
       .filter((row) => row.state !== "none");
@@ -1548,7 +1713,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
   static #onAddWorshipDay(event, target) {
     event.preventDefault();
     if (!this.actor.isOwner) return;
-    return this.actor.update({ "system.deity.worshipDays": this.actor.system.deity.worshipDays + 1 });
+    return this.actor.update({
+      "system.deity.worshipDays": this.actor.system.deity.worshipDays + 1,
+    });
   }
 
   /**
@@ -1611,6 +1778,17 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   async _onDropItem(event, item) {
     if (!this.actor.isOwner) return null;
+    // An achievement is awarded, not copied: the GM drops it on a Character
+    // (helpers/achievements.mjs - its loot box, its splash).
+    if (item.type === "achievement") {
+      const definition =
+        game.user.isGM && this.actor.type === "character" ? await definitionFor(item) : null;
+      if (!definition) {
+        ui.notifications.warn(game.i18n.localize("CARLRPG.Achievement.DropRefused"));
+        return null;
+      }
+      return awardAchievement(definition, this.actor);
+    }
     // A Vehicle carries gear as Cargo; it has no Skills, Boons or Class.
     if (isVehicle(this.actor) && item.type !== "item") {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Vehicle.OnlyCargo"));
@@ -1628,7 +1806,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     }
     // The Hotlist is filled by clicking a slot (or the star), not by
     // dropping on it: a drop there is an ordinary drop on the sheet.
-    const slotData = this.actor.type === "character" ? event.target.closest("[data-slot-type]")?.dataset : null;
+    const slotData =
+      this.actor.type === "character" ? event.target.closest("[data-slot-type]")?.dataset : null;
     const slot = slotData?.slotType === "hotlist" ? null : slotData;
     // A drop on a gear or accessory slot during a Hotlist swap is refused
     // whole, rather than creating the item and skipping the slot.
@@ -1638,7 +1817,9 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
       // as its (x) does (a Retrieve in a fight). An item is in one place at
       // a time - the list, the doll or the Hotlist.
       if (!slot) {
-        const onList = event.target.closest?.('section.tab[data-tab="items"] .carl-inventory-layout > ol.items-list');
+        const onList = event.target.closest?.(
+          'section.tab[data-tab="items"] .carl-inventory-layout > ol.items-list',
+        );
         if (onList && this.actor.type === "character" && isItemWorn(this.actor, item.id)) {
           await unwearItem(this.actor, item);
           return item;
@@ -1664,7 +1845,11 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     // removes the old item first), matching this project's "surface state,
     // don't gate" pattern elsewhere. An id whose item is gone (deleted
     // before CarlRPGActor cleared it) counts as none.
-    if (created && this.actor.type === "character" && (created.type === "class" || created.type === "race")) {
+    if (
+      created &&
+      this.actor.type === "character" &&
+      (created.type === "class" || created.type === "race")
+    ) {
       const key = created.type;
       if (!this.actor.items.has(this.actor.system[key])) {
         await this.actor.update({ [`system.${key}`]: created.id });

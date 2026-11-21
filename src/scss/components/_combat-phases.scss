@@ -2,7 +2,7 @@
 // (module/apps/combat-tracker.mjs) and the phase notices in chat (module/
 // helpers/combat-phases.mjs). Neither lives inside a .carl-rpg element, so -
 // like _chat.scss - these selectors are top-level and re-declare the palette.
-@use '../utils/palette';
+@use "../utils/palette";
 
 .carl-phase-bar {
   @include palette.variables;
@@ -331,9 +331,16 @@
     border: 1px solid rgba(0, 0, 0, 0.6);
     cursor: pointer;
 
-    &.action { background: #2ecc40; }
-    &.move { background: #f1c40f; }
-    &.favor { background: #ffd700; box-shadow: 0 0 3px #ffd700; }
+    &.action {
+      background: #2ecc40;
+    }
+    &.move {
+      background: #f1c40f;
+    }
+    &.favor {
+      background: #ffd700;
+      box-shadow: 0 0 3px #ffd700;
+    }
 
     &.spent {
       background: #c0392b;

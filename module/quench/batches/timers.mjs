@@ -19,13 +19,27 @@ import { dropExpiredConditions } from "../../helpers/expiry.mjs";
 import { processCombatEnd } from "../../helpers/round-end.mjs";
 import { SPELL_TIMER_PATH, expireSpellTimers, spellTimerFor } from "../../helpers/spell-timers.mjs";
 import {
-  SCENE_EPOCH_SETTING, activeCooldown, cooldownChipHtml, cooldownLabel, sceneEpoch, startNewScene,
+  SCENE_EPOCH_SETTING,
+  activeCooldown,
+  cooldownChipHtml,
+  cooldownLabel,
+  sceneEpoch,
+  startNewScene,
 } from "../../helpers/cooldowns.mjs";
 import { hotlistRows } from "../../helpers/hotlist.mjs";
 import CarlToolbox from "../../apps/gm-toolbox.mjs";
 import {
-  createTestCharacter, createTestCombat, createTestItem, deleteTestActor, deleteTestCombat, pressDialog,
-  useQuenchTimeout, waitFor, withDialog, withPinnedDice, PIN_D20_MID,
+  createTestCharacter,
+  createTestCombat,
+  createTestItem,
+  deleteTestActor,
+  deleteTestCombat,
+  pressDialog,
+  useQuenchTimeout,
+  waitFor,
+  withDialog,
+  withPinnedDice,
+  PIN_D20_MID,
 } from "../helpers.mjs";
 
 const CONFIRM = "carl-cooldown-confirm";
@@ -39,7 +53,9 @@ async function withClockMoved(seconds, fn) {
   const before = game.time.worldTime;
   try {
     await game.time.advance(seconds);
-    await waitFor(() => game.time.worldTime >= before + seconds, { message: "world time never moved" });
+    await waitFor(() => game.time.worldTime >= before + seconds, {
+      message: "world time never moved",
+    });
     return await fn();
   } finally {
     const back = before - game.time.worldTime;
@@ -84,22 +100,42 @@ export default function register(quench) {
           ["2 rounds", { rounds: 2 }, 20],
           ["2 minutes", { seconds: 120 }, 120],
           ["Until you enter a saferoom or descend to a new floor.", { manual: true }, null],
-          ["Until the end of two full rounds of combat or 20 seconds", { rounds: 2, seconds: 20 }, 20],
-          ["Until the end of the combat or 5 minutes.", { untilCombatEnd: true, seconds: 300 }, 300],
+          [
+            "Until the end of two full rounds of combat or 20 seconds",
+            { rounds: 2, seconds: 20 },
+            20,
+          ],
+          [
+            "Until the end of the combat or 5 minutes.",
+            { untilCombatEnd: true, seconds: 300 },
+            300,
+          ],
           ["Until the end of combat or 5 minutes.", { untilCombatEnd: true, seconds: 300 }, 300],
           ["A number of seconds equal to your Intelligence.", { perInt: 1 }, 12],
           ["A number of seconds equal to the caster's Intelligence x3.", { perInt: 3 }, 36],
           ["5 seconds", { seconds: 5 }, 5],
           ["5 minutes + 1 minute per Rank", { seconds: 300, perRank: 60 }, 480],
           ["3 rounds", { rounds: 3 }, 30],
-          ["2 minutes, or until the caster chooses to end the effect.", { seconds: 120, casterMayEnd: true }, 120],
+          [
+            "2 minutes, or until the caster chooses to end the effect.",
+            { seconds: 120, casterMayEnd: true },
+            120,
+          ],
           ["1 round", { rounds: 1 }, 10],
           ["1 minute", { seconds: 60 }, 60],
           ["1 minute per Rank", { perRank: 60 }, 180],
         ];
         const DEFAULTS = {
-          seconds: null, rounds: null, perRank: null, perInt: null,
-          untilCombatEnd: false, perScene: false, perRound: false, casterMayEnd: false, partial: false, manual: false,
+          seconds: null,
+          rounds: null,
+          perRank: null,
+          perInt: null,
+          untilCombatEnd: false,
+          perScene: false,
+          perRound: false,
+          casterMayEnd: false,
+          partial: false,
+          manual: false,
         };
 
         for (const [text, fields, seconds] of CASES) {
@@ -125,10 +161,13 @@ export default function register(quench) {
 
         it("every cooldown and duration in the compendium reads as a time, a marker or manual", async function () {
           const texts = new Set();
-          for (const pack of game.packs.filter((p) => p.documentName === "Item" && p.metadata.packageName === "carl-rpg")) {
+          for (const pack of game.packs.filter(
+            (p) => p.documentName === "Item" && p.metadata.packageName === "carl-rpg",
+          )) {
             const index = await pack.getIndex({ fields: ["system.cooldown", "system.duration"] });
             for (const entry of index) {
-              for (const text of [entry.system?.cooldown, entry.system?.duration]) if (text) texts.add(text);
+              for (const text of [entry.system?.cooldown, entry.system?.duration])
+                if (text) texts.add(text);
             }
           }
           const listed = new Set(CASES.map(([text]) => text));
@@ -149,7 +188,10 @@ export default function register(quench) {
             const byKey = Object.fromEntries(actor.system.conditions.map((c) => [c.key, c]));
             assert.approximately(byKey.shitFaced.expiresAt, now + 600, 1);
             assert.approximately(byKey.soreAsShit.expiresAt, now + 3600, 1);
-            assert.isNull(byKey.shitFaced.remaining, "the Conditions tab shows its end time instead");
+            assert.isNull(
+              byKey.shitFaced.remaining,
+              "the Conditions tab shows its end time instead",
+            );
           } finally {
             await deleteTestActor(actor);
           }
@@ -200,23 +242,47 @@ export default function register(quench) {
       describe("timed toggled Spells", function () {
         useQuenchTimeout(this);
 
-        const toggled = (actor, duration, extra = {}) => createTestItem(actor, "spell", "Timed", {
-          system: { isToggled: true, active: false, rank: 1, manaCost: 0, duration, ...extra },
-        });
+        const toggled = (actor, duration, extra = {}) =>
+          createTestItem(actor, "spell", "Timed", {
+            system: { isToggled: true, active: false, rank: 1, manaCost: 0, duration, ...extra },
+          });
 
         it("switching on stamps its end time - per Rank and Intelligence worked out at the cast", async function () {
-          const actor = await createTestCharacter("caster", { system: { stats: { int: { value: 5 } } } });
+          const actor = await createTestCharacter("caster", {
+            system: { stats: { int: { value: 5 } } },
+          });
           try {
             const bang = await toggled(actor, "5 minutes + 1 minute per Rank", { rank: 3 });
-            const water = await toggled(actor, "A number of seconds equal to the caster's Intelligence x3.");
+            const water = await toggled(
+              actor,
+              "A number of seconds equal to the caster's Intelligence x3.",
+            );
             const rounds = await toggled(actor, "2 rounds");
-            const torch = await toggled(actor, "Until you enter a saferoom or descend to a new floor.");
+            const torch = await toggled(
+              actor,
+              "Until you enter a saferoom or descend to a new floor.",
+            );
             const now = game.time.worldTime;
             const int = actor.system.stats.int.effective ?? actor.system.stats.int.value;
-            assert.approximately(spellTimerFor(actor, bang, { now, fight: null }).endsAt, now + 300 + 60 * 3, 0.001);
-            assert.approximately(spellTimerFor(actor, water, { now, fight: null }).endsAt, now + 3 * int, 0.001);
-            assert.approximately(spellTimerFor(actor, rounds, { now, fight: null }).endsAt, now + 20, 0.001);
-            assert.isNull(spellTimerFor(actor, torch, { now, fight: null }), "not a time: switched off by hand");
+            assert.approximately(
+              spellTimerFor(actor, bang, { now, fight: null }).endsAt,
+              now + 300 + 60 * 3,
+              0.001,
+            );
+            assert.approximately(
+              spellTimerFor(actor, water, { now, fight: null }).endsAt,
+              now + 3 * int,
+              0.001,
+            );
+            assert.approximately(
+              spellTimerFor(actor, rounds, { now, fight: null }).endsAt,
+              now + 20,
+              0.001,
+            );
+            assert.isNull(
+              spellTimerFor(actor, torch, { now, fight: null }),
+              "not a time: switched off by hand",
+            );
 
             await CarlDice.rollToggleSpell(actor, bang);
             assert.isTrue(bang.system.active);
@@ -235,9 +301,11 @@ export default function register(quench) {
             const shell = await toggled(actor, "5 seconds");
             await CarlDice.rollToggleSpell(actor, shell);
             assert.isTrue(shell.system.active);
-            await withClockMoved(10, () => waitFor(() => !actor.items.get(shell.id).system.active, {
-              message: "the sweep never switched it off",
-            }));
+            await withClockMoved(10, () =>
+              waitFor(() => !actor.items.get(shell.id).system.active, {
+                message: "the sweep never switched it off",
+              }),
+            );
             assert.isNull(timerOf(actor.items.get(shell.id)));
           } finally {
             await deleteTestActor(actor);
@@ -288,8 +356,12 @@ export default function register(quench) {
         it("using a Skill starts its cooldown; its row and the Hotlist show the chip", async function () {
           const actor = await createTestCharacter("cooler");
           try {
-            const skill = await createTestItem(actor, "skill", "Ping", { system: { rank: 1, cooldown: "5 minutes" } });
-            const spell = await createTestItem(actor, "spell", "Wisp", { system: { rank: 1, manaCost: 0, cooldown: "15 minutes" } });
+            const skill = await createTestItem(actor, "skill", "Ping", {
+              system: { rank: 1, cooldown: "5 minutes" },
+            });
+            const spell = await createTestItem(actor, "spell", "Wisp", {
+              system: { rank: 1, manaCost: 0, cooldown: "15 minutes" },
+            });
             await actor.update({ "system.hotlist": [spell.id] });
             const now = game.time.worldTime;
             await withPinnedDice(PIN_D20_MID, async () => {
@@ -298,20 +370,41 @@ export default function register(quench) {
             });
             assert.equal(cooldownOf(skill).kind, "time");
             assert.approximately(cooldownOf(skill).endsAt, now + 300, 1);
-            assert.equal(cooldownLabel(activeCooldown(skill)), game.i18n.format("CARLRPG.Cooldown.Chip.Minutes", { amount: 5 }));
+            assert.equal(
+              cooldownLabel(activeCooldown(skill)),
+              game.i18n.format("CARLRPG.Cooldown.Chip.Minutes", { amount: 5 }),
+            );
             assert.include(cooldownChipHtml(skill), "carl-cooldown-chip");
 
             const row = hotlistRows(actor).find((r) => r.itemId === spell.id);
-            assert.equal(row.cooldown, game.i18n.format("CARLRPG.Cooldown.Chip.Minutes", { amount: 15 }));
+            assert.equal(
+              row.cooldown,
+              game.i18n.format("CARLRPG.Cooldown.Chip.Minutes", { amount: 15 }),
+            );
 
             await actor.sheet.render({ force: true });
             try {
-              await waitFor(() => actor.sheet.element?.querySelector(`[data-item-id="${skill.id}"] .carl-cooldown-chip`), {
-                message: "the Skill row shows no chip",
-              });
-              const chip = actor.sheet.element.querySelector(`[data-item-id="${skill.id}"] .carl-cooldown-chip`);
-              assert.include(chip.textContent, game.i18n.format("CARLRPG.Cooldown.Chip.Minutes", { amount: 5 }));
-              assert.exists(actor.sheet.element.querySelector(`.carl-hotlist-row[data-item-id="${spell.id}"] .carl-cooldown-chip`));
+              await waitFor(
+                () =>
+                  actor.sheet.element?.querySelector(
+                    `[data-item-id="${skill.id}"] .carl-cooldown-chip`,
+                  ),
+                {
+                  message: "the Skill row shows no chip",
+                },
+              );
+              const chip = actor.sheet.element.querySelector(
+                `[data-item-id="${skill.id}"] .carl-cooldown-chip`,
+              );
+              assert.include(
+                chip.textContent,
+                game.i18n.format("CARLRPG.Cooldown.Chip.Minutes", { amount: 5 }),
+              );
+              assert.exists(
+                actor.sheet.element.querySelector(
+                  `.carl-hotlist-row[data-item-id="${spell.id}"] .carl-cooldown-chip`,
+                ),
+              );
             } finally {
               await actor.sheet.close();
             }
@@ -321,19 +414,29 @@ export default function register(quench) {
         });
 
         it("used again while cooling down: refusing at the prompt spends nothing", async function () {
-          const actor = await createTestCharacter("refuser", { system: { stats: { int: { value: 6 } } } });
+          const actor = await createTestCharacter("refuser", {
+            system: { stats: { int: { value: 6 } } },
+          });
           try {
-            const spell = await createTestItem(actor, "spell", "Zap", { system: { rank: 1, manaCost: 2, cooldown: "5 minutes", governingStat: "int" } });
+            const spell = await createTestItem(actor, "spell", "Zap", {
+              system: { rank: 1, manaCost: 2, cooldown: "5 minutes", governingStat: "int" },
+            });
             await actor.update({ "system.mana.value": actor.system.mana.max });
-            await withPinnedDice(PIN_D20_MID, () => CarlDice.rollSkillCheck(actor, spell, { skipDialog: true }));
+            await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollSkillCheck(actor, spell, { skipDialog: true }),
+            );
             const mana = actor.system.mana.value;
             const started = cooldownOf(spell);
             const messages = game.messages.size;
 
-            const result = await withDialog(() => CarlDice.rollSkillCheck(actor, spell, { skipDialog: true }), (dialog) => {
-              assert.include(dialog.element.textContent, spell.name);
-              pressDialog(dialog, "cancel");
-            }, CONFIRM);
+            const result = await withDialog(
+              () => CarlDice.rollSkillCheck(actor, spell, { skipDialog: true }),
+              (dialog) => {
+                assert.include(dialog.element.textContent, spell.name);
+                pressDialog(dialog, "cancel");
+              },
+              CONFIRM,
+            );
             assert.isNull(result);
             assert.equal(actor.system.mana.value, mana, "no Mana spent");
             assert.equal(game.messages.size, messages, "no card");
@@ -344,21 +447,33 @@ export default function register(quench) {
         });
 
         it("used anyway: it's rolled, the card says 'Used before cooldown.', and a fresh cooldown starts", async function () {
-          const actor = await createTestCharacter("sneaky", { system: { stats: { int: { value: 6 } } } });
+          const actor = await createTestCharacter("sneaky", {
+            system: { stats: { int: { value: 6 } } },
+          });
           try {
-            const spell = await createTestItem(actor, "spell", "Zap", { system: { rank: 1, manaCost: 2, cooldown: "5 minutes", governingStat: "int" } });
+            const spell = await createTestItem(actor, "spell", "Zap", {
+              system: { rank: 1, manaCost: 2, cooldown: "5 minutes", governingStat: "int" },
+            });
             await actor.update({ "system.mana.value": actor.system.mana.max });
-            const first = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollSkillCheck(actor, spell, { skipDialog: true }));
+            const first = await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollSkillCheck(actor, spell, { skipDialog: true }),
+            );
             assert.notInclude(first.content, earlyText());
             const mana = actor.system.mana.value;
-            const message = await withPinnedDice(PIN_D20_MID, () => withDialog(
-              () => CarlDice.rollSkillCheck(actor, spell, { skipDialog: true }),
-              (dialog) => pressDialog(dialog, "useAnyway"),
-              CONFIRM,
-            ));
+            const message = await withPinnedDice(PIN_D20_MID, () =>
+              withDialog(
+                () => CarlDice.rollSkillCheck(actor, spell, { skipDialog: true }),
+                (dialog) => pressDialog(dialog, "useAnyway"),
+                CONFIRM,
+              ),
+            );
             assert.exists(message);
             assert.include(message.content, earlyText());
-            assert.include(message.getFlag("carl-rpg", "aiReroll").body, earlyText(), "kept for a reroll or Intervene");
+            assert.include(
+              message.getFlag("carl-rpg", "aiReroll").body,
+              earlyText(),
+              "kept for a reroll or Intervene",
+            );
             assert.equal(actor.system.mana.value, mana - 2);
             assert.isAtLeast(cooldownOf(spell).endsAt, game.time.worldTime + 299);
           } finally {
@@ -369,14 +484,29 @@ export default function register(quench) {
         it("an opposed Check folded into another card carries the note in its debuffNote", async function () {
           const actor = await createTestCharacter("taunter");
           try {
-            const skill = await createTestItem(actor, "skill", "Taunt", { system: { rank: 1, cooldown: "10 minutes" } });
-            await withPinnedDice(PIN_D20_MID, () => CarlDice.rollOpposedSkillCheck(actor, skill, { difficulty: 10, skipDialog: true, post: false }));
+            const skill = await createTestItem(actor, "skill", "Taunt", {
+              system: { rank: 1, cooldown: "10 minutes" },
+            });
+            await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollOpposedSkillCheck(actor, skill, {
+                difficulty: 10,
+                skipDialog: true,
+                post: false,
+              }),
+            );
             assert.equal(cooldownOf(skill).kind, "time");
-            const result = await withPinnedDice(PIN_D20_MID, () => withDialog(
-              () => CarlDice.rollOpposedSkillCheck(actor, skill, { difficulty: 10, skipDialog: true, post: false }),
-              (dialog) => pressDialog(dialog, "useAnyway"),
-              CONFIRM,
-            ));
+            const result = await withPinnedDice(PIN_D20_MID, () =>
+              withDialog(
+                () =>
+                  CarlDice.rollOpposedSkillCheck(actor, skill, {
+                    difficulty: 10,
+                    skipDialog: true,
+                    post: false,
+                  }),
+                (dialog) => pressDialog(dialog, "useAnyway"),
+                CONFIRM,
+              ),
+            );
             assert.include(result.debuffNote, earlyText());
           } finally {
             await deleteTestActor(actor);
@@ -387,13 +517,16 @@ export default function register(quench) {
           const actor = await createTestCharacter("striker");
           try {
             const skill = await createTestItem(actor, "skill", "Punch", {
-              name: "Quench Punch", system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "" },
+              name: "Quench Punch",
+              system: { category: "attack", isHandToHand: true, rank: 1, governingStat: "" },
             });
             const de = await createTestItem(actor, "damageEffect", "Powerful Strike", {
               system: { rank: 1, parentSkills: ["Quench Punch"], cooldown: "30 hours" },
             });
             const now = game.time.worldTime;
-            const message = await withPinnedDice(PIN_D20_MID, () => CarlDice.rollAttack(actor, skill, { skipDialog: true, damageEffectItem: de }));
+            const message = await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollAttack(actor, skill, { skipDialog: true, damageEffectItem: de }),
+            );
             assert.exists(message);
             assert.approximately(cooldownOf(de).endsAt, now + 30 * 3600, 1);
             assert.isNull(cooldownOf(skill), "the Skill has no cooldown");
@@ -416,7 +549,13 @@ export default function register(quench) {
           const actor = await createTestCharacter("toggler");
           try {
             const spell = await createTestItem(actor, "spell", "Oakhide", {
-              system: { isToggled: true, rank: 1, manaCost: 0, duration: "2 minutes", cooldown: "10 minutes" },
+              system: {
+                isToggled: true,
+                rank: 1,
+                manaCost: 0,
+                duration: "2 minutes",
+                cooldown: "10 minutes",
+              },
             });
             await CarlDice.rollToggleSpell(actor, spell);
             const started = cooldownOf(spell);
@@ -424,7 +563,11 @@ export default function register(quench) {
             await CarlDice.rollToggleSpell(actor, spell); // off: free, no prompt
             assert.isFalse(spell.system.active);
             assert.deepEqual(cooldownOf(spell), started);
-            const card = await withDialog(() => CarlDice.rollToggleSpell(actor, spell), (dialog) => pressDialog(dialog, "useAnyway"), CONFIRM);
+            const card = await withDialog(
+              () => CarlDice.rollToggleSpell(actor, spell),
+              (dialog) => pressDialog(dialog, "useAnyway"),
+              CONFIRM,
+            );
             assert.include(card.content, earlyText());
             assert.isTrue(spell.system.active);
           } finally {
@@ -435,14 +578,27 @@ export default function register(quench) {
         it("once per round: lasts until the next round of the fight; outside a fight nothing is counted", async function () {
           const actor = await createTestCharacter("crossbow");
           try {
-            const skill = await createTestItem(actor, "skill", "Crossbow", { system: { rank: 1, cooldown: "Once per round." } });
-            await withPinnedDice(PIN_D20_MID, () => CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }));
+            const skill = await createTestItem(actor, "skill", "Crossbow", {
+              system: { rank: 1, cooldown: "Once per round." },
+            });
+            await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }),
+            );
             assert.isNull(activeCooldown(skill), "no rounds outside a fight");
 
             await inFight(actor, async (combat) => {
-              await withPinnedDice(PIN_D20_MID, () => CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }));
-              assert.deepInclude(cooldownOf(skill), { kind: "round", combatId: combat.id, round: combat.round });
-              assert.equal(cooldownLabel(activeCooldown(skill)), game.i18n.localize("CARLRPG.Cooldown.Chip.Round"));
+              await withPinnedDice(PIN_D20_MID, () =>
+                CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }),
+              );
+              assert.deepInclude(cooldownOf(skill), {
+                kind: "round",
+                combatId: combat.id,
+                round: combat.round,
+              });
+              assert.equal(
+                cooldownLabel(activeCooldown(skill)),
+                game.i18n.localize("CARLRPG.Cooldown.Chip.Round"),
+              );
               const round = combat.round;
               await combat.nextRound();
               await waitFor(() => combat.round === round + 1, { message: "the round never moved" });
@@ -457,11 +613,21 @@ export default function register(quench) {
           const actor = await createTestCharacter("fireball");
           const epoch = sceneEpoch();
           try {
-            const skill = await createTestItem(actor, "skill", "Cockroach", { system: { rank: 1, cooldown: "Once per scene" } });
-            await withPinnedDice(PIN_D20_MID, () => CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }));
+            const skill = await createTestItem(actor, "skill", "Cockroach", {
+              system: { rank: 1, cooldown: "Once per scene" },
+            });
+            await withPinnedDice(PIN_D20_MID, () =>
+              CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }),
+            );
             assert.deepInclude(cooldownOf(skill), { kind: "scene", combatId: null, epoch });
-            assert.equal(cooldownLabel(activeCooldown(skill)), game.i18n.localize("CARLRPG.Cooldown.Chip.Scene"));
-            assert.isFunction(CarlToolbox.DEFAULT_OPTIONS.actions.newScene, "the Toolbox's New scene button");
+            assert.equal(
+              cooldownLabel(activeCooldown(skill)),
+              game.i18n.localize("CARLRPG.Cooldown.Chip.Scene"),
+            );
+            assert.isFunction(
+              CarlToolbox.DEFAULT_OPTIONS.actions.newScene,
+              "the Toolbox's New scene button",
+            );
             await startNewScene();
             assert.isNull(activeCooldown(skill), "New scene clears it");
 
@@ -469,7 +635,9 @@ export default function register(quench) {
             await inFight(actor, async (combat) => {
               combatId = combat.id;
               // New scene cleared it, so no prompt.
-              await withPinnedDice(PIN_D20_MID, () => CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }));
+              await withPinnedDice(PIN_D20_MID, () =>
+                CarlDice.rollSkillCheck(actor, skill, { skipDialog: true }),
+              );
               assert.equal(cooldownOf(skill).combatId, combat.id);
               assert.exists(activeCooldown(skill), "still this scene while the fight lasts");
             });

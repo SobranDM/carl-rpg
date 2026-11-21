@@ -14,6 +14,7 @@ import { addConditionToActor, resolveTargetEffectLabel } from "../helpers/condit
 import { updateCardMessage } from "../helpers/chat-socket.mjs";
 import { isImmuneToAllDamage } from "../helpers/damage-pipeline.mjs";
 import { takesConditions } from "../helpers/actor-kinds.mjs";
+import { ownsUuid } from "../helpers/token-resolution.mjs";
 
 const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/target-effects-footer.hbs";
 
@@ -26,7 +27,10 @@ const FOOTER_TEMPLATE = "systems/carl-rpg/templates/chat/target-effects-footer.h
  */
 export async function buildTargetEffectsFooter(targetEffects) {
   const { renderTemplate } = foundry.applications.handlebars;
-  const effects = targetEffects.map((te) => ({ ...te, displayLabel: resolveTargetEffectLabel(te) }));
+  const effects = targetEffects.map((te) => ({
+    ...te,
+    displayLabel: resolveTargetEffectLabel(te),
+  }));
   return renderTemplate(FOOTER_TEMPLATE, { effects });
 }
 
@@ -52,15 +56,7 @@ async function resolveTargetActor(uuid) {
 export function canApplyTargetEffects(message) {
   if (game.user.isGM) return true;
   const targetUuids = message.getFlag("carl-rpg", "targetUuids") ?? [];
-  return targetUuids.some((uuid) => {
-    try {
-      const doc = fromUuidSync(uuid);
-      const actor = doc instanceof Actor ? doc : doc?.actor;
-      return !!actor?.isOwner;
-    } catch (e) {
-      return false;
-    }
-  });
+  return targetUuids.some((uuid) => ownsUuid(uuid));
 }
 
 /**
@@ -89,24 +85,32 @@ export async function onApplyTargetEffects(event, message) {
   for (const actor of actors.values()) {
     // An Immunity to the whole hit also ignores its Debuffs (p.93).
     if (isImmuneToAllDamage(damageByType, actor)) {
-      ui.notifications.info(game.i18n.format("CARLRPG.Targets.ImmuneNoEffects", { name: actor.name }));
+      ui.notifications.info(
+        game.i18n.format("CARLRPG.Targets.ImmuneNoEffects", { name: actor.name }),
+      );
       continue;
     }
     if (!takesConditions(actor)) {
-      ui.notifications.info(game.i18n.format("CARLRPG.Vehicle.ImmuneToDebuffs", { name: actor.name }));
+      ui.notifications.info(
+        game.i18n.format("CARLRPG.Vehicle.ImmuneToDebuffs", { name: actor.name }),
+      );
       continue;
     }
     for (const te of targetEffects) {
-      await addConditionToActor(actor, te.debuffKey, {
+      const added = await addConditionToActor(actor, te.debuffKey, {
         stacks: te.stacks,
         source: te.sourceLabel,
         label: te.label,
       });
+      // Not added (no GM answering): the button stays, to try again.
+      if (!added) return;
     }
   }
 
   await updateCardMessage(message, { flags: { "carl-rpg": { targetEffectsApplied: true } } });
-  ui.notifications.info(game.i18n.format("CARLRPG.TargetEffects.AppliedNotice", { count: actors.size }));
+  ui.notifications.info(
+    game.i18n.format("CARLRPG.TargetEffects.AppliedNotice", { count: actors.size }),
+  );
 }
 
 /**
@@ -116,14 +120,18 @@ export async function onApplyTargetEffects(event, message) {
  * disabled state for whenever a linked Evade roll (module/chat/
  * evade-link-card.mjs) has determined the real outcome instead.
  */
-export const targetEffectsActionEntries = [{
-  action: "applyTargetEffects",
-  buttonSelector: ".carl-apply-target-effects",
-  wrapperSelector: ".carl-target-effects",
-  canAct: canApplyTargetEffects,
-  doneFlag: "targetEffectsApplied",
-  doneLabel: () => `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Applied")}`,
-  supersededFlag: "targetEffectsSuperseded",
-  supersededLabel: () => `<i class="fas fa-ban"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Superseded")}`,
-  onClick: onApplyTargetEffects,
-}];
+export const targetEffectsActionEntries = [
+  {
+    action: "applyTargetEffects",
+    buttonSelector: ".carl-apply-target-effects",
+    wrapperSelector: ".carl-target-effects",
+    canAct: canApplyTargetEffects,
+    doneFlag: "targetEffectsApplied",
+    doneLabel: () =>
+      `<i class="fas fa-check"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Applied")}`,
+    supersededFlag: "targetEffectsSuperseded",
+    supersededLabel: () =>
+      `<i class="fas fa-ban"></i> ${game.i18n.localize("CARLRPG.TargetEffects.Superseded")}`,
+    onClick: onApplyTargetEffects,
+  },
+];
