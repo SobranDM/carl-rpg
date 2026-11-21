@@ -70,6 +70,7 @@ import registerBoxes from "./batches/boxes.mjs";
 import registerAchievements from "./batches/achievements.mjs";
 import registerOpeningSession from "./batches/opening-session.mjs";
 import registerFloorClock from "./batches/floor-clock.mjs";
+import registerAiText from "./batches/ai-text.mjs";
 import registerOpposed from "./batches/opposed.mjs";
 import { withMessageCleanup } from "./helpers.mjs";
 
@@ -133,6 +134,7 @@ const BATCH_REGISTRARS = [
   registerOpeningSession,
   registerFloorClock,
   registerOpposed,
+  registerAiText,
 ];
 
 export function registerCarlRpgQuenchTests(quench) {

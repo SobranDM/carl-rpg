@@ -542,7 +542,11 @@
     },
     "AiText": {
       "Label": "AI Text",
-      "Badge": "AI"
+      "Badge": "AI",
+      "Setting": {
+        "Name": "Show AI Text on Token Hover",
+        "Hint": "When anyone hovers over a Mob's token, show its AI Text beside it."
+      }
     },
     "Tab": {
       "Main": "Main",

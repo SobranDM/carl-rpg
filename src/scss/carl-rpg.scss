@@ -63,6 +63,45 @@
   @include floor-clock.styles;
 }
 
+/* A Mob's AI Text beside its hovered token (module/apps/ai-text-tooltip.mjs):
+   Foundry's tooltip, "AI" in its upper left. */
+#carl-ai-text-anchor {
+  position: fixed;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+#tooltip.carl-ai-tooltip {
+  max-width: 360px;
+  max-height: 50vh;
+  overflow: hidden;
+  text-align: left;
+
+  .carl-ai-tooltip-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+  }
+
+  .carl-ai-badge {
+    align-self: flex-start;
+    padding: 0 0.4em;
+    border: 1px solid currentColor;
+    border-radius: 3px;
+    font-size: 0.8em;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+  }
+
+  p {
+    margin: 0 0 0.4em;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
 /* An item's description as its Foundry tooltip (the itemTooltip helper).
    The tooltip lives on <body>, outside any sheet. */
 #tooltip.carl-item-tooltip {

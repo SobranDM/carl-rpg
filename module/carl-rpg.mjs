@@ -23,6 +23,10 @@ import OpeningSessionApp from "./apps/opening-session.mjs";
 import { registerSoundHooks, registerSoundSettings } from "./helpers/sounds.mjs";
 import { registerFloorClockSettings } from "./helpers/floor-clock.mjs";
 import FloorClockHud from "./apps/floor-clock-hud.mjs";
+import {
+  registerAiTextTooltipHooks,
+  registerAiTextTooltipSetting,
+} from "./apps/ai-text-tooltip.mjs";
 import { registerOpeningSessionSetting, resumeSession } from "./helpers/opening-session.mjs";
 import { preloadHandlebarsTemplates } from "./helpers/templates.mjs";
 import { CARLRPG } from "./helpers/config.mjs";
@@ -70,6 +74,8 @@ Hooks.once("init", function () {
   registerChargenSettings();
   registerAchievementSettings();
   registerSoundSettings();
+  // A Mob's AI Text beside its hovered token (GM's world setting).
+  registerAiTextTooltipSetting();
   // The floor-collapse timer: its change redraws every client's bar.
   registerFloorClockSettings(() => FloorClockHud.onClockChange());
   // The box-opening session's state: its change redraws every client's window.
@@ -453,6 +459,8 @@ Hooks.once("ready", function () {
   registerSoundHooks();
   // The floor-collapse bar, on everyone's screen.
   FloorClockHud.init();
+  // A Mob's AI Text when its token is hovered.
+  registerAiTextTooltipHooks();
   // A box-opening session under way: its window, and (GM) a box left
   // mid-opening by a reload.
   OpeningSessionApp.sync();
