@@ -236,6 +236,7 @@ export default function register(quench) {
               g("About"),
               g("Advancement"),
               g("Rolling"),
+              g("Bonuses"),
               g("Damage"),
               g("Debuffs"),
               g("Upgrades"),
@@ -582,6 +583,59 @@ export default function register(quench) {
               sheet,
               () => row()?.querySelector(".carl-edit-row-value")?.textContent.trim() === "+2",
               "the summary never updated",
+            );
+            await sheet.close();
+          } finally {
+            await item.delete();
+          }
+        });
+
+        it("a Passive Spell's Main tab shows and edits its base Bonuses, and still has Healing", async function () {
+          const item = await worldItem("spell", "passive bonus", {
+            system: {
+              castingKeywords: ["passive"],
+              changes: [{ targetType: "resource", target: "dr", mode: "add", value: "2" }],
+            },
+          });
+          try {
+            const sheet = await openSheet(item);
+            const bonuses = () =>
+              sheet.element.querySelector('.tab[data-tab="main"] .carl-base-bonuses');
+            const row = () => bonuses()?.querySelector(".carl-change-row");
+            assert.exists(row(), "the +2 DR is shown");
+            assert.equal(row().querySelector(".carl-edit-row-value").textContent.trim(), "+2");
+            assert.exists(sheet.element.querySelector(".carl-base-heal"), "Healing stays");
+            const value = row().querySelector('input[name="system.changes.0.value"]');
+            value.value = "3";
+            value.dispatchEvent(new Event("change", { bubbles: true }));
+            await waitFor(() => item.system.changes[0]?.value === "3", {
+              message: "the edit never saved",
+            });
+            await rerendered(
+              sheet,
+              () => row()?.querySelector(".carl-edit-row-value")?.textContent.trim() === "+3",
+              "the summary never updated",
+            );
+            assert.notExists(
+              sheet.element.querySelector(".carl-damage-effect-bonus-hint"),
+              "the Damage Effect hint is for Damage Effects",
+            );
+            // Its own Add link, for another Bonus.
+            assert.exists(
+              bonuses().querySelector('[data-action="addArrayItem"][data-path="system.changes"]'),
+            );
+            await sheet.close();
+          } finally {
+            await item.delete();
+          }
+        });
+
+        it("a Damage Effect's Main tab says only a Bonus to its own damage counts", async function () {
+          const item = await worldItem("damageEffect", "bonus hint");
+          try {
+            const sheet = await openSheet(item);
+            assert.exists(
+              sheet.element.querySelector(".carl-base-bonuses .carl-damage-effect-bonus-hint"),
             );
             await sheet.close();
           } finally {

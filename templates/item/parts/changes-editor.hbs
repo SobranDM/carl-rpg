@@ -6,7 +6,8 @@
       with `changes` (the array) and `path` (its dotted path, e.g.
       "system.changes" or "system.upgrades.0.changes"); `noAdd=true` drops
       the list's own Add link (a tier card's add bar has it). Used for gear,
-      Features, Classes, Races and each Upgrade tier.
+      Features, Classes, Races, and a Skill, Spell or Damage Effect's Main
+      tab and each of its Upgrade tiers.
 
       Context-depth note: Handlebars does NOT auto-walk up to a parent
       context for a bare {{name}} - only `../` does that. `path`/`config`/
@@ -58,7 +59,7 @@
               {{selectOptions ../config.rollModeTargets selected=change.target localize=true}}
             </select>
             {{else if (or (eq change.targetType "skillRank") (eq change.targetType "skillDamage") (eq change.targetType "advancementBonus"))}}
-            <input type="text" class="carl-w-medium" list="carl-skill-target-list-{{../item.id}}"
+            <input type="text" class="carl-w-medium" list="carl-skill-target-list-{{../item.id}}-{{../path}}"
               name="{{concat ../path '.' cIndex '.target'}}" value="{{change.target}}"
               placeholder="{{localize 'CARLRPG.Change.TargetSkillPlaceholder'}}" />
             {{else if (eq change.targetType "resistance")}}
@@ -162,7 +163,8 @@
         Skill/Spell/Damage Effect names are homebrew with no master list, so
         this is a convenience list (the current actor's owned items, empty
         for an unowned/compendium item), never a closed set. --}}
-  <datalist id="carl-skill-target-list-{{item.id}}">
+  {{!-- Keyed on the path too: a ranked sheet draws several editors at once. --}}
+  <datalist id="carl-skill-target-list-{{item.id}}-{{path}}">
     {{#each actorSkillNames as |name|}}
     <option value="{{name}}"></option>
     {{/each}}

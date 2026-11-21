@@ -157,6 +157,77 @@ export default function register(quench) {
           }
         });
 
+        it("a Passive Spell's base DR counts from Rank 1, not at Rank 0 (ruled 2026-11-20)", async function () {
+          const actor = await createTestCharacter("rank 0 bonus");
+          try {
+            const spell = await createTestItem(actor, "spell", "Bark", {
+              system: {
+                castingKeywords: ["passive"],
+                rank: 0,
+                changes: [change("resource", "dr", 2)],
+              },
+            });
+            // A Spell arrives at Rank 1 (CarlRPGItem#_preCreate); take it back.
+            await spell.update({ "system.rank": 0 });
+            assert.equal(actor.system.drEffective, 0, "untrained: nothing");
+            await spell.update({ "system.rank": 1 });
+            assert.equal(actor.system.drEffective, 2, "Rank 1: its +2 DR");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a Rank 0 Spell raised to Rank 1 by gear gives its Bonuses, and its +Rank to another Skill", async function () {
+          const actor = await createTestCharacter("boosted rank 0");
+          try {
+            const bark = await createTestItem(actor, "spell", "Bark", {
+              name: "Bark",
+              system: {
+                castingKeywords: ["passive"],
+                rank: 0,
+                changes: [change("resource", "dr", 2), change("skillRank", "Climbing", 1)],
+              },
+            });
+            await createTestItem(actor, "skill", "Climbing", {
+              name: "Climbing",
+              system: {
+                rank: 4,
+                upgrades: [{ rankThreshold: 5, changes: [change("stat", "dex", 1)] }],
+              },
+            });
+            await bark.update({ "system.rank": 0 }); // a Spell arrives at Rank 1
+            const dex = actor.system.stats.dex.effective;
+            assert.equal(actor.system.drEffective, 0, "Rank 0: nothing");
+            await gear(actor, "Bark Charm", [change("skillRank", "Bark", 1)]);
+            assert.equal(actor.system.drEffective, 2, "raised to Rank 1: its +2 DR");
+            assert.equal(actor.system.skills.climbing.rank, 5, "its +1 Climbing");
+            assert.equal(
+              actor.system.stats.dex.effective,
+              dex + 1,
+              "which unlocks Climbing's Rank 5 tier",
+            );
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a chain of Rank 0 Skills each raising the next: the last shows Rank 1 and gives its Bonuses", async function () {
+          const actor = await createTestCharacter("rank chain");
+          try {
+            const skill = (name, changes) =>
+              createTestItem(actor, "skill", name, { name, system: { rank: 0, changes } });
+            await skill("Alpha", [change("skillRank", "Beta", 1)]);
+            await skill("Beta", [change("skillRank", "Gamma", 1)]);
+            await skill("Gamma", [change("resource", "dr", 2)]);
+            assert.equal(actor.system.drEffective, 0, "all Rank 0: nothing");
+            await gear(actor, "Alpha Charm", [change("skillRank", "Alpha", 1)]);
+            assert.equal(actor.system.skills.gamma.rank, 1, "Gamma reaches Rank 1");
+            assert.equal(actor.system.drEffective, 2, "and gives its +2 DR");
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
         it("Iron Skin doubles the whole DR: Race and gear DR", async function () {
           const actor = await createTestCharacter("dr x2");
           try {

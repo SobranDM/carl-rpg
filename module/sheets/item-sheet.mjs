@@ -271,6 +271,9 @@ export class CarlRPGItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     context.isSpell = item.type === "spell";
     // Only a Skill's Upgrade cards offer the Vehicle part (driving perks).
     context.isSkill = item.type === "skill";
+    // Only a Damage Effect's Bonuses to itself count, its damage ones on
+    // the attack it's picked for (modifiers.mjs collectItemChanges) - say so.
+    context.isDamageEffect = item.type === "damageEffect";
     // A Pet's Ranks are the current Floor (data/ranked-item-base.mjs) and
     // never advance - show that Rank read-only instead of the stored one.
     context.petRank = item.system.rankIsFloor ? item.system.rank : null;
