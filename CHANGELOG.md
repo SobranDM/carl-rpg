@@ -35,6 +35,7 @@ Achievements and loot boxes, a floor collapse timer and Opposed Checks, plus beh
 ### Sheets
 
 - **Descriptions of Races, Classes, Features and Mob Attacks** on the character sheet now show links and inline rolls as their own sheets do.
+- **Bonuses on Skills, Spells and Damage Effects** can be set on the Main tab, applying from Rank 1, so a Passive Spell such as Oakhide shows its bonus. Before, those bonuses applied but couldn't be seen or edited.
 - **The GM Toolbox** is reorganized into Downtime, Rewards and Party sections, and its button is now a tool in Token Controls instead of a category of its own.
 
 ### Combat and Rolls
