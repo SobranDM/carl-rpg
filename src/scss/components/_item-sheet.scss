@@ -78,8 +78,18 @@
     gap: 8px;
     padding-bottom: 8px;
 
+    // The Description: no taller than it needs to be to read, but room to
+    // see what's being typed once it's opened (ruled 2026-11-21).
     > prose-mirror {
       min-height: 3em;
+
+      &.active {
+        min-height: 200px;
+      }
+
+      .editor-content {
+        flex: 1;
+      }
     }
   }
 

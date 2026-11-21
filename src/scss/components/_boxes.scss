@@ -12,8 +12,17 @@
     gap: 8px;
     padding: 8px;
 
+    // Room to see what's being typed once it's opened (ruled 2026-11-21).
     prose-mirror {
       min-height: 80px;
+
+      &.active {
+        min-height: 200px;
+      }
+
+      .editor-content {
+        flex: 1;
+      }
     }
   }
 

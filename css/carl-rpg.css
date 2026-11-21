@@ -4038,6 +4038,12 @@
 .carl-rpg .carl-item-page > prose-mirror {
   min-height: 3em;
 }
+.carl-rpg .carl-item-page > prose-mirror.active {
+  min-height: 200px;
+}
+.carl-rpg .carl-item-page > prose-mirror .editor-content {
+  flex: 1;
+}
 .carl-rpg .carl-item-group-title {
   display: flex;
   align-items: baseline;
@@ -4510,6 +4516,12 @@
 }
 .carl-rpg .carl-box prose-mirror {
   min-height: 80px;
+}
+.carl-rpg .carl-box prose-mirror.active {
+  min-height: 200px;
+}
+.carl-rpg .carl-box prose-mirror .editor-content {
+  flex: 1;
 }
 .carl-rpg .carl-box-head {
   display: flex;
