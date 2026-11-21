@@ -27,6 +27,31 @@ export default function register(quench) {
           }
         });
 
+        it("a Stat is a whole number once every bonus is in, on a Character and a Mob (ruled 2026-11-21)", async function () {
+          const multiply = {
+            changes: [{ targetType: "stat", target: "con", mode: "multiply", value: "1.25" }],
+          };
+          const actor = await createTestCharacter("fraction", {
+            system: { stats: { con: { value: 9 } } },
+          });
+          const mob = await createTestMob("fraction", { system: { stats: { con: { value: 9 } } } });
+          try {
+            await createTestItem(actor, "item", "strong ring", {
+              system: { equipped: true, ...multiply },
+            });
+            await createTestItem(mob, "feature", "strong hide", { system: multiply });
+            for (const who of [actor, mob]) {
+              // 9 x 1.25 = 11.25: Con 11, Mod +4 (10-19).
+              assert.equal(who.system.stats.con.effective, 11, `${who.type}: the fraction dropped`);
+              assert.equal(who.system.stats.con.mod, 4, who.type);
+              assert.equal(who.system.hb.slotValue, 4, `${who.type}: its HB slots follow`);
+            }
+          } finally {
+            await deleteTestActor(actor);
+            await deleteTestActor(mob);
+          }
+        });
+
         it("hb.slotValue mirrors CON Mod on both Character and Mob", async function () {
           const actor = await createTestCharacter("character", {
             system: { stats: { con: { value: 8 } } },

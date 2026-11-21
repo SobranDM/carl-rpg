@@ -668,6 +668,27 @@ export default function register(quench) {
       describe("bonus Health Bar slots", function () {
         useQuenchTimeout(this);
 
+        it("a Strength of 2 x1.25 from gear is 2, Mod +1 - not 2.5 and +10 (ruled 2026-11-21)", async function () {
+          const pet = await createTestPet("fraction", { system: { stats: { str: { value: 2 } } } });
+          try {
+            await createTestItem(pet, "item", "strong collar", {
+              system: {
+                equipped: true,
+                changes: [{ targetType: "stat", target: "str", mode: "multiply", value: "1.25" }],
+              },
+            });
+            assert.equal(
+              pet.system.bonuses["stats.str"],
+              0.5,
+              "test setup: the gear's x1.25 applies",
+            );
+            assert.equal(pet.system.stats.str.effective, 2);
+            assert.equal(pet.system.stats.str.mod, 1);
+          } finally {
+            await deleteTestActor(pet);
+          }
+        });
+
         // The HB clamp used to run against the base slot count, before gear's
         // "hb.max" bonus was added in (derive-creature.mjs deriveResourceCaps).
         it("a Pet with +1 hb.max from gear heals to 6 and keeps it", async function () {
