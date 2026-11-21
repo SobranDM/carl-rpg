@@ -726,7 +726,7 @@
         "Country": "Country Boss",
         "Floor": "Floor Boss"
       },
-      "Mend": "Mend (hours)",
+      "Mend": "Mend",
       "MendTitle": "Hourly Mending",
       "MendHours": "Calm hours",
       "MendHint": "Each full hour outside combat or stress: +1 HB slot and +5 Mana (p.95). Advances the world clock.",
@@ -783,7 +783,7 @@
         "Pets": "Pets ({count})",
         "Confirm": "Confirm"
       },
-      "NewScene": "New scene",
+      "NewScene": "New Scene",
       "NewSceneHint": "Start a new scene: every \"Once per scene\" cooldown ends, for every actor.",
       "NewSceneDone": "New scene: \"Once per scene\" cooldowns are cleared.",
       "Grind": "Grind",
@@ -843,8 +843,8 @@
       "HbSlotsOverride": "HB Slots (override)",
       "HbSlotsOverrideHint": "Leave blank to use the computed Level/Tier formula (shown as a placeholder); set a number to override it.",
       "Defenses": "Defenses",
-      "Dr": "DR (flat damage reduction)",
-      "DrEditHint": "Edit on the Defenses tab",
+      "Dr": "DR",
+      "DrEditHint": "Damage Resistance",
       "DebuffedValueHint": "Adjusted for this Mob's Debuffs",
       "Biography": "Biography",
       "Resistances": "Resistances",
