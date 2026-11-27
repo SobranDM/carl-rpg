@@ -43,6 +43,8 @@ import {
   headerProgress,
   rememberOpenRows,
   statusChip,
+  decidingDegree,
+  degreeTag,
   statusRow,
   statusSection,
 } from "../chat/status-rows.mjs";
@@ -643,11 +645,16 @@ export function decorateDamageCard(message, html) {
           attackDetails(attack),
         ].join("");
         const key = `damage:${row.id}`;
+        // The Evade or Shield Block that set the damage, on a tag under the chip.
+        const graded = row.caught
+          ? null
+          : decidingDegree({ evade: row.evade ?? null, block: row.block ?? null });
         return statusRow({
           id: row.id,
           key,
           open: openRows.has(`${message.id}:${key}`),
           chip: statusChip(damageStatus(row)),
+          degree: graded ? degreeTag(graded.degree, { kind: graded.kind }) : "",
           what: `<strong>${esc(attack.mobName ?? "?")}</strong>`,
           flag: attack.effect
             ? `<i class="fas fa-scroll carl-status-flag" data-tooltip="${esc(i18n.localize("CARLRPG.Reaction.HasEffect"))}"></i>`

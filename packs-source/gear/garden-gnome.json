@@ -1,0 +1,37 @@
+{
+  "_id": "y9gOEdbj2fs6Vzz9",
+  "name": "Garden Gnome",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/sundries/misc/plant-potted.webp",
+  "system": {
+    "description": "<p>A smug ceramic gnome with a pointed hat that makes a fine handle. Its Attacks use the Club Skill, which sets their damage, range and Stat.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Club",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": null,
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!y9gOEdbj2fs6Vzz9"
+}

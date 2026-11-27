@@ -1,0 +1,37 @@
+{
+  "_id": "CI3HOzGuLpO1rpAc",
+  "name": "Croquet Mallet",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/tools/hand/mallet-wood.webp",
+  "system": {
+    "description": "<p>A croquet mallet. The balls, wickets and two stakes came in the same bag. Its Attacks use the Club Skill, which sets their damage, range and Stat.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Club",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": null,
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!CI3HOzGuLpO1rpAc"
+}

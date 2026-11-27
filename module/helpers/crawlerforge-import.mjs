@@ -67,9 +67,9 @@ import {
   slotRefusal,
 } from "./equip-slots.mjs";
 import { canHotlist } from "./hotlist.mjs";
-import { PAST_TABLES, chargenTable, tableTexts, weaponData } from "./chargen.mjs";
+import { PAST_TABLES, tableTexts, weaponData } from "./chargen.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
-import { copyData, PACKS, stripCopyFields } from "./packs.mjs";
+import { copyData, PACKS, stripCopyFields, systemTable } from "./packs.mjs";
 import { gmUserIds } from "./ownership.mjs";
 import { esc } from "./html.mjs";
 
@@ -993,11 +993,14 @@ async function raceClassSources(crawler) {
     .map((d) => ({ ...d.toObject(), _stats: { compendiumSource: d.uuid } }));
 }
 
-/** The book's Past Traumas, Loose Ends and Regrets entries. */
+/**
+ * The book's Past Traumas, Loose Ends and Regrets entries - the system's
+ * own tables, never a GM's homebrew copy (packs.mjs systemTable).
+ */
 async function backgroundTables() {
   const tables = {};
   for (const [field, name] of Object.entries(PAST_TABLES)) {
-    tables[field] = tableTexts(await chargenTable(name));
+    tables[field] = tableTexts(await systemTable(name));
   }
   return tables;
 }

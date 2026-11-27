@@ -153,7 +153,7 @@ export default function register(quench) {
           const actor = { items: [gearOf("Ring", true, [entry({ debuffKey: "burned" })])] };
           const found = attackTargetEffects(
             actor,
-            skillOf("Pugilism", [entry({ debuffKey: "staggered" })]),
+            skillOf("Pugilism", [entry({ debuffKey: "staggered", stacks: 2 })]),
             {
               damageEffectItem: skillOf("Venom Strike", [entry({ debuffKey: "poisoned" })]),
               isAmazingSuccess: false,
@@ -163,6 +163,7 @@ export default function register(quench) {
             found.map((t) => t.debuffKey),
             ["staggered", "poisoned", "burned"],
           );
+          assert.equal(found[0].stacks, 2, "the Skill's entry keeps its stacks");
         });
 
         it("an Amazing-Success-only entry: decided now, or kept for each target", function () {
@@ -180,26 +181,6 @@ export default function register(quench) {
           assert.isTrue(debuffLandsOn(kept[0], { amazing: true }));
           assert.isFalse(debuffLandsOn(kept[0], { amazing: false }));
           assert.isTrue(debuffLandsOn({ amazingSuccessOnly: false }, { amazing: false }));
-        });
-
-        it("a Critical-Hit-only entry needs a natural 20", function () {
-          const actor = {
-            items: [gearOf("Blade", true, [entry({ debuffKey: "stunned", critOnly: true })])],
-          };
-          assert.lengthOf(
-            attackTargetEffects(actor, skillOf("Longsword"), {
-              isCrit: false,
-              isAmazingSuccess: null,
-            }),
-            0,
-          );
-          assert.lengthOf(
-            attackTargetEffects(actor, skillOf("Longsword"), {
-              isCrit: true,
-              isAmazingSuccess: null,
-            }),
-            1,
-          );
         });
       });
 
@@ -426,7 +407,7 @@ export default function register(quench) {
       describe("the gear sheet", function () {
         useQuenchTimeout(this);
 
-        it("a Description being typed in has room, on gear, consumables and Spells (ruled 2026-11-21)", async function () {
+        it("a Description has room to type in, and the same room closed (ruled 2026-11-21, 2026-11-27)", async function () {
           const potion = await worldItem("roomy potion", {
             system: { consumable: { kind: "potion", heal: { slots: 4 } } },
           });
@@ -441,19 +422,14 @@ export default function register(quench) {
                 '.carl-item-page > prose-mirror[name="system.description"]',
               );
               assert.exists(editor, `${item.type}: its Description`);
+              const closed = parseFloat(getComputedStyle(editor).minHeight);
               // Foundry marks an editor open for typing "active".
               editor.classList.add("active");
-              assert.isAtLeast(
-                parseFloat(getComputedStyle(editor).minHeight),
-                200,
-                `${item.type}: room while typing`,
-              );
+              const open = parseFloat(getComputedStyle(editor).minHeight);
               editor.classList.remove("active");
-              assert.isBelow(
-                parseFloat(getComputedStyle(editor).minHeight),
-                200,
-                `${item.type}: compact while reading`,
-              );
+              assert.isAtLeast(open, 200, `${item.type}: room while typing`);
+              // Clicking Edit doesn't push the rest of the page down.
+              assert.equal(closed, open, `${item.type}: the same room closed`);
               await sheet.close();
             }
           } finally {

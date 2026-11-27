@@ -1505,6 +1505,53 @@
   border: 1px dashed var(--carl-text-muted);
   color: var(--carl-text-muted);
 }
+.carl-chat-card .carl-status-chips {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 0;
+}
+.carl-chat-card .carl-degree-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  box-sizing: border-box;
+  height: 14px;
+  max-width: 100%;
+  padding: 0 4px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.carl-chat-card .carl-degree-tag i {
+  font-size: 8px;
+}
+.carl-chat-card .carl-degree-tag[data-tone=great] {
+  background: var(--carl-gold);
+  color: var(--carl-header-bg);
+}
+.carl-chat-card .carl-degree-tag[data-tone=plain] {
+  border-color: color-mix(in srgb, var(--carl-text) 30%, transparent);
+  color: var(--carl-text-muted);
+}
+.carl-chat-card .carl-degree-tag[data-tone=near] {
+  border-color: var(--carl-hazard);
+  color: #ffb199;
+}
+.carl-chat-card .carl-degree-tag[data-tone=major] {
+  background: var(--carl-hazard);
+  color: var(--carl-header-text);
+}
+.carl-chat-card .carl-degree-tag[data-tone=critical] {
+  background: var(--carl-danger);
+  border-color: var(--carl-status-bad-bg);
+  color: var(--carl-header-text);
+}
 .carl-chat-card .carl-status-icon {
   display: grid;
   place-items: center;
@@ -2747,6 +2794,13 @@
 }
 .carl-rpg .carl-toolbox-floor-row button {
   flex: 0 0 auto;
+}
+.carl-rpg .carl-toolbox-row .carl-toolbox-time {
+  flex: 0 0 auto;
+  color: var(--carl-gold);
+}
+.carl-rpg .carl-toolbox-row .carl-toolbox-time.night {
+  color: #9fb7ff;
 }
 .carl-rpg .carl-toolbox-rest-row {
   flex-wrap: wrap;
@@ -4085,9 +4139,6 @@
   padding-bottom: 8px;
 }
 .carl-rpg .carl-item-page > prose-mirror {
-  min-height: 3em;
-}
-.carl-rpg .carl-item-page > prose-mirror.active {
   min-height: 200px;
 }
 .carl-rpg .carl-item-page > prose-mirror .editor-content {
@@ -4564,15 +4615,16 @@
   gap: 2px;
   margin-top: 4px;
 }
+.carl-rpg .carl-forge-description .carl-forge-kind,
+.carl-rpg .carl-forge-debuffs .carl-forge-kind {
+  flex: 0 0 auto;
+}
 .carl-rpg .carl-forge-description .carl-hint,
 .carl-rpg .carl-forge-debuffs .carl-hint {
   margin: 0;
 }
 .carl-rpg .carl-forge-description prose-mirror {
   flex: 0 0 auto;
-  min-height: 4em;
-}
-.carl-rpg .carl-forge-description prose-mirror.active {
   min-height: 160px;
 }
 .carl-rpg .carl-forge-description prose-mirror .editor-content {
@@ -4600,9 +4652,6 @@
   padding: 8px;
 }
 .carl-rpg .carl-box prose-mirror {
-  min-height: 80px;
-}
-.carl-rpg .carl-box prose-mirror.active {
   min-height: 200px;
 }
 .carl-rpg .carl-box prose-mirror .editor-content {
@@ -5142,6 +5191,26 @@
 }
 .carl-rpg .carl-floor-clock-sep {
   opacity: 0.6;
+}
+.carl-rpg.carl-game-info {
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 0.25rem 0 0;
+}
+.carl-rpg.carl-game-info p {
+  margin: 0 0 0.5em;
+}
+.carl-rpg.carl-game-info .carl-kofi {
+  display: flex;
+  justify-content: center;
+  margin: 0.5rem 0;
+}
+.carl-rpg.carl-game-info .carl-kofi img {
+  height: 28px;
+  border: 0;
+}
+.carl-rpg.carl-game-info .carl-game-info-footer {
+  text-align: right;
 }
 
 /* A Mob's AI Text beside its hovered token (module/apps/ai-text-tooltip.mjs):

@@ -364,8 +364,16 @@ export function collectItemTargetEffects(
   const skillSlug = skillName ? slugifySkillName(skillName) : null;
   const take = (te, sourceLabel) => {
     if (!te.debuffKey) return;
-    if (te.critOnly && !isCrit) return;
-    if (te.amazingSuccessOnly && isAmazingSuccess === false) return;
+    // Both ticked: a Critical Hit OR an Amazing Success (ruled 2026-11-27 -
+    // a natural 20 is never both). A Crit lands it at once; otherwise it
+    // waits for an Amazing Success, as an Amazing-only one does.
+    const either = !!(te.critOnly && te.amazingSuccessOnly);
+    if (either) {
+      if (!isCrit && isAmazingSuccess === false) return;
+    } else {
+      if (te.critOnly && !isCrit) return;
+      if (te.amazingSuccessOnly && isAmazingSuccess === false) return;
+    }
     const only = (te.skills ?? []).map((s) => String(s ?? "").trim()).filter(Boolean);
     const named =
       only.length > 0 && !!skillSlug && only.some((s) => slugifySkillName(s) === skillSlug);
@@ -378,7 +386,7 @@ export function collectItemTargetEffects(
       stacks: te.stacks || 1,
       label: te.label || "",
       sourceLabel,
-      amazingSuccessOnly: !!te.amazingSuccessOnly,
+      amazingSuccessOnly: either ? !isCrit : !!te.amazingSuccessOnly,
     });
   };
   // The base list: at any Rank.

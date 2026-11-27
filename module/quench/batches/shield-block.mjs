@@ -365,15 +365,20 @@ export default function register(quench) {
           combat = null;
         });
         afterEach(async function () {
-          await settle(150);
-          const ids = game.messages
-            .filter(
-              (m) =>
-                m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat?.id ||
-                m.getFlag("carl-rpg", "reaction")?.combatId === combat?.id ||
-                m.getFlag("carl-rpg", "reactionDamage")?.combatId === combat?.id,
-            )
-            .map((m) => m.id);
+          // Anything posted after this is swept at the batch's end (withMessageCleanup).
+          // With no Combat started, there's nothing of this test's to pick out:
+          // an undefined id would match every message without these flags.
+          const id = combat?.id;
+          const ids = id
+            ? game.messages
+                .filter(
+                  (m) =>
+                    m.getFlag("carl-rpg", "phaseNotice")?.combatId === id ||
+                    m.getFlag("carl-rpg", "reaction")?.combatId === id ||
+                    m.getFlag("carl-rpg", "reactionDamage")?.combatId === id,
+                )
+                .map((m) => m.id)
+            : [];
           if (ids.length) await ChatMessage.deleteDocuments(ids);
           await deleteTestCombat(combat);
           for (const actor of [mob, pc1, pc2]) await deleteTestActor(actor);
@@ -561,7 +566,6 @@ export default function register(quench) {
           assert.isTrue(await block(card, pc1, list, rolled(20, 15, 16)));
           const combatant = combat.combatants.find((c) => c.actor === pc1);
           await undoAction(combat, combatant.id, actionRecord(combat, combatant.id).spent[0].id);
-          await settle(100);
           assert.equal(spent(pc1), 0, "the Action is back");
           assert.isTrue(
             list.every((h) => blockOn(card, h) === null),
@@ -584,7 +588,6 @@ export default function register(quench) {
           assert.isTrue(
             await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: h1.id }),
           );
-          await settle(100);
           assert.isNull(blockOn(card, h1), "the Caught one's block is gone");
           assert.isOk(blockOn(card, h2), "the other stays");
           assert.equal(spent(pc1), 1, "still covers one");
@@ -595,7 +598,6 @@ export default function register(quench) {
           assert.isTrue(
             await op(card, "catch", { byUuid: pc2.uuid, byName: pc2.name, hitId: h2.id }),
           );
-          await settle(100);
           assert.equal(spent(pc1), 0, "blocks nothing now: its Action came back");
           assert.isNotOk(blocker(card, pc1).blocked);
         });
@@ -617,7 +619,6 @@ export default function register(quench) {
               check: rolled(25, 15, 20),
             }),
           );
-          await settle(100);
           assert.isTrue(
             list.every((h) => state(card).hits[h.id].targetUuid === pc2.uuid),
             "Taunted away",
@@ -870,7 +871,6 @@ export default function register(quench) {
             }
             assert.deepEqual(spentTags(), [BLOCK_TAG], "the first card paid; the second was free");
           } finally {
-            await settle(150);
             for (const m of messages) await m.delete();
             const notices = game.messages
               .filter((m) => combat && m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id)

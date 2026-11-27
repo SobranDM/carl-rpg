@@ -55,6 +55,79 @@ const TONES = {
   fail: "bad",
 };
 
+/** Each Degree's icon on its tag (Font Awesome). */
+const DEGREE_ICONS = {
+  criticalHit: "fa-dice-d20",
+  amazingSuccess: "fa-star",
+  standardSuccess: "fa-check",
+  nearMissFail: "fa-bullseye",
+  standardFail: "fa-minus",
+  majorFail: "fa-angles-down",
+  criticalFail: "fa-skull",
+};
+
+/** Each Degree's tag colour: the header badge's palette (degreeBadge). */
+const DEGREE_TONES = {
+  criticalHit: "great",
+  amazingSuccess: "great",
+  standardSuccess: "plain",
+  nearMissFail: "near",
+  standardFail: "plain",
+  majorFail: "major",
+  criticalFail: "critical",
+};
+
+/** The Evade Degrees that change the damage taken (rowOutcome): never hidden behind a Shield Block. */
+const DAMAGING_EVADES = ["majorFail", "criticalFail"];
+
+/**
+ * A row's Degree tag, stacked under its status chip: icon and short word,
+ * with the full Degree and what it does in its tooltip. Nothing for an
+ * unknown or missing Degree (older cards).
+ * @param {string|null} degree  A CARLRPG.degreesOfSuccess key.
+ * @param {{kind?: "attack"|"evade"|"block"}} [options]  What was rolled -
+ *   picks the tooltip's effect line.
+ * @returns {string}
+ */
+export function degreeTag(degree, { kind = "evade" } = {}) {
+  if (!degree || !DEGREE_TONES[degree]) return "";
+  const i18n = game.i18n;
+  const name = degreeLabel(degree);
+  const effectKey = `CARLRPG.DegreeTag.Effect.${kind}.${degree}`;
+  const tip = i18n.has(effectKey)
+    ? i18n.format("CARLRPG.DegreeTag.Tip", { degree: name, effect: i18n.localize(effectKey) })
+    : name;
+  return (
+    `<span class="carl-degree-tag" data-degree="${esc(degree)}" data-tone="${DEGREE_TONES[degree]}" data-tooltip-text="${esc(tip)}">` +
+    `<i class="fas ${DEGREE_ICONS[degree]}" aria-hidden="true"></i>${esc(i18n.localize(`CARLRPG.DegreeTag.Short.${degree}`))}</span>`
+  );
+}
+
+/**
+ * Which graded Check a row's Degree tag shows: the one that decides the
+ * damage. A failed Evade bad enough to add damage (Major or Critical Fail)
+ * shows even under a Shield Block; otherwise the block, else the deciding
+ * Evade, else the Check the row shows (a failed free Evade). A Check with
+ * no Difficulty has no real Degree, so none.
+ * @param {{evade?: object|null, block?: object|null, shown?: object|null}} checks
+ *   Each a Check (or a summary) with `degree` and, where known, `difficulty`.
+ * @returns {{degree: string, kind: "evade"|"block"}|null}
+ */
+export function decidingDegree({ evade = null, block = null, shown = null }) {
+  const pick =
+    evade && DAMAGING_EVADES.includes(evade.degree)
+      ? { check: evade, kind: "evade" }
+      : block
+        ? { check: block, kind: "block" }
+        : evade
+          ? { check: evade, kind: "evade" }
+          : shown
+            ? { check: shown, kind: "evade" }
+            : null;
+  if (!pick?.check?.degree || pick.check.difficulty === null) return null;
+  return { degree: pick.check.degree, kind: pick.kind };
+}
+
 /**
  * A status chip.
  * @param {string} status  A key of CARLRPG.StatusChip.
@@ -74,6 +147,7 @@ export function statusChip(status, { tone = null, label = null } = {}) {
  * One row.
  * @param {object} row
  * @param {string} row.chip     statusChip(...)
+ * @param {string} [row.degree] degreeTag(...): stacked under the chip.
  * @param {string} row.what     Trusted HTML: "<strong>Ghoul</strong> · Bite".
  * @param {string[]} [row.sub]  Plain-text notes under it, joined with " · ".
  * @param {string} [row.flag]   Trusted HTML right after `what` (an icon).
@@ -91,6 +165,7 @@ export function statusChip(status, { tone = null, label = null } = {}) {
  */
 export function statusRow({
   chip,
+  degree = "",
   what,
   sub = [],
   flag = "",
@@ -108,8 +183,9 @@ export function statusRow({
   const subHtml = notes.length
     ? `<span class="carl-status-sub">${notes.map(esc).join(" · ")}</span>`
     : "";
+  const lead = degree ? `<span class="carl-status-chips">${chip}${degree}</span>` : chip;
   const line =
-    `${chip}<span class="carl-status-what">${what}${flag}${subHtml}</span>` +
+    `${lead}<span class="carl-status-what">${what}${flag}${subHtml}</span>` +
     `<span class="carl-status-num"${numTip ? ` data-tooltip="${esc(numTip)}"` : ""}>${num}</span><span class="carl-status-acts">${acts}</span>`;
   const cls = `carl-status-row${ghost ? " is-ghost" : ""}`;
   const rowId = id ? ` data-row-id="${esc(id)}"` : "";

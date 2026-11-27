@@ -1,0 +1,218 @@
+{
+  "_id": "bHKoBlMzvPnAWnIM",
+  "name": "Mechanic's Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Mechanic's Box's mundane - garage tools and vehicle parts (p.22). Drawn for the one item of a Bronze box when the box's title names the theme (\"Bronze Mechanic's Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Mechanic's Box: Mundane\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "cqQyyq8VrXSP4WUr",
+      "type": "text",
+      "name": "Car Battery",
+      "img": "icons/commodities/tech/battery-cell-square.webp",
+      "description": "<p>Heavy, full of acid, and still holding a charge. Something to build around.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        1,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!bHKoBlMzvPnAWnIM.cqQyyq8VrXSP4WUr"
+    },
+    {
+      "_id": "8B4XW1FJmaWw7EBk",
+      "type": "text",
+      "name": "Tire Chains",
+      "img": "icons/tools/fasteners/chain-steel-grey.webp",
+      "description": "<p>A tangle of steel chain made for snow. Grips ice and stone, and swings in a pinch.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        3,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!bHKoBlMzvPnAWnIM.8B4XW1FJmaWw7EBk"
+    },
+    {
+      "_id": "WEoBiW47HUBiZBx7",
+      "type": "text",
+      "name": "Bike Tire Patch Kit",
+      "img": "icons/commodities/tech/wheel.webp",
+      "description": "<p>Glue, rubber patches, tire levers and a palm-sized pump. Fixes anything with an inner tube; the pump inflates other things too.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        5,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!bHKoBlMzvPnAWnIM.WEoBiW47HUBiZBx7"
+    },
+    {
+      "_id": "k0OxHvx2QrkBoSTU",
+      "type": "text",
+      "name": "Car Emergency Kit",
+      "img": "icons/sundries/lights/lantern-emergency-lit.webp",
+      "description": "<p>Jumper cables, three road flares and a foil blanket, in a bag that still smells like a new car.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        7,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!bHKoBlMzvPnAWnIM.k0OxHvx2QrkBoSTU"
+    },
+    {
+      "_id": "mbMEXEyIafAPZFTY",
+      "type": "text",
+      "name": "Hand Truck",
+      "img": "icons/commodities/tech/frame-steel.webp",
+      "description": "<p>A two-wheeled dolly for moving what you can't lift into your Inventory.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        9,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!bHKoBlMzvPnAWnIM.mbMEXEyIafAPZFTY"
+    },
+    {
+      "_id": "p0Jijq8IxkbIpPGe",
+      "type": "text",
+      "name": "Socket Set",
+      "img": "icons/tools/hand/wrench-double.webp",
+      "description": "<p>Metric. Every size but the one you need.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        11,
+        12
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!bHKoBlMzvPnAWnIM.p0Jijq8IxkbIpPGe"
+    },
+    {
+      "_id": "5JPlPrx7pDmfgm9c",
+      "type": "text",
+      "name": "Riding Lawnmower",
+      "img": "icons/environment/vehicles/car-automobile-classic.webp",
+      "description": "<p>No fuel. A vehicle project waiting for a mechanic.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        13,
+        13
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!bHKoBlMzvPnAWnIM.5JPlPrx7pDmfgm9c"
+    }
+  ],
+  "formula": "1d13",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!bHKoBlMzvPnAWnIM"
+}

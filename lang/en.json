@@ -1,5 +1,13 @@
 {
   "CARLRPG": {
+    "SettingsInfo": {
+      "WikiShort": "Wiki",
+      "Unofficial": "This unofficial system is a fan project, not affiliated with or endorsed by Matt Dinniman or Renegade Game Studios. If you own the PDFs, you can import them to gain mobs, items, and more.",
+      "WikiLine": "New to the system? The {wiki} covers how everything works.",
+      "Credit": "Brought to life on Foundry VTT by SobranDM.",
+      "Kofi": "Buy Me a Coffee at ko-fi.com",
+      "Bugs": "Report bugs or make feature requests on {github}"
+    },
     "Chargen": {
       "Background": "Background",
       "Title": "Create Crawler",
@@ -69,7 +77,7 @@
       "RollStats": "Roll Stats",
       "RolledStats": "Leaving it to Chance (1d6, rerolling 1s):",
       "Derived": "Health Bar slots of {hb} each, {mana} Mana, Evade d20 + {evade}.",
-      "OwnWords": "...or in your own words",
+      "OwnWords": "... or in your own words",
       "Set": {
         "athlete": "Athlete",
         "gamingGeek": "Gaming Geek",
@@ -788,10 +796,11 @@
       "NewSceneDone": "New scene: \"Once per scene\" cooldowns are cleared.",
       "Grind": "Grind",
       "GrindTitle": "Grinding",
-      "GrindActor": "Character",
+      "GrindPickerPrompt": "Who's grinding? Everyone picked grinds the same hours, each on a Skill of their own.",
       "GrindHours": "Hours Grinding",
       "GrindNext": "Next",
-      "GrindSkillTitle": "Grinding: {name}",
+      "GrindSkillsTitle": "Grinding: Pick Skills",
+      "GrindLevel": "Level {level}",
       "GrindThresholdReached": "{name} has accrued enough hours - rolling a Skill Advancement Check.",
       "GrindProgress": "{name}: {accrued}/{rank} hours accrued.",
       "NoCharacters": "No character Actors found.",
@@ -879,6 +888,8 @@
       "PotionsUsed": "Potions Used",
       "PotionsLimit": "The most a crawler can drink in their life",
       "PotionsUsedHint": "A crawler may only consume two Stat potions and two Skill potions in their life (p.218).",
+      "HideFromAchievements": "Hide from Achievements",
+      "HideFromAchievementsHint": "Leaves this character out of the Achievements window, even with offline crawlers shown. For characters who aren't really crawlers, like a game guide.",
       "PotionsStat": "Stat",
       "PotionsSkill": "Skill",
       "EvadeTotalHint": "DEX Mod + Evade bonuses (and any dice), added to the d20 on an Evade Check",
@@ -1171,13 +1182,13 @@
         "hit": "On a hit",
         "crit": "Critical Hit",
         "amazing": "Amazing Success",
-        "both": "Crit + Amazing"
+        "both": "Crit or Amazing"
       },
       "TriggerHint": {
         "hit": "Lands on any hit the target doesn't Evade.",
         "crit": "Lands only on a Critical Hit.",
         "amazing": "Lands only on an Amazing Success.",
-        "both": "Lands only on a Critical Hit that is also an Amazing Success."
+        "both": "Lands on a Critical Hit or an Amazing Success."
       }
     },
     "ItemSheet": {
@@ -1700,6 +1711,7 @@
       "Disadvantage": "Disadvantage",
       "Difficulty": "Difficulty",
       "DifficultyPlaceholder": "none",
+      "Modifier": "Modifier",
       "DifficultyPreset": "Difficulty type",
       "DifficultyPresetHelpLabel": "What these mean",
       "DifficultyPresetHelp": "<p><strong>Unopposed</strong> (p.59): nobody stands in the way - Climbing, Dumpster-Diving, Endurance and most Skills for surviving the dungeon. 10 + 2 x Floor.</p><p><strong>Stat Check</strong> (p.59): a Stat alone, with no Skill Ranks - resisting the environment or a Mob. 10 + Floor.</p><p><strong>Opposed</strong> (p.59): against a Mob, Boss or crawler. 10 + their Stat Mod (or Spell Rank, size class) + Floor.</p><p><strong>Custom</strong> (p.59): the GM may set any Difficulty that makes more sense than the formulas.</p>",
@@ -1940,7 +1952,8 @@
         "UniqueTimes": "Something Unique ×{times}",
         "Image": "Image",
         "Description": "Description",
-        "DescriptionHint": "Your own words, shown above the item's enchantments. Rerolling the item keeps them.",
+        "DescriptionHint": "Item description, shown above the item's enchantments. Rerolling the item does not reset the description.",
+        "CloseSaveFailed": "The Loot Forge couldn't save your changes as it closed. The box or item may have been opened or deleted meanwhile.",
         "WeaponHeld": "A weapon is held in a hand.",
         "NoMagicAtTier": "This tier has no magic items. Pick Silver or higher.",
         "Kind": {
@@ -2080,6 +2093,15 @@
       "Failed": "This box couldn't be opened: something in it no longer exists. The GM can fix its contents; it stays unopened.",
       "Waiting": "Waiting for this crawler's player (or the GM)."
     },
+    "Tables": {
+      "Unreadable": "Couldn't read the Roll Table compendium {pack}, so it was passed over when looking for {name}. See the console."
+    },
+    "TimeOfDay": {
+      "Day": "Day",
+      "Night": "Night",
+      "DayHint": "It's day. Click to make it night.",
+      "NightHint": "It's night. Click to make it day."
+    },
     "Box": {
       "Name": "{tier} Box",
       "BossName": "{tier} Boss Box",
@@ -2092,6 +2114,9 @@
       "EditContents": "Edit Contents",
       "PrepareTitle": "Prepare: {name}",
       "Randomize": "Roll When Opened",
+      "RandomizeTitle": "Roll When Opened",
+      "RandomizeTextBox": "Throw away what's prepared in <strong>{name}</strong>? It will be rolled when it's opened instead. This can't be undone.",
+      "RandomizeText": "Throw away what's prepared in <strong>{name}</strong>'s box? It will be rolled when it's opened instead. This can't be undone.",
       "Open": "Open Now",
       "OpenedTitle": "{name} opened {box}",
       "MissingContents": "{name} couldn't be opened: something prepared in it no longer exists. Edit its contents.",
@@ -2118,6 +2143,39 @@
       "MajorFail": "Major Fail",
       "CriticalFail": "Critical Fail"
     },
+    "DegreeTag": {
+      "Tip": "{degree}: {effect}",
+      "Short": {
+        "criticalHit": "Crit Hit",
+        "amazingSuccess": "Amazing",
+        "standardSuccess": "Success",
+        "nearMissFail": "Near Miss",
+        "standardFail": "Fail",
+        "majorFail": "Major Fail",
+        "criticalFail": "Crit Fail"
+      },
+      "Effect": {
+        "attack": {
+          "criticalHit": "the damage dice are doubled",
+          "amazingSuccess": "+Floor damage",
+          "nearMissFail": "missed by 1 or 2"
+        },
+        "evade": {
+          "criticalHit": "Advantage on the next Attack against the attacker",
+          "amazingSuccess": "Advantage on the next Attack against the attacker",
+          "nearMissFail": "missed by 1 or 2",
+          "majorFail": "+Floor damage, and a Minor Injury after combat",
+          "criticalFail": "double damage, and a Major Injury after combat"
+        },
+        "block": {
+          "criticalHit": "half damage",
+          "amazingSuccess": "half damage",
+          "standardSuccess": "half damage",
+          "majorFail": "the Shield loses 1 DR",
+          "criticalFail": "the Shield loses 2 DR"
+        }
+      }
+    },
     "Grind": {
       "SurplusTitle": "Surplus Grinding Hours",
       "SurplusSubtitle": "{hours} hour(s) to apply",
@@ -2129,9 +2187,11 @@
       "ApplyConfirm": "Apply",
       "TargetOption": "{name} (Rank {rank}, {accrued}/{rank} hours)",
       "NoTargets": "{name} has no Skill that can take grinding hours right now. A Skill needs Rank 1 or more, must be below its Rank cap, and must be able to advance through use (not a Passive Spell).",
+      "NoTargetsLevelOnly": "{name} has no Skill that can take grinding hours right now, so their hours only count toward their next Level. A Skill needs Rank 1 or more, must be below its Rank cap, and must be able to advance through use (not a Passive Spell).",
       "ActorGone": "The grinding character no longer exists.",
       "LevelTitle": "Level from Grinding",
-      "LevelBody": "{name}'s grinding hours have reached their Level: they gain a Level (now Level {level}). If they're the party's lowest Level, they gain 1d2 Levels instead (p.171) - the GM adds the extra."
+      "LevelBody": "{name}'s grinding hours have reached their Level: they gain a Level (now Level {level}).",
+      "LevelBodyLowest": "{name}'s grinding hours have reached their Level. As the lowest Level grinding, they roll 1d2 and get {roll}: they gain {gained} Level(s) (now Level {level}, p.171)."
     },
     "DebuffRow": {
       "Difficulty": "Difficulty {value}",

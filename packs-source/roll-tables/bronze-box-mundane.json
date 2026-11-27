@@ -2,7 +2,7 @@
   "_id": "FkbxRsePK11iKknt",
   "name": "Bronze Box: Mundane",
   "img": "icons/svg/d20-grey.svg",
-  "description": "<p>Rolled by the loot generator for a Bronze box (module/helpers/loot.mjs; Loot, pp.215-219). A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and the rows named \"Spell Scroll\", \"Spellbook\" or \"Magic Item\" roll a random Spell (Table 27) or a magic item. Edit a copy in the world's Roll Tables to change what a box holds.</p>",
+  "description": "<p>A Bronze box's one item (Loot, pp.216-219: \"Bronze: No rolls, item is mundane\"), unless the Bronze Box: Weak Magic table replaces it (module/helpers/loot.mjs). Torches and biscuits are the common filler; the big Table 25 items are rare. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
   "results": [
     {
       "_id": "EioJPnadgriE9sJR",
@@ -11,10 +11,10 @@
       "img": "icons/sundries/survival/rope-coiled-brown.webp",
       "description": "",
       "documentUuid": "Compendium.carl-rpg.gear.Item.2UjptOBPYaGXaxpY",
-      "weight": 1,
+      "weight": 2,
       "range": [
         1,
-        1
+        2
       ],
       "drawn": false,
       "flags": {},
@@ -40,8 +40,8 @@
       "documentUuid": "Compendium.carl-rpg.gear.Item.kz4OB32RPxavSjDR",
       "weight": 1,
       "range": [
-        2,
-        2
+        3,
+        3
       ],
       "drawn": false,
       "flags": {},
@@ -67,8 +67,8 @@
       "documentUuid": "Compendium.carl-rpg.gear.Item.FMToyEuOPpWGxM0Y",
       "weight": 1,
       "range": [
-        3,
-        3
+        4,
+        4
       ],
       "drawn": false,
       "flags": {},
@@ -94,8 +94,8 @@
       "documentUuid": "Compendium.carl-rpg.gear.Item.zBUhdukDOb0JYqSx",
       "weight": 1,
       "range": [
-        4,
-        4
+        5,
+        5
       ],
       "drawn": false,
       "flags": {},
@@ -119,10 +119,10 @@
       "img": "icons/sundries/lights/torch-brown.webp",
       "description": "",
       "documentUuid": "Compendium.carl-rpg.gear.Item.Tqrr1xlzwN6Z8QNl",
-      "weight": 1,
+      "weight": 12,
       "range": [
-        5,
-        5
+        6,
+        17
       ],
       "drawn": false,
       "flags": {},
@@ -146,10 +146,10 @@
       "img": "icons/consumables/food/bread-toast-tan.webp",
       "description": "",
       "documentUuid": "Compendium.carl-rpg.gear.Item.d0B1Wfh8RiGQg9hQ",
-      "weight": 1,
+      "weight": 12,
       "range": [
-        6,
-        6
+        18,
+        29
       ],
       "drawn": false,
       "flags": {},
@@ -165,9 +165,1521 @@
         "exportSource": null
       },
       "_key": "!tables.results!FkbxRsePK11iKknt.KuW5QPujfRwr5Xs3"
+    },
+    {
+      "_id": "H4gfd7L10713D0FM",
+      "type": "text",
+      "name": "Bike Tire Patch Kit",
+      "img": "icons/commodities/tech/wheel.webp",
+      "description": "<p>Glue, rubber patches, tire levers and a palm-sized pump. Fixes anything with an inner tube; the pump inflates other things too.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        30,
+        31
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.H4gfd7L10713D0FM"
+    },
+    {
+      "_id": "FxyreS2PsNjbhTJW",
+      "type": "text",
+      "name": "Hotel Sewing Kit",
+      "img": "icons/tools/hand/needle-thread-spool.webp",
+      "description": "<p>Five colors of thread, two safety pins and one button that matches nothing. Mends clothes, and stitches a wound badly.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        32,
+        33
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.FxyreS2PsNjbhTJW"
+    },
+    {
+      "_id": "3YybXIF59iFC7HXl",
+      "type": "text",
+      "name": "Tackle Box",
+      "img": "icons/tools/fishing/hook-multi-steel-grey.webp",
+      "description": "<p>Line, hooks, lures, bobbers and a rubber worm. Good for snares, tripwires and fishing a key out of a grate.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        34,
+        35
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.3YybXIF59iFC7HXl"
+    },
+    {
+      "_id": "TMjvqGYHFI0f0aEb",
+      "type": "text",
+      "name": "Car Emergency Kit",
+      "img": "icons/sundries/lights/lantern-emergency-lit.webp",
+      "description": "<p>Jumper cables, three road flares and a foil blanket, in a bag that still smells like a new car.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        36,
+        37
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.TMjvqGYHFI0f0aEb"
+    },
+    {
+      "_id": "Etb4r1EkESeHBUmK",
+      "type": "text",
+      "name": "Beekeeper's Outfit",
+      "img": "icons/containers/bags/sack-canvas-grey.webp",
+      "description": "<p>A veiled hat, long gauntlets and a bellows smoker. Stings and bites go elsewhere; the smoker makes a small cloud.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        38,
+        39
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.Etb4r1EkESeHBUmK"
+    },
+    {
+      "_id": "TrI0femLC225J0vo",
+      "type": "text",
+      "name": "Kids' Volcano Science Kit",
+      "img": "icons/consumables/potions/bottle-conical-bubbling-blue.webp",
+      "description": "<p>Baking soda, vinegar, red dye and a plastic volcano. It fizzes on cue and fools nobody twice.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        40,
+        41
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.TrI0femLC225J0vo"
+    },
+    {
+      "_id": "IB9mRY3xB91Hj8Ku",
+      "type": "text",
+      "name": "Bartender's Starter Set",
+      "img": "icons/consumables/drinks/alcohol-beer-mug-yellow.webp",
+      "description": "<p>A shaker, a jigger, a strainer and a muddler. Mixes a drink or a firebomb with equal flair.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        42,
+        43
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.IB9mRY3xB91Hj8Ku"
+    },
+    {
+      "_id": "0kMvMtrniAFMyPWu",
+      "type": "text",
+      "name": "Electrician's Pouch",
+      "img": "icons/commodities/tech/wire-spool-thin.webp",
+      "description": "<p>Wire strippers, a roll of electrical tape and a multimeter with a dead battery.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        44,
+        45
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.0kMvMtrniAFMyPWu"
+    },
+    {
+      "_id": "B4dRjkHdxIla2ZEg",
+      "type": "text",
+      "name": "Children's Magic Set",
+      "img": "icons/sundries/gaming/gaming-set-cards.webp",
+      "description": "<p>Linking rings, a foam rabbit, a collapsing wand and a trick coin. Real magic not included.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        46,
+        47
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.B4dRjkHdxIla2ZEg"
+    },
+    {
+      "_id": "0xvGk7nC29tHrwnZ",
+      "type": "text",
+      "name": "Camping Cook Set",
+      "img": "icons/tools/cooking/pot-camping-iron-black.webp",
+      "description": "<p>Nesting pots, a spork and a folding stove with no fuel. Clangs nicely as an alarm.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        48,
+        49
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.0xvGk7nC29tHrwnZ"
+    },
+    {
+      "_id": "Cyzp9zwQ5Kt2QmrV",
+      "type": "text",
+      "name": "Home Haircut Kit",
+      "img": "icons/tools/hand/scissors-barber.webp",
+      "description": "<p>Battery clippers, a cape and a comb. A new look for when you'd rather not be recognized.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        50,
+        51
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.Cyzp9zwQ5Kt2QmrV"
+    },
+    {
+      "_id": "xcUOX1hgUjDmG9Rp",
+      "type": "text",
+      "name": "Painter's Bundle",
+      "img": "icons/tools/hand/brush-paint-brown-white.webp",
+      "description": "<p>A roller, a tray, a drop cloth, blue tape and a gallon of Eggshell. Marks a route; covers a sigil.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        52,
+        53
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.xcUOX1hgUjDmG9Rp"
+    },
+    {
+      "_id": "p4DuWVPfsBsxz87i",
+      "type": "text",
+      "name": "Lunchbox and Thermos",
+      "img": "icons/tools/cooking/can.webp",
+      "description": "<p>A dented metal lunchbox and an empty thermos. The napkin inside has a note on it.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        54,
+        55
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.p4DuWVPfsBsxz87i"
+    },
+    {
+      "_id": "P72l9N4t0oI8zMO5",
+      "type": "document",
+      "name": "Ironing Board",
+      "img": "icons/commodities/wood/lumber-plank-beige.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.W7GEEKNYScgGv8sI",
+      "weight": 2,
+      "range": [
+        56,
+        57
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.P72l9N4t0oI8zMO5"
+    },
+    {
+      "_id": "MEpfUNlNVPuXC72R",
+      "type": "document",
+      "name": "Pool Cue",
+      "img": "icons/weapons/staves/staff-simple.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.LbidOSE6csQEpYNS",
+      "weight": 2,
+      "range": [
+        58,
+        59
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.MEpfUNlNVPuXC72R"
+    },
+    {
+      "_id": "VhHUHhgDZ7EfJKbQ",
+      "type": "document",
+      "name": "Golf Club",
+      "img": "icons/weapons/clubs/baton-night-stick-truncheon.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.k4FEmg6ZXMQXx5Sc",
+      "weight": 2,
+      "range": [
+        60,
+        61
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.VhHUHhgDZ7EfJKbQ"
+    },
+    {
+      "_id": "5s1ayZ5KVpcJa4c5",
+      "type": "document",
+      "name": "Snow Shovel",
+      "img": "icons/tools/hand/shovel-trench.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.9NtD3pdhXd11pQpc",
+      "weight": 2,
+      "range": [
+        62,
+        63
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.5s1ayZ5KVpcJa4c5"
+    },
+    {
+      "_id": "uw5zI96JcBUKHbP1",
+      "type": "document",
+      "name": "Lacrosse Stick",
+      "img": "icons/tools/fishing/net-hand-white.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.nYLFANacrUBuLIUA",
+      "weight": 2,
+      "range": [
+        64,
+        65
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.uw5zI96JcBUKHbP1"
+    },
+    {
+      "_id": "6JULE6ZhSJOEEqk9",
+      "type": "document",
+      "name": "Marble Rolling Pin",
+      "img": "icons/weapons/clubs/club-simple-stone.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.DLYIPQGCpvLcBvlS",
+      "weight": 2,
+      "range": [
+        66,
+        67
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.6JULE6ZhSJOEEqk9"
+    },
+    {
+      "_id": "iQfESBkC100b46H2",
+      "type": "document",
+      "name": "Bowling Ball",
+      "img": "icons/sundries/sports/basketball.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.bT14SyLvl8rYnKnA",
+      "weight": 2,
+      "range": [
+        68,
+        69
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.iQfESBkC100b46H2"
+    },
+    {
+      "_id": "1NjT7i6YFSYT85St",
+      "type": "document",
+      "name": "Garden Gnome",
+      "img": "icons/sundries/misc/plant-potted.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.y9gOEdbj2fs6Vzz9",
+      "weight": 2,
+      "range": [
+        70,
+        71
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.1NjT7i6YFSYT85St"
+    },
+    {
+      "_id": "Ttwo9FHUZbf31WUR",
+      "type": "document",
+      "name": "Croquet Mallet ×4",
+      "img": "icons/tools/hand/mallet-wood.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.CI3HOzGuLpO1rpAc",
+      "weight": 2,
+      "range": [
+        72,
+        73
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.Ttwo9FHUZbf31WUR"
+    },
+    {
+      "_id": "DCIZCXEXhegQ1A6R",
+      "type": "text",
+      "name": "Baby Monitor Pair",
+      "img": "icons/tools/tech/badge-communicator.webp",
+      "description": "<p>Two handsets: one listens, the other hears, about a hundred feet apart.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        74,
+        75
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.DCIZCXEXhegQ1A6R"
+    },
+    {
+      "_id": "LO3obrorWvlpvgFs",
+      "type": "text",
+      "name": "Fire Extinguisher (Half Full)",
+      "img": "icons/sundries/survival/fire-extinguisher-red.webp",
+      "description": "<p>Puts out a fire, or fills a face with white powder for a moment.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        76,
+        77
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.LO3obrorWvlpvgFs"
+    },
+    {
+      "_id": "U8nDTGp1yQ6j6BUw",
+      "type": "text",
+      "name": "Megaphone with Siren",
+      "img": "icons/tools/instruments/megaphone.webp",
+      "description": "<p>Makes you heard across a Neighborhood. So does the siren button, which sticks.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        78,
+        79
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.U8nDTGp1yQ6j6BUw"
+    },
+    {
+      "_id": "YcX0qMzjzfwNEyAA",
+      "type": "text",
+      "name": "Roll of Bubble Wrap",
+      "img": "icons/containers/boxes/parcel.webp",
+      "description": "<p>Pops underfoot. Pad your explosives with it, or lay it down a hallway as an alarm.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        80,
+        81
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.YcX0qMzjzfwNEyAA"
+    },
+    {
+      "_id": "Yn9ykzu3e4bImr0J",
+      "type": "text",
+      "name": "Wet-Floor Sign",
+      "img": "icons/sundries/flags/banner-yellow.webp",
+      "description": "<p>A yellow folding sign. Some things in the dungeon still respect it.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        82,
+        83
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.Yn9ykzu3e4bImr0J"
+    },
+    {
+      "_id": "MR1dRoo7HnxFIU4I",
+      "type": "text",
+      "name": "Bag of 500 Zip Ties",
+      "img": "icons/tools/fasteners/pin-round.webp",
+      "description": "<p>Restraints, repairs and construction, one click at a time.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        84,
+        85
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.MR1dRoo7HnxFIU4I"
+    },
+    {
+      "_id": "P8gchaGQVDri1MFn",
+      "type": "text",
+      "name": "Metal Detector",
+      "img": "icons/commodities/tech/antenna-powered-purple.webp",
+      "description": "<p>Beeps near coins, nails and buried things - and now and then at nothing at all.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        86,
+        87
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.P8gchaGQVDri1MFn"
+    },
+    {
+      "_id": "L9Kw9qypsQvZlvuJ",
+      "type": "text",
+      "name": "Stud Finder",
+      "img": "icons/commodities/tech/electronics-tech-sensor-steel.webp",
+      "description": "<p>Finds what's behind a wall: studs, pipes, or a hollow where a door might be.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        88,
+        89
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.L9Kw9qypsQvZlvuJ"
+    },
+    {
+      "_id": "ej21O897AsYIn8CS",
+      "type": "text",
+      "name": "Laser Pointer",
+      "img": "icons/commodities/tech/remote-control-steel-red.webp",
+      "description": "<p>A red dot most animals can't ignore.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        90,
+        91
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.ej21O897AsYIn8CS"
+    },
+    {
+      "_id": "w8DxRoKLjluGMT9v",
+      "type": "text",
+      "name": "Glow Sticks ×10",
+      "img": "icons/sundries/lights/lamp-tech-blue.webp",
+      "description": "<p>Snap, shake, and they glow for a few hours. No flame anywhere near the dynamite.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        92,
+        93
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.w8DxRoKLjluGMT9v"
+    },
+    {
+      "_id": "1upXUwMlZfBZKZq7",
+      "type": "text",
+      "name": "Bucket of Sidewalk Chalk",
+      "img": "icons/tools/scribal/pen-stylus-pencil.webp",
+      "description": "<p>Arrows, notes and rude drawings for the next crawler through.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        94,
+        95
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.1upXUwMlZfBZKZq7"
+    },
+    {
+      "_id": "GXYNEdhi6HqIFjZM",
+      "type": "text",
+      "name": "Hand Warmers ×10",
+      "img": "icons/containers/bags/pouch-cloth-tan.webp",
+      "description": "<p>Shake one and it's warm for hours, then useless.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        96,
+        97
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.GXYNEdhi6HqIFjZM"
+    },
+    {
+      "_id": "PDUlpzn5z2MeTrvz",
+      "type": "text",
+      "name": "Battery String Lights",
+      "img": "icons/commodities/tech/lamp-bulb-incandescent.webp",
+      "description": "<p>Forty feet of tiny bulbs. Marks a route, or makes a saferoom feel like a dorm.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        98,
+        99
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.PDUlpzn5z2MeTrvz"
+    },
+    {
+      "_id": "42XXIQgoksGjgDw1",
+      "type": "text",
+      "name": "Hand Truck",
+      "img": "icons/commodities/tech/frame-steel.webp",
+      "description": "<p>A two-wheeled dolly for moving what you can't lift into your Inventory.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        100,
+        101
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.42XXIQgoksGjgDw1"
+    },
+    {
+      "_id": "Rx1lEukcPq9TAl8H",
+      "type": "text",
+      "name": "Inflatable Pool Flamingo",
+      "img": "icons/svg/wing.svg",
+      "description": "<p>Floats you, or stands in for you at a distance.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        102,
+        103
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.Rx1lEukcPq9TAl8H"
+    },
+    {
+      "_id": "wluSjQSjJ9ZecbZ5",
+      "type": "text",
+      "name": "Pool Noodles ×3",
+      "img": "icons/commodities/tech/pipe-cylinder.webp",
+      "description": "<p>Foam tubes: flotation, padding, or a very safe duel.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        104,
+        105
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.wluSjQSjJ9ZecbZ5"
+    },
+    {
+      "_id": "R0OL9UzrZRQn7g8I",
+      "type": "text",
+      "name": "Tire Chains",
+      "img": "icons/tools/fasteners/chain-steel-grey.webp",
+      "description": "<p>A tangle of steel chain made for snow. Grips ice and stone, and swings in a pinch.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        106,
+        107
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.R0OL9UzrZRQn7g8I"
+    },
+    {
+      "_id": "t7rvrRA9UqionL64",
+      "type": "text",
+      "name": "Bag of Rock Salt (10 lb)",
+      "img": "icons/containers/bags/sack-cloth-tan.webp",
+      "description": "<p>Melts ice, draws a line across a floor, and ruins a slug's day.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        108,
+        109
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.t7rvrRA9UqionL64"
+    },
+    {
+      "_id": "8gldEJtppxQ9nktW",
+      "type": "text",
+      "name": "Leaf Blower (12% Battery)",
+      "img": "icons/commodities/tech/fan-ventilator-copper.webp",
+      "description": "<p>Clears one cloud of gas or smoke before it dies.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        110,
+        111
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.8gldEJtppxQ9nktW"
+    },
+    {
+      "_id": "rTi8rNXnUzW1i3OT",
+      "type": "text",
+      "name": "Two-Person Tent",
+      "img": "icons/sundries/survival/shelter-tent-small.webp",
+      "description": "<p>Missing one pole. Sleeps two, if they like each other.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        112,
+        113
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.rTi8rNXnUzW1i3OT"
+    },
+    {
+      "_id": "ao38oXTxCcXQBP3p",
+      "type": "text",
+      "name": "Air Mattress",
+      "img": "icons/sundries/survival/bedroll-blue-red.webp",
+      "description": "<p>Comfortable until about three in the morning. Floats for a minute, too.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        114,
+        115
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.ao38oXTxCcXQBP3p"
+    },
+    {
+      "_id": "UoZFzX4e6SYA7qU8",
+      "type": "text",
+      "name": "Inflatable Tube Man",
+      "img": "icons/sundries/flags/banner-flag-red-white.webp",
+      "description": "<p>A flailing, grinning tube with its own blower. Nothing can look away from it.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        116,
+        117
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.UoZFzX4e6SYA7qU8"
+    },
+    {
+      "_id": "S8lmdq0i4msQDUbu",
+      "type": "text",
+      "name": "Karaoke Machine",
+      "img": "icons/tools/instruments/microphone-stand-tall.webp",
+      "description": "<p>It only plays one song, and it isn't one you know.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        118,
+        119
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.S8lmdq0i4msQDUbu"
+    },
+    {
+      "_id": "l3nb04zfkH7OsSPa",
+      "type": "text",
+      "name": "Car Battery",
+      "img": "icons/commodities/tech/battery-cell-square.webp",
+      "description": "<p>Heavy, full of acid, and still holding a charge. Something to build around.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        120,
+        121
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.l3nb04zfkH7OsSPa"
+    },
+    {
+      "_id": "8bSsqCxZKPdVF2oY",
+      "type": "text",
+      "name": "Riding Lawnmower",
+      "img": "icons/environment/vehicles/car-automobile-classic.webp",
+      "description": "<p>No fuel. A vehicle project waiting for a mechanic.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        122,
+        122
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.8bSsqCxZKPdVF2oY"
+    },
+    {
+      "_id": "JH5pZFF3Kb1wLo0r",
+      "type": "text",
+      "name": "Hot Tub Cover",
+      "img": "icons/commodities/wood/lumber-plank-brown.webp",
+      "description": "<p>A huge, stiff foam lid. A shield for the whole party, or a raft.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        123,
+        123
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.JH5pZFF3Kb1wLo0r"
+    },
+    {
+      "_id": "4zaunlaG0kSJCsno",
+      "type": "text",
+      "name": "Porta-Potty",
+      "img": "icons/containers/boxes/crate-tech-green.webp",
+      "description": "<p>Clean, for now. Portable cover with a door that locks. Whether the cameras count it as a restroom is the GM's call.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        124,
+        124
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.4zaunlaG0kSJCsno"
+    },
+    {
+      "_id": "zd8LasK1A6twSCVV",
+      "type": "text",
+      "name": "Vending Machine",
+      "img": "icons/containers/boxes/crate-metal-heavy-grey.webp",
+      "description": "<p>Empty and locked. Cover in a fight; a puzzle afterwards.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        125,
+        125
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.zd8LasK1A6twSCVV"
+    },
+    {
+      "_id": "IHHVJ8TMHEyREkw8",
+      "type": "text",
+      "name": "Snow Tires ×4",
+      "img": "icons/commodities/tech/wheel.webp",
+      "description": "<p>Four winter tires and nothing to put them on.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        126,
+        126
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.IHHVJ8TMHEyREkw8"
+    },
+    {
+      "_id": "GvYaNkCIXAlEiyeN",
+      "type": "text",
+      "name": "Participation Trophy",
+      "img": "icons/sundries/sports/baseball-trophy.webp",
+      "description": "<p>Engraved with your crawler name. The AI insists you earned it.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        127,
+        128
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.GvYaNkCIXAlEiyeN"
+    },
+    {
+      "_id": "deEpMUseYgYmzing",
+      "type": "text",
+      "name": "Jury Duty Summons",
+      "img": "icons/sundries/documents/document-official-capital.webp",
+      "description": "<p>Addressed to you, dated next week.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        129,
+        130
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.deEpMUseYgYmzing"
+    },
+    {
+      "_id": "mt0koX5VZCHlfMTo",
+      "type": "text",
+      "name": "Hang In There Poster",
+      "img": "icons/sundries/documents/paper-plain-white.webp",
+      "description": "<p>A framed kitten dangling from a branch. Inspiring, in context.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        131,
+        132
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.mt0koX5VZCHlfMTo"
+    },
+    {
+      "_id": "rSqozA1zYIlR0t28",
+      "type": "text",
+      "name": "Mixtape",
+      "img": "icons/tools/instruments/gramophone-vinyl-record-player.webp",
+      "description": "<p>Labeled in an ex's handwriting. The first song is the one you'd guess.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        133,
+        134
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.rSqozA1zYIlR0t28"
+    },
+    {
+      "_id": "56vcbIyzW1kQRxuL",
+      "type": "text",
+      "name": "A Stranger's Yearbook",
+      "img": "icons/sundries/documents/document-bound-white.webp",
+      "description": "<p>Not your school, not your year. One page is signed to you by name.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        135,
+        136
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!FkbxRsePK11iKknt.56vcbIyzW1kQRxuL"
     }
   ],
-  "formula": "1d6",
+  "formula": "1d136",
   "replacement": true,
   "displayRoll": true,
   "folder": "w1Jo7BYmYZFJADyA",

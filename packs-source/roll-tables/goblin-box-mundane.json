@@ -1,0 +1,245 @@
+{
+  "_id": "v7mjFAItVEbKWsVj",
+  "name": "Goblin Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Goblin Box's mundane - explosives and the gear that goes with them (p.22). Drawn for the one item of a Bronze box when the box's title names the theme (\"Bronze Goblin Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Goblin Box: Mundane\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "lYDojeT4XiajvjB5",
+      "type": "document",
+      "name": "Lighter",
+      "img": "icons/sundries/survival/fire-lighter-windproof.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.5Sl1VmxVHK9zB6pG",
+      "weight": 2,
+      "range": [
+        1,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!v7mjFAItVEbKWsVj.lYDojeT4XiajvjB5"
+    },
+    {
+      "_id": "mxRfJMKsHqbO05zO",
+      "type": "text",
+      "name": "Spool of Fuse Cord",
+      "img": "icons/commodities/tech/cord-fuse-green.webp",
+      "description": "<p>Fifty feet of slow fuse. Count the seconds.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        3,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!v7mjFAItVEbKWsVj.mxRfJMKsHqbO05zO"
+    },
+    {
+      "_id": "CpZgtEpqA7Fk7s1b",
+      "type": "text",
+      "name": "Blast Goggles",
+      "img": "icons/tools/scribal/spectacles-glasses.webp",
+      "description": "<p>Tinted goggles, the strap let out to the last hole.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!v7mjFAItVEbKWsVj.CpZgtEpqA7Fk7s1b"
+    },
+    {
+      "_id": "IrvMRyN892bNnocW",
+      "type": "text",
+      "name": "Earmuffs",
+      "img": "icons/containers/bags/pouch-cloth-pink.webp",
+      "description": "<p>Fuzzy earmuffs. Ringing ears are for amateurs.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!v7mjFAItVEbKWsVj.IrvMRyN892bNnocW"
+    },
+    {
+      "_id": "nlCRiumSvmd3mqNJ",
+      "type": "text",
+      "name": "Fire Extinguisher (Half Full)",
+      "img": "icons/sundries/survival/fire-extinguisher-red.webp",
+      "description": "<p>Puts out a fire, or fills a face with white powder for a moment.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!v7mjFAItVEbKWsVj.nlCRiumSvmd3mqNJ"
+    },
+    {
+      "_id": "LJz3MHKQ6KGbCn7w",
+      "type": "text",
+      "name": "Roll of Bubble Wrap",
+      "img": "icons/containers/boxes/parcel.webp",
+      "description": "<p>Pops underfoot. Pad your explosives with it, or lay it down a hallway as an alarm.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!v7mjFAItVEbKWsVj.LJz3MHKQ6KGbCn7w"
+    },
+    {
+      "_id": "IjZcLBgmaheA8PKE",
+      "type": "text",
+      "name": "Electrician's Pouch",
+      "img": "icons/commodities/tech/wire-spool-thin.webp",
+      "description": "<p>Wire strippers, a roll of electrical tape and a multimeter with a dead battery.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!v7mjFAItVEbKWsVj.IjZcLBgmaheA8PKE"
+    },
+    {
+      "_id": "UMd2ELjPwO2RAI4L",
+      "type": "text",
+      "name": "Car Emergency Kit",
+      "img": "icons/sundries/lights/lantern-emergency-lit.webp",
+      "description": "<p>Jumper cables, three road flares and a foil blanket, in a bag that still smells like a new car.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        10,
+        10
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!v7mjFAItVEbKWsVj.UMd2ELjPwO2RAI4L"
+    }
+  ],
+  "formula": "1d10",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!v7mjFAItVEbKWsVj"
+}

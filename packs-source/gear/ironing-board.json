@@ -1,0 +1,37 @@
+{
+  "_id": "W7GEEKNYScgGv8sI",
+  "name": "Ironing Board",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/commodities/wood/lumber-plank-beige.webp",
+  "system": {
+    "description": "<p>A folding ironing board, swung two-handed. The cover is scorched in the shape of a shirt. Its Attacks use the Quarterstaff Skill, which sets their damage, range and Stat.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Quarterstaff",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": null,
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!W7GEEKNYScgGv8sI"
+}

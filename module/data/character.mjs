@@ -67,6 +67,10 @@ export default class CarlRPGCharacter extends CarlRPGActorBase {
     schema.details = new fields.SchemaField({
       pronouns: text(),
       crawlerNumber: text(),
+      // Left out of the Achievements window, even with offline crawlers
+      // shown: a character who isn't really a crawler, like a game guide
+      // (issue #18; set by the GM on the Details tab).
+      hideFromAchievements: new fields.BooleanField({ required: true, initial: false }),
       popularity: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
       aiFavor: new fields.NumberField({ ...requiredInteger, initial: 0, min: 0 }),
       move: new fields.NumberField({ ...requiredInteger, initial: 20, min: 0 }),

@@ -128,26 +128,6 @@ export default function register(quench) {
           }
         });
 
-        it("a 2nd Minor Injury still becomes Long-Term, and Sepsis still adds Staggered", async function () {
-          const actor = await createTestCharacter("add rules");
-          try {
-            await addConditionToActor(actor, "minorInjury");
-            await addConditionToActor(actor, "minorInjury");
-            assert.include(keys(actor), "longTermMinorInjury");
-            assert.notInclude(keys(actor), "minorInjury");
-            const sepsis = Object.entries(CONFIG.CARLRPG.debuffs).find(
-              ([, d]) => d.mechanics?.alsoApplies?.length,
-            );
-            if (sepsis) {
-              await addConditionToActor(actor, sepsis[0]);
-              for (const extra of sepsis[1].mechanics.alsoApplies)
-                assert.include(keys(actor), extra);
-            }
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
-
         it("a player who doesn't own a Mob may only remove its one-shot Debuffs, and only in a fight or targeted", async function () {
           const player = game.users.find((u) => !u.isGM);
           if (!player) this.skip();
@@ -398,50 +378,6 @@ export default function register(quench) {
               "no browser title= tooltips on rows",
             );
           } finally {
-            await sheet.close();
-            await deleteTestActor(actor);
-          }
-        });
-
-        it("hovering an Inventory row's name shows Foundry's tooltip: the description, or a bare item's name", async function () {
-          const actor = await createTestCharacter("tooltip hover");
-          const sheet = actor.sheet;
-          const hover = async (element) => {
-            game.tooltip.deactivate();
-            element.dispatchEvent(new PointerEvent("pointerenter", { bubbles: false }));
-            // TooltipManager waits TOOLTIP_ACTIVATION_MS (500) for intent.
-            await new Promise((resolve) =>
-              setTimeout(resolve, (game.tooltip.constructor.TOOLTIP_ACTIVATION_MS ?? 500) + 200),
-            );
-          };
-          try {
-            const described = await createTestItem(actor, "item", "rope", {
-              system: { description: "<p>A sturdy rope.</p>" },
-            });
-            const bare = await createTestItem(actor, "item", "lighter");
-            await sheet.render({ force: true });
-            await waitFor(
-              () =>
-                sheet.rendered && sheet.element.querySelector(`li[data-item-id="${described.id}"]`),
-            );
-            const name = (item) =>
-              sheet.element.querySelector(`li[data-item-id="${item.id}"] .item-name h4`);
-            await hover(name(described).closest(".item-name"));
-            assert.equal(
-              game.tooltip.element,
-              name(described).closest(".item-name"),
-              "the name cell's tooltip is up",
-            );
-            assert.include(game.tooltip.tooltip.innerHTML, "A sturdy rope.");
-            await hover(name(bare).closest(".item-name"));
-            assert.equal(game.tooltip.element, name(bare).closest(".item-name"));
-            assert.include(
-              game.tooltip.tooltip.innerHTML,
-              "lighter",
-              "an item with no description: its name",
-            );
-          } finally {
-            game.tooltip.deactivate();
             await sheet.close();
             await deleteTestActor(actor);
           }

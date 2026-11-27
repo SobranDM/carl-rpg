@@ -110,6 +110,7 @@ export default function register(quench) {
           const blank = await createTestMob("ai blank", { system: { aiText: "<p> </p>" } });
           const crawler = await createTestCharacter("ai crawler");
           try {
+            assert.instanceOf(mob.system.schema.fields.aiText, foundry.data.fields.HTMLField);
             await withSetting("aiTextTooltips", true, () => {
               assert.equal(aiTextOf(fakeToken(mob)), AI);
               assert.equal(aiTextOf(fakeToken(blank)), "", "an empty paragraph is none");
@@ -123,16 +124,6 @@ export default function register(quench) {
             await deleteTestActor(mob);
             await deleteTestActor(blank);
             await deleteTestActor(crawler);
-          }
-        });
-
-        it("the AI Text field is HTML, kept as written", async function () {
-          const mob = await createTestMob("ai field", { system: { aiText: AI } });
-          try {
-            assert.instanceOf(mob.system.schema.fields.aiText, foundry.data.fields.HTMLField);
-            assert.equal(mob.system.aiText, AI);
-          } finally {
-            await deleteTestActor(mob);
           }
         });
       });

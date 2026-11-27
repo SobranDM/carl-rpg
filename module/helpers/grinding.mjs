@@ -97,29 +97,61 @@ export async function applyGrindHours(actor, item, hours) {
 }
 
 /**
+ * Who among those grinding together is the lowest Level (p.171: "The party
+ * member with the lowest Level gains 1d2 Levels when they level up this
+ * way. If there is a tie for lowest, no one rolls 1d2."). The party is
+ * whoever the GM picked to grind (ruled 2026-11-27).
+ * @param {Actor[]} actors  The characters grinding, at their Levels before it.
+ * @returns {string|null}  The lowest one's id; null on a tie, or for none.
+ */
+export function lowestGrinder(actors) {
+  const levels = (actors ?? []).map((a) => ({
+    id: a.id,
+    level: a.system.attributes?.level?.value ?? 1,
+  }));
+  if (!levels.length) return null;
+  const min = Math.min(...levels.map((l) => l.level));
+  const lowest = levels.filter((l) => l.level === min);
+  return lowest.length === 1 ? lowest[0].id : null;
+}
+
+/**
  * Grinding toward a Level (p.171): "Keep a running total of all your
  * grinding hours and erase it only when you level up... You gain a Level
  * when you grind a number of hours equal to your current Level." The total
- * resets in CarlRPGActor#_preUpdate on any Level gain. "The party member
- * with the lowest Level gains 1d2 Levels when they level up this way" is
- * left to the GM (the card says so).
+ * resets in CarlRPGActor#_preUpdate on any Level gain. The lowest Level
+ * grinding (lowestGrinder) gains 1d2 Levels instead.
  * @param {Actor} actor  A character.
  * @param {number} hours
- * @returns {Promise<{leveled: boolean, total: number}>}
+ * @param {{lowest?: boolean}} [options]  Whether they're the lowest Level grinding.
+ * @returns {Promise<{leveled: boolean, total: number, gained: number}>}
  */
-export async function addGrindLevelHours(actor, hours) {
-  if (actor?.type !== "character") return { leveled: false, total: 0 };
+export async function addGrindLevelHours(actor, hours, { lowest = false } = {}) {
+  if (actor?.type !== "character") return { leveled: false, total: 0, gained: 0 };
   const level = actor.system.attributes?.level?.value ?? 1;
   const total = (actor.system.grindLevelHours ?? 0) + Math.max(0, Math.floor(Number(hours) || 0));
   if (total < level || level >= 250) {
     await actor.update({ "system.grindLevelHours": total });
-    return { leveled: false, total };
+    return { leveled: false, total, gained: 0 };
   }
-  await actor.update({ "system.attributes.level.value": level + 1 });
+  const roll = lowest ? await new Roll("1d2").evaluate() : null;
+  const newLevel = Math.min(250, level + (roll?.total ?? 1));
+  const gained = newLevel - level;
+  await actor.update({ "system.attributes.level.value": newLevel });
+  const name = foundry.utils.escapeHTML(actor.name);
+  const body = roll
+    ? game.i18n.format("CARLRPG.Grind.LevelBodyLowest", {
+        name,
+        roll: roll.total,
+        gained,
+        level: newLevel,
+      })
+    : game.i18n.format("CARLRPG.Grind.LevelBody", { name, level: newLevel });
   await createCardMessage({
     title: game.i18n.localize("CARLRPG.Grind.LevelTitle"),
-    body: `<p>${game.i18n.format("CARLRPG.Grind.LevelBody", { name: foundry.utils.escapeHTML(actor.name), level: level + 1 })}</p>`,
+    body: `<p>${body}</p>`,
     actor,
+    rolls: roll ? [roll] : undefined,
   });
-  return { leveled: true, total };
+  return { leveled: true, total, gained };
 }

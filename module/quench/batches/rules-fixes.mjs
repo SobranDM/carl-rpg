@@ -65,14 +65,7 @@ export default function register(quench) {
         const spell = { system: { favoredClasses: ["Mage"] } };
         const caster = (classItem) => ({ system: { classItem } });
 
-        it("a Class whose category is favored pays the base cost", function () {
-          const mage = { name: "Boring Ol' Mage", system: { classTypes: ["Mage"] } };
-          assert.equal(applyFavoredClassSurcharge(spell, caster(mage), 3), 3);
-        });
-        it("any other Class pays +1", function () {
-          const fighter = { name: "Brawler", system: { classTypes: ["Fighter"] } };
-          assert.equal(applyFavoredClassSurcharge(spell, caster(fighter), 3), 4);
-        });
+        // A favored Class pays the base cost, any other +1: skill-names.mjs "Favored Classes".
         it("a caster with no Class yet pays no surcharge", function () {
           assert.equal(applyFavoredClassSurcharge(spell, caster(null), 3), 3);
         });

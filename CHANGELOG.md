@@ -1,5 +1,40 @@
 # CHANGELOG
 
+## 0.8.5
+
+- **Degrees of Success on Combat Cards:** Every target row on Attack, Reaction and Damage cards now shows its Degree (Amazing, Success, Near Miss, Fail, Major Fail, Crit Fail, Crit Hit) as a tag under its status
+  - Details in the tooltip.
+  - A Major or Critical Fail Evade shows even under a Shield Block.
+  - An Attack at several targets no longer shows the first target's Degree in its header, and every row of an Area Attack shows the shared roll.
+- **A Modifier for Combat Rolls:** The roll dialog for an Attack, Evade or Shield Block shows the Difficulty the rules give it but no longer lets you change it.
+  - A Modifier field allows more intuitive modifications.
+  - Evading or blocking several Attacks, or attacking several targets, now applies that Modifier to every one of them, instead of a changed Difficulty reaching only the first.
+- **Leaner, Themed Loot Boxes:** Boxes follow the book's shape: one headline item, a consumable or two, and gold.
+  - A review of both the rules and the novels showed that we were giving out too many items per box.
+  - A Bronze box's mundane item is sometimes swapped for weak magic instead of giving both.
+  - Silver boxes no longer add a mundane item.
+  - A box's theme (Goblin, Pet, Crafter's, Mechanic's, Survivor's, Lucky Bastard, Weapon supported so far) now picks a themed table based on the name in the Reward field.
+  - The Bronze mundane table has a bunch of new stuff: kits, odd props, odd or funny d6 weapons. Torches and biscuits as common filler.
+- **On-Hit Debuffs With Both Boxes Ticked** (Critical Hit only and Amazing Success only) now trigger on either a Critical Hit or an Amazing Success. Before, they never triggered, since a natural 20 is never also an Amazing Success.
+- **Day and Night:** A sun/moon toggle in the GM Toolbox sets whether it's day or night.
+  - **Lajabless** (p.136): +5 Intelligence and half Strength by day; +5 Strength, then double Strength, by night. Spells cost half the Mana by day and double by night (rounded up, at least 1), shown on the sheet, the Hotlist and the roll dialog. Mana above the new maximum comes down at nightfall.
+    - This is handled via some bespoke code, so you can't reproduce this on another race and renaming the race will break this functionality.
+  - **Night Elves** (p.134) roll Hide in Shadows with Advantage at night.
+  - **Gobblin' Hogs** swap their Int and Dex Mods at night, and their Surprise and Evade with them.
+- **Deleting Asks First:** Deleting an item from a Character, Mob, Pet, Vehicle or Map Loot Box sheet now has a confirmation dialog, as does throwing away a loot box's prepared contents (Roll When Opened). Shift-click skips the question.
+- **Homebrew Character Creation Tables:** A copy of a background, Past Traumas, Loose Ends or Regrets table in a world compendium now replaces the system's, as one in the world already did and as loot box tables do.
+- **Description Boxes:** Fixed a lot of description boxes across various items and actors that were weird sizes or inconsistent between the view and edit modes.
+- **A Wiki:** The system now has a [wiki](https://github.com/SobranDM/carl-rpg/wiki) covering how everything works, from making a crawler to opening loot boxes.
+- **Links in the Settings Sidebar:** The Settings tab now links to the wiki, next to the system's name.
+  - Below it are links to report bugs on GitHub and to buy me a coffee on Ko-fi.
+- **Grinding Together:** The GM Toolbox's Grind now lets you pick several crawlers at once.
+  - Everyone picked grinds the same hours, each on their own Skill, all picked in one dialog.
+  - The clock moves forward once for the whole group.
+- **Grinding Toward Levels:** The book's lowest-Level rule for leveling when grinding is now handled (p.171).
+  - The lowest Level among the crawlers grinding gains 1d2 Levels instead of 1 when grinding levels them up. The roll shows in chat.
+  - On a tie for lowest, no one rolls 1d2.
+  - A crawler with no Skill that can take the hours still counts toward their next Level.
+
 ## 0.8.4
 
 - **Taunt Only Mob Attacks:** A crawler's or Pet's Attack card no longer offers Taunt This Attack.

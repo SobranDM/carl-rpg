@@ -12,13 +12,10 @@
     gap: 8px;
     padding: 8px;
 
-    // Room to see what's being typed once it's opened (ruled 2026-11-21).
+    // Room to see what's being typed once it's opened (ruled 2026-11-21),
+    // kept open or closed so clicking Edit doesn't resize the window.
     prose-mirror {
-      min-height: 80px;
-
-      &.active {
-        min-height: 200px;
-      }
+      min-height: 200px;
 
       .editor-content {
         flex: 1;

@@ -1,5 +1,5 @@
 import { createCardMessage } from "../chat/chat-card.mjs";
-import { copyData, PACKS } from "./packs.mjs";
+import { copyData, overridableTable, systemTable } from "./packs.mjs";
 import { currentFloor } from "./floor.mjs";
 import { esc } from "./html.mjs";
 import { changeEntry } from "../pdf-import/shared.mjs";
@@ -7,6 +7,8 @@ import { enchantmentKind, itemTypeKind, lootRowQuantity, lootRowSpecial } from "
 
 /** Table 38's name (Randomized Magic Items, p.219). */
 const ITEM_TYPE_TABLE_NAME = "Item Type";
+/** Table 39: a weapon's enchantments (a Weapon Box's magic item). */
+const WEAPON_EFFECTS_TABLE_NAME = "Enchanted Mundane Item or Weapon";
 
 /* -------------------------------------------- */
 /*  The loot generator (0.8.0)                  */
@@ -21,7 +23,8 @@ const ITEM_TYPE_TABLE_NAME = "Item Type";
  *  - {kind: "item", uuid, name, img, quantity}: a compendium or world item;
  *  - {kind: "spellScroll"|"spellbook", spellUuid, spellName, rank, img}: of a
  *    random Spell (Table 27);
- *  - {kind: "text", name, img, quantity}: a table row naming no item;
+ *  - {kind: "text", name, img, quantity, description}: a table row naming
+ *    no item - a simple item of that name, its description the row's;
  *  - {kind: "magic", ...}: a magic item draft (generateMagicDraft).
  * Turned into Item data by lootItemData. Tables are read by name, the
  * world's own copy first, so a GM's edits win. The box tables (what a box
@@ -35,12 +38,8 @@ const ITEM_TYPE_TABLE_NAME = "Item Type";
  * @param {string} name
  * @returns {Promise<RollTable|null>}
  */
-export async function lootTable(name) {
-  const world = game.tables?.getName?.(name);
-  if (world) return world;
-  const pack = game.packs.get(PACKS.rollTables);
-  const entry = (await pack?.getIndex())?.find((e) => e.name === name);
-  return entry ? pack.getDocument(entry._id) : null;
+export function lootTable(name) {
+  return systemTable(name, { world: true });
 }
 
 /**
@@ -55,22 +54,57 @@ export async function lootTable(name) {
  * @param {string} name
  * @returns {Promise<RollTable|null>}
  */
-export async function boxTable(name) {
-  const world = game.tables?.getName?.(name);
-  if (world) return world;
-  const worldPacks = game.packs.filter(
-    (p) => p.documentName === "RollTable" && p.metadata.packageType === "world",
-  );
-  for (const pack of worldPacks) {
-    const entry = (await pack.getIndex())?.find((e) => e.name === name);
-    if (entry) return pack.getDocument(entry._id);
-  }
-  return lootTable(name);
+export function boxTable(name) {
+  return overridableTable(name);
 }
 
 /** A tier key as the tables name it ("bronze" -> "Bronze"). */
 function tierName(tierKey) {
   return tierKey.charAt(0).toUpperCase() + tierKey.slice(1);
+}
+
+/**
+ * The table names a box's draw from `slot` ("Mundane", "Consumables",
+ * "Weak Magic") tries, first found wins (ruled 2026-11-27): a themed box
+ * ("Bronze Goblin Box", reward-text.mjs boxTheme) tries "Bronze Goblin Box:
+ * Mundane", then "Goblin Box: Mundane" - each also with the theme's "'s"
+ * added or dropped ("Crafter" / "Crafter's") - then the tier's own "Bronze
+ * Box: Mundane". Each name is looked up as boxTable does (the world's own,
+ * a world compendium's, then the system's), so a GM's copy of a themed
+ * table wins over the system's. No theme, or one with no table: the
+ * tier's.
+ * @param {string} tierKey
+ * @param {string} theme  "" for none.
+ * @param {string} slot
+ * @returns {string[]}
+ */
+export function boxTableNames(tierKey, theme, slot) {
+  const tier = tierName(tierKey);
+  const names = [];
+  const t = String(theme ?? "").trim();
+  if (t) {
+    const toggled = /'s$/i.test(t) ? t.slice(0, -2) : `${t}'s`;
+    for (const name of [t, toggled]) names.push(`${tier} ${name} Box: ${slot}`);
+    for (const name of [t, toggled]) names.push(`${name} Box: ${slot}`);
+  }
+  names.push(`${tier} Box: ${slot}`);
+  return names;
+}
+
+/**
+ * The table a box's draw from `slot` uses: the first of boxTableNames
+ * that's found.
+ * @param {string} tierKey
+ * @param {string} theme
+ * @param {string} slot
+ * @returns {Promise<RollTable|null>}
+ */
+export async function boxTableFor(tierKey, theme, slot) {
+  for (const name of boxTableNames(tierKey, theme, slot)) {
+    const table = await boxTable(name);
+    if (table) return table;
+  }
+  return null;
 }
 
 /**
@@ -96,37 +130,131 @@ function pickFrom(list) {
 }
 
 /**
- * Roll a box's contents.
+ * Roll a box's contents - the book's shape (p.216, ruled 2026-11-27): one
+ * item, "a consumable or two", plus gold. Bronze's one item is its mundane
+ * item (p.219: "Bronze: No rolls, item is mundane"), which a weak magic item
+ * replaces `weakMagicChance` of the time; from Silver up it's the magic
+ * item. A themed box draws from its theme's tables where there are some
+ * (boxTableNames).
  * @param {string} tierKey  A key into CONFIG.CARLRPG.lootBoxTiers.
- * @param {{recipient?: Actor|null, floor?: number}} [options]
+ * @param {{recipient?: Actor|null, floor?: number, theme?: string}} [options]
  *   recipient: whose box it is - a magic item's percentage Stat and Skill
- *   are worked out for them (autofillMagicDraft).
- * @returns {Promise<{tierKey: string, gold: number, entries: object[]}|null>}  Null for an unknown tier.
+ *   are worked out for them (autofillMagicDraft). theme: the box's
+ *   (reward-text.mjs boxTheme of its title), "" for none.
+ * @returns {Promise<{tierKey: string, theme: string, gold: number, entries: object[]}|null>}
+ *   Null for an unknown tier.
  */
-export async function generateLoot(tierKey, { recipient = null, floor = currentFloor() } = {}) {
+export async function generateLoot(
+  tierKey,
+  { recipient = null, floor = currentFloor(), theme = "" } = {},
+) {
   const tier = CONFIG.CARLRPG.lootBoxTiers[tierKey];
   if (!tier) return null;
   const ctx = { tierKey, recipient, floor };
   const entries = [];
-  const draw = async (suffix, count) => {
-    const table = count > 0 ? await boxTable(`${tierName(tierKey)} Box: ${suffix}`) : null;
-    for (let i = 0; i < (table ? count : 0); i++) {
-      const { results } = await table.roll({ recursive: false });
-      for (const result of results) {
-        const entry = await rowEntry(result, ctx);
-        if (entry) entries.push(entry);
-      }
+  const tables = new Map();
+  const tableFor = async (slot) => {
+    if (!tables.has(slot)) tables.set(slot, await boxTableFor(tierKey, theme, slot));
+    return tables.get(slot);
+  };
+  const drawFrom = async (table) => {
+    const { results } = await table.roll({ recursive: false });
+    for (const result of results) {
+      const entry = await rowEntry(result, ctx);
+      if (entry) entries.push(entry);
     }
   };
   const gold = await rollTotal(tier.gold);
-  await draw("Mundane", await rollTotal(tier.mundane));
-  await draw("Consumables", await rollTotal(tier.consumables));
-  if (tier.weakMagicChance && Math.random() < tier.weakMagicChance) await draw("Weak Magic", 1);
+  const mundane = await rollTotal(tier.mundane);
+  for (let i = 0; i < mundane; i++) {
+    // A weak magic item instead of the mundane one, not as well.
+    const weak = tier.weakMagicChance && Math.random() < tier.weakMagicChance;
+    const table = (weak ? await tableFor("Weak Magic") : null) ?? (await tableFor("Mundane"));
+    if (table) await drawFrom(table);
+  }
+  const consumables = await rollTotal(tier.consumables);
+  const consumableTable = consumables > 0 ? await tableFor("Consumables") : null;
+  for (let i = 0; consumableTable && i < consumables; i++) await drawFrom(consumableTable);
+  // A Weapon Box's magic item is a weapon from its own table, enchanted
+  // (ruled 2026-11-27); with no weapon to draw, it's any magic item.
+  const weaponBox = isWeaponTheme(theme);
   for (let i = 0; i < (tier.magicItems ?? 0); i++) {
-    const magic = await generateMagicDraft(tierKey, { recipient, floor });
+    const base = weaponBox ? await drawWeaponBase(tierKey, theme) : null;
+    const magic = await generateMagicDraft(tierKey, { recipient, floor, base });
     if (magic) entries.push(magic);
   }
-  return { tierKey, gold, entries };
+  return { tierKey, theme: String(theme ?? ""), gold, entries };
+}
+
+/**
+ * Whether a box's theme is Weapon ("Silver Weapon Box"), whose magic item
+ * is built on a weapon (generateLoot).
+ * @param {string} theme
+ * @returns {boolean}
+ */
+export function isWeaponTheme(theme) {
+  return /^weapons?$/i.test(String(theme ?? "").trim());
+}
+
+/**
+ * A weapon to build a Weapon Box's magic item on: drawn from the box's
+ * Mundane table (boxTableFor - "Weapon Box: Mundane", or the GM's copy),
+ * keeping only linked Items with a weapon Skill. A few tries, then none.
+ * @param {string} tierKey
+ * @param {string} theme
+ * @returns {Promise<object|null>}  A base for generateMagicDraft.
+ */
+export async function drawWeaponBase(tierKey, theme) {
+  const table = await boxTableFor(tierKey, theme, "Mundane");
+  if (!table) return null;
+  for (let tries = 0; tries < 5; tries++) {
+    const { results } = await table.roll({ recursive: false });
+    for (const result of results) {
+      if (result.type !== "document" || !result.documentUuid) continue;
+      const doc = await fromUuid(result.documentUuid);
+      if (doc?.documentName === "Item" && doc.system?.weaponSkill) return weaponBase(doc);
+    }
+  }
+  return null;
+}
+
+/**
+ * A weapon Item as the base of a magic item: what makes it that weapon.
+ * @param {Item} doc
+ * @returns {object}
+ */
+function weaponBase(doc) {
+  const sys = doc.system;
+  return {
+    uuid: doc.uuid,
+    name: doc.name,
+    img: doc.img,
+    description: sys.description ?? "",
+    weaponSkill: sys.weaponSkill,
+    twoHanded: !!sys.twoHanded,
+    armorPiercing: !!sys.armorPiercing,
+    targetEffects: foundry.utils.deepClone(doc._source?.system?.targetEffects ?? []),
+  };
+}
+
+/**
+ * A rolled magic weapon's base, again, from the draft itself (the Loot
+ * Forge's Reroll Item): the same weapon, with what the GM has changed on it.
+ * @param {object} entry  A magic draft.
+ * @returns {object|null}  Null when it wasn't built on a weapon.
+ */
+export function baseOfDraft(entry) {
+  if (!entry?.base?.name) return null;
+  return {
+    uuid: entry.base.uuid ?? "",
+    name: entry.base.name,
+    img: entry.img ?? "",
+    description: entry.description ?? "",
+    weaponSkill: entry.weaponSkill ?? "",
+    twoHanded: !!entry.twoHanded,
+    armorPiercing: !!entry.armorPiercing,
+    targetEffects: foundry.utils.deepClone(entry.targetEffects ?? []),
+  };
 }
 
 /**
@@ -147,7 +275,16 @@ async function rowEntry(result, ctx) {
   if (result.type === "document" && result.documentUuid) {
     return { kind: "item", uuid: result.documentUuid, name, img: result.img, quantity: count };
   }
-  return { kind: "text", name, img: result.img || "icons/svg/item-bag.svg", quantity: count };
+  // A text row is a simple item of that name; the row's description, if
+  // any, becomes the item's (a mundane item with nothing to track, ruled
+  // 2026-11-27).
+  return {
+    kind: "text",
+    name,
+    img: result.img || "icons/svg/item-bag.svg",
+    quantity: count,
+    description: result.description ?? "",
+  };
 }
 
 /**
@@ -187,8 +324,11 @@ async function randomSpell() {
  * short. Each effect becomes a typed enchantment
  * (helpers/enchantments.mjs enchantmentKind), then filled in
  * (autofillMagicDraft).
+ * On a weapon (`base`, a Weapon Box's): no Item Type roll - its effects come
+ * from Table 39, Enchanted Mundane Item or Weapon - and the item is that
+ * weapon, named for it ("Enchanted Pool Cue of the...").
  * @param {string} tierKey
- * @param {{recipient?: Actor|null, floor?: number}} [options]
+ * @param {{recipient?: Actor|null, floor?: number, base?: object|null}} [options]
  * @returns {Promise<object|null>}  A magic draft:
  *   {kind: "magic", tierKey, itemType: "mundane"|"clothing"|"accessory", typeLabel,
  *    enchantments: {kind, text, value?, target?, percent?, multiplier?}[], name, slots, accessoryKind}.
@@ -196,18 +336,25 @@ async function randomSpell() {
  */
 export async function generateMagicDraft(
   tierKey,
-  { recipient = null, floor = currentFloor() } = {},
+  { recipient = null, floor = currentFloor(), base = null } = {},
 ) {
   const tier = CONFIG.CARLRPG.lootBoxTiers[tierKey];
   if (!tier?.rolls) return null;
-  const itemTypeTable = await lootTable(ITEM_TYPE_TABLE_NAME);
-  if (!itemTypeTable) return null;
-  const { results } = await itemTypeTable.roll({ recursive: false });
-  const typeLabel = results.find((r) => r.type === "text")?.name ?? "";
-  const link = results.find((r) => r.type === "document")?.documentUuid;
-  const linked = link ? await fromUuid(link) : null;
-  // The world's own copy of the effect table, if the GM made one.
-  const effects = linked ? ((await lootTable(linked.name)) ?? linked) : null;
+  let typeLabel = "";
+  let effects = null;
+  if (base) {
+    effects = await lootTable(WEAPON_EFFECTS_TABLE_NAME);
+    typeLabel = effects?.name ?? "";
+  } else {
+    const itemTypeTable = await lootTable(ITEM_TYPE_TABLE_NAME);
+    if (!itemTypeTable) return null;
+    const { results } = await itemTypeTable.roll({ recursive: false });
+    typeLabel = results.find((r) => r.type === "text")?.name ?? "";
+    const link = results.find((r) => r.type === "document")?.documentUuid;
+    const linked = link ? await fromUuid(link) : null;
+    // The world's own copy of the effect table, if the GM made one.
+    effects = linked ? ((await lootTable(linked.name)) ?? linked) : null;
+  }
   if (!effects) return null;
 
   const enchantments = [];
@@ -238,6 +385,19 @@ export async function generateMagicDraft(
     slots: [],
     accessoryKind: "",
   };
+  if (base) {
+    Object.assign(draft, {
+      base: { uuid: base.uuid ?? "", name: base.name },
+      name: magicItemName(tierKey, base.name),
+      slots: ["held"],
+      img: base.img ?? "",
+      description: base.description ?? "",
+      weaponSkill: base.weaponSkill,
+      twoHanded: !!base.twoHanded,
+      armorPiercing: !!base.armorPiercing,
+      targetEffects: foundry.utils.deepClone(base.targetEffects ?? []),
+    });
+  }
   return autofillMagicDraft(draft, { recipient, floor });
 }
 
@@ -601,7 +761,7 @@ export async function entryItemData(entry) {
         name: entry.name,
         type: "item",
         img: entry.img,
-        system: { description: "", quantity: entry.quantity ?? 1 },
+        system: { description: entry.description ?? "", quantity: entry.quantity ?? 1 },
       };
     default:
       return null;

@@ -13,6 +13,7 @@ import { collectDebuffRows, resolveDifficultyRows } from "../helpers/debuff-effe
 import { legacyAttackItems } from "../helpers/mob-attacks.mjs";
 import { parseSize } from "../helpers/size.mjs";
 import { currentFloor } from "../helpers/floor.mjs";
+import { dayNightMobStats } from "../helpers/day-night.mjs";
 
 /**
  * Mob actor ("Building a Mob", p.270-272) - a GM-built monster/NPC stat
@@ -151,6 +152,9 @@ export default class CarlRPGMob extends CarlRPGActorBase {
     aggregateActorBonuses(this);
 
     deriveStats(this);
+    // A Gobblin' Hog's Int and Dex Mods swap at night (helpers/day-night.mjs),
+    // and its Surprise and Evade below with them.
+    dayNightMobStats(this);
     // Shared DR/Resistance derivation - a Mob can own a feature granting either.
     deriveDefenses(this);
 

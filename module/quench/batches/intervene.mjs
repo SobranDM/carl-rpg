@@ -55,7 +55,8 @@ async function combatOf(...actors) {
 /** Delete the phase notices a test fight posted. */
 async function deleteNotices(combat) {
   if (!combat?.id) return;
-  await settle(150);
+  // A card that lands after this is swept with the batch's other stray
+  // messages (helpers.mjs withMessageCleanup).
   const ids = game.messages
     .filter((m) => m.getFlag("carl-rpg", "phaseNotice")?.combatId === combat.id)
     .map((m) => m.id);
@@ -263,7 +264,7 @@ export default function register(quench) {
           await setPhase(combat, "act");
         });
         afterEach(async function () {
-          await settle(150);
+          // Anything posted after this is swept at the batch's end (withMessageCleanup).
           const ids = game.messages.filter((m) => !before.has(m.id)).map((m) => m.id);
           if (ids.length) await ChatMessage.deleteDocuments(ids);
           await deleteTestCombat(combat);

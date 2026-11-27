@@ -37,6 +37,8 @@ import {
   checkDetail,
   checkNotes,
   d6CouldChange,
+  decidingDegree,
+  degreeTag,
   headerProgress,
   iconButton,
   rememberOpenRows,
@@ -51,7 +53,6 @@ import { queueForCard } from "../helpers/actor-queue.mjs";
 import { mobAttackRow } from "../helpers/attack-targets.mjs";
 import { rollsLikeCrawler } from "../helpers/actor-kinds.mjs";
 import { ownedSkill } from "../helpers/modifiers.mjs";
-import { CARLRPG } from "../helpers/config.mjs";
 import { currentPhase } from "../helpers/combat-phases.mjs";
 import { declaredAttacks } from "../helpers/declarations.mjs";
 import {
@@ -81,6 +82,7 @@ import {
   checkAt,
   checkList,
   crawlerKey,
+  decidingEvade,
   evadableHitsFor,
   gradeCheck,
   hitBlockable,
@@ -1214,6 +1216,8 @@ async function onBlock(message, state, uuid) {
       CarlDice.rollOpposedSkillCheck(who.actor, who.blocker.skill, {
         difficulty: first.row.difficulty,
         post: false,
+        // Its Modifier reaches every Check after it (rollBlockAgain keeps it).
+        combat: true,
       }),
   );
   if (!result) return;
@@ -1414,8 +1418,6 @@ function hitRow(state, hit, messageId) {
         ? i18n.localize("CARLRPG.Reaction.FreeEvade")
         : i18n.format("CARLRPG.Reaction.Sub.freeFailed", { total: check.total }),
     );
-  if (which === "evade" && check.degree === "nearMissFail")
-    sub.push(i18n.localize(CARLRPG.degreesOfSuccess.nearMissFail));
   if (which === "block") sub.push(...blockNotes(check));
   sub.push(...checkNotes(check));
   if (check?.auto)
@@ -1442,8 +1444,13 @@ function hitRow(state, hit, messageId) {
       }),
     );
   }
+  // The roll that decides the damage, on a tag under the chip.
+  const graded = hit.caughtBy
+    ? null
+    : decidingDegree({ evade: decidingEvade(hit), block: hit.block ?? null, shown: check });
   return statusRow({
     chip: statusChip(status),
+    degree: graded ? degreeTag(graded.degree, { kind: graded.kind }) : "",
     what: attackWhat(attack),
     flag: effectFlag(attack),
     sub,

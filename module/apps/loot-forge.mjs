@@ -17,9 +17,12 @@
  * Works on a LootDraft (helpers/loot.mjs generateLoot): {tierKey, gold, entries}.
  */
 import {
+  baseOfDraft,
+  drawWeaponBase,
   enchantmentLine,
   generateLoot,
   generateMagicDraft,
+  isWeaponTheme,
   MAGIC_ITEM_IMG,
   magicItemUpdate,
   ownDescription,
@@ -33,6 +36,20 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 const VALUE_KINDS = ["stat", "skill", "passiveSkill", "dr", "inherentSpell"];
 /** Enchantments that are their own words. */
 const TEXT_KINDS = ["buff", "externalBuff", "text", "unique"];
+
+/**
+ * A description with nothing in it - no words, no picture - as "": an
+ * editor saved empty hands in "<p></p>".
+ * @param {unknown} html
+ * @returns {string}
+ */
+function blankAsEmpty(html) {
+  const text = String(html ?? "");
+  if (!text) return "";
+  const div = document.createElement("div");
+  div.innerHTML = text;
+  return div.textContent.trim() || div.querySelector("img, video, iframe, hr, table") ? text : "";
+}
 
 export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2) {
   /**
@@ -61,6 +78,12 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     /** True while Save runs: a second click does nothing. */
     this.busy = false;
   }
+
+  /** The draft as opened: closing saves only if it's changed since. */
+  #opened = "";
+
+  /** Saved already (by Save, or on closing): closing doesn't save again. */
+  #saved = false;
 
   /**
    * Run Save once: further clicks while it runs are ignored.
@@ -141,7 +164,9 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
       rerollEffect: LootForge.#onRerollEffect,
       addArrayItem: LootForge.#onAddArrayItem,
       deleteArrayItem: LootForge.#onDeleteArrayItem,
-      save: LootForge.#onSave,
+      // Not "save": a description editor's own save button is
+      // data-action="save", and would save and close the Forge.
+      saveForge: LootForge.#onSave,
     },
   };
 
@@ -248,11 +273,16 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   }
 
   /**
-   * Items dropped from the sidebar, a compendium or a sheet join the loot.
+   * The draft as first drawn, to tell on closing whether anything changed:
+   * taken through the form, so what it fills in itself (a blank description,
+   * a quantity of 1) doesn't count as a change. Items dropped from the
+   * sidebar, a compendium or a sheet join the loot.
    * @override
    */
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
+    this.#applyForm(new foundry.applications.ux.FormDataExtended(this.element));
+    this.#opened = JSON.stringify(this.draft);
     if (this.single) return;
     this.element.addEventListener("dragover", (event) => event.preventDefault());
     this.element.addEventListener("drop", (event) => this.#onDrop(event));
@@ -279,6 +309,29 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
    * (the tier, a slot, a Stat...) redraws; typing doesn't, so it keeps focus.
    */
   static async #onFormChange(event, form, formData) {
+    this.#applyForm(formData);
+    // A new Weapon Skill shows or hides the weapon's parts; a new image, its
+    // preview; a box ticked, its Debuff's summary line; a saved Description,
+    // its text (a closed editor shows what it was drawn with, and there's no
+    // document update here to redraw it, as on a sheet).
+    const name = event?.target?.getAttribute?.("name") ?? event?.target?.name ?? "";
+    const redraws = [
+      ".weaponSkill",
+      ".img",
+      ".critOnly",
+      ".amazingSuccessOnly",
+      ".stacks",
+      ".description",
+    ];
+    if (event?.target instanceof HTMLSelectElement || redraws.some((s) => name.endsWith(s)))
+      this.#redraw();
+  }
+
+  /**
+   * The form's fields, into the draft.
+   * @param {foundry.applications.ux.FormDataExtended} formData
+   */
+  #applyForm(formData) {
     const data = foundry.utils.expandObject(formData.object);
     const draft = this.draft;
     if (data.tierKey) draft.tierKey = data.tierKey;
@@ -302,7 +355,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
         }
       }
       if (changes.accessoryKind !== undefined) entry.accessoryKind = changes.accessoryKind;
-      if (changes.description !== undefined) entry.description = String(changes.description ?? "");
+      if (changes.description !== undefined) entry.description = blankAsEmpty(changes.description);
       if (changes.img !== undefined) entry.img = String(changes.img ?? "").trim();
       if (changes.twoHanded !== undefined) entry.twoHanded = !!changes.twoHanded;
       if (changes.armorPiercing !== undefined) entry.armorPiercing = !!changes.armorPiercing;
@@ -331,12 +384,38 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
         if (e.text !== undefined) ench.text = String(e.text);
       }
     }
-    // A new Weapon Skill shows or hides the weapon's parts; a new image, its
-    // preview; a box ticked, its Debuff's summary line.
-    const name = event?.target?.name ?? "";
-    const redraws = [".weaponSkill", ".img", ".critOnly", ".amazingSuccessOnly", ".stacks"];
-    if (event?.target instanceof HTMLSelectElement || redraws.some((s) => name.endsWith(s)))
-      this.#redraw();
+  }
+
+  /**
+   * Closing with the X (or Escape) saves too, when the GM has changed
+   * something - unless Save did already. Unchanged, nothing is saved: a box
+   * only looked at stays as it was (still rolled when opened, if it was).
+   * @override
+   */
+  async _preClose(options) {
+    await super._preClose(options);
+    if (this.#saved || this.busy || !this.onSave || !game.user.isGM) return;
+    // What's typed but not yet handed in: a field still focused, an open
+    // Description editor.
+    // An open editor's text goes through #takeEditors, which knows whether
+    // anything was typed in it; the form would hand it in regardless.
+    if (this.element) {
+      const object = { ...new foundry.applications.ux.FormDataExtended(this.element).object };
+      for (const editor of this.element.querySelectorAll("prose-mirror[name]"))
+        if (editor.open) delete object[editor.getAttribute("name")];
+      this.#applyForm({ object });
+    }
+    this.#takeEditors();
+    if (JSON.stringify(this.draft) === this.#opened) return;
+    // A save that fails (the box or item deleted meanwhile) mustn't keep the
+    // window from closing.
+    try {
+      await this.onSave(foundry.utils.deepClone(this.draft));
+    } catch (err) {
+      console.error("carl-rpg | Loot Forge: saving on close failed", err);
+      ui.notifications.error(game.i18n.localize("CARLRPG.Loot.Forge.CloseSaveFailed"));
+    }
+    this.#saved = true;
   }
 
   /**
@@ -359,9 +438,17 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     for (const editor of this.element?.querySelectorAll("prose-mirror[name]") ?? []) {
       const m = editor.getAttribute("name").match(/^entries\.(\d+)\.description$/);
       const entry = m ? this.draft.entries[Number(m[1])] : null;
-      if (entry && editor.open) entry.description = String(editor.value ?? "");
+      if (!entry || !editor.open) continue;
+      const value = String(editor.value ?? "");
+      // Opened but nothing typed: what's stored stands (an empty editor
+      // would otherwise hand in "<p></p>", and count as a change).
+      if (value === this.#openedText.get(editor)) continue;
+      entry.description = blankAsEmpty(value);
     }
   }
+
+  /** Each Description editor's text as it was opened (#takeEditors). */
+  #openedText = new WeakMap();
 
   /** A Debuff row just added: opened on the next draw, ready to fill in. */
   #openRow = null;
@@ -369,6 +456,12 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   /** @override */
   _onRender(context, options) {
     super._onRender(context, options);
+    // The editor's "open" doesn't bubble, so each is listened to itself.
+    for (const editor of this.element.querySelectorAll("prose-mirror[name]")) {
+      editor.addEventListener("open", () =>
+        this.#openedText.set(editor, String(editor.value ?? "")),
+      );
+    }
     if (!this.#openRow) return;
     const row = this.element.querySelector(`details[data-row-key="${this.#openRow}"]`);
     if (row) row.open = true;
@@ -381,13 +474,22 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   }
 
   static async #onRerollAll() {
-    const fresh = await generateLoot(this.draft.tierKey, { recipient: this.recipient });
+    const fresh = await generateLoot(this.draft.tierKey, {
+      recipient: this.recipient,
+      theme: this.draft.theme ?? "",
+    });
     if (fresh) this.draft = fresh;
     this.#redraw();
   }
 
   static async #onAddMagic() {
-    const magic = await generateMagicDraft(this.draft.tierKey, { recipient: this.recipient });
+    // A Weapon Box's, a weapon like its own (generateLoot).
+    const theme = this.draft.theme ?? "";
+    const base = isWeaponTheme(theme) ? await drawWeaponBase(this.draft.tierKey, theme) : null;
+    const magic = await generateMagicDraft(this.draft.tierKey, {
+      recipient: this.recipient,
+      base,
+    });
     if (!magic) {
       ui.notifications.warn(game.i18n.localize("CARLRPG.Loot.Forge.NoMagicAtTier"));
       return;
@@ -405,8 +507,11 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     const index = LootForge.#entryIndex(target);
     const entry = this.draft.entries[index];
     if (entry?.kind !== "magic") return;
+    // A Weapon Box's weapon stays that weapon, with new enchantments.
+    const base = baseOfDraft(entry);
     const magic = await generateMagicDraft(entry.tierKey ?? this.draft.tierKey, {
       recipient: this.recipient,
+      base,
     });
     // A new item, but the GM's own words and image stay (ruled 2026-11-21).
     if (magic) {
@@ -461,6 +566,7 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
     return this.#once(async () => {
       this.#takeEditors();
       await this.onSave?.(foundry.utils.deepClone(this.draft));
+      this.#saved = true;
       this.close();
     });
   }

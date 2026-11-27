@@ -1,0 +1,137 @@
+{
+  "_id": "SNDtTa3hQ2ngO1aX",
+  "name": "Survivor's Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Survivor's Box's consumables - first aid and healing (p.22). Drawn for a box's consumable or two, any tier when the box's title names the theme (\"Bronze Survivor's Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Survivor's Box: Consumables\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "AHaNCmDtt2myvSCq",
+      "type": "document",
+      "name": "Healing Potion",
+      "img": "icons/consumables/potions/bottle-round-corked-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.pE9m1aDQwwYqj0gK",
+      "weight": 3,
+      "range": [
+        1,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SNDtTa3hQ2ngO1aX.AHaNCmDtt2myvSCq"
+    },
+    {
+      "_id": "BQ5WKKCEXYJQ4bkX",
+      "type": "document",
+      "name": "Good Healing Potion",
+      "img": "icons/consumables/potions/bottle-round-label-cork-red.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.G1F9L3xhCnSAHej7",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SNDtTa3hQ2ngO1aX.BQ5WKKCEXYJQ4bkX"
+    },
+    {
+      "_id": "SFObbgA9NI0gZDU0",
+      "type": "document",
+      "name": "Bandages (1d6)",
+      "img": "icons/tools/medical/bandages-adhesive.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.TQamJzIgqLFpxzn4",
+      "weight": 2,
+      "range": [
+        5,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SNDtTa3hQ2ngO1aX.SFObbgA9NI0gZDU0"
+    },
+    {
+      "_id": "JjQY3Z8adIRPp4Tc",
+      "type": "document",
+      "name": "Poison Antidote",
+      "img": "icons/consumables/potions/bottle-conical-corked-green.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.Ghu5J0A8zWEewZVS",
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!SNDtTa3hQ2ngO1aX.JjQY3Z8adIRPp4Tc"
+    }
+  ],
+  "formula": "1d7",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!SNDtTa3hQ2ngO1aX"
+}

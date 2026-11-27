@@ -115,19 +115,22 @@
     gap: 2px;
     margin-top: 4px;
 
+    // A label above the box, not beside it: the row's 110px basis would be
+    // its height in this column.
+    .carl-forge-kind {
+      flex: 0 0 auto;
+    }
+
     .carl-hint {
       margin: 0;
     }
   }
 
-  // Compact to read; room to type in once opened (as an item sheet's).
+  // The same room open or closed, so clicking Edit doesn't resize the
+  // window; longer text scrolls inside it.
   .carl-forge-description prose-mirror {
     flex: 0 0 auto;
-    min-height: 4em;
-
-    &.active {
-      min-height: 160px;
-    }
+    min-height: 160px;
 
     .editor-content {
       flex: 1;

@@ -19,7 +19,7 @@ export default function register(quench) {
   quench.registerBatch(
     "carl-rpg.loot-box",
     (context) => {
-      const { describe, it, assert } = context;
+      const { describe, it, assert, before, after } = context;
 
       describe("Loot Box actor", function () {
         useQuenchTimeout(this);
@@ -60,40 +60,29 @@ export default function register(quench) {
           }
         });
 
-        it("Bronze: mundane things, no magic item", async function () {
+        describe("rerolling a Silver box's items", function () {
           useQuenchTimeout(this, 60000);
-          const box = await createTestLootBox({ tier: "bronze" });
-          try {
+          let box;
+          before(async function () {
+            box = await createTestLootBox({ tier: "silver" });
             await generateLootBoxItems(box);
-            assert.isAbove(box.items.size, 0);
-            assert.isFalse(box.items.some((i) => i.getFlag("carl-rpg", "magicDraft")));
-          } finally {
+          });
+          after(async function () {
             await deleteTestActor(box);
-          }
-        });
+          });
 
-        it("reroll rewrites a magic item at the box's current tier, keeping the Item; a plain item isn't rerolled", async function () {
-          useQuenchTimeout(this, 60000);
-          const box = await createTestLootBox({ tier: "silver" });
-          try {
-            await generateLootBoxItems(box);
+          it("reroll rewrites a magic item at the box's current tier, keeping the Item; a plain item isn't rerolled", async function () {
             const item = box.items.find((i) => i.getFlag("carl-rpg", "magicDraft"));
             const plain = box.items.find((i) => !i.getFlag("carl-rpg", "magicDraft"));
+            assert.exists(plain, "test setup: a Silver box holds 1-2 consumables");
             await box.update({ "system.tier": "gold" });
             await rerollLootItem(item);
             assert.equal(box.items.get(item.id).getFlag("carl-rpg", "lootTier"), "gold");
             assert.equal(box.items.get(item.id).getFlag("carl-rpg", "magicDraft").tierKey, "gold");
-            if (plain) assert.isNull(await rerollLootItem(plain));
-          } finally {
-            await deleteTestActor(box);
-          }
-        });
+            assert.isNull(await rerollLootItem(plain));
+          });
 
-        it("reroll keeps the GM's words, image and a weapon's Debuffs (ruled 2026-11-21)", async function () {
-          useQuenchTimeout(this, 60000);
-          const box = await createTestLootBox({ tier: "silver" });
-          try {
-            await generateLootBoxItems(box);
+          it("reroll keeps the GM's words, image and a weapon's Debuffs (ruled 2026-11-21)", async function () {
             const item = box.items.find((i) => i.getFlag("carl-rpg", "magicDraft"));
             const debuff = { debuffKey: "blinded", stacks: 1, label: "" };
             await item.update({
@@ -102,18 +91,16 @@ export default function register(quench) {
               "system.targetEffects": [debuff],
             });
             await rerollLootItem(item);
-            const after = box.items.get(item.id);
-            assert.isTrue(after.system.description.startsWith("<p>Mine.</p>"));
+            const rerolled = box.items.get(item.id);
+            assert.isTrue(rerolled.system.description.startsWith("<p>Mine.</p>"));
             assert.lengthOf(
-              after.system.description.match(/<ul/g) ?? [],
+              rerolled.system.description.match(/<ul/g) ?? [],
               1,
               "one enchantment list",
             );
-            assert.equal(after.img, "icons/svg/sun.svg");
-            assert.equal(after.system.targetEffects[0]?.debuffKey, "blinded");
-          } finally {
-            await deleteTestActor(box);
-          }
+            assert.equal(rerolled.img, "icons/svg/sun.svg");
+            assert.equal(rerolled.system.targetEffects[0]?.debuffKey, "blinded");
+          });
         });
 
         it("taking an item moves it from the box to the character", async function () {

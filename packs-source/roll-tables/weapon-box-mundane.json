@@ -1,0 +1,272 @@
+{
+  "_id": "Olxkd9Axfd5upp5e",
+  "name": "Weapon Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Weapon Box's mundane - a silly, non-magical everyday object that fights as a d6 weapon (p.116). Drawn for the one item of a Bronze box when the box's title names the theme (\"Bronze Weapon Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Weapon Box: Mundane\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "EKC78827jC1VnowQ",
+      "type": "document",
+      "name": "Ironing Board",
+      "img": "icons/commodities/wood/lumber-plank-beige.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.W7GEEKNYScgGv8sI",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.EKC78827jC1VnowQ"
+    },
+    {
+      "_id": "0YzaD34VoTcdyzqb",
+      "type": "document",
+      "name": "Pool Cue",
+      "img": "icons/weapons/staves/staff-simple.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.LbidOSE6csQEpYNS",
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.0YzaD34VoTcdyzqb"
+    },
+    {
+      "_id": "cIF7KswBBl7buKSs",
+      "type": "document",
+      "name": "Golf Club",
+      "img": "icons/weapons/clubs/baton-night-stick-truncheon.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.k4FEmg6ZXMQXx5Sc",
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.cIF7KswBBl7buKSs"
+    },
+    {
+      "_id": "tD9jWFkQJZlNOFw0",
+      "type": "document",
+      "name": "Snow Shovel",
+      "img": "icons/tools/hand/shovel-trench.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.9NtD3pdhXd11pQpc",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.tD9jWFkQJZlNOFw0"
+    },
+    {
+      "_id": "3a8xOGIL7LZug5PT",
+      "type": "document",
+      "name": "Lacrosse Stick",
+      "img": "icons/tools/fishing/net-hand-white.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.nYLFANacrUBuLIUA",
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.3a8xOGIL7LZug5PT"
+    },
+    {
+      "_id": "5bzR4CCsOHTCKBZ0",
+      "type": "document",
+      "name": "Marble Rolling Pin",
+      "img": "icons/weapons/clubs/club-simple-stone.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.DLYIPQGCpvLcBvlS",
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.5bzR4CCsOHTCKBZ0"
+    },
+    {
+      "_id": "OzYo8OP1hci8fd1S",
+      "type": "document",
+      "name": "Bowling Ball",
+      "img": "icons/sundries/sports/basketball.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.bT14SyLvl8rYnKnA",
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.OzYo8OP1hci8fd1S"
+    },
+    {
+      "_id": "sFcOVsoSSD5VNd0F",
+      "type": "document",
+      "name": "Garden Gnome",
+      "img": "icons/sundries/misc/plant-potted.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.y9gOEdbj2fs6Vzz9",
+      "weight": 1,
+      "range": [
+        8,
+        8
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.sFcOVsoSSD5VNd0F"
+    },
+    {
+      "_id": "AFYFiWwr5RlN1hdm",
+      "type": "document",
+      "name": "Croquet Mallet ×4",
+      "img": "icons/tools/hand/mallet-wood.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.gear.Item.CI3HOzGuLpO1rpAc",
+      "weight": 1,
+      "range": [
+        9,
+        9
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Olxkd9Axfd5upp5e.AFYFiWwr5RlN1hdm"
+    }
+  ],
+  "formula": "1d9",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Olxkd9Axfd5upp5e"
+}

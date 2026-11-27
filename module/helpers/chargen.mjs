@@ -21,7 +21,7 @@ import { assignItemToSlot, slotHolds } from "./equip-slots.mjs";
 import { isInHotlist, toggleHotlist } from "./hotlist.mjs";
 import { headedSectionsToHtml, STORY_SECTIONS } from "./rich-text.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
-import { copyData, PACKS } from "./packs.mjs";
+import { copyData, overridableTable, PACKS } from "./packs.mjs";
 import { esc } from "./html.mjs";
 
 const SCOPE = "carl-rpg";
@@ -234,17 +234,14 @@ function resultText(result) {
 }
 
 /**
- * A roll table by name: the world's first (so a GM can homebrew one), else
- * the system's Roll Tables pack.
+ * A character creation table by name, so a GM can homebrew one: the world's
+ * own, then the world's compendiums, then the system's (packs.mjs
+ * overridableTable; ruled 2026-11-27).
  * @param {string} name
  * @returns {Promise<RollTable|null>}
  */
-export async function chargenTable(name) {
-  const world = game.tables?.getName?.(name);
-  if (world) return world;
-  const pack = game.packs.get(PACKS.rollTables);
-  const entry = (await pack?.getIndex())?.find((e) => e.name === name);
-  return entry ? pack.getDocument(entry._id) : null;
+export function chargenTable(name) {
+  return overridableTable(name);
 }
 
 /**

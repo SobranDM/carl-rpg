@@ -31,7 +31,12 @@ import {
 import { injectBloodSplatter } from "../helpers/window-chrome.mjs";
 import AchievementGrid from "./achievement-grid.mjs";
 import OpeningSessionApp from "./opening-session.mjs";
-import { isGrindTarget, grindTargetOptions, addGrindLevelHours } from "../helpers/grinding.mjs";
+import {
+  isGrindTarget,
+  grindTargetOptions,
+  addGrindLevelHours,
+  lowestGrinder,
+} from "../helpers/grinding.mjs";
 import { grindAndOfferSurplus } from "../chat/grind-surplus-card.mjs";
 import { queueForActor } from "../helpers/actor-queue.mjs";
 import { dropExpiredConditions } from "../helpers/expiry.mjs";
@@ -64,6 +69,7 @@ import {
   wireOpposed,
 } from "../dice/opposed.mjs";
 import { findSkillLikeItem } from "../helpers/race-class-grants.mjs";
+import { isNight, setTimeOfDay } from "../helpers/day-night.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -143,6 +149,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       openBoxes: CarlToolbox.#onOpenBoxes,
       mend: CarlToolbox.#onMend,
       floorIncrement: CarlToolbox.#onFloorIncrement,
+      toggleTimeOfDay: CarlToolbox.#onToggleTimeOfDay,
       floorDecrement: CarlToolbox.#onFloorDecrement,
       rest: CarlToolbox.#onRest,
       grind: CarlToolbox.#onGrind,
@@ -166,6 +173,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       elapsedLabel: formatElapsed(elapsedMs),
       thresholdReached: timer.running && elapsedMs >= TWO_HOURS_MS,
       floor: currentFloor(),
+      night: isNight(),
     };
   }
 
@@ -678,6 +686,13 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     if (!hasFloorClock(next)) await CarlToolbox.#onCollapseTimer.call(this);
   }
 
+  /** The sun/moon toggle: day or night (helpers/day-night.mjs). */
+  static async #onToggleTimeOfDay(event, target) {
+    if (!game.user.isGM) return;
+    await setTimeOfDay(isNight() ? "day" : "night");
+    this.render();
+  }
+
   /** Floor -: back to that floor, and its own timer if it had one. */
   static async #onFloorDecrement(event, target) {
     if (!game.user.isGM) return;
@@ -918,57 +933,80 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
   }
 
   /**
-   * Grinding (p.170): GM picks an actor, hours, and a Skill that can take
-   * them (module/helpers/grinding.mjs's isGrindTarget). Once the
-   * Skill's accrued hours meet its Rank, the Advancement Check is rolled
-   * immediately, with Debuff penalties; hours beyond that go to a chat card
-   * offering them to another Skill (module/chat/grind-surplus-card.mjs).
+   * Grinding (p.170): the GM picks who's grinding and for how long, then a
+   * Skill for each that can take the hours (module/helpers/grinding.mjs's
+   * isGrindTarget). Once a Skill's accrued hours meet its Rank, the
+   * Advancement Check is rolled immediately, with Debuff penalties; hours
+   * beyond that go to a chat card offering them to another Skill
+   * (module/chat/grind-surplus-card.mjs). The same hours count toward each
+   * one's next Level - even one with no Skill to grind - and the lowest
+   * Level of those picked, if no one ties them, gains 1d2 Levels instead of
+   * 1 (p.171; ruled 2026-11-27).
    */
   static async #onGrind(event, target) {
     if (!game.user.isGM) return;
-    const actors = game.actors.filter((a) => a.type === "character");
-    if (!actors.length) {
-      ui.notifications.warn(game.i18n.localize("CARLRPG.Toolbox.NoCharacters"));
-      return;
-    }
-    const actorOptions = actors
-      .map((a) => `<option value="${esc(a.id)}">${esc(a.name)}</option>`)
-      .join("");
-    const actorResult = await showCarlDialog({
-      title: game.i18n.localize("CARLRPG.Toolbox.GrindTitle"),
-      content: `<div class="carl-dialog-body">
-        <div class="form-group"><label>${esc(game.i18n.localize("CARLRPG.Toolbox.GrindActor"))}</label>
-          <select name="actorId">${actorOptions}</select></div>
-        <div class="form-group"><label>${game.i18n.localize("CARLRPG.Toolbox.GrindHours")}</label>
+    const i18n = game.i18n;
+    const picked = await CarlToolbox.#pickActors({
+      titleKey: "CARLRPG.Toolbox.GrindTitle",
+      promptKey: "CARLRPG.Toolbox.GrindPickerPrompt",
+      confirmLabelKey: "CARLRPG.Toolbox.GrindNext",
+      after: `<div class="form-group"><label>${esc(i18n.localize("CARLRPG.Toolbox.GrindHours"))}</label>
           <input type="number" name="hours" value="1" min="1" /></div>
-        ${advanceTimeField(game.i18n.localize("CARLRPG.Toolbox.TheHours"))}
-      </div>`,
-      buttons: [rollButton({ label: "CARLRPG.Toolbox.GrindNext" }), cancelButton()],
+        ${advanceTimeField(i18n.localize("CARLRPG.Toolbox.TheHours"))}`,
+      read: (form) => ({
+        hours: Math.floor(Number(form.querySelector('input[name="hours"]')?.value) || 0),
+        advance: !!form.querySelector("[data-advance-time]")?.checked,
+      }),
     });
-    if (!actorResult) return;
-    const actor = game.actors.get(actorResult.actorId);
-    const hours = Number(actorResult.hours) || 0;
-    if (!actor || hours <= 0) return;
+    if (!picked) return;
+    const hours = picked.data.hours;
+    if (!picked.actors.length || hours <= 0) return;
 
-    const skillItems = actor.items.filter((i) => isGrindTarget(actor, i));
-    if (!skillItems.length) {
-      ui.notifications.warn(game.i18n.format("CARLRPG.Grind.NoTargets", { name: actor.name }));
-      return;
+    // Everyone picked grinds toward a Level; those with a Skill that can take
+    // the hours put them in it too. One with none still gains Levels
+    // (ruled 2026-11-27), and is told why no Skill was asked for.
+    const grinders = picked.actors.map((actor) => ({
+      actor,
+      targets: actor.items.filter((i) => isGrindTarget(actor, i)),
+    }));
+    for (const { actor, targets } of grinders) {
+      if (!targets.length)
+        ui.notifications.info(
+          i18n.format("CARLRPG.Grind.NoTargetsLevelOnly", { name: actor.name }),
+        );
     }
-    const skillOptions = grindTargetOptions(skillItems);
-    const skillResult = await showCarlDialog({
-      title: game.i18n.format("CARLRPG.Toolbox.GrindSkillTitle", { name: actor.name }),
-      content: `<div class="carl-dialog-body"><div class="form-group"><select name="itemId">${skillOptions}</select></div></div>`,
-      buttons: [rollButton(), cancelButton()],
-    });
-    if (!skillResult) return;
-    const item = actor.items.get(skillResult.itemId);
-    if (!item || !isGrindTarget(actor, item)) return;
-    await grindAndOfferSurplus(actor, item, hours);
-    // The same hours also count toward the next Level (p.171).
-    await addGrindLevelHours(actor, hours);
-    // Grinding takes that long (docs/release-0.7.0.md §6).
-    if (actorResult.advanceTime !== false) await advanceWorldTime(hours * 3600);
+
+    const withSkills = grinders.filter((g) => g.targets.length);
+    let skills = {};
+    if (withSkills.length) {
+      const rows = withSkills
+        .map(
+          ({ actor, targets }) => `<div class="form-group">
+          <label>${esc(actor.name)} <span class="carl-hint">${esc(i18n.format("CARLRPG.Toolbox.GrindLevel", { level: actor.system.attributes?.level?.value ?? 1 }))}</span></label>
+          <div class="form-fields"><select name="skill-${esc(actor.id)}">${grindTargetOptions(targets)}</select></div>
+        </div>`,
+        )
+        .join("");
+      skills = await showCarlDialog({
+        title: i18n.localize("CARLRPG.Toolbox.GrindSkillsTitle"),
+        position: { width: 520 },
+        content: `<div class="carl-dialog-body">${rows}</div>`,
+        buttons: [rollButton(), cancelButton()],
+      });
+      if (!skills) return;
+    }
+
+    // Who's lowest is settled among everyone picked, before anyone levels up
+    // from this grind.
+    const lowestId = lowestGrinder(picked.actors);
+    for (const { actor } of grinders) {
+      const item = actor.items.get(skills[`skill-${actor.id}`] ?? "");
+      if (item && isGrindTarget(actor, item)) await grindAndOfferSurplus(actor, item, hours);
+      // The same hours also count toward the next Level (p.171).
+      await addGrindLevelHours(actor, hours, { lowest: actor.id === lowestId });
+    }
+    // Grinding takes that long, for everyone at once (docs/release-0.7.0.md §6).
+    if (picked.data.advance) await advanceWorldTime(hours * 3600);
   }
 
   /**

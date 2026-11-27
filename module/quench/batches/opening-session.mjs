@@ -116,8 +116,10 @@ export default function register(quench) {
         it("only the crawler's player or the GM may press Open!/Next!", async function () {
           const a = await crawlerWithBoxes("who", [["bronze", "Quench Who"]]);
           try {
-            const player = { id: foundry.utils.randomID(), isGM: false };
-            const stranger = { id: foundry.utils.randomID(), isGM: false };
+            // Stand-in players: Foundry's testUserPermission asks a user's
+            // role too (hasRole, from 14.371), and neither is a GM.
+            const player = { id: foundry.utils.randomID(), isGM: false, hasRole: () => false };
+            const stranger = { id: foundry.utils.randomID(), isGM: false, hasRole: () => false };
             await a.update({ [`ownership.${player.id}`]: CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER });
             await startSession([a.id]);
             assert.isTrue(canAdvance(game.user), "the GM");

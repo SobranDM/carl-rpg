@@ -1,0 +1,191 @@
+{
+  "_id": "Rl84KlcTDkl8feot",
+  "name": "Pet Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Pet Box's mundane - treats, pet healing and pet gear (p.22). Drawn for the one item of a Bronze box when the box's title names the theme (\"Bronze Pet Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Pet Box: Mundane\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "iJyfcrdkwm6suuFu",
+      "type": "text",
+      "name": "Squeaky Toy",
+      "img": "icons/sundries/sports/baseball.webp",
+      "description": "<p>A rubber hot dog that squeaks. Pets love it; mobs find it maddening.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Rl84KlcTDkl8feot.iJyfcrdkwm6suuFu"
+    },
+    {
+      "_id": "w955VPEBC9JVRNk6",
+      "type": "text",
+      "name": "Pet Stroller",
+      "img": "icons/commodities/tech/wheel-wooden.webp",
+      "description": "<p>A padded stroller with a mesh hood, for a pet who refuses to walk.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Rl84KlcTDkl8feot.w955VPEBC9JVRNk6"
+    },
+    {
+      "_id": "FEkNtMaHbDuVM7AO",
+      "type": "text",
+      "name": "Flea Comb",
+      "img": "icons/tools/hand/rake-wood-yellow.webp",
+      "description": "<p>A fine-toothed comb. Grooming time, whether they like it or not.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Rl84KlcTDkl8feot.FEkNtMaHbDuVM7AO"
+    },
+    {
+      "_id": "dQVF6nb7qHEoxQTA",
+      "type": "text",
+      "name": "Pet Bed",
+      "img": "icons/sundries/survival/bedroll-pink.webp",
+      "description": "<p>A round, fleecy bed that smells faintly of somebody else's dog.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Rl84KlcTDkl8feot.dQVF6nb7qHEoxQTA"
+    },
+    {
+      "_id": "mkjJduaRIp8THxvE",
+      "type": "text",
+      "name": "Retractable Leash",
+      "img": "icons/sundries/survival/leather-strap-brown.webp",
+      "description": "<p>Sixteen feet of leash on a reel with a lock button.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Rl84KlcTDkl8feot.mkjJduaRIp8THxvE"
+    },
+    {
+      "_id": "k3Bi91iwlVNlHs4h",
+      "type": "text",
+      "name": "Laser Pointer",
+      "img": "icons/commodities/tech/remote-control-steel-red.webp",
+      "description": "<p>A red dot most animals can't ignore.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Rl84KlcTDkl8feot.k3Bi91iwlVNlHs4h"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Rl84KlcTDkl8feot"
+}

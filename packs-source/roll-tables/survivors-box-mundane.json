@@ -1,0 +1,137 @@
+{
+  "_id": "sck5qF45cECBnkLp",
+  "name": "Survivor's Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Survivor's Box's mundane - first aid and healing (p.22). Drawn for the one item of a Bronze box when the box's title names the theme (\"Bronze Survivor's Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Survivor's Box: Mundane\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "uIymUZiaTrG1xRbr",
+      "type": "text",
+      "name": "Office First-Aid Kit",
+      "img": "icons/tools/medical/medkit-white-red.webp",
+      "description": "<p>Adhesive strips, a cold pack and a sachet of something for headaches.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        1,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sck5qF45cECBnkLp.uIymUZiaTrG1xRbr"
+    },
+    {
+      "_id": "le9miyVAczf1IgT3",
+      "type": "text",
+      "name": "Hand Warmers ×10",
+      "img": "icons/containers/bags/pouch-cloth-tan.webp",
+      "description": "<p>Shake one and it's warm for hours, then useless.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sck5qF45cECBnkLp.le9miyVAczf1IgT3"
+    },
+    {
+      "_id": "kFSpXKt1TMyB3pXU",
+      "type": "text",
+      "name": "Knee Brace",
+      "img": "icons/tools/medical/bandage-worn.webp",
+      "description": "<p>Neoprene and velcro. Holds a bad knee together for one more run.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sck5qF45cECBnkLp.kFSpXKt1TMyB3pXU"
+    },
+    {
+      "_id": "kpnkqnrZFEt0JgMq",
+      "type": "text",
+      "name": "Two-Person Tent",
+      "img": "icons/sundries/survival/shelter-tent-small.webp",
+      "description": "<p>Missing one pole. Sleeps two, if they like each other.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!sck5qF45cECBnkLp.kpnkqnrZFEt0JgMq"
+    }
+  ],
+  "formula": "1d5",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!sck5qF45cECBnkLp"
+}

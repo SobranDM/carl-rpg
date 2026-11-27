@@ -21,8 +21,14 @@ import {
   libraryAchievements,
   updateLibraryAchievement,
 } from "../helpers/achievement-library.mjs";
-import { boxDraftForForge, clearBoxContents, prepareBox } from "../helpers/boxes.mjs";
+import {
+  boxDraftForForge,
+  clearBoxContents,
+  confirmClearBox,
+  prepareBox,
+} from "../helpers/boxes.mjs";
 import { generateLoot } from "../helpers/loot.mjs";
+import { boxTheme } from "../helpers/reward-text.mjs";
 import LootForge from "./loot-forge.mjs";
 import { enrichDescription, itemDescriptions, itemTooltips } from "../helpers/rich-text.mjs";
 import { labelChoices } from "../helpers/html.mjs";
@@ -123,7 +129,10 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
 
   /** @override */
   async _prepareContext(options) {
-    const groups = pickerGroups();
+    // Characters the GM has marked as no crawler stay out (issue #18).
+    const crawlers = (list) => list.filter((a) => !a.system.details?.hideFromAchievements);
+    const all = pickerGroups();
+    const groups = { active: crawlers(all.active), other: crawlers(all.other) };
     const showOffline = this.showOffline ?? !groups.active.length;
     const columns = [...groups.active, ...(showOffline ? groups.other : [])];
     const defs = await this.definitions();
@@ -222,11 +231,16 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     for (const hook of ["createActor", "deleteActor", "userConnected"]) {
       this.#hooks.push([hook, Hooks.on(hook, redraw)]);
     }
-    // A crawler's box prepared ahead of its award (a flag on the crawler).
+    // A crawler's box prepared ahead of its award (a flag on the crawler),
+    // or a character hidden from or shown in this window (issue #18).
     this.#hooks.push([
       "updateActor",
       Hooks.on("updateActor", (actor, changed) => {
-        if (foundry.utils.hasProperty(changed, "flags.carl-rpg")) redraw();
+        if (
+          foundry.utils.hasProperty(changed, "flags.carl-rpg") ||
+          foundry.utils.hasProperty(changed, "system.details.hideFromAchievements")
+        )
+          redraw();
       }),
     ]);
   }
@@ -437,12 +451,15 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
       ui.notifications.info(game.i18n.localize("CARLRPG.Achievement.Grid.BoxOpened"));
       return;
     }
-    const tierKey = achievementBox(def)?.tierKey ?? def.system.grade;
+    const planned = achievementBox(def);
+    const tierKey = planned?.tierKey ?? def.system.grade;
     const draft = box
       ? await boxDraftForForge(box)
       : (foundry.utils.deepClone(preparedBoxFor(actor, def)) ??
-        (await generateLoot(tierKey, { recipient: actor })));
+        (await generateLoot(tierKey, { recipient: actor, theme: boxTheme(planned?.name) })));
     if (!draft) return;
+    // The Forge's Reroll All rolls the box's theme too.
+    draft.theme ||= boxTheme(box?.name ?? planned?.name);
     await LootForge.open({
       draft,
       recipient: actor,
@@ -461,8 +478,11 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     if (!def || !actor) return;
     const copy = awardedCopy(actor, def.uuid);
     const box = copy ? achievementBoxOf(copy) : null;
+    // Awarded and its box already opened: nothing left to throw away.
+    if (copy && !box) return;
+    if (!(await confirmClearBox(event, actor.name))) return;
     if (box) await clearBoxContents(box);
-    else if (!copy) await setPreparedBoxFor(actor, def, null);
+    else await setPreparedBoxFor(actor, def, null);
   }
 
   /** Take an award back, after asking. */

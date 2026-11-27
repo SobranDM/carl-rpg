@@ -41,7 +41,7 @@ export default function register(quench) {
           assert.equal(getRankDamageDie(20), "2d10");
         });
 
-        it("has no ceiling clamp beyond Rank 20 (loop just keeps the last match)", function () {
+        it("past Rank 20 it stays at Rank 20's die", function () {
           assert.equal(getRankDamageDie(999), "2d10");
         });
       });

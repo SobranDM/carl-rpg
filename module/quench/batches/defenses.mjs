@@ -111,10 +111,16 @@ export default function register(quench) {
       describe("Size from the Race", function () {
         useQuenchTimeout(this);
 
-        it("reads a Size from text", function () {
+        it("reads a Size from a number, a size name, or both", function () {
           assert.equal(parseSize("Medium (4)"), 4);
           assert.equal(parseSize("Medium (4), mostly due to wings"), 4);
           assert.equal(parseSize("Large"), 5);
+          assert.equal(parseSize("5"), 5);
+          assert.equal(parseSize("Large (5)"), 5);
+          assert.equal(parseSize("huge-ish"), 6);
+          assert.equal(parseSize("very large"), 5, "any word, not just the first");
+          assert.equal(parseSize("A Huge truck"), 6);
+          assert.isNull(parseSize("big"));
           assert.isNull(parseSize("Unchanged, but size changes when shifting"));
           assert.isNull(parseSize(""));
         });

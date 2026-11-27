@@ -178,12 +178,15 @@ export async function createCardMessage({
   flags = {},
   whisper,
   speaker,
+  rolls,
 } = {}) {
   const content = await renderShell({ title, subtitle, img, badge, body, footer });
   const messageData = {
     speaker: speaker ?? getCarlSpeaker(actor, token),
     content,
     whisper,
+    // A roll behind the card's words (a grinder's 1d2 Levels): shown as dice.
+    ...(rolls?.length ? { rolls } : {}),
     flags: { "carl-rpg": { chatCard: true, kind: "card", ...flags } },
   };
   return noted(actor, await ChatMessage.create(messageData));

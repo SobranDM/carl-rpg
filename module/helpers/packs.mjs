@@ -14,6 +14,59 @@ export const PACKS = Object.freeze({
   gear: "carl-rpg.gear",
 });
 
+/** World Roll Table compendiums already reported as unreadable this session. */
+const UNREADABLE_WARNED = new Set();
+
+/**
+ * A Roll Table a GM may replace with their own, by name: the world's own
+ * first, then the world's compendiums (the first one the world lists - the
+ * order they were made, not the sidebar's), then the system's Roll Tables
+ * pack. Used for loot box contents (loot.mjs boxTable, ruled 2026-11-20)
+ * and character creation's tables (chargen.mjs chargenTable, ruled
+ * 2026-11-27). Only compendiums this user can see: a player opening the
+ * Crawler Creation wizard never reaches a GM's private one, and one that
+ * can't be read is passed over.
+ * @param {string} name
+ * @returns {Promise<RollTable|null>}
+ */
+export async function overridableTable(name) {
+  const world = game.tables?.getName?.(name);
+  if (world) return world;
+  const worldPacks = game.packs.filter(
+    (p) => p.documentName === "RollTable" && p.metadata.packageType === "world" && p.visible,
+  );
+  for (const pack of worldPacks) {
+    try {
+      const entry = (await pack.getIndex())?.find((e) => e.name === name);
+      if (entry) return await pack.getDocument(entry._id);
+    } catch (err) {
+      if (UNREADABLE_WARNED.has(pack.collection)) continue;
+      UNREADABLE_WARNED.add(pack.collection);
+      console.warn(`CarlRPG | Couldn't read Roll Table compendium ${pack.collection}`, err);
+      if (game.user?.isGM)
+        ui.notifications?.warn(
+          game.i18n.format("CARLRPG.Tables.Unreadable", { pack: pack.title, name }),
+        );
+    }
+  }
+  return systemTable(name);
+}
+
+/**
+ * A Roll Table from the system's Roll Tables pack, by name - or the world's
+ * own of that name, which a GM's edits go into (loot.mjs lootTable).
+ * @param {string} name
+ * @param {{world?: boolean}} [options]  world: look in the world first.
+ * @returns {Promise<RollTable|null>}
+ */
+export async function systemTable(name, { world = false } = {}) {
+  const own = world ? game.tables?.getName?.(name) : null;
+  if (own) return own;
+  const pack = game.packs.get(PACKS.rollTables);
+  const entry = (await pack?.getIndex())?.find((e) => e.name === name);
+  return entry ? pack.getDocument(entry._id) : null;
+}
+
 /**
  * Run `fn` with a compendium unlocked (a GM may have locked it), then lock
  * it again if it was.

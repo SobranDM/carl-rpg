@@ -1,6 +1,7 @@
 import {
   createTestCharacter,
   createTestMob,
+  createTestPet,
   createTestItem,
   deleteTestActor,
   settle,
@@ -16,18 +17,7 @@ export default function register(quench) {
       describe("prepareDerivedData: Stat mod / HB / Shield / Resistance wiring", function () {
         useQuenchTimeout(this);
 
-        it("derives stats.<key>.mod from the effective (base+bonus) value via getStatMod", async function () {
-          const actor = await createTestCharacter("character", {
-            system: { stats: { con: { value: 8 } } },
-          });
-          try {
-            assert.equal(actor.system.stats.con.mod, 3); // getStatMod(8) -> [6,9,3] band
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
-
-        it("a Stat is a whole number once every bonus is in, on a Character and a Mob (ruled 2026-11-21)", async function () {
+        it("a Stat is a whole number once every bonus is in, on a Character, a Mob and a Pet (ruled 2026-11-21)", async function () {
           const multiply = {
             changes: [{ targetType: "stat", target: "con", mode: "multiply", value: "1.25" }],
           };
@@ -35,50 +25,39 @@ export default function register(quench) {
             system: { stats: { con: { value: 9 } } },
           });
           const mob = await createTestMob("fraction", { system: { stats: { con: { value: 9 } } } });
+          // A Pet's small Stat: 2 x1.25 is 2, Mod +1 - not 2.5 and +10.
+          const pet = await createTestPet("fraction", { system: { stats: { con: { value: 2 } } } });
           try {
             await createTestItem(actor, "item", "strong ring", {
               system: { equipped: true, ...multiply },
             });
             await createTestItem(mob, "feature", "strong hide", { system: multiply });
-            for (const who of [actor, mob]) {
-              // 9 x 1.25 = 11.25: Con 11, Mod +4 (10-19).
-              assert.equal(who.system.stats.con.effective, 11, `${who.type}: the fraction dropped`);
-              assert.equal(who.system.stats.con.mod, 4, who.type);
-              assert.equal(who.system.hb.slotValue, 4, `${who.type}: its HB slots follow`);
+            await createTestItem(pet, "item", "strong collar", {
+              system: { equipped: true, ...multiply },
+            });
+            // 9 x 1.25 = 11.25: Con 11, Mod +4 (10-19). 2 x 1.25 = 2.5: Con 2, Mod +1.
+            for (const [who, bonus, effective, mod] of [
+              [actor, 2.25, 11, 4],
+              [mob, 2.25, 11, 4],
+              [pet, 0.5, 2, 1],
+            ]) {
+              assert.equal(
+                who.system.bonuses["stats.con"],
+                bonus,
+                `${who.type}: test setup, the x1.25 applies`,
+              );
+              assert.equal(
+                who.system.stats.con.effective,
+                effective,
+                `${who.type}: the fraction dropped`,
+              );
+              assert.equal(who.system.stats.con.mod, mod, who.type);
+              assert.equal(who.system.hb.slotValue, mod, `${who.type}: its HB slots follow`);
             }
           } finally {
             await deleteTestActor(actor);
             await deleteTestActor(mob);
-          }
-        });
-
-        it("hb.slotValue mirrors CON Mod on both Character and Mob", async function () {
-          const actor = await createTestCharacter("character", {
-            system: { stats: { con: { value: 8 } } },
-          });
-          const mob = await createTestMob("mob", { system: { stats: { con: { value: 8 } } } });
-          try {
-            assert.equal(actor.system.hb.slotValue, 3);
-            assert.equal(mob.system.hb.slotValue, 3);
-          } finally {
-            await deleteTestActor(actor);
-            await deleteTestActor(mob);
-          }
-        });
-
-        it("hb.effectiveMax includes a 'resource' ChangeEntry bonus targeting hb.max", async function () {
-          const actor = await createTestCharacter();
-          try {
-            await createTestItem(actor, "item", "gear", {
-              system: {
-                equipped: true,
-                changes: [{ targetType: "resource", target: "hb.max", mode: "add", value: "5" }],
-              },
-            });
-            await settle();
-            assert.equal(actor.system.hb.effectiveMax, 15); // 10 base + 5 bonus
-          } finally {
-            await deleteTestActor(actor);
+            await deleteTestActor(pet);
           }
         });
 

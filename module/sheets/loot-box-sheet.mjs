@@ -13,6 +13,7 @@ import { enrichDescription } from "../helpers/rich-text.mjs";
 import { keepStoredForBlankNumbers, mergeSystemSubmit } from "../helpers/form-arrays.mjs";
 import { itemFor } from "../helpers/sheet-rows.mjs";
 import { labelChoices } from "../helpers/html.mjs";
+import { deleteItemAsking } from "../helpers/confirm.mjs";
 
 /**
  * Loot Box sheet: pick a tier, roll loot (GM), take items out (everyone).
@@ -189,6 +190,6 @@ export class CarlRPGLootBoxSheet extends DragDropMixin(HandlebarsApplicationMixi
   static async #onDeleteItem(event, target) {
     event.preventDefault();
     if (!this.actor.isOwner) return;
-    await this.#itemFor(target)?.delete();
+    await deleteItemAsking(this.#itemFor(target), event);
   }
 }

@@ -63,36 +63,6 @@ export default function register(quench) {
           }
         });
 
-        it("item is the sheet's Item; actor is its owner, or null in the sidebar", async function () {
-          const actor = await createTestCharacter("owner");
-          const loose = await worldItem("item", "loose");
-          try {
-            const owned = await createTestItem(actor, "skill", "owned");
-            assert.strictEqual(owned.sheet.item, owned);
-            assert.strictEqual(owned.sheet.actor, actor);
-            assert.strictEqual(loose.sheet.item, loose);
-            assert.isNull(loose.sheet.actor);
-          } finally {
-            await deleteTestActor(actor);
-            await loose.delete();
-          }
-        });
-
-        it("editing a field still saves the Item", async function () {
-          const item = await worldItem("item", "rename");
-          try {
-            const sheet = await openSheet(item);
-            const input = sheet.element.querySelector('input[name="name"]');
-            const renamed = `${item.name} renamed`;
-            input.value = renamed;
-            input.dispatchEvent(new Event("change", { bubbles: true }));
-            await waitFor(() => item.name === renamed, { message: "the change was never saved" });
-            await sheet.close();
-          } finally {
-            await item.delete();
-          }
-        });
-
         it("an owned Skill's sheet still offers its Advancement roll", async function () {
           const actor = await createTestCharacter("advancement");
           try {

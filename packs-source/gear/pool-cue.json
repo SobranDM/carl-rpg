@@ -1,0 +1,37 @@
+{
+  "_id": "LbidOSE6csQEpYNS",
+  "name": "Pool Cue",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/weapons/staves/staff-simple.webp",
+  "system": {
+    "description": "<p>A two-piece pool cue that screws together, with a cube of blue chalk in the case. Its Attacks use the Quarterstaff Skill, which sets their damage, range and Stat.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Quarterstaff",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": null,
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!LbidOSE6csQEpYNS"
+}

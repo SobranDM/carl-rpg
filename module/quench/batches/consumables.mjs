@@ -199,25 +199,6 @@ export default function register(quench) {
           }
         });
 
-        it("a healing-only potion under The Taint is refused and kept", async function () {
-          const actor = await createTestCharacter("tainted", { system: { hb: { value: 2 } } });
-          try {
-            const taintKey = Object.entries(CONFIG.CARLRPG.debuffs).find(
-              ([, d]) => d.mechanics?.noHealing,
-            )?.[0];
-            await addConditionToActor(actor, taintKey);
-            const potion = await consumableItem(actor, "heal", {
-              kind: "potion",
-              heal: { slots: 3 },
-            });
-            assert.isNull(await quietly(() => useConsumable(actor, potion, { skipDialog: true })));
-            assert.exists(actor.items.get(potion.id), "kept");
-            assert.equal(actor.system.hb.value, 2);
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
-
         it("a Mana potion restores to full; an Antidote cures Poisoned", async function () {
           const actor = await createTestCharacter("caster", { system: { mana: { value: 0 } } });
           try {

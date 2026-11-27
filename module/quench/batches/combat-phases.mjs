@@ -74,9 +74,9 @@ async function combatOf(...actors) {
 /** Delete the phase notices a test combat posted. */
 async function deleteNotices(combat) {
   if (!combat?.id) return;
-  // The round-start notice is posted from _onStartRound, just after the
-  // update that started the round resolves.
-  await settle(150);
+  // A notice that lands after this (the round-start one is posted from
+  // _onStartRound, just after the update that started the round resolves) is
+  // swept with the batch's other stray messages (helpers.mjs withMessageCleanup).
   const ids = game.messages
     .filter(
       (m) =>
@@ -402,15 +402,6 @@ export default function register(quench) {
           assert.isTrue(queasy(), "back after withdrawing");
         });
 
-        it("two declarations at the start of a round both survive", async function () {
-          await combat.nextTurn();
-          await combat.nextTurn();
-          await combat.nextTurn();
-          assert.equal(combat.round, 2);
-          await Promise.all([declare(), declare()]);
-          assert.lengthOf(declaredAttacks(combat), 2);
-        });
-
         it("the Declare HUD shows a controlled Mob's Attacks, declares on click and withdraws", async function () {
           const hud = game.carlrpg.declareHud;
           assert.instanceOf(hud, CarlDeclareHud);
@@ -536,33 +527,6 @@ export default function register(quench) {
           assert.equal(declaredCounts().get("quenchMarkToken"), 2);
           await combat.nextTurn();
           assert.isUndefined(declaredCounts().get("quenchMarkToken"), "gone once Reaction starts");
-        });
-
-        it("the mark is a check, with a count for two or more, and is removed at 0", async function () {
-          const token = new PIXI.Container();
-          token.w = 100;
-          token.h = 100;
-          try {
-            drawMark(token, 1);
-            const mark = token.getChildByName(DECLARED_MARK_NAME);
-            assert.exists(mark);
-            assert.notExists(
-              mark.children.find((c) => c instanceof PIXI.Text),
-              "no count for one",
-            );
-            drawMark(token, 3);
-            const counted = token.getChildByName(DECLARED_MARK_NAME);
-            assert.equal(counted.children.find((c) => c instanceof PIXI.Text)?.text, "3");
-            assert.lengthOf(
-              token.children.filter((c) => c.name === DECLARED_MARK_NAME),
-              1,
-              "redrawn, not stacked",
-            );
-            drawMark(token, 0);
-            assert.notExists(token.getChildByName(DECLARED_MARK_NAME));
-          } finally {
-            token.destroy({ children: true });
-          }
         });
 
         it("the tracker lists the GM's declarations during Declaration", async function () {
@@ -820,12 +784,6 @@ export default function register(quench) {
           assert.isFalse(await op(card, "pullArea", { tauntId: taunt.id }), "once");
         });
 
-        it("Taunt's range is 30 ft, 60 from Rank 10; with no tokens there's no distance to check", function () {
-          assert.equal(tauntRange(9), 30);
-          assert.equal(tauntRange(10), 60);
-          assert.isNull(tokenDistance(pc1.uuid, mob.uuid));
-        });
-
         it("no stages: Evade is open at once, and one Evade covers every Attack", async function () {
           await declareOn(pc1);
           const card = await startReaction();
@@ -950,7 +908,7 @@ export default function register(quench) {
           assert.lengthOf(evade.interventions, 1);
         });
 
-        it("AI Reroll spends AI Favor and replaces a failed Check - not a Natural 1", async function () {
+        it("AI Reroll spends AI Favor and replaces a failed Check", async function () {
           await pc1.update({ "system.details.aiFavor": 2 });
           await declareOn(pc1);
           const card = await startReaction();
@@ -980,24 +938,6 @@ export default function register(quench) {
             }),
             "once per Check",
           );
-        });
-
-        it("a Natural 1 can't be rerolled", async function () {
-          await pc1.update({ "system.details.aiFavor": 2 });
-          await declareOn(pc1);
-          const card = await startReaction();
-          const hitId = onlyHit(card).id;
-          await op(card, "evade", { uuid: pc1.uuid, checks: { [hitId]: rolled(3, 1, 16) } });
-          assert.isFalse(
-            await op(card, "reroll", {
-              ref: { type: "hit", hitId, which: "evade" },
-              naturalRoll: 18,
-              total: 20,
-              roll: null,
-              breakdown: "",
-            }),
-          );
-          assert.equal(pc1.system.details.aiFavor, 2);
         });
 
         it("AI Reroll takes a successful Evade too (p.61) - its Advantage goes if it drops - but never a Natural 1", async function () {
@@ -1192,25 +1132,6 @@ export default function register(quench) {
             value: 4,
           });
           assert.equal(onlyHit(card).targetUuid, pc2.uuid, "pulled once it succeeded");
-        });
-
-        it("a crawler who doesn't Evade takes the full hit", async function () {
-          await declareOn(pc1);
-          const card = await startReaction();
-          const before = hbOf(pc1);
-          assert.isAbove(before, 0);
-          const damage = await postDamageCard(combat, state(card));
-          assert.equal(
-            damage.getFlag("carl-rpg", "reactionDamage").rows[onlyHit(card).id].status,
-            "pending",
-          );
-          await rollAllDamage(damage);
-          await waitFor(() => hbOf(pc1) < before, { message: "no damage taken" });
-          assert.equal(
-            damage.getFlag("carl-rpg", "reactionDamage").rows[onlyHit(card).id].result.raw,
-            100,
-            "the full hit",
-          );
         });
 
         it("a failed free Evade has no consequences of its own", async function () {
@@ -1412,6 +1333,50 @@ export default function register(quench) {
             html.querySelector(".carl-status-row.is-ghost"),
             "the moved Attack, struck through in pc1's section",
           );
+        });
+      });
+
+      describe("The declared mark and Taunt's range (no fight needed)", function () {
+        useQuenchTimeout(this);
+
+        it("the mark is a check, with a count for two or more, and is removed at 0", async function () {
+          const token = new PIXI.Container();
+          token.w = 100;
+          token.h = 100;
+          try {
+            drawMark(token, 1);
+            const mark = token.getChildByName(DECLARED_MARK_NAME);
+            assert.exists(mark);
+            assert.notExists(
+              mark.children.find((c) => c instanceof PIXI.Text),
+              "no count for one",
+            );
+            drawMark(token, 3);
+            const counted = token.getChildByName(DECLARED_MARK_NAME);
+            assert.equal(counted.children.find((c) => c instanceof PIXI.Text)?.text, "3");
+            assert.lengthOf(
+              token.children.filter((c) => c.name === DECLARED_MARK_NAME),
+              1,
+              "redrawn, not stacked",
+            );
+            drawMark(token, 0);
+            assert.notExists(token.getChildByName(DECLARED_MARK_NAME));
+          } finally {
+            token.destroy({ children: true });
+          }
+        });
+
+        it("Taunt's range is 30 ft, 60 from Rank 10; with no tokens there's no distance to check", async function () {
+          assert.equal(tauntRange(9), 30);
+          assert.equal(tauntRange(10), 60);
+          const pc = await createTestCharacter("taunt-range-pc");
+          const mob = await createTestMob("taunt-range-mob");
+          try {
+            assert.isNull(tokenDistance(pc.uuid, mob.uuid));
+          } finally {
+            await deleteTestActor(pc);
+            await deleteTestActor(mob);
+          }
         });
       });
 

@@ -1,0 +1,137 @@
+{
+  "_id": "6PTpoyT7wd3eUKCP",
+  "name": "Mechanic's Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Mechanic's Box's consumables - garage tools and vehicle parts (p.22). Drawn for a box's consumable or two, any tier when the box's title names the theme (\"Bronze Mechanic's Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Mechanic's Box: Consumables\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "XAva56fhbnTLV4EF",
+      "type": "text",
+      "name": "Motor Oil ×2",
+      "img": "icons/commodities/tech/canister-steel.webp",
+      "description": "<p>Quarts of motor oil. Keeps things turning; makes a floor treacherous.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        1,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!6PTpoyT7wd3eUKCP.XAva56fhbnTLV4EF"
+    },
+    {
+      "_id": "wN2g9CjBgDqbhKHU",
+      "type": "text",
+      "name": "Spare Inner Tube",
+      "img": "icons/commodities/tech/wheel.webp",
+      "description": "<p>Fits a bicycle, a wheelbarrow, or nothing you own yet.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!6PTpoyT7wd3eUKCP.wN2g9CjBgDqbhKHU"
+    },
+    {
+      "_id": "odNXxI8zy7qGgasa",
+      "type": "text",
+      "name": "Hose Clamps ×6",
+      "img": "icons/tools/fasteners/plating-ring-metal-housing.webp",
+      "description": "<p>Steel bands that tighten with a screwdriver.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!6PTpoyT7wd3eUKCP.odNXxI8zy7qGgasa"
+    },
+    {
+      "_id": "NyywZx4DqXyTSIsH",
+      "type": "text",
+      "name": "Gasket Sealant",
+      "img": "icons/consumables/potions/bottle-metal-yellow-gray.webp",
+      "description": "<p>A tube of grey goo that stops leaks, mostly.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!6PTpoyT7wd3eUKCP.NyywZx4DqXyTSIsH"
+    }
+  ],
+  "formula": "1d5",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!6PTpoyT7wd3eUKCP"
+}

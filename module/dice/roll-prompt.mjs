@@ -176,6 +176,9 @@ export function offStatNote(statKey, governing = "") {
  * @returns {Promise<{advantage: "normal"|"advantage"|"disadvantage", difficulty: number|null, modifier: number, checked: Set<string>, checkedDebuffs: Set<string>, damageEffectId: string|null, manaCostChoice: number, isArea: boolean, splash: Set<number>, usesAction: boolean|null, statKey?: string, skillId?: string|null}|null>}
  *   null if the dialog was cancelled/closed. skillId: the picked Attack
  *   Skill, with a skillPicker.
+ * @param {boolean} [options.combat]  A combat roll (an Attack, an Evade, a
+ *   Shield Block): a given Difficulty is locked and a Modifier shown instead,
+ *   kept for every Check the dialog covers (ruled 2026-11-27).
  * @param {object|null} [options.opposedChoice]  The Opposed controls under
  *   the Difficulty (dice/opposed.mjs buildOpposedChoice): its Difficulty and
  *   label are the dialog's to start; the result's `opposed` is who opposed
@@ -195,6 +198,10 @@ export async function promptRollOptions(options = {}) {
       .trim(),
     difficulty: args.opposedChoice ? args.opposedChoice.difficulty : args.difficulty,
     showDifficulty: args.showDifficulty,
+    // A combat roll (an Attack, an Evade, a Shield Block) whose Difficulty
+    // the rules give: shown but locked, with a Modifier instead, so the one
+    // dialog's change reaches every Check it covers (ruled 2026-11-27).
+    combatLock: lockedDifficulty(args),
     defaultAdvantage: args.defaultAdvantage,
     conditions: args.conditionalModifiers,
     damageEffectChoices: args.damageEffectChoices,
@@ -282,8 +289,10 @@ export async function promptRollOptions(options = {}) {
     checkedDebuffs,
     advantage: result.advantage ?? "normal",
     // An emptied number box comes back null (FormDataExtended): no Difficulty.
-    difficulty:
-      Number.isFinite(Number(result.difficulty ?? NaN)) && result.difficulty !== ""
+    // A locked one isn't sent at all: the given Difficulty stands.
+    difficulty: lockedDifficulty(current)
+      ? current.difficulty
+      : Number.isFinite(Number(result.difficulty ?? NaN)) && result.difficulty !== ""
         ? Number(result.difficulty)
         : null,
     modifier: Number(result.modifier) || 0,
@@ -311,6 +320,17 @@ export async function promptRollOptions(options = {}) {
 
 const ROLL_OPTIONS_TEMPLATE = "systems/carl-rpg/templates/dialog/roll-options.hbs";
 
+/**
+ * Whether a dialog's Difficulty is locked: a combat roll with a Difficulty
+ * given (ruled 2026-11-27). With none (an Attack at no target, the sheet's
+ * Evade) it stays open to type in.
+ * @param {object} args  withDefaults' result.
+ * @returns {boolean}
+ */
+function lockedDifficulty(args) {
+  return !!args.combat && typeof args.difficulty === "number" && !args.opposedChoice;
+}
+
 /** promptRollOptions' arguments with their defaults filled in. */
 function withDefaults({
   title,
@@ -330,9 +350,11 @@ function withDefaults({
   usesAction = null,
   statChoice = null,
   opposedChoice = null,
+  combat = false,
 } = {}) {
   return {
     title,
+    combat,
     difficulty,
     showDifficulty,
     defaultAdvantage,
@@ -375,7 +397,7 @@ function readKeptFields(root) {
   const kept = {};
   const advantage = root.querySelector('select[name="advantage"]');
   if (advantage) kept.advantage = advantage.value;
-  for (const name of ["difficulty"]) {
+  for (const name of ["difficulty", "modifier"]) {
     const field = root.querySelector(`input[name="${name}"]`);
     if (field) kept[name] = field.value;
   }
@@ -388,9 +410,9 @@ function restoreKeptFields(root, kept) {
     const advantage = root.querySelector('select[name="advantage"]');
     if (advantage) advantage.value = kept.advantage;
   }
-  for (const name of ["difficulty"]) {
+  for (const name of ["difficulty", "modifier"]) {
     const field = root.querySelector(`input[name="${name}"]`);
-    if (field && kept[name] !== undefined) field.value = kept[name];
+    if (field && !field.disabled && kept[name] !== undefined) field.value = kept[name];
   }
 }
 

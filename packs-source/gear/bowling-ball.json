@@ -1,0 +1,37 @@
+{
+  "_id": "bT14SyLvl8rYnKnA",
+  "name": "Bowling Ball",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/sundries/sports/basketball.webp",
+  "system": {
+    "description": "<p>A sixteen-pound bowling ball in a bag with a long strap. Swing the bag. Its Attacks use the Club Skill, which sets their damage, range and Stat.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Club",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": false
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": null,
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!bT14SyLvl8rYnKnA"
+}

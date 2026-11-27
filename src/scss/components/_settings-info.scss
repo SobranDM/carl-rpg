@@ -1,0 +1,28 @@
+// Under the Settings sidebar's game info (templates/apps/settings-info.hbs):
+// the credits, the wiki and the Ko-fi, as WWN's.
+@mixin styles {
+  &.carl-game-info {
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 0.25rem 0 0;
+
+    p {
+      margin: 0 0 0.5em;
+    }
+
+    .carl-kofi {
+      display: flex;
+      justify-content: center;
+      margin: 0.5rem 0;
+
+      img {
+        height: 28px;
+        border: 0;
+      }
+    }
+
+    .carl-game-info-footer {
+      text-align: right;
+    }
+  }
+}
