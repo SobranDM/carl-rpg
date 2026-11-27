@@ -14,6 +14,9 @@ export const PACKS = Object.freeze({
   gear: "carl-rpg.gear",
 });
 
+/** World Roll Table compendiums already reported as unreadable this session. */
+const UNREADABLE_WARNED = new Set();
+
 /**
  * A Roll Table a GM may replace with their own, by name: the world's own
  * first, then the world's compendiums (the first one the world lists - the
@@ -37,6 +40,8 @@ export async function overridableTable(name) {
       const entry = (await pack.getIndex())?.find((e) => e.name === name);
       if (entry) return await pack.getDocument(entry._id);
     } catch (err) {
+      if (UNREADABLE_WARNED.has(pack.collection)) continue;
+      UNREADABLE_WARNED.add(pack.collection);
       console.warn(`CarlRPG | Couldn't read Roll Table compendium ${pack.collection}`, err);
       if (game.user?.isGM)
         ui.notifications?.warn(

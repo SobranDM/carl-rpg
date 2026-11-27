@@ -64,6 +64,7 @@ import {
   wireOpposed,
 } from "../dice/opposed.mjs";
 import { findSkillLikeItem } from "../helpers/race-class-grants.mjs";
+import { isNight, setTimeOfDay } from "../helpers/day-night.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ApplicationV2 } = foundry.applications.api;
@@ -143,6 +144,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       openBoxes: CarlToolbox.#onOpenBoxes,
       mend: CarlToolbox.#onMend,
       floorIncrement: CarlToolbox.#onFloorIncrement,
+      toggleTimeOfDay: CarlToolbox.#onToggleTimeOfDay,
       floorDecrement: CarlToolbox.#onFloorDecrement,
       rest: CarlToolbox.#onRest,
       grind: CarlToolbox.#onGrind,
@@ -166,6 +168,7 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
       elapsedLabel: formatElapsed(elapsedMs),
       thresholdReached: timer.running && elapsedMs >= TWO_HOURS_MS,
       floor: currentFloor(),
+      night: isNight(),
     };
   }
 
@@ -676,6 +679,13 @@ export default class CarlToolbox extends HandlebarsApplicationMixin(ApplicationV
     await game.settings.set("carl-rpg", "currentFloor", next);
     this.render();
     if (!hasFloorClock(next)) await CarlToolbox.#onCollapseTimer.call(this);
+  }
+
+  /** The sun/moon toggle: day or night (helpers/day-night.mjs). */
+  static async #onToggleTimeOfDay(event, target) {
+    if (!game.user.isGM) return;
+    await setTimeOfDay(isNight() ? "day" : "night");
+    this.render();
   }
 
   /** Floor -: back to that floor, and its own timer if it had one. */

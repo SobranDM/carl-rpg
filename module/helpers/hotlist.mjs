@@ -39,6 +39,7 @@ import {
 } from "./equip-slots.mjs";
 import { useConsumable } from "./consumables.mjs";
 import { ownedRank } from "./modifiers.mjs";
+import { effectiveManaCost } from "./mana-cost.mjs";
 import { withoutOutclassedUnarmed } from "./hand-to-hand.mjs";
 import { createCardMessage } from "../chat/chat-card.mjs";
 import { cancelButton, showCarlDialog } from "../apps/carl-dialog.mjs";
@@ -123,7 +124,7 @@ export function hotlistCandidates(actor) {
     if (item.type === "spell") {
       entry.detail = game.i18n.format("CARLRPG.Hotlist.SpellDetail", {
         rank: ownedRank(actor, item),
-        mana: item.system.manaCost ?? 0,
+        mana: effectiveManaCost(item, actor),
       });
       groups.spells.push(entry);
     } else if (item.system.consumable?.kind) {
@@ -161,7 +162,7 @@ export function hotlistRows(actor) {
         kind: "spell",
         action: "Cast",
         rank: ownedRank(actor, item),
-        manaCost: sys.manaCost,
+        manaCost: effectiveManaCost(item, actor),
         active: !!sys.active,
       });
     } else if (item.type === "skill" || item.type === "damageEffect") {

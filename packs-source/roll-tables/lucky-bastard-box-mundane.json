@@ -1,0 +1,137 @@
+{
+  "_id": "B83DiLbrmR11paPK",
+  "name": "Lucky Bastard Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Lucky Bastard Box's mundane - good-luck charms and gambling prizes (p.22). Drawn for the one item of a Bronze box when the box's title names the theme (\"Bronze Lucky Bastard Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Lucky Bastard Box: Mundane\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "AvTiHZO1SsTvJ4U9",
+      "type": "text",
+      "name": "Rabbit's Foot Keychain",
+      "img": "icons/sundries/misc/key-ring-gold.webp",
+      "description": "<p>Dyed purple. It wasn't lucky for the rabbit.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!B83DiLbrmR11paPK.AvTiHZO1SsTvJ4U9"
+    },
+    {
+      "_id": "PnvoiPs6To8i1oMd",
+      "type": "text",
+      "name": "Four-Leaf Clover Paperweight",
+      "img": "icons/tools/scribal/lens-grey-brown.webp",
+      "description": "<p>A real one, sealed in a glass dome.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!B83DiLbrmR11paPK.PnvoiPs6To8i1oMd"
+    },
+    {
+      "_id": "5P6Qag7hdvFq48M5",
+      "type": "text",
+      "name": "Lucky Horseshoe",
+      "img": "icons/sundries/misc/horseshoe-iron.webp",
+      "description": "<p>Worn smooth, nail holes and all. Hang it points up.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!B83DiLbrmR11paPK.5P6Qag7hdvFq48M5"
+    },
+    {
+      "_id": "OSuXg21e04OuuzNH",
+      "type": "text",
+      "name": "Wishbone",
+      "img": "icons/commodities/bones/bone-simple-white-pink.webp",
+      "description": "<p>Dry and ready to snap. Someone else has to pull the other end.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!B83DiLbrmR11paPK.OSuXg21e04OuuzNH"
+    }
+  ],
+  "formula": "1d4",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!B83DiLbrmR11paPK"
+}

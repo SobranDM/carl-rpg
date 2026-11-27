@@ -669,11 +669,16 @@ CARLRPG.consumableUnits = {
  *    Bronze 0 - its item is mundane.
  *  - gold: "And almost always ... Gold" (pp.216-218), a Roll formula; ""
  *    for none (Celestial: "Sorry, no Gold").
+ *  - The book's shape (p.216, ruled 2026-11-27): one item, "a consumable
+ *    or two", plus gold. Bronze's item is mundane (p.219); from Silver up
+ *    it's the magic item, and there's no mundane item besides.
  *  - magicItems: magic items per box (Tables 38-42); weakMagicChance: the
- *    chance of one "weak magic" item from the Bronze Box: Weak Magic table.
+ *    chance each mundane item is a "weak magic" item from the "<Tier> Box:
+ *    Weak Magic" table instead (it replaces the mundane item, not added).
  *  - consumables / mundane: how many rows to draw from the tier's
  *    "<Tier> Box: Consumables" / "<Tier> Box: Mundane" tables (a formula or
- *    a number; 0 for none).
+ *    a number; 0 for none) - or a themed box's (helpers/loot.mjs
+ *    boxTableNames).
  *  - spellRank: a Spell Scroll's or Spellbook's Rank (Table 25, p.116 for
  *    Bronze to Platinum; Legendary and Celestial provisional).
  *  - skillX / statX: what "+X Skill/Stat Bonus" is worth (p.220). A
@@ -707,7 +712,7 @@ CARLRPG.lootBoxTiers = {
     magicItems: 1,
     weakMagicChance: 0,
     consumables: "1d2",
-    mundane: 1,
+    mundane: 0,
     spellRank: "2d4",
     skillX: { min: 1, max: 1 },
     statX: { min: 2, max: 2 },

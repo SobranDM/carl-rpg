@@ -34,7 +34,7 @@
  */
 import CarlDice from "../dice/dice.mjs";
 import { CARLRPG } from "../helpers/config.mjs";
-import { isHitDegree } from "../helpers/rules.mjs";
+import { getDegreeOfSuccess, isHitDegree } from "../helpers/rules.mjs";
 import {
   activeRows,
   rowOutcome,
@@ -77,6 +77,8 @@ import {
   checkDetail,
   checkNotes,
   d6CouldChange,
+  decidingDegree,
+  degreeTag,
   headerProgress,
   iconButton,
   rememberOpenRows,
@@ -262,6 +264,54 @@ function attackTotalFor(row, flags) {
 }
 
 /**
+ * The Difficulty an Area Attack's one roll was made against: the chosen
+ * foe's - the first target's (p.83).
+ * @param {object} flags
+ * @returns {number|null}
+ */
+function areaDifficulty(flags) {
+  return flags.targetRows?.t0?.difficulty ?? flags.targetDifficulty ?? null;
+}
+
+/**
+ * A crawler's Attack's Degree against one row: its own roll against that
+ * target, or an Area Attack's one shared roll. None without a Difficulty
+ * (only a Natural 1 or 20 would mean anything) or on a row that has none
+ * (a Mob's Attack, older cards).
+ * @param {object} row
+ * @param {object} flags
+ * @returns {string|null}
+ */
+function attackDegree(row, flags) {
+  if (flags.isArea && rollsLikeCrawler(flags.attackerType)) {
+    const difficulty = areaDifficulty(flags);
+    if (difficulty === null || typeof flags.attackTotal !== "number") return null;
+    return getDegreeOfSuccess(flags.naturalRoll ?? null, flags.attackTotal, difficulty);
+  }
+  if (row.difficulty === null || row.difficulty === undefined) return null;
+  return row.degree ?? null;
+}
+
+/**
+ * The Degree tag a row shows: the roll that decides its damage - its Evade
+ * or Shield Block (decidingDegree), else the Attack's own Degree.
+ * @param {object} row
+ * @param {object} flags
+ * @param {object|null} check  The Check the row shows (shownRowCheck).
+ * @returns {{degree: string, kind: "attack"|"evade"|"block"}|null}
+ */
+export function rowDegree(row, flags, check) {
+  const graded = decidingDegree({
+    evade: decidingRowCheck(row) ?? row.evade ?? null,
+    block: row.checks?.block ?? row.block ?? null,
+    shown: check,
+  });
+  if (graded) return graded;
+  const degree = attackDegree(row, flags);
+  return degree ? { degree, kind: "attack" } : null;
+}
+
+/**
  * Where one row stands, as its chip shows it, with the Evade it shows.
  * @param {object} row
  * @param {object} flags
@@ -288,15 +338,17 @@ function targetRow(message, row, flags, { status, check, which }) {
   const i18n = game.i18n;
   const sub = [];
   if (row.zone === "splash") sub.push(i18n.localize("CARLRPG.Targets.Splash"));
-  if (row.amazing) sub.push(i18n.localize(CARLRPG.degreesOfSuccess.amazingSuccess));
+  // The Degree is on its tag; an Attack's Amazing Success (+Floor) stays
+  // written out when the tag shows the target's Evade instead (p.87).
+  const graded = rowDegree(row, flags, check);
+  if (row.amazing && graded?.kind !== "attack")
+    sub.push(i18n.localize(CARLRPG.degreesOfSuccess.amazingSuccess));
   if (which === "free")
     sub.push(
       check.success
         ? i18n.localize("CARLRPG.Reaction.FreeEvade")
         : i18n.format("CARLRPG.Reaction.Sub.freeFailed", { total: check.total }),
     );
-  if (which === "evade" && check.degree === "nearMissFail")
-    sub.push(i18n.localize(CARLRPG.degreesOfSuccess.nearMissFail));
   if (which === "block") sub.push(...blockNotes(check));
   sub.push(...checkNotes(check));
   // "A Near Miss targeting an occupant hits the vehicle" (p.72).
@@ -314,9 +366,12 @@ function targetRow(message, row, flags, { status, check, which }) {
   if (check) num = versusNum(check.total, check.difficulty);
   else if (status === "incoming") {
     num = `<span class="carl-status-vs">${esc(i18n.localize("CARLRPG.Roll.Evade"))}</span> <b>${esc(rowEvadeDifficulty(row, flags) ?? "-")}</b>`;
-  } else if (rollsLikeCrawler(flags.attackerType))
-    num = versusNum(attackTotalFor(row, flags) ?? "-", row.difficulty);
-  else if (row.toHit !== undefined && row.toHit !== null)
+  } else if (rollsLikeCrawler(flags.attackerType)) {
+    // An Area Attack is one roll against the chosen foe, for every row.
+    num = flags.isArea
+      ? versusNum(flags.attackTotal ?? "-", areaDifficulty(flags))
+      : versusNum(attackTotalFor(row, flags) ?? "-", row.difficulty);
+  } else if (row.toHit !== undefined && row.toHit !== null)
     num = versusNum(row.toHit, row.difficulty);
 
   // This viewer's icons on the row.
@@ -424,6 +479,7 @@ function targetRow(message, row, flags, { status, check, which }) {
     key,
     open: openRows.has(`${message.id}:${key}`),
     chip: statusChip(status, tone ? { tone } : {}),
+    degree: graded ? degreeTag(graded.degree, { kind: graded.kind }) : "",
     what: `<strong>${esc(row.name)}</strong>`,
     sub,
     num,
@@ -710,6 +766,7 @@ export async function blockRow(message, rowId, { skipDialog = false } = {}) {
           difficulty,
           skipDialog,
           post: false,
+          combat: true,
         });
         if (!result) return null;
         markLocal(message, row.id, { blocked: true });

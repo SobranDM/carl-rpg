@@ -74,7 +74,7 @@
   <div class="form-group carl-dialog-difficulty">
     <label>{{#if difficultyLabel}}{{difficultyLabel}}{{else}}{{localize "CARLRPG.Dialog.Difficulty"}}{{/if}}</label>
     <div class="form-fields carl-dialog-preset">
-      <input type="number" name="difficulty" value="{{difficulty}}" placeholder="{{localize 'CARLRPG.Dialog.DifficultyPlaceholder'}}" />
+      <input type="number" name="difficulty" value="{{difficulty}}" placeholder="{{localize 'CARLRPG.Dialog.DifficultyPlaceholder'}}"{{#if combatLock}} disabled{{/if}} />
       {{#if difficultyBasis}}
       <i class="fa-solid fa-circle-question carl-dialog-help" tabindex="0" role="img"
         data-tooltip-html="{{localize 'CARLRPG.Dialog.DifficultyPresetHelp'}}" data-tooltip-direction="UP"
@@ -83,6 +83,18 @@
     </div>
     {{#if (or difficultyBasis opposedHtml)}}<p class="carl-dialog-hint carl-dialog-difficulty-basis">{{difficultyBasis}}</p>{{/if}}
   </div>
+  {{#if combatLock}}
+  {{!-- A combat roll (ruled 2026-11-27): the Difficulty above is the rules';
+        a situational call goes here, and reaches every Check this dialog
+        covers (each Attack an Evade or Shield Block answers, each target). --}}
+  <div class="form-group carl-dialog-modifier">
+    <label>{{localize "CARLRPG.Dialog.Modifier"}}</label>
+    <div class="form-fields">
+      <input type="number" name="modifier" value="0" step="1" />
+    </div>
+    <p class="carl-dialog-hint">{{localize "CARLRPG.Dialog.ModifierHint"}}</p>
+  </div>
+  {{/if}}
   {{!-- Opposed (p.59; dice/opposed.mjs): by whom and with which Stat - or a
         number (a Spell Rank, a size class) - sets the Difficulty above. --}}
   {{{opposedHtml}}}
@@ -113,7 +125,7 @@
       {{#each manaCostChoices as |mc index|}}
       <label class="carl-dialog-mana-cost-option">
         <input type="radio" name="manaCostChoice" value="{{index}}" {{#if mc.isBase}}checked{{/if}} />
-        {{mc.manaCost}} {{localize "CARLRPG.Actor.Mana"}}{{#unless mc.isBase}} - {{mc.description}}{{/unless}}
+        {{mc.shownCost}} {{localize "CARLRPG.Actor.Mana"}}{{#unless mc.isBase}} - {{mc.description}}{{/unless}}
       </label>
       {{/each}}
     </div>

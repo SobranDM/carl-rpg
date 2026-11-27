@@ -16,6 +16,7 @@ import {
   decorateTargetRows,
 } from "../../chat/attack-targets-card.mjs";
 import { askTiming } from "../../helpers/chat-socket.mjs";
+import { CARLRPG } from "../../helpers/config.mjs";
 import {
   createTestCharacter,
   createTestItem,
@@ -620,6 +621,237 @@ export default function register(quench) {
             assert.equal(active[0].uuid, chase.uuid, "the first one's");
           } finally {
             await deleteTestActor(pip);
+          }
+        });
+      });
+
+      describe("Degree tags on the status rows (2026-11-27)", function () {
+        useQuenchTimeout(this);
+
+        const mobRow = (id, actor, extra = {}) => ({
+          id,
+          uuid: actor.uuid,
+          name: actor.name,
+          isCharacter: false,
+          isVehicle: false,
+          zone: "full",
+          difficulty: 11,
+          hit: true,
+          amazing: false,
+          degree: "standardSuccess",
+          natural: 15,
+          freeEvade: false,
+          freeUsed: false,
+          evade: null,
+          applied: false,
+          replaced: false,
+          ...extra,
+        });
+        const card = (flags) =>
+          ChatMessage.create({
+            content: '<div class="carl-chat-card"></div>',
+            flags: { "carl-rpg": { floor: 3, isArea: false, ...flags } },
+          });
+        const draw = (message) => {
+          const html = document.createElement("div");
+          html.innerHTML =
+            '<div class="carl-chat-card"><header class="carl-chat-header"></header><div class="carl-target-rows"></div></div>';
+          decorateTargetRows(message, html);
+          return html;
+        };
+        const rowEl = (html, id) => html.querySelector(`[data-row-id="${id}"]`);
+        const tagOf = (html, id) =>
+          rowEl(html, id)?.querySelector(".carl-status-chips .carl-degree-tag");
+        const short = (degree) => game.i18n.localize(`CARLRPG.DegreeTag.Short.${degree}`);
+
+        it("a crawler's Amazing Success on a Mob: a gold Amazing tag under the chip, not a word on the sub-line", async function () {
+          const rat = await createTestMob("degree-rat");
+          const hound = await createTestMob("degree-hound");
+          let message;
+          try {
+            message = await card({
+              attackerType: "character",
+              attackTotal: 21,
+              naturalRoll: 15,
+              targetRows: {
+                t0: mobRow("t0", rat, { amazing: true, degree: "amazingSuccess" }),
+                t1: mobRow("t1", hound, { difficulty: 23, hit: false, degree: "nearMissFail" }),
+              },
+            });
+            const html = draw(message);
+            const tag = tagOf(html, "t0");
+            assert.exists(tag, "a tag stacked with the chip");
+            assert.equal(tag.textContent, short("amazingSuccess"));
+            assert.equal(tag.dataset.tone, "great");
+            assert.exists(tag.querySelector("i.fas"), "an icon with the word, never colour alone");
+            assert.include(
+              tag.dataset.tooltipText,
+              game.i18n.localize("CARLRPG.Degree.AmazingSuccess"),
+            );
+            assert.notInclude(
+              rowEl(html, "t0").querySelector(".carl-status-what").textContent,
+              game.i18n.localize("CARLRPG.Degree.AmazingSuccess"),
+              "the sub-line word moved into the tag",
+            );
+            const near = tagOf(html, "t1");
+            assert.equal(near?.textContent, short("nearMissFail"), "a Missed row says how close");
+            assert.equal(near.dataset.tone, "near");
+          } finally {
+            await message?.delete();
+            await deleteTestActor(rat);
+            await deleteTestActor(hound);
+          }
+        });
+
+        it("a Major Fail Evade on a Mob's Attack: a Major Fail tag, still shown under a Shield Block that worked", async function () {
+          const wren = await createTestCharacter("degree-wren");
+          const chase = await createTestCharacter("degree-chase");
+          const check = (kind, natural, total, degree, success) => ({
+            kind,
+            natural,
+            base: total,
+            total,
+            difficulty: 16,
+            degree,
+            success,
+            breakdown: "",
+            roll: null,
+            interventions: [],
+            aiRerolled: null,
+            actorUuid: null,
+          });
+          const crawlerRow = (id, actor, checks, summary) => ({
+            ...mobRow(id, actor, {
+              isCharacter: true,
+              difficulty: 16,
+              degree: null,
+              natural: null,
+            }),
+            checks,
+            ...summary,
+          });
+          let message;
+          try {
+            const failed = check("evade", 3, 5, "majorFail", false);
+            const blocked = {
+              ...check("block", 14, 18, "standardSuccess", true),
+              shieldName: "Bin Lid",
+              rank: 1,
+            };
+            const failedSummary = { evade: { degree: "majorFail", success: false } };
+            message = await card({
+              attackerType: "mob",
+              attackTotal: 16,
+              targetRows: {
+                t0: crawlerRow("t0", wren, { evade: failed }, failedSummary),
+                t1: crawlerRow(
+                  "t1",
+                  chase,
+                  { evade: failed, block: blocked },
+                  { ...failedSummary, block: { degree: "standardSuccess", success: true } },
+                ),
+              },
+            });
+            const html = draw(message);
+            for (const id of ["t0", "t1"]) {
+              const tag = tagOf(html, id);
+              assert.equal(
+                tag?.textContent,
+                short("majorFail"),
+                `${id}: the Evade that adds damage`,
+              );
+              assert.equal(tag.dataset.tone, "major");
+              assert.exists(
+                rowEl(html, id).querySelector(".carl-status-chips .carl-status-chip"),
+                "the status chip is still there, above it",
+              );
+            }
+          } finally {
+            await message?.delete();
+            await deleteTestActor(wren);
+            await deleteTestActor(chase);
+          }
+        });
+
+        it("an Area Attack's rows show its one roll: the first target's number and Degree on every row", async function () {
+          const rat = await createTestMob("degree-area-rat");
+          const hound = await createTestMob("degree-area-hound");
+          let message;
+          try {
+            message = await card({
+              attackerType: "character",
+              isArea: true,
+              attackTotal: 21,
+              naturalRoll: 15,
+              targetDifficulty: 11,
+              targetRows: {
+                t0: mobRow("t0", rat, { amazing: true, degree: "amazingSuccess" }),
+                // Against its own Difficulty it would be a Near Miss; the shared roll hit.
+                t1: mobRow("t1", hound, { difficulty: 23, amazing: true, degree: "nearMissFail" }),
+              },
+            });
+            const html = draw(message);
+            assert.equal(tagOf(html, "t1")?.textContent, short("amazingSuccess"));
+            const num = rowEl(html, "t1").querySelector(".carl-status-num").textContent;
+            assert.include(num, "21");
+            assert.include(num, "11", "against the first target's Difficulty");
+            assert.notInclude(num, "23");
+          } finally {
+            await message?.delete();
+            await deleteTestActor(rat);
+            await deleteTestActor(hound);
+          }
+        });
+
+        it("a crawler's Attack at several Mobs has no Degree in its header; at one, it keeps it", async function () {
+          const actor = await createTestCharacter("degree-dax");
+          const rat = await createTestMob("degree-head-rat", {
+            system: { stats: { dex: { value: 3 } } },
+          });
+          const hound = await createTestMob("degree-head-hound");
+          const messages = [];
+          try {
+            const skill = await createTestItem(actor, "skill", "Attack Skill", {
+              name: "Wrench Work",
+              system: { category: "attack", isHandToHand: true, rank: 15, governingStat: "" },
+            });
+            await settle();
+            const roll = (targets) =>
+              withSetting("currentFloor", 1, () =>
+                withPinnedDice(PIN_D20_MID, () =>
+                  withFakeTargets(targets, () =>
+                    CarlDice.rollAttack(actor, skill, { skipDialog: true }),
+                  ),
+                ),
+              );
+            const header = (message) => {
+              const div = document.createElement("div");
+              div.innerHTML = message.content;
+              return div.querySelector(".carl-chat-header");
+            };
+            const labels = Object.values(CARLRPG.degreesOfSuccess).map((k) =>
+              game.i18n.localize(k),
+            );
+
+            const several = await roll([{ actor: rat }, { actor: hound }]);
+            messages.push(several);
+            assert.exists(several, "the Attack was rolled");
+            assert.notOk(several.getFlag("carl-rpg", "isArea"), "not an Area Attack");
+            const head = header(several);
+            for (const label of labels) assert.notInclude(head.textContent, label);
+            assert.notExists(head.querySelector(".carl-badge"), "no Degree badge");
+
+            const one = await roll([{ actor: rat }]);
+            messages.push(one);
+            assert.isTrue(
+              labels.some((label) => header(one).textContent.includes(label)),
+              "one target: its Degree in the header",
+            );
+          } finally {
+            for (const m of messages) await m?.delete();
+            await deleteTestActor(actor);
+            await deleteTestActor(rat);
+            await deleteTestActor(hound);
           }
         });
       });

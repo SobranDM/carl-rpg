@@ -34,7 +34,8 @@
       </a>
       {{cooldownChip item}}
     </div>
-    <div class="item-prop">{{item.system.manaCost}}</div>
+    {{!-- What this caster pays: Favored Class, day or night (helpers/mana-cost.mjs). --}}
+    <div class="item-prop">{{lookup @root.manaCosts item._id}}</div>
     <div class="item-prop">{{item.system.rank}}</div>
     <div class="item-controls">
       {{#if @root.isCharacter}}

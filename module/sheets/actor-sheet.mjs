@@ -84,6 +84,7 @@ import { itemFor, itemRow } from "../helpers/sheet-rows.mjs";
 import { boxTierRank } from "../helpers/boxes.mjs";
 import { achievementsOf, awardAchievement, definitionFor } from "../helpers/achievements.mjs";
 import { deleteItemAsking } from "../helpers/confirm.mjs";
+import { effectiveManaCost } from "../helpers/mana-cost.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -566,6 +567,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const descriptions = await itemDescriptions(actor.items);
     context.itemTooltips = itemTooltips(actor.items, descriptions);
     context.namedItemTooltips = namedItemTooltips(actor.items, descriptions);
+    // Each Spell's cost to this caster (helpers/mana-cost.mjs), by item id.
+    context.manaCosts = Object.fromEntries(
+      actor.items.filter((i) => i.type === "spell").map((i) => [i.id, effectiveManaCost(i, actor)]),
+    );
     // A usable Hotlist row's tooltip: what clicking it does, then the item's
     // name and description (ruled 2026-11-21).
     for (const row of context.hotlist?.rows ?? []) {
@@ -1041,6 +1046,8 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
    */
   _sortList(items, path, dir) {
     const value = (item) => {
+      // A Spell's Mana as the column shows it: this caster's cost.
+      if (path === "system.manaCost") return effectiveManaCost(item, this.actor);
       const v = foundry.utils.getProperty(item, path);
       return path === "system.category" ? skillCategoryRank(v) : v;
     };

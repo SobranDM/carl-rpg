@@ -1,0 +1,110 @@
+{
+  "_id": "8zYjOyGrKBJffwqF",
+  "name": "Goblin Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Goblin Box's consumables - explosives and the gear that goes with them (p.22). Drawn for a box's consumable or two, any tier when the box's title names the theme (\"Bronze Goblin Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Goblin Box: Consumables\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "mzl7EbjwVScdWBy0",
+      "type": "document",
+      "name": "Stick of Basic Dynamite (1d4)",
+      "img": "icons/weapons/thrown/dynamite-simple-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.mzq0hzwJv2wJ6Xku",
+      "weight": 3,
+      "range": [
+        1,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8zYjOyGrKBJffwqF.mzl7EbjwVScdWBy0"
+    },
+    {
+      "_id": "X7sKypydDwTf55Yn",
+      "type": "document",
+      "name": "Stick of Good Goblin Dynamite",
+      "img": "icons/weapons/thrown/dynamite-simple-brown.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.0AosTPbKmlQ1UbSs",
+      "weight": 2,
+      "range": [
+        4,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8zYjOyGrKBJffwqF.X7sKypydDwTf55Yn"
+    },
+    {
+      "_id": "LOxsj5Cw63g0ElRG",
+      "type": "text",
+      "name": "Road Flares ×3",
+      "img": "icons/sundries/lights/torch-black.webp",
+      "description": "<p>Bright red, hot, and good for lighting a fuse from arm's length.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!8zYjOyGrKBJffwqF.LOxsj5Cw63g0ElRG"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!8zYjOyGrKBJffwqF"
+}

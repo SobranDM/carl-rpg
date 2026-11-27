@@ -1,0 +1,137 @@
+{
+  "_id": "Z1nzM6iGlsJhYn8J",
+  "name": "Crafter's Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Crafter's Box's consumables - tools, fasteners and workshop odds and ends (p.22). Drawn for a box's consumable or two, any tier when the box's title names the theme (\"Bronze Crafter's Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Crafter's Box: Consumables\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "mG6qvopHqJSchJnb",
+      "type": "document",
+      "name": "Magic Paper",
+      "img": "icons/sundries/scrolls/scroll-plain-tan.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.AVxogJPJPHesmKSW",
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Z1nzM6iGlsJhYn8J.mG6qvopHqJSchJnb"
+    },
+    {
+      "_id": "W9Oixo781kan0xkg",
+      "type": "text",
+      "name": "Coffee Can of Screws",
+      "img": "icons/tools/fasteners/screw-flat-steel-grey.webp",
+      "description": "<p>Hundreds of screws, nails and washers, none of them matching.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        2,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Z1nzM6iGlsJhYn8J.W9Oixo781kan0xkg"
+    },
+    {
+      "_id": "2TfLdg89SokSmcUo",
+      "type": "text",
+      "name": "Epoxy Twin-Pack ×2",
+      "img": "icons/consumables/potions/bottle-metal-yellow-gray.webp",
+      "description": "<p>Mix the two tubes and it sets like stone in five minutes.</p>",
+      "documentUuid": null,
+      "weight": 2,
+      "range": [
+        4,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Z1nzM6iGlsJhYn8J.2TfLdg89SokSmcUo"
+    },
+    {
+      "_id": "UzzAJ5rqRN9F4GTY",
+      "type": "text",
+      "name": "Sandpaper Assortment",
+      "img": "icons/sundries/documents/paper-plain-white.webp",
+      "description": "<p>Coarse to fine, a sheet of each.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!Z1nzM6iGlsJhYn8J.UzzAJ5rqRN9F4GTY"
+    }
+  ],
+  "formula": "1d6",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!Z1nzM6iGlsJhYn8J"
+}

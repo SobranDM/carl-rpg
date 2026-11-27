@@ -87,6 +87,57 @@ export default function register(quench) {
           }
         });
 
+        it("a combat roll's Difficulty is locked, and its Modifier reaches every Check after it (ruled 2026-11-27)", async function () {
+          const actor = await createTestCharacter("combat modifier");
+          try {
+            const first = await withDialog(
+              () => CarlDice.rollEvadeCheck(actor, { difficulty: 15, post: false }),
+              (dialog) => {
+                const difficulty = dialog.element.querySelector('input[name="difficulty"]');
+                assert.isTrue(difficulty.disabled, "the rules' Difficulty, locked");
+                dialog.element.querySelector('input[name="modifier"]').value = "3";
+                press(dialog, "roll");
+              },
+            );
+            assert.equal(first.options.modifier, 3);
+            assert.equal(first.options.difficulty, 15, "the given Difficulty stands");
+            // The next Attack's Check, as the Reaction card rolls it: the same
+            // choices, its own Difficulty.
+            const { difficulty: _first, ...preset } = first.options;
+            const second = await CarlDice.rollEvadeCheck(actor, {
+              difficulty: 18,
+              post: false,
+              isAction: false,
+              preset,
+            });
+            assert.equal(second.options.modifier, 3);
+            assert.equal(second.options.difficulty, 18);
+            assert.equal(
+              second.total - second.naturalRoll,
+              first.total - first.naturalRoll,
+              "the same +3 on both",
+            );
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("with no Difficulty given, a combat roll's stays open to type in", async function () {
+          const actor = await createTestCharacter("combat open");
+          try {
+            await withDialog(
+              () => CarlDice.rollEvadeCheck(actor, { post: false }),
+              (dialog) => {
+                const difficulty = dialog.element.querySelector('input[name="difficulty"]');
+                assert.isFalse(difficulty.disabled);
+                press(dialog, "cancel");
+              },
+            );
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
         it("a Skill Check card shows the Difficulty it was rolled against", async function () {
           const actor = await createTestCharacter("difficulty");
           let message;

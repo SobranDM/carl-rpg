@@ -21,7 +21,8 @@ const ITEM_TYPE_TABLE_NAME = "Item Type";
  *  - {kind: "item", uuid, name, img, quantity}: a compendium or world item;
  *  - {kind: "spellScroll"|"spellbook", spellUuid, spellName, rank, img}: of a
  *    random Spell (Table 27);
- *  - {kind: "text", name, img, quantity}: a table row naming no item;
+ *  - {kind: "text", name, img, quantity, description}: a table row naming
+ *    no item - a simple item of that name, its description the row's;
  *  - {kind: "magic", ...}: a magic item draft (generateMagicDraft).
  * Turned into Item data by lootItemData. Tables are read by name, the
  * world's own copy first, so a GM's edits win. The box tables (what a box
@@ -61,6 +62,50 @@ function tierName(tierKey) {
 }
 
 /**
+ * The table names a box's draw from `slot` ("Mundane", "Consumables",
+ * "Weak Magic") tries, first found wins (ruled 2026-11-27): a themed box
+ * ("Bronze Goblin Box", reward-text.mjs boxTheme) tries "Bronze Goblin Box:
+ * Mundane", then "Goblin Box: Mundane" - each also with the theme's "'s"
+ * added or dropped ("Crafter" / "Crafter's") - then the tier's own "Bronze
+ * Box: Mundane". Each name is looked up as boxTable does (the world's own,
+ * a world compendium's, then the system's), so a GM's copy of a themed
+ * table wins over the system's. No theme, or one with no table: the
+ * tier's.
+ * @param {string} tierKey
+ * @param {string} theme  "" for none.
+ * @param {string} slot
+ * @returns {string[]}
+ */
+export function boxTableNames(tierKey, theme, slot) {
+  const tier = tierName(tierKey);
+  const names = [];
+  const t = String(theme ?? "").trim();
+  if (t) {
+    const toggled = /'s$/i.test(t) ? t.slice(0, -2) : `${t}'s`;
+    for (const name of [t, toggled]) names.push(`${tier} ${name} Box: ${slot}`);
+    for (const name of [t, toggled]) names.push(`${name} Box: ${slot}`);
+  }
+  names.push(`${tier} Box: ${slot}`);
+  return names;
+}
+
+/**
+ * The table a box's draw from `slot` uses: the first of boxTableNames
+ * that's found.
+ * @param {string} tierKey
+ * @param {string} theme
+ * @param {string} slot
+ * @returns {Promise<RollTable|null>}
+ */
+export async function boxTableFor(tierKey, theme, slot) {
+  for (const name of boxTableNames(tierKey, theme, slot)) {
+    const table = await boxTable(name);
+    if (table) return table;
+  }
+  return null;
+}
+
+/**
  * A number, or a Roll formula's total; "" or none is 0.
  * @param {number|string|null|undefined} formula
  * @returns {Promise<number>}
@@ -83,37 +128,56 @@ function pickFrom(list) {
 }
 
 /**
- * Roll a box's contents.
+ * Roll a box's contents - the book's shape (p.216, ruled 2026-11-27): one
+ * item, "a consumable or two", plus gold. Bronze's one item is its mundane
+ * item (p.219: "Bronze: No rolls, item is mundane"), which a weak magic item
+ * replaces `weakMagicChance` of the time; from Silver up it's the magic
+ * item. A themed box draws from its theme's tables where there are some
+ * (boxTableNames).
  * @param {string} tierKey  A key into CONFIG.CARLRPG.lootBoxTiers.
- * @param {{recipient?: Actor|null, floor?: number}} [options]
+ * @param {{recipient?: Actor|null, floor?: number, theme?: string}} [options]
  *   recipient: whose box it is - a magic item's percentage Stat and Skill
- *   are worked out for them (autofillMagicDraft).
- * @returns {Promise<{tierKey: string, gold: number, entries: object[]}|null>}  Null for an unknown tier.
+ *   are worked out for them (autofillMagicDraft). theme: the box's
+ *   (reward-text.mjs boxTheme of its title), "" for none.
+ * @returns {Promise<{tierKey: string, theme: string, gold: number, entries: object[]}|null>}
+ *   Null for an unknown tier.
  */
-export async function generateLoot(tierKey, { recipient = null, floor = currentFloor() } = {}) {
+export async function generateLoot(
+  tierKey,
+  { recipient = null, floor = currentFloor(), theme = "" } = {},
+) {
   const tier = CONFIG.CARLRPG.lootBoxTiers[tierKey];
   if (!tier) return null;
   const ctx = { tierKey, recipient, floor };
   const entries = [];
-  const draw = async (suffix, count) => {
-    const table = count > 0 ? await boxTable(`${tierName(tierKey)} Box: ${suffix}`) : null;
-    for (let i = 0; i < (table ? count : 0); i++) {
-      const { results } = await table.roll({ recursive: false });
-      for (const result of results) {
-        const entry = await rowEntry(result, ctx);
-        if (entry) entries.push(entry);
-      }
+  const tables = new Map();
+  const tableFor = async (slot) => {
+    if (!tables.has(slot)) tables.set(slot, await boxTableFor(tierKey, theme, slot));
+    return tables.get(slot);
+  };
+  const drawFrom = async (table) => {
+    const { results } = await table.roll({ recursive: false });
+    for (const result of results) {
+      const entry = await rowEntry(result, ctx);
+      if (entry) entries.push(entry);
     }
   };
   const gold = await rollTotal(tier.gold);
-  await draw("Mundane", await rollTotal(tier.mundane));
-  await draw("Consumables", await rollTotal(tier.consumables));
-  if (tier.weakMagicChance && Math.random() < tier.weakMagicChance) await draw("Weak Magic", 1);
+  const mundane = await rollTotal(tier.mundane);
+  for (let i = 0; i < mundane; i++) {
+    // A weak magic item instead of the mundane one, not as well.
+    const weak = tier.weakMagicChance && Math.random() < tier.weakMagicChance;
+    const table = (weak ? await tableFor("Weak Magic") : null) ?? (await tableFor("Mundane"));
+    if (table) await drawFrom(table);
+  }
+  const consumables = await rollTotal(tier.consumables);
+  const consumableTable = consumables > 0 ? await tableFor("Consumables") : null;
+  for (let i = 0; consumableTable && i < consumables; i++) await drawFrom(consumableTable);
   for (let i = 0; i < (tier.magicItems ?? 0); i++) {
     const magic = await generateMagicDraft(tierKey, { recipient, floor });
     if (magic) entries.push(magic);
   }
-  return { tierKey, gold, entries };
+  return { tierKey, theme: String(theme ?? ""), gold, entries };
 }
 
 /**
@@ -134,7 +198,16 @@ async function rowEntry(result, ctx) {
   if (result.type === "document" && result.documentUuid) {
     return { kind: "item", uuid: result.documentUuid, name, img: result.img, quantity: count };
   }
-  return { kind: "text", name, img: result.img || "icons/svg/item-bag.svg", quantity: count };
+  // A text row is a simple item of that name; the row's description, if
+  // any, becomes the item's (a mundane item with nothing to track, ruled
+  // 2026-11-27).
+  return {
+    kind: "text",
+    name,
+    img: result.img || "icons/svg/item-bag.svg",
+    quantity: count,
+    description: result.description ?? "",
+  };
 }
 
 /**
@@ -588,7 +661,7 @@ export async function entryItemData(entry) {
         name: entry.name,
         type: "item",
         img: entry.img,
-        system: { description: "", quantity: entry.quantity ?? 1 },
+        system: { description: entry.description ?? "", quantity: entry.quantity ?? 1 },
       };
     default:
       return null;

@@ -273,6 +273,65 @@
     }
   }
 
+  // A row's Degree tag (status-rows.mjs degreeTag), stacked under its chip
+  // in the same 74px column: icon + short word, in the header badge's
+  // colours (carl-badge--hit/--warn/--miss), so a Degree reads the same on
+  // every card.
+  .carl-status-chips {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .carl-degree-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    box-sizing: border-box;
+    height: 14px;
+    max-width: 100%;
+    padding: 0 4px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+
+    i {
+      font-size: 8px;
+    }
+
+    &[data-tone="great"] {
+      background: var(--carl-gold);
+      color: var(--carl-header-bg);
+    }
+
+    &[data-tone="plain"] {
+      border-color: color-mix(in srgb, var(--carl-text) 30%, transparent);
+      color: var(--carl-text-muted);
+    }
+
+    &[data-tone="near"] {
+      border-color: var(--carl-hazard);
+      color: #ffb199;
+    }
+
+    &[data-tone="major"] {
+      background: var(--carl-hazard);
+      color: var(--carl-header-text);
+    }
+
+    &[data-tone="critical"] {
+      background: var(--carl-danger);
+      border-color: var(--carl-status-bad-bg);
+      color: var(--carl-header-text);
+    }
+  }
+
   // Row icons (AI Reroll, Intervene, Evade, Apply) and section/footer buttons.
   .carl-status-icon {
     display: grid;

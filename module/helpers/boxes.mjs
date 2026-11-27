@@ -7,6 +7,7 @@ import {
   postLootCard,
 } from "./loot.mjs";
 import { queueForActor } from "./actor-queue.mjs";
+import { boxTheme } from "./reward-text.mjs";
 import { confirmUndoable } from "./confirm.mjs";
 import { esc } from "./html.mjs";
 
@@ -116,12 +117,13 @@ export async function boxDraftForForge(box) {
   if (sys.contents.mode === "prepared") {
     return {
       tierKey: sys.tier,
+      theme: boxTheme(box.name),
       gold: sys.contents.gold,
       entries: foundry.utils.deepClone(sys.contents.entries),
     };
   }
   const owner = box.parent?.type === "character" ? box.parent : null;
-  return generateLoot(sys.tier, { recipient: owner });
+  return generateLoot(sys.tier, { recipient: owner, theme: boxTheme(box.name) });
 }
 
 /**
@@ -146,13 +148,15 @@ export function prepareBox(box, draft) {
  * Ask before a box's prepared contents are thrown away for "Roll When
  * Opened" (ruled 2026-11-27); Shift-click skips it (helpers/confirm.mjs).
  * @param {Event} event  The click.
- * @param {string} name  The crawler the box is for.
+ * @param {string} name  The crawler the box is for - or, with `box`, the box.
+ * @param {{box?: boolean}} [options]  box: `name` is the box's own (no crawler).
  * @returns {Promise<boolean>}
  */
-export function confirmClearBox(event, name) {
+export function confirmClearBox(event, name, { box = false } = {}) {
+  const key = box ? "CARLRPG.Box.RandomizeTextBox" : "CARLRPG.Box.RandomizeText";
   return confirmUndoable(event, {
     title: game.i18n.localize("CARLRPG.Box.RandomizeTitle"),
-    content: `<p>${game.i18n.format("CARLRPG.Box.RandomizeText", { name: esc(name) })}</p>`,
+    content: `<p>${game.i18n.format(key, { name: esc(name) })}</p>`,
   });
 }
 
@@ -198,7 +202,7 @@ export function openBox(box) {
         if (entry.kind === "magic") await autofillMagicDraft(entry, { recipient: actor });
       }
     } else {
-      draft = await generateLoot(sys.tier, { recipient: actor });
+      draft = await generateLoot(sys.tier, { recipient: actor, theme: boxTheme(live.name) });
     }
     if (!draft) return null;
     const itemData = await lootItemData(draft);

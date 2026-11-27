@@ -2,6 +2,14 @@
 
 ## 0.8.5
 
+- **Degrees of Success on Combat Cards:** Every target row on Attack, Reaction and Damage cards now shows its Degree (Amazing, Success, Near Miss, Fail, Major Fail, Crit Fail, Crit Hit) as a tag under its status, with what it does in the tooltip. A Major or Critical Fail Evade shows even under a Shield Block. An Attack at several targets no longer shows the first target's Degree in its header, and every row of an Area Attack shows the shared roll.
+- **A Modifier for Combat Rolls:** The roll dialog for an Attack, Evade or Shield Block shows the Difficulty the rules give it but no longer lets you change it; a Modifier field takes its place. Evading or blocking several Attacks, or attacking several targets, now applies that Modifier to every one of them, instead of a changed Difficulty reaching only the first.
+- **Leaner, Themed Loot Boxes:** Boxes follow the book's shape: one headline item, a consumable or two, and gold. A Bronze box's mundane item is sometimes swapped for weak magic instead of joined by it, and Silver boxes no longer add a mundane item. A box's theme (Goblin, Pet, Crafter's, Mechanic's, Survivor's, Lucky Bastard, Weapon) now picks a themed table where there is one. The Bronze mundane table grows from 6 rows to 62 (kits, odd props, nine funny d6 weapons), with torches and biscuits as common filler.
+- **On-Hit Debuffs With Both Boxes Ticked** (Critical Hit only and Amazing Success only) now land on either a Critical Hit or an Amazing Success. Before, they never landed, since a natural 20 is never also an Amazing Success.
+- **Day and Night:** A sun/moon toggle in the GM Toolbox sets whether it's day or night.
+  - **Lajabless** (p.136): +5 Intelligence and half Strength by day; +5 Strength, then double Strength, by night. Spells cost half the Mana by day and double by night (rounded up, at least 1), shown on the sheet, the Hotlist and the roll dialog. Mana above the new maximum comes down at nightfall.
+  - **Night Elves** (p.134) roll Hide in Shadows with Advantage at night.
+  - **Gobblin' Hogs** swap their Int and Dex Mods at night, and their Surprise and Evade with them.
 - **Deleting Asks First:** Deleting an item from a Character, Mob, Pet, Vehicle or Map Loot Box sheet now asks before it goes, as does throwing away a loot box's prepared contents (Roll When Opened). Shift-click skips the question.
 - **Homebrew Character Creation Tables:** A copy of a background, Past Traumas, Loose Ends or Regrets table in a world compendium now replaces the system's, as one in the world already did and as loot box tables do.
 

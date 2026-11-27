@@ -2,6 +2,7 @@ import { getStatMod } from "../../helpers/rules.mjs";
 import { computeActiveShieldSlots } from "../../helpers/modifiers.mjs";
 import { conditionLabel, findConditionWithMechanic } from "../../helpers/debuff-effects.mjs";
 import { currentFloor } from "../../helpers/floor.mjs";
+import { dayNightStat } from "../../helpers/day-night.mjs";
 
 /**
  * The stat block and derived values every creature Actor shares - Characters
@@ -51,9 +52,12 @@ export function deriveStats(sys) {
     if (!stat) continue;
     const bonus = sys.bonuses?.[`stats.${key}`] ?? 0;
     const cap = sys.caps?.[`stats.${key}`];
-    const total = cap !== undefined ? Math.min(stat.value + bonus, cap) : stat.value + bonus;
+    // Day or night, for a Lajabless (helpers/day-night.mjs): on the whole
+    // Stat, before any cap. The bonus shown is then what it all adds up to.
+    const phased = dayNightStat(sys, key, stat.value + bonus);
+    const total = cap !== undefined ? Math.min(phased, cap) : phased;
     const effective = Math.floor(total);
-    stat.bonus = bonus;
+    stat.bonus = phased === stat.value + bonus ? bonus : Math.floor(phased) - stat.value;
     stat.effective = effective;
     stat.mod = getStatMod(effective);
     stat.label = game.i18n.localize(CONFIG.CARLRPG.stats[key]) ?? key;

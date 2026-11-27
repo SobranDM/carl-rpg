@@ -26,6 +26,12 @@
       <button type="button" data-action="floorIncrement" data-tooltip-text="{{localize 'CARLRPG.Toolbox.FloorIncrement'}}">
         <i class="fas fa-plus"></i>
       </button>
+      {{!-- Day or night (helpers/day-night.mjs): click to change it. --}}
+      <button type="button" class="carl-toolbox-time{{#if night}} night{{/if}}" data-action="toggleTimeOfDay"
+        data-tooltip-text="{{localize (ifThen night 'CARLRPG.TimeOfDay.NightHint' 'CARLRPG.TimeOfDay.DayHint')}}"
+        aria-label="{{localize (ifThen night 'CARLRPG.TimeOfDay.Night' 'CARLRPG.TimeOfDay.Day')}}">
+        <i class="fas {{#if night}}fa-moon{{else}}fa-sun{{/if}}"></i>
+      </button>
     </div>
     <div class="carl-toolbox-row">
       <button type="button" data-action="endFloor" data-tooltip-text="{{localize 'CARLRPG.Toolbox.EndFloorHint'}}">

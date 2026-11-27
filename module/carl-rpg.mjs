@@ -33,6 +33,7 @@ import { CARLRPG } from "./helpers/config.mjs";
 import * as models from "./data/_module.mjs";
 import CarlDice from "./dice/dice.mjs";
 import CarlToolbox from "./apps/gm-toolbox.mjs";
+import { TIME_OF_DAY, clampManaToMax } from "./helpers/day-night.mjs";
 import CarlSpendStatPointsDialog from "./apps/spend-stat-points-dialog.mjs";
 import CrawlerCreation from "./apps/crawler-creation.mjs";
 import { registerChargenSettings } from "./helpers/chargen.mjs";
@@ -115,14 +116,27 @@ Hooks.once("init", function () {
     onChange: () => {
       // The floor-collapse bar's Floor (every client).
       FloorClockHud.refresh();
-      for (const actor of game.actors) {
-        actor.reset();
-        if (actor.sheet?.rendered) actor.sheet.render();
-      }
-      for (const actor of unlinkedTokenActors()) {
-        actor.reset();
-        if (actor.sheet?.rendered) actor.sheet.render();
-      }
+      resetAllActors();
+    },
+  });
+
+  // Day or night (helpers/day-night.mjs; ruled 2026-11-27): the GM's
+  // sun/moon toggle in the Toolbox. Lajabless Stats and Spell costs, a Night
+  // Elf's Hide in Shadows and a Gobblin' Hog's Mods turn on it, so every
+  // actor is worked out again; the active GM then brings down any Mana above
+  // its new Max (a Lajabless loses its +5 Int at nightfall).
+  game.settings.register("carl-rpg", TIME_OF_DAY, {
+    scope: "world",
+    config: false,
+    type: String,
+    choices: { day: "CARLRPG.TimeOfDay.Day", night: "CARLRPG.TimeOfDay.Night" },
+    default: "day",
+    onChange: (value) => {
+      resetAllActors();
+      game.carlrpg?.toolbox?.rendered && game.carlrpg.toolbox.render();
+      // Only nightfall lowers a Max (daybreak raises it): Mana above Max at
+      // daybreak is a kept overflow, left alone.
+      if (value === "night" && game.users.activeGM?.isSelf) void clampManaToMax();
     },
   });
 
@@ -555,4 +569,18 @@ function rollItemMacro(itemUuid) {
     }
     item.roll();
   });
+}
+
+/**
+ * Work every actor out again from its stored data and redraw open sheets -
+ * after a world setting they read changes (the Floor, day or night). Mobs
+ * are almost always unlinked tokens (absent from game.actors), hence the
+ * scene sweep. reset(), not prepareData(): it starts again from the stored
+ * data, so nothing derived last time carries over.
+ */
+function resetAllActors() {
+  for (const actor of [...game.actors, ...unlinkedTokenActors()]) {
+    actor.reset();
+    if (actor.sheet?.rendered) actor.sheet.render();
+  }
 }

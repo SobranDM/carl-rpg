@@ -52,7 +52,6 @@ import {
   damageEffectFits,
   effectiveRank,
   ownedRank,
-  sameSkillName,
   skillRankCap,
   slugifySkillName,
   tiersHighestFirst,
@@ -94,6 +93,8 @@ import { earlyUseNote, passCooldown, passCooldowns, startCooldown } from "../hel
 import { SPELL_TIMER_PATH, spellTimerFor } from "../helpers/spell-timers.mjs";
 import { currentFloor } from "../helpers/floor.mjs";
 import { esc } from "../helpers/html.mjs";
+import { applyFavoredClassSurcharge, effectiveManaCost } from "../helpers/mana-cost.mjs";
+import { dayNightAdvantage } from "../helpers/day-night.mjs";
 import { buildOpposedChoice, hardestTarget, opposedNote } from "./opposed.mjs";
 
 /**
@@ -455,41 +456,25 @@ function setRowDamageFactor(rows, factor) {
  * @param {Item} spellItem
  * @returns {{manaCost: number, description: string, isBase: boolean}[]} Empty if the spell has no variants.
  */
-function buildManaCostChoices(spellItem) {
+function buildManaCostChoices(spellItem, actor = null) {
   const variants = spellItem.system.manaCostVariants ?? [];
   if (!variants.length) return [];
+  // shownCost: what this caster pays for it (helpers/mana-cost.mjs).
+  const choice = (manaCost, description, isBase) => ({
+    manaCost,
+    shownCost: effectiveManaCost(spellItem, actor, manaCost),
+    description,
+    isBase,
+  });
   return [
-    {
-      manaCost: spellItem.system.manaCost,
-      description: game.i18n.localize("CARLRPG.Dialog.ManaCostBase"),
-      isBase: true,
-    },
-    ...variants.map((v) => ({ manaCost: v.manaCost, description: v.description, isBase: false })),
+    choice(spellItem.system.manaCost, game.i18n.localize("CARLRPG.Dialog.ManaCostBase"), true),
+    ...variants.map((v) => choice(v.manaCost, v.description, false)),
   ];
 }
 
-/**
- * "If a Spell is Favored by any particular Classes, other Classes pay 1
- * additional Mana to cast it" (p.201; module/data/spell.mjs's
- * favoredClasses). A Spell lists Class CATEGORIES ("Mage", "Cleric"...),
- * which a Class item carries as `classTypes` - "Boring Ol' Mage" is a Mage
- * - so the match is against those (and the Class's own name, for a Spell
- * that names one), by slug: any case or punctuation. A Spell with no favoredClasses charges everyone the
- * same, and a caster with no Class yet isn't an "other Class", so pays no
- * surcharge either.
- * @param {Item} spellItem
- * @param {Actor} actor
- * @param {number} manaCost
- * @returns {number}
- */
-export function applyFavoredClassSurcharge(spellItem, actor, manaCost) {
-  const favored = spellItem.system.favoredClasses ?? [];
-  if (!favored.length) return manaCost;
-  const classItem = actor.system.classItem;
-  if (!classItem) return manaCost;
-  const categories = [...(classItem.system?.classTypes ?? []), classItem.name];
-  return categories.some((c) => favored.some((f) => sameSkillName(f, c))) ? manaCost : manaCost + 1;
-}
+// The Favored-Class +1 (p.201) lives with the rest of a Spell's cost now
+// (helpers/mana-cost.mjs); still exported from here for older callers.
+export { applyFavoredClassSurcharge };
 
 /**
  * @param {Item} spellItem
@@ -502,7 +487,7 @@ function resolveManaCost(spellItem, manaCostChoices, chosenIndex, actor) {
   const chosen = manaCostChoices.length
     ? (manaCostChoices[chosenIndex] ?? manaCostChoices[0])
     : { manaCost: spellItem.system.manaCost, description: null, isBase: true };
-  return { ...chosen, manaCost: applyFavoredClassSurcharge(spellItem, actor, chosen.manaCost) };
+  return { ...chosen, manaCost: effectiveManaCost(spellItem, actor, chosen.manaCost) };
 }
 
 /**
@@ -1185,15 +1170,17 @@ export default class CarlDice {
 
     const rollData = actor.getRollData();
     const { conditionalModifiers } = cast;
-    const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
+    const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem, actor) : [];
     const debuffRows = decorateRows(
       [...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })],
       "roll",
     );
+    // A Night Elf's Hide in Shadows at night (helpers/day-night.mjs).
+    const timeAdvantage = dayNightAdvantage(actor, skillItem);
 
     const usesActionDefault = actionBox(ctx, true);
     let options = {
-      advantage: "normal",
+      advantage: timeAdvantage ? "advantage" : "normal",
       difficulty: null,
       modifier: 0,
       checked: new Set(),
@@ -1208,6 +1195,7 @@ export default class CarlDice {
       const base = difficultyPresets.find((p) => p.selected);
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.SkillCheckTitle", { name: skillItem.name }),
+        defaultAdvantage: timeAdvantage ? "advantage" : null,
         difficulty: selectedPresetValue(difficultyPresets),
         difficultyPresets,
         showDifficulty: true,
@@ -1553,7 +1541,7 @@ export default class CarlDice {
     );
     const { conditionalModifiers } = cast;
 
-    const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem) : [];
+    const manaCostChoices = cast.payMana ? buildManaCostChoices(skillItem, actor) : [];
     // Woozy's "no DEX Mod" row is collected whatever the Stat, marked
     // `dexOnly`: the dialog's Stat (Off-Stat, p.58) decides whether it counts.
     const governingDex = skillSys.governingStat === "dex";
@@ -1602,6 +1590,7 @@ export default class CarlDice {
           ? game.i18n.localize("CARLRPG.Dialog.BaseDifficulty")
           : null,
         defaultAdvantage: advantageEntitled ? "advantage" : null,
+        combat: true,
         conditionalModifiers,
         damageEffectChoices,
         manaCostChoices,
@@ -1982,17 +1971,20 @@ export default class CarlDice {
       }),
     );
 
+    const perRowDegrees = targetRowList.length > 1 && !isArea;
     const message = await createRollMessage({
       rolls,
       rollMeta,
       title: skillItem.name,
-      // Several targets: each row was rolled against its own Difficulty.
+      // Several targets: each row was rolled against its own Difficulty and
+      // shows its own Degree, so the header has none (an Area Attack's one
+      // roll was against the first target's).
       subtitle: withManaCostSubtitle(
-        checkSubtitle(degree, targetRowList.length > 1 ? null : difficulty),
+        perRowDegrees ? "" : checkSubtitle(degree, difficulty),
         chosenManaCost,
       ),
       img: skillItem.img,
-      badge: degreeBadge(degree),
+      badge: perRowDegrees ? null : degreeBadge(degree),
       body,
       footer,
       flags,
@@ -2268,17 +2260,18 @@ export default class CarlDice {
     if (targetRowList.length && !isArea && !rollsLikeCrawler(flags.attackerType))
       footerParts.push(await buildTauntLinkFooter());
 
+    const perRowDegrees = targetRowList.length > 1 && !isArea;
     return {
       rolls,
       rollMeta,
       extraRollRows: d6.totalRow(attackTotal),
       title: skillItem.name,
       subtitle: withManaCostSubtitle(
-        checkSubtitle(degree, targetRowList.length > 1 ? null : difficulty),
+        perRowDegrees ? "" : checkSubtitle(degree, difficulty),
         spec.chosenManaCost,
       ),
       img: skillItem.img,
-      badge: degreeBadge(degree),
+      badge: perRowDegrees ? null : degreeBadge(degree),
       body: `${spec.body ?? ""}${spec.used ? rerollNote() : ""}`,
       footer: footerParts.length ? footerParts.join("") : undefined,
       flags: newFlags,
@@ -2719,7 +2712,7 @@ export default class CarlDice {
     // (docs/known-gaps.md 1.6) - no picker here: no heal spell currently has
     // manaCostVariants. A Scroll pays none.
     const chosenManaCost = cast.payMana
-      ? { manaCost: applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost), isBase: true }
+      ? { manaCost: effectiveManaCost(skillItem, actor, skillSys.manaCost), isBase: true }
       : null;
     if (chosenManaCost) await applyManaCost(actor, chosenManaCost.manaCost);
     if (!castAs) await startCooldown(skillItem);
@@ -2825,7 +2818,7 @@ export default class CarlDice {
           uuid: actor.uuid,
           data: { "system.shield.value": actor.system.shield?.value ?? 0 },
         });
-      manaCostSpent = applyFavoredClassSurcharge(skillItem, actor, skillSys.manaCost);
+      manaCostSpent = effectiveManaCost(skillItem, actor, skillSys.manaCost);
       await applyManaCost(actor, manaCostSpent);
       await removeConditionsById(actor, endedConditionIds(actor.system, []));
     }
@@ -2933,6 +2926,7 @@ export default class CarlDice {
       const difficultyPresets = difficulty === null ? [] : givenPresets(difficulty);
       const prompted = await promptRollOptions({
         title: game.i18n.localize("CARLRPG.Dialog.EvadeTitle"),
+        combat: true,
         difficulty,
         difficultyPresets,
         conditionalModifiers,
@@ -3056,6 +3050,7 @@ export default class CarlDice {
       post = true,
       markUse = true,
       isAction = true,
+      combat = false,
     } = {},
   ) {
     const sys = actor.system;
@@ -3071,7 +3066,8 @@ export default class CarlDice {
     const rollData = actor.getRollData();
     const conditionalModifiers = collectApplicableConditionalModifiers(sys, skillItem.name);
     // An opposed Spell is still cast - it costs Mana like any other (p.173).
-    const manaCostChoices = skillItem.type === "spell" ? buildManaCostChoices(skillItem) : [];
+    const manaCostChoices =
+      skillItem.type === "spell" ? buildManaCostChoices(skillItem, actor) : [];
     const rollerRows = checkActionRows(
       decorateRows(
         [...collectDebuffRows(sys, "check"), ...collectVehicleRows(actor, "check", { skillItem })],
@@ -3094,7 +3090,8 @@ export default class CarlDice {
         : [];
 
     let options = {
-      advantage: "normal",
+      // A Night Elf's Hide in Shadows at night (helpers/day-night.mjs).
+      advantage: dayNightAdvantage(actor, skillItem) ? "advantage" : "normal",
       difficulty,
       modifier: 0,
       checked: new Set(),
@@ -3106,6 +3103,8 @@ export default class CarlDice {
         difficulty === null ? buildSkillCheckPresets(skillItem) : givenPresets(difficulty);
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.OpposedCheckTitle", { name: skillItem.name }),
+        defaultAdvantage: dayNightAdvantage(actor, skillItem) ? "advantage" : null,
+        combat,
         difficulty: difficulty ?? selectedPresetValue(difficultyPresets),
         difficultyPresets,
         difficultyLabel: opponentRows.length

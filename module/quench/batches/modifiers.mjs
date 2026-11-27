@@ -134,6 +134,28 @@ export default function register(quench) {
           );
         });
 
+        it("both ticked lands on a Critical Hit or an Amazing Success (ruled 2026-11-27)", function () {
+          const item = {
+            name: "Quench Either Blade",
+            system: {
+              rank: 1,
+              targetEffects: [
+                { id: "e", debuffKey: "stunned", critOnly: true, amazingSuccessOnly: true },
+              ],
+            },
+          };
+          const at = (opts) => collectItemTargetEffects(item, opts);
+          assert.lengthOf(at({ isCrit: false, isAmazingSuccess: false }), 0, "neither");
+          const crit = at({ isCrit: true, isAmazingSuccess: false });
+          assert.lengthOf(crit, 1, "a Critical Hit");
+          assert.isFalse(crit[0].amazingSuccessOnly, "lands on the Crit, no Amazing needed");
+          assert.lengthOf(at({ isCrit: false, isAmazingSuccess: true }), 1, "an Amazing Success");
+          // Per target (Amazing decided per row): waits for an Amazing Success.
+          const waiting = at({ isCrit: false, isAmazingSuccess: null });
+          assert.lengthOf(waiting, 1);
+          assert.isTrue(waiting[0].amazingSuccessOnly);
+        });
+
         it("filters out entries with a blank debuffKey", function () {
           const item = {
             name: "Blank Effect",

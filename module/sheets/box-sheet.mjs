@@ -90,8 +90,11 @@ export class CarlRPGBoxSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   /** @private */
   static async #onClearContents(event, target) {
     if (!game.user.isGM) return;
-    const crawler = this.item.parent?.name ?? this.item.name;
-    if (!(await confirmClearBox(event, crawler))) return;
+    const crawler = this.item.parent?.name;
+    const ok = crawler
+      ? await confirmClearBox(event, crawler)
+      : await confirmClearBox(event, this.item.name, { box: true });
+    if (!ok) return;
     await clearBoxContents(this.item);
   }
 

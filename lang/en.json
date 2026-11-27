@@ -1171,13 +1171,13 @@
         "hit": "On a hit",
         "crit": "Critical Hit",
         "amazing": "Amazing Success",
-        "both": "Crit + Amazing"
+        "both": "Crit or Amazing"
       },
       "TriggerHint": {
         "hit": "Lands on any hit the target doesn't Evade.",
         "crit": "Lands only on a Critical Hit.",
         "amazing": "Lands only on an Amazing Success.",
-        "both": "Lands only on a Critical Hit that is also an Amazing Success."
+        "both": "Lands on a Critical Hit or an Amazing Success."
       }
     },
     "ItemSheet": {
@@ -1700,6 +1700,8 @@
       "Disadvantage": "Disadvantage",
       "Difficulty": "Difficulty",
       "DifficultyPlaceholder": "none",
+      "Modifier": "Modifier",
+      "ModifierHint": "Added to the roll. Against several Attacks or targets, it's added to every one of them; each keeps the Difficulty the rules give it.",
       "DifficultyPreset": "Difficulty type",
       "DifficultyPresetHelpLabel": "What these mean",
       "DifficultyPresetHelp": "<p><strong>Unopposed</strong> (p.59): nobody stands in the way - Climbing, Dumpster-Diving, Endurance and most Skills for surviving the dungeon. 10 + 2 x Floor.</p><p><strong>Stat Check</strong> (p.59): a Stat alone, with no Skill Ranks - resisting the environment or a Mob. 10 + Floor.</p><p><strong>Opposed</strong> (p.59): against a Mob, Boss or crawler. 10 + their Stat Mod (or Spell Rank, size class) + Floor.</p><p><strong>Custom</strong> (p.59): the GM may set any Difficulty that makes more sense than the formulas.</p>",
@@ -2083,6 +2085,12 @@
     "Tables": {
       "Unreadable": "Couldn't read the Roll Table compendium {pack}, so it was passed over when looking for {name}. See the console."
     },
+    "TimeOfDay": {
+      "Day": "Day",
+      "Night": "Night",
+      "DayHint": "It's day. Click to make it night.",
+      "NightHint": "It's night. Click to make it day."
+    },
     "Box": {
       "Name": "{tier} Box",
       "BossName": "{tier} Boss Box",
@@ -2096,6 +2104,7 @@
       "PrepareTitle": "Prepare: {name}",
       "Randomize": "Roll When Opened",
       "RandomizeTitle": "Roll When Opened",
+      "RandomizeTextBox": "Throw away what's prepared in <strong>{name}</strong>? It will be rolled when it's opened instead. This can't be undone.",
       "RandomizeText": "Throw away what's prepared in <strong>{name}</strong>'s box? It will be rolled when it's opened instead. This can't be undone.",
       "Open": "Open Now",
       "OpenedTitle": "{name} opened {box}",
@@ -2122,6 +2131,39 @@
       "StandardFail": "Standard Fail",
       "MajorFail": "Major Fail",
       "CriticalFail": "Critical Fail"
+    },
+    "DegreeTag": {
+      "Tip": "{degree}: {effect}",
+      "Short": {
+        "criticalHit": "Crit Hit",
+        "amazingSuccess": "Amazing",
+        "standardSuccess": "Success",
+        "nearMissFail": "Near Miss",
+        "standardFail": "Fail",
+        "majorFail": "Major Fail",
+        "criticalFail": "Crit Fail"
+      },
+      "Effect": {
+        "attack": {
+          "criticalHit": "the damage dice are doubled",
+          "amazingSuccess": "+Floor damage",
+          "nearMissFail": "missed by 1 or 2"
+        },
+        "evade": {
+          "criticalHit": "Advantage on the next Attack against the attacker",
+          "amazingSuccess": "Advantage on the next Attack against the attacker",
+          "nearMissFail": "missed by 1 or 2",
+          "majorFail": "+Floor damage, and a Minor Injury after combat",
+          "criticalFail": "double damage, and a Major Injury after combat"
+        },
+        "block": {
+          "criticalHit": "half damage",
+          "amazingSuccess": "half damage",
+          "standardSuccess": "half damage",
+          "majorFail": "the Shield loses 1 DR",
+          "criticalFail": "the Shield loses 2 DR"
+        }
+      }
     },
     "Grind": {
       "SurplusTitle": "Surplus Grinding Hours",

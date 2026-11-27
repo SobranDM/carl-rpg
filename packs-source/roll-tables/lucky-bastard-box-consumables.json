@@ -1,0 +1,83 @@
+{
+  "_id": "czL8qMKddCGq6iyx",
+  "name": "Lucky Bastard Box: Consumables",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Lucky Bastard Box's consumables - good-luck charms and gambling prizes (p.22). Drawn for a box's consumable or two, any tier when the box's title names the theme (\"Bronze Lucky Bastard Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Lucky Bastard Box: Consumables\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "ykJMRKKgOLdtvAq1",
+      "type": "document",
+      "name": "Scratcher Ticket",
+      "img": "icons/sundries/gaming/playing-cards.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.qYcSMVA4r6WB7KAh",
+      "weight": 3,
+      "range": [
+        1,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!czL8qMKddCGq6iyx.ykJMRKKgOLdtvAq1"
+    },
+    {
+      "_id": "BNxOpwh56G3z9vth",
+      "type": "document",
+      "name": "Scratcher Ticket ×2",
+      "img": "icons/sundries/gaming/playing-cards.webp",
+      "description": "",
+      "documentUuid": "Compendium.carl-rpg.consumables.Item.qYcSMVA4r6WB7KAh",
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!czL8qMKddCGq6iyx.BNxOpwh56G3z9vth"
+    }
+  ],
+  "formula": "1d4",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!czL8qMKddCGq6iyx"
+}

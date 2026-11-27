@@ -381,7 +381,10 @@ export default class LootForge extends HandlebarsApplicationMixin(ApplicationV2)
   }
 
   static async #onRerollAll() {
-    const fresh = await generateLoot(this.draft.tierKey, { recipient: this.recipient });
+    const fresh = await generateLoot(this.draft.tierKey, {
+      recipient: this.recipient,
+      theme: this.draft.theme ?? "",
+    });
     if (fresh) this.draft = fresh;
     this.#redraw();
   }

@@ -1,0 +1,37 @@
+{
+  "_id": "9NtD3pdhXd11pQpc",
+  "name": "Snow Shovel",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/tools/hand/shovel-trench.webp",
+  "system": {
+    "description": "<p>A wide plastic snow shovel. It also digs, scoops and props a door shut. Its Attacks use the Quarterstaff Skill, which sets their damage, range and Stat.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Quarterstaff",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": null,
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!9NtD3pdhXd11pQpc"
+}

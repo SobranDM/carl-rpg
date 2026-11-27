@@ -1,6 +1,8 @@
 import {
   autofillMagicDraft,
   boxTable,
+  boxTableFor,
+  boxTableNames,
   buildMagicItemData,
   enchantmentLine,
   generateLoot,
@@ -30,6 +32,9 @@ import {
   waitFor,
 } from "../helpers.mjs";
 import { useConsumable } from "../../helpers/consumables.mjs";
+import { boxTheme } from "../../helpers/reward-text.mjs";
+import { giveBox, openBox } from "../../helpers/boxes.mjs";
+import { attackReadiness, isWeaponFor } from "../../helpers/weapons.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
 
 /**
@@ -40,6 +45,58 @@ import { addConditionToActor } from "../../helpers/conditions.mjs";
  */
 const TIERS = ["bronze", "silver", "gold", "platinum", "legendary", "celestial"];
 const KINDS = ["item", "spellScroll", "spellbook", "text", "magic"];
+
+/**
+ * Run `fn` with a tier's recipe changed (CONFIG.CARLRPG.lootBoxTiers), then
+ * put it back - so a test can pin the weak magic chance.
+ * @param {string} tierKey
+ * @param {object} patch
+ * @param {() => Promise<any>} fn
+ */
+async function withRecipe(tierKey, patch, fn) {
+  const tier = CONFIG.CARLRPG.lootBoxTiers[tierKey];
+  const saved = Object.fromEntries(Object.keys(patch).map((k) => [k, tier[k]]));
+  Object.assign(tier, patch);
+  try {
+    return await fn();
+  } finally {
+    Object.assign(tier, saved);
+  }
+}
+
+/**
+ * Run `fn` with world Roll Tables made for it - each `{name, rows}`, a row
+ * a text row's name or `{name, description}` or `{name, documentUuid}` -
+ * then delete them. Null (fn not run) when the world already has a table
+ * of one of those names: that's the GM's, and it would win.
+ * @param {{name: string, rows: (string|object)[]}[]} specs
+ * @param {(tables: RollTable[]) => Promise<any>} fn
+ */
+async function withWorldTables(specs, fn) {
+  if (specs.some((t) => game.tables.getName(t.name))) return null;
+  const tables = await RollTable.createDocuments(
+    specs.map(({ name, rows }) => ({
+      name,
+      formula: `1d${rows.length}`,
+      results: rows.map((row, i) => {
+        const r = typeof row === "string" ? { name: row } : row;
+        return {
+          type: r.documentUuid ? "document" : "text",
+          name: r.name,
+          description: r.description ?? "",
+          documentUuid: r.documentUuid ?? null,
+          range: [i + 1, i + 1],
+          weight: 1,
+        };
+      }),
+    })),
+  );
+  try {
+    return (await fn(tables)) ?? true;
+  } finally {
+    await RollTable.deleteDocuments(tables.map((t) => t.id));
+  }
+}
 
 export default function register(quench) {
   quench.registerBatch(
@@ -217,7 +274,9 @@ export default function register(quench) {
             },
           ]);
           try {
-            const loot = await generateLoot("bronze");
+            const loot = await withRecipe("bronze", { weakMagicChance: 0 }, () =>
+              generateLoot("bronze"),
+            );
             const thing = loot.entries.find((e) => e.name === "Quench Thing");
             assert.exists(thing, "the world's row was drawn");
             assert.equal(thing.kind, "text");
@@ -251,7 +310,9 @@ export default function register(quench) {
               { pack: pack.collection },
             );
             assert.equal((await boxTable(name))?.pack, pack.collection, "the world compendium's");
-            const loot = await generateLoot("bronze");
+            const loot = await withRecipe("bronze", { weakMagicChance: 0 }, () =>
+              generateLoot("bronze"),
+            );
             const thing = loot.entries.find((e) => e.name === "Quench Pack Thing");
             assert.exists(thing, "drawn from it");
             assert.equal(thing.quantity, 2);
@@ -286,6 +347,231 @@ export default function register(quench) {
           const table = await lootTable("Item Type");
           assert.exists(table);
           if (table.pack) assert.equal(table.pack, "carl-rpg.roll-tables");
+        });
+      });
+
+      describe("The book's shape and themed boxes (ruled 2026-11-27)", function () {
+        useQuenchTimeout(this, 60000);
+        const named = (loot, name) => loot.entries.filter((e) => e.name === name);
+
+        it("the recipe: one item, a consumable or two", function () {
+          const tiers = CONFIG.CARLRPG.lootBoxTiers;
+          assert.equal(tiers.bronze.mundane, 1, "Bronze's item is mundane");
+          assert.equal(tiers.bronze.magicItems, 0);
+          assert.isAbove(tiers.bronze.weakMagicChance, 0);
+          for (const tierKey of TIERS.slice(1)) {
+            assert.equal(tiers[tierKey].mundane, 0, `${tierKey}: no mundane item`);
+            assert.equal(tiers[tierKey].magicItems, 1, `${tierKey}: one magic item`);
+          }
+          for (const tierKey of TIERS) assert.equal(tiers[tierKey].consumables, "1d2", tierKey);
+        });
+
+        it("entries per box: Bronze its item and 1-2 consumables; Silver up a magic item and 1-2, no mundane", async function () {
+          const ran = await withWorldTables(
+            [
+              { name: "Bronze Box: Mundane", rows: ["Quench Widget"] },
+              { name: "Bronze Box: Consumables", rows: ["Quench Tonic"] },
+              { name: "Silver Box: Mundane", rows: ["Quench Silver Widget"] },
+            ],
+            async () => {
+              for (let i = 0; i < 4; i++) {
+                const bronze = await withRecipe("bronze", { weakMagicChance: 0 }, () =>
+                  generateLoot("bronze"),
+                );
+                assert.lengthOf(named(bronze, "Quench Widget"), 1, "one mundane item");
+                const tonics = named(bronze, "Quench Tonic").length;
+                assert.isTrue(tonics >= 1 && tonics <= 2, `${tonics} consumables`);
+                assert.lengthOf(bronze.entries, 1 + tonics);
+              }
+              for (const tierKey of TIERS.slice(1)) {
+                const loot = await generateLoot(tierKey, { floor: 3 });
+                const magic = loot.entries.filter((e) => e.kind === "magic").length;
+                const rest = loot.entries.length - magic;
+                assert.equal(magic, 1, `${tierKey}: one magic item`);
+                assert.isTrue(rest >= 1 && rest <= 2, `${tierKey}: ${rest} consumables`);
+                assert.lengthOf(named(loot, "Quench Silver Widget"), 0, `${tierKey}: no mundane`);
+              }
+            },
+          );
+          if (!ran) this.skip();
+        });
+
+        it("Bronze's weak magic item replaces its mundane item, not added to it", async function () {
+          const ran = await withWorldTables(
+            [
+              { name: "Bronze Box: Mundane", rows: ["Quench Widget"] },
+              { name: "Bronze Box: Weak Magic", rows: ["Quench Shimmer"] },
+              { name: "Bronze Box: Consumables", rows: ["Quench Tonic"] },
+            ],
+            async () => {
+              for (let i = 0; i < 3; i++) {
+                const loot = await withRecipe("bronze", { weakMagicChance: 1 }, () =>
+                  generateLoot("bronze"),
+                );
+                assert.lengthOf(named(loot, "Quench Shimmer"), 1, "the weak magic item");
+                assert.lengthOf(named(loot, "Quench Widget"), 0, "instead of the mundane one");
+                assert.lengthOf(loot.entries, 1 + named(loot, "Quench Tonic").length);
+              }
+            },
+          );
+          if (!ran) this.skip();
+        });
+
+        it("a box's theme comes from its title", function () {
+          assert.equal(boxTheme("Bronze Quenchling Box"), "Quenchling");
+          assert.equal(boxTheme("Gold quenchmaker’s box"), "Quenchmaker's");
+          assert.equal(boxTheme("Platinum Lucky Quench Box"), "Lucky Quench");
+          assert.equal(boxTheme("You've received a Silver Quenchling Box!"), "Quenchling");
+          assert.equal(boxTheme("Quenchling Box"), "Quenchling", "no tier: a short title");
+          assert.equal(boxTheme("Silver Box"), "");
+          assert.equal(boxTheme(""), "");
+          assert.deepEqual(boxTableNames("gold", "Quenchmaker", "Mundane"), [
+            "Gold Quenchmaker Box: Mundane",
+            "Gold Quenchmaker's Box: Mundane",
+            "Quenchmaker Box: Mundane",
+            "Quenchmaker's Box: Mundane",
+            "Gold Box: Mundane",
+          ]);
+          assert.deepEqual(boxTableNames("bronze", "", "Consumables"), ["Bronze Box: Consumables"]);
+        });
+
+        it("a themed box draws from its theme's table, else the tier's; a tier's themed table first", async function () {
+          const ran = await withWorldTables(
+            [
+              { name: "Quenchling Box: Mundane", rows: ["Quench Themed Thing"] },
+              { name: "Bronze Box: Consumables", rows: ["Quench Tonic"] },
+            ],
+            async () => {
+              const loot = await withRecipe("bronze", { weakMagicChance: 0 }, () =>
+                generateLoot("bronze", { theme: "Quenchling" }),
+              );
+              assert.equal(loot.theme, "Quenchling");
+              assert.lengthOf(named(loot, "Quench Themed Thing"), 1, "the theme's table");
+              assert.isAbove(
+                named(loot, "Quench Tonic").length,
+                0,
+                "no themed Consumables table: the tier's",
+              );
+              const none = await withRecipe("bronze", { weakMagicChance: 0 }, () =>
+                generateLoot("bronze", { theme: "Quenchnobody" }),
+              );
+              assert.lengthOf(named(none, "Quench Themed Thing"), 0, "an unknown theme: generic");
+              await withWorldTables(
+                [{ name: "Bronze Quenchling Box: Mundane", rows: ["Quench Bronze Thing"] }],
+                async () => {
+                  const tiered = await withRecipe("bronze", { weakMagicChance: 0 }, () =>
+                    generateLoot("bronze", { theme: "Quenchling" }),
+                  );
+                  assert.lengthOf(named(tiered, "Quench Bronze Thing"), 1, "the tier's own first");
+                },
+              );
+            },
+          );
+          if (!ran) this.skip();
+        });
+
+        it("opening a box reads the theme from its title", async function () {
+          const actor = await createTestCharacter("themed box");
+          try {
+            const ran = await withWorldTables(
+              [{ name: "Quenchling Box: Mundane", rows: ["Quench Themed Thing"] }],
+              async () => {
+                const box = await giveBox(actor, {
+                  tierKey: "bronze",
+                  name: "Bronze Quenchling Box",
+                });
+                await withRecipe("bronze", { weakMagicChance: 0 }, () => openBox(box));
+                assert.exists(actor.items.getName("Quench Themed Thing"));
+              },
+            );
+            if (!ran) this.skip();
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("a text row becomes a simple item, with the row's quantity and description", async function () {
+          const ran = await withWorldTables(
+            [
+              {
+                name: "Bronze Box: Mundane",
+                rows: [{ name: "Quench Gizmo ×2", description: "<p>Quench words.</p>" }],
+              },
+            ],
+            async () => {
+              const loot = await withRecipe("bronze", { weakMagicChance: 0 }, () =>
+                generateLoot("bronze"),
+              );
+              const [entry] = named(loot, "Quench Gizmo");
+              assert.exists(entry);
+              assert.equal(entry.kind, "text");
+              const [data] = await lootItemData({ entries: [entry] });
+              assert.equal(data.type, "item");
+              assert.equal(data.name, "Quench Gizmo");
+              assert.equal(data.system.quantity, 2);
+              assert.include(data.system.description, "Quench words.");
+            },
+          );
+          if (!ran) this.skip();
+        });
+
+        it("a funny weapon row arrives as a weapon its Skill can attack with", async function () {
+          const actor = await createTestCharacter("funny weapon");
+          let spatula = null;
+          try {
+            // createTestItem decorates the name: the weapon names the Skill as made.
+            const club = await createTestItem(actor, "skill", "Club", {
+              system: { category: "attack", rank: 1 },
+            });
+            [spatula] = await Item.createDocuments([
+              {
+                name: "Quench Spatula",
+                type: "item",
+                system: { weaponSkill: club.name, slots: ["held"], twoHanded: false },
+              },
+            ]);
+            const ran = await withWorldTables(
+              [
+                {
+                  name: "Quenchling Box: Mundane",
+                  rows: [{ name: "Quench Spatula", documentUuid: spatula.uuid }],
+                },
+              ],
+              async () => {
+                const box = await giveBox(actor, {
+                  tierKey: "bronze",
+                  name: "Bronze Quenchling Box",
+                });
+                await withRecipe("bronze", { weakMagicChance: 0 }, () => openBox(box));
+                const weapon = actor.items.getName("Quench Spatula");
+                assert.exists(weapon);
+                assert.isTrue(isWeaponFor(weapon, club));
+                assert.deepEqual(weapon.system.slots, ["held"]);
+                const ready = attackReadiness(actor, club, { mainHand: weapon });
+                assert.isTrue(ready.ready);
+                assert.equal(ready.weapon, weapon);
+              },
+            );
+            if (!ran) this.skip();
+          } finally {
+            await deleteTestActor(actor);
+            await spatula?.delete();
+          }
+        });
+
+        it("the system's themed tables (packs rebuilt): Goblin and Weapon", async function () {
+          const goblin = await boxTableFor("bronze", "Goblin", "Consumables");
+          const weapons = await boxTableFor("bronze", "Weapon", "Mundane");
+          if (goblin?.name !== "Goblin Box: Consumables" || weapons?.name !== "Weapon Box: Mundane")
+            this.skip();
+          for (const result of weapons.results) {
+            const item = await fromUuid(result.documentUuid);
+            assert.exists(item, result.name);
+            assert.isNotEmpty(item.system.weaponSkill, `${item.name}: a Weapon Skill`);
+            assert.include(item.system.slots, "held", item.name);
+          }
+          const consumables = await boxTableFor("silver", "Weapon", "Consumables");
+          assert.equal(consumables?.name, "Silver Box: Consumables", "no themed table: the tier's");
         });
       });
 

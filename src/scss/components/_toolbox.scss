@@ -45,6 +45,16 @@
     }
   }
 
+  // Day or night (helpers/day-night.mjs): a sun or a moon, the word in its
+  // tooltip.
+  .carl-toolbox-time {
+    color: var(--carl-gold);
+
+    &.night {
+      color: #9fb7ff;
+    }
+  }
+
   // Short/Long Rest get their own two-up row, Full Day Rest wraps to a
   // full-width row beneath - three non-shrinking button labels don't fit
   // in the toolbox's 280px width on one line (see module/apps/gm-toolbox.mjs).

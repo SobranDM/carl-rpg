@@ -28,6 +28,7 @@ import {
   prepareBox,
 } from "../helpers/boxes.mjs";
 import { generateLoot } from "../helpers/loot.mjs";
+import { boxTheme } from "../helpers/reward-text.mjs";
 import LootForge from "./loot-forge.mjs";
 import { enrichDescription, itemDescriptions, itemTooltips } from "../helpers/rich-text.mjs";
 import { labelChoices } from "../helpers/html.mjs";
@@ -442,12 +443,15 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
       ui.notifications.info(game.i18n.localize("CARLRPG.Achievement.Grid.BoxOpened"));
       return;
     }
-    const tierKey = achievementBox(def)?.tierKey ?? def.system.grade;
+    const planned = achievementBox(def);
+    const tierKey = planned?.tierKey ?? def.system.grade;
     const draft = box
       ? await boxDraftForForge(box)
       : (foundry.utils.deepClone(preparedBoxFor(actor, def)) ??
-        (await generateLoot(tierKey, { recipient: actor })));
+        (await generateLoot(tierKey, { recipient: actor, theme: boxTheme(planned?.name) })));
     if (!draft) return;
+    // The Forge's Reroll All rolls the box's theme too.
+    draft.theme ||= boxTheme(box?.name ?? planned?.name);
     await LootForge.open({
       draft,
       recipient: actor,

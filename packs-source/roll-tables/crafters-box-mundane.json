@@ -1,0 +1,218 @@
+{
+  "_id": "waeeWVn0usHTZRoI",
+  "name": "Crafter's Box: Mundane",
+  "img": "icons/svg/d20-grey.svg",
+  "description": "<p>A Crafter's Box's mundane - tools, fasteners and workshop odds and ends (p.22). Drawn for the one item of a Bronze box when the box's title names the theme (\"Bronze Crafter's Box\"; module/helpers/loot.mjs boxTableNames). A \"&lt;Tier&gt; Crafter's Box: Mundane\" table, if a GM makes one, comes first. A row's name can set a quantity - \"Torch ×10\", \"Bandages (1d6)\" - and a text row becomes a simple item of that name, its description the row's. Edit a copy in the world's Roll Tables (or a world compendium) to change what a box holds.</p>",
+  "results": [
+    {
+      "_id": "VUf2AhtTQ5yGI1jZ",
+      "type": "text",
+      "name": "Electrician's Pouch",
+      "img": "icons/commodities/tech/wire-spool-thin.webp",
+      "description": "<p>Wire strippers, a roll of electrical tape and a multimeter with a dead battery.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        1,
+        1
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!waeeWVn0usHTZRoI.VUf2AhtTQ5yGI1jZ"
+    },
+    {
+      "_id": "AJk39YUnys7u8GIt",
+      "type": "text",
+      "name": "Painter's Bundle",
+      "img": "icons/tools/hand/brush-paint-brown-white.webp",
+      "description": "<p>A roller, a tray, a drop cloth, blue tape and a gallon of Eggshell. Marks a route; covers a sigil.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        2,
+        2
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!waeeWVn0usHTZRoI.AJk39YUnys7u8GIt"
+    },
+    {
+      "_id": "onJMa5dTkNpPIGmn",
+      "type": "text",
+      "name": "Bike Tire Patch Kit",
+      "img": "icons/commodities/tech/wheel.webp",
+      "description": "<p>Glue, rubber patches, tire levers and a palm-sized pump. Fixes anything with an inner tube; the pump inflates other things too.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        3,
+        3
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!waeeWVn0usHTZRoI.onJMa5dTkNpPIGmn"
+    },
+    {
+      "_id": "TeuWXwxf8VKpWCYC",
+      "type": "text",
+      "name": "Hotel Sewing Kit",
+      "img": "icons/tools/hand/needle-thread-spool.webp",
+      "description": "<p>Five colors of thread, two safety pins and one button that matches nothing. Mends clothes, and stitches a wound badly.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        4,
+        4
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!waeeWVn0usHTZRoI.TeuWXwxf8VKpWCYC"
+    },
+    {
+      "_id": "2JoP6sQjHWIZKkDA",
+      "type": "text",
+      "name": "Cordless Drill",
+      "img": "icons/tools/hand/drill-steel-brown-grey.webp",
+      "description": "<p>One bit, one battery, half a charge.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        5,
+        5
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!waeeWVn0usHTZRoI.2JoP6sQjHWIZKkDA"
+    },
+    {
+      "_id": "unFBRp6jSEku5BSJ",
+      "type": "text",
+      "name": "Clamp Set",
+      "img": "icons/tools/fasteners/bracket.webp",
+      "description": "<p>Four clamps that hold anything still while you work on it.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        6,
+        6
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!waeeWVn0usHTZRoI.unFBRp6jSEku5BSJ"
+    },
+    {
+      "_id": "3ctZINT11QbSc7NJ",
+      "type": "text",
+      "name": "Socket Set",
+      "img": "icons/tools/hand/wrench-double.webp",
+      "description": "<p>Metric. Every size but the one you need.</p>",
+      "documentUuid": null,
+      "weight": 1,
+      "range": [
+        7,
+        7
+      ],
+      "drawn": false,
+      "flags": {},
+      "_stats": {
+        "coreVersion": "14.367",
+        "systemId": null,
+        "systemVersion": null,
+        "createdTime": null,
+        "modifiedTime": null,
+        "lastModifiedBy": null,
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_key": "!tables.results!waeeWVn0usHTZRoI.3ctZINT11QbSc7NJ"
+    }
+  ],
+  "formula": "1d7",
+  "replacement": true,
+  "displayRoll": true,
+  "folder": "w1Jo7BYmYZFJADyA",
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_stats": {
+    "coreVersion": "14.367",
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "_key": "!tables!waeeWVn0usHTZRoI"
+}

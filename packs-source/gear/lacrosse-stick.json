@@ -1,0 +1,37 @@
+{
+  "_id": "nYLFANacrUBuLIUA",
+  "name": "Lacrosse Stick",
+  "type": "item",
+  "folder": "uYafaB35UeMzIC9G",
+  "img": "icons/tools/fishing/net-hand-white.webp",
+  "system": {
+    "description": "<p>A lacrosse stick. The pocket can scoop up a rock - or something lit - and fling it. Its Attacks use the Quarterstaff Skill, which sets their damage, range and Stat.</p>",
+    "changes": [],
+    "quantity": 1,
+    "weight": 0,
+    "equipped": false,
+    "weaponSkill": "Quarterstaff",
+    "slots": [
+      "held"
+    ],
+    "twoHanded": true
+  },
+  "effects": [],
+  "_stats": {
+    "coreVersion": null,
+    "systemId": null,
+    "systemVersion": null,
+    "createdTime": null,
+    "modifiedTime": null,
+    "lastModifiedBy": null,
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  },
+  "sort": 0,
+  "ownership": {
+    "default": 0
+  },
+  "flags": {},
+  "_key": "!items!nYLFANacrUBuLIUA"
+}
