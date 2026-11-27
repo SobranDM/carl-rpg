@@ -52,6 +52,14 @@
         </div>
         {{/each}}
       </div>
+      {{!-- GM only (issue #18): a character who isn't really a crawler, left
+            out of the Achievements window. --}}
+      {{#if @root.isGM}}
+      <label class="carl-sheet-line carl-hide-achievements" data-tooltip-text="{{localize 'CARLRPG.Actor.HideFromAchievementsHint'}}">
+        <span>{{localize "CARLRPG.Actor.HideFromAchievements"}}</span>
+        <input type="checkbox" name="system.details.hideFromAchievements" {{checked system.details.hideFromAchievements}} />
+      </label>
+      {{/if}}
     </fieldset>
 
     <fieldset class="carl-details-box carl-personal-space">

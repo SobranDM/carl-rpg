@@ -888,6 +888,8 @@
       "PotionsUsed": "Potions Used",
       "PotionsLimit": "The most a crawler can drink in their life",
       "PotionsUsedHint": "A crawler may only consume two Stat potions and two Skill potions in their life (p.218).",
+      "HideFromAchievements": "Hide from Achievements",
+      "HideFromAchievementsHint": "Leaves this character out of the Achievements window, even with offline crawlers shown. For characters who aren't really crawlers, like a game guide.",
       "PotionsStat": "Stat",
       "PotionsSkill": "Skill",
       "EvadeTotalHint": "DEX Mod + Evade bonuses (and any dice), added to the d20 on an Evade Check",

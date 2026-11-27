@@ -129,7 +129,10 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
 
   /** @override */
   async _prepareContext(options) {
-    const groups = pickerGroups();
+    // Characters the GM has marked as no crawler stay out (issue #18).
+    const crawlers = (list) => list.filter((a) => !a.system.details?.hideFromAchievements);
+    const all = pickerGroups();
+    const groups = { active: crawlers(all.active), other: crawlers(all.other) };
     const showOffline = this.showOffline ?? !groups.active.length;
     const columns = [...groups.active, ...(showOffline ? groups.other : [])];
     const defs = await this.definitions();
@@ -228,11 +231,16 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     for (const hook of ["createActor", "deleteActor", "userConnected"]) {
       this.#hooks.push([hook, Hooks.on(hook, redraw)]);
     }
-    // A crawler's box prepared ahead of its award (a flag on the crawler).
+    // A crawler's box prepared ahead of its award (a flag on the crawler),
+    // or a character hidden from or shown in this window (issue #18).
     this.#hooks.push([
       "updateActor",
       Hooks.on("updateActor", (actor, changed) => {
-        if (foundry.utils.hasProperty(changed, "flags.carl-rpg")) redraw();
+        if (
+          foundry.utils.hasProperty(changed, "flags.carl-rpg") ||
+          foundry.utils.hasProperty(changed, "system.details.hideFromAchievements")
+        )
+          redraw();
       }),
     ]);
   }
