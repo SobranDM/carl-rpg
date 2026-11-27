@@ -24,6 +24,16 @@
 - **Deleting Asks First:** Deleting an item from a Character, Mob, Pet, Vehicle or Map Loot Box sheet now has a confirmation dialog, as does throwing away a loot box's prepared contents (Roll When Opened). Shift-click skips the question.
 - **Homebrew Character Creation Tables:** A copy of a background, Past Traumas, Loose Ends or Regrets table in a world compendium now replaces the system's, as one in the world already did and as loot box tables do.
 - **Description Boxes:** Fixed a lot of description boxes across various items and actors that were weird sizes or inconsistent between the view and edit modes.
+- **A Wiki:** The system now has a [wiki](https://github.com/SobranDM/carl-rpg/wiki) covering how everything works, from making a crawler to opening loot boxes.
+- **Links in the Settings Sidebar:** The Settings tab now links to the wiki, next to the system's name.
+  - Below it are links to report bugs on GitHub and to buy me a coffee on Ko-fi.
+- **Grinding Together:** The GM Toolbox's Grind now lets you pick several crawlers at once.
+  - Everyone picked grinds the same hours, each on their own Skill, all picked in one dialog.
+  - The clock moves forward once for the whole group.
+- **Grinding Toward Levels:** The book's lowest-Level rule for leveling when grinding is now handled (p.171).
+  - The lowest Level among the crawlers grinding gains 1d2 Levels instead of 1 when grinding levels them up. The roll shows in chat.
+  - On a tie for lowest, no one rolls 1d2.
+  - A crawler with no Skill that can take the hours still counts toward their next Level.
 
 ## 0.8.4
 
