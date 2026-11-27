@@ -1,0 +1,56 @@
+# Publishes the repo's wiki/ folder to the GitHub wiki whenever it changes on
+# main (or when run by hand from the Actions tab).
+#
+# The wiki is its own git repo (<repo>.wiki.git). This repo's wiki/ folder is
+# the only source: each run makes the wiki match it, so a page edited in
+# GitHub's wiki editor is overwritten by the next run. Edit pages here, in a
+# branch, like any other change.
+#
+# Pages: wiki/<Page-Name>.md (Home.md is the front page; _Sidebar.md and
+# _Footer.md show on every page). Images: wiki/images/, linked from a page
+# as images/<file>.png.
+name: Wiki
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "wiki/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish to the wiki
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${REPO}.wiki.git" wiki-repo
+          # Make the wiki match wiki/ exactly (pages removed here go there too),
+          # keeping the wiki repo's own .git.
+          rsync -a --delete --exclude ".git" wiki/ wiki-repo/
+          cd wiki-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "The wiki is already up to date."
+            exit 0
+          fi
+          git commit -m "Wiki: sync from ${SHA}"
+          git push
