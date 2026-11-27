@@ -21,7 +21,12 @@ import {
   libraryAchievements,
   updateLibraryAchievement,
 } from "../helpers/achievement-library.mjs";
-import { boxDraftForForge, clearBoxContents, prepareBox } from "../helpers/boxes.mjs";
+import {
+  boxDraftForForge,
+  clearBoxContents,
+  confirmClearBox,
+  prepareBox,
+} from "../helpers/boxes.mjs";
 import { generateLoot } from "../helpers/loot.mjs";
 import LootForge from "./loot-forge.mjs";
 import { enrichDescription, itemDescriptions, itemTooltips } from "../helpers/rich-text.mjs";
@@ -461,8 +466,11 @@ export default class AchievementGrid extends HandlebarsApplicationMixin(Applicat
     if (!def || !actor) return;
     const copy = awardedCopy(actor, def.uuid);
     const box = copy ? achievementBoxOf(copy) : null;
+    // Awarded and its box already opened: nothing left to throw away.
+    if (copy && !box) return;
+    if (!(await confirmClearBox(event, actor.name))) return;
     if (box) await clearBoxContents(box);
-    else if (!copy) await setPreparedBoxFor(actor, def, null);
+    else await setPreparedBoxFor(actor, def, null);
   }
 
   /** Take an award back, after asking. */

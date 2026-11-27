@@ -83,6 +83,7 @@ import { labelChoices } from "../helpers/html.mjs";
 import { itemFor, itemRow } from "../helpers/sheet-rows.mjs";
 import { boxTierRank } from "../helpers/boxes.mjs";
 import { achievementsOf, awardAchievement, definitionFor } from "../helpers/achievements.mjs";
+import { deleteItemAsking } from "../helpers/confirm.mjs";
 
 /** Skill list order on the sheet (skill.mjs `category`); anything else sorts last. */
 const SKILL_CATEGORY_ORDER = ["attack", "utility", "passive"];
@@ -1224,9 +1225,10 @@ export class CarlRPGActorSheet extends DragDropMixin(HandlebarsApplicationMixin(
     const li = itemRow(target);
     const item = itemFor(this.actor, target);
     if (!item) return;
-    await item.delete();
+    // Asks first; Shift-click deletes at once (helpers/confirm.mjs).
+    if (!(await deleteItemAsking(item, event))) return;
     // Use native DOM to hide the element
-    li.style.display = "none";
+    if (li) li.style.display = "none";
     this.render(false);
   }
 

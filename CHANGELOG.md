@@ -2,6 +2,7 @@
 
 ## 0.8.5
 
+- **Deleting Asks First:** Deleting an item from a Character, Mob, Pet, Vehicle or Map Loot Box sheet now asks before it goes, as does throwing away a loot box's prepared contents (Roll When Opened). Shift-click skips the question.
 - **Homebrew Character Creation Tables:** A copy of a background, Past Traumas, Loose Ends or Regrets table in a world compendium now replaces the system's, as one in the world already did and as loot box tables do.
 
 ## 0.8.4

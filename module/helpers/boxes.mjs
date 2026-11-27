@@ -7,6 +7,8 @@ import {
   postLootCard,
 } from "./loot.mjs";
 import { queueForActor } from "./actor-queue.mjs";
+import { confirmUndoable } from "./confirm.mjs";
+import { esc } from "./html.mjs";
 
 /**
  * Boxes (data/box.mjs; docs/loot-and-achievements.md): giving a crawler an
@@ -137,6 +139,20 @@ export function prepareBox(box, draft) {
       gold: Math.max(0, Math.floor(Number(draft.gold) || 0)),
       entries: draft.entries,
     },
+  });
+}
+
+/**
+ * Ask before a box's prepared contents are thrown away for "Roll When
+ * Opened" (ruled 2026-11-27); Shift-click skips it (helpers/confirm.mjs).
+ * @param {Event} event  The click.
+ * @param {string} name  The crawler the box is for.
+ * @returns {Promise<boolean>}
+ */
+export function confirmClearBox(event, name) {
+  return confirmUndoable(event, {
+    title: game.i18n.localize("CARLRPG.Box.RandomizeTitle"),
+    content: `<p>${game.i18n.format("CARLRPG.Box.RandomizeText", { name: esc(name) })}</p>`,
   });
 }
 

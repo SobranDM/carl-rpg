@@ -5,6 +5,7 @@ import {
   boxDraftForForge,
   boxView,
   clearBoxContents,
+  confirmClearBox,
   openBox,
   prepareBox,
 } from "../helpers/boxes.mjs";
@@ -89,6 +90,8 @@ export class CarlRPGBoxSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
   /** @private */
   static async #onClearContents(event, target) {
     if (!game.user.isGM) return;
+    const crawler = this.item.parent?.name ?? this.item.name;
+    if (!(await confirmClearBox(event, crawler))) return;
     await clearBoxContents(this.item);
   }
 

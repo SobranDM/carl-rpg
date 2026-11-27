@@ -2,6 +2,7 @@ import { CarlRPGActorSheet } from "../../sheets/actor-sheet.mjs";
 import { refreshTimedSheets } from "../../helpers/expiry.mjs";
 import { assignItemToSlot } from "../../helpers/equip-slots.mjs";
 import { placeInHotlist } from "../../helpers/hotlist.mjs";
+import { CONFIRM_CLASS } from "../../helpers/confirm.mjs";
 import {
   BOON_HOURS,
   boonAvailable,
@@ -16,6 +17,8 @@ import {
   deleteTestActor,
   dropOnSheet as dropOn,
   makeDragEvent,
+  openDialog,
+  pressDialog,
   settle,
   useQuenchTimeout,
   waitFor,
@@ -1315,6 +1318,48 @@ export default function register(quench) {
             if (skill) delete skill.isOwner;
             await sheet.close();
             await deleteTestActor(mob);
+          }
+        });
+      });
+
+      describe("Deleting an item asks first (ruled 2026-11-27)", function () {
+        useQuenchTimeout(this);
+
+        it("a plain click asks - No keeps it, Yes deletes; Shift-click deletes at once", async function () {
+          const actor = await createTestCharacter("delete-asks");
+          const sheet = actor.sheet;
+          try {
+            const rope = await createTestItem(actor, "item", "rope");
+            const lamp = await createTestItem(actor, "item", "lamp");
+            await sheet.render({ force: true });
+            await waitFor(() => sheet.rendered);
+            const trash = (item) =>
+              sheet.element.querySelector(`[data-item-id="${item.id}"] [data-action="deleteItem"]`);
+            const click = (el, shiftKey = false) =>
+              el.dispatchEvent(
+                new MouseEvent("click", { bubbles: true, cancelable: true, shiftKey }),
+              );
+
+            await waitFor(() => trash(rope), { message: "no delete button on the row" });
+            click(trash(rope));
+            let dialog = await openDialog(CONFIRM_CLASS);
+            pressDialog(dialog, "no");
+            await settle();
+            assert.exists(actor.items.get(rope.id), "No: still there");
+
+            await waitFor(() => trash(rope));
+            click(trash(rope));
+            dialog = await openDialog(CONFIRM_CLASS);
+            pressDialog(dialog, "yes");
+            await waitFor(() => !actor.items.get(rope.id), { message: "Yes didn't delete it" });
+
+            await waitFor(() => trash(lamp));
+            click(trash(lamp), true);
+            await waitFor(() => !actor.items.get(lamp.id), {
+              message: "Shift-click didn't delete it",
+            });
+          } finally {
+            await deleteTestActor(actor);
           }
         });
       });

@@ -38,6 +38,10 @@ export async function overridableTable(name) {
       if (entry) return await pack.getDocument(entry._id);
     } catch (err) {
       console.warn(`CarlRPG | Couldn't read Roll Table compendium ${pack.collection}`, err);
+      if (game.user?.isGM)
+        ui.notifications?.warn(
+          game.i18n.format("CARLRPG.Tables.Unreadable", { pack: pack.title, name }),
+        );
     }
   }
   return systemTable(name);

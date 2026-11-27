@@ -2080,6 +2080,9 @@
       "Failed": "This box couldn't be opened: something in it no longer exists. The GM can fix its contents; it stays unopened.",
       "Waiting": "Waiting for this crawler's player (or the GM)."
     },
+    "Tables": {
+      "Unreadable": "Couldn't read the Roll Table compendium {pack}, so it was passed over when looking for {name}. See the console."
+    },
     "Box": {
       "Name": "{tier} Box",
       "BossName": "{tier} Boss Box",
@@ -2092,6 +2095,8 @@
       "EditContents": "Edit Contents",
       "PrepareTitle": "Prepare: {name}",
       "Randomize": "Roll When Opened",
+      "RandomizeTitle": "Roll When Opened",
+      "RandomizeText": "Throw away what's prepared in <strong>{name}</strong>'s box? It will be rolled when it's opened instead. This can't be undone.",
       "Open": "Open Now",
       "OpenedTitle": "{name} opened {box}",
       "MissingContents": "{name} couldn't be opened: something prepared in it no longer exists. Edit its contents.",
