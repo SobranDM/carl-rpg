@@ -334,20 +334,49 @@ export default function register(quench) {
 
         it("with neither, the system's", async function () {
           const name = "Silver Box: Consumables";
+          // The GM's own copy - in the world or a world compendium - would win.
           if (game.tables.getName(name)) this.skip();
+          for (const pack of game.packs) {
+            if (pack.documentName !== "RollTable" || pack.metadata.packageType !== "world")
+              continue;
+            if ((await pack.getIndex()).find((e) => e.name === name)) this.skip();
+          }
           const table = await boxTable(name);
           assert.exists(table);
-          assert.isTrue(
-            table.pack === "carl-rpg.roll-tables" ||
-              game.packs.get(table.pack)?.metadata.packageType === "world",
-          );
+          assert.equal(table.pack, "carl-rpg.roll-tables");
         });
 
         it("the magic item's tables (the book's) aren't looked for in world compendiums", async function () {
-          // lootTable: the world's, then the system's - unchanged.
-          const table = await lootTable("Item Type");
-          assert.exists(table);
-          if (table.pack) assert.equal(table.pack, "carl-rpg.roll-tables");
+          const name = "Item Type";
+          // The GM's own copy in the world would win; one in a world compendium already
+          // would make boxTable's check below meaningless.
+          if (game.tables.getName(name)) this.skip();
+          if ((await boxTable(name))?.pack !== "carl-rpg.roll-tables") this.skip();
+          const pack = await foundry.documents.collections.CompendiumCollection.createCompendium({
+            type: "RollTable",
+            label: "Quench Magic Tables",
+            name: `quench-magic-tables-${foundry.utils.randomID().toLowerCase()}`,
+          });
+          try {
+            await RollTable.implementation.create(
+              {
+                name,
+                formula: "1d1",
+                results: [{ type: "text", name: "Quench Pack Type", range: [1, 1], weight: 1 }],
+              },
+              { pack: pack.collection },
+            );
+            assert.equal(
+              (await boxTable(name))?.pack,
+              pack.collection,
+              "test setup: a box table lookup would find the compendium copy",
+            );
+            const table = await lootTable(name);
+            assert.exists(table);
+            assert.equal(table.pack, "carl-rpg.roll-tables", "the system's, not the compendium's");
+          } finally {
+            await pack.deleteCompendium();
+          }
         });
       });
 
@@ -764,22 +793,6 @@ export default function register(quench) {
           });
           assert.equal(data.system.weaponSkill, "Club");
           assert.deepEqual(data.system.slots, ["held"]);
-        });
-
-        it("magicItemUpdate drops the old draft's enchantments", function () {
-          const update = magicItemUpdate({
-            kind: "magic",
-            tierKey: "silver",
-            itemType: "mundane",
-            typeLabel: "x",
-            name: "Stick",
-            slots: ["held"],
-            accessoryKind: "",
-            enchantments: [{ kind: "dr", value: 1 }],
-          });
-          assert.equal(update.name, "Stick");
-          assert.lengthOf(update["system.changes"], 1);
-          assert.deepEqual(update["system.slots"], ["held"]);
         });
 
         it("the Forge draws a rolled box: a row per entry, its gold", async function () {

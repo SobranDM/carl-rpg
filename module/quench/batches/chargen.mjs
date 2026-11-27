@@ -26,12 +26,15 @@ import {
   withSetting,
 } from "../helpers.mjs";
 
-/** Change a wizard field as a user would, then let it redraw. */
-async function changeField(app, selector, apply) {
+/**
+ * Change a wizard field as a user would, then wait until `done(el)` holds
+ * (the field's element is passed, to tell a redraw by its replacement).
+ */
+async function changeField(app, selector, apply, done) {
   const el = app.element.querySelector(selector);
   apply(el);
   el.dispatchEvent(new Event("change", { bubbles: true }));
-  await settle(150);
+  await waitFor(() => done(el), { message: `the wizard never took the change to ${selector}` });
 }
 
 /** The wizard window for an actor, if open. */
@@ -621,26 +624,40 @@ export default function register(quench) {
             app = CrawlerCreation.open(actor);
             await waitFor(() => app.rendered);
             const next = app.element.querySelector('[data-action="next"]');
-            await changeField(app, 'input[name="name"]', (el) => {
-              el.value = "Driven";
-            });
-            assert.equal(app.draft.name, "Driven");
+            await changeField(
+              app,
+              'input[name="name"]',
+              (el) => {
+                el.value = "Driven";
+              },
+              () => app.draft.name === "Driven",
+            );
             assert.strictEqual(
               app.element.querySelector('[data-action="next"]'),
               next,
               "typing doesn't redraw the page, so a click on Next isn't lost",
             );
-            await changeField(app, 'input[name="name"]', (el) => {
-              el.value = "";
-            });
+            await changeField(
+              app,
+              'input[name="name"]',
+              (el) => {
+                el.value = "";
+              },
+              () => app.draft.name === "",
+            );
             assert.isTrue(next.disabled, "no name: Next is off, without a redraw");
             assert.isFalse(
               app.element.querySelector(".carl-chargen-problems").hidden,
               "and the problem shows",
             );
-            await changeField(app, 'input[name="name"]', (el) => {
-              el.value = "Driven";
-            });
+            await changeField(
+              app,
+              'input[name="name"]',
+              (el) => {
+                el.value = "Driven";
+              },
+              () => app.draft.name === "Driven",
+            );
             assert.isFalse(next.disabled);
 
             app.element.querySelector('[data-action="next"]').click();
@@ -659,12 +676,20 @@ export default function register(quench) {
               ...app.element.querySelectorAll('input[name^="stage.childhood.skill."]'),
             ];
             await waitFor(() => boxes().length === 3, { message: "the background's three Skills" });
+            const ticked = () => app.draft.stages.childhood?.skills.length ?? 0;
             for (const i of [0, 1, 2]) {
-              const box = app.element.querySelector(`input[name="stage.childhood.skill.${i}"]`);
-              if (!box.disabled)
-                await changeField(app, `input[name="stage.childhood.skill.${i}"]`, (el) => {
+              const selector = `input[name="stage.childhood.skill.${i}"]`;
+              if (app.element.querySelector(selector).disabled) continue;
+              const before = ticked();
+              // A tick changes the page: wait for the draft and the redraw.
+              await changeField(
+                app,
+                selector,
+                (el) => {
                   el.checked = true;
-                });
+                },
+                (el) => ticked() === before + 1 && app.element.querySelector(selector) !== el,
+              );
             }
             assert.lengthOf(app.draft.stages.childhood.skills, 2, "two at most");
             assert.lengthOf(

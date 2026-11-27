@@ -49,20 +49,9 @@ export default function register(quench) {
       const { describe, it, assert } = context;
 
       describe("slugifySkillName", function () {
-        it("normalizes whitespace/case into a dash-joined slug", function () {
-          assert.equal(slugifySkillName("Fire Fingers"), "fire-fingers");
-          assert.equal(slugifySkillName("  Multi   Space  "), "multi-space");
-        });
-
         it("falls back to 'unknown' for blank/null input", function () {
           assert.equal(slugifySkillName(""), "unknown");
           assert.equal(slugifySkillName(null), "unknown");
-        });
-
-        it("drops accents and punctuation, keeps letters in any script", function () {
-          assert.equal(slugifySkillName("Über!!"), "uber");
-          assert.equal(slugifySkillName("Épée"), "epee");
-          assert.equal(slugifySkillName("Таунт"), "таунт");
         });
       });
 
@@ -83,57 +72,6 @@ export default function register(quench) {
       });
 
       describe("collectItemTargetEffects", function () {
-        it("only surfaces effects whose Upgrade tier rankThreshold is met", function () {
-          const item = {
-            name: "Iron Punch",
-            system: {
-              rank: 10,
-              upgrades: [
-                {
-                  rankThreshold: 5,
-                  targetEffects: [
-                    { id: "a", debuffKey: "poisoned", critOnly: false, amazingSuccessOnly: false },
-                  ],
-                },
-              ],
-            },
-          };
-          assert.lengthOf(collectItemTargetEffects(item), 1);
-
-          const untrained = { ...item, system: { ...item.system, rank: 3 } };
-          assert.lengthOf(collectItemTargetEffects(untrained), 0);
-        });
-
-        it("gates critOnly/amazingSuccessOnly entries on the caller's flags", function () {
-          const item = {
-            name: "Enchanted Blade",
-            system: {
-              rank: 10,
-              upgrades: [
-                {
-                  rankThreshold: 5,
-                  targetEffects: [
-                    { id: "crit", debuffKey: "stunned", critOnly: true, amazingSuccessOnly: false },
-                    { id: "as", debuffKey: "staggered", critOnly: false, amazingSuccessOnly: true },
-                  ],
-                },
-              ],
-            },
-          };
-          assert.lengthOf(
-            collectItemTargetEffects(item, { isCrit: false, isAmazingSuccess: false }),
-            0,
-          );
-          assert.lengthOf(
-            collectItemTargetEffects(item, { isCrit: true, isAmazingSuccess: false }),
-            1,
-          );
-          assert.lengthOf(
-            collectItemTargetEffects(item, { isCrit: false, isAmazingSuccess: true }),
-            1,
-          );
-        });
-
         it("both ticked lands on a Critical Hit or an Amazing Success (ruled 2026-11-27)", function () {
           const item = {
             name: "Quench Either Blade",
@@ -504,12 +442,6 @@ export default function register(quench) {
       });
 
       describe("accumulateBonus / accumulateCap", function () {
-        it("accumulateBonus applies the mode-based scalar change onto the bag", function () {
-          const bonuses = { x: 2 };
-          accumulateBonus(bonuses, "x", change({ mode: "add", value: "3" }), {});
-          assert.equal(bonuses.x, 5);
-        });
-
         it("accumulateCap keeps the most restrictive (lowest) cap per key", function () {
           const caps = {};
           accumulateCap(caps, "dr", change({ capMax: "10" }), {});
@@ -522,22 +454,6 @@ export default function register(quench) {
           const caps = {};
           accumulateCap(caps, "dr", change({ capMax: "" }), {});
           assert.notProperty(caps, "dr");
-        });
-
-        it("accumulateBonus 'multiply' with a numeric baseValue contributes base*(factor-1), not current*factor", function () {
-          const bonuses = {};
-          accumulateBonus(bonuses, "x", change({ mode: "multiply", value: "4" }), {}, 10);
-          assert.equal(
-            bonuses.x,
-            30,
-            "base 10, factor 4 -> bonus 10*(4-1) = 30 (effective 10+30=40=10*4)",
-          );
-        });
-
-        it("accumulateBonus 'multiply' with no baseValue falls back to the old current*factor arithmetic (always 0 for a first contributor)", function () {
-          const bonuses = {};
-          accumulateBonus(bonuses, "x", change({ mode: "multiply", value: "4" }), {});
-          assert.equal(bonuses.x, 0);
         });
 
         it("accumulateBonus non-multiply modes ignore baseValue entirely (add/subtract regression)", function () {

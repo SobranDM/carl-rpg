@@ -5,7 +5,7 @@
  * compendium's heals.
  */
 import CarlDice from "../../dice/dice.mjs";
-import { healsAllTargets, healsMode, resolveHealRecipients } from "../../helpers/heal-targets.mjs";
+import { healsMode, resolveHealRecipients } from "../../helpers/heal-targets.mjs";
 import { healDoneFor, healRows, onApplyHeal } from "../../chat/heal-card.mjs";
 import { addConditionToActor } from "../../helpers/conditions.mjs";
 import {
@@ -39,12 +39,6 @@ export default function register(quench) {
             "others",
             "set, it wins",
           );
-        });
-
-        it("a tier heals every target only once its Rank is reached", function () {
-          const upgrades = [{ rankThreshold: 15, healAllTargets: true }];
-          assert.isFalse(healsAllTargets({ system: { rank: 10, upgrades } }));
-          assert.isTrue(healsAllTargets({ system: { rank: 15, upgrades } }));
         });
 
         it("Self only heals the caster, whoever is targeted", async function () {

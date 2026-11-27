@@ -23,72 +23,8 @@ export default function register(quench) {
     (context) => {
       const { describe, it, assert } = context;
 
-      describe("bakeItemGrants: a change with no persisted id (legacy/compendium-authored content)", function () {
-        useQuenchTimeout(this);
-
-        it("bakes correctly and the item ends up with a real, non-blank persisted id", async function () {
-          // A literal id:"" would fail schema validation outright (the field
-          // is `blank: false`) - omitting the key entirely is how this
-          // actually reproduces on disk (compendium content authored before
-          // ChangeEntry.id existed simply never had the key at all), and lets
-          // the SchemaField's own `initial: () => randomID()` fill it in.
-          // What matters for regression purposes either way: baking still
-          // works, and the id is never left blank afterward.
-          const actor = await createTestCharacter();
-          try {
-            const race = await createTestItem(actor, "race");
-            race.updateSource({
-              "system.changes": [
-                {
-                  targetType: "stat",
-                  target: "str",
-                  mode: "add",
-                  value: "2",
-                  capMax: "",
-                  levelGate: 0,
-                  damageDiceKind: "",
-                  damageType: "",
-                  conditions: [],
-                },
-              ],
-            });
-            await bakeItemGrants(race);
-            await settle();
-            assert.isNotEmpty(race.system.changes[0].id);
-            assert.equal(
-              actor.system.stats.str.value,
-              5,
-              "the grant itself should still bake despite the missing id",
-            );
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
-      });
-
       describe("bakeItemGrants: Rank-10 skillRank grant cap (p.127)", function () {
         useQuenchTimeout(this);
-
-        it("caps at Rank 10 when the actor already has Ranks in the Skill", async function () {
-          const actor = await createTestCharacter();
-          try {
-            await createTestItem(actor, "skill", "Alchemy", {
-              name: "Alchemy",
-              system: { rank: 6, category: "utility" },
-            });
-            await createTestItem(actor, "race", "race", {
-              system: {
-                changes: [{ targetType: "skillRank", target: "Alchemy", mode: "add", value: "8" }],
-              },
-            });
-            // _onCreate's own bakeItemGrants call isn't awaited by createEmbeddedDocuments - poll instead of a fixed settle().
-            await waitFor(() => actor.items.find((i) => i.name === "Alchemy")?.system.rank !== 6);
-            const alchemy = actor.items.find((i) => i.name === "Alchemy");
-            assert.equal(alchemy.system.rank, 10);
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
 
         it("is uncapped for a from-scratch grant (actor owns the Skill at Rank 0)", async function () {
           const actor = await createTestCharacter();
@@ -99,39 +35,12 @@ export default function register(quench) {
             });
             await createTestItem(actor, "race", "race", {
               system: {
-                changes: [{ targetType: "skillRank", target: "Alchemy", mode: "add", value: "8" }],
+                changes: [{ targetType: "skillRank", target: "Alchemy", mode: "add", value: "12" }],
               },
             });
             await waitFor(() => actor.items.find((i) => i.name === "Alchemy")?.system.rank !== 0);
             const alchemy = actor.items.find((i) => i.name === "Alchemy");
-            assert.equal(alchemy.system.rank, 8);
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
-
-        it("creates a bare new Skill item at the granted Rank when nothing matches anywhere", async function () {
-          const actor = await createTestCharacter();
-          try {
-            await createTestItem(actor, "race", "race", {
-              system: {
-                changes: [
-                  {
-                    targetType: "skillRank",
-                    target: "Totally Not A Real Skill XYZ123",
-                    mode: "add",
-                    value: "8",
-                  },
-                ],
-              },
-            });
-            await waitFor(
-              () => !!actor.items.find((i) => i.name === "Totally Not A Real Skill XYZ123"),
-            );
-            const created = actor.items.find((i) => i.name === "Totally Not A Real Skill XYZ123");
-            assert.exists(created);
-            assert.equal(created.type, "skill");
-            assert.equal(created.system.rank, 8);
+            assert.equal(alchemy.system.rank, 12, "past the Rank-10 cap: Rank 0 is from scratch");
           } finally {
             await deleteTestActor(actor);
           }
@@ -189,7 +98,9 @@ export default function register(quench) {
               },
             });
             await waitFor(() => !!actor.items.find((i) => i.name === name));
-            assert.equal(actor.items.find((i) => i.name === name).system.rank, 12);
+            const created = actor.items.find((i) => i.name === name);
+            assert.equal(created.type, "skill", "a bare new Skill");
+            assert.equal(created.system.rank, 12);
           } finally {
             await deleteTestActor(actor);
           }
@@ -273,7 +184,12 @@ export default function register(quench) {
             // As the sidebar's Duplicate does. Its items are embedded in the
             // new actor's own creation, so Item _preCreate never runs on them.
             dup = await a.clone({ name: `${a.name} (Copy)` }, { save: true });
-            await settle(300);
+            // A stray bake on the copy would queue (helpers/actor-queue.mjs)
+            // ahead of the recheck below, so the recheck's await covers it.
+            const dupRace = () => dup.items.find((i) => i.type === "race");
+            await waitFor(() => !!dupRace() && bakedIds(dupRace()).length === 2, {
+              message: "the duplicate never came in with its Race's record",
+            });
             await recheckLevelGatedGrants(dup);
             await settle();
             assert.equal(
@@ -281,7 +197,7 @@ export default function register(quench) {
               5,
               "the duplicate's Stats already include the grant",
             );
-            assert.lengthOf(bakedIds(dup.items.find((i) => i.type === "race")), 2);
+            assert.lengthOf(bakedIds(dupRace()), 2);
           } finally {
             await deleteTestActor(a);
             await deleteTestActor(dup);
@@ -338,30 +254,9 @@ export default function register(quench) {
         });
       });
 
-      describe("isEligibleNow: levelGate and conditions gating", function () {
+      // levelGate: actor-document.mjs "_onUpdate: level-gated grant recheck".
+      describe("isEligibleNow: conditions gating", function () {
         useQuenchTimeout(this);
-
-        it("a levelGate'd stat change stays dormant until Level reaches it, then bakes on recheck", async function () {
-          const actor = await createTestCharacter();
-          try {
-            await createTestItem(actor, "race", "race", {
-              system: {
-                changes: [
-                  { targetType: "stat", target: "dex", mode: "add", value: "2", levelGate: 50 },
-                ],
-              },
-            });
-            await settle();
-            assert.equal(actor.system.stats.dex.value, 3, "not yet eligible below Level 50");
-
-            await actor.update({ "system.attributes.level.value": 50 });
-            await recheckLevelGatedGrants(actor);
-            await settle();
-            assert.equal(actor.system.stats.dex.value, 5, "eligible once Level 50 is reached");
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
 
         it("a change carrying roll-time 'conditions' is never baked into base", async function () {
           const actor = await createTestCharacter();

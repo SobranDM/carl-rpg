@@ -153,7 +153,7 @@ export default function register(quench) {
           const actor = { items: [gearOf("Ring", true, [entry({ debuffKey: "burned" })])] };
           const found = attackTargetEffects(
             actor,
-            skillOf("Pugilism", [entry({ debuffKey: "staggered" })]),
+            skillOf("Pugilism", [entry({ debuffKey: "staggered", stacks: 2 })]),
             {
               damageEffectItem: skillOf("Venom Strike", [entry({ debuffKey: "poisoned" })]),
               isAmazingSuccess: false,
@@ -163,6 +163,7 @@ export default function register(quench) {
             found.map((t) => t.debuffKey),
             ["staggered", "poisoned", "burned"],
           );
+          assert.equal(found[0].stacks, 2, "the Skill's entry keeps its stacks");
         });
 
         it("an Amazing-Success-only entry: decided now, or kept for each target", function () {
@@ -180,26 +181,6 @@ export default function register(quench) {
           assert.isTrue(debuffLandsOn(kept[0], { amazing: true }));
           assert.isFalse(debuffLandsOn(kept[0], { amazing: false }));
           assert.isTrue(debuffLandsOn({ amazingSuccessOnly: false }, { amazing: false }));
-        });
-
-        it("a Critical-Hit-only entry needs a natural 20", function () {
-          const actor = {
-            items: [gearOf("Blade", true, [entry({ debuffKey: "stunned", critOnly: true })])],
-          };
-          assert.lengthOf(
-            attackTargetEffects(actor, skillOf("Longsword"), {
-              isCrit: false,
-              isAmazingSuccess: null,
-            }),
-            0,
-          );
-          assert.lengthOf(
-            attackTargetEffects(actor, skillOf("Longsword"), {
-              isCrit: true,
-              isAmazingSuccess: null,
-            }),
-            1,
-          );
         });
       });
 

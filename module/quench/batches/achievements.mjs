@@ -135,17 +135,10 @@ export default function register(quench) {
             assert.equal(sections[0].category, "Café Crawl");
             assert.deepEqual(achievementCategories(order), ["Café Crawl"]);
           }
-        });
-
-        it("the editor suggests every category in use, once each", function () {
           assert.deepEqual(
-            achievementCategories([
-              def("a", "gold", "Boss Kills"),
-              def("b", "gold", "boss kills"),
-              def("c", "gold", "Boss Kills"),
-              def("d", "gold"),
-            ]),
-            ["Boss Kills"],
+            achievementCategories([...cats, def("d", "gold")]),
+            ["Café Crawl"],
+            "one without a category suggests none",
           );
         });
       });
@@ -477,6 +470,25 @@ export default function register(quench) {
             assert.isFalse((await grid._prepareContext({})).showOffline, "the GM's choice stands");
           } finally {
             await grid.close();
+          }
+        });
+
+        it("a character hidden from Achievements has no column, even with offline crawlers shown (issue #18)", async function () {
+          const actor = await createTestCharacter("guide");
+          const grid = AchievementGrid.open();
+          try {
+            await waitFor(() => grid.rendered);
+            grid.showOffline = true;
+            const shown = async () =>
+              (await grid._prepareContext({})).columns.some((c) => c.id === actor.id);
+            assert.isTrue(await shown(), "a crawler like any other");
+            await actor.update({ "system.details.hideFromAchievements": true });
+            assert.isFalse(await shown(), "hidden");
+            await actor.update({ "system.details.hideFromAchievements": false });
+            assert.isTrue(await shown(), "back again");
+          } finally {
+            await grid.close();
+            await deleteTestActor(actor);
           }
         });
 

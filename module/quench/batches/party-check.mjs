@@ -12,7 +12,6 @@ import {
 } from "../../dice/roll-prompt.mjs";
 import {
   applyPartyOp,
-  buildPartyCheckState,
   canRollRow,
   gradePartyRoll,
   offStatLabel,
@@ -27,6 +26,7 @@ import {
   PIN_D20_MID,
   pressDialog,
   useQuenchTimeout,
+  waitFor,
   withDialog,
   withPinnedDice,
 } from "../helpers.mjs";
@@ -162,6 +162,12 @@ export default function register(quench) {
             assert.exists(message);
             const state = () => message.getFlag("carl-rpg", "partyCheck");
             assert.deepEqual(Object.keys(state().rows), ["c0", "c1"]);
+            assert.deepEqual(
+              state().rows.c0,
+              { uuid: a.uuid, name: a.name, check: null },
+              "one row per crawler, unrolled",
+            );
+            assert.isFalse(state().closed);
 
             assert.isTrue(
               await applyPartyOp(
@@ -235,11 +241,15 @@ export default function register(quench) {
               "int",
               "stored with the roll",
             );
-            await new Promise((r) => setTimeout(r, 50));
-            const html =
-              document.querySelector(`.chat-log [data-message-id="${message.id}"]`)?.textContent ??
-              "";
-            if (html) assert.include(html, offStatLabel("int", "con"), "shown on the row");
+            const label = offStatLabel("int", "con");
+            const drawn = () =>
+              [...document.querySelectorAll(`[data-message-id="${message.id}"]`)].map(
+                (el) => el.textContent,
+              );
+            await waitFor(() => drawn().length, { message: "the card was never drawn" });
+            await waitFor(() => drawn().some((text) => text.includes(label)), {
+              message: "the Off-Stat label never showed on the row",
+            });
           } finally {
             await message?.delete();
             await deleteTestActor(a);
@@ -297,17 +307,6 @@ export default function register(quench) {
             assert.isTrue(a.items.get(skill.id).system.marked, "marked for Advancement");
           } finally {
             await message?.delete();
-            await deleteTestActor(a);
-          }
-        });
-
-        it("builds one row per crawler, unrolled", async function () {
-          const a = await createTestCharacter("rows");
-          try {
-            const state = buildPartyCheckState({ skill: "Climbing", difficulty: 14, actors: [a] });
-            assert.deepEqual(state.rows.c0, { uuid: a.uuid, name: a.name, check: null });
-            assert.isFalse(state.closed);
-          } finally {
             await deleteTestActor(a);
           }
         });

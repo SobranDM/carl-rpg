@@ -406,31 +406,6 @@ export default function register(quench) {
           }
         });
       });
-
-      describe("the Combat tab", function () {
-        useQuenchTimeout(this);
-
-        it("has an Attack! button at the top of the Stats column, and no Attacks list", async function () {
-          const actor = await createTestCharacter("attack tab");
-          const sheet = actor.sheet;
-          try {
-            await sheet.render({ force: true });
-            await waitFor(() => sheet.rendered);
-            const column = sheet.element.querySelector(
-              'section.tab[data-tab="abilities"] .carl-stats-column',
-            );
-            assert.strictEqual(
-              column.firstElementChild,
-              column.querySelector('[data-action="chooseAttack"]'),
-              "first in the column",
-            );
-            assert.notExists(sheet.element.querySelector(".carl-combat-attacks"));
-          } finally {
-            await sheet.close();
-            await deleteTestActor(actor);
-          }
-        });
-      });
     },
     { displayName: "CarlRPG: weapons and the Attack! button" },
   );

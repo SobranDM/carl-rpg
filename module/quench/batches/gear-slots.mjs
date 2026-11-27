@@ -283,11 +283,14 @@ export default function register(quench) {
         it("a consumable is never equipped", async function () {
           const actor = await createTestCharacter("potion");
           try {
+            // A slot set, so only the consumable rule can refuse it (not "no slot").
             const potion = await createTestItem(actor, "item", "Potion", {
-              system: { consumable: { kind: "potion" } },
+              system: { consumable: { kind: "potion" }, slots: ["head"] },
             });
+            assert.deepEqual(potion.system.slots, ["head"], "test setup: it has a slot");
             await potion.update({ "system.equipped": true });
             assert.isFalse(actor.items.get(potion.id).system.equipped);
+            assert.equal(actor.system.gearSlots.head, "", "not worn in its slot");
           } finally {
             await deleteTestActor(actor);
           }

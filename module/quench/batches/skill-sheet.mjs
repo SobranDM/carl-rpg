@@ -1,19 +1,7 @@
-import CarlDice from "../../dice/dice.mjs";
 import { collectItemTargetEffects } from "../../helpers/modifiers.mjs";
 import { changeSummary, debuffSummary, debuffTrigger } from "../../helpers/sheet-rows.mjs";
 import { mergeSubmitted } from "../../helpers/form-arrays.mjs";
-import {
-  createTestCharacter,
-  createTestItem,
-  createTestMob,
-  deleteTestActor,
-  settle,
-  useQuenchTimeout,
-  waitFor,
-  withFakeTargets,
-  withPinnedDice,
-  PIN_D20_MID,
-} from "../helpers.mjs";
+import { settle, useQuenchTimeout, waitFor } from "../helpers.mjs";
 
 /**
  * Crawler Skills and the Skill sheet (docs/skill-item-sheets.md, phase 1):
@@ -119,39 +107,6 @@ export default function register(quench) {
             assert.isString(item.system.targetEffects[0].id);
           } finally {
             await item.delete();
-          }
-        });
-
-        it("a Rank 1 Attack carries its base Debuff to the Attack card", async function () {
-          const actor = await createTestCharacter("base debuff");
-          const target = await createTestMob("base debuff target");
-          try {
-            const skill = await createTestItem(actor, "skill", "Base Debuff Skill", {
-              name: "Base Debuff Skill",
-              system: {
-                category: "attack",
-                isHandToHand: true,
-                rank: 1,
-                governingStat: "",
-                baseDamage: { dice: "1d4", stat: "", damageType: "" },
-                targetEffects: [{ debuffKey: "poisoned", stacks: 2 }],
-              },
-            });
-            await settle();
-            const message = await withPinnedDice(PIN_D20_MID, () =>
-              withFakeTargets([{ actor: target }], () =>
-                CarlDice.rollAttack(actor, skill, { skipDialog: true }),
-              ),
-            );
-            assert.exists(message);
-            const effects = message.getFlag("carl-rpg", "targetEffects") ?? [];
-            const poisoned = effects.find((t) => t.debuffKey === "poisoned");
-            assert.exists(poisoned, "the base Debuff is on the card");
-            assert.equal(poisoned.stacks, 2);
-            assert.equal(poisoned.sourceLabel, "Base Debuff Skill");
-          } finally {
-            await deleteTestActor(actor);
-            await deleteTestActor(target);
           }
         });
       });

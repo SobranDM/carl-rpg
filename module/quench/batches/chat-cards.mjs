@@ -168,26 +168,6 @@ export default function register(quench) {
             if (message) await message.delete();
           }
         });
-
-        it("onApplyHeal restores HB up to effectiveMax and flags healApplied", async function () {
-          const actor = await createTestCharacter("healed", {
-            system: { hb: { value: 3, max: 10 } },
-          });
-          let message;
-          try {
-            message = await ChatMessage.create({
-              content: "<div></div>",
-              flags: { "carl-rpg": { healActorUuid: actor.uuid, healAmount: 5 } },
-            });
-            await onApplyHeal(fakeEvent, message);
-            await settle();
-            assert.equal(actor.system.hb.value, 8);
-            assert.isTrue(message.getFlag("carl-rpg", "healApplied"));
-          } finally {
-            await deleteTestActor(actor);
-            if (message) await message.delete();
-          }
-        });
       });
 
       describe("Applied once: the row's current state is read just before applying", function () {

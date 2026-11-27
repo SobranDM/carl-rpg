@@ -61,7 +61,8 @@ async function combatOf(...actors) {
 /** Delete the cards a test combat posted. */
 async function deleteCards(combat) {
   if (!combat?.id) return;
-  await settle(150);
+  // A card that lands after this is swept with the batch's other stray
+  // messages (helpers.mjs withMessageCleanup).
   const ids = game.messages
     .filter((m) => {
       const f = m.flags?.["carl-rpg"] ?? {};

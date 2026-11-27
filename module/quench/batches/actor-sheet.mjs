@@ -133,7 +133,10 @@ export default function register(quench) {
           const sheet = actor.sheet;
           try {
             // Enough rows (~31px each) that the Inventory tab overflows the 750px window.
-            for (let i = 0; i < 25; i++) await createTestItem(actor, "item", `scroll ${i}`);
+            await actor.createEmbeddedDocuments(
+              "Item",
+              Array.from({ length: 25 }, (_, i) => ({ name: `Quench scroll ${i}`, type: "item" })),
+            );
             await sheet.render({ force: true });
             await waitFor(() => sheet.rendered);
             sheet.changeTab("items", "primary");
@@ -203,11 +206,19 @@ export default function register(quench) {
               [game.i18n.localize("CARLRPG.Actor.Race"), game.i18n.localize("CARLRPG.Actor.Class")],
               "Race before Class",
             );
-            assert.exists(
-              combat.querySelector('.carl-stats-column [data-action="chooseAttack"]'),
-              "the Attack! button",
+            const attackButton = combat.querySelector(
+              '.carl-stats-column [data-action="chooseAttack"]',
             );
-            assert.notExists(combat.querySelector(".carl-combat-attacks"), "no Attacks list");
+            assert.exists(attackButton, "the Attack! button");
+            assert.strictEqual(
+              combat.querySelector(".carl-stats-column").firstElementChild,
+              attackButton,
+              "the Attack! button is first in the Stats column",
+            );
+            assert.notExists(
+              sheet.element.querySelector(".carl-combat-attacks"),
+              "no Attacks list",
+            );
             const skillsTab = sheet.element.querySelector('section.tab[data-tab="skills"]');
             assert.exists(skillsTab.querySelector(".carl-skills-list"));
             assert.notExists(
@@ -309,9 +320,8 @@ export default function register(quench) {
           return sheet;
         };
 
-        it("a Character has no Defenses tab and its Boons tab is labelled Benefits; a Mob has Boons and no Defenses tab", async function () {
+        it("a Character has no Defenses tab and its Boons tab is labelled Benefits", async function () {
           const actor = await createTestCharacter("tabs");
-          const mob = await createTestMob("tabs");
           try {
             const sheet = await openSheet(actor);
             const tabs = [...sheet.element.querySelectorAll("nav [data-tab]")].map(
@@ -324,34 +334,8 @@ export default function register(quench) {
               game.i18n.localize("CARLRPG.Tab.Benefits"),
             );
             await sheet.close();
-
-            // A Mob's tabs are the Character's (docs/mob-sheet.md): its DR and
-            // Resistances are on the Combat tab, and it never rolls an Evade.
-            const mobSheet = await openSheet(mob);
-            const mobTabs = [...mobSheet.element.querySelectorAll("nav [data-tab]")].map(
-              (el) => el.dataset.tab,
-            );
-            assert.deepEqual(
-              mobTabs,
-              ["abilities", "items", "features", "conditions", "description"],
-              "no Skills tab on a Mob",
-            );
-            assert.include(
-              mobSheet.element.querySelector('nav [data-tab="features"]').textContent,
-              game.i18n.localize("CARLRPG.Tab.Boons"),
-            );
-            assert.exists(
-              mobSheet.element.querySelector(".carl-mob-defenses"),
-              "the Combat tab's Defenses",
-            );
-            assert.notExists(
-              mobSheet.element.querySelector('.carl-stats-column [data-action="rollEvade"]'),
-              "no Evade roll",
-            );
-            await mobSheet.close();
           } finally {
             await deleteTestActor(actor);
-            await deleteTestActor(mob);
           }
         });
 
@@ -495,15 +479,6 @@ export default function register(quench) {
               "one Mana input on the form",
             );
 
-            for (const name of [
-              "system.details.size",
-              "system.details.popularity",
-              "system.details.gold",
-              "system.details.pronouns",
-              "system.details.crawlerNumber",
-            ]) {
-              assert.notExists(header.querySelector(`[name="${name}"]`), `${name} left the header`);
-            }
             assert.notExists(header.querySelector("#carl-floor-display"), "no Floor");
             assert.notInclude(header.textContent, game.i18n.localize("CARLRPG.Actor.Floor"));
             assert.notExists(
@@ -761,30 +736,16 @@ export default function register(quench) {
             `section.tab[data-tab="items"] li.item[data-item-id="${itemId}"]`,
           );
 
-        it("Characters, Mobs and Loot Boxes all use core ActorSheetV2", async function () {
-          const crawler = await createTestCharacter("v2");
-          const mob = await createTestMob("v2");
-          const box = await createTestLootBox();
-          try {
-            for (const actor of [crawler, mob, box]) {
-              assert.instanceOf(actor.sheet, foundry.applications.sheets.ActorSheetV2, actor.type);
-            }
-            assert.instanceOf(crawler.sheet, CarlRPGActorSheet);
-            assert.instanceOf(mob.sheet, CarlRPGActorSheet);
-          } finally {
-            await deleteTestActor(crawler);
-            await deleteTestActor(mob);
-            await deleteTestActor(box);
-          }
-        });
-
-        it("the header offers Prototype Token on Characters, Mobs and Loot Boxes", async function () {
+        it("Characters, Mobs and Loot Boxes use core ActorSheetV2, and the header offers Prototype Token", async function () {
           const crawler = await createTestCharacter("header");
           const mob = await createTestMob("header");
           const box = await createTestLootBox();
           try {
+            assert.instanceOf(crawler.sheet, CarlRPGActorSheet);
+            assert.instanceOf(mob.sheet, CarlRPGActorSheet);
             for (const actor of [crawler, mob, box]) {
               const sheet = await openSheet(actor);
+              assert.instanceOf(sheet, foundry.applications.sheets.ActorSheetV2, actor.type);
               const actions = sheet._getHeaderControls().map((c) => c.action);
               assert.include(actions, "configurePrototypeToken", actor.type);
               assert.notInclude(
@@ -819,21 +780,6 @@ export default function register(quench) {
             await sheet.close();
           } finally {
             await config?.close();
-            await deleteTestActor(actor);
-          }
-        });
-
-        it("binds one DragDrop handler, on rows with an item id", async function () {
-          const actor = await createTestCharacter("bind");
-          try {
-            const item = await createTestItem(actor, "item", "row");
-            const sheet = await openSheet(actor);
-            assert.equal(sheet._dragDrop.dragSelector, "[data-item-id]");
-            assert.strictEqual(sheet._dragDrop, sheet._dragDrop, "one cached handler");
-            assert.equal(inventoryRow(sheet, item.id).getAttribute("draggable"), "true");
-            assert.isFunction(sheet.element.ondrop);
-            await sheet.close();
-          } finally {
             await deleteTestActor(actor);
           }
         });

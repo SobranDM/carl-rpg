@@ -108,9 +108,11 @@ export default function register(quench) {
         it("the star fills the first empty slot, takes it out again, and a full Hotlist refuses", async function () {
           const actor = await createTestCharacter("pins");
           try {
-            const items = [];
-            for (let i = 0; i < 11; i++)
-              items.push(await createTestItem(actor, "item", `pin ${i}`));
+            // Any 11 distinct items: their order doesn't matter.
+            const items = await actor.createEmbeddedDocuments(
+              "Item",
+              Array.from({ length: 11 }, (_, i) => ({ name: `Quench pin ${i}`, type: "item" })),
+            );
             assert.isTrue(await toggleHotlist(actor, items[0]));
             assert.equal(actor.system.hotlist[0], items[0].id);
             assert.isTrue(isInHotlist(actor, items[0]));
@@ -656,7 +658,7 @@ export default function register(quench) {
           }
         });
 
-        it("a drop wears gear in a slot, another moves it, the Accessories slot takes it, (x) takes it off; worn gear lists first", async function () {
+        it("a drop wears gear in a slot, another moves it, the Accessories slot takes it, (x) takes it off; worn gear leaves the Inventory list", async function () {
           const actor = await createTestCharacter("slots");
           const sheet = actor.sheet;
           try {

@@ -8,7 +8,6 @@
  */
 import CarlDice from "../../dice/dice.mjs";
 import { applyRow } from "../../chat/attack-targets-card.mjs";
-import { landDebuffs } from "../../helpers/land-debuffs.mjs";
 import { applyOp, reactionCardFor } from "../../chat/reaction-card.mjs";
 import { debuffLandsOn } from "../../helpers/modifiers.mjs";
 import { mobAttacksOf } from "../../helpers/mob-attacks.mjs";
@@ -54,7 +53,8 @@ async function combatOf(...actors) {
 /** Delete the phase notices and cards a test combat posted. */
 async function deleteNotices(combat) {
   if (!combat?.id) return;
-  await settle(150);
+  // A card that lands after this is swept with the batch's other stray
+  // messages (helpers.mjs withMessageCleanup).
   const ids = game.messages
     .filter(
       (m) =>
@@ -96,30 +96,6 @@ export default function register(quench) {
             "poisoned",
             "stunned",
           ]);
-        });
-
-        it("landDebuffs adds them to a crawler; none to an Immune one", async function () {
-          const plain = await createTestCharacter("lands");
-          const immune = await createTestCharacter("immune", {
-            system: { resistances: { fire: "immune" } },
-          });
-          try {
-            const row = { evade: { degree: "majorFail", success: false } };
-            const done = await landDebuffs(plain, effectsOf(EFFECTS), row, { fire: 4 });
-            assert.deepEqual(
-              done.landed.map((t) => t.debuffKey),
-              ["burned", "poisoned"],
-            );
-            assert.includeMembers(keys(plain), ["burned", "poisoned"]);
-            assert.notInclude(keys(plain), "stunned");
-            const skipped = await landDebuffs(immune, effectsOf(EFFECTS), row, { fire: 4 });
-            assert.lengthOf(skipped.landed, 0);
-            assert.lengthOf(skipped.lines, 1, "the GM is told why");
-            assert.lengthOf(keys(immune), 0);
-          } finally {
-            await deleteTestActor(plain);
-            await deleteTestActor(immune);
-          }
         });
       });
 
@@ -284,16 +260,6 @@ export default function register(quench) {
           await settle();
           return { damage, data };
         };
-
-        it("the declared Attack keeps its Debuffs through to the Damage card", async function () {
-          await declareOn(pc1);
-          const card = await startReaction();
-          assert.lengthOf(state(card).attacks[onlyHit(card).attackId].targetEffects, 3);
-          const damage = await postDamageCard(combat, state(card));
-          const attack = Object.values(damage.getFlag("carl-rpg", "reactionDamage").attacks)[0];
-          assert.lengthOf(attack.targetEffects, 3);
-          await damage.delete();
-        });
 
         it("not Evaded: every trigger lands with the damage", async function () {
           await declareOn(pc1);

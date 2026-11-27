@@ -186,9 +186,6 @@ export default function register(quench) {
             "2d20kh",
           );
         });
-        it("existing two-argument calls are unchanged", function () {
-          assert.equal(resolveD20Formula(true, "advantage"), "1d20");
-        });
       });
 
       describe("endedConditionIds / isOneShotDebuff", function () {

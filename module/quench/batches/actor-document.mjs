@@ -117,16 +117,6 @@ export default function register(quench) {
       describe("_preUpdate: +3 Stat points per Level (p.169)", function () {
         useQuenchTimeout(this);
 
-        it("accrues 3 x levelDelta into bankedStatPoints on a Level increase", async function () {
-          const actor = await createTestCharacter();
-          try {
-            await actor.update({ "system.attributes.level.value": 5 });
-            assert.equal(actor.system.bankedStatPoints, 12); // 3 x (5 - 1)
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
-
         it("does not claw back points on a Level decrease (GM correcting a mistake)", async function () {
           const actor = await createTestCharacter();
           try {

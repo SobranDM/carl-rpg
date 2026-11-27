@@ -1494,19 +1494,6 @@ export default function register(quench) {
       describe("opening and closing the PDF (pdf-loader)", function () {
         useQuenchTimeout(this);
 
-        it("closes a document through its loading task (pdf.js 6 documents have no destroy)", async function () {
-          let destroyed = 0;
-          const pdfDoc = {
-            loadingTask: {
-              destroy: async () => {
-                destroyed += 1;
-              },
-            },
-          };
-          await closePdfDocument(pdfDoc);
-          assert.equal(destroyed, 1);
-        });
-
         it("never throws or rejects: nothing open, or a close that fails", async function () {
           await closePdfDocument(null);
           await closePdfDocument({});

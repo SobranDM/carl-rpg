@@ -272,10 +272,24 @@ export default function register(quench) {
       });
 
       describe("Favored Classes", function () {
-        it("a Spell's Favored Class matches the Class in any case", function () {
+        it("a Spell's Favored Class matches the Class in any case; any other Class pays +1 Mana (p.201)", function () {
           const actor = {
             system: { classItem: { name: "Boring Ol' Mage", system: { classTypes: ["mage"] } } },
           };
+          const caster = (name, classTypes) => ({
+            system: { classItem: { name, system: { classTypes } } },
+          });
+          const mageSpell = { system: { favoredClasses: ["Mage"] } };
+          assert.equal(
+            applyFavoredClassSurcharge(mageSpell, caster("Boring Ol' Mage", ["Mage"]), 3),
+            3,
+            "a Class whose category is favored pays the base cost",
+          );
+          assert.equal(
+            applyFavoredClassSurcharge(mageSpell, caster("Brawler", ["Fighter"]), 3),
+            4,
+            "a Fighter Class pays 1 more",
+          );
           assert.equal(
             applyFavoredClassSurcharge({ system: { favoredClasses: ["Mage"] } }, actor, 2),
             2,

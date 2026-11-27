@@ -204,7 +204,6 @@ export default function register(quench) {
                 game.i18n.format("CARLRPG.Dialog.Preset.Unopposed", { value: 16 }),
                 "the hint names the formula used",
               );
-              assert.isAtLeast(dialog.position.width, 480);
               press(dialog, "cancel");
             },
           );

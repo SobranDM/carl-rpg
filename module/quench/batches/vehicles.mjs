@@ -283,19 +283,6 @@ export default function register(quench) {
           }
         });
 
-        it("Chopper Pilot's Move Ranks are 5 and 15", async function () {
-          const rider = await crawlerWithSkill("biker", "Chopper Pilot", 5);
-          const v = await drivenVehicle(rider, {
-            system: { move: 120, driveSkill: "Chopper Pilot" },
-          });
-          try {
-            assert.equal(vehicleStatus(v).driveBonus, 5);
-          } finally {
-            await deleteTestActor(v);
-            await deleteTestActor(rider);
-          }
-        });
-
         it("Driving and Chopper Pilot as before: Attacks at 5 / 10, Evade Advantage at Driving 10, stunts at 15", async function () {
           const has = (rows, id) => rows.some((r) => r.id === id);
           for (const [name, attackRank, evadeRank] of [

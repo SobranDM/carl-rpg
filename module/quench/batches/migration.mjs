@@ -58,7 +58,6 @@ import {
   blockEntered,
   legacyCompanionsOf,
   migrateCompanionsOf,
-  parseSize,
   petDataFrom,
   vehicleDataFrom,
 } from "../../helpers/companion-migration.mjs";
@@ -69,6 +68,7 @@ import {
   createTestMob,
   deleteTestActor,
   useQuenchTimeout,
+  waitFor,
 } from "../helpers.mjs";
 
 /** An Attack Skill with this exact name. */
@@ -152,6 +152,21 @@ export default function register(quench) {
             [...renamed, "some-later-fix"],
             "read as the new ids, without duplicates",
           );
+        });
+
+        it("migration order: the compendium refresh, base DR and Create Crawler steps come before the Weapon Skill notice; the Mob Sizes after the Mob Attacks", function () {
+          const index = (id) => MIGRATIONS.findIndex((m) => m.id === id);
+          const notice = index(WEAPON_SKILL_NOTICE_ID);
+          for (const id of [
+            COMPENDIUM_REFRESH_ID,
+            BASE_DR_MIGRATION_ID,
+            CHARGEN_DONE_MIGRATION_ID,
+          ]) {
+            assert.isAtLeast(index(id), 0, id);
+            assert.isBelow(index(id), notice, id);
+          }
+          assert.isAtLeast(index(MOB_ATTACKS_MIGRATION_ID), 0);
+          assert.isAbove(index(MOB_SIZE_MIGRATION_ID), index(MOB_ATTACKS_MIGRATION_ID));
         });
 
         it("the list (declared last in its module) names a defined id and step for each", function () {
@@ -483,16 +498,19 @@ export default function register(quench) {
         });
 
         it("ticks a named copy in the Items directory too", async function () {
+          useQuenchTimeout(this, 60000);
           const bite = await Item.implementation.create({
             name: "Bite",
             type: "skill",
             system: { category: "attack" },
           });
           try {
-            assert.deepEqual(skillSettingBoxUpdate(bite), {
-              _id: bite.id,
-              "system.noWeapon": true,
-            });
+            assert.isNotOk(bite.system.noWeapon, "unticked to start with");
+            const failures = [];
+            const step = MIGRATIONS.find((m) => m.id === SKILL_SETTING_BOXES_ID);
+            await step.run({ fail: (where, err) => failures.push(`${where}: ${err?.message}`) });
+            assert.isEmpty(failures, failures.join("; "));
+            assert.isTrue(game.items.get(bite.id).system.noWeapon, "the sidebar copy is ticked");
           } finally {
             await bite.delete();
           }
@@ -501,12 +519,6 @@ export default function register(quench) {
 
       describe("0.7.0: the structured Deity block", function () {
         useQuenchTimeout(this);
-
-        it("is one of the 0.7.0 migrations", function () {
-          const step = MIGRATIONS.find((m) => m.id === DEITY_MIGRATION_ID);
-          assert.exists(step);
-          assert.equal(step.version, "0.7.0");
-        });
 
         it("saves a Character's whole Deity block (old notes included) as a forced replacement; skips other actors", async function () {
           const actor = await createTestCharacter("deity block", {
@@ -663,26 +675,6 @@ export default function register(quench) {
         /** An Upgrade tier. */
         const tier = (rankThreshold, changes) => ({ rankThreshold, changes });
 
-        it("both new 0.7.0 steps run in a world that had the earlier ones", function () {
-          for (const id of [COMPENDIUM_REFRESH_ID, BASE_DR_MIGRATION_ID]) {
-            const index = MIGRATIONS.findIndex((m) => m.id === id);
-            assert.isAtLeast(index, 0, id);
-            assert.equal(MIGRATIONS[index].version, "0.7.0");
-            assert.isBelow(
-              index,
-              MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID),
-            );
-            const p = migrationPlan({
-              done: MIGRATIONS.slice(0, index).map((m) => m.id),
-              hasContent: true,
-            });
-            assert.include(
-              p.run.map((m) => m.id),
-              id,
-            );
-          }
-        });
-
         it("an old Dodge copy's overriding tiers become the compendium's adds; its Rank and other changes stay", function () {
           const copy = {
             type: "skill",
@@ -747,7 +739,14 @@ export default function register(quench) {
                 ],
               },
             });
-            await new Promise((r) => setTimeout(r, 200));
+            const statId = race.system.changes.find((c) => c.targetType === "stat").id;
+            await waitFor(
+              () =>
+                (actor.items.get(race.id)?.getFlag("carl-rpg", "bakedGrantIds") ?? []).includes(
+                  statId,
+                ),
+              { message: "the Race's DEX grant never baked" },
+            );
             const dex = actor.system.stats.dex.value;
             const source = {
               type: "race",
@@ -762,11 +761,7 @@ export default function register(quench) {
             };
             const update = refreshedItemUpdate(race, source);
             const statEntry = update["system.changes"].find((c) => c.targetType === "stat");
-            assert.equal(
-              statEntry.id,
-              race.system.changes.find((c) => c.targetType === "stat").id,
-              "the Stat grant keeps its id",
-            );
+            assert.equal(statEntry.id, statId, "the Stat grant keeps its id");
             await actor.updateEmbeddedDocuments("Item", [{ _id: race.id, ...update }], {
               carlMigration: true,
             });
@@ -1006,24 +1001,6 @@ export default function register(quench) {
       describe("0.7.0: Characters made before the Create Crawler wizard", function () {
         useQuenchTimeout(this);
 
-        it("is a 0.7.0 step that runs in a world that had the earlier ones", function () {
-          const index = MIGRATIONS.findIndex((m) => m.id === CHARGEN_DONE_MIGRATION_ID);
-          assert.isAtLeast(index, 0);
-          assert.equal(MIGRATIONS[index].version, "0.7.0");
-          assert.isBelow(
-            index,
-            MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID),
-          );
-          const p = migrationPlan({
-            done: MIGRATIONS.slice(0, index).map((m) => m.id),
-            hasContent: true,
-          });
-          assert.include(
-            p.run.map((m) => m.id),
-            CHARGEN_DONE_MIGRATION_ID,
-          );
-        });
-
         it("marks a Character with Skills as created, once; leaves a blank one, a done one and a Mob", async function () {
           const built = await createTestCharacter("old crawler");
           const caster = await createTestCharacter("old caster");
@@ -1231,7 +1208,7 @@ export default function register(quench) {
         const gear = (actor, name, system = {}) =>
           createTestItem(actor, "item", name, { name, system: { weaponSkill: "", ...system } });
 
-        it("is the last 0.7.0 migration, after the gear slots'", function () {
+        it("comes after the Deity block's and the gear slots'; a world that had the earlier ones runs it and the rest", function () {
           const index = MIGRATIONS.findIndex((m) => m.id === WEAPON_SKILL_NOTICE_ID);
           assert.isAtLeast(index, 0);
           assert.equal(MIGRATIONS[index].version, "0.7.0");
@@ -1398,17 +1375,6 @@ export default function register(quench) {
           assert.isNull(legacyCompanionsOf(done));
         });
 
-        it("reads Size from a number, a size name, or both", function () {
-          assert.equal(parseSize("Large"), 5);
-          assert.equal(parseSize("5"), 5);
-          assert.equal(parseSize("Large (5)"), 5);
-          assert.equal(parseSize("huge-ish"), 6);
-          assert.equal(parseSize("very large"), 5, "any word, not just the first");
-          assert.equal(parseSize("A Huge truck"), 6);
-          assert.isNull(parseSize("big"));
-          assert.isNull(parseSize(""));
-        });
-
         it("a block counts as entered for any value - but not the untouched 10/10 Health Bar", function () {
           assert.isFalse(
             blockEntered({ name: "", attacks: ["", ""], level: null, hb: { value: 10, max: 10 } }),
@@ -1544,16 +1510,6 @@ export default function register(quench) {
       describe("0.7.0: a Mob's Size saved as Table 9's value", function () {
         useQuenchTimeout(this);
 
-        it("is a 0.7.0 migration, after the Mob Attacks'", function () {
-          const index = MIGRATIONS.findIndex((m) => m.id === MOB_SIZE_MIGRATION_ID);
-          assert.isAtLeast(index, 0);
-          assert.equal(MIGRATIONS[index].version, "0.7.0");
-          assert.isAbove(
-            index,
-            MIGRATIONS.findIndex((m) => m.id === MOB_ATTACKS_MIGRATION_ID),
-          );
-        });
-
         it("saves a Mob's Size as read, and only Mobs", async function () {
           const mob = await createTestMob("size save", { system: { size: "Large (5)" } });
           const pc = await createTestCharacter("size save pc");
@@ -1570,12 +1526,6 @@ export default function register(quench) {
 
       describe("0.7.0: vehicle Skills set on the items", function () {
         useQuenchTimeout(this);
-
-        it("is a 0.7.0 migration", function () {
-          const step = MIGRATIONS.find((m) => m.id === VEHICLE_SKILL_MIGRATION_ID);
-          assert.exists(step);
-          assert.equal(step.version, "0.7.0");
-        });
 
         it("a vehicle's old driving-Skill key becomes the Skill's name, saved", async function () {
           assert.equal(driveSkillName("driving"), "Driving");

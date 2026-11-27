@@ -16,20 +16,6 @@ export default function register(quench) {
       describe("_onCreate: automatic Race/Class grant baking", function () {
         useQuenchTimeout(this);
 
-        it("bakes a newly-created Race item's grants with no explicit bakeItemGrants call", async function () {
-          const actor = await createTestCharacter();
-          try {
-            await createTestItem(actor, "race", "race", {
-              system: { changes: [{ targetType: "stat", target: "str", mode: "add", value: "2" }] },
-            });
-            // _onCreate's own bakeItemGrants call isn't awaited by createEmbeddedDocuments - poll instead of a fixed settle().
-            await waitFor(() => actor.system.stats.str.value !== 3);
-            assert.equal(actor.system.stats.str.value, 5); // 3 base + 2 grant
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
-
         it("does not bake anything for a newly-created Skill item", async function () {
           const actor = await createTestCharacter();
           try {

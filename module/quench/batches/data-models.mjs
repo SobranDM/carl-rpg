@@ -17,7 +17,7 @@ export default function register(quench) {
   quench.registerBatch(
     "carl-rpg.data-models",
     (context) => {
-      const { describe, it, assert } = context;
+      const { describe, it, assert, before, after } = context;
 
       describe("actor-base.mjs defaults (shared by Character and Mob)", function () {
         useQuenchTimeout(this);
@@ -51,6 +51,9 @@ export default function register(quench) {
           const actor = await createTestCharacter();
           try {
             assert.equal(actor.system.attributes.level.value, 1);
+            const field = actor.system.schema.getField("attributes.level.value");
+            assert.equal(field.min, 1);
+            assert.equal(field.max, 250);
           } finally {
             await deleteTestActor(actor);
           }
@@ -292,93 +295,60 @@ export default function register(quench) {
 
       describe("item schemas (embedded on a Character)", function () {
         useQuenchTimeout(this);
+        let actor;
+        before(async function () {
+          actor = await createTestCharacter("item schemas");
+        });
+        after(async function () {
+          await deleteTestActor(actor);
+        });
 
         it("item-base.mjs: changes defaults to []", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const gear = await createTestItem(actor, "item");
-            assert.deepEqual(gear.system.changes, []);
-          } finally {
-            await deleteTestActor(actor);
-          }
+          const gear = await createTestItem(actor, "item");
+          assert.deepEqual(gear.system.changes, []);
         });
 
         it("ranked-item-base.mjs: rank defaults to 0 (min 0, max 20), advancementGate defaults to 'normal'", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const skill = await createTestItem(actor, "skill");
-            assert.equal(skill.system.rank, 0);
-            assert.equal(skill.system.advancementGate, "normal");
-          } finally {
-            await deleteTestActor(actor);
-          }
+          const skill = await createTestItem(actor, "skill");
+          assert.equal(skill.system.rank, 0);
+          assert.equal(skill.system.advancementGate, "normal");
         });
 
         it("isMagicDamage defaults false for Skill, true for Spell (spell.mjs's override)", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const skill = await createTestItem(actor, "skill");
-            const spell = await createTestItem(actor, "spell");
-            assert.isFalse(skill.system.isMagicDamage);
-            assert.isTrue(spell.system.isMagicDamage);
-          } finally {
-            await deleteTestActor(actor);
-          }
+          const skill = await createTestItem(actor, "skill");
+          const spell = await createTestItem(actor, "spell");
+          assert.isFalse(skill.system.isMagicDamage);
+          assert.isTrue(spell.system.isMagicDamage);
         });
 
         it("skill.mjs: category defaults to 'utility'", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const skill = await createTestItem(actor, "skill");
-            assert.equal(skill.system.category, "utility");
-          } finally {
-            await deleteTestActor(actor);
-          }
+          const skill = await createTestItem(actor, "skill");
+          assert.equal(skill.system.category, "utility");
         });
 
         it("spell.mjs: castingKeywords/manaCostVariants default to []", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const spell = await createTestItem(actor, "spell");
-            assert.deepEqual(spell.system.castingKeywords, []);
-            assert.deepEqual(spell.system.manaCostVariants, []);
-          } finally {
-            await deleteTestActor(actor);
-          }
+          const spell = await createTestItem(actor, "spell");
+          assert.deepEqual(spell.system.castingKeywords, []);
+          assert.deepEqual(spell.system.manaCostVariants, []);
         });
 
         it("damage-effect.mjs: parentSkills defaults to []", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const de = await createTestItem(actor, "damageEffect");
-            assert.deepEqual(de.system.parentSkills, []);
-          } finally {
-            await deleteTestActor(actor);
-          }
+          const de = await createTestItem(actor, "damageEffect");
+          assert.deepEqual(de.system.parentSkills, []);
         });
 
         it("class.mjs/race.mjs: skillChoiceGrants defaults to []", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const klass = await createTestItem(actor, "class");
-            const race = await createTestItem(actor, "race");
-            assert.deepEqual(klass.system.skillChoiceGrants, []);
-            assert.deepEqual(race.system.skillChoiceGrants, []);
-          } finally {
-            await deleteTestActor(actor);
-          }
+          const klass = await createTestItem(actor, "class");
+          const race = await createTestItem(actor, "race");
+          assert.deepEqual(klass.system.skillChoiceGrants, []);
+          assert.deepEqual(race.system.skillChoiceGrants, []);
         });
 
         it("item.mjs (gear): quantity defaults to 1, weight to 0, equipped to false", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const gear = await createTestItem(actor, "item");
-            assert.equal(gear.system.quantity, 1);
-            assert.equal(gear.system.weight, 0);
-            assert.isFalse(gear.system.equipped);
-          } finally {
-            await deleteTestActor(actor);
-          }
+          const gear = await createTestItem(actor, "item");
+          assert.equal(gear.system.quantity, 1);
+          assert.equal(gear.system.weight, 0);
+          assert.isFalse(gear.system.equipped);
         });
       });
 
@@ -414,7 +384,7 @@ export default function register(quench) {
           // that's the actual signal to check for, not a caught exception.
           const actor = await createTestCharacter();
           try {
-            const before = actor.items.size;
+            const itemsBefore = actor.items.size;
             const gear = await createTestItem(actor, "item", "item", {
               system: {
                 changes: [{ targetType: "not-a-real-type", target: "x", mode: "add", value: "1" }],
@@ -424,7 +394,7 @@ export default function register(quench) {
               gear,
               "a StringField with a closed 'choices' list should reject an out-of-enum value, so no Item gets created",
             );
-            assert.equal(actor.items.size, before, "no new item should have been created");
+            assert.equal(actor.items.size, itemsBefore, "no new item should have been created");
           } finally {
             await deleteTestActor(actor);
           }
@@ -443,7 +413,7 @@ export default function register(quench) {
           // error via Foundry's own onError), not a rejected Promise.
           const actor = await createTestCharacter();
           try {
-            const before = actor.items.size;
+            const itemsBefore = actor.items.size;
             const skill = await createTestItem(actor, "skill", "skill", {
               system: { upgrades: [{ rankThreshold: 7, description: "off-enum test" }] },
             });
@@ -451,7 +421,7 @@ export default function register(quench) {
               skill,
               "rankThreshold's NumberField 'choices' should reject an out-of-enum value, so no Item gets created",
             );
-            assert.equal(actor.items.size, before, "no new item should have been created");
+            assert.equal(actor.items.size, itemsBefore, "no new item should have been created");
           } finally {
             await deleteTestActor(actor);
           }
@@ -622,26 +592,6 @@ export default function register(quench) {
             const extra = await createTestItem(actor, "item", "extra ring");
             await assignItemToSlot(actor, { slotType: "accessory", slotKey: "99" }, extra);
             assert.notInclude(actor.system.accessories, extra.id, "can't add past the cap");
-          } finally {
-            await deleteTestActor(actor);
-          }
-        });
-
-        it("(x) on a gear or accessory slot clears it and unequips", async function () {
-          const actor = await createTestCharacter();
-          try {
-            const helm = await createTestItem(actor, "item", "helm");
-            const ring = await createTestItem(actor, "item", "ring");
-            await assignItemToSlot(actor, { slotType: "gear", slotKey: "head" }, helm);
-            await assignItemToSlot(actor, { slotType: "accessory", slotKey: "0" }, ring);
-
-            await clearSlot(actor, { slotType: "gear", slotKey: "head" });
-            assert.equal(actor.system.gearSlots.head, "");
-            assert.isFalse(helm.system.equipped);
-
-            await clearSlot(actor, { slotType: "accessory", slotKey: "0" });
-            assert.deepEqual(actor.system.accessories, []);
-            assert.isFalse(ring.system.equipped);
           } finally {
             await deleteTestActor(actor);
           }

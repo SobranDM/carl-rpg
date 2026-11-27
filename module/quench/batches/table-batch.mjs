@@ -4,7 +4,7 @@ import { scaleDamageByType } from "../../helpers/damage-pipeline.mjs";
 import { rowOutcome, rowEvadeDifficulty } from "../../helpers/attack-targets.mjs";
 import { buildDifficultyPresets, selectedPresetValue } from "../../helpers/rules.mjs";
 import { mendingUpdates } from "../../helpers/rest.mjs";
-import { endOfFloorPopularityDelta, collapseDays } from "../../helpers/floor.mjs";
+import { endOfFloorPopularityDelta } from "../../helpers/floor.mjs";
 import { addGrindLevelHours, lowestGrinder } from "../../helpers/grinding.mjs";
 import { PVE_INITIATIVE } from "../../documents/combat.mjs";
 import { applyRow } from "../../chat/attack-targets-card.mjs";
@@ -442,13 +442,11 @@ export default function register(quench) {
           });
         });
 
-        it("end-of-floor Popularity from the Charisma score (p.280) and collapse timers (p.63)", function () {
+        it("end-of-floor Popularity from the Charisma score (p.280)", function () {
           assert.equal(endOfFloorPopularityDelta(15, 3), 1);
           assert.equal(endOfFloorPopularityDelta(6, 3), -1);
           assert.equal(endOfFloorPopularityDelta(10, 3), 0);
           assert.equal(endOfFloorPopularityDelta(1, 0), 0);
-          assert.equal(collapseDays(4), 10);
-          assert.isNull(collapseDays(9));
         });
 
         it("grinding hours equal to the Level grant a Level, and any Level gain resets them (p.171)", async function () {

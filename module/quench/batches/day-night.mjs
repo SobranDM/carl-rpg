@@ -44,6 +44,9 @@ export default function register(quench) {
         useQuenchTimeout(this, 30000);
 
         it("the GM's toggle is a world setting, day unless set", async function () {
+          const setting = game.settings.settings.get(`carl-rpg.${TIME_OF_DAY}`);
+          assert.equal(setting.scope, "world");
+          assert.equal(setting.default, "day");
           await byDay(async () => assert.isFalse(isNight()));
           await atNight(async () => assert.isTrue(isNight()));
         });
