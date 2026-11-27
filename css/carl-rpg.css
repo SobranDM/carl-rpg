@@ -2795,10 +2795,11 @@
 .carl-rpg .carl-toolbox-floor-row button {
   flex: 0 0 auto;
 }
-.carl-rpg .carl-toolbox-time {
+.carl-rpg .carl-toolbox-row .carl-toolbox-time {
+  flex: 0 0 auto;
   color: var(--carl-gold);
 }
-.carl-rpg .carl-toolbox-time.night {
+.carl-rpg .carl-toolbox-row .carl-toolbox-time.night {
   color: #9fb7ff;
 }
 .carl-rpg .carl-toolbox-rest-row {

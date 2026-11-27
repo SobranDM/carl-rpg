@@ -2,6 +2,12 @@
   <fieldset class="carl-toolbox-section">
     <legend>{{localize "CARLRPG.Toolbox.RealWorldTimer"}}</legend>
     <div class="carl-toolbox-row">
+      {{!-- Day or night (helpers/day-night.mjs): click to change it. --}}
+      <button type="button" class="carl-toolbox-time{{#if night}} night{{/if}}" data-action="toggleTimeOfDay"
+        data-tooltip-text="{{localize (ifThen night 'CARLRPG.TimeOfDay.NightHint' 'CARLRPG.TimeOfDay.DayHint')}}"
+        aria-label="{{localize (ifThen night 'CARLRPG.TimeOfDay.Night' 'CARLRPG.TimeOfDay.Day')}}">
+        <i class="fas {{#if night}}fa-moon{{else}}fa-sun{{/if}}"></i>
+      </button>
       <button type="button" data-action="toggleTimer">
         <i class="fas {{#if timerRunning}}fa-stop{{else}}fa-play{{/if}}"></i>
         {{#if timerRunning}}{{localize "CARLRPG.Toolbox.StopTimer"}}{{else}}{{localize "CARLRPG.Toolbox.StartTimer"}}{{/if}}
@@ -25,12 +31,6 @@
       <span class="carl-toolbox-floor">{{localize "CARLRPG.Actor.Floor"}} {{floor}}</span>
       <button type="button" data-action="floorIncrement" data-tooltip-text="{{localize 'CARLRPG.Toolbox.FloorIncrement'}}">
         <i class="fas fa-plus"></i>
-      </button>
-      {{!-- Day or night (helpers/day-night.mjs): click to change it. --}}
-      <button type="button" class="carl-toolbox-time{{#if night}} night{{/if}}" data-action="toggleTimeOfDay"
-        data-tooltip-text="{{localize (ifThen night 'CARLRPG.TimeOfDay.NightHint' 'CARLRPG.TimeOfDay.DayHint')}}"
-        aria-label="{{localize (ifThen night 'CARLRPG.TimeOfDay.Night' 'CARLRPG.TimeOfDay.Day')}}">
-        <i class="fas {{#if night}}fa-moon{{else}}fa-sun{{/if}}"></i>
       </button>
     </div>
     <div class="carl-toolbox-row">
