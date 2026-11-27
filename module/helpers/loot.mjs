@@ -7,6 +7,8 @@ import { enchantmentKind, itemTypeKind, lootRowQuantity, lootRowSpecial } from "
 
 /** Table 38's name (Randomized Magic Items, p.219). */
 const ITEM_TYPE_TABLE_NAME = "Item Type";
+/** Table 39: a weapon's enchantments (a Weapon Box's magic item). */
+const WEAPON_EFFECTS_TABLE_NAME = "Enchanted Mundane Item or Weapon";
 
 /* -------------------------------------------- */
 /*  The loot generator (0.8.0)                  */
@@ -173,11 +175,86 @@ export async function generateLoot(
   const consumables = await rollTotal(tier.consumables);
   const consumableTable = consumables > 0 ? await tableFor("Consumables") : null;
   for (let i = 0; consumableTable && i < consumables; i++) await drawFrom(consumableTable);
+  // A Weapon Box's magic item is a weapon from its own table, enchanted
+  // (ruled 2026-11-27); with no weapon to draw, it's any magic item.
+  const weaponBox = isWeaponTheme(theme);
   for (let i = 0; i < (tier.magicItems ?? 0); i++) {
-    const magic = await generateMagicDraft(tierKey, { recipient, floor });
+    const base = weaponBox ? await drawWeaponBase(tierKey, theme) : null;
+    const magic = await generateMagicDraft(tierKey, { recipient, floor, base });
     if (magic) entries.push(magic);
   }
   return { tierKey, theme: String(theme ?? ""), gold, entries };
+}
+
+/**
+ * Whether a box's theme is Weapon ("Silver Weapon Box"), whose magic item
+ * is built on a weapon (generateLoot).
+ * @param {string} theme
+ * @returns {boolean}
+ */
+export function isWeaponTheme(theme) {
+  return /^weapons?$/i.test(String(theme ?? "").trim());
+}
+
+/**
+ * A weapon to build a Weapon Box's magic item on: drawn from the box's
+ * Mundane table (boxTableFor - "Weapon Box: Mundane", or the GM's copy),
+ * keeping only linked Items with a weapon Skill. A few tries, then none.
+ * @param {string} tierKey
+ * @param {string} theme
+ * @returns {Promise<object|null>}  A base for generateMagicDraft.
+ */
+export async function drawWeaponBase(tierKey, theme) {
+  const table = await boxTableFor(tierKey, theme, "Mundane");
+  if (!table) return null;
+  for (let tries = 0; tries < 5; tries++) {
+    const { results } = await table.roll({ recursive: false });
+    for (const result of results) {
+      if (result.type !== "document" || !result.documentUuid) continue;
+      const doc = await fromUuid(result.documentUuid);
+      if (doc?.documentName === "Item" && doc.system?.weaponSkill) return weaponBase(doc);
+    }
+  }
+  return null;
+}
+
+/**
+ * A weapon Item as the base of a magic item: what makes it that weapon.
+ * @param {Item} doc
+ * @returns {object}
+ */
+function weaponBase(doc) {
+  const sys = doc.system;
+  return {
+    uuid: doc.uuid,
+    name: doc.name,
+    img: doc.img,
+    description: sys.description ?? "",
+    weaponSkill: sys.weaponSkill,
+    twoHanded: !!sys.twoHanded,
+    armorPiercing: !!sys.armorPiercing,
+    targetEffects: foundry.utils.deepClone(doc._source?.system?.targetEffects ?? []),
+  };
+}
+
+/**
+ * A rolled magic weapon's base, again, from the draft itself (the Loot
+ * Forge's Reroll Item): the same weapon, with what the GM has changed on it.
+ * @param {object} entry  A magic draft.
+ * @returns {object|null}  Null when it wasn't built on a weapon.
+ */
+export function baseOfDraft(entry) {
+  if (!entry?.base?.name) return null;
+  return {
+    uuid: entry.base.uuid ?? "",
+    name: entry.base.name,
+    img: entry.img ?? "",
+    description: entry.description ?? "",
+    weaponSkill: entry.weaponSkill ?? "",
+    twoHanded: !!entry.twoHanded,
+    armorPiercing: !!entry.armorPiercing,
+    targetEffects: foundry.utils.deepClone(entry.targetEffects ?? []),
+  };
 }
 
 /**
@@ -247,8 +324,11 @@ async function randomSpell() {
  * short. Each effect becomes a typed enchantment
  * (helpers/enchantments.mjs enchantmentKind), then filled in
  * (autofillMagicDraft).
+ * On a weapon (`base`, a Weapon Box's): no Item Type roll - its effects come
+ * from Table 39, Enchanted Mundane Item or Weapon - and the item is that
+ * weapon, named for it ("Enchanted Pool Cue of the...").
  * @param {string} tierKey
- * @param {{recipient?: Actor|null, floor?: number}} [options]
+ * @param {{recipient?: Actor|null, floor?: number, base?: object|null}} [options]
  * @returns {Promise<object|null>}  A magic draft:
  *   {kind: "magic", tierKey, itemType: "mundane"|"clothing"|"accessory", typeLabel,
  *    enchantments: {kind, text, value?, target?, percent?, multiplier?}[], name, slots, accessoryKind}.
@@ -256,18 +336,25 @@ async function randomSpell() {
  */
 export async function generateMagicDraft(
   tierKey,
-  { recipient = null, floor = currentFloor() } = {},
+  { recipient = null, floor = currentFloor(), base = null } = {},
 ) {
   const tier = CONFIG.CARLRPG.lootBoxTiers[tierKey];
   if (!tier?.rolls) return null;
-  const itemTypeTable = await lootTable(ITEM_TYPE_TABLE_NAME);
-  if (!itemTypeTable) return null;
-  const { results } = await itemTypeTable.roll({ recursive: false });
-  const typeLabel = results.find((r) => r.type === "text")?.name ?? "";
-  const link = results.find((r) => r.type === "document")?.documentUuid;
-  const linked = link ? await fromUuid(link) : null;
-  // The world's own copy of the effect table, if the GM made one.
-  const effects = linked ? ((await lootTable(linked.name)) ?? linked) : null;
+  let typeLabel = "";
+  let effects = null;
+  if (base) {
+    effects = await lootTable(WEAPON_EFFECTS_TABLE_NAME);
+    typeLabel = effects?.name ?? "";
+  } else {
+    const itemTypeTable = await lootTable(ITEM_TYPE_TABLE_NAME);
+    if (!itemTypeTable) return null;
+    const { results } = await itemTypeTable.roll({ recursive: false });
+    typeLabel = results.find((r) => r.type === "text")?.name ?? "";
+    const link = results.find((r) => r.type === "document")?.documentUuid;
+    const linked = link ? await fromUuid(link) : null;
+    // The world's own copy of the effect table, if the GM made one.
+    effects = linked ? ((await lootTable(linked.name)) ?? linked) : null;
+  }
   if (!effects) return null;
 
   const enchantments = [];
@@ -298,6 +385,19 @@ export async function generateMagicDraft(
     slots: [],
     accessoryKind: "",
   };
+  if (base) {
+    Object.assign(draft, {
+      base: { uuid: base.uuid ?? "", name: base.name },
+      name: magicItemName(tierKey, base.name),
+      slots: ["held"],
+      img: base.img ?? "",
+      description: base.description ?? "",
+      weaponSkill: base.weaponSkill,
+      twoHanded: !!base.twoHanded,
+      armorPiercing: !!base.armorPiercing,
+      targetEffects: foundry.utils.deepClone(base.targetEffects ?? []),
+    });
+  }
   return autofillMagicDraft(draft, { recipient, floor });
 }
 

@@ -1,5 +1,13 @@
 {
   "CARLRPG": {
+    "SettingsInfo": {
+      "WikiShort": "Wiki",
+      "Unofficial": "This unofficial system is a fan project, not affiliated with or endorsed by Matt Dinniman or Renegade Game Studios. If you own the PDFs, you can import them to gain mobs, items, and more.",
+      "WikiLine": "New to the system? The {wiki} covers how everything works.",
+      "Credit": "Brought to life on Foundry VTT by SobranDM.",
+      "Kofi": "Buy Me a Coffee at ko-fi.com",
+      "Bugs": "Report bugs or make feature requests on {github}"
+    },
     "Chargen": {
       "Background": "Background",
       "Title": "Create Crawler",
@@ -69,7 +77,7 @@
       "RollStats": "Roll Stats",
       "RolledStats": "Leaving it to Chance (1d6, rerolling 1s):",
       "Derived": "Health Bar slots of {hb} each, {mana} Mana, Evade d20 + {evade}.",
-      "OwnWords": "...or in your own words",
+      "OwnWords": "... or in your own words",
       "Set": {
         "athlete": "Athlete",
         "gamingGeek": "Gaming Geek",
@@ -788,10 +796,11 @@
       "NewSceneDone": "New scene: \"Once per scene\" cooldowns are cleared.",
       "Grind": "Grind",
       "GrindTitle": "Grinding",
-      "GrindActor": "Character",
+      "GrindPickerPrompt": "Who's grinding? Everyone picked grinds the same hours, each on a Skill of their own.",
       "GrindHours": "Hours Grinding",
       "GrindNext": "Next",
-      "GrindSkillTitle": "Grinding: {name}",
+      "GrindSkillsTitle": "Grinding: Pick Skills",
+      "GrindLevel": "Level {level}",
       "GrindThresholdReached": "{name} has accrued enough hours - rolling a Skill Advancement Check.",
       "GrindProgress": "{name}: {accrued}/{rank} hours accrued.",
       "NoCharacters": "No character Actors found.",
@@ -1701,7 +1710,6 @@
       "Difficulty": "Difficulty",
       "DifficultyPlaceholder": "none",
       "Modifier": "Modifier",
-      "ModifierHint": "Added to the roll. Against several Attacks or targets, it's added to every one of them; each keeps the Difficulty the rules give it.",
       "DifficultyPreset": "Difficulty type",
       "DifficultyPresetHelpLabel": "What these mean",
       "DifficultyPresetHelp": "<p><strong>Unopposed</strong> (p.59): nobody stands in the way - Climbing, Dumpster-Diving, Endurance and most Skills for surviving the dungeon. 10 + 2 x Floor.</p><p><strong>Stat Check</strong> (p.59): a Stat alone, with no Skill Ranks - resisting the environment or a Mob. 10 + Floor.</p><p><strong>Opposed</strong> (p.59): against a Mob, Boss or crawler. 10 + their Stat Mod (or Spell Rank, size class) + Floor.</p><p><strong>Custom</strong> (p.59): the GM may set any Difficulty that makes more sense than the formulas.</p>",
@@ -1942,7 +1950,8 @@
         "UniqueTimes": "Something Unique ×{times}",
         "Image": "Image",
         "Description": "Description",
-        "DescriptionHint": "Your own words, shown above the item's enchantments. Rerolling the item keeps them.",
+        "DescriptionHint": "Item description, shown above the item's enchantments. Rerolling the item does not reset the description.",
+        "CloseSaveFailed": "The Loot Forge couldn't save your changes as it closed. The box or item may have been opened or deleted meanwhile.",
         "WeaponHeld": "A weapon is held in a hand.",
         "NoMagicAtTier": "This tier has no magic items. Pick Silver or higher.",
         "Kind": {
@@ -2176,9 +2185,11 @@
       "ApplyConfirm": "Apply",
       "TargetOption": "{name} (Rank {rank}, {accrued}/{rank} hours)",
       "NoTargets": "{name} has no Skill that can take grinding hours right now. A Skill needs Rank 1 or more, must be below its Rank cap, and must be able to advance through use (not a Passive Spell).",
+      "NoTargetsLevelOnly": "{name} has no Skill that can take grinding hours right now, so their hours only count toward their next Level. A Skill needs Rank 1 or more, must be below its Rank cap, and must be able to advance through use (not a Passive Spell).",
       "ActorGone": "The grinding character no longer exists.",
       "LevelTitle": "Level from Grinding",
-      "LevelBody": "{name}'s grinding hours have reached their Level: they gain a Level (now Level {level}). If they're the party's lowest Level, they gain 1d2 Levels instead (p.171) - the GM adds the extra."
+      "LevelBody": "{name}'s grinding hours have reached their Level: they gain a Level (now Level {level}).",
+      "LevelBodyLowest": "{name}'s grinding hours have reached their Level. As the lowest Level grinding, they roll 1d2 and get {roll}: they gain {gained} Level(s) (now Level {level}, p.171)."
     },
     "DebuffRow": {
       "Difficulty": "Difficulty {value}",

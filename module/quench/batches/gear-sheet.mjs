@@ -426,7 +426,7 @@ export default function register(quench) {
       describe("the gear sheet", function () {
         useQuenchTimeout(this);
 
-        it("a Description being typed in has room, on gear, consumables and Spells (ruled 2026-11-21)", async function () {
+        it("a Description has room to type in, and the same room closed (ruled 2026-11-21, 2026-11-27)", async function () {
           const potion = await worldItem("roomy potion", {
             system: { consumable: { kind: "potion", heal: { slots: 4 } } },
           });
@@ -441,19 +441,14 @@ export default function register(quench) {
                 '.carl-item-page > prose-mirror[name="system.description"]',
               );
               assert.exists(editor, `${item.type}: its Description`);
+              const closed = parseFloat(getComputedStyle(editor).minHeight);
               // Foundry marks an editor open for typing "active".
               editor.classList.add("active");
-              assert.isAtLeast(
-                parseFloat(getComputedStyle(editor).minHeight),
-                200,
-                `${item.type}: room while typing`,
-              );
+              const open = parseFloat(getComputedStyle(editor).minHeight);
               editor.classList.remove("active");
-              assert.isBelow(
-                parseFloat(getComputedStyle(editor).minHeight),
-                200,
-                `${item.type}: compact while reading`,
-              );
+              assert.isAtLeast(open, 200, `${item.type}: room while typing`);
+              // Clicking Edit doesn't push the rest of the page down.
+              assert.equal(closed, open, `${item.type}: the same room closed`);
               await sheet.close();
             }
           } finally {

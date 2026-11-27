@@ -3104,7 +3104,9 @@ export default class CarlDice {
       const prompted = await promptRollOptions({
         title: game.i18n.format("CARLRPG.Dialog.OpposedCheckTitle", { name: skillItem.name }),
         defaultAdvantage: dayNightAdvantage(actor, skillItem) ? "advantage" : null,
-        combat,
+        // Locked only to a Difficulty the caller knows (an Attack's to-hit):
+        // with none, the preset filled in below stays open to change.
+        combat: combat && difficulty !== null,
         difficulty: difficulty ?? selectedPresetValue(difficultyPresets),
         difficultyPresets,
         difficultyLabel: opponentRows.length

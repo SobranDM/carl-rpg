@@ -23,6 +23,7 @@
   - **Gobblin' Hogs** swap their Int and Dex Mods at night, and their Surprise and Evade with them.
 - **Deleting Asks First:** Deleting an item from a Character, Mob, Pet, Vehicle or Map Loot Box sheet now has a confirmation dialog, as does throwing away a loot box's prepared contents (Roll When Opened). Shift-click skips the question.
 - **Homebrew Character Creation Tables:** A copy of a background, Past Traumas, Loose Ends or Regrets table in a world compendium now replaces the system's, as one in the world already did and as loot box tables do.
+- **Description Boxes:** Fixed a lot of description boxes across various items and actors that were weird sizes or inconsistent between the view and edit modes.
 
 ## 0.8.4
 

@@ -1,5 +1,6 @@
 import {
   autofillMagicDraft,
+  baseOfDraft,
   boxTable,
   boxTableFor,
   boxTableNames,
@@ -470,6 +471,23 @@ export default function register(quench) {
           if (!ran) this.skip();
         });
 
+        it("a Weapon Box's magic item is a weapon from its table, enchanted on Table 39 (ruled 2026-11-27)", async function () {
+          const loot = await generateLoot("gold", { theme: "Weapon" });
+          const magic = loot.entries.filter((e) => e.kind === "magic");
+          assert.isNotEmpty(magic, "Gold gives a magic item");
+          for (const item of magic) {
+            assert.isNotEmpty(item.weaponSkill, `${item.name}: a weapon`);
+            assert.isNotEmpty(item.base?.name, `${item.name}: built on one`);
+            assert.include(item.name, item.base.name, "named for its weapon");
+            assert.deepEqual(item.slots, ["held"]);
+            assert.equal(item.typeLabel, "Enchanted Mundane Item or Weapon");
+          }
+          // Rerolled in the Forge, it stays that weapon.
+          const again = await generateMagicDraft("gold", { base: baseOfDraft(magic[0]) });
+          assert.equal(again.base.name, magic[0].base.name);
+          assert.equal(again.weaponSkill, magic[0].weaponSkill);
+        });
+
         it("opening a box reads the theme from its title", async function () {
           const actor = await createTestCharacter("themed box");
           try {
@@ -718,7 +736,7 @@ export default function register(quench) {
             entry.name = "Ring of After";
             entry.enchantments[0].target = "str";
             entry.enchantments[0].value = 4;
-            forge.element.querySelector('[data-action="save"]').click();
+            forge.element.querySelector('[data-action="saveForge"]').click();
             await waitFor(() => actor.items.get(item.id)?.name === "Ring of After");
             const after = actor.items.get(item.id);
             assert.equal(after.img, "icons/svg/sun.svg");
@@ -776,7 +794,7 @@ export default function register(quench) {
               Number(forge.element.querySelector('input[name="gold"]').value),
               draft.gold,
             );
-            assert.isNotNull(forge.element.querySelector('[data-action="save"]'));
+            assert.isNotNull(forge.element.querySelector('[data-action="saveForge"]'));
             assert.isNull(
               forge.element.querySelector('[name="recipientId"]'),
               "the caller picks who it's for",
@@ -784,6 +802,90 @@ export default function register(quench) {
           } finally {
             await forge.close();
           }
+        });
+
+        it("saving a description keeps the Forge open and shows the new text", async function () {
+          const saved = [];
+          const forge = await LootForge.open({
+            draft: {
+              tierKey: "gold",
+              entries: [{ kind: "magic", tierKey: "gold", name: "Test Trinket", enchantments: [] }],
+            },
+            onSave: async (d) => saved.push(d),
+          });
+          try {
+            const pm = forge.element.querySelector(".carl-forge-description prose-mirror");
+            assert.exists(pm);
+            pm.querySelector("button.toggle").click();
+            const saveButton = () => pm.querySelector('menu button[data-action="save"]');
+            await waitFor(() => saveButton() && pm.querySelector(".ProseMirror"));
+            pm.querySelector(".ProseMirror").innerHTML = "<p>Glows faintly.</p>";
+            await new Promise((r) => setTimeout(r, 100));
+            saveButton().click();
+            const shown = () =>
+              forge.element.querySelector(".carl-forge-description .editor-content")?.textContent ??
+              "";
+            await waitFor(() => shown().includes("Glows faintly."));
+            assert.isTrue(forge.rendered, "the Forge is still open");
+            assert.lengthOf(saved, 0, "the Forge itself wasn't saved");
+            assert.equal(forge.draft.entries[0].description, "<p>Glows faintly.</p>");
+          } finally {
+            await forge.close();
+          }
+        });
+
+        it("closing saves what changed, and nothing if nothing did", async function () {
+          const open = async (saved) =>
+            LootForge.open({
+              draft: await generateLoot("silver", { floor: 2 }),
+              onSave: async (d) => saved.push(d),
+            });
+
+          const untouched = [];
+          await (await open(untouched)).close();
+          assert.lengthOf(untouched, 0, "only looked at: not saved");
+
+          const changed = [];
+          const forge = await open(changed);
+          const gold = forge.element.querySelector('input[name="gold"]');
+          gold.value = "4321";
+          await forge.close();
+          assert.lengthOf(changed, 1, "saved once, on closing");
+          assert.equal(changed[0].gold, 4321, "with what was typed");
+
+          const viaSave = [];
+          const saver = await open(viaSave);
+          saver.element.querySelector('input[name="gold"]').value = "7";
+          saver.element.querySelector('[data-action="saveForge"]').click();
+          await waitFor(() => !saver.rendered);
+          assert.lengthOf(viaSave, 1, "Save, then closing, saves once");
+        });
+
+        it("a Description opened but not typed in isn't a change; a failed save still closes", async function () {
+          const draft = () => ({
+            tierKey: "gold",
+            entries: [{ kind: "magic", tierKey: "gold", name: "Test Trinket", enchantments: [] }],
+          });
+          const saved = [];
+          const looked = await LootForge.open({
+            draft: draft(),
+            onSave: async (d) => saved.push(d),
+          });
+          const pm = looked.element.querySelector(".carl-forge-description prose-mirror");
+          pm.querySelector("button.toggle").click();
+          await waitFor(() => pm.classList.contains("active"));
+          await looked.close();
+          assert.lengthOf(saved, 0, "an empty editor opened and closed: not saved");
+
+          const failing = await LootForge.open({
+            draft: draft(),
+            onSave: async () => {
+              throw new Error("the box is gone");
+            },
+          });
+          failing.element.querySelector(".carl-forge-name").value = "Renamed";
+          await failing.close();
+          assert.isFalse(failing.rendered, "the window closes anyway");
         });
       });
 
@@ -1005,7 +1107,7 @@ export default function register(quench) {
             assert.equal(entry.description, "<p>Mine.</p><p>Added.</p>");
             entry.twoHanded = true;
             entry.targetEffects = [debuff];
-            forge.element.querySelector('[data-action="save"]').click();
+            forge.element.querySelector('[data-action="saveForge"]').click();
             await waitFor(() => actor.items.get(item.id)?.system.twoHanded === true);
             const after = actor.items.get(item.id);
             assert.equal(after.img, "icons/svg/sun.svg");

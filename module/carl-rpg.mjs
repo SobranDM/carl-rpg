@@ -367,6 +367,43 @@ Hooks.on("renderItemDirectory", (app, html) => {
   actions.append(button);
 });
 
+// The Settings sidebar (as WWN's): a Wiki link by the system's name, and
+// under the game info who made it, the wiki, the Ko-fi and where to report
+// bugs (templates/apps/settings-info.hbs).
+const WIKI_URL = "https://github.com/SobranDM/carl-rpg/wiki";
+const ISSUES_URL = "https://github.com/SobranDM/carl-rpg/issues";
+const KOFI_URL = "https://ko-fi.com/sobrandm0972";
+Hooks.on("renderSettings", async (app, html) => {
+  const info = html.querySelector(".info");
+  if (!info || html.querySelector(".carl-game-info")) return;
+  const i18n = game.i18n;
+  const link = (href, text) =>
+    `<a href="${href}" target="_blank" rel="noopener">${foundry.utils.escapeHTML(text)}</a>`;
+  const label = info.querySelector(".system .label");
+  if (label && !label.querySelector(".carl-wiki-link")) {
+    const wiki = document.createElement("a");
+    wiki.classList.add("carl-wiki-link");
+    wiki.href = WIKI_URL;
+    wiki.target = "_blank";
+    wiki.rel = "noopener";
+    wiki.textContent = i18n.localize("CARLRPG.SettingsInfo.WikiShort");
+    label.append(" ", wiki);
+  }
+  const rendered = await foundry.applications.handlebars.renderTemplate(
+    "systems/carl-rpg/templates/apps/settings-info.hbs",
+    {
+      kofiUrl: KOFI_URL,
+      wikiLine: i18n.format("CARLRPG.SettingsInfo.WikiLine", {
+        wiki: link(WIKI_URL, i18n.localize("CARLRPG.SettingsInfo.WikiShort")),
+      }),
+      bugsLine: i18n.format("CARLRPG.SettingsInfo.Bugs", {
+        github: link(ISSUES_URL, "GitHub"),
+      }),
+    },
+  );
+  info.insertAdjacentHTML("afterend", rendered);
+});
+
 Handlebars.registerHelper("toLowerCase", function (str) {
   return str.toLowerCase();
 });

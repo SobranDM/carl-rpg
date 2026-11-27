@@ -15,6 +15,7 @@
  * on the Mob) - so the generic Race item carries nothing for it.
  */
 import { slugifySkillName } from "./modifiers.mjs";
+import { unlinkedTokenActors } from "./token-resolution.mjs";
 
 /** The world setting: "day" or "night". */
 export const TIME_OF_DAY = "timeOfDay";
@@ -115,7 +116,8 @@ export function setTimeOfDay(value) {
  * @returns {Promise<Actor[]>}  The actors brought down.
  */
 export async function clampManaToMax() {
-  const over = game.actors.filter((actor) => {
+  // Unlinked tokens too: each has its own Mana (as the setting's reset).
+  const over = [...game.actors, ...unlinkedTokenActors()].filter((actor) => {
     const mana = actor.system?.mana;
     return dayNightRace(actor.system) === "lajabless" && mana && mana.value > mana.max;
   });

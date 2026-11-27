@@ -5,7 +5,7 @@ import { rowOutcome, rowEvadeDifficulty } from "../../helpers/attack-targets.mjs
 import { buildDifficultyPresets, selectedPresetValue } from "../../helpers/rules.mjs";
 import { mendingUpdates } from "../../helpers/rest.mjs";
 import { endOfFloorPopularityDelta, collapseDays } from "../../helpers/floor.mjs";
-import { addGrindLevelHours } from "../../helpers/grinding.mjs";
+import { addGrindLevelHours, lowestGrinder } from "../../helpers/grinding.mjs";
 import { PVE_INITIATIVE } from "../../documents/combat.mjs";
 import { applyRow } from "../../chat/attack-targets-card.mjs";
 import { setDefeated } from "../../helpers/defeat.mjs";
@@ -464,6 +464,29 @@ export default function register(quench) {
             assert.equal(actor.system.grindLevelHours, 0);
             await actor.update({ "system.grindLevelHours": 2 });
             await actor.update({ "system.attributes.level.value": 5 });
+            assert.equal(actor.system.grindLevelHours, 0);
+          } finally {
+            await deleteTestActor(actor);
+          }
+        });
+
+        it("the lowest Level grinding is found among those grinding; a tie means no one (p.171)", function () {
+          const at = (id, level) => ({ id, system: { attributes: { level: { value: level } } } });
+          assert.equal(lowestGrinder([at("a", 6), at("b", 4), at("c", 5)]), "b");
+          assert.isNull(lowestGrinder([at("a", 6), at("b", 4), at("c", 4)]), "a tie: no one");
+          assert.equal(lowestGrinder([at("a", 6)]), "a", "alone, they're the lowest");
+          assert.isNull(lowestGrinder([]));
+        });
+
+        it("the lowest Level grinding gains 1d2 Levels when grinding levels them up (p.171)", async function () {
+          const actor = await createTestCharacter("lowest grinder", {
+            system: { attributes: { level: { value: 3 } } },
+          });
+          try {
+            const result = await addGrindLevelHours(actor, 3, { lowest: true });
+            assert.isTrue(result.leveled);
+            assert.oneOf(result.gained, [1, 2]);
+            assert.equal(actor.system.attributes.level.value, 3 + result.gained);
             assert.equal(actor.system.grindLevelHours, 0);
           } finally {
             await deleteTestActor(actor);

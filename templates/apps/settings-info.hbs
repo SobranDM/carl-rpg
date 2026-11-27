@@ -1,0 +1,13 @@
+{{!-- Under the Settings sidebar's game info (carl-rpg.mjs renderSettings):
+      who made the system, where its wiki is, and the Ko-fi. --}}
+<section class="carl-rpg carl-game-info">
+  <p>{{localize "CARLRPG.SettingsInfo.Unofficial"}}</p>
+  <p>{{{wikiLine}}}</p>
+  <p>{{localize "CARLRPG.SettingsInfo.Credit"}}</p>
+  <div class="carl-kofi">
+    <a href="{{kofiUrl}}" target="_blank" rel="noopener">
+      <img src="https://cdn.ko-fi.com/cdn/kofi2.png?v=2" alt="{{localize 'CARLRPG.SettingsInfo.Kofi'}}" />
+    </a>
+  </div>
+  <div class="carl-game-info-footer">{{{bugsLine}}}</div>
+</section>

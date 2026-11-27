@@ -8,6 +8,11 @@ _Dungeon Crawler Carl_.
 This is a fan project, not affiliated with or endorsed by Matt Dinniman or
 the rulebook's publisher, Renegade Game Studios. Use at your own risk.
 
+**New to the system? See the [wiki](https://github.com/SobranDM/carl-rpg/wiki)**
+for how everything works, from making a crawler to opening loot boxes.
+
+![A New Achievement! splash](wiki/images/achievement-splash.png)
+
 ## Features
 
 ### Characters
@@ -19,6 +24,12 @@ the rulebook's publisher, Renegade Game Studios. Use at your own risk.
 - Bonuses from Races, Classes, gear, Skills and Spells applied for you,
   including DR, Move, Evade and armor by slot
 - Potions, scrolls and spellbooks you can use, with Potion Sickness tracked
+- Races that change with day and night, such as the Lajabless and Night
+  Elves, from a sun/moon toggle in the GM Toolbox
+
+<p align="center">
+  <img src="wiki/images/character-sheet.png" alt="A Character sheet's Combat tab" width="520" />
+</p>
 
 ### Rolls and combat
 
@@ -28,11 +39,18 @@ the rulebook's publisher, Renegade Game Studios. Use at your own risk.
   a number such as a Spell Rank
 - Phased combat (Declaration, Reaction, Resolution, Crawler Actions) with
   Action tracking, Intervene, Shield Block and Taunt
+- One Evade covers every Attack aimed at you that round, and every row on an
+  Attack, Reaction or Damage card shows its Degree of success
 - Damage through DR, Resistance, Vulnerability and Immunity into whole
   Health Bar slots, with Shields as a second pool
 - Debuffs that apply their penalties, change Mob Difficulties, and wear off
   on their own
 - Mob sheets whose Attacks carry their to-hit, damage and Debuffs
+
+<p align="center">
+  <img src="wiki/images/attack-card.png" alt="An Attack card with a row per target" width="280" />
+  <img src="wiki/images/evade-card.png" alt="An Evade against three Attacks" width="280" />
+</p>
 
 ### Loot and achievements
 
@@ -42,15 +60,25 @@ the rulebook's publisher, Renegade Game Studios. Use at your own risk.
   party opens them together, one crawler at a time, with everyone watching
 - Box contents rolled from Roll Tables for each tier, or prepared ahead of
   time by the GM for each crawler. Magic items are rolled on the book's
-  tables and come with working bonuses. GMs can swap in their own copies of
-  the box tables
+  tables and come with working bonuses
+- Themed boxes, such as Goblin, Pet and Crafter's boxes, draw from their own
+  tables
+- GMs can swap in their own copies of the box tables, and of the character
+  creation tables
+
+<p align="center">
+  <img src="wiki/images/opening-session.png" alt="Opening loot boxes together" width="420" />
+</p>
 
 ### GM Toolbox
 
-- Rests, Mending, Grinding, End Floor and Boss Killed, and Party Skill Checks
+- Rests, Mending, End Floor and Boss Killed, and Party Skill Checks
+- Grinding for several crawlers at once, toward their Skills and their next
+  Level. The lowest Level grinding gains 1d2 Levels, as the book says
 - A floor collapse timer on everyone's screen, in 30-hour days. It follows
   Foundry's in-world clock, so rests, grinding and combat move it
 - A real-world session timer for the two-hour tick
+- Day or night in the dungeon, for the Races and Mobs that change with it
 
 ### Compendiums
 
@@ -76,6 +104,9 @@ edition of the PDF isn't supported.
 
 Characters made on CrawlerForge can be brought in with the **Import
 CrawlerForge** button in the Actors sidebar.
+
+See [Importing](https://github.com/SobranDM/carl-rpg/wiki/Importing) on the
+wiki for more.
 
 ## Installation
 
