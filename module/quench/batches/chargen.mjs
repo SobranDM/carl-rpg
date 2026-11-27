@@ -147,6 +147,48 @@ export default function register(quench) {
         });
       });
 
+      describe("A GM's own tables (ruled 2026-11-27)", function () {
+        useQuenchTimeout(this, 30000);
+
+        it("a table of the same name in a world compendium, then the world, replaces the system's", async function () {
+          const name = "Past Traumas";
+          // The GM's own copy - in the world or a world compendium - would win.
+          if ((await chargenTable(name))?.pack !== "carl-rpg.roll-tables") this.skip();
+          const pack = await foundry.documents.collections.CompendiumCollection.createCompendium({
+            type: "RollTable",
+            label: "Quench Chargen Tables",
+            name: `quench-chargen-tables-${foundry.utils.randomID().toLowerCase()}`,
+          });
+          let world = null;
+          try {
+            await RollTable.implementation.create(
+              {
+                name,
+                formula: "1d1",
+                results: [{ type: "text", name: "Quench trauma", range: [1, 1], weight: 1 }],
+              },
+              { pack: pack.collection },
+            );
+            assert.equal(
+              (await chargenTable(name))?.pack,
+              pack.collection,
+              "the world compendium's",
+            );
+            [world] = await RollTable.createDocuments([
+              {
+                name,
+                formula: "1d1",
+                results: [{ type: "text", name: "Quench world trauma", range: [1, 1], weight: 1 }],
+              },
+            ]);
+            assert.equal((await chargenTable(name))?.id, world.id, "the world's own first");
+          } finally {
+            await world?.delete();
+            await pack.deleteCompendium();
+          }
+        });
+      });
+
       describe("What blocks finishing", function () {
         useQuenchTimeout(this);
 

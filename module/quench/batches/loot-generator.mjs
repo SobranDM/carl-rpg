@@ -234,13 +234,7 @@ export default function register(quench) {
         it("a world compendium's copy beats the system's; the world's own beats both", async function () {
           const name = "Bronze Box: Mundane";
           // The GM's own copy - in the world or a world compendium - would win.
-          const ownCopy = game.packs.some(
-            (p) =>
-              p.documentName === "RollTable" &&
-              p.metadata.packageType === "world" &&
-              p.index.some((e) => e.name === name),
-          );
-          if (game.tables.getName(name) || ownCopy) this.skip();
+          if ((await boxTable(name))?.pack !== "carl-rpg.roll-tables") this.skip();
           const pack = await foundry.documents.collections.CompendiumCollection.createCompendium({
             type: "RollTable",
             label: "Quench Box Tables",

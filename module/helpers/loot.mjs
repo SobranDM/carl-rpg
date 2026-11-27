@@ -1,5 +1,5 @@
 import { createCardMessage } from "../chat/chat-card.mjs";
-import { copyData, PACKS } from "./packs.mjs";
+import { copyData, overridableTable, systemTable } from "./packs.mjs";
 import { currentFloor } from "./floor.mjs";
 import { esc } from "./html.mjs";
 import { changeEntry } from "../pdf-import/shared.mjs";
@@ -35,12 +35,8 @@ const ITEM_TYPE_TABLE_NAME = "Item Type";
  * @param {string} name
  * @returns {Promise<RollTable|null>}
  */
-export async function lootTable(name) {
-  const world = game.tables?.getName?.(name);
-  if (world) return world;
-  const pack = game.packs.get(PACKS.rollTables);
-  const entry = (await pack?.getIndex())?.find((e) => e.name === name);
-  return entry ? pack.getDocument(entry._id) : null;
+export function lootTable(name) {
+  return systemTable(name, { world: true });
 }
 
 /**
@@ -55,17 +51,8 @@ export async function lootTable(name) {
  * @param {string} name
  * @returns {Promise<RollTable|null>}
  */
-export async function boxTable(name) {
-  const world = game.tables?.getName?.(name);
-  if (world) return world;
-  const worldPacks = game.packs.filter(
-    (p) => p.documentName === "RollTable" && p.metadata.packageType === "world",
-  );
-  for (const pack of worldPacks) {
-    const entry = (await pack.getIndex())?.find((e) => e.name === name);
-    if (entry) return pack.getDocument(entry._id);
-  }
-  return lootTable(name);
+export function boxTable(name) {
+  return overridableTable(name);
 }
 
 /** A tier key as the tables name it ("bronze" -> "Bronze"). */

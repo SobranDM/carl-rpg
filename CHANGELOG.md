@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.8.5
+
+- **Homebrew Character Creation Tables:** A copy of a background, Past Traumas, Loose Ends or Regrets table in a world compendium now replaces the system's, as one in the world already did and as loot box tables do.
+
 ## 0.8.4
 
 - **Taunt Only Mob Attacks:** A crawler's or Pet's Attack card no longer offers Taunt This Attack.
